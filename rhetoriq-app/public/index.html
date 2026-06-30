@@ -275,6 +275,48 @@ body.adv .vubtn{display:block}
 .cinp:focus{border-color:var(--tx)}
 .csnd{padding:8px 14px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px}
 
+/* QUICK ACTIONS */
+.qactions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.qa{padding:9px 16px;border:1.5px solid var(--bd);border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;background:#fff;color:var(--tx);font-family:'Inter',sans-serif;transition:all .15s;text-align:left}
+.qa:hover{border-color:var(--tx);background:var(--sf)}
+.qa-icon{font-size:14px;margin-right:4px}
+
+/* VOICE BUTTON */
+.vbtn{padding:12px 14px;background:#fff;border:1.5px solid var(--bd);border-radius:4px;cursor:pointer;font-size:16px;align-self:flex-end;flex-shrink:0;transition:all .15s}
+.vbtn:hover{border-color:var(--tx)}
+.vbtn.recording{background:#fff0f0;border-color:var(--red);animation:pulse .8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* HEALTH SCORE */
+.hs-widget{border:1.5px solid var(--bd);border-radius:8px;padding:20px;margin-bottom:24px;background:#fff}
+.hs-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.hs-title{font-size:14px;font-weight:600}
+.hs-score{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300;line-height:1;color:var(--tx)}
+.hs-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-top:2px}
+.hs-result{font-size:13px;line-height:1.7;color:var(--tx);white-space:pre-wrap;margin-top:12px;display:none}
+.hs-result.show{display:block}
+.hs-genbtn{padding:8px 16px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px}
+.hs-genbtn:hover{background:#333}
+
+/* PRIVACY BADGE */
+.priv-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mu);padding:4px 10px;border:1px solid var(--bd);border-radius:20px;margin-bottom:14px}
+
+/* AUTO DEBRIEF CARD */
+.debrief-nudge{display:none;margin-top:16px;border:1.5px solid var(--bd);border-radius:8px;padding:16px 20px;background:var(--sf)}
+.debrief-nudge.show{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.debrief-nudge-text{font-size:13px;color:var(--tx)}
+.debrief-nudge-text strong{font-weight:600}
+.dn-btn{padding:8px 16px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px;flex-shrink:0}
+.dn-btn:hover{background:#333}
+.dn-dismiss{background:none;border:none;font-size:18px;color:var(--mu);cursor:pointer;flex-shrink:0}
+
+/* MODAL TABS */
+.mtabs{display:flex;border-bottom:1.5px solid var(--bd);margin-bottom:18px;margin-top:4px}
+.mtab{padding:8px 16px;background:none;border:none;border-bottom:2px solid transparent;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--mu);cursor:pointer;margin-bottom:-1.5px}
+.mtab.active{color:var(--tx);border-bottom-color:var(--tx)}
+.mtabpanel{display:none}
+.mtabpanel.active{display:block}
+
 /* MOBILE */
 @media(max-width:700px){
   .hdr{padding:0 16px;padding-top:var(--safe-top)}
@@ -333,14 +375,30 @@ body.adv .vubtn{display:block}
 </div>
 
 <div class="ov" id="np-ov">
-  <div class="modal">
+  <div class="modal" style="max-width:500px">
     <h2 id="np-title">Add Person</h2>
     <p>Add a person to the People Directory for this client.</p>
     <input type="hidden" id="np-id">
-    <div class="mf"><label class="fl">Full Name</label><input type="text" id="np-name" placeholder="e.g. Anna Berger"></div>
-    <div class="mf"><label class="fl">Role / Position</label><input type="text" id="np-role" placeholder="e.g. CEO, CFO, Head of HR"></div>
-    <div class="mf"><label class="fl">Department (optional)</label><input type="text" id="np-dept" placeholder="e.g. Executive Board, Communications"></div>
-    <div class="mf"><label class="fl">Notes (optional)</label><textarea id="np-notes" style="min-height:80px" placeholder="Communication style, context, what to keep in mind..."></textarea></div>
+    <div class="mtabs">
+      <button class="mtab active" onclick="switchMTab(this,'np-t1')">General</button>
+      <button class="mtab" onclick="switchMTab(this,'np-t2')">Communication Style</button>
+      <button class="mtab" onclick="switchMTab(this,'np-t3')">Triggers &amp; Preferences</button>
+    </div>
+    <div class="mtabpanel active" id="np-t1">
+      <div class="mf"><label class="fl">Full Name</label><input type="text" id="np-name" placeholder="e.g. Anna Berger"></div>
+      <div class="mf"><label class="fl">Role / Position</label><input type="text" id="np-role" placeholder="e.g. CEO, CFO, Head of HR"></div>
+      <div class="mf"><label class="fl">Department (optional)</label><input type="text" id="np-dept" placeholder="e.g. Executive Board, Communications"></div>
+      <div class="mf"><label class="fl">Notes (optional)</label><textarea id="np-notes" style="min-height:70px" placeholder="General context, what to keep in mind..."></textarea></div>
+    </div>
+    <div class="mtabpanel" id="np-t2">
+      <div class="mf"><label class="fl">How they communicate</label><textarea id="np-commstyle" style="min-height:80px" placeholder="e.g. Very direct, dislikes small talk. Prefers data over stories. Formal in writing, informal verbally."></textarea></div>
+      <div class="mf"><label class="fl">Strengths</label><textarea id="np-strengths" style="min-height:60px" placeholder="e.g. Excellent at simplifying complex topics. Strong presence in 1-on-1s."></textarea></div>
+      <div class="mf"><label class="fl">Weak points</label><textarea id="np-weaknesses" style="min-height:60px" placeholder="e.g. Tends to over-explain. Loses audience in town halls. Gets defensive under criticism."></textarea></div>
+    </div>
+    <div class="mtabpanel" id="np-t3">
+      <div class="mf"><label class="fl">Known triggers (what upsets or derails them)</label><textarea id="np-triggers" style="min-height:80px" placeholder="e.g. Being interrupted. Questions about budget. Any reference to the 2022 restructuring."></textarea></div>
+      <div class="mf"><label class="fl">Preferences (what they respond well to)</label><textarea id="np-prefs" style="min-height:80px" placeholder="e.g. Short bullet points. Always lead with the bottom line. Use numbers. Avoid emotional language."></textarea></div>
+    </div>
     <div class="mact"><button class="mcanc" onclick="closeModal('np-ov')">Cancel</button><button class="mconf" onclick="savePerson()">Save</button></div>
   </div>
 </div>
@@ -380,9 +438,18 @@ body.adv .vubtn{display:block}
         <div class="router-sub">Describe your task &mdash; RhetorIQ opens the right module automatically.</div>
         <div class="router-row">
           <textarea class="rtarea" id="router-input" placeholder='e.g. "Check if this press release could backfire" or "Write a speech for our CEO" or "Crisis: supplier just announced bankruptcy"'></textarea>
+          <button class="vbtn" id="voice-btn" onclick="toggleVoice()" title="Voice input">&#127908;</button>
           <button class="rbtn" onclick="routePrompt()">&#8594; Go</button>
         </div>
         <div class="rstat" id="rstat"></div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="qactions">
+        <button class="qa" onclick="quickAction('I have a meeting in 1 hour and need to prepare')"><span class="qa-icon">&#9200;</span>Meeting in 1 hour</button>
+        <button class="qa" onclick="quickAction('Something just happened and I need an immediate crisis response')"><span class="qa-icon">&#128308;</span>Something just happened</button>
+        <button class="qa" onclick="quickAction('I need to write something — speech, email, or announcement')"><span class="qa-icon">&#9998;</span>I need to write something</button>
+        <button class="qa" onclick="quickAction('Check this before I send it — what could go wrong?')"><span class="qa-icon">&#128269;</span>Check before I send</button>
       </div>
 
       <!-- Memory Banner (shown when client selected and memory exists) -->
@@ -398,6 +465,22 @@ body.adv .vubtn{display:block}
           <div class="mem-chips" id="mem-chips"></div>
           <button class="mem-edit" onclick="goPage('memory')">Edit memory &rarr;</button>
         </div>
+      </div>
+
+      <!-- Health Score Widget -->
+      <div class="hs-widget" id="hs-widget" style="display:none">
+        <div class="hs-top">
+          <div>
+            <div class="hs-title">&#9670; Communication Health Score</div>
+            <div style="font-size:12px;color:var(--mu);margin-top:2px">Based on your last 90 days of module usage</div>
+          </div>
+          <div style="text-align:right">
+            <div class="hs-score" id="hs-score">&#8212;</div>
+            <div class="hs-label">/ 10</div>
+          </div>
+        </div>
+        <button class="hs-genbtn" id="hs-btn" onclick="generateHealthScore()">Generate Score</button>
+        <div class="hs-result" id="hs-result"></div>
       </div>
 
       <div class="stats">
@@ -423,6 +506,7 @@ body.adv .vubtn{display:block}
         <div class="mcard g-foundation" onclick="goModule('profiling')"><div class="ctag">Foundation</div><div class="cname">Rhetoric Profile</div><div class="cdesc">How does this company, team, or leader communicate? What patterns repeat? Where are the weak points?</div></div>
         <div class="mcard g-foundation" onclick="goModule('language')"><div class="ctag">Foundation</div><div class="cname">Language Analytics</div><div class="cdesc">Paste texts from leadership, board, and employees. See where the official message and the lived reality diverge.</div></div>
         <!-- PREVENTION -->
+        <div class="mcard span2 g-prevention" onclick="goModule('pre-meeting')"><span class="new-badge">NEW</span><div class="ctag">Prevention &mdash; Preparation</div><div class="cname">Pre-Meeting Brief</div><div class="cdesc">Meeting in 1 hour? Get a full brief: the 3 hardest moments, your opening, key messages, what not to say, and a stakeholder map.</div></div>
         <div class="mcard g-prevention" onclick="goModule('risk')"><div class="ctag">Prevention</div><div class="cname">Risk Management</div><div class="cdesc">Ready to send? Paste the text first. Get a clear list of what could go wrong.</div></div>
         <div class="mcard g-prevention" onclick="goModule('stress')"><div class="ctag">Prevention</div><div class="cname">Challenger Test</div><div class="cdesc">What will critics say? Get the hardest counterarguments before you walk into any room.</div></div>
         <div class="mcard g-prevention" onclick="goModule('impact')"><div class="ctag">Prevention</div><div class="cname">Simulate Impact</div><div class="cdesc">Before any big announcement: how will employees, media, investors, and other stakeholders react?</div></div>
@@ -636,6 +720,8 @@ async function switchClient(id){
   if(clientId){await loadPeople();await loadMemory();}
   loadStats();
   updateMemBanner();
+  const hw=document.getElementById('hs-widget');
+  if(hw)hw.style.display=clientId?'block':'none';
 }
 function copyTok(t){navigator.clipboard.writeText(t).catch(()=>{});alert('Token copied!');}
 async function delData(cid,name){
@@ -688,11 +774,20 @@ function viewPersonProfile(pid,type,label){
   if(!prof){alert('No '+label+' saved for '+person.name+' yet.\n\nRun the module and use "Save to People" to store it.');return;}
   alert(person.name+' — '+label+':\n\n'+prof.content.substring(0,800)+(prof.content.length>800?'...':''));
 }
-function openAddPerson(){document.getElementById('np-title').textContent='Add Person';document.getElementById('np-id').value='';document.getElementById('np-name').value='';document.getElementById('np-role').value='';document.getElementById('np-dept').value='';document.getElementById('np-notes').value='';openModal('np-ov');}
+function clearPersonModal(){['np-name','np-role','np-dept','np-notes','np-commstyle','np-strengths','np-weaknesses','np-triggers','np-prefs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('np-id').value='';}
+function openAddPerson(){document.getElementById('np-title').textContent='Add Person';clearPersonModal();switchMTab(document.querySelector('#np-ov .mtab'),'np-t1');openModal('np-ov');}
 function openEditPerson(id){
   const p=people.find(x=>x.id===id);if(!p)return;
   document.getElementById('np-title').textContent='Edit Person';
-  document.getElementById('np-id').value=id;document.getElementById('np-name').value=p.name;document.getElementById('np-role').value=p.role||'';document.getElementById('np-dept').value=p.department||'';document.getElementById('np-notes').value=p.notes||'';
+  clearPersonModal();
+  document.getElementById('np-id').value=id;
+  document.getElementById('np-name').value=p.name;
+  document.getElementById('np-role').value=p.role||'';
+  document.getElementById('np-dept').value=p.department||'';
+  document.getElementById('np-notes').value=p.notes||'';
+  const profMap={};(p.profiles||[]).forEach(pr=>profMap[pr.profile_type]=pr.content);
+  ['commstyle','strengths','weaknesses','triggers','prefs'].forEach(k=>{const el=document.getElementById('np-'+k);if(el&&profMap[k])el.value=profMap[k];});
+  switchMTab(document.querySelector('#np-ov .mtab'),'np-t1');
   openModal('np-ov');
 }
 async function savePerson(){
@@ -700,9 +795,15 @@ async function savePerson(){
   const body={name:document.getElementById('np-name').value.trim(),role:document.getElementById('np-role').value.trim(),department:document.getElementById('np-dept').value.trim(),notes:document.getElementById('np-notes').value.trim(),clientId};
   if(!body.name)return alert('Please enter a name.');
   try{
-    let r;
-    if(id)r=await api('/api/people/'+id,{method:'PUT',body:JSON.stringify(body)});
-    else r=await api('/api/people',{method:'POST',body:JSON.stringify(body)});
+    let r,saved;
+    if(id){r=await api('/api/people/'+id,{method:'PUT',body:JSON.stringify(body)});saved=await r.json();saved.id=id;}
+    else{r=await api('/api/people',{method:'POST',body:JSON.stringify(body)});saved=await r.json();}
+    // Save extra profile fields
+    const extras={commstyle:'commstyle',strengths:'strengths',weaknesses:'weaknesses',triggers:'triggers',prefs:'prefs'};
+    for(const[fieldId,profileType]of Object.entries(extras)){
+      const val=(document.getElementById('np-'+fieldId)||{}).value||'';
+      if(val.trim())await api('/api/people/'+saved.id+'/profile',{method:'POST',body:JSON.stringify({profile_type:profileType,content:val.trim()})});
+    }
     await loadPeople();closeModal('np-ov');
   }catch(e){alert('Error: '+e.message);}
 }
@@ -765,9 +866,11 @@ function getPeopleContext(selectedIds){
   if(!selectedIds||!selectedIds.length)return '';
   const selected=people.filter(p=>selectedIds.includes(p.id));
   if(!selected.length)return '';
+  const PLABELS={rhetoric:'Rhetoric Profile',fingerprint:'Language Over Time',voice:'Voice DNA',commstyle:'Communication Style',strengths:'Strengths',weaknesses:'Weak Points',triggers:'Known Triggers',prefs:'Preferences'};
   const parts=selected.map(p=>{
-    const profs=(p.profiles||[]).map(pr=>'['+pr.profile_type+']: '+pr.content).join('\n');
-    return `Person: ${p.name} (${p.role||''})\n${profs||'No profiles saved yet.'}`;
+    const profs=(p.profiles||[]).map(pr=>'['+( PLABELS[pr.profile_type]||pr.profile_type)+']: '+pr.content).join('\n');
+    const extra=p.notes?`[Notes]: ${p.notes}`:'';
+    return `Person: ${p.name} (${p.role||''})\n${[profs,extra].filter(Boolean).join('\n')||'No profiles saved yet.'}`;
   });
   return '\n\n---\nPEOPLE PROFILES:\n'+parts.join('\n\n');
 }
@@ -801,7 +904,7 @@ function filterMods(group,btn){
 }
 
 // ROUTER
-const MNAMES={profiling:'Rhetoric Profile',fingerprint:'Language Over Time',language:'Language Analytics',risk:'Risk Management',stress:'Challenger Test',impact:'Simulate Impact',crisis:'Instant Crisis Response',actionability:'Clarity Check',thread:'Decision Digest','rh-translate':'Rhetorical Translation','text-gen':'Text Generator',review:'Write Feedback',recognition:'Write Appreciation',sparring:'2-Min. Training',debrief:'Debriefing','brand-voice':'Brand Voice DNA','brand-voice-co':'Brand Voice DNA','brand-voice-ind':'Brand Voice DNA','vs-cal':'Text Generator','vs-gen':'Text Generator'};
+const MNAMES={profiling:'Rhetoric Profile',fingerprint:'Language Over Time',language:'Language Analytics',risk:'Risk Management',stress:'Challenger Test',impact:'Simulate Impact',crisis:'Instant Crisis Response',actionability:'Clarity Check',thread:'Decision Digest','rh-translate':'Rhetorical Translation','text-gen':'Text Generator',review:'Write Feedback',recognition:'Write Appreciation',sparring:'2-Min. Training',debrief:'Debriefing','brand-voice':'Brand Voice DNA','brand-voice-co':'Brand Voice DNA','brand-voice-ind':'Brand Voice DNA','vs-cal':'Text Generator','vs-gen':'Text Generator','pre-meeting':'Pre-Meeting Brief'};
 
 async function routePrompt(){
   const text=document.getElementById('router-input').value.trim();
@@ -850,7 +953,8 @@ const MDEFS={
   debrief:{title:'Debriefing',desc:'After a speech or announcement: what worked, what didn\'t, where did the audience react differently than expected?',mf:'db-orig',ph:'Paste the original speech, statement, or email here.',api:'debrief',twopart:true,fields:[{id:'db-feedback',type:'ta',lbl:'Real Feedback & Reactions',ph:'Press quotes, internal feedback, Q&A responses, social media comments, audience reactions.'},{id:'db-ctx',type:'text',lbl:'Context',ph:'e.g. Quarterly all-hands, investor call, media interview'}]},
   review:{title:'Write Feedback',desc:'Rough notes about an employee in, precise written performance feedback out.',mf:'pr-in',ph:'"Often late, delivers strong quality, saved the client project last month, struggles with prioritisation..."',api:'pr',people:true,fields:[{id:'pr-role',type:'text',lbl:"Employee's Role",ph:'e.g. Senior Analyst, Project Manager'},{id:'pr-fmt',type:'sel',lbl:'Format',opts:['Written appraisal (HR document)','Verbal feedback (conversation guide)','360 feedback','Probationary review']}]},
   recognition:{title:'Write Appreciation',desc:'Write a recognition for any employee that feels personal and genuine &mdash; not generic copy-paste.',mf:'rw-in',ph:'"Meier worked over the weekend to rescue the database migration. The client noticed. Said it was the best handover they ever received."',api:'rw',people:true,fields:[{id:'rw-type',type:'sel',lbl:'Recipient Type',opts:['The Analyst &mdash; values precision and evidence','The Executor &mdash; values impact and results','The Team Player &mdash; values group contribution','The Visionary &mdash; values ideas and vision','The Pragmatist &mdash; wants direct acknowledgement']},{id:'rw-fmt',type:'sel',lbl:'Format',opts:['Verbal recognition (conversation)','Written acknowledgement (email)','Public praise (team meeting)','Formal recognition (HR document)']}]},
-  'text-gen':{title:'Text Generator',desc:'Briefing in, finished text out. LinkedIn, speech, press release, email &mdash; any format, in the authentic brand voice.',api:'text-gen',special:'textgen'}
+  'text-gen':{title:'Text Generator',desc:'Briefing in, finished text out. LinkedIn, speech, press release, email &mdash; any format, in the authentic brand voice.',api:'text-gen',special:'textgen'},
+  'pre-meeting':{title:'Pre-Meeting Brief',desc:'Meeting in 1 hour? Get a complete brief: the 3 hardest moments, your opening line, key messages, what not to say, and a stakeholder map.',api:'pre-meeting',special:'premeeting'}
 };
 
 function goModule(name,prefill){
@@ -859,13 +963,15 @@ function goModule(name,prefill){
   document.getElementById('mod-desc').innerHTML=def.desc;
   const form=document.getElementById('mod-form');
   if(def.special==='textgen')buildTextGen(prefill,form);
+  else if(def.special==='premeeting')buildPreMeeting(prefill,form);
   else buildForm(name,def,prefill,form);
   goPage('module');
 }
 
 function buildForm(name,def,prefill,form){
   let h='';
-  if(def.alert)h+=`<div class="crisis-alert">&#128308; Crisis Mode: you will receive 3 ready-to-use response strategies. Choose and adapt.</div>`;
+  if(def.alert)h+=`<div class="crisis-alert">&#128308; Crisis Mode: you will receive 3 ready-to-use response strategies. Choose and adapt.</div>`+privBadge();
+  else if(name==='risk'||name==='stress')h+=privBadge();
   if(def.people&&people.length)h+=buildPeopleSelector();
   h+=`<div class="upzone" onclick="document.getElementById('mf-${name}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload document</strong> &mdash; .txt, .pdf, .docx (optional)</div><input type="file" id="mf-${name}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'${def.mf}','mt-${name}')"></div>`;
   h+=`<div class="ftags" id="mt-${name}"></div>`;
@@ -947,6 +1053,7 @@ async function runMod(name){
   else if(name==='debrief'){module='debrief';rid='debrief-r';bid='debrief-b';const orig=g('db-orig');const fb=g('db-feedback');if(!orig||!fb)return alert('Please enter both the original communication and the real feedback.');data={original:orig,feedback:fb+context,context:g('db-ctx')};}
   else if(name==='review'){module='pr';rid='review-r';bid='review-b';const t=g('pr-in');if(!t)return alert('Please enter text.');data={text:t+context,role:g('pr-role'),format:g('pr-fmt')};}
   else if(name==='recognition'){module='rw';rid='recognition-r';bid='recognition-b';const t=g('rw-in');if(!t)return alert('Please enter text.');data={text:t+context,type:g('rw-type'),format:g('rw-fmt')};}
+  else if(name==='pre-meeting'){module='pre-meeting';rid='pre-meeting-r';bid='pre-meeting-b';const sit=g('pm-sit');if(!sit)return alert('Please describe the meeting or situation.');const pCtx=getPeopleContext(getSelectedPeople());data={situation:sit,datetime:g('pm-dt'),format:g('pm-fmt'),participants:g('pm-part'),goal:g('pm-goal'),text:g('pm-bg'),peopleContext:pCtx+memCtx};}
   else return;
 
   const box=document.getElementById(rid),body=document.getElementById(bid);
@@ -958,6 +1065,7 @@ async function runMod(name){
     const d=await r.json();if(!r.ok)throw new Error(d.error);
     body.textContent=d.result;
     if(module==='vs-cal')voiceProf=d.result;
+    if(['crisis','si','st'].includes(module))showDebriefNudge(module,rid);
     loadStats();
   }catch(e){body.textContent='Error: '+e.message;}
 }
@@ -1015,6 +1123,81 @@ function renderVids(){
   grid.innerHTML=VIDS.map(m=>{const src=stored[m.id]||'';return `<div class="vc${src?' hv':''}"><div class="vthumb">${src?`<video src="${src}" controls></video>`:`<div class="vph"><div style="font-size:28px;color:var(--dm);margin-bottom:6px">&#9654;</div><div style="font-size:13px;font-weight:600;margin-bottom:2px">${m.name}</div><div style="font-size:12px;color:var(--mu)">${m.sub}</div></div>`}</div><div class="vfoot"><span class="vfn">${m.name}</span><button class="vubtn" onclick="document.getElementById('vf-${m.id}').click()">Upload</button></div><input type="file" id="vf-${m.id}" accept="video/*" onchange="saveVid('${m.id}',this)"></div>`;}).join('');
 }
 function saveVid(id,input){const f=input.files[0];if(!f)return;const reader=new FileReader();reader.onload=e=>{const s=JSON.parse(localStorage.getItem('riq-vids')||'{}');s[id]=e.target.result;localStorage.setItem('riq-vids',JSON.stringify(s));renderVids();};reader.readAsDataURL(f);}
+
+// PRE-MEETING FORM
+function buildPreMeeting(prefill,form){
+  form.innerHTML=`
+  ${people.length?buildPeopleSelector():''}
+  <div class="fg2"><label class="fl2">Meeting / Situation</label><input type="text" id="pm-sit" placeholder="e.g. Q3 all-hands after layoffs, investor call about missed targets, media interview"></div>
+  <div class="row2">
+    <div class="fg2"><label class="fl2">Date &amp; Time</label><input type="text" id="pm-dt" placeholder="e.g. Today 14:00"></div>
+    <div class="fg2"><label class="fl2">Format</label><select id="pm-fmt"><option>In-person</option><option>Video call</option><option>Panel / Stage</option><option>Media interview</option><option>Board meeting</option><option>Town hall</option></select></div>
+  </div>
+  <div class="fg2"><label class="fl2">Participants</label><input type="text" id="pm-part" placeholder="e.g. CFO, Works council, 3 journalists from NZZ"></div>
+  <div class="fg2"><label class="fl2">My goal for this meeting</label><input type="text" id="pm-goal" placeholder="e.g. Get budget approval, defuse tension, announce restructuring without panic"></div>
+  <div class="fg2"><label class="fl2">Background / Context (optional)</label><textarea id="pm-bg" style="min-height:100px" placeholder="Paste any relevant context: recent emails, previous meeting notes, known tensions..."></textarea></div>
+  <button class="runbtn" onclick="runMod('pre-meeting')">Generate Brief</button>
+  <div class="rbox" id="pre-meeting-r"><div class="rhead"><span class="rlbl">Pre-Meeting Brief</span><div class="rbtns"><button class="cpbtn" onclick="cp('pre-meeting-b')">Copy</button></div></div><div class="rbody" id="pre-meeting-b"></div></div>`;
+  if(prefill){const el=document.getElementById('pm-sit');if(el)el.value=prefill;}
+}
+
+// MODAL TABS
+function switchMTab(btn,panelId){
+  btn.closest('.mtabs').querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+  btn.closest('.modal').querySelectorAll('.mtabpanel').forEach(p=>p.classList.remove('active'));
+  document.getElementById(panelId).classList.add('active');
+}
+
+// QUICK ACTIONS
+function quickAction(text){
+  document.getElementById('router-input').value=text;
+  routePrompt();
+}
+
+// VOICE INPUT
+let voiceRec=null;
+function toggleVoice(){
+  const btn=document.getElementById('voice-btn');
+  if(!('SpeechRecognition' in window||'webkitSpeechRecognition' in window)){alert('Voice input is not supported in this browser. Please use Chrome.');return;}
+  if(voiceRec){voiceRec.stop();voiceRec=null;btn.classList.remove('recording');return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  voiceRec=new SR();voiceRec.lang='en-US';voiceRec.continuous=false;voiceRec.interimResults=false;
+  voiceRec.onresult=e=>{const t=e.results[0][0].transcript;const inp=document.getElementById('router-input');inp.value=(inp.value?inp.value+' ':'')+t;};
+  voiceRec.onend=()=>{voiceRec=null;btn.classList.remove('recording');};
+  voiceRec.onerror=()=>{voiceRec=null;btn.classList.remove('recording');};
+  voiceRec.start();btn.classList.add('recording');
+}
+
+// HEALTH SCORE
+async function generateHealthScore(){
+  const btn=document.getElementById('hs-btn');const score=document.getElementById('hs-score');const result=document.getElementById('hs-result');
+  btn.textContent='Generating...';btn.disabled=true;score.textContent='...';result.classList.remove('show');
+  try{
+    const r=await api('/api/analyze/health-score'+(clientId?'?clientId='+clientId:''));
+    const d=await r.json();
+    const match=d.result.match(/(\d+\.?\d*)\/10/);
+    score.textContent=match?match[1]:'?';
+    result.textContent=d.result;result.classList.add('show');
+  }catch(e){score.textContent='!';result.textContent='Error: '+e.message;result.classList.add('show');}
+  btn.textContent='Refresh';btn.disabled=false;
+}
+
+// SHOW HEALTH SCORE WIDGET WHEN CLIENT SELECTED
+const _origSwitchClient=switchClient;
+// (done inline in switchClient below)
+
+// AUTO-DEBRIEF NUDGE
+const DEBRIEF_MODULES=['crisis','impact','stress'];
+function showDebriefNudge(modName,resultId){
+  const box=document.getElementById(resultId);if(!box)return;
+  let nudge=document.getElementById('dn-'+resultId);
+  if(!nudge){nudge=document.createElement('div');nudge.className='debrief-nudge';nudge.id='dn-'+resultId;box.after(nudge);}
+  nudge.innerHTML=`<div class="debrief-nudge-text"><strong>Debrief this later?</strong><br>After the meeting or announcement, run a Debriefing to capture what actually happened.</div><button class="dn-btn" onclick="goModule('debrief')">Open Debriefing</button><button class="dn-dismiss" onclick="this.closest('.debrief-nudge').classList.remove('show')">&times;</button>`;
+  nudge.classList.add('show');
+}
+
+// PRIVACY BADGE HTML
+function privBadge(){return '<div class="priv-badge">&#128274; Data not stored for AI training &mdash; results auto-deleted after 30 days</div>';}
 
 // KEYBOARD
 document.getElementById('adv-pw').addEventListener('keydown',e=>{if(e.key==='Enter')loginAdvisor();});

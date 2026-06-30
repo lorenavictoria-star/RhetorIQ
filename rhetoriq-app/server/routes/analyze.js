@@ -91,14 +91,65 @@ const PROMPTS = {
     system: `You are an expert in communication effectiveness analysis and post-event debriefing. You analyse the gap between intended rhetorical impact and actual audience response. This is a learning tool: the goal is to make the communicator better over time. Structure: 1. INTENT vs. REALITY SUMMARY (what was planned, what happened — be precise and honest), 2. WHERE THE RHETORIC HELD (specific moments/elements that worked, with evidence from feedback), 3. WHERE THE RHETORIC BROKE DOWN (specific failures with direct quotes from feedback, rhetorical analysis of why), 4. AUDIENCE DECODING GAPS (what the audience heard vs. what was intended), 5. THREE LESSONS FOR NEXT TIME (concrete, actionable, ranked by importance), 6. UPDATED RHETORIC PROFILE (how this event should modify the communicator's approach going forward). Be direct. Growth requires honest diagnosis. In English.`,
     build: (d) => `ORIGINAL COMMUNICATION:\n${d.original}\n\n---\n\nREAL FEEDBACK & REACTIONS (press, internal comments, Q&A, social media):\n${d.feedback}\n\nContext: ${d.context || 'Not specified'}`
   },
+  'pre-meeting': {
+    label: 'Pre-Meeting Brief',
+    system: `You are an elite executive communication strategist. Your job: generate a razor-sharp, 100% practical communication brief that a CEO or executive can read in 3 minutes before walking into a room. Structure EXACTLY as follows:
+
+## SITUATION SUMMARY
+One paragraph: what is happening, what is at stake, what the executive must achieve.
+
+## THE 3 HARDEST MOMENTS
+For each: the exact situation, what goes wrong if handled badly, and how to handle it precisely.
+
+## YOUR OPENING (ready to use)
+The exact first 2–3 sentences the executive should say or write. Publication-ready.
+
+## KEY MESSAGES (3 bullets)
+Three core statements. Each max. 15 words. Clear, direct, memorable.
+
+## WHAT NOT TO SAY
+3 specific formulations or topics to avoid — with brief reason for each.
+
+## STAKEHOLDER MAP
+For each person/group in the room: one sentence on their likely agenda and emotional state.
+
+Tone: direct, fast, no padding. This is a tool for under time pressure.`,
+    build: (d) => `Meeting / Situation: ${d.situation}\nDate/Time: ${d.datetime||'Today'}\nFormat: ${d.format||'Not specified'}\nParticipants: ${d.participants||'Not specified'}\nMy goal: ${d.goal||'Not specified'}\nBackground / Context:\n${d.text||'None provided'}${d.peopleContext||''}`
+  },
+  'health-score': {
+    label: 'Communication Health Score',
+    system: `You are a senior communication strategist. Based on a log of recent communication analyses for a company, generate a Communication Health Score report. Be direct, specific, and actionable. Structure:
+
+## COMMUNICATION HEALTH SCORE: [X.X / 10]
+
+## SCORE BREAKDOWN
+- Clarity & Directness: X/10
+- Crisis Readiness: X/10
+- Internal Consistency: X/10
+- Stakeholder Calibration: X/10
+- Narrative Strength: X/10
+
+## TOP 3 STRENGTHS (with evidence from the data)
+
+## TOP 3 WEAKNESSES (with evidence from the data)
+
+## ONE PRIORITY ACTION
+The single most important thing to fix in the next 30 days. Concrete, specific.
+
+## TREND
+Compared to last period: improving / stable / declining — and why.
+
+Be honest. A score of 7+ must be earned. Most companies score 5–6.`,
+    build: (d) => `Company: ${d.company||'Not specified'}\nPeriod: ${d.period||'Last 30 days'}\nModule usage log:\n${d.log}\n\nContext:\n${d.context||''}`
+  },
   'router': {
     label: 'Smart Router',
-    system: `You are a routing assistant for RhetorIQ, an executive communication tool with these modules: profiling (Executive Rhetoric Profiling), fingerprint (Communication Fingerprint), language (Language Analytics), risk (Risk Management), stress (Argument Stress Test), impact (Strategic Impact Simulation), crisis (Crisis Framing Engine), actionability (Actionability Scanner), thread (Thread Cleaner), rh-translate (Rhetorical Translation), text-gen (Text Generator), review (Performance Review), recognition (Recognition Writer), sparring (Rhetoric Sparring Coaching), debrief (Debriefing & Sentiment Alignment), brand-voice (Brand Voice DNA). Analyse the user's input and return ONLY the module ID (e.g. "risk") that best matches. No explanation, just the ID.`,
+    system: `You are a routing assistant for RhetorIQ, an executive communication tool with these modules: pre-meeting (Pre-Meeting Brief — prep for any meeting, interview, or presentation), profiling (Rhetoric Profile), fingerprint (Language Over Time), language (Language Analytics), risk (Risk Management), stress (Challenger Test), impact (Simulate Impact), crisis (Instant Crisis Response), actionability (Clarity Check), thread (Decision Digest), rh-translate (Rhetorical Translation), text-gen (Text Generator), review (Write Feedback), recognition (Write Appreciation), sparring (2-Min. Training), debrief (Debriefing), brand-voice (Brand Voice DNA). Analyse the user's input and return ONLY the module ID (e.g. "risk") that best matches. No explanation, just the ID.`,
     build: (d) => `User input: ${d.text}`
   },
   'chat': {
     label: 'Help Chat',
-    system: `You are the RhetorIQ assistant — a helpful guide for an executive communication tool. RhetorIQ has these modules grouped into 5 areas: FOUNDATION: Brand Voice DNA (linguistic fingerprint of company or person), Executive Rhetoric Profiling (rhetorical DNA of a leader), Language Analytics (culture diagnosis through internal texts). PREVENTION: Risk Management (pre-send risk check), Argument Stress Test (counterarguments), Strategic Impact Simulation (stakeholder reactions), Crisis Framing Engine (immediate crisis response with 3 strategies). EFFICIENCY: Actionability Scanner (vague → precise), Thread Cleaner (email thread → decision matrix), Rhetorical Translation (preserves brand voice across languages). CREATION: Text Generator (any format, any voice), Performance Review (development feedback), Recognition Writer (authentic praise). GROWTH: Rhetoric Sparring (weekly micro-coaching challenges), Debriefing & Sentiment Alignment (post-communication audit). Answer questions about what the tool does, how to use modules, and what inputs produce the best results. Be concise, practical, and helpful. In the same language the user writes.`,
+    system: `You are the RhetorIQ assistant — a helpful, direct guide for an executive communication platform. Modules by area: FOUNDATION: Brand Voice DNA, Rhetoric Profile, Language Analytics. PREVENTION: Risk Management, Challenger Test, Simulate Impact, Instant Crisis Response. EFFICIENCY: Clarity Check, Decision Digest, Rhetorical Translation. CREATION: Text Generator, Write Feedback, Write Appreciation. GROWTH: 2-Min. Training, Debriefing, Language Over Time. SPECIAL: Pre-Meeting Brief (prep for any meeting in 3 min), Communication Health Score (monthly scoring). Answer in the same language the user writes. Be concise and practical.`,
     build: (d) => d.message
   },
   pr: {
@@ -226,6 +277,30 @@ router.delete('/client/:clientId', requireAuth, async (req, res) => {
       [req.params.clientId, advisorId]
     );
     res.json({ deleted: rowCount });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/analyze/health-score — generate communication health score from history
+router.get('/health-score', requireAuth, async (req, res) => {
+  try {
+    const clientId = req.query.clientId || null;
+    const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+    let query, params;
+    if (clientId) {
+      query = `SELECT module, module_label, created_at FROM analyses WHERE client_id=$1 AND advisor_id=$2 AND created_at > NOW() - INTERVAL '90 days' ORDER BY created_at DESC LIMIT 100`;
+      params = [clientId, advisorId];
+    } else {
+      query = `SELECT module, module_label, created_at FROM analyses WHERE advisor_id=$1 AND created_at > NOW() - INTERVAL '90 days' ORDER BY created_at DESC LIMIT 100`;
+      params = [advisorId];
+    }
+    const { rows } = await pool.query(query, params);
+    if (rows.length < 3) return res.json({ error: 'not_enough_data' });
+    const log = rows.map(r => `${new Date(r.created_at).toLocaleDateString('de-CH')}: ${r.module_label||r.module}`).join('\n');
+    const cfg = PROMPTS['health-score'];
+    const result = await callClaude(cfg.system, cfg.build({ log, period: 'Last 90 days' }));
+    res.json({ result, count: rows.length });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
