@@ -8,739 +8,707 @@
 <title>RhetorIQ</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500;600&display=swap');
-:root {
-  --bg:#ffffff; --surface:#f7f7f5; --border:#e5e5e3;
-  --text:#111; --muted:#888; --dim:#bbb;
-  --safe-top:env(safe-area-inset-top); --safe-bottom:env(safe-area-inset-bottom);
-}
+:root{--bg:#fff;--sf:#f7f7f5;--bd:#e5e5e3;--tx:#111;--mu:#888;--dm:#bbb;--red:#c00;--safe-top:env(safe-area-inset-top);--safe-bottom:env(safe-area-inset-bottom)}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
-body{font-size:15px;line-height:1.6}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);font-size:15px;line-height:1.6}
 
 /* LOGIN */
 #login-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px}
 #login-screen.hidden{display:none}
-.login-box{width:100%;max-width:380px}
-.login-logo{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;margin-bottom:4px}
-.login-tagline{font-size:13px;color:var(--muted);margin-bottom:40px}
-.field-group{margin-bottom:16px}
-.field-label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:6px}
-.field-input{width:100%;padding:14px 16px;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:15px;color:var(--text);background:var(--surface);outline:none;border-radius:4px}
-.field-input:focus{border-color:#111}
-.login-btn{width:100%;padding:15px;background:#111;color:#fff;border:none;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;cursor:pointer;border-radius:4px;margin-top:8px}
-.login-btn:hover{background:#333}
-.login-err{color:#c00;font-size:13px;margin-top:8px;display:none}
-.login-switch{text-align:center;margin-top:20px;font-size:13px;color:var(--muted)}
-.login-switch a{color:#111;cursor:pointer;text-decoration:underline}
+.lbox{width:100%;max-width:380px}
+.llogo{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;margin-bottom:4px}
+.ltag{font-size:13px;color:var(--mu);margin-bottom:40px}
+.fl{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:6px}
+.fi{width:100%;padding:14px 16px;border:1.5px solid var(--bd);font-family:'Inter',sans-serif;font-size:15px;color:var(--tx);background:var(--sf);outline:none;border-radius:4px}
+.fi:focus{border-color:var(--tx)}
+.fg{margin-bottom:16px}
+.lbtn{width:100%;padding:15px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;cursor:pointer;border-radius:4px;margin-top:8px}
+.lbtn:hover{background:#333}
+.lerr{color:var(--red);font-size:13px;margin-top:8px;display:none}
+.lsw{text-align:center;margin-top:20px;font-size:13px;color:var(--mu)}
+.lsw a{color:var(--tx);cursor:pointer;text-decoration:underline}
 #client-form{display:none}
 
-/* APP SHELL */
+/* SHELL */
 .app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 
 /* HEADER */
-.header{flex-shrink:0;border-bottom:1.5px solid var(--border);padding:0 32px;padding-top:var(--safe-top);height:calc(60px + var(--safe-top));display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
-.header-logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;cursor:pointer}
-.header-nav{display:flex;gap:4px;align-items:center}
-.nav-btn{padding:8px 14px;font-size:13px;font-weight:500;color:var(--muted);background:none;border:none;cursor:pointer;border-radius:4px;font-family:'Inter',sans-serif}
-.nav-btn:hover{background:var(--surface);color:var(--text)}
-.nav-btn.active{color:var(--text);background:var(--surface)}
-.nav-btn.advisor-only{display:none}
-body.advisor .nav-btn.advisor-only{display:inline-block}
-.header-user{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:12px}
-.signout-btn{font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline;background:none;border:none;font-family:'Inter',sans-serif}
-.ws-dot{width:7px;height:7px;border-radius:50%;background:var(--dim);display:inline-block}
-.ws-dot.on{background:#4a4}
+.hdr{flex-shrink:0;border-bottom:1.5px solid var(--bd);padding:0 32px;padding-top:var(--safe-top);height:calc(60px + var(--safe-top));display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
+.hlogo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;cursor:pointer}
+.hnav{display:flex;gap:4px}
+.nb{padding:8px 14px;font-size:13px;font-weight:500;color:var(--mu);background:none;border:none;cursor:pointer;border-radius:4px;font-family:'Inter',sans-serif}
+.nb:hover{background:var(--sf);color:var(--tx)}
+.nb.active{color:var(--tx);background:var(--sf)}
+.nb.ao{display:none}
+body.adv .nb.ao{display:inline-block}
+.huser{font-size:12px;color:var(--mu);display:flex;align-items:center;gap:12px}
+.sout{font-size:12px;color:var(--mu);cursor:pointer;text-decoration:underline;background:none;border:none;font-family:'Inter',sans-serif}
+.wsd{width:7px;height:7px;border-radius:50%;background:var(--dm);display:inline-block}
+.wsd.on{background:#4a4}
 
 /* CLIENT BAR */
-.client-bar{display:none;background:var(--surface);border-bottom:1px solid var(--border);padding:10px 32px;align-items:center;gap:12px;flex-shrink:0}
-body.advisor .client-bar{display:flex}
-.client-bar select{padding:8px 12px;border:1.5px solid var(--border);background:#fff;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);border-radius:4px;outline:none;cursor:pointer}
-.client-bar-label{font-size:13px;color:var(--muted)}
-.new-client-btn{margin-left:auto;padding:8px 18px;background:#111;color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px}
-.new-client-btn:hover{background:#333}
+.cbar{display:none;background:var(--sf);border-bottom:1px solid var(--bd);padding:10px 32px;align-items:center;gap:12px;flex-shrink:0}
+body.adv .cbar{display:flex}
+.cbar select{padding:8px 12px;border:1.5px solid var(--bd);background:#fff;font-family:'Inter',sans-serif;font-size:14px;color:var(--tx);border-radius:4px;outline:none;cursor:pointer}
+.cbar-lbl{font-size:13px;color:var(--mu)}
+.ncbtn{margin-left:auto;padding:8px 18px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px}
+.ncbtn:hover{background:#333}
 
 /* CONTENT */
 .content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.page{display:none;padding:36px 32px;max-width:860px;margin:0 auto;padding-bottom:calc(36px + var(--safe-bottom))}
+.page{display:none;padding:36px 32px;max-width:900px;margin:0 auto;padding-bottom:calc(36px + var(--safe-bottom))}
 .page.active{display:block}
 
-/* HOME */
-.smart-router-section{background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:28px;margin-bottom:36px}
-.section-eyebrow{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px}
-.smart-router-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;margin-bottom:6px}
-.smart-router-sub{font-size:14px;color:var(--muted);margin-bottom:18px}
+/* SMART ROUTER */
+.router-box{background:var(--sf);border:1.5px solid var(--bd);border-radius:8px;padding:28px;margin-bottom:36px}
+.eyebrow{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:8px}
+.router-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;margin-bottom:6px}
+.router-sub{font-size:14px;color:var(--mu);margin-bottom:18px}
 .router-row{display:flex;gap:10px;align-items:flex-start}
-.router-textarea{flex:1;padding:14px 16px;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:#fff;resize:none;height:80px;outline:none;border-radius:4px}
-.router-textarea:focus{border-color:#111}
-.router-btn{padding:14px 22px;background:#111;color:#fff;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border-radius:4px;white-space:nowrap;flex-shrink:0}
-.router-btn:hover{background:#333}
-.router-status{font-size:13px;color:var(--muted);margin-top:10px;min-height:20px}
+.rtarea{flex:1;padding:14px 16px;border:1.5px solid var(--bd);font-family:'Inter',sans-serif;font-size:14px;color:var(--tx);background:#fff;resize:none;height:80px;outline:none;border-radius:4px}
+.rtarea:focus{border-color:var(--tx)}
+.rbtn{padding:14px 22px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border-radius:4px;white-space:nowrap;flex-shrink:0}
+.rbtn:hover{background:#333}
+.rstat{font-size:13px;color:var(--mu);margin-top:10px;min-height:20px}
 
-.modules-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:16px}
-.module-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.module-card{border:1.5px solid var(--border);border-radius:8px;padding:22px;cursor:pointer;background:#fff;transition:all 0.15s}
-.module-card:hover{border-color:#111;box-shadow:0 2px 12px rgba(0,0,0,0.08)}
-.card-tag{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px}
-.card-name{font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px}
-.card-desc{font-size:13px;color:var(--muted);line-height:1.55}
-.module-card.featured{grid-column:span 2;background:var(--surface)}
+/* STATS */
+.stats{display:flex;gap:12px;margin-bottom:32px}
+.stat{text-align:center;flex:1;padding:18px;border:1.5px solid var(--bd);border-radius:8px;background:#fff}
+.sn{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;line-height:1}
+.sl{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-top:4px}
+.stat.ao{display:none}
+body.adv .stat.ao{display:block}
+
+/* MODULE GROUPS */
+.group{margin-bottom:32px}
+.group-header{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1.5px solid var(--bd)}
+.group-num{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--dm)}
+.group-name{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--tx)}
+.group-desc{font-size:12px;color:var(--mu);margin-left:auto}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mcard{border:1.5px solid var(--bd);border-radius:8px;padding:20px;cursor:pointer;background:#fff;transition:all .15s;position:relative}
+.mcard:hover{border-color:var(--tx);box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.mcard.new::after{content:'NEW';position:absolute;top:12px;right:12px;font-size:9px;font-weight:700;letter-spacing:.1em;background:var(--tx);color:#fff;padding:2px 7px;border-radius:10px}
+.mcard.red-btn{border-color:#e8c0c0;background:#fff8f8}
+.mcard.red-btn:hover{border-color:var(--red);box-shadow:0 2px 12px rgba(200,0,0,.08)}
+.ctag{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:8px}
+.cname{font-size:16px;font-weight:600;color:var(--tx);margin-bottom:5px}
+.cdesc{font-size:13px;color:var(--mu);line-height:1.5}
+.mcard.span2{grid-column:span 2}
 
 /* MODULE PAGE */
-.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;margin-bottom:28px;background:none;border:none;font-family:'Inter',sans-serif;padding:0}
-.back-btn:hover{color:var(--text)}
-.module-title{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:400;margin-bottom:8px}
-.module-desc{font-size:15px;color:var(--muted);max-width:600px;margin-bottom:28px}
-.form-label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:8px}
-.form-group{margin-bottom:20px}
-textarea{width:100%;padding:14px 16px;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--surface);resize:vertical;min-height:140px;outline:none;border-radius:4px;line-height:1.7}
-textarea:focus{border-color:#111;background:#fff}
-textarea::placeholder{color:var(--dim)}
-select,input[type="text"]{width:100%;padding:12px 14px;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--surface);outline:none;border-radius:4px;-webkit-appearance:none}
-select:focus,input[type="text"]:focus{border-color:#111;background:#fff}
-.row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.run-btn{padding:15px 36px;background:#111;color:#fff;border:none;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;cursor:pointer;border-radius:4px;margin-top:4px}
-.run-btn:hover{background:#333}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--mu);cursor:pointer;margin-bottom:28px;background:none;border:none;font-family:'Inter',sans-serif;padding:0}
+.back:hover{color:var(--tx)}
+.mtitle{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:400;margin-bottom:8px}
+.mdesc{font-size:15px;color:var(--mu);max-width:620px;margin-bottom:28px}
+.fl2{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:8px}
+.fg2{margin-bottom:20px}
+textarea{width:100%;padding:14px 16px;border:1.5px solid var(--bd);font-family:'Inter',sans-serif;font-size:14px;color:var(--tx);background:var(--sf);resize:vertical;min-height:140px;outline:none;border-radius:4px;line-height:1.7}
+textarea:focus{border-color:var(--tx);background:#fff}
+textarea::placeholder{color:var(--dm)}
+select,input[type=text]{width:100%;padding:12px 14px;border:1.5px solid var(--bd);font-family:'Inter',sans-serif;font-size:14px;color:var(--tx);background:var(--sf);outline:none;border-radius:4px;-webkit-appearance:none}
+select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.runbtn{padding:15px 36px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;cursor:pointer;border-radius:4px;margin-top:4px}
+.runbtn:hover{background:#333}
+.runbtn.crisis-btn{background:var(--red);border-color:var(--red)}
+.runbtn.crisis-btn:hover{background:#a00}
 
-/* FILE UPLOAD */
-.upload-zone{border:1.5px dashed var(--border);border-radius:6px;padding:14px 18px;margin-bottom:16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.15s}
-.upload-zone:hover{border-color:#111;background:var(--surface)}
-.upload-icon{font-size:20px;color:var(--dim)}
-.upload-text{font-size:13px;color:var(--muted)}
-.upload-text strong{color:var(--text)}
-.upload-zone input[type="file"]{display:none}
-.file-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-.file-tag{font-size:12px;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:20px;display:flex;align-items:center;gap:6px;color:var(--muted)}
-.file-tag button{background:none;border:none;cursor:pointer;font-size:14px;color:var(--dim);line-height:1}
+/* UPLOAD */
+.upzone{border:1.5px dashed var(--bd);border-radius:6px;padding:14px 18px;margin-bottom:16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s}
+.upzone:hover{border-color:var(--tx);background:var(--sf)}
+.upzone input[type=file]{display:none}
+.upi{font-size:20px;color:var(--dm)}
+.upt{font-size:13px;color:var(--mu)}
+.upt strong{color:var(--tx)}
+.ftags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.ftag{font-size:12px;padding:4px 10px;background:var(--sf);border:1px solid var(--bd);border-radius:20px;display:flex;align-items:center;gap:6px;color:var(--mu)}
+.ftag button{background:none;border:none;cursor:pointer;font-size:14px;color:var(--dm);line-height:1}
 
 /* RESULT */
-.result-box{display:none;margin-top:24px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden}
-.result-box.show{display:block}
-.result-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border)}
-.result-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)}
-.copy-btn{padding:6px 14px;background:#fff;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:4px;color:var(--text)}
-.copy-btn:hover{border-color:#111}
-.result-body{padding:22px;font-size:14px;line-height:1.85;white-space:pre-wrap;color:var(--text)}
-.spinner{display:flex;gap:5px;padding:22px;align-items:center}
-.dot{width:5px;height:5px;border-radius:50%;background:#111;animation:blink 1.2s infinite}
+.rbox{display:none;margin-top:24px;border:1.5px solid var(--bd);border-radius:8px;overflow:hidden}
+.rbox.show{display:block}
+.rhead{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--sf);border-bottom:1px solid var(--bd)}
+.rlbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
+.cpbtn{padding:6px 14px;background:#fff;border:1.5px solid var(--bd);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:4px;color:var(--tx)}
+.cpbtn:hover{border-color:var(--tx)}
+.rbody{padding:22px;font-size:14px;line-height:1.85;white-space:pre-wrap;color:var(--tx)}
+.spin{display:flex;gap:5px;padding:22px;align-items:center}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--tx);animation:blink 1.2s infinite}
 .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,80%,100%{opacity:.15}40%{opacity:1}}
 
-/* BRAND VOICE TOGGLE */
-.toggle-row{display:flex;border:1.5px solid var(--border);border-radius:6px;margin-bottom:24px;overflow:hidden}
-.toggle-btn{flex:1;padding:12px;background:#fff;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;cursor:pointer;color:var(--muted)}
-.toggle-btn.active{background:#111;color:#fff;font-weight:600}
-.brand-section{display:none}
-.brand-section.active{display:block}
+/* CRISIS ALERT STYLE */
+.crisis-alert{background:#fff8f8;border:1.5px solid #e8c0c0;border-radius:8px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;gap:12px}
+.crisis-icon{font-size:24px}
+.crisis-text{font-size:13px;color:#a00;font-weight:500}
 
-/* TEXT GEN TABS */
-.tab-row{display:flex;gap:0;border-bottom:1.5px solid var(--border);margin-bottom:24px}
-.tab{padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;margin-bottom:-1.5px}
-.tab.active{color:#111;border-bottom-color:#111}
+/* BRAND TOGGLE */
+.tog{display:flex;border:1.5px solid var(--bd);border-radius:6px;margin-bottom:24px;overflow:hidden}
+.togbtn{flex:1;padding:12px;background:#fff;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;cursor:pointer;color:var(--mu)}
+.togbtn.active{background:var(--tx);color:#fff;font-weight:600}
+.bsec{display:none}
+.bsec.active{display:block}
 
-/* CLIENTS PAGE */
-.clients-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
-.page-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400}
-.client-card{border:1.5px solid var(--border);border-radius:8px;padding:20px 24px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.client-name{font-size:16px;font-weight:600;margin-bottom:3px}
-.client-meta{font-size:13px;color:var(--muted)}
-.client-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
-.btn-outline{padding:8px 14px;background:#fff;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;border-radius:4px;color:var(--text);font-weight:500}
-.btn-outline:hover{border-color:#111}
-.btn-danger{padding:8px 14px;background:#fff;border:1.5px solid #e00;font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;border-radius:4px;color:#c00;font-weight:500}
-.btn-danger:hover{background:#fff0f0}
-.token-code{font-family:monospace;font-size:11px;background:var(--surface);padding:4px 8px;border-radius:3px;color:var(--muted);margin-top:6px;display:inline-block}
+/* TABS */
+.tabs{display:flex;border-bottom:1.5px solid var(--bd);margin-bottom:24px}
+.tab{padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--mu);cursor:pointer;margin-bottom:-1.5px}
+.tab.active{color:var(--tx);border-bottom-color:var(--tx)}
+
+/* CLIENTS */
+.ph-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.ptitle{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400}
+.cc{border:1.5px solid var(--bd);border-radius:8px;padding:20px 24px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.cn{font-size:16px;font-weight:600;margin-bottom:3px}
+.cm{font-size:13px;color:var(--mu)}
+.ca{display:flex;gap:8px;flex-shrink:0}
+.obtn{padding:8px 14px;background:#fff;border:1.5px solid var(--bd);font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;border-radius:4px;color:var(--tx);font-weight:500}
+.obtn:hover{border-color:var(--tx)}
+.dbtn{padding:8px 14px;background:#fff;border:1.5px solid #e00;font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;border-radius:4px;color:var(--red);font-weight:500}
+.dbtn:hover{background:#fff0f0}
+.tkcode{font-family:monospace;font-size:11px;background:var(--sf);padding:4px 8px;border-radius:3px;color:var(--mu);margin-top:6px;display:inline-block}
 
 /* HISTORY */
-.history-item{padding:16px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px}
-.history-module{font-size:14px;font-weight:500}
-.history-date{font-size:12px;color:var(--muted)}
-.history-badge{font-size:11px;padding:3px 10px;background:var(--surface);border:1px solid var(--border);border-radius:20px;color:var(--muted);white-space:nowrap}
-
-/* STATS BAR */
-.stats-bar{display:flex;gap:12px;margin-bottom:32px}
-.stat{text-align:center;flex:1;padding:18px;border:1.5px solid var(--border);border-radius:8px;background:#fff}
-.stat-n{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;line-height:1}
-.stat-l{font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-top:4px}
-.stat.advisor-only{display:none}
-body.advisor .stat.advisor-only{display:block}
+.hi{padding:16px 0;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.hm{font-size:14px;font-weight:500}
+.hd{font-size:12px;color:var(--mu)}
+.hb{font-size:11px;padding:3px 10px;background:var(--sf);border:1px solid var(--bd);border-radius:20px;color:var(--mu);white-space:nowrap}
 
 /* MODAL */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center;padding:24px}
-.overlay.show{display:flex}
-.modal{background:#fff;border-radius:10px;padding:32px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,0.15)}
-.modal-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;margin-bottom:4px}
-.modal-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
-.modal-field{margin-bottom:16px}
-.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
-.modal-actions button{padding:10px 20px;border-radius:4px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
-.btn-cancel{background:#fff;border:1.5px solid var(--border);color:var(--muted)}
-.btn-confirm{background:#111;border:1.5px solid #111;color:#fff}
-.btn-confirm:hover{background:#333}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center;padding:24px}
+.ov.show{display:flex}
+.modal{background:#fff;border-radius:10px;padding:32px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,.15)}
+.modal h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;margin-bottom:4px}
+.modal p{font-size:13px;color:var(--mu);margin-bottom:24px}
+.mf{margin-bottom:16px}
+.mact{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
+.mact button{padding:10px 20px;border-radius:4px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.mcanc{background:#fff;border:1.5px solid var(--bd);color:var(--mu)}
+.mconf{background:var(--tx);border:1.5px solid var(--tx);color:#fff}
+.mconf:hover{background:#333}
 
 /* VIDEOS */
-.video-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.video-card{border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
-.video-thumb{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;cursor:pointer;background:var(--surface)}
-.video-thumb video{width:100%;height:100%;object-fit:cover;display:none}
-.video-card.has-video .video-thumb video{display:block}
-.video-card.has-video .video-placeholder{display:none}
-.video-placeholder{text-align:center;padding:24px}
-.play-icon{font-size:36px;color:var(--dim);margin-bottom:6px}
-.video-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.video-footer-name{font-size:13px;font-weight:600}
-.upload-video-btn{font-size:12px;padding:5px 12px;background:#fff;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;display:none}
-body.advisor .upload-video-btn{display:block}
-.upload-video-btn:hover{border-color:#111}
-.video-card input[type="file"]{display:none}
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.vc{border:1.5px solid var(--bd);border-radius:8px;overflow:hidden;background:var(--sf)}
+.vthumb{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;flex-direction:column;background:var(--sf)}
+.vthumb video{width:100%;height:100%;object-fit:cover;display:none}
+.vc.hv .vthumb video{display:block}
+.vc.hv .vph{display:none}
+.vph{text-align:center;padding:24px}
+.vfoot{padding:12px 16px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center}
+.vfn{font-size:13px;font-weight:600}
+.vubtn{font-size:12px;padding:5px 12px;background:#fff;border:1.5px solid var(--bd);border-radius:4px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;display:none}
+body.adv .vubtn{display:block}
+.vubtn:hover{border-color:var(--tx)}
+.vc input[type=file]{display:none}
 
-/* EMPTY STATE */
-.empty{text-align:center;padding:60px 24px;color:var(--muted)}
-.empty-icon{font-size:40px;margin-bottom:12px;opacity:0.4}
-.empty-text{font-size:15px}
+/* EMPTY */
+.empty{text-align:center;padding:60px 24px;color:var(--mu)}
+.ei{font-size:40px;margin-bottom:12px;opacity:.4}
 
 /* CHATBOT */
-#chat-btn{position:fixed;bottom:calc(24px + var(--safe-bottom));right:24px;width:52px;height:52px;background:#111;border:none;border-radius:50%;cursor:pointer;z-index:200;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.2);font-size:22px;color:#fff}
-#chat-btn:hover{background:#333}
-#chat-panel{position:fixed;bottom:calc(88px + var(--safe-bottom));right:24px;width:340px;max-height:480px;background:#fff;border:1.5px solid var(--border);border-radius:12px;z-index:200;display:none;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,0.12);overflow:hidden}
-#chat-panel.open{display:flex}
-.chat-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-.chat-head-title{font-size:14px;font-weight:600}
-.chat-head-sub{font-size:11px;color:var(--muted)}
-.chat-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);line-height:1}
-.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
-.chat-msg{font-size:13px;line-height:1.6;padding:10px 13px;border-radius:8px;max-width:88%}
-.chat-msg.user{background:#111;color:#fff;align-self:flex-end;border-radius:8px 8px 2px 8px}
-.chat-msg.bot{background:var(--surface);color:var(--text);align-self:flex-start;border-radius:8px 8px 8px 2px}
-.chat-foot{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
-.chat-input{flex:1;padding:9px 12px;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:13px;outline:none;border-radius:6px;color:var(--text)}
-.chat-input:focus{border-color:#111}
-.chat-send{padding:9px 16px;background:#111;color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px}
+#cbtn{position:fixed;bottom:calc(24px + var(--safe-bottom));right:24px;width:52px;height:52px;background:var(--tx);border:none;border-radius:50%;cursor:pointer;z-index:200;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.2);font-size:22px;color:#fff}
+#cbtn:hover{background:#333}
+#cpanel{position:fixed;bottom:calc(88px + var(--safe-bottom));right:24px;width:340px;max-height:480px;background:#fff;border:1.5px solid var(--bd);border-radius:12px;z-index:200;display:none;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.12);overflow:hidden}
+#cpanel.open{display:flex}
+.chd{padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.cht{font-size:14px;font-weight:600}
+.chs{font-size:11px;color:var(--mu)}
+.chc{background:none;border:none;font-size:18px;cursor:pointer;color:var(--mu)}
+.cms{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.cm2{font-size:13px;line-height:1.6;padding:10px 13px;border-radius:8px;max-width:88%}
+.cm2.u{background:var(--tx);color:#fff;align-self:flex-end;border-radius:8px 8px 2px 8px}
+.cm2.b{background:var(--sf);color:var(--tx);align-self:flex-start;border-radius:8px 8px 8px 2px}
+.cft{padding:10px 12px;border-top:1px solid var(--bd);display:flex;gap:8px;flex-shrink:0}
+.cinp{flex:1;padding:9px 12px;border:1.5px solid var(--bd);font-family:'Inter',sans-serif;font-size:13px;outline:none;border-radius:6px;color:var(--tx)}
+.cinp:focus{border-color:var(--tx)}
+.csnd{padding:9px 16px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px}
 
 /* MOBILE */
 @media(max-width:700px){
-  .header{padding:0 18px;padding-top:var(--safe-top)}
-  .header-nav{display:none}
+  .hdr{padding:0 18px;padding-top:var(--safe-top)}
+  .hnav{display:none}
   .page{padding:20px 18px;padding-bottom:calc(80px + var(--safe-bottom))}
-  .module-grid{grid-template-columns:1fr}
-  .module-card.featured{grid-column:span 1}
-  .row-2{grid-template-columns:1fr}
-  .stats-bar{gap:8px}
-  .video-grid{grid-template-columns:1fr}
+  .mgrid{grid-template-columns:1fr}
+  .mcard.span2{grid-column:span 1}
+  .row2{grid-template-columns:1fr}
+  .stats{gap:8px}
+  .vgrid{grid-template-columns:1fr}
   .router-row{flex-direction:column}
-  .client-bar{padding:10px 18px}
-  .mobile-nav{display:flex}
-  #chat-panel{width:calc(100vw - 32px);right:16px}
+  .cbar{padding:10px 18px}
+  .mnav{display:flex}
+  #cpanel{width:calc(100vw - 32px);right:16px}
 }
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1.5px solid var(--border);padding:8px 0;padding-bottom:calc(8px + var(--safe-bottom));z-index:100;justify-content:space-around}
-.m-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;cursor:pointer;min-width:60px}
-.m-nav-icon{font-size:20px;color:var(--dim)}
-.m-nav-label{font-size:10px;color:var(--muted);font-weight:500}
-.m-nav-item.active .m-nav-icon,.m-nav-item.active .m-nav-label{color:#111}
+.mnav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1.5px solid var(--bd);padding:8px 0;padding-bottom:calc(8px + var(--safe-bottom));z-index:100;justify-content:space-around}
+.mni{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;cursor:pointer;min-width:52px}
+.mni-i{font-size:18px;color:var(--dm)}
+.mni-l{font-size:9px;color:var(--mu);font-weight:500}
+.mni.active .mni-i,.mni.active .mni-l{color:var(--tx)}
 </style>
 </head>
 <body>
 
 <!-- LOGIN -->
 <div id="login-screen">
-  <div class="login-box">
-    <div class="login-logo">RhetorIQ</div>
-    <div class="login-tagline">Executive Communication by Lorena Lienhard</div>
+  <div class="lbox">
+    <div class="llogo">RhetorIQ</div>
+    <div class="ltag">Executive Communication by Lorena Lienhard</div>
     <div id="advisor-form">
-      <div class="field-group"><label class="field-label">Email</label><input class="field-input" type="email" id="adv-email" autocomplete="email" placeholder="your@email.com"></div>
-      <div class="field-group"><label class="field-label">Password</label><input class="field-input" type="password" id="adv-pw" autocomplete="current-password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"></div>
-      <button class="login-btn" onclick="loginAdvisor()">Sign in</button>
-      <div class="login-err" id="adv-err"></div>
-      <div class="login-switch">Client? <a onclick="showForm('client-form','advisor-form')">Enter your access token</a></div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="adv-email" autocomplete="email" placeholder="your@email.com"></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="adv-pw" autocomplete="current-password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"></div>
+      <button class="lbtn" onclick="loginAdvisor()">Sign in</button>
+      <div class="lerr" id="adv-err"></div>
+      <div class="lsw">Client? <a onclick="sf('client-form','advisor-form')">Enter your access token</a></div>
     </div>
     <div id="client-form">
-      <div class="field-group"><label class="field-label">Access Token</label><input class="field-input" type="text" id="cl-token" placeholder="Paste your token here"></div>
-      <button class="login-btn" onclick="loginClient()">Open Client View</button>
-      <div class="login-err" id="cl-err"></div>
-      <div class="login-switch"><a onclick="showForm('advisor-form','client-form')">Back to Advisor login</a></div>
+      <div class="fg"><label class="fl">Access Token</label><input class="fi" type="text" id="cl-token" placeholder="Paste your token here"></div>
+      <button class="lbtn" onclick="loginClient()">Open Client View</button>
+      <div class="lerr" id="cl-err"></div>
+      <div class="lsw"><a onclick="sf('advisor-form','client-form')">Back to Advisor login</a></div>
     </div>
   </div>
 </div>
 
-<!-- NEW CLIENT MODAL -->
-<div class="overlay" id="new-client-overlay">
+<!-- MODAL -->
+<div class="ov" id="nc-ov">
   <div class="modal">
-    <div class="modal-title">Add New Client</div>
-    <div class="modal-sub">Create a client workspace with a secure access token.</div>
-    <div class="modal-field"><label class="field-label">Company Name</label><input type="text" id="nc-name" placeholder="e.g. Acme AG"></div>
-    <div class="modal-field"><label class="field-label">Industry</label><select id="nc-industry"><option>Financial Services</option><option>Industry / Manufacturing</option><option>Tech / SaaS</option><option>Healthcare</option><option>Education</option><option>Public Sector</option><option>Other</option></select></div>
-    <div class="modal-field"><label class="field-label">Primary Contact</label><input type="text" id="nc-contact" placeholder="e.g. CEO Martin Meier"></div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-confirm" onclick="addClient()">Create Client</button>
-    </div>
+    <h2>Add New Client</h2>
+    <p>Create a client workspace with a secure access token.</p>
+    <div class="mf"><label class="fl">Company Name</label><input type="text" id="nc-name" placeholder="e.g. Acme AG"></div>
+    <div class="mf"><label class="fl">Industry</label><select id="nc-industry"><option>Financial Services</option><option>Industry / Manufacturing</option><option>Tech / SaaS</option><option>Healthcare</option><option>Education</option><option>Public Sector</option><option>Other</option></select></div>
+    <div class="mf"><label class="fl">Primary Contact</label><input type="text" id="nc-contact" placeholder="e.g. CEO Martin Meier"></div>
+    <div class="mact"><button class="mcanc" onclick="closeModal()">Cancel</button><button class="mconf" onclick="addClient()">Create Client</button></div>
   </div>
 </div>
 
 <!-- APP -->
 <div class="app" id="app" style="display:none">
-  <header class="header">
-    <div class="header-logo" onclick="goHome()">RhetorIQ</div>
-    <nav class="header-nav">
-      <button class="nav-btn active" id="nav-home" onclick="goHome()">Home</button>
-      <button class="nav-btn" id="nav-brand-voice" onclick="goPage('brand-voice')">Brand Voice</button>
-      <button class="nav-btn" id="nav-videos" onclick="goPage('videos')">Tutorials</button>
-      <button class="nav-btn" id="nav-history" onclick="goPage('history');loadHistory()">History</button>
-      <button class="nav-btn advisor-only" id="nav-clients" onclick="goPage('clients')">Clients</button>
+  <header class="hdr">
+    <div class="hlogo" onclick="goHome()">RhetorIQ</div>
+    <nav class="hnav">
+      <button class="nb active" id="nav-home" onclick="goHome()">Home</button>
+      <button class="nb" id="nav-brand-voice" onclick="goPage('brand-voice')">Brand Voice</button>
+      <button class="nb" id="nav-videos" onclick="goPage('videos')">Tutorials</button>
+      <button class="nb" id="nav-history" onclick="goPage('history');loadHistory()">History</button>
+      <button class="nb ao" id="nav-clients" onclick="goPage('clients')">Clients</button>
     </nav>
-    <div class="header-user">
-      <span class="ws-dot" id="ws-dot"></span>
-      <span id="user-name-display"></span>
-      <button class="signout-btn" onclick="logout()">Sign out</button>
+    <div class="huser">
+      <span class="wsd" id="ws-dot"></span>
+      <span id="uname"></span>
+      <button class="sout" onclick="logout()">Sign out</button>
     </div>
   </header>
 
-  <div class="client-bar">
-    <span class="client-bar-label">Client:</span>
+  <div class="cbar">
+    <span class="cbar-lbl">Client:</span>
     <select id="client-select" onchange="switchClient(this.value)"><option value="">Select client</option></select>
-    <button class="new-client-btn" onclick="openModal()">+ New Client</button>
+    <button class="ncbtn" onclick="openModal()">+ New Client</button>
   </div>
 
   <div class="content">
 
     <!-- HOME -->
     <div class="page active" id="page-home">
-      <div class="smart-router-section">
-        <div class="section-eyebrow">Smart Prompt</div>
-        <div class="smart-router-title">What would you like to do?</div>
-        <div class="smart-router-sub">Describe your task &mdash; RhetorIQ automatically opens the right module.</div>
+      <div class="router-box">
+        <div class="eyebrow">Smart Prompt</div>
+        <div class="router-title">What would you like to do?</div>
+        <div class="router-sub">Describe your task &mdash; RhetorIQ automatically opens the right module.</div>
         <div class="router-row">
-          <textarea class="router-textarea" id="router-input" placeholder='e.g. "Check if this press release could cause problems" or "Write a LinkedIn post for our CEO"'></textarea>
-          <button class="router-btn" onclick="routePrompt()">&#8594; Go</button>
+          <textarea class="rtarea" id="router-input" placeholder='e.g. "Check if this press release could cause problems" or "Write a LinkedIn post for our CEO" or "Train our CEO on passive voice"'></textarea>
+          <button class="rbtn" onclick="routePrompt()">&#8594; Go</button>
         </div>
-        <div class="router-status" id="router-status"></div>
+        <div class="rstat" id="rstat"></div>
       </div>
 
-      <div class="stats-bar">
-        <div class="stat advisor-only"><div class="stat-n" id="stat-clients">0</div><div class="stat-l">Clients</div></div>
-        <div class="stat"><div class="stat-n" id="stat-analyses">0</div><div class="stat-l">Analyses</div></div>
-        <div class="stat"><div class="stat-n">12</div><div class="stat-l">Modules</div></div>
+      <div class="stats">
+        <div class="stat ao"><div class="sn" id="stat-clients">0</div><div class="sl">Clients</div></div>
+        <div class="stat"><div class="sn" id="stat-analyses">0</div><div class="sl">Analyses</div></div>
+        <div class="stat"><div class="sn">16</div><div class="sl">Modules</div></div>
       </div>
 
-      <div class="modules-title">All Modules</div>
-      <div class="module-grid">
-        <div class="module-card featured" onclick="goPage('brand-voice')">
-          <div class="card-tag">&#9670; Foundation</div>
-          <div class="card-name">Brand Voice DNA</div>
-          <div class="card-desc">Extract the complete communication fingerprint of a company or person. The master reference for all future content.</div>
+      <!-- GROUP 1: FOUNDATION -->
+      <div class="group">
+        <div class="group-header">
+          <span class="group-num">1</span>
+          <span class="group-name">Foundation</span>
+          <span class="group-desc">Build the linguistic base</span>
         </div>
-        <div class="module-card" onclick="goModule('profiling')"><div class="card-tag">Analysis</div><div class="card-name">Executive Rhetoric Profiling</div><div class="card-desc">Rhetorical DNA of a leader &mdash; argumentation, persuasion patterns, blind spots.</div></div>
-        <div class="module-card" onclick="goModule('fingerprint')"><div class="card-tag">Analysis</div><div class="card-name">Communication Fingerprint</div><div class="card-desc">How does language shift over time &mdash; under pressure, in crisis, at peak performance?</div></div>
-        <div class="module-card" onclick="goModule('language')"><div class="card-tag">Analysis</div><div class="card-name">Language Analytics</div><div class="card-desc">Where does leadership rhetoric and lived culture diverge?</div></div>
-        <div class="module-card" onclick="goModule('risk')"><div class="card-tag">Prevention</div><div class="card-name">Risk Management</div><div class="card-desc">Identify communication risks before anything goes out.</div></div>
-        <div class="module-card" onclick="goModule('stress')"><div class="card-tag">Prevention</div><div class="card-name">Argument Stress Test</div><div class="card-desc">Strongest counterarguments from multiple perspectives.</div></div>
-        <div class="module-card" onclick="goModule('impact')"><div class="card-tag">Prevention</div><div class="card-name">Strategic Impact Simulation</div><div class="card-desc">Simulate stakeholder reactions before any major announcement.</div></div>
-        <div class="module-card" onclick="goModule('actionability')"><div class="card-tag">Prevention</div><div class="card-name">Actionability Scanner</div><div class="card-desc">Translate vague directives into precise, operational language.</div></div>
-        <div class="module-card" onclick="goModule('thread')"><div class="card-tag">Prevention</div><div class="card-name">Thread Cleaner</div><div class="card-desc">50 emails &rarr; one clear decision matrix.</div></div>
-        <div class="module-card featured" onclick="goModule('text-gen')"><div class="card-tag">&#9670; Creation</div><div class="card-name">Text Generator</div><div class="card-desc">LinkedIn, website rewrite, press releases, speeches, B2B/B2C, internal docs &mdash; in the authentic brand voice.</div></div>
-        <div class="module-card" onclick="goModule('review')"><div class="card-tag">Creation</div><div class="card-name">Performance Review</div><div class="card-desc">Keywords in &mdash; rhetorically precise, development-oriented feedback out.</div></div>
-        <div class="module-card" onclick="goModule('recognition')"><div class="card-tag">Creation</div><div class="card-name">Recognition Writer</div><div class="card-desc">Authentic, calibrated recognition &mdash; tailored to the recipient.</div></div>
+        <div class="mgrid">
+          <div class="mcard span2" onclick="goPage('brand-voice')"><div class="ctag">&#9670; Master Reference</div><div class="cname">Brand Voice DNA</div><div class="cdesc">Extract the complete communication fingerprint of a company or individual. The foundation for all other modules.</div></div>
+          <div class="mcard" onclick="goModule('profiling')"><div class="ctag">Analysis</div><div class="cname">Executive Rhetoric Profiling</div><div class="cdesc">Rhetorical DNA of a leader &mdash; argumentation logic, persuasion patterns, blind spots.</div></div>
+          <div class="mcard" onclick="goModule('language')"><div class="ctag">Analysis</div><div class="cname">Language Analytics</div><div class="cdesc">Where does leadership rhetoric and lived culture diverge?</div></div>
+        </div>
       </div>
-    </div>
+
+      <!-- GROUP 2: PREVENTION -->
+      <div class="group">
+        <div class="group-header">
+          <span class="group-num">2</span>
+          <span class="group-name">Prevention</span>
+          <span class="group-desc">Before anything goes out</span>
+        </div>
+        <div class="mgrid">
+          <div class="mcard" onclick="goModule('risk')"><div class="ctag">Pre-Send</div><div class="cname">Risk Management</div><div class="cdesc">Identify communication risks before anything goes out.</div></div>
+          <div class="mcard" onclick="goModule('stress')"><div class="ctag">Preparation</div><div class="cname">Argument Stress Test</div><div class="cdesc">Strongest counterarguments from multiple perspectives.</div></div>
+          <div class="mcard" onclick="goModule('impact')"><div class="ctag">Simulation</div><div class="cname">Strategic Impact Simulation</div><div class="cdesc">Simulate stakeholder reactions before any major announcement.</div></div>
+          <div class="mcard red-btn new" onclick="goModule('crisis')"><div class="ctag" style="color:#a00">&#128308; Crisis Mode</div><div class="cname">Crisis Framing Engine</div><div class="cdesc">Red Button: harde Fakten rein &mdash; drei sofort einsetzbare rhetorische Strategien raus. F&uuml;r die ersten 15 Minuten.</div></div>
+        </div>
+      </div>
+
+      <!-- GROUP 3: EFFICIENCY -->
+      <div class="group">
+        <div class="group-header">
+          <span class="group-num">3</span>
+          <span class="group-name">Efficiency</span>
+          <span class="group-desc">Clarity &amp; precision at speed</span>
+        </div>
+        <div class="mgrid">
+          <div class="mcard" onclick="goModule('actionability')"><div class="ctag">Clarity</div><div class="cname">Actionability Scanner</div><div class="cdesc">Translate vague directives into precise, operational language.</div></div>
+          <div class="mcard" onclick="goModule('thread')"><div class="ctag">Decision Logic</div><div class="cname">Thread Cleaner</div><div class="cdesc">50 emails &rarr; one clear decision matrix.</div></div>
+          <div class="mcard span2 new" onclick="goModule('rh-translate')"><div class="ctag">&#9670; Swiss Tool</div><div class="cname">Rhetorical Translation</div><div class="cdesc">Translates CEO statements not just linguistically but rhetorically &mdash; preserving the exact argumentation style and authority in German, French, English, and Italian.</div></div>
+        </div>
+      </div>
+
+      <!-- GROUP 4: CREATION -->
+      <div class="group">
+        <div class="group-header">
+          <span class="group-num">4</span>
+          <span class="group-name">Creation</span>
+          <span class="group-desc">Generate publication-ready content</span>
+        </div>
+        <div class="mgrid">
+          <div class="mcard span2" onclick="goModule('text-gen')"><div class="ctag">&#9670; Ghostwriter</div><div class="cname">Text Generator</div><div class="cdesc">LinkedIn, website rewrite, press releases, speeches, B2B/B2C, internal docs &mdash; in the authentic brand voice.</div></div>
+          <div class="mcard" onclick="goModule('review')"><div class="ctag">HR</div><div class="cname">Performance Review</div><div class="cdesc">Keywords in &mdash; rhetorically precise, development-oriented feedback out.</div></div>
+          <div class="mcard" onclick="goModule('recognition')"><div class="ctag">Leadership Culture</div><div class="cname">Recognition Writer</div><div class="cdesc">Authentic, calibrated recognition &mdash; tailored to the recipient type.</div></div>
+        </div>
+      </div>
+
+      <!-- GROUP 5: GROWTH -->
+      <div class="group">
+        <div class="group-header">
+          <span class="group-num">5</span>
+          <span class="group-name">Growth</span>
+          <span class="group-desc">Sustained development</span>
+        </div>
+        <div class="mgrid">
+          <div class="mcard new" onclick="goModule('sparring')"><div class="ctag">&#9670; Micro-Coaching</div><div class="cname">Rhetoric Sparring</div><div class="cdesc">Based on the leader&rsquo;s communication weaknesses: 3 personalized micro-challenges, each completable in 2 minutes.</div></div>
+          <div class="mcard new" onclick="goModule('debrief')"><div class="ctag">Post-Mortem</div><div class="cname">Debriefing &amp; Sentiment Alignment</div><div class="cdesc">Load real feedback (press, Q&amp;A, internal). Did our simulation match reality? Where did the rhetoric hold &mdash; where did it break?</div></div>
+          <div class="mcard" onclick="goModule('fingerprint')"><div class="ctag">Development</div><div class="cname">Communication Fingerprint</div><div class="cdesc">How does language shift over time &mdash; under pressure, in crisis, at peak performance?</div></div>
+        </div>
+      </div>
+    </div><!-- /home -->
 
     <!-- BRAND VOICE -->
     <div class="page" id="page-brand-voice">
-      <button class="back-btn" onclick="goHome()">&#8592; Home</button>
-      <div class="module-title">Brand Voice DNA</div>
-      <div class="module-desc">Extract the complete linguistic fingerprint of a company or individual. The master reference for all communication.</div>
-      <div class="toggle-row">
-        <button class="toggle-btn active" onclick="switchBrand('company',this)">Company</button>
-        <button class="toggle-btn" onclick="switchBrand('individual',this)">Individual Person</button>
+      <button class="back" onclick="goHome()">&#8592; Home</button>
+      <div class="mtitle">Brand Voice DNA</div>
+      <div class="mdesc">Extract the complete linguistic fingerprint of a company or individual. The master reference for all communication.</div>
+      <div class="tog">
+        <button class="togbtn active" onclick="switchBrand('company',this)">Company</button>
+        <button class="togbtn" onclick="switchBrand('individual',this)">Individual Person</button>
       </div>
-      <div class="brand-section active" id="brand-company">
-        <div class="row-2">
-          <div class="form-group"><label class="form-label">Company Name</label><input type="text" id="bv-company" placeholder="e.g. Acme AG"></div>
-          <div class="form-group"><label class="form-label">Industry</label><select id="bv-industry"><option value="">Select</option><option>Financial Services</option><option>Industry / Manufacturing</option><option>Tech / SaaS</option><option>Healthcare</option><option>Education</option><option>Public Sector</option><option>Consulting</option><option>Other</option></select></div>
+      <div class="bsec active" id="brand-company">
+        <div class="row2">
+          <div class="fg2"><label class="fl2">Company Name</label><input type="text" id="bv-company" placeholder="e.g. Acme AG"></div>
+          <div class="fg2"><label class="fl2">Industry</label><select id="bv-industry"><option value="">Select</option><option>Financial Services</option><option>Industry / Manufacturing</option><option>Tech / SaaS</option><option>Healthcare</option><option>Education</option><option>Public Sector</option><option>Consulting</option><option>Other</option></select></div>
         </div>
-        <div class="form-group"><label class="form-label">Core Values (optional)</label><input type="text" id="bv-values" placeholder="e.g. Precision, Trust, Swiss Quality"></div>
-        <div class="form-group"><label class="form-label">Target Audiences</label><input type="text" id="bv-audiences" placeholder="e.g. B2B CFOs, HR Directors, Investors"></div>
-        <div class="form-group">
-          <label class="form-label">Source Texts &mdash; website, reports, emails (separate with ---)</label>
-          <div class="upload-zone" onclick="document.getElementById('bv-co-file').click()"><span class="upload-icon">&#8679;</span><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><input type="file" id="bv-co-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-co-input','bv-co-tags')"></div>
-          <div class="file-tags" id="bv-co-tags"></div>
-          <textarea id="bv-co-input" placeholder="Paste company texts here. The more diverse, the more precise the DNA profile."></textarea>
+        <div class="fg2"><label class="fl2">Core Values (optional)</label><input type="text" id="bv-values" placeholder="e.g. Precision, Trust, Swiss Quality"></div>
+        <div class="fg2"><label class="fl2">Target Audiences</label><input type="text" id="bv-audiences" placeholder="e.g. B2B CFOs, HR Directors, Investors"></div>
+        <div class="fg2">
+          <label class="fl2">Source Texts &mdash; website, reports, emails (separate with ---)</label>
+          <div class="upzone" onclick="document.getElementById('bv-co-f').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><input type="file" id="bv-co-f" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-co-in','bv-co-tags')"></div>
+          <div class="ftags" id="bv-co-tags"></div>
+          <textarea id="bv-co-in" placeholder="Paste company texts here. The more diverse (website, reports, emails), the more precise the DNA profile."></textarea>
         </div>
-        <button class="run-btn" onclick="runModule('brand-voice-co')">Extract Brand Voice DNA</button>
-        <div class="result-box" id="brand-voice-co-result"><div class="result-header"><span class="result-label">Brand Voice DNA &mdash; Company</span><button class="copy-btn" onclick="copyResult('brand-voice-co-body')">Copy</button></div><div class="result-body" id="brand-voice-co-body"></div></div>
+        <button class="runbtn" onclick="runMod('brand-voice-co')">Extract Brand Voice DNA</button>
+        <div class="rbox" id="brand-voice-co-r"><div class="rhead"><span class="rlbl">Brand Voice DNA &mdash; Company</span><button class="cpbtn" onclick="cp('brand-voice-co-b')">Copy</button></div><div class="rbody" id="brand-voice-co-b"></div></div>
       </div>
-      <div class="brand-section" id="brand-individual">
-        <div class="row-2">
-          <div class="form-group"><label class="form-label">Name</label><input type="text" id="bv-person" placeholder="e.g. CEO Anna Berger"></div>
-          <div class="form-group"><label class="form-label">Role / Context</label><input type="text" id="bv-person-role" placeholder="e.g. CEO, keynote speaker"></div>
+      <div class="bsec" id="brand-individual">
+        <div class="row2">
+          <div class="fg2"><label class="fl2">Name</label><input type="text" id="bv-person" placeholder="e.g. CEO Anna Berger"></div>
+          <div class="fg2"><label class="fl2">Role / Context</label><input type="text" id="bv-prole" placeholder="e.g. CEO, keynote speaker"></div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Reference Texts &mdash; speeches, emails, LinkedIn posts (separate with ---)</label>
-          <div class="upload-zone" onclick="document.getElementById('bv-ind-file').click()"><span class="upload-icon">&#8679;</span><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><input type="file" id="bv-ind-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-ind-input','bv-ind-tags')"></div>
-          <div class="file-tags" id="bv-ind-tags"></div>
-          <textarea id="bv-ind-input" placeholder="Include texts from different contexts &mdash; formal and informal, internal and external."></textarea>
+        <div class="fg2">
+          <label class="fl2">Reference Texts &mdash; speeches, emails, LinkedIn (separate with ---)</label>
+          <div class="upzone" onclick="document.getElementById('bv-ind-f').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><input type="file" id="bv-ind-f" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-ind-in','bv-ind-tags')"></div>
+          <div class="ftags" id="bv-ind-tags"></div>
+          <textarea id="bv-ind-in" placeholder="Include texts from different contexts &mdash; formal and informal, internal and external."></textarea>
         </div>
-        <button class="run-btn" onclick="runModule('brand-voice-ind')">Extract Voice DNA</button>
-        <div class="result-box" id="brand-voice-ind-result"><div class="result-header"><span class="result-label">Brand Voice DNA &mdash; Individual</span><button class="copy-btn" onclick="copyResult('brand-voice-ind-body')">Copy</button></div><div class="result-body" id="brand-voice-ind-body"></div></div>
+        <button class="runbtn" onclick="runMod('brand-voice-ind')">Extract Voice DNA</button>
+        <div class="rbox" id="brand-voice-ind-r"><div class="rhead"><span class="rlbl">Brand Voice DNA &mdash; Individual</span><button class="cpbtn" onclick="cp('brand-voice-ind-b')">Copy</button></div><div class="rbody" id="brand-voice-ind-b"></div></div>
       </div>
     </div>
 
-    <!-- MODULE (dynamic) -->
+    <!-- DYNAMIC MODULE -->
     <div class="page" id="page-module">
-      <button class="back-btn" onclick="goHome()">&#8592; Home</button>
-      <div class="module-title" id="mod-title"></div>
-      <div class="module-desc" id="mod-desc"></div>
+      <button class="back" onclick="goHome()">&#8592; Home</button>
+      <div class="mtitle" id="mod-title"></div>
+      <div class="mdesc" id="mod-desc"></div>
       <div id="mod-form"></div>
     </div>
 
     <!-- CLIENTS -->
     <div class="page" id="page-clients">
-      <div class="clients-header"><div class="page-title">Clients</div><button class="new-client-btn" onclick="openModal()">+ New Client</button></div>
-      <div id="clients-list"><div class="empty"><div class="empty-icon">&#128101;</div><div class="empty-text">No clients yet.</div></div></div>
+      <div class="ph-row"><div class="ptitle">Clients</div><button class="ncbtn" onclick="openModal()">+ New Client</button></div>
+      <div id="clients-list"><div class="empty"><div class="ei">&#128101;</div><div>No clients yet.</div></div></div>
     </div>
 
     <!-- VIDEOS -->
     <div class="page" id="page-videos">
-      <div class="page-title" style="margin-bottom:8px">Video Tutorials</div>
-      <p style="color:var(--muted);font-size:14px;margin-bottom:28px">Step-by-step guides for every module.</p>
-      <div class="video-grid" id="video-grid"></div>
+      <div class="ptitle" style="margin-bottom:8px">Video Tutorials</div>
+      <p style="color:var(--mu);font-size:14px;margin-bottom:28px">Step-by-step guides for every module.</p>
+      <div class="vgrid" id="vgrid"></div>
     </div>
 
     <!-- HISTORY -->
     <div class="page" id="page-history">
-      <div class="page-title" style="margin-bottom:24px">Analysis History</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Analyses are automatically deleted after 30 days.</p>
-      <div id="history-list"><div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-text">No analyses yet.</div></div></div>
+      <div class="ptitle" style="margin-bottom:8px">Analysis History</div>
+      <p style="font-size:13px;color:var(--mu);margin-bottom:20px">Analyses are automatically deleted after 30 days.</p>
+      <div id="hist-list"><div class="empty"><div class="ei">&#128203;</div><div>No analyses yet.</div></div></div>
     </div>
 
   </div>
 
-  <nav class="mobile-nav">
-    <div class="m-nav-item active" id="mn-home" onclick="goHome();setMN('home')"><div class="m-nav-icon">&#8962;</div><div class="m-nav-label">Home</div></div>
-    <div class="m-nav-item" id="mn-brand" onclick="goPage('brand-voice');setMN('brand')"><div class="m-nav-icon">&#9670;</div><div class="m-nav-label">Brand</div></div>
-    <div class="m-nav-item" id="mn-history" onclick="goPage('history');loadHistory();setMN('history')"><div class="m-nav-icon">&#128203;</div><div class="m-nav-label">History</div></div>
-    <div class="m-nav-item" id="mn-clients" style="display:none" onclick="goPage('clients');setMN('clients')"><div class="m-nav-icon">&#128101;</div><div class="m-nav-label">Clients</div></div>
+  <nav class="mnav">
+    <div class="mni active" id="mn-home" onclick="goHome();setMN('home')"><div class="mni-i">&#8962;</div><div class="mni-l">Home</div></div>
+    <div class="mni" id="mn-brand" onclick="goPage('brand-voice');setMN('brand')"><div class="mni-i">&#9670;</div><div class="mni-l">Brand</div></div>
+    <div class="mni" id="mn-hist" onclick="goPage('history');loadHistory();setMN('hist')"><div class="mni-i">&#128203;</div><div class="mni-l">History</div></div>
+    <div class="mni" id="mn-cl" style="display:none" onclick="goPage('clients');setMN('cl')"><div class="mni-i">&#128101;</div><div class="mni-l">Clients</div></div>
   </nav>
 </div>
 
-<!-- CHATBOT -->
-<button id="chat-btn" onclick="toggleChat()">&#128172;</button>
-<div id="chat-panel">
-  <div class="chat-head">
-    <div><div class="chat-head-title">RhetorIQ Assistant</div><div class="chat-head-sub">Ask me anything</div></div>
-    <button class="chat-close" onclick="toggleChat()">&times;</button>
-  </div>
-  <div class="chat-msgs" id="chat-msgs">
-    <div class="chat-msg bot">Hello! I can explain any module and help you get the best results. What would you like to know?</div>
-  </div>
-  <div class="chat-foot">
-    <input class="chat-input" id="chat-input" placeholder="Ask a question&hellip;" onkeydown="if(event.key==='Enter')sendChat()">
-    <button class="chat-send" onclick="sendChat()">Send</button>
-  </div>
+<button id="cbtn" onclick="toggleChat()">&#128172;</button>
+<div id="cpanel">
+  <div class="chd"><div><div class="cht">RhetorIQ Assistant</div><div class="chs">Ask me anything</div></div><button class="chc" onclick="toggleChat()">&times;</button></div>
+  <div class="cms" id="chat-msgs"><div class="cm2 b">Hello! I can explain any module and help you get the best results. What would you like to know?</div></div>
+  <div class="cft"><input class="cinp" id="chat-input" placeholder="Ask a question&hellip;" onkeydown="if(event.key==='Enter')sendChat()"><button class="csnd" onclick="sendChat()">Send</button></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script>
 if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
 const API='https://rhetoriq-jib0.onrender.com';
-let authToken=localStorage.getItem('riq-token');
-let isAdvisor=false;
-let activeClientId=null;
-let clientList=[];
-let chatHistory=[];
-let voiceProfile=null;
+let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],chatHist=[],voiceProf=null;
 
-function showForm(show,hide){document.getElementById(show).style.display='block';document.getElementById(hide).style.display='none';}
-function apiFetch(path,opts={}){return fetch(API+path,{...opts,headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken,...(opts.headers||{})}});}
+function sf(s,h){document.getElementById(s).style.display='block';document.getElementById(h).style.display='none';}
+function api(path,o={}){return fetch(API+path,{...o,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(o.headers||{})}});}
 
 // AUTH
 async function loginAdvisor(){
-  const email=document.getElementById('adv-email').value.trim();
-  const pw=document.getElementById('adv-pw').value;
-  const err=document.getElementById('adv-err');err.style.display='none';
-  try{
-    const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
-    const d=await r.json();
-    if(!r.ok){err.textContent=d.error||'Login failed';err.style.display='block';return;}
-    authToken=d.token;localStorage.setItem('riq-token',authToken);bootApp(d.user,'advisor');
-  }catch{err.textContent='Connection error';err.style.display='block';}
+  const e=document.getElementById('adv-email').value.trim(),p=document.getElementById('adv-pw').value,err=document.getElementById('adv-err');err.style.display='none';
+  try{const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,password:p})});const d=await r.json();if(!r.ok){err.textContent=d.error||'Login failed';err.style.display='block';return;}token=d.token;localStorage.setItem('riq-token',token);boot(d.user,'advisor');}catch{err.textContent='Connection error';err.style.display='block';}
 }
 async function loginClient(){
-  const token=document.getElementById('cl-token').value.trim();
-  const err=document.getElementById('cl-err');err.style.display='none';
-  try{
-    const r=await fetch(API+'/auth/client-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})});
-    const d=await r.json();
-    if(!r.ok){err.textContent=d.error||'Invalid token';err.style.display='block';return;}
-    authToken=d.token;localStorage.setItem('riq-token',authToken);bootApp(d.client,'client');
-  }catch{err.textContent='Connection error';err.style.display='block';}
+  const t=document.getElementById('cl-token').value.trim(),err=document.getElementById('cl-err');err.style.display='none';
+  try{const r=await fetch(API+'/auth/client-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});const d=await r.json();if(!r.ok){err.textContent=d.error||'Invalid token';err.style.display='block';return;}token=d.token;localStorage.setItem('riq-token',token);boot(d.client,'client');}catch{err.textContent='Connection error';err.style.display='block';}
 }
-function logout(){authToken=null;localStorage.removeItem('riq-token');location.reload();}
+function logout(){token=null;localStorage.removeItem('riq-token');location.reload();}
 async function tryAutoLogin(){
-  if(!authToken)return;
-  try{
-    const p=JSON.parse(atob(authToken.split('.')[1]));
-    if(p.exp*1000<Date.now()){localStorage.removeItem('riq-token');return;}
-    if(p.role==='advisor')bootApp({id:p.id,name:p.name,email:p.email},'advisor');
-    else bootApp({id:p.clientId,name:p.clientName},'client');
-  }catch{localStorage.removeItem('riq-token');}
+  if(!token)return;
+  try{const p=JSON.parse(atob(token.split('.')[1]));if(p.exp*1000<Date.now()){localStorage.removeItem('riq-token');return;}if(p.role==='advisor')boot({id:p.id,name:p.name,email:p.email},'advisor');else boot({id:p.clientId,name:p.clientName},'client');}catch{localStorage.removeItem('riq-token');}
 }
 
 // BOOT
-async function bootApp(user,role){
-  isAdvisor=role==='advisor';
+async function boot(user,role){
+  isAdv=role==='advisor';
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('app').style.display='flex';
-  document.getElementById('user-name-display').textContent=user.name||user.email||'';
-  if(isAdvisor){document.body.classList.add('advisor');document.getElementById('mn-clients').style.display='flex';await loadClients();}
-  connectWS();loadStats();renderVideos();
+  document.getElementById('uname').textContent=user.name||user.email||'';
+  if(isAdv){document.body.classList.add('adv');document.getElementById('mn-cl').style.display='flex';await loadClients();}
+  connectWS();loadStats();renderVids();
 }
 
-// WEBSOCKET
+// WS
 function connectWS(){
   const proto=location.protocol==='https:'?'wss':'ws';
   const ws=new WebSocket(API.replace(/^https?/,proto)+'/ws');
   const dot=document.getElementById('ws-dot');
-  ws.onopen=()=>dot.classList.add('on');
-  ws.onclose=()=>{dot.classList.remove('on');setTimeout(connectWS,3000);};
+  ws.onopen=()=>dot.classList.add('on');ws.onclose=()=>{dot.classList.remove('on');setTimeout(connectWS,3000);};
   ws.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.type==='analysis')loadStats();}catch{}};
 }
 
 // STATS
 async function loadStats(){
-  try{const r=await apiFetch('/api/analyze/history');const d=await r.json();document.getElementById('stat-analyses').textContent=d.length;}catch{}
-  document.getElementById('stat-clients').textContent=clientList.length;
+  try{const r=await api('/api/analyze/history');const d=await r.json();document.getElementById('stat-analyses').textContent=d.length;}catch{}
+  document.getElementById('stat-clients').textContent=clients.length;
 }
 
 // CLIENTS
-async function loadClients(){
-  try{const r=await apiFetch('/api/clients');clientList=await r.json();renderClients();}catch{}
-}
+async function loadClients(){try{const r=await api('/api/clients');clients=await r.json();renderClients();}catch{}}
 function renderClients(){
-  document.getElementById('stat-clients').textContent=clientList.length;
+  document.getElementById('stat-clients').textContent=clients.length;
   const sel=document.getElementById('client-select');
-  sel.innerHTML='<option value="">Select client</option>'+clientList.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  sel.innerHTML='<option value="">Select client</option>'+clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   const list=document.getElementById('clients-list');
-  if(!clientList.length){list.innerHTML='<div class="empty"><div class="empty-icon">&#128101;</div><div class="empty-text">No clients yet.</div></div>';return;}
-  list.innerHTML=clientList.map(c=>`
-    <div class="client-card">
-      <div>
-        <div class="client-name">${c.name}</div>
-        <div class="client-meta">${c.industry||''} &mdash; ${c.contact||''}</div>
-        <div class="token-code">${c.token.substring(0,24)}&hellip;</div>
-      </div>
-      <div class="client-actions">
-        <button class="btn-outline" onclick="copyToken('${c.token}')">Copy Token</button>
-        <button class="btn-danger" onclick="deleteClientData(${c.id},'${c.name}')">Delete All Data</button>
-      </div>
-    </div>`).join('');
+  if(!clients.length){list.innerHTML='<div class="empty"><div class="ei">&#128101;</div><div>No clients yet.</div></div>';return;}
+  list.innerHTML=clients.map(c=>`<div class="cc"><div><div class="cn">${c.name}</div><div class="cm">${c.industry||''} &mdash; ${c.contact||''}</div><div class="tkcode">${c.token.substring(0,24)}&hellip;</div></div><div class="ca"><button class="obtn" onclick="copyTok('${c.token}')">Copy Token</button><button class="dbtn" onclick="delData(${c.id},'${c.name}')">Delete All Data</button></div></div>`).join('');
 }
-function switchClient(id){activeClientId=id||null;}
-function copyToken(t){navigator.clipboard.writeText(t).catch(()=>{});alert('Token copied!\n\nShare this with your client. They use it to log in at:\n'+location.origin);}
-async function deleteClientData(clientId,name){
+function switchClient(id){clientId=id||null;}
+function copyTok(t){navigator.clipboard.writeText(t).catch(()=>{});alert('Token copied!\n\nShare this with your client. They log in at:\n'+location.origin);}
+async function delData(cid,name){
   if(!confirm('Delete ALL analyses for "'+name+'"?\n\nThis cannot be undone.'))return;
-  try{
-    const r=await apiFetch('/api/analyze/client/'+clientId,{method:'DELETE'});
-    const d=await r.json();
-    alert('Done. '+d.deleted+' analysis records deleted.');
-    loadStats();
-  }catch{alert('Error deleting data.');}
+  try{const r=await api('/api/analyze/client/'+cid,{method:'DELETE'});const d=await r.json();alert('Done. '+d.deleted+' records deleted.');loadStats();}catch{alert('Error deleting data.');}
 }
-function openModal(){document.getElementById('new-client-overlay').classList.add('show');}
-function closeModal(){document.getElementById('new-client-overlay').classList.remove('show');}
+function openModal(){document.getElementById('nc-ov').classList.add('show');}
+function closeModal(){document.getElementById('nc-ov').classList.remove('show');}
 async function addClient(){
-  const name=document.getElementById('nc-name').value.trim();
-  if(!name)return alert('Please enter a company name.');
-  try{
-    const r=await apiFetch('/api/clients',{method:'POST',body:JSON.stringify({name,industry:document.getElementById('nc-industry').value,contact:document.getElementById('nc-contact').value.trim()})});
-    const c=await r.json();clientList.unshift(c);renderClients();closeModal();
-    document.getElementById('nc-name').value='';document.getElementById('nc-contact').value='';
-    goPage('clients');
-  }catch(e){alert('Error: '+e.message);}
+  const name=document.getElementById('nc-name').value.trim();if(!name)return alert('Please enter a company name.');
+  try{const r=await api('/api/clients',{method:'POST',body:JSON.stringify({name,industry:document.getElementById('nc-industry').value,contact:document.getElementById('nc-contact').value.trim()})});const c=await r.json();clients.unshift(c);renderClients();closeModal();document.getElementById('nc-name').value='';document.getElementById('nc-contact').value='';goPage('clients');}catch(e){alert('Error: '+e.message);}
 }
 
-// NAVIGATION
+// NAV
 function goHome(){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-home').classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   document.getElementById('nav-home').classList.add('active');
   document.querySelector('.content').scrollTop=0;
 }
 function goPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
   document.querySelector('.content').scrollTop=0;
 }
-function setMN(id){document.querySelectorAll('.m-nav-item').forEach(n=>n.classList.remove('active'));const el=document.getElementById('mn-'+id);if(el)el.classList.add('active');}
+function setMN(id){document.querySelectorAll('.mni').forEach(n=>n.classList.remove('active'));const el=document.getElementById('mn-'+id);if(el)el.classList.add('active');}
 
-// SMART ROUTER
-const MODULE_NAMES={profiling:'Executive Rhetoric Profiling',fingerprint:'Communication Fingerprint',language:'Language Analytics',risk:'Risk Management',stress:'Argument Stress Test',impact:'Strategic Impact Simulation',actionability:'Actionability Scanner',thread:'Thread Cleaner','text-gen':'Text Generator',review:'Performance Review',recognition:'Recognition Writer','brand-voice':'Brand Voice DNA','brand-voice-co':'Brand Voice DNA','brand-voice-ind':'Brand Voice DNA','vs-gen':'Text Generator','vs-cal':'Text Generator'};
+// ROUTER
+const MNAMES={profiling:'Executive Rhetoric Profiling',fingerprint:'Communication Fingerprint',language:'Language Analytics',risk:'Risk Management',stress:'Argument Stress Test',impact:'Strategic Impact Simulation',crisis:'Crisis Framing Engine',actionability:'Actionability Scanner',thread:'Thread Cleaner','rh-translate':'Rhetorical Translation','text-gen':'Text Generator',review:'Performance Review',recognition:'Recognition Writer',sparring:'Rhetoric Sparring',debrief:'Debriefing & Sentiment Alignment','brand-voice':'Brand Voice DNA','brand-voice-co':'Brand Voice DNA','brand-voice-ind':'Brand Voice DNA','vs-cal':'Text Generator','vs-gen':'Text Generator'};
 
 async function routePrompt(){
   const text=document.getElementById('router-input').value.trim();
-  if(!text){document.getElementById('router-status').textContent='Please describe what you would like to do.';return;}
-  const status=document.getElementById('router-status');
-  status.textContent='Analysing your request...';
+  if(!text){document.getElementById('rstat').textContent='Please describe what you would like to do.';return;}
+  const s=document.getElementById('rstat');s.textContent='Analysing your request...';
   try{
-    const r=await apiFetch('/api/analyze/route',{method:'POST',body:JSON.stringify({text})});
+    const r=await api('/api/analyze/route',{method:'POST',body:JSON.stringify({text})});
     const d=await r.json();
-    let module=(d.module||'').trim().toLowerCase().replace(/[^a-z-]/g,'');
-    if(module==='brand-voice-co'||module==='brand-voice-ind')module='brand-voice';
-    if(module==='vs-gen'||module==='vs-cal')module='text-gen';
-    const name=MODULE_NAMES[module]||'the right module';
-    status.textContent='Opening: '+name+'...';
+    let mod=(d.module||'').trim().toLowerCase().replace(/[^a-z-]/g,'');
+    if(mod==='brand-voice-co'||mod==='brand-voice-ind')mod='brand-voice';
+    if(mod==='vs-cal'||mod==='vs-gen')mod='text-gen';
+    const name=MNAMES[mod]||'the right module';
+    s.textContent='Opening: '+name+'...';
     setTimeout(()=>{
-      status.textContent='';
-      if(module==='brand-voice'){goPage('brand-voice');}
-      else{goModule(module,text);}
-      document.getElementById('router-input').value='';
+      s.textContent='';document.getElementById('router-input').value='';
+      if(mod==='brand-voice')goPage('brand-voice');else goModule(mod,text);
     },600);
-  }catch{status.textContent='Could not route &mdash; please choose a module below.';}
+  }catch{s.textContent='Could not route &mdash; please choose a module below.';}
 }
 
-// MODULE CONFIG
-const MCFG={
-  profiling:{title:'Executive Rhetoric Profiling',desc:'Analyse the rhetorical architecture of leadership texts: argumentation logic, persuasion patterns, and strategic blind spots.',mainField:'rp-input',mainPlaceholder:'Speeches, emails, LinkedIn posts, internal memos &mdash; separate with ---.'},
-  fingerprint:{title:'Communication Fingerprint',desc:'Reveals how language shifts across time &mdash; under pressure, in crisis, at peak performance.',mainField:'cf-input',mainPlaceholder:'Use "---" between different time periods, e.g. "2024-01 Report [text] --- 2024-06 Crisis [text]"'},
-  language:{title:'Language Analytics',desc:'Diagnoses where leadership rhetoric and lived culture diverge.',mainField:'la-input',mainPlaceholder:'Paste internal company texts here (emails, meeting minutes, strategy papers).'},
-  risk:{title:'Risk Management',desc:'Evaluates communication risks before anything goes out.',mainField:'rm-input',mainPlaceholder:'Press release, CEO statement, internal announcement...'},
-  stress:{title:'Argument Stress Test',desc:'Generates the strongest counterarguments from multiple perspectives.',mainField:'st-input',mainPlaceholder:'"We are introducing a new performance evaluation system..."'},
-  impact:{title:'Strategic Impact Simulation',desc:'Simulates how different stakeholder groups will react &mdash; before it is too late.',mainField:'si-input',mainPlaceholder:'Merger announcement, layoffs, strategy shift, leadership change...'},
-  actionability:{title:'Actionability Scanner',desc:'Scans for vagueness and rewrites into precise, operational language.',mainField:'as-input',mainPlaceholder:'"We should take a look at the customer satisfaction topic..."'},
-  thread:{title:'Thread Cleaner',desc:'Extracts the logical decision structure from email chains or chat threads.',mainField:'tc-input',mainPlaceholder:'Paste the complete thread here.',mainHeight:'200px'},
-  review:{title:'Performance Review',desc:'Keywords in &mdash; rhetorically precise, development-oriented feedback out.',mainField:'pr-input',mainPlaceholder:'"Often late, delivers strong quality, saved the client project last month"'},
-  recognition:{title:'Recognition Writer',desc:'Authentic, calibrated recognition &mdash; tailored to the recipient type.',mainField:'rw-input',mainPlaceholder:'"Meier worked over the weekend to rescue the database migration..."'}
-};
-
-const MSELECTS={
-  profiling:[{id:'rp-industry',label:'Industry',opts:['Financial Services','Industry / Manufacturing','Tech / SaaS','Healthcare','Education','Public Sector','Other']},{id:'rp-name',label:'Name / Role',type:'text',placeholder:'e.g. CEO Martin Meier'}],
-  fingerprint:[{id:'cf-name',label:'Name / Role',type:'text',placeholder:'e.g. CFO Anna Berger'},{id:'cf-focus',label:'Focus',opts:['Overall development','Behaviour under pressure','Crisis vs. normal operations','Trust-building over time','Tone drift']}],
-  language:[{id:'la-size',label:'Company Size',opts:['10&ndash;50 employees','50&ndash;200 employees','200&ndash;1,000 employees','1,000+ employees']},{id:'la-focus',label:'Focus',opts:['Leadership vs. employee communication','Cultural consistency','Change communication','Trust climate']}],
-  risk:[{id:'rm-audience',label:'Target Audience',opts:['Employees','Investors','Media / Public','Customers','Board / Executive team','All simultaneously']},{id:'rm-context',label:'Situation',opts:['Strategy shift','Layoffs / Restructuring','Merger / Acquisition','Crisis','New product / Launch','Cultural change']}],
-  stress:[{id:'st-perspectives',label:'Perspectives',opts:['All (Media, Employees, Competitors)','Media / Public','Employees / Works council','Investors / Analysts','Critics / NGOs']},{id:'st-intensity',label:'Intensity',opts:['Moderate &mdash; fair criticism','Sharp &mdash; aggressive questioning','Maximum &mdash; hardest possible attack']}],
-  impact:[{id:'si-stakeholders',label:'Stakeholders',opts:['All groups','Employees only','Media only','Investors only','Employees + Media']},{id:'si-severity',label:'Impact Level',opts:['Low &mdash; routine change','Medium &mdash; noticeable impact','High &mdash; significant transformation','Critical &mdash; existential crisis']}],
-  actionability:[{id:'as-context',label:'Format',opts:['Email delegation','Meeting minutes','Project briefing','Strategy document','Verbal instruction']},{id:'as-recipient',label:'Recipient',opts:['Direct reports','Project team','Department head','External partners']}],
-  thread:[{id:'tc-source',label:'Source',opts:['Email thread','Teams chat','Slack channel','Meeting chat']},{id:'tc-goal',label:'Output Goal',opts:['Decision matrix for CEO','Action recommendation for project lead','Summary for absent participants','Identify next steps']}],
-  review:[{id:'pr-role',label:"Person's Role",type:'text',placeholder:'e.g. Senior Analyst'},{id:'pr-format',label:'Format',opts:['Written appraisal (HR document)','Verbal feedback (conversation guide)','360&deg; feedback','Probationary review']}],
-  recognition:[{id:'rw-type',label:'Recipient Type',opts:['The Analyst &mdash; values precision','The Executor &mdash; values impact','The Team Player &mdash; values group contribution','The Visionary &mdash; values ideas','The Pragmatist &mdash; wants direct acknowledgement']},{id:'rw-format',label:'Format',opts:['Verbal recognition','Written acknowledgement (email)','Public praise (team meeting)','Formal recognition (HR document)']}]
+// MODULE DEFINITIONS
+const MDEFS={
+  profiling:{title:'Executive Rhetoric Profiling',desc:'Analyse the rhetorical architecture of leadership texts: argumentation logic, persuasion patterns, and strategic blind spots.',mf:'rp-in',ph:'Speeches, emails, LinkedIn posts, memos &mdash; separate with ---.',api:'rp',fields:[{id:'rp-name',type:'text',lbl:'Name / Role',ph:'e.g. CEO Martin Meier'},{id:'rp-industry',type:'sel',lbl:'Industry',opts:['Financial Services','Industry / Manufacturing','Tech / SaaS','Healthcare','Education','Public Sector','Other']}]},
+  fingerprint:{title:'Communication Fingerprint',desc:'Reveals how language shifts across time &mdash; under pressure, in crisis, at peak performance.',mf:'cf-in',ph:'Use "---" between time periods, e.g. "2024-01 Report [text] --- 2024-06 Crisis [text]"',api:'cf',fields:[{id:'cf-name',type:'text',lbl:'Name / Role',ph:'e.g. CFO Anna Berger'},{id:'cf-focus',type:'sel',lbl:'Focus',opts:['Overall development','Behaviour under pressure','Crisis vs. normal operations','Trust-building over time','Tone drift']}]},
+  language:{title:'Language Analytics',desc:'Diagnoses where leadership rhetoric and lived culture diverge.',mf:'la-in',ph:'Paste internal company texts here (emails, meeting minutes, strategy papers).',api:'la',mh:'180px',fields:[{id:'la-size',type:'sel',lbl:'Company Size',opts:['10&ndash;50 employees','50&ndash;200 employees','200&ndash;1,000 employees','1,000+ employees']},{id:'la-focus',type:'sel',lbl:'Focus',opts:['Leadership vs. employee communication','Cultural consistency','Change communication','Trust climate']}]},
+  risk:{title:'Risk Management',desc:'Evaluates communication risks before anything goes out.',mf:'rm-in',ph:'Press release, CEO statement, internal announcement...',api:'rm',fields:[{id:'rm-audience',type:'sel',lbl:'Target Audience',opts:['Employees','Investors','Media / Public','Customers','Board / Executive team','All simultaneously']},{id:'rm-context',type:'sel',lbl:'Situation',opts:['Strategy shift','Layoffs / Restructuring','Merger / Acquisition','Crisis','New product / Launch','Cultural change']}]},
+  stress:{title:'Argument Stress Test',desc:'Generates the strongest counterarguments from multiple perspectives.',mf:'st-in',ph:'"We are introducing a new performance evaluation system..."',api:'st',fields:[{id:'st-persp',type:'sel',lbl:'Perspectives',opts:['All (Media, Employees, Competitors)','Media / Public','Employees / Works council','Investors / Analysts','Critics / NGOs']},{id:'st-int',type:'sel',lbl:'Intensity',opts:['Moderate &mdash; fair criticism','Sharp &mdash; aggressive questioning','Maximum &mdash; hardest possible attack']}]},
+  impact:{title:'Strategic Impact Simulation',desc:'Simulates how different stakeholder groups will react &mdash; before it is too late.',mf:'si-in',ph:'Merger announcement, layoffs, strategy shift, leadership change...',api:'si',fields:[{id:'si-sth',type:'sel',lbl:'Stakeholders',opts:['All groups','Employees only','Media only','Investors only','Employees + Media']},{id:'si-sev',type:'sel',lbl:'Impact Level',opts:['Low &mdash; routine change','Medium &mdash; noticeable impact','High &mdash; significant transformation','Critical &mdash; existential crisis']}]},
+  crisis:{title:'Crisis Framing Engine',desc:'Red Button mode: enter the hard facts &mdash; get three ready-to-use rhetorical response strategies for the first 15 minutes.',mf:'cr-in',ph:'State the hard facts: what happened, when, who is affected, what is already known publicly.',api:'crisis',alert:true,fields:[{id:'cr-type',type:'sel',lbl:'Crisis Type',opts:['Reputational damage / Shitstorm','Workplace accident / Safety incident','Media leak / Unwanted disclosure','Leadership scandal','Product failure / Recall','Financial irregularity','Other']},{id:'cr-aud',type:'text',lbl:'Affected Audiences',ph:'e.g. Employees, Media, Investors, Customers'},{id:'cr-timing',type:'sel',lbl:'Time Since Crisis Broke',opts:['Just now (0&ndash;15 min)','Under 1 hour','1&ndash;3 hours','Several hours / next day']}]},
+  actionability:{title:'Actionability Scanner',desc:'Scans for vagueness and rewrites into precise, operational language.',mf:'as-in',ph:'"We should take a look at the customer satisfaction topic..."',api:'as',fields:[{id:'as-ctx',type:'sel',lbl:'Format',opts:['Email delegation','Meeting minutes','Project briefing','Strategy document','Verbal instruction']},{id:'as-rec',type:'sel',lbl:'Recipient',opts:['Direct reports','Project team','Department head','External partners']}]},
+  thread:{title:'Thread Cleaner',desc:'Extracts the logical decision structure from email chains or chat threads.',mf:'tc-in',ph:'Paste the complete thread here.',api:'tc',mh:'200px',fields:[{id:'tc-src',type:'sel',lbl:'Source',opts:['Email thread','Teams chat','Slack channel','Meeting chat']},{id:'tc-goal',type:'sel',lbl:'Output Goal',opts:['Decision matrix for CEO','Action recommendation for project lead','Summary for absent participants','Identify next steps']}]},
+  'rh-translate':{title:'Rhetorical Translation',desc:'Translates not just words &mdash; but the full rhetorical impact. Preserves the exact argumentation style, authority signals, and brand voice across languages.',mf:'rt-in',ph:'Paste the original text here.',api:'rh-translate',fields:[{id:'rt-src',type:'sel',lbl:'Source Language',opts:['German','English','French','Italian','Spanish']},{id:'rt-tgt',type:'sel',lbl:'Target Language',opts:['English','German','French','Italian','Spanish']},{id:'rt-ctx',type:'text',lbl:'Context / Audience',ph:'e.g. External investors, French-speaking employees'}]},
+  sparring:{title:'Rhetoric Sparring &mdash; Micro-Coaching',desc:'Based on a leader\'s communication weaknesses: 3 personalized micro-challenges, each completable in 2 minutes. Designed to build lasting rhetorical skill.',mf:'sp-in',ph:'Paste the communication fingerprint analysis or describe the known weaknesses: e.g. "Uses too many passive constructions under stress. Avoids direct conflict. Speaks too technically in emotional moments."',api:'sparring',fields:[{id:'sp-name',type:'text',lbl:'Name / Role',ph:'e.g. CEO Anna Berger'},{id:'sp-role',type:'text',lbl:'Current Development Focus',ph:'e.g. Confidence in board presentations, emotional leadership'},{id:'sp-focus',type:'sel',lbl:'This Week\'s Priority',opts:['Based on fingerprint analysis','Clarity & directness','Emotional presence','Authority under pressure','Storytelling & narrative','Listening & dialogue']}]},
+  debrief:{title:'Debriefing & Sentiment Alignment',desc:'Load the original communication + the real reactions. Did our simulation match reality? Where did the rhetoric hold &mdash; and where did it break?',mf:'db-orig',ph:'Paste the original speech, statement, or email here.',api:'debrief',twopart:true,fields:[{id:'db-feedback',type:'ta',lbl:'Real Feedback & Reactions',ph:'Press quotes, internal feedback, Q&A responses, social media comments, summary of the reactions received.'},{id:'db-ctx',type:'text',lbl:'Context',ph:'e.g. Quarterly all-hands, investor call, media interview'}]},
+  review:{title:'Performance Review',desc:'Keywords in &mdash; rhetorically precise, development-oriented feedback out.',mf:'pr-in',ph:'"Often late, delivers strong quality, saved the client project last month"',api:'pr',fields:[{id:'pr-role',type:'text',lbl:"Person's Role",ph:'e.g. Senior Analyst, Project Manager'},{id:'pr-fmt',type:'sel',lbl:'Format',opts:['Written appraisal (HR document)','Verbal feedback (conversation guide)','360&deg; feedback','Probationary review']}]},
+  recognition:{title:'Recognition Writer',desc:'Authentic, calibrated recognition &mdash; precise and tailored to the recipient type.',mf:'rw-in',ph:'"Meier worked over the weekend to rescue the database migration..."',api:'rw',fields:[{id:'rw-type',type:'sel',lbl:'Recipient Type',opts:['The Analyst &mdash; values precision','The Executor &mdash; values impact','The Team Player &mdash; values group contribution','The Visionary &mdash; values ideas','The Pragmatist &mdash; wants direct acknowledgement']},{id:'rw-fmt',type:'sel',lbl:'Format',opts:['Verbal recognition','Written acknowledgement (email)','Public praise (team meeting)','Formal recognition (HR document)']}]},
+  'text-gen':{title:'Text Generator',desc:'Generate publication-ready texts in any format &mdash; in the authentic brand or personal voice.',api:'text-gen',special:'textgen'}
 };
 
 function goModule(name,prefill){
-  const cfg=MCFG[name];
-  if(!cfg){if(name==='text-gen')buildTextGen(prefill);return;}
+  const def=MDEFS[name];if(!def)return;
+  document.getElementById('mod-title').innerHTML=def.title;
+  document.getElementById('mod-desc').innerHTML=def.desc;
   const form=document.getElementById('mod-form');
-  document.getElementById('mod-title').textContent=cfg.title;
-  document.getElementById('mod-desc').innerHTML=cfg.desc;
-
-  const selects=MSELECTS[name]||[];
-  let html=`<div class="upload-zone" onclick="document.getElementById('mf-${name}').click()"><span class="upload-icon">&#8679;</span><div class="upload-text"><strong>Upload document</strong> &mdash; .txt, .pdf, .docx (optional)</div><input type="file" id="mf-${name}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'${cfg.mainField}','mt-${name}')"></div>`;
-  html+=`<div class="file-tags" id="mt-${name}"></div>`;
-  html+=`<div class="form-group"><label class="form-label">Text</label><textarea id="${cfg.mainField}" placeholder="${cfg.mainPlaceholder||''}" style="${cfg.mainHeight?'min-height:'+cfg.mainHeight:''}"></textarea></div>`;
-  if(selects.length){
-    html+=`<div class="row-2">`;
-    selects.forEach(s=>{
-      if(s.type==='text'){html+=`<div class="form-group"><label class="form-label">${s.label}</label><input type="text" id="${s.id}" placeholder="${s.placeholder||''}"></div>`;}
-      else{html+=`<div class="form-group"><label class="form-label">${s.label}</label><select id="${s.id}">${s.opts.map(o=>`<option>${o}</option>`).join('')}</select></div>`;}
-    });
-    html+=`</div>`;
-  }
-  html+=`<button class="run-btn" onclick="runModule('${name}')">Run Analysis</button>`;
-  html+=`<div class="result-box" id="${name}-result"><div class="result-header"><span class="result-label">Result</span><button class="copy-btn" onclick="copyResult('${name}-body')">Copy</button></div><div class="result-body" id="${name}-body"></div></div>`;
-  form.innerHTML=html;
-  if(prefill){const ta=document.getElementById(cfg.mainField);if(ta)ta.value=prefill;}
+  if(def.special==='textgen'){buildTextGen(prefill,form);}
+  else{buildForm(name,def,prefill,form);}
   goPage('module');
 }
 
-function buildTextGen(prefill){
-  document.getElementById('mod-title').textContent='Text Generator';
-  document.getElementById('mod-desc').innerHTML='Generate publication-ready texts in any format &mdash; in the authentic brand or personal voice.';
-  document.getElementById('mod-form').innerHTML=`
-  <div class="tab-row">
-    <button class="tab active" onclick="switchTab(this,'tg-cal','tg-gen')">1. Calibrate Voice (optional)</button>
-    <button class="tab" onclick="switchTab(this,'tg-gen','tg-cal')">2. Generate Text</button>
-  </div>
+function buildForm(name,def,prefill,form){
+  let h='';
+  if(def.alert)h+=`<div class="crisis-alert"><div class="crisis-icon">&#128308;</div><div class="crisis-text">Crisis Mode: You will receive 3 ready-to-use response strategies. Choose and adapt.</div></div>`;
+  h+=`<div class="upzone" onclick="document.getElementById('mf-${name}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload document</strong> &mdash; .txt, .pdf, .docx (optional)</div><input type="file" id="mf-${name}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'${def.mf}','mt-${name}')"></div>`;
+  h+=`<div class="ftags" id="mt-${name}"></div>`;
+  h+=`<div class="fg2"><label class="fl2">Text</label><textarea id="${def.mf}" placeholder="${def.ph||''}" style="${def.mh?'min-height:'+def.mh:''}"></textarea></div>`;
+  if(def.twopart){
+    const f2=def.fields.find(f=>f.type==='ta');
+    if(f2)h+=`<div class="fg2"><label class="fl2">${f2.lbl}</label><textarea id="${f2.id}" placeholder="${f2.ph||''}"></textarea></div>`;
+  }
+  const others=def.fields.filter(f=>f.type!=='ta');
+  if(others.length){h+=`<div class="row2">`;others.forEach(f=>{if(f.type==='text')h+=`<div class="fg2"><label class="fl2">${f.lbl}</label><input type="text" id="${f.id}" placeholder="${f.ph||''}"></div>`;else h+=`<div class="fg2"><label class="fl2">${f.lbl}</label><select id="${f.id}">${f.opts.map(o=>`<option>${o}</option>`).join('')}</select></div>`;});h+=`</div>`;}
+  const isCrisis=def.alert;
+  h+=`<button class="runbtn${isCrisis?' crisis-btn':''}" onclick="runMod('${name}')">${isCrisis?'&#128308; Activate Crisis Engine':'Run Analysis'}</button>`;
+  h+=`<div class="rbox" id="${name}-r"><div class="rhead"><span class="rlbl">Result</span><button class="cpbtn" onclick="cp('${name}-b')">Copy</button></div><div class="rbody" id="${name}-b"></div></div>`;
+  form.innerHTML=h;
+  if(prefill){const ta=document.getElementById(def.mf);if(ta)ta.value=prefill;}
+}
+
+function buildTextGen(prefill,form){
+  form.innerHTML=`
+  <div class="tabs"><button class="tab active" onclick="stab(this,'tg-cal','tg-gen')">1. Calibrate Voice (optional)</button><button class="tab" onclick="stab(this,'tg-gen','tg-cal')">2. Generate Text</button></div>
   <div id="tg-cal">
-    <p style="font-size:14px;color:var(--muted);margin-bottom:16px">Paste reference texts to calibrate the voice. Or skip to step 2 and describe the desired style in the briefing.</p>
-    <div class="upload-zone" onclick="document.getElementById('tg-ref-f').click()"><span class="upload-icon">&#8679;</span><div class="upload-text"><strong>Upload reference documents</strong></div><input type="file" id="tg-ref-f" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref','tg-ref-tags')"></div>
-    <div class="file-tags" id="tg-ref-tags"></div>
-    <div class="form-group"><label class="form-label">Reference Texts</label><textarea id="tg-ref" placeholder="LinkedIn posts, website copy, speeches, emails &mdash; separate with ---."></textarea></div>
-    <button class="run-btn" onclick="runModule('vs-cal')">Calibrate Voice Profile</button>
-    <div class="result-box" id="vs-cal-result"><div class="result-header"><span class="result-label">Voice Profile</span><button class="copy-btn" onclick="copyResult('vs-cal-body')">Copy</button></div><div class="result-body" id="vs-cal-body"></div></div>
+    <p style="font-size:14px;color:var(--mu);margin-bottom:16px">Paste reference texts to calibrate the voice. Or skip to step 2.</p>
+    <div class="upzone" onclick="document.getElementById('tg-rf').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload reference documents</strong></div><input type="file" id="tg-rf" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref','tg-rt')"></div>
+    <div class="ftags" id="tg-rt"></div>
+    <div class="fg2"><label class="fl2">Reference Texts</label><textarea id="tg-ref" placeholder="LinkedIn posts, website copy, speeches, emails &mdash; separate with ---."></textarea></div>
+    <button class="runbtn" onclick="runMod('vs-cal')">Calibrate Voice Profile</button>
+    <div class="rbox" id="vs-cal-r"><div class="rhead"><span class="rlbl">Voice Profile</span><button class="cpbtn" onclick="cp('vs-cal-b')">Copy</button></div><div class="rbody" id="vs-cal-b"></div></div>
   </div>
   <div id="tg-gen" style="display:none">
-    <div class="upload-zone" onclick="document.getElementById('tg-task-f').click()"><span class="upload-icon">&#8679;</span><div class="upload-text"><strong>Upload source document to rewrite</strong></div><input type="file" id="tg-task-f" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task','tg-task-tags')"></div>
-    <div class="file-tags" id="tg-task-tags"></div>
-    <div class="form-group"><label class="form-label">Briefing / Content</label><textarea id="tg-task" placeholder="Describe what you want to create, or paste source content to rewrite." style="min-height:120px"></textarea></div>
-    <div class="row-2">
-      <div class="form-group"><label class="form-label">Format</label>
-        <select id="tg-format">
-          <optgroup label="Social / Digital"><option>LinkedIn Post</option><option>LinkedIn Article</option><option>Newsletter</option><option>Twitter / X Thread</option></optgroup>
-          <optgroup label="Website"><option>Website Homepage (B2C)</option><option>Website Homepage (B2B)</option><option>Website &mdash; Full rewrite</option><option>Product / Service Page</option><option>Landing Page</option></optgroup>
-          <optgroup label="External"><option>Press Release</option><option>Investor Letter</option><option>Customer Letter</option><option>Crisis Statement</option><option>B2B Proposal</option></optgroup>
-          <optgroup label="Internal"><option>Internal Announcement</option><option>Internal Email</option><option>Town Hall Script</option><option>Leadership Memo</option></optgroup>
-          <optgroup label="Speaking"><option>Speech / Keynote</option><option>Talking Points</option><option>Interview Preparation</option></optgroup>
-          <optgroup label="HR"><option>Job Posting</option><option>Employer Branding Text</option></optgroup>
-        </select>
-      </div>
-      <div class="form-group"><label class="form-label">Audience</label>
-        <select id="tg-audience"><option>B2B &mdash; C-Suite</option><option>B2B &mdash; HR Leaders</option><option>B2B &mdash; Finance / Investors</option><option>B2B &mdash; General Business</option><option>B2C &mdash; General Consumer</option><option>B2C &mdash; Premium / Luxury</option><option>Internal &mdash; All Employees</option><option>Internal &mdash; Leadership Team</option><option>Media / Journalists</option></select>
-      </div>
+    <div class="upzone" onclick="document.getElementById('tg-tf').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload source document to rewrite</strong></div><input type="file" id="tg-tf" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task','tg-tt')"></div>
+    <div class="ftags" id="tg-tt"></div>
+    <div class="fg2"><label class="fl2">Briefing / Content</label><textarea id="tg-task" placeholder="Describe what to create, or paste content to rewrite." style="min-height:120px"></textarea></div>
+    <div class="row2">
+      <div class="fg2"><label class="fl2">Format</label><select id="tg-fmt"><optgroup label="Social / Digital"><option>LinkedIn Post</option><option>LinkedIn Article</option><option>Newsletter</option><option>Twitter / X Thread</option></optgroup><optgroup label="Website"><option>Website Homepage (B2C)</option><option>Website Homepage (B2B)</option><option>Website &mdash; Full rewrite</option><option>Product / Service Page</option><option>Landing Page</option></optgroup><optgroup label="External"><option>Press Release</option><option>Investor Letter</option><option>Customer Letter</option><option>Crisis Statement</option><option>B2B Proposal</option></optgroup><optgroup label="Internal"><option>Internal Announcement</option><option>Internal Email</option><option>Town Hall Script</option><option>Leadership Memo</option></optgroup><optgroup label="Speaking"><option>Speech / Keynote</option><option>Talking Points</option><option>Interview Preparation</option></optgroup><optgroup label="HR"><option>Job Posting</option><option>Employer Branding Text</option></optgroup></select></div>
+      <div class="fg2"><label class="fl2">Audience</label><select id="tg-aud"><option>B2B &mdash; C-Suite</option><option>B2B &mdash; HR Leaders</option><option>B2B &mdash; Finance / Investors</option><option>B2B &mdash; General Business</option><option>B2C &mdash; General Consumer</option><option>B2C &mdash; Premium / Luxury</option><option>Internal &mdash; All Employees</option><option>Internal &mdash; Leadership Team</option><option>Media / Journalists</option></select></div>
     </div>
-    <div class="row-2">
-      <div class="form-group"><label class="form-label">Tone</label>
-        <select id="tg-tone"><option>From Voice Profile (if calibrated)</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European &mdash; understated</option></select>
-      </div>
-      <div class="form-group"><label class="form-label">Language</label>
-        <select id="tg-language"><option>English</option><option>German</option><option>French</option><option>Italian</option><option>Spanish</option></select>
-      </div>
+    <div class="row2">
+      <div class="fg2"><label class="fl2">Tone</label><select id="tg-tone"><option>From Voice Profile (if calibrated)</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European &mdash; understated</option></select></div>
+      <div class="fg2"><label class="fl2">Language</label><select id="tg-lang"><option>English</option><option>German</option><option>French</option><option>Italian</option><option>Spanish</option></select></div>
     </div>
-    <div class="form-group"><label class="form-label">Length (optional)</label><input type="text" id="tg-length" placeholder="e.g. 200 words, 3 paragraphs, max. 1 page"></div>
-    <button class="run-btn" onclick="runModule('text-gen')">Generate Text</button>
-    <div class="result-box" id="text-gen-result"><div class="result-header"><span class="result-label">Generated Text</span><button class="copy-btn" onclick="copyResult('text-gen-body')">Copy</button></div><div class="result-body" id="text-gen-body"></div></div>
+    <div class="fg2"><label class="fl2">Length (optional)</label><input type="text" id="tg-len" placeholder="e.g. 200 words, 3 paragraphs"></div>
+    <button class="runbtn" onclick="runMod('text-gen')">Generate Text</button>
+    <div class="rbox" id="text-gen-r"><div class="rhead"><span class="rlbl">Generated Text</span><button class="cpbtn" onclick="cp('text-gen-b')">Copy</button></div><div class="rbody" id="text-gen-b"></div></div>
   </div>`;
   if(prefill){const ta=document.getElementById('tg-task');if(ta)ta.value=prefill;}
-  goPage('module');
 }
 
-function switchTab(btn,showId,hideId){
-  btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById(showId).style.display='block';
-  document.getElementById(hideId).style.display='none';
-}
+function stab(btn,show,hide){btn.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById(show).style.display='block';document.getElementById(hide).style.display='none';}
 
 function g(id){const el=document.getElementById(id);return el?el.value:'';}
 
-async function runModule(name){
-  let module,data,resultId,bodyId;
-  if(name==='brand-voice-co'){module='brand-voice-co';resultId='brand-voice-co-result';bodyId='brand-voice-co-body';const t=g('bv-co-input');if(!t)return alert('Please enter text.');data={text:t,company:g('bv-company'),industry:g('bv-industry'),values:g('bv-values'),audiences:g('bv-audiences')};}
-  else if(name==='brand-voice-ind'){module='brand-voice-ind';resultId='brand-voice-ind-result';bodyId='brand-voice-ind-body';const t=g('bv-ind-input');if(!t)return alert('Please enter text.');data={text:t,person:g('bv-person'),role:g('bv-person-role')};}
-  else if(name==='vs-cal'){module='vs-cal';resultId='vs-cal-result';bodyId='vs-cal-body';const t=g('tg-ref');if(!t)return alert('Please enter reference texts.');data={text:t};}
-  else if(name==='text-gen'){module='text-gen';resultId='text-gen-result';bodyId='text-gen-body';const t=g('tg-task');if(!t)return alert('Please enter a briefing.');data={text:t,format:g('tg-format'),audience:g('tg-audience'),tone:g('tg-tone'),language:g('tg-language'),length:g('tg-length'),voiceProfile};}
-  else if(name==='profiling'){module='rp';resultId='profiling-result';bodyId='profiling-body';const t=g('rp-input');if(!t)return alert('Please enter text.');data={text:t,name:g('rp-name'),industry:g('rp-industry')};}
-  else if(name==='fingerprint'){module='cf';resultId='fingerprint-result';bodyId='fingerprint-body';const t=g('cf-input');if(!t)return alert('Please enter text.');data={text:t,name:g('cf-name'),focus:g('cf-focus')};}
-  else if(name==='language'){module='la';resultId='language-result';bodyId='language-body';const t=g('la-input');if(!t)return alert('Please enter text.');data={text:t,size:g('la-size'),focus:g('la-focus')};}
-  else if(name==='risk'){module='rm';resultId='risk-result';bodyId='risk-body';const t=g('rm-input');if(!t)return alert('Please enter text.');data={text:t,audience:g('rm-audience'),context:g('rm-context')};}
-  else if(name==='stress'){module='st';resultId='stress-result';bodyId='stress-body';const t=g('st-input');if(!t)return alert('Please enter text.');data={text:t,perspectives:g('st-perspectives'),intensity:g('st-intensity')};}
-  else if(name==='impact'){module='si';resultId='impact-result';bodyId='impact-body';const t=g('si-input');if(!t)return alert('Please enter text.');data={text:t,stakeholders:g('si-stakeholders'),severity:g('si-severity')};}
-  else if(name==='actionability'){module='as';resultId='actionability-result';bodyId='actionability-body';const t=g('as-input');if(!t)return alert('Please enter text.');data={text:t,context:g('as-context'),recipient:g('as-recipient')};}
-  else if(name==='thread'){module='tc';resultId='thread-result';bodyId='thread-body';const t=g('tc-input');if(!t)return alert('Please enter text.');data={text:t,source:g('tc-source'),goal:g('tc-goal')};}
-  else if(name==='review'){module='pr';resultId='review-result';bodyId='review-body';const t=g('pr-input');if(!t)return alert('Please enter text.');data={text:t,role:g('pr-role'),format:g('pr-format')};}
-  else if(name==='recognition'){module='rw';resultId='recognition-result';bodyId='recognition-body';const t=g('rw-input');if(!t)return alert('Please enter text.');data={text:t,type:g('rw-type'),format:g('rw-format')};}
+async function runMod(name){
+  let module,data,rid,bid;
+  if(name==='brand-voice-co'){module='brand-voice-co';rid='brand-voice-co-r';bid='brand-voice-co-b';const t=g('bv-co-in');if(!t)return alert('Please enter text.');data={text:t,company:g('bv-company'),industry:g('bv-industry'),values:g('bv-values'),audiences:g('bv-audiences')};}
+  else if(name==='brand-voice-ind'){module='brand-voice-ind';rid='brand-voice-ind-r';bid='brand-voice-ind-b';const t=g('bv-ind-in');if(!t)return alert('Please enter text.');data={text:t,person:g('bv-person'),role:g('bv-prole')};}
+  else if(name==='vs-cal'){module='vs-cal';rid='vs-cal-r';bid='vs-cal-b';const t=g('tg-ref');if(!t)return alert('Please enter reference texts.');data={text:t};}
+  else if(name==='text-gen'){module='text-gen';rid='text-gen-r';bid='text-gen-b';const t=g('tg-task');if(!t)return alert('Please enter a briefing.');data={text:t,format:g('tg-fmt'),audience:g('tg-aud'),tone:g('tg-tone'),language:g('tg-lang'),length:g('tg-len'),voiceProfile:voiceProf};}
+  else if(name==='profiling'){module='rp';rid='profiling-r';bid='profiling-b';const t=g('rp-in');if(!t)return alert('Please enter text.');data={text:t,name:g('rp-name'),industry:g('rp-industry')};}
+  else if(name==='fingerprint'){module='cf';rid='fingerprint-r';bid='fingerprint-b';const t=g('cf-in');if(!t)return alert('Please enter text.');data={text:t,name:g('cf-name'),focus:g('cf-focus')};}
+  else if(name==='language'){module='la';rid='language-r';bid='language-b';const t=g('la-in');if(!t)return alert('Please enter text.');data={text:t,size:g('la-size'),focus:g('la-focus')};}
+  else if(name==='risk'){module='rm';rid='risk-r';bid='risk-b';const t=g('rm-in');if(!t)return alert('Please enter text.');data={text:t,audience:g('rm-audience'),context:g('rm-context')};}
+  else if(name==='stress'){module='st';rid='stress-r';bid='stress-b';const t=g('st-in');if(!t)return alert('Please enter text.');data={text:t,perspectives:g('st-persp'),intensity:g('st-int')};}
+  else if(name==='impact'){module='si';rid='impact-r';bid='impact-b';const t=g('si-in');if(!t)return alert('Please enter text.');data={text:t,stakeholders:g('si-sth'),severity:g('si-sev')};}
+  else if(name==='crisis'){module='crisis';rid='crisis-r';bid='crisis-b';const t=g('cr-in');if(!t)return alert('Please enter the crisis facts.');data={text:t,crisisType:g('cr-type'),audiences:g('cr-aud'),timing:g('cr-timing')};}
+  else if(name==='actionability'){module='as';rid='actionability-r';bid='actionability-b';const t=g('as-in');if(!t)return alert('Please enter text.');data={text:t,context:g('as-ctx'),recipient:g('as-rec')};}
+  else if(name==='thread'){module='tc';rid='thread-r';bid='thread-b';const t=g('tc-in');if(!t)return alert('Please enter text.');data={text:t,source:g('tc-src'),goal:g('tc-goal')};}
+  else if(name==='rh-translate'){module='rh-translate';rid='rh-translate-r';bid='rh-translate-b';const t=g('rt-in');if(!t)return alert('Please enter text.');data={text:t,sourceLang:g('rt-src'),targetLang:g('rt-tgt'),context:g('rt-ctx'),voiceProfile:voiceProf};}
+  else if(name==='sparring'){module='sparring';rid='sparring-r';bid='sparring-b';const t=g('sp-in');if(!t)return alert('Please describe the communication weaknesses.');data={text:t,name:g('sp-name'),role:g('sp-role'),focus:g('sp-focus')};}
+  else if(name==='debrief'){module='debrief';rid='debrief-r';bid='debrief-b';const orig=g('db-orig');const fb=g('db-feedback');if(!orig||!fb)return alert('Please enter both the original communication and the real feedback.');data={original:orig,feedback:fb,context:g('db-ctx')};}
+  else if(name==='review'){module='pr';rid='review-r';bid='review-b';const t=g('pr-in');if(!t)return alert('Please enter text.');data={text:t,role:g('pr-role'),format:g('pr-fmt')};}
+  else if(name==='recognition'){module='rw';rid='recognition-r';bid='recognition-b';const t=g('rw-in');if(!t)return alert('Please enter text.');data={text:t,type:g('rw-type'),format:g('rw-fmt')};}
   else return;
 
-  const box=document.getElementById(resultId);const body=document.getElementById(bodyId);
+  const box=document.getElementById(rid),body=document.getElementById(bid);
   box.classList.add('show');
-  body.innerHTML='<div class="spinner"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:10px;color:var(--muted);font-size:14px">Analysing&hellip;</span></div>';
+  body.innerHTML='<div class="spin"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:10px;color:var(--mu);font-size:14px">Analysing&hellip;</span></div>';
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
   try{
-    const r=await apiFetch('/api/analyze',{method:'POST',body:JSON.stringify({module,clientId:activeClientId,data})});
+    const r=await api('/api/analyze',{method:'POST',body:JSON.stringify({module,clientId,data})});
     const d=await r.json();if(!r.ok)throw new Error(d.error);
     body.textContent=d.result;
-    if(module==='vs-cal')voiceProfile=d.result;
+    if(module==='vs-cal')voiceProf=d.result;
     loadStats();
   }catch(e){body.textContent='Error: '+e.message;}
 }
@@ -752,7 +720,7 @@ async function handleFiles(input,targetId,tagsId){
       const text=await extractText(file);
       const ta=document.getElementById(targetId);if(ta)ta.value=ta.value?ta.value+'\n---\n'+text:text;
       const tags=document.getElementById(tagsId);
-      if(tags){const tag=document.createElement('div');tag.className='file-tag';tag.innerHTML='&#128196; '+file.name+' <button onclick="this.parentElement.remove()" title="Remove">&times;</button>';tags.appendChild(tag);}
+      if(tags){const tag=document.createElement('div');tag.className='ftag';tag.innerHTML='&#128196; '+file.name+' <button onclick="this.parentElement.remove()">&times;</button>';tags.appendChild(tag);}
     }catch(e){alert('Could not read '+file.name+': '+e.message);}
   }
   input.value='';
@@ -760,56 +728,49 @@ async function handleFiles(input,targetId,tagsId){
 async function extractText(file){
   const n=file.name.toLowerCase();
   if(n.endsWith('.txt'))return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsText(file);});
-  if(n.endsWith('.pdf')){if(typeof pdfjsLib==='undefined')throw new Error('PDF library loading, try again in a moment.');const ab=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:ab}).promise;let t='';for(let i=1;i<=pdf.numPages;i++){const p=await pdf.getPage(i);const c=await p.getTextContent();t+=c.items.map(s=>s.str).join(' ')+'\n';}return t;}
-  if(n.endsWith('.docx')){if(typeof mammoth==='undefined')throw new Error('DOCX library loading, try again in a moment.');const ab=await file.arrayBuffer();const res=await mammoth.extractRawText({arrayBuffer:ab});return res.value;}
-  throw new Error('Please use .txt, .pdf, or .docx files');
+  if(n.endsWith('.pdf')){if(typeof pdfjsLib==='undefined')throw new Error('PDF library loading...');const ab=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:ab}).promise;let t='';for(let i=1;i<=pdf.numPages;i++){const p=await pdf.getPage(i);const c=await p.getTextContent();t+=c.items.map(s=>s.str).join(' ')+'\n';}return t;}
+  if(n.endsWith('.docx')){if(typeof mammoth==='undefined')throw new Error('DOCX library loading...');const ab=await file.arrayBuffer();const res=await mammoth.extractRawText({arrayBuffer:ab});return res.value;}
+  throw new Error('Please use .txt, .pdf, or .docx');
 }
 
 // HISTORY
 async function loadHistory(){
-  const el=document.getElementById('history-list');
-  el.innerHTML='<div class="empty"><div class="empty-icon">&#8987;</div><div class="empty-text">Loading...</div></div>';
+  const el=document.getElementById('hist-list');el.innerHTML='<div class="empty"><div class="ei">&#8987;</div><div>Loading...</div></div>';
   try{
-    const r=await apiFetch('/api/analyze/history'+(activeClientId?'?clientId='+activeClientId:''));
-    const rows=await r.json();
-    if(!rows.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-text">No analyses yet.</div></div>';return;}
-    el.innerHTML=rows.map(h=>{const d=new Date(h.created_at).toLocaleString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});return `<div class="history-item"><div><div class="history-module">${h.module_label||h.module}</div><div class="history-date">${d}</div></div><span class="history-badge">${h.module}</span></div>`;}).join('');
-  }catch{el.innerHTML='<div class="empty"><div class="empty-icon">&#9888;</div><div class="empty-text">Could not load history.</div></div>';}
+    const r=await api('/api/analyze/history'+(clientId?'?clientId='+clientId:''));const rows=await r.json();
+    if(!rows.length){el.innerHTML='<div class="empty"><div class="ei">&#128203;</div><div>No analyses yet.</div></div>';return;}
+    el.innerHTML=rows.map(h=>{const d=new Date(h.created_at).toLocaleString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});return `<div class="hi"><div><div class="hm">${h.module_label||h.module}</div><div class="hd">${d}</div></div><span class="hb">${h.module}</span></div>`;}).join('');
+  }catch{el.innerHTML='<div class="empty"><div class="ei">&#9888;</div><div>Could not load history.</div></div>';}
 }
 
-// BRAND VOICE TOGGLE
-function switchBrand(mode,btn){
-  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
-  document.querySelectorAll('.brand-section').forEach(s=>s.classList.remove('active'));
-  document.getElementById('brand-'+mode).classList.add('active');
-}
+// BRAND VOICE
+function switchBrand(mode,btn){document.querySelectorAll('.togbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.bsec').forEach(s=>s.classList.remove('active'));document.getElementById('brand-'+mode).classList.add('active');}
 
-function copyResult(id){navigator.clipboard.writeText(document.getElementById(id).textContent).catch(()=>{});}
+function cp(id){navigator.clipboard.writeText(document.getElementById(id).textContent).catch(()=>{});}
 
 // CHATBOT
-function toggleChat(){document.getElementById('chat-panel').classList.toggle('open');}
+function toggleChat(){document.getElementById('cpanel').classList.toggle('open');}
 async function sendChat(){
-  const input=document.getElementById('chat-input');const msg=input.value.trim();if(!msg)return;input.value='';
+  const inp=document.getElementById('chat-input');const msg=inp.value.trim();if(!msg)return;inp.value='';
   const msgs=document.getElementById('chat-msgs');
-  msgs.innerHTML+=`<div class="chat-msg user">${msg}</div>`;msgs.scrollTop=msgs.scrollHeight;
-  chatHistory.push({role:'user',content:msg});
+  msgs.innerHTML+=`<div class="cm2 u">${msg}</div>`;msgs.scrollTop=msgs.scrollHeight;
+  chatHist.push({role:'user',content:msg});
   try{
-    const r=await apiFetch('/api/analyze/chat',{method:'POST',body:JSON.stringify({message:msg,history:chatHistory.slice(-6)})});
-    const d=await r.json();chatHistory.push({role:'assistant',content:d.reply});
-    msgs.innerHTML+=`<div class="chat-msg bot">${d.reply}</div>`;msgs.scrollTop=msgs.scrollHeight;
-  }catch{msgs.innerHTML+=`<div class="chat-msg bot" style="color:#c00">Error &mdash; try again.</div>`;}
+    const r=await api('/api/analyze/chat',{method:'POST',body:JSON.stringify({message:msg,history:chatHist.slice(-6)})});
+    const d=await r.json();chatHist.push({role:'assistant',content:d.reply});
+    msgs.innerHTML+=`<div class="cm2 b">${d.reply}</div>`;msgs.scrollTop=msgs.scrollHeight;
+  }catch{msgs.innerHTML+=`<div class="cm2 b" style="color:var(--red)">Error &mdash; try again.</div>`;}
 }
 
 // VIDEOS
-const VIDS=[{id:'intro',name:'Introduction',sub:'Overview and getting started'},{id:'brand',name:'Brand Voice DNA',sub:'Extract the linguistic fingerprint'},{id:'risk',name:'Risk Management',sub:'Find risks before sending'},{id:'textgen',name:'Text Generator',sub:'Create texts in any format'},{id:'profiling',name:'Rhetoric Profiling',sub:'Analyse leadership communication'},{id:'stress',name:'Stress Test',sub:'Prepare for tough questions'}];
-function renderVideos(){
-  const grid=document.getElementById('video-grid');
-  const stored=JSON.parse(localStorage.getItem('riq-videos')||'{}');
-  grid.innerHTML=VIDS.map(m=>{const src=stored[m.id]||'';return `<div class="video-card${src?' has-video':''}"><div class="video-thumb">${src?`<video src="${src}" controls></video>`:`<div class="video-placeholder"><div class="play-icon">&#9654;</div><div style="font-size:14px;font-weight:600;margin-bottom:4px">${m.name}</div><div style="font-size:12px;color:var(--muted)">${m.sub}</div></div>`}</div><div class="video-footer"><span class="video-footer-name">${m.name}</span><button class="upload-video-btn" onclick="document.getElementById('vf-${m.id}').click()">Upload</button></div><input type="file" id="vf-${m.id}" accept="video/*" onchange="saveVideo('${m.id}',this)"></div>`;}).join('');
+const VIDS=[{id:'intro',name:'Introduction',sub:'Overview and getting started'},{id:'brand',name:'Brand Voice DNA',sub:'Extract the linguistic fingerprint'},{id:'crisis',name:'Crisis Framing Engine',sub:'Red Button: first 15 minutes'},{id:'textgen',name:'Text Generator',sub:'Create texts in any format'},{id:'sparring',name:'Rhetoric Sparring',sub:'Weekly micro-coaching'},{id:'debrief',name:'Debriefing',sub:'Post-communication audit'}];
+function renderVids(){
+  const grid=document.getElementById('vgrid');const stored=JSON.parse(localStorage.getItem('riq-vids')||'{}');
+  grid.innerHTML=VIDS.map(m=>{const src=stored[m.id]||'';return `<div class="vc${src?' hv':''}"><div class="vthumb">${src?`<video src="${src}" controls></video>`:`<div class="vph"><div style="font-size:32px;color:var(--dm);margin-bottom:8px">&#9654;</div><div style="font-size:14px;font-weight:600;margin-bottom:3px">${m.name}</div><div style="font-size:12px;color:var(--mu)">${m.sub}</div></div>`}</div><div class="vfoot"><span class="vfn">${m.name}</span><button class="vubtn" onclick="document.getElementById('vf-${m.id}').click()">Upload</button></div><input type="file" id="vf-${m.id}" accept="video/*" onchange="saveVid('${m.id}',this)"></div>`;}).join('');
 }
-function saveVideo(id,input){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{const s=JSON.parse(localStorage.getItem('riq-videos')||'{}');s[id]=e.target.result;localStorage.setItem('riq-videos',JSON.stringify(s));renderVideos();};reader.readAsDataURL(file);}
+function saveVid(id,input){const f=input.files[0];if(!f)return;const reader=new FileReader();reader.onload=e=>{const s=JSON.parse(localStorage.getItem('riq-vids')||'{}');s[id]=e.target.result;localStorage.setItem('riq-vids',JSON.stringify(s));renderVids();};reader.readAsDataURL(f);}
 
-// KEYBOARD SHORTCUTS
+// KEYBOARD
 document.getElementById('adv-pw').addEventListener('keydown',e=>{if(e.key==='Enter')loginAdvisor();});
 document.getElementById('cl-token').addEventListener('keydown',e=>{if(e.key==='Enter')loginClient();});
 
