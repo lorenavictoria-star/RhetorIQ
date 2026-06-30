@@ -300,25 +300,14 @@ body.adv .vubtn{display:block}
 .csnd{padding:8px 14px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px}
 
 /* QUICK ACCESS CARDS */
-.qa-section{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
-.qa-card{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border:1.5px solid var(--bd);border-radius:8px;cursor:pointer;background:#fff;transition:border-color .15s,box-shadow .15s}
-.qa-card:hover{border-color:#888;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-.qa-card-left{display:flex;flex-direction:column;gap:2px}
-.qa-tag{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)}
-.qa-name{font-size:15px;font-weight:600;color:var(--tx)}
-.qa-desc{font-size:12px;color:var(--mu);line-height:1.4;margin-top:1px}
-.qa-arr{font-size:18px;color:var(--dm);flex-shrink:0}
-.qa-card.qa-featured{background:var(--tx);border-color:var(--tx)}
-.qa-card.qa-featured .qa-tag{color:rgba(255,255,255,.55)}
-.qa-card.qa-featured .qa-name{color:#fff}
-.qa-card.qa-featured .qa-desc{color:rgba(255,255,255,.65)}
-.qa-card.qa-featured .qa-arr{color:rgba(255,255,255,.5)}
-.qa-card.qa-featured:hover{background:#222;border-color:#222}
-.qa-card.qa-crisis{border-color:#f0c0c0;background:#fff9f9}
-.qa-card.qa-crisis .qa-tag{color:#c00}
-.qa-card.qa-crisis .qa-name{color:#a00}
-.qa-card.qa-crisis .qa-desc{color:#c06060}
-.qa-card.qa-crisis:hover{border-color:#c00}
+.qa-section{display:flex;flex-direction:column;gap:7px;margin-bottom:24px}
+.qa-card{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border:1.5px solid var(--bd);border-radius:6px;cursor:pointer;background:#fff;transition:border-color .15s}
+.qa-card:hover{border-color:#aaa}
+.qa-card-left{display:flex;flex-direction:column;gap:1px}
+.qa-tag{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dm)}
+.qa-name{font-size:13px;font-weight:600;color:var(--tx)}
+.qa-desc{font-size:11px;color:var(--mu);line-height:1.4}
+.qa-arr{font-size:14px;color:var(--dm);flex-shrink:0}
 
 /* MOST USED ROW (kept for buildMostUsed compat) */
 .mu-row{display:none}
@@ -523,7 +512,7 @@ body.adv .vubtn{display:block}
 
       <!-- Quick Access Cards -->
       <div class="qa-section">
-        <div class="qa-card qa-featured" onclick="goModule('pre-meeting')">
+        <div class="qa-card" onclick="goModule('pre-meeting')">
           <div class="qa-card-left">
             <div class="qa-tag" id="qa-tag1">Preparation</div>
             <div class="qa-name" id="qa-name1">Meeting Prep</div>
@@ -531,7 +520,7 @@ body.adv .vubtn{display:block}
           </div>
           <div class="qa-arr">&#8594;</div>
         </div>
-        <div class="qa-card qa-crisis" onclick="goModule('crisis')">
+        <div class="qa-card" onclick="goModule('crisis')">
           <div class="qa-card-left">
             <div class="qa-tag" id="qa-tag2">Emergency</div>
             <div class="qa-name" id="qa-name2">Crisis Response</div>
