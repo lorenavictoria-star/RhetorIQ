@@ -518,19 +518,17 @@ body.adv .vubtn{display:block}
 
       <div class="mgrid">
         <!-- FOUNDATION -->
-        <div class="mcard span3 g-foundation" onclick="goPage('brand-voice')"><div class="ctag">&#9670; Foundation &mdash; Master Reference</div><div class="cname">Brand Voice DNA</div><div class="cdesc">How does this company or person communicate? Paste any texts &mdash; get a complete language profile back.</div></div>
-        <div class="mcard g-foundation" onclick="goModule('profiling')"><div class="ctag">Foundation</div><div class="cname">Rhetoric Profile</div><div class="cdesc">How does this company, team, or leader communicate? What patterns repeat? Where are the weak points?</div></div>
-        <div class="mcard g-foundation" onclick="goModule('language')"><div class="ctag">Foundation</div><div class="cname">Culture Sync</div><div class="cdesc">Paste texts from leadership, board, and employees. See where the official message and the lived reality diverge.</div></div>
+        <div class="mcard span3 g-foundation" onclick="goPage('brand-voice')"><div class="ctag">&#9670; Foundation &mdash; Master Reference</div><div class="cname">Brand Voice</div><div class="cdesc">How does this company or person communicate? Paste any texts &mdash; get a complete language profile back.</div></div>
+        <div class="mcard span2 g-foundation" onclick="goModule('profiling')"><div class="ctag">Foundation</div><div class="cname">How We Communicate</div><div class="cdesc">How does this company, team, or leader communicate? What patterns repeat? Where are the weak points?</div></div>
         <!-- PREVENTION -->
-        <div class="mcard span2 g-prevention" onclick="goModule('pre-meeting')"><span class="new-badge">NEW</span><div class="ctag">Prevention &mdash; Preparation</div><div class="cname">Pre-Meeting Brief</div><div class="cdesc">Meeting in 1 hour? Get a full brief: the 3 hardest moments, your opening, key messages, what not to say, and a stakeholder map.</div></div>
-        <div class="mcard g-prevention" onclick="goModule('risk')"><div class="ctag">Prevention</div><div class="cname">Risk Management</div><div class="cdesc">Ready to send? Paste the text first. Get a clear list of what could go wrong.</div></div>
-        <div class="mcard g-prevention" onclick="goModule('stress')"><div class="ctag">Prevention</div><div class="cname">Challenger Test</div><div class="cdesc">What will critics say? Get the hardest counterarguments before you walk into any room.</div></div>
-        <div class="mcard g-prevention" onclick="goModule('impact')"><div class="ctag">Prevention</div><div class="cname">Simulate Impact</div><div class="cdesc">Before any big announcement: how will employees, media, investors, and other stakeholders react?</div></div>
-        <div class="mcard red-btn g-prevention" onclick="goModule('crisis')"><span class="new-badge" style="background:#c00">&#128308; NOW</span><div class="ctag" style="color:#a00">Prevention &mdash; Emergency</div><div class="cname">Instant Crisis Response</div><div class="cdesc">Something just happened. Paste the facts. Get 3 statements ready to use in 2 minutes.</div></div>
+        <div class="mcard g-prevention g-foundation" onclick="goModule('pre-meeting')"><span class="new-badge">NEW</span><div class="ctag">Preparation</div><div class="cname">Meeting Prep</div><div class="cdesc">Meeting in 1 hour? Get the 3 hardest moments, your opening, key messages, what not to say, and a stakeholder map.</div></div>
+        <div class="mcard span2 g-prevention" onclick="goModule('arg-reaction')"><span class="new-badge">NEW</span><div class="ctag">Prevention</div><div class="cname">Argument / Reaction Preview</div><div class="cdesc">Three tools in one: get the hardest pushback, simulate how stakeholders will react, and check if leadership message matches company reality.</div></div>
+        <div class="mcard g-prevention" onclick="goModule('risk')"><div class="ctag">Prevention</div><div class="cname">Risk Scan</div><div class="cdesc">Ready to send? Paste the text first. Get a clear list of what could go wrong.</div></div>
+        <div class="mcard red-btn g-prevention" onclick="goModule('crisis')"><span class="new-badge" style="background:#c00">&#128308; NOW</span><div class="ctag" style="color:#a00">Prevention &mdash; Emergency</div><div class="cname">Crisis Response</div><div class="cdesc">Something just happened. Paste the facts. Get 3 statements ready to use in 2 minutes.</div></div>
         <!-- EFFICIENCY -->
         <div class="mcard g-efficiency" onclick="goModule('actionability')"><div class="ctag">Efficiency</div><div class="cname">Clarity Check</div><div class="cdesc">Vague message? Paste it in. Get a version that is direct, clear, and actionable.</div></div>
-        <div class="mcard g-efficiency" onclick="goModule('thread')"><div class="ctag">Efficiency</div><div class="cname">Decision Digest</div><div class="cdesc">Paste emails, meeting notes, Slack threads, board minutes &mdash; anything messy. Get: what was decided, what is open, who acts.</div></div>
-        <div class="mcard span3 g-efficiency" onclick="goModule('rh-translate')"><span class="new-badge">NEW</span><div class="ctag">Efficiency</div><div class="cname">Rhetorical Translation</div><div class="cdesc">Translate any text from DE to FR to EN to IT &mdash; keeping the exact tone, authority, and argumentation style. Not just words &mdash; full rhetorical impact.</div></div>
+        <div class="mcard g-efficiency" onclick="goModule('thread')"><div class="ctag">Efficiency</div><div class="cname">Notes to Tasks</div><div class="cdesc">Paste emails, meeting notes, Slack threads, board minutes &mdash; anything messy. Get: what was decided, what is open, who acts.</div></div>
+        <div class="mcard span3 g-efficiency" onclick="goModule('rh-translate')"><span class="new-badge">NEW</span><div class="ctag">Efficiency</div><div class="cname">Translate</div><div class="cdesc">Translate any text from DE to FR to EN to IT &mdash; keeping the exact tone, authority, and argumentation style. Not just words &mdash; full rhetorical impact.</div></div>
         <!-- CREATION -->
         <div class="mcard span2 g-creation" onclick="goModule('text-gen')"><div class="ctag">&#9670; Creation &mdash; Ghostwriter</div><div class="cname">Text Generator</div><div class="cdesc">Briefing in, finished text out. LinkedIn, speech, press release, email &mdash; any format, in the authentic brand voice.</div></div>
         <div class="mcard g-creation" onclick="goModule('review')"><div class="ctag">Creation &mdash; HR</div><div class="cname">Write Feedback</div><div class="cdesc">Rough notes about an employee in, precise written performance feedback out.</div></div>
@@ -546,7 +544,7 @@ body.adv .vubtn{display:block}
     <!-- BRAND VOICE -->
     <div class="page" id="page-brand-voice">
       <button class="back" onclick="goHome()">&#8592; Home</button>
-      <div class="mtitle">Brand Voice DNA</div>
+      <div class="mtitle">Brand Voice</div>
       <div class="mdesc">How does this company or person communicate? Paste any texts &mdash; get a complete language profile that becomes the master reference for all other modules.</div>
       <div class="tog">
         <button class="togbtn active" onclick="switchBrand('company',this)">Company</button>
@@ -930,7 +928,7 @@ function toggleModuleGrid(){
 async function buildMostUsed(){
   const pills=document.getElementById('mu-pills');
   if(!pills)return;
-  const MOD_LABELS={'rp':'Rhetoric Profile','cf':'Language Over Time','la':'Culture Sync','rm':'Risk Management','st':'Challenger Test','si':'Simulate Impact','crisis':'Instant Crisis Response','as':'Clarity Check','tc':'Decision Digest','rh-translate':'Rhetorical Translation','text-gen':'Text Generator','pr':'Write Feedback','rw':'Write Appreciation','sparring':'2-Min. Training','debrief':'Debriefing','brand-voice-co':'Voice Profile','brand-voice-ind':'Voice Profile','pre-meeting':'Pre-Meeting Brief'};
+  const MOD_LABELS={'rp':'How We Communicate','cf':'Language Over Time','la':'Argument / Reaction Preview','rm':'Risk Scan','st':'Argument / Reaction Preview','si':'Argument / Reaction Preview','crisis':'Crisis Response','as':'Clarity Check','tc':'Notes to Tasks','rh-translate':'Translate','text-gen':'Text Generator','pr':'Write Feedback','rw':'Write Appreciation','sparring':'2-Min. Training','debrief':'Debrief','brand-voice-co':'Brand Voice','brand-voice-ind':'Brand Voice','pre-meeting':'Meeting Prep'};
   const MOD_PAGE={'rp':'profiling','cf':'fingerprint','la':'language','rm':'risk','st':'stress','si':'impact','crisis':'crisis','as':'actionability','tc':'thread','rh-translate':'rh-translate','text-gen':'text-gen','pr':'review','rw':'recognition','sparring':'sparring','debrief':'debrief','brand-voice-co':'brand-voice','brand-voice-ind':'brand-voice','pre-meeting':'pre-meeting'};
   let extra=[];
   try{
@@ -954,7 +952,7 @@ function filterMods(group,btn){
 }
 
 // ROUTER
-const MNAMES={profiling:'Rhetoric Profile',fingerprint:'Language Over Time',language:'Language Analytics',risk:'Risk Management',stress:'Challenger Test',impact:'Simulate Impact',crisis:'Instant Crisis Response',actionability:'Clarity Check',thread:'Decision Digest','rh-translate':'Rhetorical Translation','text-gen':'Text Generator',review:'Write Feedback',recognition:'Write Appreciation',sparring:'2-Min. Training',debrief:'Debriefing','brand-voice':'Brand Voice DNA','brand-voice-co':'Brand Voice DNA','brand-voice-ind':'Brand Voice DNA','vs-cal':'Text Generator','vs-gen':'Text Generator','pre-meeting':'Pre-Meeting Brief'};
+const MNAMES={profiling:'How We Communicate',fingerprint:'Language Over Time',language:'How We Communicate','arg-reaction':'Argument / Reaction Preview',stress:'Argument / Reaction Preview',impact:'Argument / Reaction Preview',risk:'Risk Scan',crisis:'Crisis Response',actionability:'Clarity Check',thread:'Notes to Tasks','rh-translate':'Translate','text-gen':'Text Generator',review:'Write Feedback',recognition:'Write Appreciation',sparring:'2-Min. Training',debrief:'Debrief','brand-voice':'Brand Voice','brand-voice-co':'Brand Voice','brand-voice-ind':'Brand Voice','vs-cal':'Text Generator','vs-gen':'Text Generator','pre-meeting':'Meeting Prep'};
 
 async function routePrompt(){
   const text=document.getElementById('router-input').value.trim();
@@ -989,22 +987,23 @@ function getSelectedPeople(){
 
 // MODULE DEFINITIONS
 const MDEFS={
-  profiling:{title:'Rhetoric Profile',desc:'How does this company, team, or leader communicate? What patterns repeat? Where are the weak points?',mf:'rp-in',ph:'Paste speeches, emails, LinkedIn posts, reports, board communications. The more diverse, the deeper the analysis.',api:'rp',people:true,fields:[{id:'rp-name',type:'text',lbl:'Name / Company / Group',ph:'e.g. CEO Anna Berger, or "Executive Board Acme AG"'},{id:'rp-industry',type:'sel',lbl:'Industry',opts:['Financial Services','Industry / Manufacturing','Tech / SaaS','Healthcare','Education','Public Sector','Other']}]},
+  profiling:{title:'How We Communicate',desc:'How does this company, team, or leader communicate? What patterns repeat? Where are the weak points?',mf:'rp-in',ph:'Paste speeches, emails, LinkedIn posts, reports, board communications. The more diverse, the deeper the analysis.',api:'rp',people:true,fields:[{id:'rp-name',type:'text',lbl:'Name / Company / Group',ph:'e.g. CEO Anna Berger, or "Executive Board Acme AG"'},{id:'rp-industry',type:'sel',lbl:'Industry',opts:['Financial Services','Industry / Manufacturing','Tech / SaaS','Healthcare','Education','Public Sector','Other']}]},
   fingerprint:{title:'Language Over Time',desc:'How has the language of a person, a team, or the whole company shifted &mdash; under pressure, in crisis, after a leadership change, at peak performance?',mf:'cf-in',ph:'Separate texts by time period using "---" and a date label, e.g. "2023-Q1 [text] --- 2024-Q1 [text]"',api:'cf',people:true,fields:[{id:'cf-name',type:'text',lbl:'Name / Company / Group',ph:'e.g. CEO Anna Berger, or "Acme AG communications 2022-2024"'},{id:'cf-focus',type:'sel',lbl:'Focus',opts:['Overall development','Behaviour under pressure','Crisis vs. normal operations','Trust-building over time','Tone drift','After leadership change']}]},
   language:{title:'Language Analytics',desc:'Paste texts from leadership, board members, managers, and employees. See where the official message and the lived reality diverge.',mf:'la-in',ph:'Include texts from multiple levels: board statements, manager emails, employee survey comments, internal newsletters. Separate groups with ---.',api:'la',mh:'180px',fields:[{id:'la-size',type:'sel',lbl:'Company Size',opts:['10-50 employees','50-200 employees','200-1,000 employees','1,000+ employees']},{id:'la-focus',type:'sel',lbl:'Focus',opts:['Leadership vs. employee communication','Cultural consistency across levels','Change communication effectiveness','Trust climate','Board vs. management vs. staff']}]},
-  risk:{title:'Risk Management',desc:'Ready to send? Paste the text first. Get a clear list of what could go wrong.',mf:'rm-in',ph:'Press release, CEO statement, internal announcement, investor letter...',api:'rm',fields:[{id:'rm-audience',type:'sel',lbl:'Target Audience',opts:['Employees','Investors','Media / Public','Customers','Board / Executive team','All simultaneously']},{id:'rm-context',type:'sel',lbl:'Situation',opts:['Strategy shift','Layoffs / Restructuring','Merger / Acquisition','Crisis','New product / Launch','Cultural change']}]},
+  risk:{title:'Risk Scan',desc:'Ready to send? Paste the text first. Get a clear list of what could go wrong.',mf:'rm-in',ph:'Press release, CEO statement, internal announcement, investor letter...',api:'rm',fields:[{id:'rm-audience',type:'sel',lbl:'Target Audience',opts:['Employees','Investors','Media / Public','Customers','Board / Executive team','All simultaneously']},{id:'rm-context',type:'sel',lbl:'Situation',opts:['Strategy shift','Layoffs / Restructuring','Merger / Acquisition','Crisis','New product / Launch','Cultural change']}]},
   stress:{title:'Challenger Test',desc:'What will critics say? Get the hardest counterarguments before you walk into any room.',mf:'st-in',ph:'"We are introducing a new performance evaluation system..." or any position, strategy, or announcement.',api:'st',fields:[{id:'st-persp',type:'sel',lbl:'Perspectives',opts:['All (Media, Employees, Competitors)','Media / Public','Employees / Works council','Investors / Analysts','Critics / NGOs']},{id:'st-int',type:'sel',lbl:'Intensity',opts:['Moderate &mdash; fair criticism','Sharp &mdash; aggressive questioning','Maximum &mdash; hardest possible attack']}]},
   impact:{title:'Simulate Impact',desc:'Before any big announcement: how will employees, media, investors, and other stakeholders react?',mf:'si-in',ph:'Merger announcement, layoffs, strategy shift, leadership change, new policy...',api:'si',fields:[{id:'si-sth',type:'sel',lbl:'Stakeholders',opts:['All groups','Employees only','Media only','Investors only','Employees + Media']},{id:'si-sev',type:'sel',lbl:'Impact Level',opts:['Low &mdash; routine change','Medium &mdash; noticeable impact','High &mdash; significant transformation','Critical &mdash; existential crisis']}]},
-  crisis:{title:'Instant Crisis Response',desc:'Something just happened. Paste the facts. Get 3 statements ready to use in 2 minutes.',mf:'cr-in',ph:'State the hard facts: what happened, when, who is affected, what is already known publicly.',api:'crisis',alert:true,fields:[{id:'cr-type',type:'sel',lbl:'Crisis Type',opts:['Reputational damage / Shitstorm','Workplace accident / Safety incident','Media leak / Unwanted disclosure','Leadership scandal','Product failure / Recall','Financial irregularity','Other']},{id:'cr-aud',type:'text',lbl:'Affected Audiences',ph:'e.g. Employees, Media, Investors, Customers'},{id:'cr-timing',type:'sel',lbl:'Time Since Crisis Broke',opts:['Just now (0-15 min)','Under 1 hour','1-3 hours','Several hours / next day']}]},
+  crisis:{title:'Crisis Response',desc:'Something just happened. Paste the facts. Get 3 statements ready to use in 2 minutes.',mf:'cr-in',ph:'State the hard facts: what happened, when, who is affected, what is already known publicly.',api:'crisis',alert:true,fields:[{id:'cr-type',type:'sel',lbl:'Crisis Type',opts:['Reputational damage / Shitstorm','Workplace accident / Safety incident','Media leak / Unwanted disclosure','Leadership scandal','Product failure / Recall','Financial irregularity','Other']},{id:'cr-aud',type:'text',lbl:'Affected Audiences',ph:'e.g. Employees, Media, Investors, Customers'},{id:'cr-timing',type:'sel',lbl:'Time Since Crisis Broke',opts:['Just now (0-15 min)','Under 1 hour','1-3 hours','Several hours / next day']}]},
   actionability:{title:'Clarity Check',desc:'Vague message? Paste it in. Get a version that is direct, clear, and actionable.',mf:'as-in',ph:'"We should take a look at the customer satisfaction topic..." or any unclear directive.',api:'as',fields:[{id:'as-ctx',type:'sel',lbl:'Format',opts:['Email delegation','Meeting minutes','Project briefing','Strategy document','Verbal instruction']},{id:'as-rec',type:'sel',lbl:'Recipient',opts:['Direct reports','Project team','Department head','External partners']}]},
-  thread:{title:'Decision Digest',desc:'Paste anything messy &mdash; emails, meeting notes, Slack threads, board minutes, strategy docs. Get back: what was decided, what is open, who needs to act.',mf:'tc-in',ph:'Paste the full content here. No need to clean it up.',api:'tc',mh:'200px',fields:[{id:'tc-src',type:'sel',lbl:'Source Type',opts:['Email thread','Meeting notes / minutes','Slack / Teams chat','Board minutes','Strategy document','Mixed / multiple sources']},{id:'tc-goal',type:'sel',lbl:'Output Goal',opts:['Decision summary for CEO','Action items with owners','Summary for absent stakeholders','Identify blockers & open questions']}]},
-  'rh-translate':{title:'Rhetorical Translation',desc:'Translate any text from DE to FR to EN to IT &mdash; keeping the exact tone, authority, and argumentation style. Not just words &mdash; full rhetorical impact.',mf:'rt-in',ph:'Paste the original text here.',api:'rh-translate',fields:[{id:'rt-src',type:'sel',lbl:'Source Language',opts:['German','English','French','Italian','Spanish']},{id:'rt-tgt',type:'sel',lbl:'Target Language',opts:['English','German','French','Italian','Spanish']},{id:'rt-ctx',type:'text',lbl:'Context / Audience',ph:'e.g. External investors, French-speaking employees'}]},
+  thread:{title:'Notes to Tasks',desc:'Paste anything messy &mdash; emails, meeting notes, Slack threads, board minutes, strategy docs. Get back: what was decided, what is open, who needs to act.',mf:'tc-in',ph:'Paste the full content here. No need to clean it up.',api:'tc',mh:'200px',fields:[{id:'tc-src',type:'sel',lbl:'Source Type',opts:['Email thread','Meeting notes / minutes','Slack / Teams chat','Board minutes','Strategy document','Mixed / multiple sources']},{id:'tc-goal',type:'sel',lbl:'Output Goal',opts:['Decision summary for CEO','Action items with owners','Summary for absent stakeholders','Identify blockers & open questions']}]},
+  'rh-translate':{title:'Translate',desc:'Translate any text from DE to FR to EN to IT &mdash; keeping the exact tone, authority, and argumentation style. Not just words &mdash; full rhetorical impact.',mf:'rt-in',ph:'Paste the original text here.',api:'rh-translate',fields:[{id:'rt-src',type:'sel',lbl:'Source Language',opts:['German','English','French','Italian','Spanish']},{id:'rt-tgt',type:'sel',lbl:'Target Language',opts:['English','German','French','Italian','Spanish']},{id:'rt-ctx',type:'text',lbl:'Context / Audience',ph:'e.g. External investors, French-speaking employees'}]},
   sparring:{title:'2-Min. Training',desc:'3 short personal exercises based on known communication weaknesses. Each takes 2 minutes.',mf:'sp-in',ph:'Paste a Rhetoric Profile or Language Over Time analysis, or describe the known weaknesses directly.',api:'sparring',people:true,fields:[{id:'sp-name',type:'text',lbl:'Name / Role',ph:'e.g. CEO Anna Berger'},{id:'sp-role',type:'text',lbl:'Current Development Focus',ph:'e.g. Confidence in board presentations, clarity under pressure'},{id:'sp-focus',type:'sel',lbl:'This Week\'s Priority',opts:['Based on profile analysis','Clarity & directness','Emotional presence','Authority under pressure','Storytelling & narrative','Listening & dialogue']}]},
-  debrief:{title:'Debriefing',desc:'After a speech or announcement: what worked, what didn\'t, where did the audience react differently than expected?',mf:'db-orig',ph:'Paste the original speech, statement, or email here.',api:'debrief',twopart:true,fields:[{id:'db-feedback',type:'ta',lbl:'Real Feedback & Reactions',ph:'Press quotes, internal feedback, Q&A responses, social media comments, audience reactions.'},{id:'db-ctx',type:'text',lbl:'Context',ph:'e.g. Quarterly all-hands, investor call, media interview'}]},
+  debrief:{title:'Debrief',desc:'After a speech or announcement: what worked, what didn\'t, where did the audience react differently than expected?',mf:'db-orig',ph:'Paste the original speech, statement, or email here.',api:'debrief',twopart:true,fields:[{id:'db-feedback',type:'ta',lbl:'Real Feedback & Reactions',ph:'Press quotes, internal feedback, Q&A responses, social media comments, audience reactions.'},{id:'db-ctx',type:'text',lbl:'Context',ph:'e.g. Quarterly all-hands, investor call, media interview'}]},
   review:{title:'Write Feedback',desc:'Rough notes about an employee in, precise written performance feedback out.',mf:'pr-in',ph:'"Often late, delivers strong quality, saved the client project last month, struggles with prioritisation..."',api:'pr',people:true,fields:[{id:'pr-role',type:'text',lbl:"Employee's Role",ph:'e.g. Senior Analyst, Project Manager'},{id:'pr-fmt',type:'sel',lbl:'Format',opts:['Written appraisal (HR document)','Verbal feedback (conversation guide)','360 feedback','Probationary review']}]},
   recognition:{title:'Write Appreciation',desc:'Write a recognition for any employee that feels personal and genuine &mdash; not generic copy-paste.',mf:'rw-in',ph:'"Meier worked over the weekend to rescue the database migration. The client noticed. Said it was the best handover they ever received."',api:'rw',people:true,fields:[{id:'rw-type',type:'sel',lbl:'Recipient Type',opts:['The Analyst &mdash; values precision and evidence','The Executor &mdash; values impact and results','The Team Player &mdash; values group contribution','The Visionary &mdash; values ideas and vision','The Pragmatist &mdash; wants direct acknowledgement']},{id:'rw-fmt',type:'sel',lbl:'Format',opts:['Verbal recognition (conversation)','Written acknowledgement (email)','Public praise (team meeting)','Formal recognition (HR document)']}]},
   'text-gen':{title:'Text Generator',desc:'Briefing in, finished text out. LinkedIn, speech, press release, email &mdash; any format, in the authentic brand voice.',api:'text-gen',special:'textgen'},
-  'pre-meeting':{title:'Pre-Meeting Brief',desc:'Meeting in 1 hour? Get a complete brief: the 3 hardest moments, your opening line, key messages, what not to say, and a stakeholder map.',api:'pre-meeting',special:'premeeting'}
+  'pre-meeting':{title:'Meeting Prep',desc:'Meeting in 1 hour? Get a complete brief: the 3 hardest moments, your opening line, key messages, what not to say, and a stakeholder map.',api:'pre-meeting',special:'premeeting'},
+  'arg-reaction':{title:'Argument / Reaction Preview',desc:'Three tools in one: get the hardest pushback, simulate how stakeholders will react, and check if the leadership message matches company reality.',api:'arg-reaction',special:'argreaction'}
 };
 
 function goModule(name,prefill){
@@ -1014,6 +1013,7 @@ function goModule(name,prefill){
   const form=document.getElementById('mod-form');
   if(def.special==='textgen')buildTextGen(prefill,form);
   else if(def.special==='premeeting')buildPreMeeting(prefill,form);
+  else if(def.special==='argreaction')buildArgReaction(prefill,form);
   else buildForm(name,def,prefill,form);
   goPage('module');
 }
@@ -1103,6 +1103,9 @@ async function runMod(name){
   else if(name==='debrief'){module='debrief';rid='debrief-r';bid='debrief-b';const orig=g('db-orig');const fb=g('db-feedback');if(!orig||!fb)return alert('Please enter both the original communication and the real feedback.');data={original:orig,feedback:fb+context,context:g('db-ctx')};}
   else if(name==='review'){module='pr';rid='review-r';bid='review-b';const t=g('pr-in');if(!t)return alert('Please enter text.');data={text:t+context,role:g('pr-role'),format:g('pr-fmt')};}
   else if(name==='recognition'){module='rw';rid='recognition-r';bid='recognition-b';const t=g('rw-in');if(!t)return alert('Please enter text.');data={text:t+context,type:g('rw-type'),format:g('rw-fmt')};}
+  else if(name==='arg-pushback'){module='st';rid='arg-pushback-r';bid='arg-pushback-b';const t=g('ar-push-in');if(!t)return alert('Please enter text.');data={text:t+context,perspectives:g('ar-push-persp'),intensity:g('ar-push-int')};}
+  else if(name==='arg-reactions'){module='si';rid='arg-reactions-r';bid='arg-reactions-b';const t=g('ar-react-in');if(!t)return alert('Please enter text.');data={text:t+context,stakeholders:g('ar-react-sth'),severity:g('ar-react-sev')};}
+  else if(name==='arg-culture'){module='la';rid='arg-culture-r';bid='arg-culture-b';const t=g('ar-cult-in');if(!t)return alert('Please enter text.');data={text:t+context,size:g('ar-cult-size'),focus:g('ar-cult-focus')};}
   else if(name==='pre-meeting'){module='pre-meeting';rid='pre-meeting-r';bid='pre-meeting-b';const sit=g('pm-sit');if(!sit)return alert('Please describe the meeting or situation.');const pCtx=getPeopleContext(getSelectedPeople());data={situation:sit,datetime:g('pm-dt'),format:g('pm-fmt'),participants:g('pm-part'),goal:g('pm-goal'),text:g('pm-bg'),peopleContext:pCtx+memCtx};}
   else return;
 
@@ -1189,6 +1192,54 @@ function buildPreMeeting(prefill,form){
   <button class="runbtn" onclick="runMod('pre-meeting')">Generate Brief</button>
   <div class="rbox" id="pre-meeting-r"><div class="rhead"><span class="rlbl">Pre-Meeting Brief</span><div class="rbtns"><button class="cpbtn" onclick="cp('pre-meeting-b')">Copy</button></div></div><div class="rbody" id="pre-meeting-b"></div></div>`;
   if(prefill){const el=document.getElementById('pm-sit');if(el)el.value=prefill;}
+}
+
+// ARG/REACTION PREVIEW FORM (3 tabs: Pushback / Stakeholder Reactions / Culture Check)
+function buildArgReaction(prefill,form){
+  form.innerHTML=`
+  <div class="tabs" id="ar-tabs">
+    <button class="tab active" onclick="arTab(this,'ar-push','ar-react','ar-cult')">Pushback</button>
+    <button class="tab" onclick="arTab(this,'ar-react','ar-push','ar-cult')">Stakeholder Reactions</button>
+    <button class="tab" onclick="arTab(this,'ar-cult','ar-push','ar-react')">Culture Check</button>
+  </div>
+  <div id="ar-push">
+    ${privBadge()}
+    <div class="fg2"><label class="fl2">Your position or announcement</label><textarea id="ar-push-in" style="min-height:130px" placeholder="&quot;We are introducing a new performance evaluation system...&quot; or any position, strategy, or announcement."></textarea></div>
+    <div class="row2">
+      <div class="fg2"><label class="fl2">Perspectives</label><select id="ar-push-persp"><option>All (Media, Employees, Competitors)</option><option>Media / Public</option><option>Employees / Works council</option><option>Investors / Analysts</option><option>Critics / NGOs</option></select></div>
+      <div class="fg2"><label class="fl2">Intensity</label><select id="ar-push-int"><option>Moderate &mdash; fair criticism</option><option>Sharp &mdash; aggressive questioning</option><option>Maximum &mdash; hardest possible attack</option></select></div>
+    </div>
+    <button class="runbtn" onclick="runMod('arg-pushback')">Get Pushback</button>
+    <div class="rbox" id="arg-pushback-r"><div class="rhead"><span class="rlbl">Pushback</span><div class="rbtns"><button class="cpbtn" onclick="cp('arg-pushback-b')">Copy</button></div></div><div class="rbody" id="arg-pushback-b"></div></div>
+    <div class="debrief-nudge" id="dn-arg-pushback-r"></div>
+  </div>
+  <div id="ar-react" style="display:none">
+    ${privBadge()}
+    <div class="fg2"><label class="fl2">Announcement or message</label><textarea id="ar-react-in" style="min-height:130px" placeholder="Merger announcement, layoffs, strategy shift, leadership change, new policy..."></textarea></div>
+    <div class="row2">
+      <div class="fg2"><label class="fl2">Stakeholders</label><select id="ar-react-sth"><option>All groups</option><option>Employees only</option><option>Media only</option><option>Investors only</option><option>Employees + Media</option></select></div>
+      <div class="fg2"><label class="fl2">Impact Level</label><select id="ar-react-sev"><option>Low &mdash; routine change</option><option>Medium &mdash; noticeable impact</option><option>High &mdash; significant transformation</option><option>Critical &mdash; existential crisis</option></select></div>
+    </div>
+    <button class="runbtn" onclick="runMod('arg-reactions')">Simulate Reactions</button>
+    <div class="rbox" id="arg-reactions-r"><div class="rhead"><span class="rlbl">Stakeholder Reactions</span><div class="rbtns"><button class="cpbtn" onclick="cp('arg-reactions-b')">Copy</button></div></div><div class="rbody" id="arg-reactions-b"></div></div>
+    <div class="debrief-nudge" id="dn-arg-reactions-r"></div>
+  </div>
+  <div id="ar-cult" style="display:none">
+    <div class="fg2"><label class="fl2">Texts from multiple levels (separate with ---)</label><textarea id="ar-cult-in" style="min-height:160px" placeholder="Board statements, manager emails, employee survey comments, internal newsletters..."></textarea></div>
+    <div class="row2">
+      <div class="fg2"><label class="fl2">Company Size</label><select id="ar-cult-size"><option>10-50 employees</option><option>50-200 employees</option><option>200-1,000 employees</option><option>1,000+ employees</option></select></div>
+      <div class="fg2"><label class="fl2">Focus</label><select id="ar-cult-focus"><option>Leadership vs. employee communication</option><option>Cultural consistency across levels</option><option>Change communication effectiveness</option><option>Trust climate</option><option>Board vs. management vs. staff</option></select></div>
+    </div>
+    <button class="runbtn" onclick="runMod('arg-culture')">Check Alignment</button>
+    <div class="rbox" id="arg-culture-r"><div class="rhead"><span class="rlbl">Culture Check</span><div class="rbtns"><button class="cpbtn" onclick="cp('arg-culture-b')">Copy</button></div></div><div class="rbody" id="arg-culture-b"></div></div>
+  </div>`;
+  if(prefill){const t=document.getElementById('ar-push-in');if(t)t.value=prefill;}
+}
+function arTab(btn,show,hide1,hide2){
+  btn.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+  document.getElementById(show).style.display='block';
+  document.getElementById(hide1).style.display='none';
+  document.getElementById(hide2).style.display='none';
 }
 
 // MODAL TABS
