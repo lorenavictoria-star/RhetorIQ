@@ -283,7 +283,7 @@ body.client-mode .live-badge{display:inline-block}
       <label class="login-label">Email</label>
       <input class="login-input" type="email" id="login-email" placeholder="advisor@example.com" autocomplete="email">
       <label class="login-label">Password</label>
-      <input class="login-input" type="password" id="login-password" placeholder="‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢" autocomplete="current-password">
+      <input class="login-input" type="password" id="login-password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" autocomplete="current-password">
       <button class="login-btn" onclick="loginAdvisor()">Sign in as Advisor</button>
       <div class="login-error" id="login-error"></div>
       <div class="login-divider">or</div>
@@ -341,7 +341,7 @@ body.client-mode .live-badge{display:inline-block}
     <div class="chat-msg assistant">Hello! I'm your RhetorIQ guide. Ask me which module to use, how to get the best results, or what any feature does.</div>
   </div>
   <div class="chat-input-row">
-    <input class="chat-input" id="chat-input" placeholder="Ask a question‚Ä¶" onkeydown="if(event.key==='Enter')sendChat()">
+    <input class="chat-input" id="chat-input" placeholder="Ask a question&#8230;" onkeydown="if(event.key==='Enter')sendChat()">
     <button class="chat-send" onclick="sendChat()">Send</button>
   </div>
 </div>
@@ -514,7 +514,7 @@ body.client-mode .live-badge{display:inline-block}
           <div class="file-upload-area" onclick="triggerUpload('bv-co-file','bv-co-input')">
             <input type="file" id="bv-co-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-co-input')">
             <span class="upload-icon">&uarr;</span>
-            <div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><div class="upload-text" style="margin-top:2px">or drag & drop ¬∑ multiple files supported</div></div>
+            <div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><div class="upload-text" style="margin-top:2px">or drag & drop &#183; multiple files supported</div></div>
           </div>
           <div id="bv-co-files"></div>
           <button class="run-btn" onclick="run('brand-voice-co')">Extract Brand Voice DNA</button>
@@ -537,7 +537,7 @@ body.client-mode .live-badge{display:inline-block}
           <div class="file-upload-area" onclick="triggerUpload('bv-ind-file','bv-ind-input')">
             <input type="file" id="bv-ind-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-ind-input')">
             <span class="upload-icon">&uarr;</span>
-            <div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><div class="upload-text" style="margin-top:2px">or drag & drop ¬∑ multiple files supported</div></div>
+            <div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><div class="upload-text" style="margin-top:2px">or drag & drop &#183; multiple files supported</div></div>
           </div>
           <div id="bv-ind-files"></div>
           <button class="run-btn" onclick="run('brand-voice-ind')">Extract Voice DNA</button>
@@ -583,7 +583,7 @@ body.client-mode .live-badge{display:inline-block}
         <div class="file-upload-area" onclick="triggerUpload('la-file','la-input')"><input type="file" id="la-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'la-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div></div></div>
         <div id="la-files"></div>
         <div class="input-row">
-          <div><label class="field-label">Company Size</label><select id="la-size"><option>10‚Äì50 employees</option><option>50‚Äì200 employees</option><option>200‚Äì1,000 employees</option><option>1,000+ employees</option></select></div>
+          <div><label class="field-label">Company Size</label><select id="la-size"><option>10&#8211;50 employees</option><option>50&#8211;200 employees</option><option>200&#8211;1,000 employees</option><option>1,000+ employees</option></select></div>
           <div><label class="field-label">Analysis Focus</label><select id="la-focus"><option>Leadership vs. employee communication</option><option>Cultural consistency</option><option>Change communication</option><option>Trust climate in language</option></select></div>
         </div>
         <button class="run-btn" onclick="run('la')">Run Language Analytics</button>
@@ -784,7 +784,7 @@ body.client-mode .live-badge{display:inline-block}
         <div id="pr-files"></div>
         <div class="input-row">
           <div><label class="field-label">Person's role</label><input type="text" id="pr-role" placeholder="e.g. Senior Analyst, Project Manager"></div>
-          <div><label class="field-label">Format</label><select id="pr-format"><option>Written appraisal (HR document)</option><option>Verbal feedback (conversation guide)</option><option>360¬∞ feedback</option><option>Probationary review</option></select></div>
+          <div><label class="field-label">Format</label><select id="pr-format"><option>Written appraisal (HR document)</option><option>Verbal feedback (conversation guide)</option><option>360&#176; feedback</option><option>Probationary review</option></select></div>
         </div>
         <button class="run-btn" onclick="run('pr')">Formulate Feedback</button>
         <div class="result-box" id="pr-result"><div class="result-top"><span class="result-tag">Performance Review</span><button class="copy-btn" onclick="copyResult('pr-body')">Copy</button></div><div class="result-body" id="pr-body"></div></div>
@@ -793,7 +793,7 @@ body.client-mode .live-badge{display:inline-block}
       <!-- RECOGNITION WRITER -->
       <div class="panel" id="panel-recognition">
         <div class="module-header"><div class="module-title">Recognition Writer</div><div class="module-sub">Culturally calibrated, authentic recognition &mdash; precise, free of AI-kitsch, psychologically targeted.</div></div>
-        <div class="input-block"><label class="field-label">What did the person specifically do?</label><textarea id="rw-input" style="min-height:100px" placeholder='e.g. "M√ºller worked over the weekend to rescue the database migration and secured the entire product launch"'></textarea></div>
+        <div class="input-block"><label class="field-label">What did the person specifically do?</label><textarea id="rw-input" style="min-height:100px" placeholder='e.g. "M&#252;ller worked over the weekend to rescue the database migration and secured the entire product launch"'></textarea></div>
         <div class="input-row">
           <div><label class="field-label">Recipient type</label><select id="rw-type"><option>The Analyst &mdash; wants praise for precision and logic</option><option>The Executor &mdash; wants recognition for impact and results</option><option>The Team Player &mdash; wants to be seen for contribution to the group</option><option>The Visionary &mdash; wants appreciation for ideas and courage</option><option>The Pragmatist &mdash; wants direct, factual acknowledgement</option></select></div>
           <div><label class="field-label">Format</label><select id="rw-format"><option>Verbal recognition (conversation guide)</option><option>Written acknowledgement (email / Slack)</option><option>Public praise (team meeting / All-Hands)</option><option>Formal recognition (annual report / HR document)</option></select></div>
@@ -817,7 +817,7 @@ body.client-mode .live-badge{display:inline-block}
       <!-- HISTORY -->
       <div class="panel" id="panel-history">
         <div class="module-header"><div class="module-title">All Analyses</div><div class="module-sub">Persistent log of all analyses.</div></div>
-        <div id="history-list"><div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">Loading‚Ä¶</div></div>
+        <div id="history-list"><div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">Loading&#8230;</div></div>
       </div>
 
     </div><!-- /content -->
@@ -840,10 +840,10 @@ body.client-mode .live-badge{display:inline-block}
 <script>
 if (typeof pdfjsLib !== 'undefined') pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-// ‚îÄ‚îÄ CONFIG ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; CONFIG &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 const API = 'https://rhetoriq-jib0.onrender.com';
 
-// ‚îÄ‚îÄ STATE ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; STATE &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 let authToken = localStorage.getItem('riq-token');
 let currentUser = null;
 let isAdvisor = false;
@@ -854,7 +854,7 @@ let wsConnection = null;
 let _voiceProfile = null;
 let chatHistory = [];
 
-// ‚îÄ‚îÄ VIDEO DATA ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; VIDEO DATA &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 const VIDEO_MODULES = [
   { id:'intro', label:'Introduction to RhetorIQ', desc:'Overview of all modules and how to get started' },
   { id:'brand-voice', label:'Brand Voice DNA', desc:'How to extract the linguistic fingerprint of a company or person' },
@@ -897,7 +897,7 @@ function saveVideo(id, input) {
   reader.readAsDataURL(file);
 }
 
-// ‚îÄ‚îÄ FILE UPLOAD ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; FILE UPLOAD &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 function triggerUpload(fileInputId, targetTextareaId) {
   document.getElementById(fileInputId).click();
 }
@@ -970,12 +970,12 @@ document.addEventListener('drop', e => {
   }
 });
 
-// ‚îÄ‚îÄ SMART ROUTER ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; SMART ROUTER &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 async function routePrompt() {
   const text = document.getElementById('router-input').value.trim();
   if (!text) return;
   const hint = document.getElementById('router-hint');
-  hint.textContent = 'Routing‚Ä¶';
+  hint.textContent = 'Routing&#8230;';
   try {
     const r = await apiFetch('/api/analyze/route', { method:'POST', body: JSON.stringify({ text }) });
     const d = await r.json();
@@ -1001,7 +1001,7 @@ async function routePrompt() {
   }
 }
 
-// ‚îÄ‚îÄ BRAND VOICE TOGGLE ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; BRAND VOICE TOGGLE &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 function switchBrandMode(mode, btn) {
   document.querySelectorAll('.brand-toggle-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -1009,7 +1009,7 @@ function switchBrandMode(mode, btn) {
   document.getElementById('brand-' + mode).classList.add('active');
 }
 
-// ‚îÄ‚îÄ AUTH ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; AUTH &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 function showClientForm() { document.getElementById('advisor-login-form').style.display='none'; document.getElementById('client-token-form').style.display='block'; }
 function showAdvisorForm() { document.getElementById('client-token-form').style.display='none'; document.getElementById('advisor-login-form').style.display='block'; }
 
@@ -1048,7 +1048,7 @@ function logout() {
   document.body.classList.remove('advisor-mode','client-mode');
 }
 
-// ‚îÄ‚îÄ INIT ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; INIT &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 async function initApp(user, role) {
   currentUser = user; isAdvisor = role === 'advisor';
   document.getElementById('login-screen').classList.add('hidden');
@@ -1079,7 +1079,7 @@ async function tryAutoLogin() {
   } catch { localStorage.removeItem('riq-token'); }
 }
 
-// ‚îÄ‚îÄ WEBSOCKET ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; WEBSOCKET &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 function connectWebSocket() {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   const host = API.replace(/^https?/, proto);
@@ -1099,7 +1099,7 @@ function handleIncomingAnalysis(analysis) {
   if (bodyEl) { const box = document.getElementById(analysis.module + '-result'); if(box) { box.classList.add('visible'); bodyEl.textContent = analysis.result; } }
 }
 
-// ‚îÄ‚îÄ CLIENT MANAGEMENT ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; CLIENT MANAGEMENT &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 async function loadClients() {
   try { const r = await apiFetch('/api/clients'); clientList = await r.json(); renderClients(); } catch {}
 }
@@ -1109,7 +1109,7 @@ function renderClients() {
   const list = document.getElementById('client-list');
   const sel = document.getElementById('active-client-select');
   if (!clientList.length) { list.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No clients yet.</div>'; sel.innerHTML='<option value="">&mdash; Select client &mdash;</option>'; return; }
-  list.innerHTML = clientList.map(c=>`<div class="client-card"><div><div class="client-card-name">${c.name}</div><div class="client-card-meta">${c.industry||''} ¬∑ ${c.contact||''}</div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><code class="client-card-badge">${c.token.substring(0,16)}‚Ä¶</code><button class="btn" style="font-size:10px;padding:4px 10px" onclick="copyToken('${c.token}')">Copy token</button></div></div>`).join('');
+  list.innerHTML = clientList.map(c=>`<div class="client-card"><div><div class="client-card-name">${c.name}</div><div class="client-card-meta">${c.industry||''} &#183; ${c.contact||''}</div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><code class="client-card-badge">${c.token.substring(0,16)}&#8230;</code><button class="btn" style="font-size:10px;padding:4px 10px" onclick="copyToken('${c.token}')">Copy token</button></div></div>`).join('');
   sel.innerHTML = '<option value="">&mdash; Select client &mdash;</option>' + clientList.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
 }
 
@@ -1129,12 +1129,12 @@ async function addClient() {
   } catch(e) { alert('Error: '+e.message); }
 }
 
-// ‚îÄ‚îÄ API HELPER ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; API HELPER &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 function apiFetch(path, options={}) {
   return fetch(API+path, { ...options, headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken,...(options.headers||{})} });
 }
 
-// ‚îÄ‚îÄ ANALYSIS COUNT ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; ANALYSIS COUNT &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 function updateAnalysisCount() {
   apiFetch('/api/analyze/history').then(r=>r.json()).then(rows=>{ analysisCount=rows.length; document.getElementById('stat-analyses').textContent=analysisCount; }).catch(()=>{});
 }
@@ -1147,7 +1147,7 @@ async function loadHistory() {
   el.innerHTML = rows.map(h=>{const d=new Date(h.created_at).toLocaleString('en-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});return `<div class="history-row"><div><div class="history-title">${h.module_label||h.module}</div><div class="history-meta">${d}</div></div><div class="history-badge">${h.module}</div></div>`;}).join('');
 }
 
-// ‚îÄ‚îÄ CHATBOT ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; CHATBOT &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 function toggleChat() { document.getElementById('chatbot-panel').classList.toggle('open'); }
 
 async function sendChat() {
@@ -1169,7 +1169,7 @@ async function sendChat() {
   }
 }
 
-// ‚îÄ‚îÄ MODULE RUNNERS ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; MODULE RUNNERS &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 async function run(id) {
   let module, data, bodyElId, resultElId;
 
@@ -1192,7 +1192,7 @@ async function run(id) {
   const resultBox = document.getElementById(resultElId);
   const bodyEl = document.getElementById(bodyElId);
   resultBox.classList.add('visible');
-  bodyEl.innerHTML = '<div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:8px">Analysing‚Ä¶</span></div>';
+  bodyEl.innerHTML = '<div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:8px">Analysing&#8230;</span></div>';
 
   try {
     const r = await apiFetch('/api/analyze', { method:'POST', body:JSON.stringify({ module, clientId:activeClientId, data }) });
@@ -1206,9 +1206,9 @@ async function run(id) {
   }
 }
 
-// ‚îÄ‚îÄ UI HELPERS ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; UI HELPERS &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 const meta = {
-  dashboard:['Dashboard','Smart prompt ¬∑ All modules'],
+  dashboard:['Dashboard','Smart prompt &#183; All modules'],
   clients:['Clients','Manage your client workspace'],
   'brand-voice':['Brand Voice DNA','Company or individual linguistic fingerprint'],
   profiling:['Executive Rhetoric Profiling','Analyse rhetorical architecture'],
@@ -1219,7 +1219,7 @@ const meta = {
   impact:['Strategic Impact Simulation','Simulate stakeholder reactions'],
   actionability:['Actionability Scanner','Translate vagueness into clarity'],
   thread:['Thread Cleaner','Decision logic from communication threads'],
-  'text-gen':['Text Generator','LinkedIn ¬∑ Website ¬∑ B2B ¬∑ Press ¬∑ Internal'],
+  'text-gen':['Text Generator','LinkedIn &#183; Website &#183; B2B &#183; Press &#183; Internal'],
   review:['Performance Review','Development-oriented feedback'],
   recognition:['Recognition Writer','Calibrated authentic recognition'],
   videos:['Video Tutorials','Step-by-step guides for every module'],
@@ -1249,7 +1249,7 @@ function switchTab(btn, showId, hideId) {
 
 function copyResult(id) { navigator.clipboard.writeText(document.getElementById(id).textContent).catch(()=>{}); }
 
-// ‚îÄ‚îÄ PWA ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; PWA &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 let deferredPrompt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('install-banner').classList.add('show');});
 window.addEventListener('appinstalled',()=>document.getElementById('install-banner').classList.remove('show'));
@@ -1261,7 +1261,7 @@ if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch
 document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')loginAdvisor();});
 document.getElementById('client-token-input').addEventListener('keydown',e=>{if(e.key==='Enter')loginClient();});
 
-// ‚îÄ‚îÄ BOOT ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+// &#9472;&#9472; BOOT &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 tryAutoLogin();
 </script>
 </body>
