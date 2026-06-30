@@ -126,7 +126,7 @@ body.advisor-mode .stat-block.advisor-only{display:block}
 .module-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border:1px solid var(--border)}
 .module-tile{background:var(--bg);padding:20px 22px;cursor:pointer;transition:background 0.12s;position:relative}
 .module-tile:hover{background:var(--surface)}
-.module-tile::after{content:'‚Üí';position:absolute;right:18px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:13px;opacity:0;transition:opacity 0.12s}
+.module-tile::after{content:'&rarr;';position:absolute;right:18px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:13px;opacity:0;transition:opacity 0.12s}
 .module-tile:hover::after{opacity:1}
 .tile-tag{font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px}
 .tile-name{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:400;color:var(--text);margin-bottom:5px}
@@ -304,12 +304,12 @@ body.client-mode .live-badge{display:inline-block}
   <span>Install RhetorIQ as an app</span>
   <div style="display:flex;gap:8px;align-items:center">
     <button onclick="installApp()">Install</button>
-    <button class="dismiss" onclick="document.getElementById('install-banner').classList.remove('show')">‚úï</button>
+    <button class="dismiss" onclick="document.getElementById('install-banner').classList.remove('show')">&times;</button>
   </div>
 </div>
 <div id="ios-hint">
-  <span style="font-size:20px;display:block;margin-bottom:6px">‚¨Ü</span>
-  Tap <strong>Share</strong> ‚Üí<br><strong>"Add to Home Screen"</strong>
+  <span style="font-size:20px;display:block;margin-bottom:6px">&#11014;</span>
+  Tap <strong>Share</strong> &rarr;<br><strong>"Add to Home Screen"</strong>
   <br><span style="margin-top:8px;display:inline-block;color:var(--text-dim);cursor:pointer;font-size:11px" onclick="document.getElementById('ios-hint').classList.remove('show')">Dismiss</span>
 </div>
 
@@ -331,11 +331,11 @@ body.client-mode .live-badge{display:inline-block}
 </div>
 
 <!-- CHATBOT -->
-<button id="chatbot-btn" onclick="toggleChat()" title="Help & Navigation">üí¨</button>
+<button id="chatbot-btn" onclick="toggleChat()" title="Help & Navigation">&#128172;</button>
 <div id="chatbot-panel">
   <div class="chat-header">
     <div><div class="chat-header-title">RhetorIQ Assistant</div><div class="chat-header-sub">Ask me anything about the modules</div></div>
-    <button class="chat-close" onclick="toggleChat()">‚úï</button>
+    <button class="chat-close" onclick="toggleChat()">&times;</button>
   </div>
   <div class="chat-messages" id="chat-messages">
     <div class="chat-msg assistant">Hello! I'm your RhetorIQ guide. Ask me which module to use, how to get the best results, or what any feature does.</div>
@@ -389,8 +389,8 @@ body.client-mode .live-badge{display:inline-block}
       <div class="nav-item" onclick="showPanel('history',this);loadHistory()"><div class="nav-dot"></div><div class="nav-label">All Analyses</div></div>
     </div>
     <div class="sidebar-footer">
-      <div class="user-name" id="sidebar-user-name">‚Äî</div>
-      <div class="user-role" id="sidebar-user-role">‚Äî</div>
+      <div class="user-name" id="sidebar-user-name">&mdash;</div>
+      <div class="user-role" id="sidebar-user-role">&mdash;</div>
       <div class="logout-btn" onclick="logout()">Sign out</div>
     </div>
   </nav>
@@ -402,7 +402,7 @@ body.client-mode .live-badge{display:inline-block}
     </div>
     <div class="client-bar">
       <span class="client-label">Active client</span>
-      <select class="client-select" id="active-client-select" onchange="switchClient(this.value)"><option value="">‚Äî Select client ‚Äî</option></select>
+      <select class="client-select" id="active-client-select" onchange="switchClient(this.value)"><option value="">&mdash; Select client &mdash;</option></select>
       <span class="ws-dot" id="ws-dot"></span>
       <button class="new-client-btn" onclick="openModal()">+ New Client</button>
     </div>
@@ -426,10 +426,10 @@ body.client-mode .live-badge{display:inline-block}
         <div class="smart-router">
           <span class="smart-router-label">Smart Prompt</span>
           <div class="smart-router-title">What do you want to analyse or create?</div>
-          <div class="smart-router-sub">Describe your goal ‚Äî RhetorIQ automatically routes to the right module.</div>
+          <div class="smart-router-sub">Describe your goal &mdash; RhetorIQ automatically routes to the right module.</div>
           <div class="smart-router-row">
             <textarea id="router-input" placeholder='e.g. "I want to check if this press release could cause problems with employees" or "Write a LinkedIn post for our CEO"' style="min-height:80px"></textarea>
-            <button class="smart-router-btn" onclick="routePrompt()">‚Üí Analyse</button>
+            <button class="smart-router-btn" onclick="routePrompt()">&rarr; Analyse</button>
           </div>
           <div class="router-hint" id="router-hint"></div>
         </div>
@@ -445,14 +445,14 @@ body.client-mode .live-badge{display:inline-block}
           <div class="module-tile tile-span2" onclick="showPanel('brand-voice',null)">
             <div class="tile-tag">Brand DNA</div>
             <div class="tile-name">Brand Voice DNA</div>
-            <div class="tile-desc">The complete linguistic fingerprint of a company or individual ‚Äî the master reference for all communication. Company-wide or person-specific.</div>
+            <div class="tile-desc">The complete linguistic fingerprint of a company or individual &mdash; the master reference for all communication. Company-wide or person-specific.</div>
           </div>
         </div>
 
         <div class="modules-label" style="margin-top:24px">Analysis</div>
         <div class="module-grid" style="margin-bottom:1px">
-          <div class="module-tile" onclick="showPanel('profiling',null)"><div class="tile-tag">Profiling</div><div class="tile-name">Executive Rhetoric Profiling</div><div class="tile-desc">Rhetorical DNA of a leader ‚Äî argumentation logic, persuasion patterns, strategic blind spots.</div></div>
-          <div class="module-tile" onclick="showPanel('fingerprint',null)"><div class="tile-tag">Development</div><div class="tile-name">Communication Fingerprint</div><div class="tile-desc">How does language shift over time ‚Äî under pressure, in crisis, at peak performance?</div></div>
+          <div class="module-tile" onclick="showPanel('profiling',null)"><div class="tile-tag">Profiling</div><div class="tile-name">Executive Rhetoric Profiling</div><div class="tile-desc">Rhetorical DNA of a leader &mdash; argumentation logic, persuasion patterns, strategic blind spots.</div></div>
+          <div class="module-tile" onclick="showPanel('fingerprint',null)"><div class="tile-tag">Development</div><div class="tile-name">Communication Fingerprint</div><div class="tile-desc">How does language shift over time &mdash; under pressure, in crisis, at peak performance?</div></div>
           <div class="module-tile tile-span2" onclick="showPanel('language',null)"><div class="tile-tag">Diagnostics</div><div class="tile-name">Language Analytics</div><div class="tile-desc">Where does leadership rhetoric and lived culture diverge? Diagnosis through internal texts.</div></div>
         </div>
 
@@ -462,14 +462,14 @@ body.client-mode .live-badge{display:inline-block}
           <div class="module-tile" onclick="showPanel('stress',null)"><div class="tile-tag">Preparation</div><div class="tile-name">Argument Stress Test</div><div class="tile-desc">Strongest counterarguments from three perspectives.</div></div>
           <div class="module-tile" onclick="showPanel('impact',null)"><div class="tile-tag">Simulation</div><div class="tile-name">Strategic Impact Simulation</div><div class="tile-desc">Simulate stakeholder reactions before any major announcement.</div></div>
           <div class="module-tile" onclick="showPanel('actionability',null)"><div class="tile-tag">Clarity</div><div class="tile-name">Actionability Scanner</div><div class="tile-desc">Translate vague directives into precise, operational language.</div></div>
-          <div class="module-tile tile-span2" onclick="showPanel('thread',null)"><div class="tile-tag">Decision Logic</div><div class="tile-name">Thread Cleaner</div><div class="tile-desc">50 emails ‚Üí half a page decision matrix.</div></div>
+          <div class="module-tile tile-span2" onclick="showPanel('thread',null)"><div class="tile-tag">Decision Logic</div><div class="tile-name">Thread Cleaner</div><div class="tile-desc">50 emails &rarr; half a page decision matrix.</div></div>
         </div>
 
         <div class="modules-label" style="margin-top:24px">Creation</div>
         <div class="module-grid">
-          <div class="module-tile tile-span2" onclick="showPanel('text-gen',null)"><div class="tile-tag">Text Generator</div><div class="tile-name">Text Generator</div><div class="tile-desc">LinkedIn posts, website copy, B2B/B2C texts, press releases, speeches, internal documents ‚Äî generated in the authentic brand or personal voice.</div></div>
-          <div class="module-tile" onclick="showPanel('review',null)"><div class="tile-tag">HR</div><div class="tile-name">Performance Review</div><div class="tile-desc">Keywords in ‚Äî rhetorically precise, development-oriented feedback out.</div></div>
-          <div class="module-tile" onclick="showPanel('recognition',null)"><div class="tile-tag">Leadership Culture</div><div class="tile-name">Recognition Writer</div><div class="tile-desc">Culturally calibrated, authentic praise ‚Äî tailored to the recipient type.</div></div>
+          <div class="module-tile tile-span2" onclick="showPanel('text-gen',null)"><div class="tile-tag">Text Generator</div><div class="tile-name">Text Generator</div><div class="tile-desc">LinkedIn posts, website copy, B2B/B2C texts, press releases, speeches, internal documents &mdash; generated in the authentic brand or personal voice.</div></div>
+          <div class="module-tile" onclick="showPanel('review',null)"><div class="tile-tag">HR</div><div class="tile-name">Performance Review</div><div class="tile-desc">Keywords in &mdash; rhetorically precise, development-oriented feedback out.</div></div>
+          <div class="module-tile" onclick="showPanel('recognition',null)"><div class="tile-tag">Leadership Culture</div><div class="tile-name">Recognition Writer</div><div class="tile-desc">Culturally calibrated, authentic praise &mdash; tailored to the recipient type.</div></div>
         </div>
       </div>
 
@@ -484,7 +484,7 @@ body.client-mode .live-badge{display:inline-block}
       <div class="panel" id="panel-brand-voice">
         <div class="module-header">
           <div class="module-title">Brand Voice DNA</div>
-          <div class="module-sub">Extract the complete linguistic fingerprint ‚Äî for an entire company or a specific individual. This becomes the master reference for all communication, ghostwriting, and content strategy.</div>
+          <div class="module-sub">Extract the complete linguistic fingerprint &mdash; for an entire company or a specific individual. This becomes the master reference for all communication, ghostwriting, and content strategy.</div>
         </div>
         <div class="brand-toggle">
           <button class="brand-toggle-btn active" onclick="switchBrandMode('company',this)">Company</button>
@@ -508,18 +508,18 @@ body.client-mode .live-badge{display:inline-block}
             <input type="text" id="bv-audiences" placeholder="e.g. B2B CFOs, HR Directors, International Investors">
           </div>
           <div class="input-block">
-            <label class="field-label">Source texts ‚Äî website copy, annual reports, marketing materials, internal communications (separate with ---)</label>
+            <label class="field-label">Source texts &mdash; website copy, annual reports, marketing materials, internal communications (separate with ---)</label>
             <textarea id="bv-co-input" placeholder="Paste company texts here. The more diverse (website, reports, emails, social media), the more precise the DNA profile." style="min-height:180px"></textarea>
           </div>
           <div class="file-upload-area" onclick="triggerUpload('bv-co-file','bv-co-input')">
             <input type="file" id="bv-co-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-co-input')">
-            <span class="upload-icon">‚Üë</span>
-            <div><div class="upload-text"><strong>Upload documents</strong> ‚Äî .txt, .pdf, .docx</div><div class="upload-text" style="margin-top:2px">or drag & drop ¬∑ multiple files supported</div></div>
+            <span class="upload-icon">&uarr;</span>
+            <div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><div class="upload-text" style="margin-top:2px">or drag & drop ¬∑ multiple files supported</div></div>
           </div>
           <div id="bv-co-files"></div>
           <button class="run-btn" onclick="run('brand-voice-co')">Extract Brand Voice DNA</button>
           <div class="result-box" id="bv-co-result">
-            <div class="result-top"><span class="result-tag">Brand Voice DNA ‚Äî Company</span><button class="copy-btn" onclick="copyResult('bv-co-body')">Copy</button></div>
+            <div class="result-top"><span class="result-tag">Brand Voice DNA &mdash; Company</span><button class="copy-btn" onclick="copyResult('bv-co-body')">Copy</button></div>
             <div class="result-body" id="bv-co-body"></div>
           </div>
         </div>
@@ -531,18 +531,18 @@ body.client-mode .live-badge{display:inline-block}
             <div><label class="field-label">Role / Context</label><input type="text" id="bv-person-role" placeholder="e.g. CEO, keynote speaker, LinkedIn author"></div>
           </div>
           <div class="input-block">
-            <label class="field-label">Reference texts ‚Äî speeches, emails, LinkedIn posts, interviews (separate with ---)</label>
-            <textarea id="bv-ind-input" placeholder="The more diverse the sources, the more precise the voice profile. Include texts from different contexts ‚Äî formal and informal, internal and external." style="min-height:180px"></textarea>
+            <label class="field-label">Reference texts &mdash; speeches, emails, LinkedIn posts, interviews (separate with ---)</label>
+            <textarea id="bv-ind-input" placeholder="The more diverse the sources, the more precise the voice profile. Include texts from different contexts &mdash; formal and informal, internal and external." style="min-height:180px"></textarea>
           </div>
           <div class="file-upload-area" onclick="triggerUpload('bv-ind-file','bv-ind-input')">
             <input type="file" id="bv-ind-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-ind-input')">
-            <span class="upload-icon">‚Üë</span>
-            <div><div class="upload-text"><strong>Upload documents</strong> ‚Äî .txt, .pdf, .docx</div><div class="upload-text" style="margin-top:2px">or drag & drop ¬∑ multiple files supported</div></div>
+            <span class="upload-icon">&uarr;</span>
+            <div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><div class="upload-text" style="margin-top:2px">or drag & drop ¬∑ multiple files supported</div></div>
           </div>
           <div id="bv-ind-files"></div>
           <button class="run-btn" onclick="run('brand-voice-ind')">Extract Voice DNA</button>
           <div class="result-box" id="bv-ind-result">
-            <div class="result-top"><span class="result-tag">Brand Voice DNA ‚Äî Individual</span><button class="copy-btn" onclick="copyResult('bv-ind-body')">Copy</button></div>
+            <div class="result-top"><span class="result-tag">Brand Voice DNA &mdash; Individual</span><button class="copy-btn" onclick="copyResult('bv-ind-body')">Copy</button></div>
             <div class="result-body" id="bv-ind-body"></div>
           </div>
         </div>
@@ -551,8 +551,8 @@ body.client-mode .live-badge{display:inline-block}
       <!-- EXECUTIVE RHETORIC PROFILING -->
       <div class="panel" id="panel-profiling">
         <div class="module-header"><div class="module-title">Executive Rhetoric Profiling</div><div class="module-sub">Analyses the rhetorical architecture of leadership texts: argumentation logic, Ethos/Pathos/Logos distribution, linguistic signatures, and strategic blind spots.</div></div>
-        <div class="input-block"><label class="field-label">Texts from the leader</label><textarea id="rp-input" placeholder="Speeches, emails, LinkedIn posts, internal memos ‚Äî separate with ---."></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('rp-file','rp-input')"><input type="file" id="rp-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'rp-input')"><span class="upload-icon">‚Üë</span><div><div class="upload-text"><strong>Upload documents</strong> ‚Äî .txt, .pdf, .docx</div></div></div>
+        <div class="input-block"><label class="field-label">Texts from the leader</label><textarea id="rp-input" placeholder="Speeches, emails, LinkedIn posts, internal memos &mdash; separate with ---."></textarea></div>
+        <div class="file-upload-area" onclick="triggerUpload('rp-file','rp-input')"><input type="file" id="rp-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'rp-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div></div></div>
         <div id="rp-files"></div>
         <div class="input-row">
           <div><label class="field-label">Name / Role</label><input type="text" id="rp-name" placeholder="e.g. CEO Martin Meier"></div>
@@ -564,9 +564,9 @@ body.client-mode .live-badge{display:inline-block}
 
       <!-- COMMUNICATION FINGERPRINT -->
       <div class="panel" id="panel-fingerprint">
-        <div class="module-header"><div class="module-title">Communication Fingerprint</div><div class="module-sub">Reveals how language shifts over time ‚Äî under pressure, in crisis, at peak performance.</div></div>
-        <div class="input-block"><label class="field-label">Texts ‚Äî separated by time or context (use --- with a date/context label)</label><textarea id="cf-input" placeholder="2024-01 ‚Äî Quarterly Report&#10;[text]&#10;---&#10;2024-06 ‚Äî Crisis Communication&#10;[text]" style="min-height:160px"></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('cf-file','cf-input')"><input type="file" id="cf-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'cf-input')"><span class="upload-icon">‚Üë</span><div><div class="upload-text"><strong>Upload documents</strong> ‚Äî .txt, .pdf, .docx</div></div></div>
+        <div class="module-header"><div class="module-title">Communication Fingerprint</div><div class="module-sub">Reveals how language shifts over time &mdash; under pressure, in crisis, at peak performance.</div></div>
+        <div class="input-block"><label class="field-label">Texts &mdash; separated by time or context (use --- with a date/context label)</label><textarea id="cf-input" placeholder="2024-01 &mdash; Quarterly Report&#10;[text]&#10;---&#10;2024-06 &mdash; Crisis Communication&#10;[text]" style="min-height:160px"></textarea></div>
+        <div class="file-upload-area" onclick="triggerUpload('cf-file','cf-input')"><input type="file" id="cf-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'cf-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div></div></div>
         <div id="cf-files"></div>
         <div class="input-row">
           <div><label class="field-label">Name / Role</label><input type="text" id="cf-name" placeholder="e.g. CFO Anna Berger"></div>
@@ -579,8 +579,8 @@ body.client-mode .live-badge{display:inline-block}
       <!-- LANGUAGE ANALYTICS -->
       <div class="panel" id="panel-language">
         <div class="module-header"><div class="module-title">Language Analytics</div><div class="module-sub">Diagnoses where leadership rhetoric and lived culture diverge.</div></div>
-        <div class="input-block"><label class="field-label">Internal texts ‚Äî separate with ---</label><textarea id="la-input" placeholder="Emails, meeting minutes, strategy papers, HR communications." style="min-height:160px"></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('la-file','la-input')"><input type="file" id="la-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'la-input')"><span class="upload-icon">‚Üë</span><div><div class="upload-text"><strong>Upload documents</strong> ‚Äî .txt, .pdf, .docx</div></div></div>
+        <div class="input-block"><label class="field-label">Internal texts &mdash; separate with ---</label><textarea id="la-input" placeholder="Emails, meeting minutes, strategy papers, HR communications." style="min-height:160px"></textarea></div>
+        <div class="file-upload-area" onclick="triggerUpload('la-file','la-input')"><input type="file" id="la-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'la-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div></div></div>
         <div id="la-files"></div>
         <div class="input-row">
           <div><label class="field-label">Company Size</label><select id="la-size"><option>10‚Äì50 employees</option><option>50‚Äì200 employees</option><option>200‚Äì1,000 employees</option><option>1,000+ employees</option></select></div>
@@ -592,9 +592,9 @@ body.client-mode .live-badge{display:inline-block}
 
       <!-- RISK MANAGEMENT -->
       <div class="panel" id="panel-risk">
-        <div class="module-header"><div class="module-title">Risk Management</div><div class="module-sub">Evaluates reception risks, flags dangerous formulations, recommends corrections ‚Äî before communication goes out.</div></div>
+        <div class="module-header"><div class="module-title">Risk Management</div><div class="module-sub">Evaluates reception risks, flags dangerous formulations, recommends corrections &mdash; before communication goes out.</div></div>
         <div class="input-block"><label class="field-label">Planned communication</label><textarea id="rm-input" placeholder="Press release, CEO statement, internal announcement, investor letter..."></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('rm-file','rm-input')"><input type="file" id="rm-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'rm-input')"><span class="upload-icon">‚Üë</span><div><div class="upload-text"><strong>Upload document</strong> ‚Äî .txt, .pdf, .docx</div></div></div>
+        <div class="file-upload-area" onclick="triggerUpload('rm-file','rm-input')"><input type="file" id="rm-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'rm-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload document</strong> &mdash; .txt, .pdf, .docx</div></div></div>
         <div id="rm-files"></div>
         <div class="input-row">
           <div><label class="field-label">Target audience</label><select id="rm-audience"><option value="">Select audience</option><option>Employees</option><option>Investors</option><option>Media / Public</option><option>Customers</option><option>Board / Executive team</option><option>All simultaneously</option></select></div>
@@ -608,11 +608,11 @@ body.client-mode .live-badge{display:inline-block}
       <div class="panel" id="panel-stress">
         <div class="module-header"><div class="module-title">Argument Stress Test</div><div class="module-sub">Generates the strongest counterarguments from multiple perspectives. Preparation for interviews, board meetings, shareholder assemblies.</div></div>
         <div class="input-block"><label class="field-label">Thesis / Position / Key Message</label><textarea id="st-input" style="min-height:110px" placeholder='e.g. "We are introducing a new performance evaluation system that variabilises 20% of bonuses."'></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('st-file','st-input')"><input type="file" id="st-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'st-input')"><span class="upload-icon">‚Üë</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
+        <div class="file-upload-area" onclick="triggerUpload('st-file','st-input')"><input type="file" id="st-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'st-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
         <div id="st-files"></div>
         <div class="input-row">
           <div><label class="field-label">Perspectives</label><select id="st-perspectives"><option>All three (Media, Employees, Competitors)</option><option>Media / Public</option><option>Employees / Works council</option><option>Investors / Analysts</option><option>Critics / NGOs</option></select></div>
-          <div><label class="field-label">Intensity</label><select id="st-intensity"><option>Moderate ‚Äî fair criticism</option><option>Sharp ‚Äî aggressive questioning</option><option>Maximum ‚Äî hardest possible attack</option></select></div>
+          <div><label class="field-label">Intensity</label><select id="st-intensity"><option>Moderate &mdash; fair criticism</option><option>Sharp &mdash; aggressive questioning</option><option>Maximum &mdash; hardest possible attack</option></select></div>
         </div>
         <button class="run-btn" onclick="run('st')">Run Stress Test</button>
         <div class="result-box" id="st-result"><div class="result-top"><span class="result-tag">Argument Stress Test Report</span><button class="copy-btn" onclick="copyResult('st-body')">Copy</button></div><div class="result-body" id="st-body"></div></div>
@@ -620,13 +620,13 @@ body.client-mode .live-badge{display:inline-block}
 
       <!-- STRATEGIC IMPACT SIMULATION -->
       <div class="panel" id="panel-impact">
-        <div class="module-header"><div class="module-title">Strategic Impact Simulation</div><div class="module-sub">Simulates how different stakeholder groups will react ‚Äî strategic adjustments before it's too late.</div></div>
+        <div class="module-header"><div class="module-title">Strategic Impact Simulation</div><div class="module-sub">Simulates how different stakeholder groups will react &mdash; strategic adjustments before it's too late.</div></div>
         <div class="input-block"><label class="field-label">Planned communication</label><textarea id="si-input" placeholder="Merger announcement, layoffs, strategy shift, leadership change..."></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('si-file','si-input')"><input type="file" id="si-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'si-input')"><span class="upload-icon">‚Üë</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
+        <div class="file-upload-area" onclick="triggerUpload('si-file','si-input')"><input type="file" id="si-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'si-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
         <div id="si-files"></div>
         <div class="input-row">
           <div><label class="field-label">Stakeholders</label><select id="si-stakeholders"><option>All groups</option><option>Employees only</option><option>Media only</option><option>Investors only</option><option>Employees + Media</option></select></div>
-          <div><label class="field-label">Strategic context</label><select id="si-severity"><option>Low ‚Äî routine change</option><option>Medium ‚Äî noticeable impact</option><option>High ‚Äî significant transformation</option><option>Critical ‚Äî existential crisis</option></select></div>
+          <div><label class="field-label">Strategic context</label><select id="si-severity"><option>Low &mdash; routine change</option><option>Medium &mdash; noticeable impact</option><option>High &mdash; significant transformation</option><option>Critical &mdash; existential crisis</option></select></div>
         </div>
         <button class="run-btn" onclick="run('si')">Run Impact Simulation</button>
         <div class="result-box" id="si-result"><div class="result-top"><span class="result-tag">Strategic Impact Report</span><button class="copy-btn" onclick="copyResult('si-body')">Copy</button></div><div class="result-body" id="si-body"></div></div>
@@ -634,9 +634,9 @@ body.client-mode .live-badge{display:inline-block}
 
       <!-- ACTIONABILITY SCANNER -->
       <div class="panel" id="panel-actionability">
-        <div class="module-header"><div class="module-title">Actionability Scanner</div><div class="module-sub">Scans for vagueness, missing deadlines, unclear responsibilities ‚Äî translates into operational language.</div></div>
+        <div class="module-header"><div class="module-title">Actionability Scanner</div><div class="module-sub">Scans for vagueness, missing deadlines, unclear responsibilities &mdash; translates into operational language.</div></div>
         <div class="input-block"><label class="field-label">Instruction / Briefing / Delegation</label><textarea id="as-input" placeholder='e.g. "We should take a look at the customer satisfaction topic and see what we can improve."'></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('as-file','as-input')"><input type="file" id="as-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'as-input')"><span class="upload-icon">‚Üë</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
+        <div class="file-upload-area" onclick="triggerUpload('as-file','as-input')"><input type="file" id="as-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'as-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
         <div id="as-files"></div>
         <div class="input-row">
           <div><label class="field-label">Context</label><select id="as-context"><option>Email delegation</option><option>Meeting minutes</option><option>Project briefing</option><option>Strategy document</option><option>Verbal instruction to be written up</option></select></div>
@@ -649,22 +649,22 @@ body.client-mode .live-badge{display:inline-block}
       <!-- THREAD CLEANER -->
       <div class="panel" id="panel-thread">
         <div class="module-header"><div class="module-title">Thread Cleaner</div><div class="module-sub">Extracts the logical decision structure from email chains, Teams or Slack threads.</div></div>
-        <div class="input-block"><label class="field-label">Full thread ‚Äî paste entirely</label><textarea id="tc-input" placeholder="Paste the complete thread here." style="min-height:180px"></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('tc-file','tc-input')"><input type="file" id="tc-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'tc-input')"><span class="upload-icon">‚Üë</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
+        <div class="input-block"><label class="field-label">Full thread &mdash; paste entirely</label><textarea id="tc-input" placeholder="Paste the complete thread here." style="min-height:180px"></textarea></div>
+        <div class="file-upload-area" onclick="triggerUpload('tc-file','tc-input')"><input type="file" id="tc-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'tc-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
         <div id="tc-files"></div>
         <div class="input-row">
           <div><label class="field-label">Source</label><select id="tc-source"><option>Email thread</option><option>Teams chat</option><option>Slack channel</option><option>Meeting chat</option></select></div>
           <div><label class="field-label">Output goal</label><select id="tc-goal"><option>Decision matrix for CEO / Executive team</option><option>Action recommendation for project lead</option><option>Summary for absent participants</option><option>Identify next steps</option></select></div>
         </div>
         <button class="run-btn" onclick="run('tc')">Clean Thread</button>
-        <div class="result-box" id="tc-result"><div class="result-top"><span class="result-tag">Thread ‚Äî Decision Matrix</span><button class="copy-btn" onclick="copyResult('tc-body')">Copy</button></div><div class="result-body" id="tc-body"></div></div>
+        <div class="result-box" id="tc-result"><div class="result-top"><span class="result-tag">Thread &mdash; Decision Matrix</span><button class="copy-btn" onclick="copyResult('tc-body')">Copy</button></div><div class="result-body" id="tc-body"></div></div>
       </div>
 
       <!-- TEXT GENERATOR -->
       <div class="panel" id="panel-text-gen">
         <div class="module-header">
           <div class="module-title">Text Generator</div>
-          <div class="module-sub">Generate publication-ready texts in any format ‚Äî in the authentic brand or personal voice. From LinkedIn posts to website rewrites, B2B pitches to internal communications.</div>
+          <div class="module-sub">Generate publication-ready texts in any format &mdash; in the authentic brand or personal voice. From LinkedIn posts to website rewrites, B2B pitches to internal communications.</div>
         </div>
         <div class="tab-row">
           <button class="tab active" onclick="switchTab(this,'tg-cal-section','tg-gen-section')">1. Calibrate Voice</button>
@@ -673,16 +673,16 @@ body.client-mode .live-badge{display:inline-block}
 
         <div id="tg-cal-section">
           <div class="module-sub" style="margin-bottom:20px">Optional: calibrate the voice/brand first for more authentic output. Or skip to Generate and describe the desired style in the briefing.</div>
-          <div class="input-block"><label class="field-label">Reference texts (paste or upload ‚Äî the voice to write in)</label><textarea id="tg-ref" placeholder="LinkedIn posts, website copy, speeches, emails, annual report sections ‚Äî separate with ---."></textarea></div>
-          <div class="file-upload-area" onclick="triggerUpload('tg-ref-file','tg-ref')"><input type="file" id="tg-ref-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref')"><span class="upload-icon">‚Üë</span><div><div class="upload-text"><strong>Upload reference documents</strong></div></div></div>
+          <div class="input-block"><label class="field-label">Reference texts (paste or upload &mdash; the voice to write in)</label><textarea id="tg-ref" placeholder="LinkedIn posts, website copy, speeches, emails, annual report sections &mdash; separate with ---."></textarea></div>
+          <div class="file-upload-area" onclick="triggerUpload('tg-ref-file','tg-ref')"><input type="file" id="tg-ref-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload reference documents</strong></div></div></div>
           <div id="tg-ref-files"></div>
           <button class="run-btn" onclick="run('vs-cal')">Calibrate Voice Profile</button>
           <div class="result-box" id="vs-cal-result"><div class="result-top"><span class="result-tag">Voice Profile</span><button class="copy-btn" onclick="copyResult('vs-cal-body')">Copy</button></div><div class="result-body" id="vs-cal-body"></div></div>
         </div>
 
         <div id="tg-gen-section" style="display:none">
-          <div class="input-block"><label class="field-label">Briefing / Content to work with</label><textarea id="tg-task" placeholder="Describe what you want to create ‚Äî or paste source content to rewrite. Include key messages, facts, tone guidance." style="min-height:120px"></textarea></div>
-          <div class="file-upload-area" onclick="triggerUpload('tg-task-file','tg-task')"><input type="file" id="tg-task-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task')"><span class="upload-icon">‚Üë</span><div><div class="upload-text"><strong>Upload source document to rewrite</strong></div></div></div>
+          <div class="input-block"><label class="field-label">Briefing / Content to work with</label><textarea id="tg-task" placeholder="Describe what you want to create &mdash; or paste source content to rewrite. Include key messages, facts, tone guidance." style="min-height:120px"></textarea></div>
+          <div class="file-upload-area" onclick="triggerUpload('tg-task-file','tg-task')"><input type="file" id="tg-task-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload source document to rewrite</strong></div></div></div>
           <div id="tg-task-files"></div>
           <div class="input-row">
             <div><label class="field-label">Format</label>
@@ -695,12 +695,12 @@ body.client-mode .live-badge{display:inline-block}
                   <option>Newsletter</option>
                 </optgroup>
                 <optgroup label="Website">
-                  <option>Website ‚Äî Homepage (B2C)</option>
-                  <option>Website ‚Äî Homepage (B2B)</option>
-                  <option>Website ‚Äî About / Company</option>
-                  <option>Website ‚Äî Product / Service Page</option>
-                  <option>Website ‚Äî Landing Page</option>
-                  <option>Website ‚Äî Full rewrite</option>
+                  <option>Website &mdash; Homepage (B2C)</option>
+                  <option>Website &mdash; Homepage (B2B)</option>
+                  <option>Website &mdash; About / Company</option>
+                  <option>Website &mdash; Product / Service Page</option>
+                  <option>Website &mdash; Landing Page</option>
+                  <option>Website &mdash; Full rewrite</option>
                 </optgroup>
                 <optgroup label="External Communication">
                   <option>Press Release</option>
@@ -734,14 +734,14 @@ body.client-mode .live-badge{display:inline-block}
             </div>
             <div><label class="field-label">Audience</label>
               <select id="tg-audience">
-                <option>B2B ‚Äî Senior Executives (C-Suite)</option>
-                <option>B2B ‚Äî HR / People Leaders</option>
-                <option>B2B ‚Äî Finance / Investors</option>
-                <option>B2B ‚Äî General Business Audience</option>
-                <option>B2C ‚Äî General Consumer</option>
-                <option>B2C ‚Äî Premium / Luxury Segment</option>
-                <option>Internal ‚Äî All Employees</option>
-                <option>Internal ‚Äî Leadership Team</option>
+                <option>B2B &mdash; Senior Executives (C-Suite)</option>
+                <option>B2B &mdash; HR / People Leaders</option>
+                <option>B2B &mdash; Finance / Investors</option>
+                <option>B2B &mdash; General Business Audience</option>
+                <option>B2C &mdash; General Consumer</option>
+                <option>B2C &mdash; Premium / Luxury Segment</option>
+                <option>Internal &mdash; All Employees</option>
+                <option>Internal &mdash; Leadership Team</option>
                 <option>Media / Journalists</option>
                 <option>Investors / Analysts</option>
               </select>
@@ -756,8 +756,8 @@ body.client-mode .live-badge{display:inline-block}
                 <option>Warm & Human</option>
                 <option>Precise & Data-driven</option>
                 <option>Provocative & Bold</option>
-                <option>Swiss / European ‚Äî understated</option>
-                <option>International ‚Äî globally neutral</option>
+                <option>Swiss / European &mdash; understated</option>
+                <option>International &mdash; globally neutral</option>
               </select>
             </div>
             <div><label class="field-label">Language</label>
@@ -778,9 +778,9 @@ body.client-mode .live-badge{display:inline-block}
 
       <!-- PERFORMANCE REVIEW -->
       <div class="panel" id="panel-review">
-        <div class="module-header"><div class="module-title">Performance Review</div><div class="module-sub">Formulates rhetorically precise, development-oriented feedback ‚Äî psycholinguistically calibrated, clear in substance.</div></div>
+        <div class="module-header"><div class="module-title">Performance Review</div><div class="module-sub">Formulates rhetorically precise, development-oriented feedback &mdash; psycholinguistically calibrated, clear in substance.</div></div>
         <div class="input-block"><label class="field-label">Raw feedback (keywords, observations)</label><textarea id="pr-input" placeholder='e.g. "often late, delivers strong quality, takes little ownership, saved the client project last month"'></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('pr-file','pr-input')"><input type="file" id="pr-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'pr-input')"><span class="upload-icon">‚Üë</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
+        <div class="file-upload-area" onclick="triggerUpload('pr-file','pr-input')"><input type="file" id="pr-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'pr-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
         <div id="pr-files"></div>
         <div class="input-row">
           <div><label class="field-label">Person's role</label><input type="text" id="pr-role" placeholder="e.g. Senior Analyst, Project Manager"></div>
@@ -792,14 +792,14 @@ body.client-mode .live-badge{display:inline-block}
 
       <!-- RECOGNITION WRITER -->
       <div class="panel" id="panel-recognition">
-        <div class="module-header"><div class="module-title">Recognition Writer</div><div class="module-sub">Culturally calibrated, authentic recognition ‚Äî precise, free of AI-kitsch, psychologically targeted.</div></div>
+        <div class="module-header"><div class="module-title">Recognition Writer</div><div class="module-sub">Culturally calibrated, authentic recognition &mdash; precise, free of AI-kitsch, psychologically targeted.</div></div>
         <div class="input-block"><label class="field-label">What did the person specifically do?</label><textarea id="rw-input" style="min-height:100px" placeholder='e.g. "M√ºller worked over the weekend to rescue the database migration and secured the entire product launch"'></textarea></div>
         <div class="input-row">
-          <div><label class="field-label">Recipient type</label><select id="rw-type"><option>The Analyst ‚Äî wants praise for precision and logic</option><option>The Executor ‚Äî wants recognition for impact and results</option><option>The Team Player ‚Äî wants to be seen for contribution to the group</option><option>The Visionary ‚Äî wants appreciation for ideas and courage</option><option>The Pragmatist ‚Äî wants direct, factual acknowledgement</option></select></div>
+          <div><label class="field-label">Recipient type</label><select id="rw-type"><option>The Analyst &mdash; wants praise for precision and logic</option><option>The Executor &mdash; wants recognition for impact and results</option><option>The Team Player &mdash; wants to be seen for contribution to the group</option><option>The Visionary &mdash; wants appreciation for ideas and courage</option><option>The Pragmatist &mdash; wants direct, factual acknowledgement</option></select></div>
           <div><label class="field-label">Format</label><select id="rw-format"><option>Verbal recognition (conversation guide)</option><option>Written acknowledgement (email / Slack)</option><option>Public praise (team meeting / All-Hands)</option><option>Formal recognition (annual report / HR document)</option></select></div>
         </div>
         <button class="run-btn" onclick="run('rw')">Write Recognition</button>
-        <div class="result-box" id="rw-result"><div class="result-top"><span class="result-tag">Recognition ‚Äî Calibrated</span><button class="copy-btn" onclick="copyResult('rw-body')">Copy</button></div><div class="result-body" id="rw-body"></div></div>
+        <div class="result-box" id="rw-result"><div class="result-top"><span class="result-tag">Recognition &mdash; Calibrated</span><button class="copy-btn" onclick="copyResult('rw-body')">Copy</button></div><div class="result-body" id="rw-body"></div></div>
       </div>
 
       <!-- VIDEOS -->
@@ -824,11 +824,11 @@ body.client-mode .live-badge{display:inline-block}
 
     <nav class="mobile-nav">
       <div class="mobile-nav-inner">
-        <div class="mnav-item active" id="mn-dashboard" onclick="showPanel('dashboard',null);setMNav('dashboard')"><div class="mnav-icon">‚åÇ</div><div class="mnav-label">Home</div></div>
-        <div class="mnav-item" id="mn-brand-voice" onclick="showPanel('brand-voice',null);setMNav('brand-voice')"><div class="mnav-icon">‚óâ</div><div class="mnav-label">Brand</div></div>
-        <div class="mnav-item" id="mn-risk" onclick="showPanel('risk',null);setMNav('risk')"><div class="mnav-icon">‚óé</div><div class="mnav-label">Risk</div></div>
-        <div class="mnav-item" id="mn-text-gen" onclick="showPanel('text-gen',null);setMNav('text-gen')"><div class="mnav-icon">‚óá</div><div class="mnav-label">Generate</div></div>
-        <div class="mnav-item" id="mn-more" onclick="showPanel('thread',null);setMNav('more')"><div class="mnav-icon">‚ãØ</div><div class="mnav-label">More</div></div>
+        <div class="mnav-item active" id="mn-dashboard" onclick="showPanel('dashboard',null);setMNav('dashboard')"><div class="mnav-icon">&#8962;</div><div class="mnav-label">Home</div></div>
+        <div class="mnav-item" id="mn-brand-voice" onclick="showPanel('brand-voice',null);setMNav('brand-voice')"><div class="mnav-icon">&#9673;</div><div class="mnav-label">Brand</div></div>
+        <div class="mnav-item" id="mn-risk" onclick="showPanel('risk',null);setMNav('risk')"><div class="mnav-icon">&#9678;</div><div class="mnav-label">Risk</div></div>
+        <div class="mnav-item" id="mn-text-gen" onclick="showPanel('text-gen',null);setMNav('text-gen')"><div class="mnav-icon">&#9671;</div><div class="mnav-label">Generate</div></div>
+        <div class="mnav-item" id="mn-more" onclick="showPanel('thread',null);setMNav('more')"><div class="mnav-icon">&#8943;</div><div class="mnav-label">More</div></div>
       </div>
     </nav>
   </div>
@@ -873,7 +873,7 @@ function renderVideos() {
     return `<div class="video-card${src?' has-video':''}" id="vcard-${m.id}">
       ${src ? `<video src="${src}" controls></video>` : `
       <div class="video-placeholder">
-        <div class="video-play-icon">‚ñ∑</div>
+        <div class="video-play-icon">&#9655;</div>
         <div class="tile-name" style="font-size:14px;margin-bottom:4px">${m.label}</div>
         <div class="video-label">${m.desc}</div>
       </div>`}
@@ -915,7 +915,7 @@ async function handleFiles(input, targetId) {
       if (badgeContainer) {
         const badge = document.createElement('div');
         badge.className = 'file-badge';
-        badge.innerHTML = `üìÑ ${file.name} <span class="remove-file" onclick="this.parentElement.remove()">‚úï</span>`;
+        badge.innerHTML = `&#128196; ${file.name} <span class="remove-file" onclick="this.parentElement.remove()">&times;</span>`;
         badgeContainer.appendChild(badge);
       }
     } catch(e) {
@@ -988,7 +988,7 @@ async function routePrompt() {
       recognition:'Recognition Writer', 'brand-voice':'Brand Voice DNA'
     };
     const name = moduleNames[module] || module;
-    hint.textContent = `‚Üí Routing to: ${name}`;
+    hint.textContent = `&rarr; Routing to: ${name}`;
     setTimeout(() => {
       showPanel(module === 'brand-voice' ? 'brand-voice' : module, null);
       // Pre-fill the main textarea of the target module
@@ -997,7 +997,7 @@ async function routePrompt() {
       hint.textContent = '';
     }, 800);
   } catch(e) {
-    hint.textContent = 'Could not route ‚Äî please select a module manually.';
+    hint.textContent = 'Could not route &mdash; please select a module manually.';
   }
 }
 
@@ -1108,12 +1108,12 @@ function renderClients() {
   document.getElementById('stat-clients').textContent = clientList.length;
   const list = document.getElementById('client-list');
   const sel = document.getElementById('active-client-select');
-  if (!clientList.length) { list.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No clients yet.</div>'; sel.innerHTML='<option value="">‚Äî Select client ‚Äî</option>'; return; }
+  if (!clientList.length) { list.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No clients yet.</div>'; sel.innerHTML='<option value="">&mdash; Select client &mdash;</option>'; return; }
   list.innerHTML = clientList.map(c=>`<div class="client-card"><div><div class="client-card-name">${c.name}</div><div class="client-card-meta">${c.industry||''} ¬∑ ${c.contact||''}</div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><code class="client-card-badge">${c.token.substring(0,16)}‚Ä¶</code><button class="btn" style="font-size:10px;padding:4px 10px" onclick="copyToken('${c.token}')">Copy token</button></div></div>`).join('');
-  sel.innerHTML = '<option value="">‚Äî Select client ‚Äî</option>' + clientList.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  sel.innerHTML = '<option value="">&mdash; Select client &mdash;</option>' + clientList.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
 }
 
-function copyToken(token) { navigator.clipboard.writeText(token).catch(()=>{}); alert('Token copied! Share with your client ‚Äî they use it to sign in at:\n' + location.origin); }
+function copyToken(token) { navigator.clipboard.writeText(token).catch(()=>{}); alert('Token copied! Share with your client &mdash; they use it to sign in at:\n' + location.origin); }
 function switchClient(id) { activeClientId = id || null; }
 function openModal() { document.getElementById('new-client-modal').classList.add('show'); }
 function closeModal() { document.getElementById('new-client-modal').classList.remove('show'); }
@@ -1165,7 +1165,7 @@ async function sendChat() {
     msgs.innerHTML += `<div class="chat-msg assistant">${d.reply}</div>`;
     msgs.scrollTop = msgs.scrollHeight;
   } catch(e) {
-    msgs.innerHTML += `<div class="chat-msg assistant" style="color:#c00">Error ‚Äî please try again.</div>`;
+    msgs.innerHTML += `<div class="chat-msg assistant" style="color:#c00">Error &mdash; please try again.</div>`;
   }
 }
 
@@ -1254,7 +1254,7 @@ let deferredPrompt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('install-banner').classList.add('show');});
 window.addEventListener('appinstalled',()=>document.getElementById('install-banner').classList.remove('show'));
 function installApp(){if(!deferredPrompt)return;deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById('install-banner').classList.remove('show');});}
-function showInstallHint(){if(/iphone|ipad|ipod/i.test(navigator.userAgent)){document.getElementById('ios-hint').classList.add('show');setTimeout(()=>document.getElementById('ios-hint').classList.remove('show'),6000);}else if(deferredPrompt)installApp();else alert('Open RhetorIQ in Chrome or Edge ‚Äî install icon appears in address bar.');}
+function showInstallHint(){if(/iphone|ipad|ipod/i.test(navigator.userAgent)){document.getElementById('ios-hint').classList.add('show');setTimeout(()=>document.getElementById('ios-hint').classList.remove('show'),6000);}else if(deferredPrompt)installApp();else alert('Open RhetorIQ in Chrome or Edge &mdash; install icon appears in address bar.');}
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
 // Enter keys
