@@ -30,6 +30,27 @@
 html, body { height:100%; overflow:hidden; }
 body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); font-size:13px; }
 
+/* ‚îÄ‚îÄ LOGIN SCREEN ‚îÄ‚îÄ */
+#login-screen {
+  position:fixed; inset:0; background:var(--bg); z-index:999;
+  display:flex; align-items:center; justify-content:center;
+}
+#login-screen.hidden { display:none; }
+.login-box { width:360px; max-width:90vw; padding:48px 40px; border:1px solid var(--border); }
+.login-logo { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:400; margin-bottom:4px; }
+.login-sub { font-size:10px; letter-spacing:0.17em; text-transform:uppercase; color:var(--text-dim); margin-bottom:36px; }
+.login-label { font-size:8.5px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); margin-bottom:7px; display:block; }
+.login-input { width:100%; background:var(--surface); border:1px solid var(--border); color:var(--text); font-family:'Inter',sans-serif; font-size:13px; padding:10px 13px; outline:none; margin-bottom:14px; }
+.login-input:focus { border-color:var(--border-strong); }
+.login-btn { width:100%; padding:12px; background:var(--text); color:#fff; border:none; font-family:'Inter',sans-serif; font-size:12px; font-weight:500; cursor:pointer; margin-top:8px; letter-spacing:0.03em; }
+.login-btn:hover { opacity:0.85; }
+.login-error { font-size:11.5px; color:#c00; margin-top:10px; display:none; }
+.login-divider { text-align:center; font-size:10px; color:var(--text-dim); margin:20px 0; }
+.client-token-link { font-size:11px; color:var(--text-muted); text-align:center; cursor:pointer; text-decoration:underline; }
+
+/* CLIENT TOKEN FORM */
+#client-token-form { display:none; }
+
 /* INSTALL BANNER */
 #install-banner { display:none; position:fixed; top:0; left:0; right:0; z-index:300; background:var(--text); color:#fff; padding:11px 20px; padding-top:calc(11px + var(--safe-top)); font-size:12px; align-items:center; justify-content:space-between; gap:12px; }
 #install-banner.show { display:flex; }
@@ -62,21 +83,26 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .nav-item.active .nav-label { color:var(--text); font-weight:500; }
 .nav-item.active .nav-dot { background:var(--text); }
 
-/* ADVISOR-ONLY NAV ITEMS */
 .nav-item.advisor-only { display:none; }
 body.advisor-mode .nav-item.advisor-only { display:flex; }
 
 .sidebar-footer { margin-top:auto; padding:16px 24px; border-top:1px solid var(--border); padding-bottom:calc(16px + var(--safe-bottom)); }
 .user-name { font-size:11.5px; font-weight:500; color:var(--text); }
 .user-role { font-size:10px; color:var(--text-dim); margin-top:2px; }
+.logout-btn { font-size:10px; color:var(--text-dim); cursor:pointer; margin-top:8px; text-decoration:underline; }
+.logout-btn:hover { color:var(--text); }
 
-/* ADVISOR PANEL - client switcher */
+/* CLIENT BAR */
 .client-bar { display:none; background:var(--surface2); border-bottom:1px solid var(--border); padding:8px 36px; align-items:center; gap:10px; font-size:11.5px; }
 body.advisor-mode .client-bar { display:flex; }
 .client-select { background:var(--bg); border:1px solid var(--border); font-family:'Inter',sans-serif; font-size:11.5px; color:var(--text); padding:5px 10px; outline:none; cursor:pointer; }
 .client-label { color:var(--text-muted); font-size:11px; }
 .new-client-btn { margin-left:auto; font-size:11px; padding:5px 14px; border:1px solid var(--border-strong); background:var(--text); color:#fff; cursor:pointer; font-family:'Inter',sans-serif; font-weight:500; letter-spacing:0.02em; transition:opacity 0.12s; }
 .new-client-btn:hover { opacity:0.82; }
+
+/* WS STATUS */
+.ws-dot { width:6px; height:6px; border-radius:50%; background:var(--text-dim); display:inline-block; margin-right:4px; transition:background 0.3s; }
+.ws-dot.connected { background:#3a3; }
 
 /* MAIN */
 .main { flex:1; display:flex; flex-direction:column; min-width:0; height:100%; }
@@ -101,7 +127,6 @@ body.advisor-mode .btn.advisor-only { display:inline-block; }
 .stat-block { background:var(--bg); padding:22px 24px; }
 .stat-n { font-family:'Cormorant Garamond',serif; font-size:38px; font-weight:300; color:var(--text); line-height:1; margin-bottom:5px; }
 .stat-l { font-size:9px; text-transform:uppercase; letter-spacing:0.14em; color:var(--text-dim); }
-/* Hide advisor-only stats in client mode */
 .stat-block.advisor-only { display:none; }
 body.advisor-mode .stat-block.advisor-only { display:block; }
 
@@ -109,7 +134,7 @@ body.advisor-mode .stat-block.advisor-only { display:block; }
 .module-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--border); border:1px solid var(--border); }
 .module-tile { background:var(--bg); padding:20px 22px; cursor:pointer; transition:background 0.12s; position:relative; }
 .module-tile:hover { background:var(--surface); }
-.module-tile::after { content:'→'; position:absolute; right:18px; top:50%; transform:translateY(-50%); color:var(--text-dim); font-size:13px; opacity:0; transition:opacity 0.12s; }
+.module-tile::after { content:'‚Üí'; position:absolute; right:18px; top:50%; transform:translateY(-50%); color:var(--text-dim); font-size:13px; opacity:0; transition:opacity 0.12s; }
 .module-tile:hover::after { opacity:1; }
 .tile-tag { font-size:8.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; }
 .tile-name { font-family:'Cormorant Garamond',serif; font-size:15px; font-weight:400; color:var(--text); margin-bottom:5px; }
@@ -126,7 +151,7 @@ body.advisor-mode .stat-block.advisor-only { display:block; }
 textarea { width:100%; background:var(--surface); border:1px solid var(--border); color:var(--text); font-family:'Inter',sans-serif; font-size:12.5px; line-height:1.7; padding:13px 15px; resize:vertical; min-height:130px; outline:none; transition:border-color 0.12s; font-weight:300; }
 textarea:focus { border-color:var(--border-strong); }
 textarea::placeholder { color:var(--text-dim); }
-select, input[type="text"] { width:100%; background:var(--surface); border:1px solid var(--border); color:var(--text); font-family:'Inter',sans-serif; font-size:12.5px; padding:9px 13px; outline:none; transition:border-color 0.12s; -webkit-appearance:none; font-weight:300; }
+select, input[type="text"], input[type="email"], input[type="password"] { width:100%; background:var(--surface); border:1px solid var(--border); color:var(--text); font-family:'Inter',sans-serif; font-size:12.5px; padding:9px 13px; outline:none; transition:border-color 0.12s; -webkit-appearance:none; font-weight:300; }
 select:focus, input:focus { border-color:var(--border-strong); }
 .input-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
 .run-btn { padding:11px 28px; background:var(--text); color:#fff; border:none; font-family:'Inter',sans-serif; font-size:12px; font-weight:500; cursor:pointer; transition:opacity 0.12s; letter-spacing:0.03em; }
@@ -159,16 +184,15 @@ select:focus, input:focus { border-color:var(--border-strong); }
 .history-meta { font-size:10.5px; color:var(--text-dim); }
 .history-badge { font-size:9.5px; padding:3px 10px; border:1px solid var(--border); color:var(--text-muted); background:var(--surface); white-space:nowrap; }
 
-/* ADVISOR PANEL */
+/* CLIENT CARDS */
 .advisor-panel { display:none; }
 body.advisor-mode .advisor-panel { display:block; }
-.client-card { border:1px solid var(--border); padding:18px 20px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; transition:background 0.12s; }
-.client-card:hover { background:var(--surface); }
+.client-card { border:1px solid var(--border); padding:18px 20px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; }
 .client-card-name { font-size:13.5px; font-weight:500; color:var(--text); margin-bottom:3px; }
 .client-card-meta { font-size:11px; color:var(--text-muted); }
-.client-card-badge { font-size:9.5px; padding:3px 10px; border:1px solid var(--border); color:var(--text-muted); }
+.client-card-badge { font-size:9.5px; padding:3px 10px; border:1px solid var(--border); color:var(--text-muted); font-family:monospace; }
 
-/* NEW CLIENT MODAL */
+/* MODAL */
 .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:200; align-items:center; justify-content:center; }
 .modal-overlay.show { display:flex; }
 .modal { background:var(--bg); border:1px solid var(--border); padding:32px; width:440px; max-width:90vw; }
@@ -187,6 +211,10 @@ body.advisor-mode .advisor-panel { display:block; }
 .mnav-label { font-size:8.5px; color:var(--text-dim); letter-spacing:0.04em; transition:color 0.12s; }
 .mnav-item.active .mnav-icon, .mnav-item.active .mnav-label { color:var(--text); }
 
+/* LIVE BADGE */
+.live-badge { display:none; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:#3a3; border:1px solid #3a3; padding:2px 7px; }
+body.client-mode .live-badge { display:inline-block; }
+
 @media(max-width:768px){
   .sidebar,.topbar,.client-bar{display:none!important}
   .mobile-header,.mobile-nav{display:block}
@@ -203,17 +231,47 @@ body.advisor-mode .advisor-panel { display:block; }
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">RhetorIQ</div>
+    <div class="login-sub">by Lorena Lienhard</div>
+
+    <!-- Advisor form -->
+    <div id="advisor-login-form">
+      <label class="login-label">Email</label>
+      <input class="login-input" type="email" id="login-email" placeholder="advisor@example.com" autocomplete="email">
+      <label class="login-label">Password</label>
+      <input class="login-input" type="password" id="login-password" placeholder="‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢" autocomplete="current-password">
+      <button class="login-btn" onclick="loginAdvisor()">Sign in as Advisor</button>
+      <div class="login-error" id="login-error"></div>
+      <div class="login-divider">or</div>
+      <div class="client-token-link" onclick="showClientForm()">I have a client access token</div>
+    </div>
+
+    <!-- Client token form -->
+    <div id="client-token-form">
+      <label class="login-label">Client Access Token</label>
+      <input class="login-input" type="text" id="client-token-input" placeholder="Paste your token here">
+      <button class="login-btn" onclick="loginClient()">Open Client View</button>
+      <div class="login-error" id="client-error"></div>
+      <div class="login-divider">or</div>
+      <div class="client-token-link" onclick="showAdvisorForm()">Sign in as Advisor</div>
+    </div>
+  </div>
+</div>
+
 <!-- INSTALL BANNER -->
 <div id="install-banner">
   <span>Install RhetorIQ as an app</span>
   <div style="display:flex;gap:8px;align-items:center">
     <button onclick="installApp()">Install</button>
-    <button class="dismiss" onclick="document.getElementById('install-banner').classList.remove('show')">✕</button>
+    <button class="dismiss" onclick="document.getElementById('install-banner').classList.remove('show')">‚úï</button>
   </div>
 </div>
 <div id="ios-hint">
-  <span style="font-size:20px;display:block;margin-bottom:6px">⬆</span>
-  Tap <strong>Share</strong> →<br><strong>"Add to Home Screen"</strong><br>to install RhetorIQ.
+  <span style="font-size:20px;display:block;margin-bottom:6px">‚¨Ü</span>
+  Tap <strong>Share</strong> ‚Üí<br><strong>"Add to Home Screen"</strong><br>to install RhetorIQ.
   <br><span class="close-hint" onclick="document.getElementById('ios-hint').classList.remove('show')">Dismiss</span>
 </div>
 
@@ -221,7 +279,7 @@ body.advisor-mode .advisor-panel { display:block; }
 <div class="modal-overlay" id="new-client-modal">
   <div class="modal">
     <div class="modal-title">New Client</div>
-    <div class="modal-sub">Add a new client to your workspace. They will receive a dedicated access link.</div>
+    <div class="modal-sub">Add a new client. They will receive a dedicated access token.</div>
     <div class="modal-field">
       <label class="field-label">Company Name</label>
       <input type="text" id="nc-name" placeholder="e.g. Acme AG">
@@ -251,7 +309,7 @@ body.advisor-mode .advisor-panel { display:block; }
     <div class="sidebar-logo">
       <div class="logo-word">RhetorIQ</div>
       <div class="logo-sub">by Lorena Lienhard</div>
-      <div class="mode-badge advisor-only advisor" id="mode-badge-sidebar">Advisor Mode</div>
+      <div class="mode-badge advisor-only advisor">Advisor Mode</div>
       <div class="mode-badge" id="client-badge-sidebar" style="display:none"></div>
     </div>
 
@@ -312,14 +370,15 @@ body.advisor-mode .advisor-panel { display:block; }
 
     <div class="nav-section">
       <div class="nav-section-label">Log</div>
-      <div class="nav-item" onclick="showPanel('history',this)">
+      <div class="nav-item" onclick="showPanel('history',this);loadHistory()">
         <div class="nav-dot"></div><div class="nav-label">All Analyses</div>
       </div>
     </div>
 
     <div class="sidebar-footer">
-      <div class="user-name" id="sidebar-user-name">Lorena Lienhard</div>
-      <div class="user-role" id="sidebar-user-role">Executive Communication Advisor</div>
+      <div class="user-name" id="sidebar-user-name">‚Äî</div>
+      <div class="user-role" id="sidebar-user-role">‚Äî</div>
+      <div class="logout-btn" onclick="logout()">Sign out</div>
     </div>
   </nav>
 
@@ -330,12 +389,13 @@ body.advisor-mode .advisor-panel { display:block; }
       <div class="mobile-page" id="mobile-page">Dashboard</div>
     </div>
 
-    <!-- CLIENT BAR (advisor only) -->
+    <!-- CLIENT BAR -->
     <div class="client-bar">
       <span class="client-label">Active client</span>
       <select class="client-select" id="active-client-select" onchange="switchClient(this.value)">
-        <option value="">— Select client —</option>
+        <option value="">‚Äî Select client ‚Äî</option>
       </select>
+      <span class="ws-dot" id="ws-dot"></span>
       <button class="new-client-btn" onclick="openModal()">+ New Client</button>
     </div>
 
@@ -346,6 +406,7 @@ body.advisor-mode .advisor-panel { display:block; }
         <div class="topbar-crumb" id="topbar-crumb">Overview of all modules</div>
       </div>
       <div class="topbar-right">
+        <span class="live-badge">Live</span>
         <button class="btn" onclick="showInstallHint()">Install App</button>
         <button class="btn btn-dark advisor-only" onclick="openModal()">+ New Client</button>
       </div>
@@ -375,65 +436,57 @@ body.advisor-mode .advisor-panel { display:block; }
           <div class="module-tile" onclick="showPanel('profiling',null)">
             <div class="tile-tag">Profiling</div>
             <div class="tile-name">Executive Rhetoric Profiling</div>
-            <div class="tile-desc">Rhetorical DNA of a leader — argumentation logic, persuasion patterns, strategic blind spots.</div>
+            <div class="tile-desc">Rhetorical DNA of a leader ‚Äî argumentation logic, persuasion patterns, strategic blind spots.</div>
           </div>
           <div class="module-tile" onclick="showPanel('fingerprint',null)">
             <div class="tile-tag">Development</div>
             <div class="tile-name">Communication Fingerprint</div>
-            <div class="tile-desc">How does an executive's language shift over time — under pressure, in crisis, at peak performance?</div>
+            <div class="tile-desc">How does an executive's language shift over time ‚Äî under pressure, in crisis, at peak performance?</div>
           </div>
           <div class="module-tile tile-span2" onclick="showPanel('language',null)">
             <div class="tile-tag">Diagnostics</div>
             <div class="tile-name">Language Analytics</div>
-            <div class="tile-desc">Where does leadership rhetoric and lived company culture diverge? Diagnosis through internal texts.</div>
+            <div class="tile-desc">Where does leadership rhetoric and lived company culture diverge?</div>
           </div>
         </div>
 
         <div class="modules-label" style="margin-top:24px">Prevention</div>
         <div class="module-grid" style="margin-bottom:1px">
           <div class="module-tile" onclick="showPanel('risk',null)">
-            <div class="tile-tag">Prevention</div>
-            <div class="tile-name">Risk Management</div>
+            <div class="tile-tag">Prevention</div><div class="tile-name">Risk Management</div>
             <div class="tile-desc">Identify reception risks before communication goes out.</div>
           </div>
           <div class="module-tile" onclick="showPanel('stress',null)">
-            <div class="tile-tag">Preparation</div>
-            <div class="tile-name">Argument Stress Test</div>
-            <div class="tile-desc">Strongest counterarguments from three perspectives — before your audience brings them.</div>
+            <div class="tile-tag">Preparation</div><div class="tile-name">Argument Stress Test</div>
+            <div class="tile-desc">Strongest counterarguments from three perspectives.</div>
           </div>
           <div class="module-tile" onclick="showPanel('impact',null)">
-            <div class="tile-tag">Simulation</div>
-            <div class="tile-name">Strategic Impact Simulation</div>
-            <div class="tile-desc">Simulate stakeholder reactions before any major announcement goes out.</div>
+            <div class="tile-tag">Simulation</div><div class="tile-name">Strategic Impact Simulation</div>
+            <div class="tile-desc">Simulate stakeholder reactions before any major announcement.</div>
           </div>
           <div class="module-tile" onclick="showPanel('actionability',null)">
-            <div class="tile-tag">Clarity</div>
-            <div class="tile-name">Actionability Scanner</div>
+            <div class="tile-tag">Clarity</div><div class="tile-name">Actionability Scanner</div>
             <div class="tile-desc">Identify vague directives and translate them into precise, operational language.</div>
           </div>
           <div class="module-tile tile-span2" onclick="showPanel('thread',null)">
-            <div class="tile-tag">Decision Logic</div>
-            <div class="tile-name">Thread Cleaner</div>
-            <div class="tile-desc">50 emails → half a page decision matrix. Core question, options, counterarguments — distilled.</div>
+            <div class="tile-tag">Decision Logic</div><div class="tile-name">Thread Cleaner</div>
+            <div class="tile-desc">50 emails ‚Üí half a page decision matrix.</div>
           </div>
         </div>
 
         <div class="modules-label" style="margin-top:24px">Leadership</div>
         <div class="module-grid">
           <div class="module-tile" onclick="showPanel('voice',null)">
-            <div class="tile-tag">Ghostwriting</div>
-            <div class="tile-name">Voice Signature</div>
-            <div class="tile-desc">Calibrate the linguistic signature — generate texts in the authentic voice of the executive.</div>
+            <div class="tile-tag">Ghostwriting</div><div class="tile-name">Voice Signature</div>
+            <div class="tile-desc">Calibrate the linguistic signature ‚Äî generate texts in the authentic voice.</div>
           </div>
           <div class="module-tile" onclick="showPanel('review',null)">
-            <div class="tile-tag">HR</div>
-            <div class="tile-name">Performance Review</div>
-            <div class="tile-desc">Keywords in — rhetorically precise, development-oriented feedback out.</div>
+            <div class="tile-tag">HR</div><div class="tile-name">Performance Review</div>
+            <div class="tile-desc">Keywords in ‚Äî rhetorically precise, development-oriented feedback out.</div>
           </div>
           <div class="module-tile tile-span2" onclick="showPanel('recognition',null)">
-            <div class="tile-tag">Leadership Culture</div>
-            <div class="tile-name">Recognition Writer</div>
-            <div class="tile-desc">Culturally calibrated, authentic praise — tailored to the recipient type, no AI-kitsch.</div>
+            <div class="tile-tag">Leadership Culture</div><div class="tile-name">Recognition Writer</div>
+            <div class="tile-desc">Culturally calibrated, authentic praise ‚Äî tailored to the recipient type.</div>
           </div>
         </div>
       </div>
@@ -442,13 +495,13 @@ body.advisor-mode .advisor-panel { display:block; }
       <div class="panel advisor-panel" id="panel-clients">
         <div class="module-header">
           <div class="module-title">Clients</div>
-          <div class="module-sub">Manage your client workspace. Each client has a dedicated access link and isolated session history.</div>
+          <div class="module-sub">Manage your client workspace. Each client gets a dedicated access token.</div>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
           <button class="btn btn-dark" onclick="openModal()">+ New Client</button>
         </div>
         <div id="client-list">
-          <div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No clients yet. Add your first client above.</div>
+          <div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No clients yet.</div>
         </div>
       </div>
 
@@ -460,13 +513,12 @@ body.advisor-mode .advisor-panel { display:block; }
         </div>
         <div class="input-block">
           <label class="field-label">Texts from the leader</label>
-          <textarea id="rp-input" placeholder="Speeches, emails, LinkedIn posts, internal memos — separate multiple texts with ---."></textarea>
+          <textarea id="rp-input" placeholder="Speeches, emails, LinkedIn posts, internal memos ‚Äî separate multiple texts with ---."></textarea>
         </div>
         <div class="input-row">
           <div><label class="field-label">Name / Role</label><input type="text" id="rp-name" placeholder="e.g. CEO Martin Meier"></div>
           <div><label class="field-label">Industry</label>
-            <select id="rp-industry">
-              <option value="">Select industry</option>
+            <select id="rp-industry"><option value="">Select industry</option>
               <option>Financial Services</option><option>Industry / Manufacturing</option>
               <option>Tech / SaaS</option><option>Healthcare</option>
               <option>Education</option><option>Public Sector</option><option>Other</option>
@@ -484,11 +536,11 @@ body.advisor-mode .advisor-panel { display:block; }
       <div class="panel" id="panel-fingerprint">
         <div class="module-header">
           <div class="module-title">Communication Fingerprint</div>
-          <div class="module-sub">Enter texts from different points in time or contexts. The system reveals how language shifts — under pressure, in crisis, at peak performance. Identify patterns before they become critical.</div>
+          <div class="module-sub">Enter texts from different points in time or contexts. Reveals how language shifts ‚Äî under pressure, in crisis, at peak performance.</div>
         </div>
         <div class="input-block">
-          <label class="field-label">Texts — separated by time or context (use --- with a date/context label)</label>
-          <textarea id="cf-input" placeholder="2024-01 — Quarterly Report&#10;[text]&#10;---&#10;2024-06 — Crisis Communication&#10;[text]&#10;---&#10;2025-01 — Investor Relations&#10;[text]" style="min-height:160px"></textarea>
+          <label class="field-label">Texts ‚Äî separated by time or context (use --- with a date/context label)</label>
+          <textarea id="cf-input" placeholder="2024-01 ‚Äî Quarterly Report&#10;[text]&#10;---&#10;2024-06 ‚Äî Crisis Communication&#10;[text]" style="min-height:160px"></textarea>
         </div>
         <div class="input-row">
           <div><label class="field-label">Name / Role</label><input type="text" id="cf-name" placeholder="e.g. CFO Anna Berger"></div>
@@ -511,17 +563,17 @@ body.advisor-mode .advisor-panel { display:block; }
       <div class="panel" id="panel-language">
         <div class="module-header">
           <div class="module-title">Language Analytics</div>
-          <div class="module-sub">Enter internal company texts. The system diagnoses where leadership rhetoric and lived culture diverge — and where language builds or erodes trust.</div>
+          <div class="module-sub">Diagnoses where leadership rhetoric and lived culture diverge ‚Äî and where language builds or erodes trust.</div>
         </div>
         <div class="input-block">
-          <label class="field-label">Internal texts (emails, meeting minutes, strategy papers, HR communications) — separate with ---</label>
+          <label class="field-label">Internal texts ‚Äî separate with ---</label>
           <textarea id="la-input" placeholder="Texts from multiple hierarchy levels significantly increase diagnostic accuracy." style="min-height:160px"></textarea>
         </div>
         <div class="input-row">
           <div><label class="field-label">Company Size</label>
             <select id="la-size">
-              <option>10–50 employees</option><option>50–200 employees</option>
-              <option>200–1,000 employees</option><option>1,000+ employees</option>
+              <option>10‚Äì50 employees</option><option>50‚Äì200 employees</option>
+              <option>200‚Äì1,000 employees</option><option>1,000+ employees</option>
             </select>
           </div>
           <div><label class="field-label">Analysis Focus</label>
@@ -543,7 +595,7 @@ body.advisor-mode .advisor-panel { display:block; }
       <div class="panel" id="panel-risk">
         <div class="module-header">
           <div class="module-title">Risk Management</div>
-          <div class="module-sub">Enter communication before it goes out. The system evaluates reception risks, flags dangerous formulations, and recommends precise corrections.</div>
+          <div class="module-sub">Enter communication before it goes out. Evaluates reception risks, flags dangerous formulations, recommends corrections.</div>
         </div>
         <div class="input-block">
           <label class="field-label">Planned communication</label>
@@ -551,16 +603,13 @@ body.advisor-mode .advisor-panel { display:block; }
         </div>
         <div class="input-row">
           <div><label class="field-label">Target audience</label>
-            <select id="rm-audience">
-              <option value="">Select audience</option>
-              <option>Employees</option><option>Investors</option>
-              <option>Media / Public</option><option>Customers</option>
-              <option>Board / Executive team</option><option>All simultaneously</option>
+            <select id="rm-audience"><option value="">Select audience</option>
+              <option>Employees</option><option>Investors</option><option>Media / Public</option>
+              <option>Customers</option><option>Board / Executive team</option><option>All simultaneously</option>
             </select>
           </div>
           <div><label class="field-label">Context</label>
-            <select id="rm-context">
-              <option value="">Select situation</option>
+            <select id="rm-context"><option value="">Select situation</option>
               <option>Strategy shift</option><option>Layoffs / Restructuring</option>
               <option>Merger / Acquisition</option><option>Crisis / Reputational damage</option>
               <option>New product / Launch</option><option>Cultural change</option>
@@ -578,11 +627,11 @@ body.advisor-mode .advisor-panel { display:block; }
       <div class="panel" id="panel-stress">
         <div class="module-header">
           <div class="module-title">Argument Stress Test</div>
-          <div class="module-sub">Enter a thesis or position. The system generates the strongest counterarguments from three perspectives — and trains precise responses. Preparation for interviews, board meetings, shareholder assemblies.</div>
+          <div class="module-sub">Enter a thesis or position. The system generates the strongest counterarguments from three perspectives.</div>
         </div>
         <div class="input-block">
           <label class="field-label">Thesis / Position / Key Message</label>
-          <textarea id="st-input" placeholder='e.g. "We are introducing a new performance evaluation system that variabilises 20% of bonuses."' style="min-height:110px"></textarea>
+          <textarea id="st-input" style="min-height:110px" placeholder='e.g. "We are introducing a new performance evaluation system that variabilises 20% of bonuses."'></textarea>
         </div>
         <div class="input-row">
           <div><label class="field-label">Perspectives to test</label>
@@ -594,9 +643,9 @@ body.advisor-mode .advisor-panel { display:block; }
           </div>
           <div><label class="field-label">Intensity</label>
             <select id="st-intensity">
-              <option>Moderate — fair criticism</option>
-              <option>Sharp — aggressive questioning</option>
-              <option>Maximum — hardest possible attack</option>
+              <option>Moderate ‚Äî fair criticism</option>
+              <option>Sharp ‚Äî aggressive questioning</option>
+              <option>Maximum ‚Äî hardest possible attack</option>
             </select>
           </div>
         </div>
@@ -611,7 +660,7 @@ body.advisor-mode .advisor-panel { display:block; }
       <div class="panel" id="panel-impact">
         <div class="module-header">
           <div class="module-title">Strategic Impact Simulation</div>
-          <div class="module-sub">Enter planned communication. The system simulates how different stakeholder groups will react — strategic adjustments before it's too late.</div>
+          <div class="module-sub">Simulates how different stakeholder groups will react ‚Äî strategic adjustments before it's too late.</div>
         </div>
         <div class="input-block">
           <label class="field-label">Planned communication</label>
@@ -627,10 +676,8 @@ body.advisor-mode .advisor-panel { display:block; }
           </div>
           <div><label class="field-label">Strategic context</label>
             <select id="si-severity">
-              <option>Low — routine change</option>
-              <option>Medium — noticeable impact</option>
-              <option>High — significant transformation</option>
-              <option>Critical — existential crisis</option>
+              <option>Low ‚Äî routine change</option><option>Medium ‚Äî noticeable impact</option>
+              <option>High ‚Äî significant transformation</option><option>Critical ‚Äî existential crisis</option>
             </select>
           </div>
         </div>
@@ -645,7 +692,7 @@ body.advisor-mode .advisor-panel { display:block; }
       <div class="panel" id="panel-actionability">
         <div class="module-header">
           <div class="module-title">Actionability Scanner</div>
-          <div class="module-sub">Enter instructions or briefings before sending. The system scans for vagueness, missing deadlines, and unclear responsibilities — and translates into operational language.</div>
+          <div class="module-sub">Scans for vagueness, missing deadlines, and unclear responsibilities ‚Äî translates into operational language.</div>
         </div>
         <div class="input-block">
           <label class="field-label">Instruction / Briefing / Delegation</label>
@@ -677,10 +724,10 @@ body.advisor-mode .advisor-panel { display:block; }
       <div class="panel" id="panel-thread">
         <div class="module-header">
           <div class="module-title">Thread Cleaner</div>
-          <div class="module-sub">Paste an email chain, Teams or Slack thread. The system extracts the logical decision structure — not a summary, but the argumentative architecture: core question, options, counterarguments, open points.</div>
+          <div class="module-sub">Extracts the logical decision structure from an email or chat thread.</div>
         </div>
         <div class="input-block">
-          <label class="field-label">Full thread (paste entirely — all participants, replies, forwards)</label>
+          <label class="field-label">Full thread (paste entirely)</label>
           <textarea id="tc-input" placeholder="Paste the complete thread here." style="min-height:180px"></textarea>
         </div>
         <div class="input-row">
@@ -701,7 +748,7 @@ body.advisor-mode .advisor-panel { display:block; }
         </div>
         <button class="run-btn" onclick="run('tc')">Clean Thread</button>
         <div class="result-box" id="tc-result">
-          <div class="result-top"><span class="result-tag">Thread — Decision Matrix</span><button class="copy-btn" onclick="copyResult('tc-body')">Copy</button></div>
+          <div class="result-top"><span class="result-tag">Thread ‚Äî Decision Matrix</span><button class="copy-btn" onclick="copyResult('tc-body')">Copy</button></div>
           <div class="result-body" id="tc-body"></div>
         </div>
       </div>
@@ -710,7 +757,7 @@ body.advisor-mode .advisor-panel { display:block; }
       <div class="panel" id="panel-voice">
         <div class="module-header">
           <div class="module-title">Voice Signature</div>
-          <div class="module-sub">One-time calibration of the linguistic signature — then scalable text generation in the authentic voice of the executive.</div>
+          <div class="module-sub">One-time calibration of the linguistic signature ‚Äî then scalable text generation in the authentic voice of the executive.</div>
         </div>
         <div class="tab-row">
           <button class="tab active" onclick="switchTab(this,'vs-cal','vs-gen')">Calibrate</button>
@@ -718,8 +765,8 @@ body.advisor-mode .advisor-panel { display:block; }
         </div>
         <div id="vs-cal">
           <div class="input-block">
-            <label class="field-label">Reference texts (3–5, separate with ---)</label>
-            <textarea id="vs-ref" placeholder="LinkedIn posts, speeches, emails, interviews — the more diverse, the more precise the profile."></textarea>
+            <label class="field-label">Reference texts (3‚Äì5, separate with ---)</label>
+            <textarea id="vs-ref" placeholder="LinkedIn posts, speeches, emails, interviews."></textarea>
           </div>
           <button class="run-btn" onclick="run('vs-cal')">Calibrate Voice Signature</button>
           <div class="result-box" id="vs-cal-result">
@@ -759,7 +806,7 @@ body.advisor-mode .advisor-panel { display:block; }
       <div class="panel" id="panel-review">
         <div class="module-header">
           <div class="module-title">Performance Review</div>
-          <div class="module-sub">Enter keywords and observations — including critical ones. The system formulates rhetorically precise, development-oriented feedback: psycholinguistically calibrated, clear in substance, without unnecessary attack surfaces.</div>
+          <div class="module-sub">Enter keywords and observations. The system formulates rhetorically precise, development-oriented feedback.</div>
         </div>
         <div class="input-block">
           <label class="field-label">Raw feedback (keywords, observations)</label>
@@ -771,8 +818,7 @@ body.advisor-mode .advisor-panel { display:block; }
             <select id="pr-format">
               <option>Written appraisal (HR document)</option>
               <option>Verbal feedback (conversation guide)</option>
-              <option>360° feedback</option>
-              <option>Probationary review</option>
+              <option>360¬∞ feedback</option><option>Probationary review</option>
             </select>
           </div>
         </div>
@@ -787,20 +833,20 @@ body.advisor-mode .advisor-panel { display:block; }
       <div class="panel" id="panel-recognition">
         <div class="module-header">
           <div class="module-title">Recognition Writer</div>
-          <div class="module-sub">Describe a concrete achievement, choose the recipient type. The system formulates culturally calibrated, authentic recognition — precise, free of AI-kitsch, psychologically targeted.</div>
+          <div class="module-sub">Describe a concrete achievement. The system formulates culturally calibrated, authentic recognition.</div>
         </div>
         <div class="input-block">
           <label class="field-label">What did the person specifically do?</label>
-          <textarea id="rw-input" placeholder='e.g. "Müller worked over the weekend to rescue the database migration and secured the entire product launch"' style="min-height:100px"></textarea>
+          <textarea id="rw-input" style="min-height:100px" placeholder='e.g. "M√ºller worked over the weekend to rescue the database migration and secured the entire product launch"'></textarea>
         </div>
         <div class="input-row">
           <div><label class="field-label">Recipient type</label>
             <select id="rw-type">
-              <option>The Analyst — wants praise for precision and logic</option>
-              <option>The Executor — wants recognition for impact and results</option>
-              <option>The Team Player — wants to be seen for their contribution to the group</option>
-              <option>The Visionary — wants appreciation for ideas and courage</option>
-              <option>The Pragmatist — wants direct, factual acknowledgement, no fuss</option>
+              <option>The Analyst ‚Äî wants praise for precision and logic</option>
+              <option>The Executor ‚Äî wants recognition for impact and results</option>
+              <option>The Team Player ‚Äî wants to be seen for contribution to the group</option>
+              <option>The Visionary ‚Äî wants appreciation for ideas and courage</option>
+              <option>The Pragmatist ‚Äî wants direct, factual acknowledgement</option>
             </select>
           </div>
           <div><label class="field-label">Format</label>
@@ -814,7 +860,7 @@ body.advisor-mode .advisor-panel { display:block; }
         </div>
         <button class="run-btn" onclick="run('rw')">Write Recognition</button>
         <div class="result-box" id="rw-result">
-          <div class="result-top"><span class="result-tag">Recognition — Calibrated</span><button class="copy-btn" onclick="copyResult('rw-body')">Copy</button></div>
+          <div class="result-top"><span class="result-tag">Recognition ‚Äî Calibrated</span><button class="copy-btn" onclick="copyResult('rw-body')">Copy</button></div>
           <div class="result-body" id="rw-body"></div>
         </div>
       </div>
@@ -823,10 +869,10 @@ body.advisor-mode .advisor-panel { display:block; }
       <div class="panel" id="panel-history">
         <div class="module-header">
           <div class="module-title">All Analyses</div>
-          <div class="module-sub">Log of this session.</div>
+          <div class="module-sub">Persistent log of all analyses.</div>
         </div>
         <div id="history-list">
-          <div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No analyses yet. Start with any module.</div>
+          <div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">Loading‚Ä¶</div>
         </div>
       </div>
 
@@ -836,19 +882,19 @@ body.advisor-mode .advisor-panel { display:block; }
     <nav class="mobile-nav">
       <div class="mobile-nav-inner">
         <div class="mnav-item active" id="mn-dashboard" onclick="showPanel('dashboard',null);setMNav('dashboard')">
-          <div class="mnav-icon">⌂</div><div class="mnav-label">Home</div>
+          <div class="mnav-icon">‚åÇ</div><div class="mnav-label">Home</div>
         </div>
         <div class="mnav-item" id="mn-profiling" onclick="showPanel('profiling',null);setMNav('profiling')">
-          <div class="mnav-icon">◈</div><div class="mnav-label">Profile</div>
+          <div class="mnav-icon">‚óà</div><div class="mnav-label">Profile</div>
         </div>
         <div class="mnav-item" id="mn-risk" onclick="showPanel('risk',null);setMNav('risk')">
-          <div class="mnav-icon">◎</div><div class="mnav-label">Risk</div>
+          <div class="mnav-icon">‚óé</div><div class="mnav-label">Risk</div>
         </div>
         <div class="mnav-item" id="mn-voice" onclick="showPanel('voice',null);setMNav('voice')">
-          <div class="mnav-icon">◇</div><div class="mnav-label">Voice</div>
+          <div class="mnav-icon">‚óá</div><div class="mnav-label">Voice</div>
         </div>
         <div class="mnav-item" id="mn-more" onclick="showPanel('thread',null);setMNav('more')">
-          <div class="mnav-icon">⋯</div><div class="mnav-label">More</div>
+          <div class="mnav-icon">‚ãØ</div><div class="mnav-label">More</div>
         </div>
       </div>
     </nav>
@@ -856,111 +902,324 @@ body.advisor-mode .advisor-panel { display:block; }
 </div>
 
 <script>
-// ── MODE DETECTION ──────────────────────────────────────────
-const params = new URLSearchParams(window.location.search);
-const clientParam = params.get('client');
-const isAdvisor = !clientParam;
+// ‚îÄ‚îÄ CONFIG ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+const API = 'https://rhetoriq-jib0.onrender.com';
 
-if (isAdvisor) {
-  document.body.classList.add('advisor-mode');
-} else {
-  // Client mode: show company name
-  const clientName = decodeURIComponent(clientParam).replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-  const badge = document.getElementById('client-badge-sidebar');
-  if (badge) { badge.textContent = clientName; badge.style.display='inline-flex'; }
-  document.getElementById('sidebar-user-name').textContent = clientName;
-  document.getElementById('sidebar-user-role').textContent = 'Powered by RhetorIQ';
-  // Hide advisor mode badge
-  const ab = document.getElementById('mode-badge-sidebar');
-  if (ab) ab.style.display='none';
+// ‚îÄ‚îÄ STATE ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+let authToken = localStorage.getItem('riq-token');
+let currentUser = null;
+let isAdvisor = false;
+let activeClientId = null;
+let clientList = [];
+let analysisCount = 0;
+let wsConnection = null;
+let _voiceProfile = null;
+
+// ‚îÄ‚îÄ AUTH ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+function showClientForm() {
+  document.getElementById('advisor-login-form').style.display = 'none';
+  document.getElementById('client-token-form').style.display = 'block';
+}
+function showAdvisorForm() {
+  document.getElementById('client-token-form').style.display = 'none';
+  document.getElementById('advisor-login-form').style.display = 'block';
 }
 
-// ── PWA ──────────────────────────────────────────────────────
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault(); deferredPrompt = e;
-  document.getElementById('install-banner').classList.add('show');
-});
-window.addEventListener('appinstalled', () => document.getElementById('install-banner').classList.remove('show'));
-function installApp() {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(() => { deferredPrompt=null; document.getElementById('install-banner').classList.remove('show'); });
+async function loginAdvisor() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  try {
+    const r = await fetch(API + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.error || 'Login failed'; err.style.display = 'block'; return; }
+    authToken = d.token;
+    localStorage.setItem('riq-token', authToken);
+    initApp(d.user, 'advisor');
+  } catch(e) {
+    err.textContent = 'Connection error'; err.style.display = 'block';
+  }
 }
-function showInstallHint() {
-  if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
-    document.getElementById('ios-hint').classList.add('show');
-    setTimeout(()=>document.getElementById('ios-hint').classList.remove('show'),6000);
-  } else if (deferredPrompt) installApp();
-  else alert('Open RhetorIQ in Chrome or Edge — the install icon appears in the address bar.');
+
+async function loginClient() {
+  const token = document.getElementById('client-token-input').value.trim();
+  const err = document.getElementById('client-error');
+  err.style.display = 'none';
+  try {
+    const r = await fetch(API + '/auth/client-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
+    });
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.error || 'Invalid token'; err.style.display = 'block'; return; }
+    authToken = d.token;
+    localStorage.setItem('riq-token', authToken);
+    initApp(d.client, 'client');
+  } catch(e) {
+    err.textContent = 'Connection error'; err.style.display = 'block';
+  }
 }
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
-// ── CLIENT MANAGEMENT (advisor only) ─────────────────────────
-let clients = JSON.parse(localStorage.getItem('rhetoriq-clients')||'[]');
-let analysisCount = parseInt(localStorage.getItem('rhetoriq-count')||'0');
+function logout() {
+  authToken = null;
+  currentUser = null;
+  localStorage.removeItem('riq-token');
+  if (wsConnection) wsConnection.close();
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.body.classList.remove('advisor-mode', 'client-mode');
+}
 
-function saveClients() { localStorage.setItem('rhetoriq-clients',JSON.stringify(clients)); }
+// ‚îÄ‚îÄ INIT ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+async function initApp(user, role) {
+  currentUser = user;
+  isAdvisor = role === 'advisor';
+
+  document.getElementById('login-screen').classList.add('hidden');
+
+  if (isAdvisor) {
+    document.body.classList.add('advisor-mode');
+    document.getElementById('sidebar-user-name').textContent = user.name || user.email;
+    document.getElementById('sidebar-user-role').textContent = 'Executive Communication Advisor';
+    await loadClients();
+  } else {
+    document.body.classList.add('client-mode');
+    document.getElementById('sidebar-user-name').textContent = user.name || user.clientName;
+    document.getElementById('sidebar-user-role').textContent = 'Powered by RhetorIQ';
+    const badge = document.getElementById('client-badge-sidebar');
+    badge.textContent = user.name || user.clientName;
+    badge.style.display = 'inline-flex';
+  }
+
+  connectWebSocket();
+  updateAnalysisCount();
+}
+
+// Try auto-login from stored token
+async function tryAutoLogin() {
+  if (!authToken) return;
+  try {
+    // Decode JWT to check expiry
+    const payload = JSON.parse(atob(authToken.split('.')[1]));
+    if (payload.exp * 1000 < Date.now()) { localStorage.removeItem('riq-token'); return; }
+    if (payload.role === 'advisor') {
+      initApp({ id: payload.id, name: payload.name, email: payload.email }, 'advisor');
+    } else {
+      initApp({ id: payload.clientId, name: payload.clientName }, 'client');
+    }
+  } catch { localStorage.removeItem('riq-token'); }
+}
+
+// ‚îÄ‚îÄ WEBSOCKET ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+function connectWebSocket() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const host = API ? API.replace(/^https?/, proto) : `${proto}://${location.host}`;
+  wsConnection = new WebSocket(`${host}/ws`);
+
+  const dot = document.getElementById('ws-dot');
+  wsConnection.onopen = () => { if (dot) dot.classList.add('connected'); };
+  wsConnection.onclose = () => {
+    if (dot) dot.classList.remove('connected');
+    setTimeout(connectWebSocket, 3000); // auto-reconnect
+  };
+  wsConnection.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'analysis') handleIncomingAnalysis(msg.analysis);
+    } catch {}
+  };
+}
+
+function handleIncomingAnalysis(analysis) {
+  // In client mode: show result live when advisor runs an analysis
+  analysisCount++;
+  document.getElementById('stat-analyses').textContent = analysisCount;
+  // Flash the relevant result box if the module panel is active
+  const bodyEl = document.getElementById(analysis.module + '-body');
+  if (bodyEl) {
+    const box = document.getElementById(analysis.module + '-result');
+    if (box) { box.classList.add('visible'); bodyEl.textContent = analysis.result; }
+  }
+}
+
+// ‚îÄ‚îÄ CLIENT MANAGEMENT ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+async function loadClients() {
+  try {
+    const r = await apiFetch('/api/clients');
+    clientList = await r.json();
+    renderClients();
+  } catch {}
+}
 
 function renderClients() {
+  document.getElementById('stat-clients').textContent = clientList.length;
+
   const list = document.getElementById('client-list');
   const sel = document.getElementById('active-client-select');
-  document.getElementById('stat-clients').textContent = clients.length;
 
-  if (!clients.length) {
-    list.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No clients yet. Add your first client above.</div>';
-    sel.innerHTML='<option value="">— Select client —</option>';
+  if (!clientList.length) {
+    list.innerHTML = '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No clients yet.</div>';
+    sel.innerHTML = '<option value="">‚Äî Select client ‚Äî</option>';
     return;
   }
 
-  list.innerHTML = clients.map((c,i)=>`
+  list.innerHTML = clientList.map(c => `
     <div class="client-card">
       <div>
         <div class="client-card-name">${c.name}</div>
-        <div class="client-card-meta">${c.industry} · ${c.contact}</div>
+        <div class="client-card-meta">${c.industry || ''} ¬∑ ${c.contact || ''}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="client-card-badge">rhetoriq.app/?client=${encodeURIComponent(c.name.toLowerCase().replace(/\s+/g,'-'))}</div>
-        <button class="btn" style="font-size:10px;padding:4px 10px" onclick="copyLink('${c.name}')">Copy link</button>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <code class="client-card-badge">${c.token.substring(0,16)}‚Ä¶</code>
+        <button class="btn" style="font-size:10px;padding:4px 10px" onclick="copyToken('${c.token}')">Copy token</button>
       </div>
     </div>
   `).join('');
 
-  sel.innerHTML = '<option value="">— Select client —</option>' +
-    clients.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  sel.innerHTML = '<option value="">‚Äî Select client ‚Äî</option>' +
+    clientList.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 }
 
-function copyLink(name) {
-  const slug = encodeURIComponent(name.toLowerCase().replace(/\s+/g,'-'));
-  const url = `${window.location.origin}${window.location.pathname}?client=${slug}`;
-  navigator.clipboard.writeText(url).catch(()=>{});
-  alert('Client link copied:\n'+url);
+function copyToken(token) {
+  navigator.clipboard.writeText(token).catch(()=>{});
+  alert('Client access token copied!\n\nShare this token with your client ‚Äî they use it to log in at:\n' + location.origin);
 }
 
-function switchClient(name) { /* future: filter history by client */ }
+function switchClient(id) { activeClientId = id || null; }
 
 function openModal() { document.getElementById('new-client-modal').classList.add('show'); }
 function closeModal() { document.getElementById('new-client-modal').classList.remove('show'); }
 
-function addClient() {
+async function addClient() {
   const name = document.getElementById('nc-name').value.trim();
   if (!name) return;
   const industry = document.getElementById('nc-industry').value;
-  const contact = document.getElementById('nc-contact').value.trim() || '—';
-  clients.push({name, industry, contact});
-  saveClients();
-  renderClients();
-  closeModal();
-  document.getElementById('nc-name').value='';
-  document.getElementById('nc-contact').value='';
-  showPanel('clients', null);
-  // highlight the new client
-  setTimeout(()=>{ const items=document.querySelectorAll('.client-card'); if(items.length) items[items.length-1].style.background='var(--surface2)'; setTimeout(()=>{ items.forEach(i=>i.style.background=''); },1000); },100);
+  const contact = document.getElementById('nc-contact').value.trim();
+  try {
+    const r = await apiFetch('/api/clients', { method:'POST', body: JSON.stringify({ name, industry, contact }) });
+    const client = await r.json();
+    clientList.unshift(client);
+    renderClients();
+    closeModal();
+    document.getElementById('nc-name').value = '';
+    document.getElementById('nc-contact').value = '';
+    showPanel('clients', null);
+  } catch(e) { alert('Error: ' + e.message); }
 }
 
-if (isAdvisor) renderClients();
+// ‚îÄ‚îÄ API HELPER ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+function apiFetch(path, options = {}) {
+  return fetch(API + path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + authToken,
+      ...(options.headers || {})
+    }
+  });
+}
 
-// ── NAVIGATION ───────────────────────────────────────────────
+// ‚îÄ‚îÄ ANALYSIS ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+function updateAnalysisCount() {
+  apiFetch('/api/analyze/history').then(r => r.json()).then(rows => {
+    analysisCount = rows.length;
+    document.getElementById('stat-analyses').textContent = analysisCount;
+  }).catch(()=>{});
+}
+
+async function loadHistory() {
+  const clientId = activeClientId || '';
+  const r = await apiFetch('/api/analyze/history' + (clientId ? '?clientId='+clientId : ''));
+  const rows = await r.json();
+  const el = document.getElementById('history-list');
+  if (!rows.length) { el.innerHTML = '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No analyses yet.</div>'; return; }
+  el.innerHTML = rows.map(h => {
+    const d = new Date(h.created_at).toLocaleString('en-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `<div class="history-row"><div><div class="history-title">${h.module_label||h.module}</div><div class="history-meta">${d}</div></div><div class="history-badge">${h.module}</div></div>`;
+  }).join('');
+}
+
+// ‚îÄ‚îÄ MODULE RUNNERS ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+async function run(id) {
+  let module, data, bodyElId, resultElId;
+
+  if (id==='rp') {
+    const text = document.getElementById('rp-input').value.trim(); if (!text) return;
+    module = 'rp'; bodyElId = 'rp-body'; resultElId = 'rp-result';
+    data = { text, name: document.getElementById('rp-name').value.trim(), industry: document.getElementById('rp-industry').value };
+  } else if (id==='cf') {
+    const text = document.getElementById('cf-input').value.trim(); if (!text) return;
+    module = 'cf'; bodyElId = 'cf-body'; resultElId = 'cf-result';
+    data = { text, name: document.getElementById('cf-name').value.trim(), focus: document.getElementById('cf-focus').value };
+  } else if (id==='la') {
+    const text = document.getElementById('la-input').value.trim(); if (!text) return;
+    module = 'la'; bodyElId = 'la-body'; resultElId = 'la-result';
+    data = { text, size: document.getElementById('la-size').value, focus: document.getElementById('la-focus').value };
+  } else if (id==='rm') {
+    const text = document.getElementById('rm-input').value.trim(); if (!text) return;
+    module = 'rm'; bodyElId = 'rm-body'; resultElId = 'rm-result';
+    data = { text, audience: document.getElementById('rm-audience').value, context: document.getElementById('rm-context').value };
+  } else if (id==='st') {
+    const text = document.getElementById('st-input').value.trim(); if (!text) return;
+    module = 'st'; bodyElId = 'st-body'; resultElId = 'st-result';
+    data = { text, perspectives: document.getElementById('st-perspectives').value, intensity: document.getElementById('st-intensity').value };
+  } else if (id==='si') {
+    const text = document.getElementById('si-input').value.trim(); if (!text) return;
+    module = 'si'; bodyElId = 'si-body'; resultElId = 'si-result';
+    data = { text, stakeholders: document.getElementById('si-stakeholders').value, severity: document.getElementById('si-severity').value };
+  } else if (id==='as') {
+    const text = document.getElementById('as-input').value.trim(); if (!text) return;
+    module = 'as'; bodyElId = 'as-body'; resultElId = 'as-result';
+    data = { text, context: document.getElementById('as-context').value, recipient: document.getElementById('as-recipient').value };
+  } else if (id==='tc') {
+    const text = document.getElementById('tc-input').value.trim(); if (!text) return;
+    module = 'tc'; bodyElId = 'tc-body'; resultElId = 'tc-result';
+    data = { text, source: document.getElementById('tc-source').value, goal: document.getElementById('tc-goal').value };
+  } else if (id==='vs-cal') {
+    const text = document.getElementById('vs-ref').value.trim(); if (!text) return;
+    module = 'vs-cal'; bodyElId = 'vs-cal-body'; resultElId = 'vs-cal-result';
+    data = { text };
+  } else if (id==='vs-gen') {
+    const text = document.getElementById('vs-task').value.trim(); if (!text) return;
+    module = 'vs-gen'; bodyElId = 'vs-gen-body'; resultElId = 'vs-gen-result';
+    data = { text, format: document.getElementById('vs-format').value, tone: document.getElementById('vs-tone').value, voiceProfile: _voiceProfile };
+  } else if (id==='pr') {
+    const text = document.getElementById('pr-input').value.trim(); if (!text) return;
+    module = 'pr'; bodyElId = 'pr-body'; resultElId = 'pr-result';
+    data = { text, role: document.getElementById('pr-role').value, format: document.getElementById('pr-format').value };
+  } else if (id==='rw') {
+    const text = document.getElementById('rw-input').value.trim(); if (!text) return;
+    module = 'rw'; bodyElId = 'rw-body'; resultElId = 'rw-result';
+    data = { text, type: document.getElementById('rw-type').value, format: document.getElementById('rw-format').value };
+  } else return;
+
+  const resultBox = document.getElementById(resultElId);
+  const bodyEl = document.getElementById(bodyElId);
+  resultBox.classList.add('visible');
+  bodyEl.innerHTML = '<div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:8px">Analysing...</span></div>';
+
+  try {
+    const r = await apiFetch('/api/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ module, clientId: activeClientId, data })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    bodyEl.textContent = d.result;
+    if (module === 'vs-cal') _voiceProfile = d.result;
+    analysisCount++;
+    document.getElementById('stat-analyses').textContent = analysisCount;
+  } catch(e) {
+    bodyEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+// ‚îÄ‚îÄ UI HELPERS ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
 const meta = {
   dashboard:     ['Dashboard','Overview of all modules'],
   clients:       ['Clients','Manage your client workspace'],
@@ -975,7 +1234,7 @@ const meta = {
   voice:         ['Voice Signature','Calibrate the linguistic signature'],
   review:        ['Performance Review','Development-oriented feedback'],
   recognition:   ['Recognition Writer','Calibrated authentic recognition'],
-  history:       ['All Analyses','Session log']
+  history:       ['All Analyses','Persistent analysis log']
 };
 
 function showPanel(name, navEl) {
@@ -1008,197 +1267,35 @@ function switchTab(btn, showId, hideId) {
   document.getElementById(hideId).style.display='none';
 }
 
-// ── HISTORY ──────────────────────────────────────────────────
-const sessionHistory = [];
-function addHistory(module, badge) {
-  analysisCount++;
-  localStorage.setItem('rhetoriq-count', analysisCount);
-  document.getElementById('stat-analyses').textContent = analysisCount;
-  const now = new Date().toLocaleString('en-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  sessionHistory.unshift({module,badge,time:now});
-  document.getElementById('history-list').innerHTML = sessionHistory.map(h=>
-    `<div class="history-row"><div><div class="history-title">${h.module}</div><div class="history-meta">${h.time}</div></div><div class="history-badge">${h.badge}</div></div>`
-  ).join('');
-}
-
-// ── UI HELPERS ───────────────────────────────────────────────
-function showLoading(el) {
-  el.innerHTML='<div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:8px">Analysing...</span></div>';
-}
-function showResult(id) {
-  const box=document.getElementById(id+'-result');
-  const body=document.getElementById(id+'-body');
-  box.classList.add('visible');
-  showLoading(body);
-  return body;
-}
 function copyResult(id) { navigator.clipboard.writeText(document.getElementById(id).textContent).catch(()=>{}); }
 
-// ── CLAUDE API ───────────────────────────────────────────────
-async function claude(system, user) {
-  const r = await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system,messages:[{role:'user',content:user}]})
-  });
-  const d = await r.json();
-  if(d.error) throw new Error(d.error.message);
-  return d.content?.[0]?.text || 'No response received.';
+// ‚îÄ‚îÄ PWA ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById('install-banner').classList.add('show');
+});
+window.addEventListener('appinstalled', () => document.getElementById('install-banner').classList.remove('show'));
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => { deferredPrompt=null; document.getElementById('install-banner').classList.remove('show'); });
 }
-
-// ── MODULE RUNNERS ───────────────────────────────────────────
-async function run(id) {
-  try {
-    let body, result;
-
-    if (id==='rp') {
-      const text=document.getElementById('rp-input').value.trim(); if(!text)return;
-      const name=document.getElementById('rp-name').value.trim()||'the executive';
-      const ind=document.getElementById('rp-industry').value;
-      body=showResult('rp');
-      result=await claude(
-        `You are an expert in rhetoric and executive communication, grounded in Aristotle, Perelman, and Cicero. Analyse the rhetorical architecture of leadership texts with academic precision. Structure: 1. ARGUMENTATION LOGIC, 2. PERSUASION STRATEGY (Ethos/Pathos/Logos with direct textual evidence), 3. LINGUISTIC SIGNATURES (characteristic patterns), 4. STRATEGIC STRENGTHS, 5. BLIND SPOTS & RISKS. Direct, actionable. In English.`,
-        `Executive Rhetoric Profile for ${name}${ind?' ('+ind+')':''}:\n\n${text}`
-      );
-      body.textContent=result; addHistory('Executive Rhetoric Profiling', name);
-    }
-
-    else if (id==='cf') {
-      const text=document.getElementById('cf-input').value.trim(); if(!text)return;
-      const name=document.getElementById('cf-name').value.trim()||'the executive';
-      const focus=document.getElementById('cf-focus').value;
-      body=showResult('cf');
-      result=await claude(
-        `You are an expert in longitudinal linguistic analysis of leadership communication. Analyse how a person's language shifts across time or contexts. Identify: tone drift, behaviour under pressure, rhetorical patterns that strengthen or weaken, trust signals, consistency vs. inconsistency. Structure: 1. OVERALL DEVELOPMENT, 2. CRITICAL SHIFTS (with direct textual evidence), 3. PATTERNS UNDER PRESSURE, 4. STRATEGIC IMPLICATIONS. Academic rigour, actionable output. In English.`,
-        `Communication Fingerprint for ${name}. Focus: ${focus}.\n\n${text}`
-      );
-      body.textContent=result; addHistory('Communication Fingerprint', name);
-    }
-
-    else if (id==='la') {
-      const text=document.getElementById('la-input').value.trim(); if(!text)return;
-      const size=document.getElementById('la-size').value;
-      const focus=document.getElementById('la-focus').value;
-      body=showResult('la');
-      result=await claude(
-        `You are an expert in organisational communication analysis (linguistics, rhetoric, organisational psychology). Analyse internal company texts. Identify: gaps between stated and lived culture, power dynamics in language, trust climate, cultural tensions. Structure: 1. CULTURE FINDING, 2. CRITICAL LANGUAGE SYMPTOMS (with textual evidence), 3. LEADERSHIP–EMPLOYEE GAP, 4. RECOMMENDATIONS. In English.`,
-        `Language Analytics (${size}, focus: ${focus}):\n\n${text}`
-      );
-      body.textContent=result; addHistory('Language Analytics', focus.substring(0,22)+'...');
-    }
-
-    else if (id==='rm') {
-      const text=document.getElementById('rm-input').value.trim(); if(!text)return;
-      const aud=document.getElementById('rm-audience').value||'unspecified';
-      const ctx=document.getElementById('rm-context').value||'unspecified';
-      body=showResult('rm');
-      result=await claude(
-        `You are an expert in preventive communication risk analysis (reception psychology, rhetoric). Analyse communication BEFORE it goes out. Structure: 1. OVERALL RISK LEVEL (low/medium/high/critical + rationale), 2. CRITICAL FORMULATIONS (quote + precise risk explanation), 3. LIKELY MISRECEPTIONS, 4. RESISTANCE POTENTIAL by audience, 5. CONCRETE REVISION RECOMMENDATIONS. Direct, precise. In English.`,
-        `Audience: ${aud}\nContext: ${ctx}\n\nText:\n${text}`
-      );
-      body.textContent=result; addHistory('Risk Management', aud);
-    }
-
-    else if (id==='st') {
-      const text=document.getElementById('st-input').value.trim(); if(!text)return;
-      const persp=document.getElementById('st-perspectives').value;
-      const intens=document.getElementById('st-intensity').value;
-      body=showResult('st');
-      result=await claude(
-        `You are an expert in strategic communication and argumentation analysis. Generate the strongest possible counterarguments to a thesis from multiple perspectives — not balanced, but maximally challenging. For each perspective: 1. STRONGEST COUNTERARGUMENT, 2. EMOTIONAL ATTACK POINT, 3. RHETORICAL TRAP. Then: RECOMMENDED RESPONSE STRATEGIES for each counterargument. In English, precise.`,
-        `Thesis: ${text}\nPerspectives: ${persp}\nIntensity: ${intens}`
-      );
-      body.textContent=result; addHistory('Argument Stress Test', intens.split('—')[0].trim());
-    }
-
-    else if (id==='si') {
-      const text=document.getElementById('si-input').value.trim(); if(!text)return;
-      const stak=document.getElementById('si-stakeholders').value;
-      const sev=document.getElementById('si-severity').value;
-      body=showResult('si');
-      result=await claude(
-        `You are an expert in strategic communication and stakeholder management (reception psychology). Simulate realistic stakeholder reactions. For each group: immediate emotional reaction, cognitive interpretation, likely action, critical misunderstandings. Conclusion: overall risk assessment + top 3 strategic adjustments. In English.`,
-        `Stakeholders: ${stak}\nContext: ${sev}\n\nCommunication:\n${text}`
-      );
-      body.textContent=result; addHistory('Strategic Impact Simulation', sev.split('—')[0].trim());
-    }
-
-    else if (id==='as') {
-      const text=document.getElementById('as-input').value.trim(); if(!text)return;
-      const ctx=document.getElementById('as-context').value;
-      const rec=document.getElementById('as-recipient').value;
-      body=showResult('as');
-      result=await claude(
-        `You are an expert in pragmatic linguistics and leadership communication. Analyse instructions for operationalisability. Identify: vague verbs ("take a look", "handle"), missing deadlines, unclear responsibilities, unmeasurable goals, interpretation gaps. Then: precise rewrite. Structure: 1. VAGUENESS FINDINGS (quote + explanation), 2. MISSING ELEMENTS, 3. REVISED VERSION. Direct, in English.`,
-        `Context: ${ctx}\nRecipient: ${rec}\n\nInstruction:\n${text}`
-      );
-      body.textContent=result; addHistory('Actionability Scanner', ctx);
-    }
-
-    else if (id==='tc') {
-      const text=document.getElementById('tc-input').value.trim(); if(!text)return;
-      const src=document.getElementById('tc-source').value;
-      const goal=document.getElementById('tc-goal').value;
-      body=showResult('tc');
-      result=await claude(
-        `You are an expert in argumentation analysis and executive communication. Analyse communication threads and extract the logical decision structure. Do not summarise — extract the argumentative architecture. Structure: 1. CORE QUESTION (one precise question), 2. OPTIONS (max. 3, with pros/cons), 3. COUNTERARGUMENTS (who argues what), 4. OPEN POINTS / BLOCKERS, 5. RECOMMENDED DECISION BASIS. Maximum half a page. In English.`,
-        `Source: ${src}\nGoal: ${goal}\n\nThread:\n${text}`
-      );
-      body.textContent=result; addHistory('Thread Cleaner', src);
-    }
-
-    else if (id==='vs-cal') {
-      const text=document.getElementById('vs-ref').value.trim(); if(!text)return;
-      body=showResult('vs-cal');
-      result=await claude(
-        `You are a ghostwriting expert for executive communication. Create a precise Voice Signature Profile as the foundation for scalable ghostwriting. Structure: 1. CORE TONALITY & REGISTER, 2. CHARACTERISTIC SENTENCE STRUCTURES (with examples from the texts), 3. VOCABULARY SIGNATURE (preferred words, avoided formulations), 4. ARGUMENTATION SEQUENCE, 5. EMOTIONAL INTENSITY, 6. GHOSTWRITING DIRECTIVES for future texts. Actionable, precise. In English.`,
-        `Voice Signature Profile from:\n\n${text}`
-      );
-      body.textContent=result; window._voiceProfile=result; addHistory('Voice Signature','Calibrated');
-    }
-
-    else if (id==='vs-gen') {
-      const task=document.getElementById('vs-task').value.trim(); if(!task)return;
-      const fmt=document.getElementById('vs-format').value;
-      const tone=document.getElementById('vs-tone').value;
-      body=showResult('vs-gen');
-      result=await claude(
-        `You are a precision ghostwriter for executives. Write exclusively in the style of the Voice Signature Profile. The person must immediately recognise themselves. No generic tone.${window._voiceProfile?'\n\nVoice Signature:\n'+window._voiceProfile:''}`,
-        `Format: ${fmt}\nTone: ${tone}\nBriefing: ${task}`
-      );
-      body.textContent=result; addHistory('Voice Signature', fmt);
-    }
-
-    else if (id==='pr') {
-      const text=document.getElementById('pr-input').value.trim(); if(!text)return;
-      const role=document.getElementById('pr-role').value||'employee';
-      const fmt=document.getElementById('pr-format').value;
-      body=showResult('pr');
-      result=await claude(
-        `You are an expert in HR communication and psycholinguistics calibrated to Swiss and European corporate culture. Formulate feedback that is rhetorically precise, development-oriented, and clear — without softening the substance or creating unnecessary attack surfaces. Structure: 1. STRENGTHS (specific, performance-based), 2. DEVELOPMENT AREAS (direct but constructive), 3. RECOMMENDATION / NEXT STEPS. Swiss directness, no US motivational clichés. In English.`,
-        `Format: ${fmt}\nRole: ${role}\n\nRaw feedback:\n${text}`
-      );
-      body.textContent=result; addHistory('Performance Review', role);
-    }
-
-    else if (id==='rw') {
-      const text=document.getElementById('rw-input').value.trim(); if(!text)return;
-      const type=document.getElementById('rw-type').value;
-      const fmt=document.getElementById('rw-format').value;
-      body=showResult('rw');
-      result=await claude(
-        `You are an expert in leadership communication and recognition culture calibrated to Swiss and European corporate norms. Formulate recognition that: refers to the concrete achievement, is psychologically calibrated to the recipient type, respects European directness (no American motivational kitsch), links the action to the impact on the team or organisation. No "thanks for your great effort". Precise, authentic, effective. In English.`,
-        `Recipient type: ${type}\nFormat: ${fmt}\n\nConcrete achievement:\n${text}`
-      );
-      body.textContent=result; addHistory('Recognition Writer', type.split('—')[0].trim());
-    }
-
-  } catch(e) {
-    console.error(e);
-  }
+function showInstallHint() {
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+    document.getElementById('ios-hint').classList.add('show');
+    setTimeout(()=>document.getElementById('ios-hint').classList.remove('show'),6000);
+  } else if (deferredPrompt) installApp();
+  else alert('Open RhetorIQ in Chrome or Edge ‚Äî the install icon appears in the address bar.');
 }
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
-// ── INIT ─────────────────────────────────────────────────────
-document.getElementById('stat-analyses').textContent = analysisCount;
+// Enter key on login
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') loginAdvisor(); });
+document.getElementById('client-token-input').addEventListener('keydown', e => { if (e.key === 'Enter') loginClient(); });
+
+// ‚îÄ‚îÄ BOOT ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+tryAutoLogin();
 </script>
 </body>
 </html>
