@@ -299,14 +299,46 @@ body.adv .vubtn{display:block}
 .cinp:focus{border-color:var(--tx)}
 .csnd{padding:8px 14px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px}
 
-/* MOST USED ROW */
-.mu-row{margin-bottom:24px}
+/* QUICK ACCESS CARDS */
+.qa-section{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.qa-card{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border:1.5px solid var(--bd);border-radius:8px;cursor:pointer;background:#fff;transition:border-color .15s,box-shadow .15s}
+.qa-card:hover{border-color:#888;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.qa-card-left{display:flex;flex-direction:column;gap:2px}
+.qa-tag{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)}
+.qa-name{font-size:15px;font-weight:600;color:var(--tx)}
+.qa-desc{font-size:12px;color:var(--mu);line-height:1.4;margin-top:1px}
+.qa-arr{font-size:18px;color:var(--dm);flex-shrink:0}
+.qa-card.qa-featured{background:var(--tx);border-color:var(--tx)}
+.qa-card.qa-featured .qa-tag{color:rgba(255,255,255,.55)}
+.qa-card.qa-featured .qa-name{color:#fff}
+.qa-card.qa-featured .qa-desc{color:rgba(255,255,255,.65)}
+.qa-card.qa-featured .qa-arr{color:rgba(255,255,255,.5)}
+.qa-card.qa-featured:hover{background:#222;border-color:#222}
+.qa-card.qa-crisis{border-color:#f0c0c0;background:#fff9f9}
+.qa-card.qa-crisis .qa-tag{color:#c00}
+.qa-card.qa-crisis .qa-name{color:#a00}
+.qa-card.qa-crisis .qa-desc{color:#c06060}
+.qa-card.qa-crisis:hover{border-color:#c00}
+
+/* MOST USED ROW (kept for buildMostUsed compat) */
+.mu-row{display:none}
 .mu-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:10px}
 .mu-pills{display:flex;gap:8px;flex-wrap:wrap}
 .mu-pill{padding:8px 16px;border:1.5px solid var(--bd);border-radius:4px;font-size:13px;font-weight:500;cursor:pointer;background:#fff;color:var(--tx);font-family:'Inter',sans-serif;transition:border-color .15s}
 .mu-pill:hover{border-color:var(--tx)}
 .mu-pill.featured{border-color:var(--tx);background:var(--tx);color:#fff}
 .mu-pill.featured:hover{background:#333}
+
+/* CONTACT PAGE */
+.contact-card{border:1.5px solid var(--bd);border-radius:10px;padding:24px 26px;background:#fff;margin-bottom:16px}
+.contact-tagline{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--tx);margin-bottom:4px;font-style:italic}
+.contact-role{font-size:13px;color:var(--mu);margin-bottom:24px;line-height:1.5}
+.contact-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--bd);font-size:14px}
+.contact-row:last-child{border-bottom:none}
+.contact-icon{font-size:16px;width:22px;flex-shrink:0;text-align:center}
+.contact-val{color:var(--tx);text-decoration:none}
+.contact-val:hover{text-decoration:underline}
+.contact-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);width:60px;flex-shrink:0}
 
 /* SAVED REFERENCES BANNER */
 .ref-banner{border:1.5px solid #b8d4f0;border-radius:8px;padding:14px 18px;margin-bottom:18px;background:#f0f7ff}
@@ -363,10 +395,10 @@ body.adv .vubtn{display:block}
 .mtabpanel.active{display:block}
 
 /* BOTTOM NAV — always visible, Version C */
-.mnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--bd);padding:8px 0;padding-bottom:calc(8px + var(--safe-bottom));z-index:100;justify-content:space-around}
-.mni{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 14px;cursor:pointer;min-width:52px}
-.mni-i{font-size:20px;color:var(--dm)}
-.mni-l{font-size:10px;color:var(--mu);font-weight:500;letter-spacing:.02em}
+.mnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--bd);padding:6px 0;padding-bottom:calc(6px + var(--safe-bottom));z-index:100;justify-content:space-around}
+.mni{display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 6px;cursor:pointer;min-width:44px}
+.mni-i{font-size:18px;color:var(--dm)}
+.mni-l{font-size:9px;color:var(--mu);font-weight:500;letter-spacing:.01em}
 .mni.active .mni-i,.mni.active .mni-l{color:var(--tx)}
 
 /* MOBILE */
@@ -488,12 +520,38 @@ body.adv .vubtn{display:block}
         </div>
       </div>
 
-      <!-- Most Used Row -->
-      <div class="mu-row" id="mu-row">
-        <div class="mu-label">Quick access</div>
-        <div class="mu-pills" id="mu-pills">
-          <button class="mu-pill featured" onclick="goModule('pre-meeting')">Pre-Meeting Brief</button>
+      <!-- Quick Access Cards -->
+      <div class="qa-section">
+        <div class="qa-card qa-featured" onclick="goModule('pre-meeting')">
+          <div class="qa-card-left">
+            <div class="qa-tag">Preparation</div>
+            <div class="qa-name">Meeting Prep</div>
+            <div class="qa-desc">Brief, agenda &amp; people context — before any meeting</div>
+          </div>
+          <div class="qa-arr">&#8594;</div>
         </div>
+        <div class="qa-card qa-crisis" onclick="goModule('crisis')">
+          <div class="qa-card-left">
+            <div class="qa-tag">Emergency</div>
+            <div class="qa-name">Crisis Response</div>
+            <div class="qa-desc">Immediate framing for unexpected situations</div>
+          </div>
+          <div class="qa-arr">&#8594;</div>
+        </div>
+        <div class="qa-card" onclick="goModule('text-gen')">
+          <div class="qa-card-left">
+            <div class="qa-tag">Creation</div>
+            <div class="qa-name">Write</div>
+            <div class="qa-desc">Speeches, emails, statements — built for your voice</div>
+          </div>
+          <div class="qa-arr">&#8594;</div>
+        </div>
+      </div>
+
+      <!-- Most Used Row (hidden, kept for JS compat) -->
+      <div class="mu-row" id="mu-row">
+        <div class="mu-label">Recently used</div>
+        <div class="mu-pills" id="mu-pills"></div>
       </div>
 
       <!-- Memory Banner (shown when client selected and memory exists) -->
@@ -701,21 +759,51 @@ body.adv .vubtn{display:block}
       <div id="hist-list"><div class="empty"><div class="ei">&#128203;</div><div>No analyses yet.</div></div></div>
     </div>
 
+    <!-- CONTACT -->
+    <div class="page" id="page-contact">
+      <div class="page-title" style="margin-bottom:6px">Contact</div>
+      <div class="contact-tagline">Wort. Wirkung. Wandel.</div>
+      <div class="contact-role" style="margin-bottom:24px">Rhetoric &amp; executive communication coaching<br>for leaders in business, finance and education.</div>
+      <div class="contact-card">
+        <div class="contact-row">
+          <span class="contact-lbl">Email</span>
+          <a class="contact-val" href="mailto:contact@lorenalienhard.ch">contact@lorenalienhard.ch</a>
+        </div>
+        <div class="contact-row">
+          <span class="contact-lbl">Phone</span>
+          <a class="contact-val" href="tel:+41799573976">079 957 39 76</a>
+        </div>
+        <div class="contact-row">
+          <span class="contact-lbl">Address</span>
+          <span style="color:var(--tx);font-size:14px">Dorfstrasse 87, 8706 Meilen</span>
+        </div>
+        <div class="contact-row">
+          <span class="contact-lbl">LinkedIn</span>
+          <a class="contact-val" href="https://www.linkedin.com/in/lorena-victoria-lienhard-4a490b144/" target="_blank" rel="noopener">Lorena Victoria Lienhard</a>
+        </div>
+        <div class="contact-row">
+          <span class="contact-lbl">Website</span>
+          <a class="contact-val" href="https://www.lorenalienhard.ch" target="_blank" rel="noopener">lorenalienhard.ch</a>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /content -->
 
   <nav class="mnav">
     <div class="mni active" id="mn-home" onclick="goHome();setMN('home')"><div class="mni-i">&#8962;</div><div class="mni-l">Home</div></div>
     <div class="mni" id="mn-modules" onclick="goPage('modules');setMN('modules');renderModulesList()"><div class="mni-i">&#9783;</div><div class="mni-l">Modules</div></div>
+    <div class="mni" id="mn-brand" onclick="goPage('brand-voice');setMN('brand')"><div class="mni-i">&#9670;</div><div class="mni-l">Brand</div></div>
     <div class="mni" id="mn-people" onclick="goPage('people');setMN('people');loadPeople()"><div class="mni-i">&#128101;</div><div class="mni-l">People</div></div>
     <div class="mni" id="mn-hist" onclick="goPage('history');loadHistory();setMN('hist')"><div class="mni-i">&#128203;</div><div class="mni-l">History</div></div>
     <div class="mni" id="mn-more" onclick="toggleMore()"><div class="mni-i">&#8943;</div><div class="mni-l">More</div></div>
   </nav>
 
-  <div id="more-menu" style="display:none;position:fixed;bottom:70px;right:12px;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);z-index:200;min-width:180px;overflow:hidden">
-    <div onclick="goPage('brand-voice');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Brand Voice</div>
+  <div id="more-menu" style="display:none;position:fixed;bottom:70px;right:12px;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);z-index:200;min-width:190px;overflow:hidden">
     <div onclick="goPage('memory');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Context</div>
     <div class="ao-item" onclick="goPage('clients');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none">Clients</div>
     <div onclick="goPage('videos');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Videos</div>
+    <div onclick="goPage('contact');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Contact</div>
     <div onclick="logout()" style="padding:13px 18px;font-size:14px;cursor:pointer;color:var(--mu)">Sign out</div>
   </div>
 </div>
