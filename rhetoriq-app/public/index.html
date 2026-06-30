@@ -487,14 +487,15 @@ body.adv .vubtn{display:block}
     <div class="hright">
       <span class="wsd" id="ws-dot" style="display:none"></span>
       <span class="huname" id="uname"></span>
-      <button class="sout" onclick="logout()">Sign out</button>
+      <button id="lang-toggle" onclick="toggleLang()" style="font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--mu);background:none;border:1px solid var(--bd);border-radius:4px;padding:4px 8px;cursor:pointer;font-family:'Inter',sans-serif">DE</button>
+      <button class="sout" id="hdr-signout" onclick="logout()">Sign out</button>
     </div>
   </header>
 
   <div class="cbar">
-    <span class="cbar-lbl">Client:</span>
+    <span class="cbar-lbl" id="cbar-lbl">Client:</span>
     <select id="client-select" onchange="switchClient(this.value)"><option value="">Select client</option></select>
-    <button class="ncbtn" onclick="openModal('nc-ov')">+ New Client</button>
+    <button class="ncbtn" id="cbar-new" onclick="openModal('nc-ov')">+ New Client</button>
   </div>
 
   <div class="content">
@@ -503,12 +504,12 @@ body.adv .vubtn{display:block}
     <div class="page active" id="page-home">
 
       <div class="router-box">
-        <div class="router-title">What would you like to do?</div>
-        <div class="router-sub">Describe your task &mdash; RhetorIQ opens the right module automatically.</div>
+        <div class="router-title" id="router-title">What would you like to do?</div>
+        <div class="router-sub" id="router-sub">Describe your task &mdash; RhetorIQ opens the right module automatically.</div>
         <div class="router-row">
           <textarea class="rtarea" id="router-input" placeholder='e.g. "Check if this press release could backfire" or "Write a speech for our CEO" or "Crisis: supplier just announced bankruptcy"'></textarea>
           <button class="vbtn" id="voice-btn" onclick="toggleVoice()" title="Voice input">&#127908;</button>
-          <button class="rbtn" onclick="routePrompt()">&#8594; Go</button>
+          <button class="rbtn" onclick="routePrompt()"><span id="rbtn-txt">&#8594; Go</span></button>
         </div>
         <div class="rstat" id="rstat"></div>
         <div class="pi-banner" id="pi-banner">
@@ -524,25 +525,25 @@ body.adv .vubtn{display:block}
       <div class="qa-section">
         <div class="qa-card qa-featured" onclick="goModule('pre-meeting')">
           <div class="qa-card-left">
-            <div class="qa-tag">Preparation</div>
-            <div class="qa-name">Meeting Prep</div>
-            <div class="qa-desc">Brief, agenda &amp; people context — before any meeting</div>
+            <div class="qa-tag" id="qa-tag1">Preparation</div>
+            <div class="qa-name" id="qa-name1">Meeting Prep</div>
+            <div class="qa-desc" id="qa-desc1">Brief, agenda &amp; people context — before any meeting</div>
           </div>
           <div class="qa-arr">&#8594;</div>
         </div>
         <div class="qa-card qa-crisis" onclick="goModule('crisis')">
           <div class="qa-card-left">
-            <div class="qa-tag">Emergency</div>
-            <div class="qa-name">Crisis Response</div>
-            <div class="qa-desc">Immediate framing for unexpected situations</div>
+            <div class="qa-tag" id="qa-tag2">Emergency</div>
+            <div class="qa-name" id="qa-name2">Crisis Response</div>
+            <div class="qa-desc" id="qa-desc2">Immediate framing for unexpected situations</div>
           </div>
           <div class="qa-arr">&#8594;</div>
         </div>
         <div class="qa-card" onclick="goModule('text-gen')">
           <div class="qa-card-left">
-            <div class="qa-tag">Creation</div>
-            <div class="qa-name">Write</div>
-            <div class="qa-desc">Speeches, emails, statements — built for your voice</div>
+            <div class="qa-tag" id="qa-tag3">Creation</div>
+            <div class="qa-name" id="qa-name3">Write</div>
+            <div class="qa-desc" id="qa-desc3">Speeches, emails, statements — built for your voice</div>
           </div>
           <div class="qa-arr">&#8594;</div>
         </div>
@@ -761,9 +762,9 @@ body.adv .vubtn{display:block}
 
     <!-- CONTACT -->
     <div class="page" id="page-contact">
-      <div class="page-title" style="margin-bottom:6px">Contact</div>
+      <div class="page-title" id="contact-title" style="margin-bottom:6px">Contact</div>
       <div class="contact-tagline">Wort. Wirkung. Wandel.</div>
-      <div class="contact-role" style="margin-bottom:24px">Rhetoric &amp; executive communication coaching<br>for leaders in business, finance and education.</div>
+      <div id="contact-role" style="font-size:13px;color:var(--mu);margin-bottom:24px;line-height:1.6">Rhetoric &amp; executive communication coaching<br>for leaders in business, finance and education.</div>
       <div class="contact-card">
         <div class="contact-row">
           <span class="contact-lbl">Email</span>
@@ -791,20 +792,20 @@ body.adv .vubtn{display:block}
   </div><!-- /content -->
 
   <nav class="mnav">
-    <div class="mni active" id="mn-home" onclick="goHome();setMN('home')"><div class="mni-i">&#8962;</div><div class="mni-l">Home</div></div>
-    <div class="mni" id="mn-modules" onclick="goPage('modules');setMN('modules');renderModulesList()"><div class="mni-i">&#9783;</div><div class="mni-l">Modules</div></div>
-    <div class="mni" id="mn-brand" onclick="goPage('brand-voice');setMN('brand')"><div class="mni-i">&#9670;</div><div class="mni-l">Brand</div></div>
-    <div class="mni" id="mn-people" onclick="goPage('people');setMN('people');loadPeople()"><div class="mni-i">&#128101;</div><div class="mni-l">People</div></div>
-    <div class="mni" id="mn-hist" onclick="goPage('history');loadHistory();setMN('hist')"><div class="mni-i">&#128203;</div><div class="mni-l">History</div></div>
-    <div class="mni" id="mn-more" onclick="toggleMore()"><div class="mni-i">&#8943;</div><div class="mni-l">More</div></div>
+    <div class="mni active" id="mn-home" onclick="goHome();setMN('home')"><div class="mni-i">&#8962;</div><div class="mni-l" id="mn-home-l">Home</div></div>
+    <div class="mni" id="mn-modules" onclick="goPage('modules');setMN('modules');renderModulesList()"><div class="mni-i">&#9783;</div><div class="mni-l" id="mn-modules-l">Modules</div></div>
+    <div class="mni" id="mn-brand" onclick="goPage('brand-voice');setMN('brand')"><div class="mni-i">&#9670;</div><div class="mni-l" id="mn-brand-l">Brand</div></div>
+    <div class="mni" id="mn-people" onclick="goPage('people');setMN('people');loadPeople()"><div class="mni-i">&#128101;</div><div class="mni-l" id="mn-people-l">People</div></div>
+    <div class="mni" id="mn-hist" onclick="goPage('history');loadHistory();setMN('hist')"><div class="mni-i">&#128203;</div><div class="mni-l" id="mn-hist-l">History</div></div>
+    <div class="mni" id="mn-more" onclick="toggleMore()"><div class="mni-i">&#8943;</div><div class="mni-l" id="mn-more-l">More</div></div>
   </nav>
 
   <div id="more-menu" style="display:none;position:fixed;bottom:70px;right:12px;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);z-index:200;min-width:190px;overflow:hidden">
-    <div onclick="goPage('memory');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Context</div>
-    <div class="ao-item" onclick="goPage('clients');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none">Clients</div>
-    <div onclick="goPage('videos');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Videos</div>
-    <div onclick="goPage('contact');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Contact</div>
-    <div onclick="logout()" style="padding:13px 18px;font-size:14px;cursor:pointer;color:var(--mu)">Sign out</div>
+    <div id="mm-context" onclick="goPage('memory');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Context</div>
+    <div id="mm-clients" class="ao-item" onclick="goPage('clients');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none">Clients</div>
+    <div id="mm-videos" onclick="goPage('videos');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Videos</div>
+    <div id="mm-contact" onclick="goPage('contact');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Contact</div>
+    <div id="mm-signout" onclick="logout()" style="padding:13px 18px;font-size:14px;cursor:pointer;color:var(--mu)">Sign out</div>
   </div>
 </div>
 
@@ -822,6 +823,67 @@ if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https:/
 
 const API='https://rhetoriq-jib0.onrender.com';
 let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null;
+
+// ── LANGUAGE TOGGLE ───────────────────────────────────────────
+let LANG=localStorage.getItem('riq-lang')||'en';
+const T={
+  en:{
+    nav_home:'Home',nav_modules:'Modules',nav_brand:'Brand',nav_people:'People',nav_hist:'History',nav_more:'More',
+    mm_context:'Context',mm_clients:'Clients',mm_videos:'Videos',mm_contact:'Contact',mm_signout:'Sign out',
+    router_title:'What would you like to do?',
+    router_sub:'Describe your task — RhetorIQ opens the right module automatically.',
+    router_go:'→ Go',
+    router_ph:'e.g. “Check if this press release could backfire” or “Write a speech for our CEO” or “Crisis: supplier just announced bankruptcy”',
+    qa_tag1:'Preparation',qa_name1:'Meeting Prep',qa_desc1:'Brief, agenda & people context — before any meeting',
+    qa_tag2:'Emergency',qa_name2:'Crisis Response',qa_desc2:'Immediate framing for unexpected situations',
+    qa_tag3:'Creation',qa_name3:'Write',qa_desc3:'Speeches, emails, statements — built for your voice',
+    cbar_lbl:'Client:',cbar_new:'+ New Client',
+    hdr_signout:'Sign out',
+    contact_title:'Contact',
+    contact_role:'Rhetoric & executive communication coaching<br>for leaders in business, finance and education.',
+    lang_btn:'DE'
+  },
+  de:{
+    nav_home:'Start',nav_modules:'Module',nav_brand:'Marke',nav_people:'Personen',nav_hist:'Verlauf',nav_more:'Mehr',
+    mm_context:'Kontext',mm_clients:'Klienten',mm_videos:'Videos',mm_contact:'Kontakt',mm_signout:'Abmelden',
+    router_title:'Was möchten Sie tun?',
+    router_sub:'Beschreiben Sie Ihre Aufgabe — RhetorIQ öffnet automatisch das richtige Modul.',
+    router_go:'→ Los',
+    router_ph:'z.B. „Könnte diese Pressemitteilung nach hinten losgehen?“ oder „Rede für unsere CEO schreiben“ oder „Krise: Lieferant hat soeben Insolvenz angemeldet“',
+    qa_tag1:'Vorbereitung',qa_name1:'Meeting-Vorbereitung',qa_desc1:'Brief, Agenda & Personenkontext — vor jedem Meeting',
+    qa_tag2:'Notfall',qa_name2:'Krisenreaktion',qa_desc2:'Sofortige Einordnung unerwarteter Situationen',
+    qa_tag3:'Erstellung',qa_name3:'Schreiben',qa_desc3:'Reden, E-Mails, Statements — nach Ihrer Stimme',
+    cbar_lbl:'Klient:',cbar_new:'+ Neuer Klient',
+    hdr_signout:'Abmelden',
+    contact_title:'Kontakt',
+    contact_role:'Rhetorik & Führungskommunikation<br>für Führungskräfte in Wirtschaft, Finanzen und Bildung.',
+    lang_btn:'EN'
+  }
+};
+function applyLang(){
+  const t=T[LANG];
+  const s=(id,txt)=>{const el=document.getElementById(id);if(el)el.textContent=txt;};
+  const h=(id,html)=>{const el=document.getElementById(id);if(el)el.innerHTML=html;};
+  s('mn-home-l',t.nav_home);s('mn-modules-l',t.nav_modules);s('mn-brand-l',t.nav_brand);
+  s('mn-people-l',t.nav_people);s('mn-hist-l',t.nav_hist);s('mn-more-l',t.nav_more);
+  s('mm-context',t.mm_context);s('mm-clients',t.mm_clients);s('mm-videos',t.mm_videos);
+  s('mm-contact',t.mm_contact);s('mm-signout',t.mm_signout);
+  s('router-title',t.router_title);s('router-sub',t.router_sub);s('rbtn-txt',t.router_go);
+  const ri=document.getElementById('router-input');if(ri)ri.placeholder=t.router_ph;
+  s('qa-tag1',t.qa_tag1);s('qa-name1',t.qa_name1);s('qa-desc1',t.qa_desc1);
+  s('qa-tag2',t.qa_tag2);s('qa-name2',t.qa_name2);s('qa-desc2',t.qa_desc2);
+  s('qa-tag3',t.qa_tag3);s('qa-name3',t.qa_name3);s('qa-desc3',t.qa_desc3);
+  s('cbar-lbl',t.cbar_lbl);s('cbar-new',t.cbar_new);
+  s('hdr-signout',t.hdr_signout);
+  s('contact-title',t.contact_title);h('contact-role',t.contact_role);
+  s('lang-toggle',t.lang_btn);
+}
+function toggleLang(){
+  LANG=LANG==='en'?'de':'en';
+  localStorage.setItem('riq-lang',LANG);
+  applyLang();
+}
+applyLang();
 
 function sf(s,h){document.getElementById(s).style.display='block';document.getElementById(h).style.display='none';}
 function api(path,o={}){return fetch(API+path,{...o,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(o.headers||{})}});}
