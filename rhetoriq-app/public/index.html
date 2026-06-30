@@ -284,6 +284,18 @@ body.adv .vubtn{display:block}
 .mu-pill.featured{border-color:var(--tx);background:var(--tx);color:#fff}
 .mu-pill.featured:hover{background:#333}
 
+/* SAVED REFERENCES BANNER */
+.ref-banner{border:1.5px solid #b8d4f0;border-radius:8px;padding:14px 18px;margin-bottom:18px;background:#f0f7ff}
+.ref-banner-top{display:flex;align-items:center;justify-content:space-between}
+.ref-banner-title{font-size:13px;font-weight:600;color:#1a5a9a}
+.ref-banner-count{font-size:12px;color:#4a80c0}
+.ref-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ref-chip{font-size:12px;padding:4px 10px;border-radius:20px;background:#dceeff;color:#1a5a9a;display:flex;align-items:center;gap:5px}
+.ref-chip button{background:none;border:none;cursor:pointer;font-size:13px;color:#4a80c0;line-height:1;padding:0}
+.ref-load-btn{font-size:12px;color:#1a5a9a;text-decoration:underline;cursor:pointer;background:none;border:none;font-family:'Inter',sans-serif;margin-top:8px;display:block}
+.save-ref-btn{padding:9px 18px;background:#f0f7ff;border:1.5px solid #b8d4f0;color:#1a5a9a;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px;margin-right:8px}
+.save-ref-btn:hover{background:#dceeff}
+
 /* BROWSE TOGGLE */
 .browse-toggle{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;cursor:pointer;user-select:none}
 .browse-lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
@@ -551,6 +563,7 @@ body.adv .vubtn{display:block}
         <button class="togbtn" onclick="switchBrand('individual',this)">Individual</button>
       </div>
       <div class="bsec active" id="brand-company">
+        <div id="ref-banner-co"></div>
         <div class="row2">
           <div class="fg2"><label class="fl2">Company Name</label><input type="text" id="bv-company" placeholder="e.g. Acme AG"></div>
           <div class="fg2"><label class="fl2">Industry</label><select id="bv-industry"><option value="">Select</option><option>Financial Services</option><option>Industry / Manufacturing</option><option>Tech / SaaS</option><option>Healthcare</option><option>Education</option><option>Public Sector</option><option>Consulting</option><option>Other</option></select></div>
@@ -559,30 +572,37 @@ body.adv .vubtn{display:block}
         <div class="fg2"><label class="fl2">Target Audiences</label><input type="text" id="bv-audiences" placeholder="e.g. B2B CFOs, HR Directors, Investors"></div>
         <div class="fg2">
           <label class="fl2">Source Texts &mdash; website, reports, emails (separate with ---)</label>
-          <div class="upzone" onclick="document.getElementById('bv-co-f').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><input type="file" id="bv-co-f" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-co-in','bv-co-tags')"></div>
+          <div class="upzone" onclick="document.getElementById('bv-co-f').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx (saved by advisor, always available)</div><input type="file" id="bv-co-f" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-co-in','bv-co-tags')"></div>
           <div class="ftags" id="bv-co-tags"></div>
-          <textarea id="bv-co-in" placeholder="Paste company texts here. The more diverse (website, reports, emails), the more precise the DNA profile."></textarea>
+          <textarea id="bv-co-in" placeholder="Paste company texts here, or upload documents above. Advisor can save these permanently so they are always pre-loaded."></textarea>
         </div>
-        <button class="runbtn" onclick="runMod('brand-voice-co')">Extract Brand Voice DNA</button>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
+          <button class="save-ref-btn" onclick="saveAsReference('ref_brand_co','bv-co-in')">&#128204; Save as Reference</button>
+          <button class="runbtn" style="margin-top:0" onclick="runMod('brand-voice-co')">Extract Brand Voice</button>
+        </div>
         <div class="rbox" id="brand-voice-co-r">
-          <div class="rhead"><span class="rlbl">Brand Voice DNA &mdash; Company</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-co-b')">Copy</button><button class="svbtn" onclick="saveToMemory('brand_voice','brand-voice-co-b')">Save to Memory</button></div></div>
+          <div class="rhead"><span class="rlbl">Brand Voice &mdash; Company</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-co-b')">Copy</button><button class="svbtn" onclick="saveToMemory('brand_voice','brand-voice-co-b')">Save to Memory</button></div></div>
           <div class="rbody" id="brand-voice-co-b"></div>
         </div>
       </div>
       <div class="bsec" id="brand-individual">
+        <div id="ref-banner-ind"></div>
         <div class="row2">
           <div class="fg2"><label class="fl2">Name</label><input type="text" id="bv-person" placeholder="e.g. CEO Anna Berger"></div>
           <div class="fg2"><label class="fl2">Role / Context</label><input type="text" id="bv-prole" placeholder="e.g. CEO, keynote speaker"></div>
         </div>
         <div class="fg2">
           <label class="fl2">Reference Texts &mdash; speeches, emails, LinkedIn (separate with ---)</label>
-          <div class="upzone" onclick="document.getElementById('bv-ind-f').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><input type="file" id="bv-ind-f" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-ind-in','bv-ind-tags')"></div>
+          <div class="upzone" onclick="document.getElementById('bv-ind-f').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx (saved by advisor, always available)</div><input type="file" id="bv-ind-f" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-ind-in','bv-ind-tags')"></div>
           <div class="ftags" id="bv-ind-tags"></div>
           <textarea id="bv-ind-in" placeholder="Include texts from different contexts &mdash; formal and informal, internal and external."></textarea>
         </div>
-        <button class="runbtn" onclick="runMod('brand-voice-ind')">Extract Voice DNA</button>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
+          <button class="save-ref-btn" onclick="saveAsReference('ref_brand_ind','bv-ind-in')">&#128204; Save as Reference</button>
+          <button class="runbtn" style="margin-top:0" onclick="runMod('brand-voice-ind')">Extract Brand Voice</button>
+        </div>
         <div class="rbox" id="brand-voice-ind-r">
-          <div class="rhead"><span class="rlbl">Brand Voice DNA &mdash; Individual</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-ind-b')">Copy</button><button class="svbtn" onclick="saveToMemory('brand_voice','brand-voice-ind-b')">Save to Memory</button></div></div>
+          <div class="rhead"><span class="rlbl">Brand Voice &mdash; Individual</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-ind-b')">Copy</button><button class="svbtn" onclick="saveToMemory('brand_voice','brand-voice-ind-b')">Save to Memory</button></div></div>
           <div class="rbody" id="brand-voice-ind-b"></div>
         </div>
       </div>
@@ -912,8 +932,74 @@ function goPage(name){
   document.querySelector('.content').scrollTop=0;
   if(name==='people')loadPeople();
   if(name==='memory')renderMemory();
+  if(name==='brand-voice')loadBrandVoiceRefs();
 }
 function setMN(id){document.querySelectorAll('.mni').forEach(n=>n.classList.remove('active'));const el=document.getElementById('mn-'+id);if(el)el.classList.add('active');}
+
+// PERSISTENT REFERENCE DOCUMENTS
+const REF_LABELS={'ref_brand_co':'Brand Voice — Company','ref_brand_ind':'Brand Voice — Individual','ref_profiling':'How We Communicate'};
+
+async function saveAsReference(memType, srcId){
+  if(!clientId)return alert('Please select a client first.');
+  const content=document.getElementById(srcId)?.value?.trim();
+  if(!content)return alert('No text to save. Upload or paste documents first.');
+  if(!confirm('Save these documents as permanent reference for this client?\n\nThey will be automatically loaded every time this module is opened.'))return;
+  try{
+    await api('/api/memory/'+clientId+'/'+memType,{method:'PUT',body:JSON.stringify({content})});
+    await loadMemory();
+    renderRefBanner(memType, srcId.includes('co')?'ref-banner-co': srcId.includes('ind')?'ref-banner-ind':null);
+    alert('Reference documents saved. They will now be pre-loaded every time this module is opened.');
+  }catch{alert('Error saving reference.');}
+}
+
+function renderRefBanner(memType, bannerId){
+  if(!bannerId)return;
+  const el=document.getElementById(bannerId);if(!el)return;
+  const ref=memory.find(m=>m.memory_type===memType);
+  if(!ref){el.innerHTML='';return;}
+  const d=new Date(ref.updated_at).toLocaleDateString('de-CH');
+  const words=ref.content.split(/\s+/).length;
+  el.innerHTML=`<div class="ref-banner">
+    <div class="ref-banner-top">
+      <div class="ref-banner-title">&#128204; Reference documents loaded</div>
+      <span class="ref-banner-count">${words.toLocaleString()} words &mdash; saved ${d}</span>
+    </div>
+    <div class="ref-chips" style="margin-top:8px">
+      <span class="ref-chip">Advisor-uploaded reference &#10003;<button onclick="deleteReference('${memType}','${bannerId}')" title="Remove reference">&times;</button></span>
+    </div>
+    <button class="ref-load-btn" onclick="loadRefIntoField('${memType}','${bannerId}')">Load into text field to edit &rarr;</button>
+  </div>`;
+}
+
+function loadRefIntoField(memType, bannerId){
+  const ref=memory.find(m=>m.memory_type===memType);if(!ref)return;
+  const fieldMap={'ref_brand_co':'bv-co-in','ref_brand_ind':'bv-ind-in','ref_profiling':'rp-in'};
+  const fieldId=fieldMap[memType];if(!fieldId)return;
+  const el=document.getElementById(fieldId);if(el)el.value=ref.content;
+}
+
+async function deleteReference(memType, bannerId){
+  if(!confirm('Remove this reference? The client will need to upload documents again.'))return;
+  try{
+    await api('/api/memory/'+clientId+'/'+memType,{method:'PUT',body:JSON.stringify({content:''})});
+    memory=memory.filter(m=>m.memory_type!==memType);
+    const el=document.getElementById(bannerId);if(el)el.innerHTML='';
+  }catch{alert('Error.');}
+}
+
+function getRefContext(memType){
+  const ref=memory.find(m=>m.memory_type===memType&&m.content&&m.content.length>10);
+  return ref?'\n\n---\nREFERENCE DOCUMENTS (pre-loaded by advisor):\n'+ref.content:'';
+}
+
+function loadBrandVoiceRefs(){
+  renderRefBanner('ref_brand_co','ref-banner-co');
+  renderRefBanner('ref_brand_ind','ref-banner-ind');
+  const cRef=memory.find(m=>m.memory_type==='ref_brand_co'&&m.content&&m.content.length>10);
+  const iRef=memory.find(m=>m.memory_type==='ref_brand_ind'&&m.content&&m.content.length>10);
+  if(cRef&&!document.getElementById('bv-co-in').value)document.getElementById('bv-co-in').value=cRef.content;
+  if(iRef&&!document.getElementById('bv-ind-in').value)document.getElementById('bv-ind-in').value=iRef.content;
+}
 
 // TOGGLE MODULE GRID
 function toggleModuleGrid(){
@@ -1085,8 +1171,8 @@ async function runMod(name){
   const context=memCtx+peopleCtx;
 
   let module,data,rid,bid;
-  if(name==='brand-voice-co'){module='brand-voice-co';rid='brand-voice-co-r';bid='brand-voice-co-b';const t=g('bv-co-in');if(!t)return alert('Please enter text.');data={text:t+context,company:g('bv-company'),industry:g('bv-industry'),values:g('bv-values'),audiences:g('bv-audiences')};}
-  else if(name==='brand-voice-ind'){module='brand-voice-ind';rid='brand-voice-ind-r';bid='brand-voice-ind-b';const t=g('bv-ind-in');if(!t)return alert('Please enter text.');data={text:t+context,person:g('bv-person'),role:g('bv-prole')};}
+  if(name==='brand-voice-co'){module='brand-voice-co';rid='brand-voice-co-r';bid='brand-voice-co-b';const t=g('bv-co-in')||getRefContext('ref_brand_co');if(!t)return alert('Please enter text or save reference documents first.');data={text:t+context,company:g('bv-company'),industry:g('bv-industry'),values:g('bv-values'),audiences:g('bv-audiences')};}
+  else if(name==='brand-voice-ind'){module='brand-voice-ind';rid='brand-voice-ind-r';bid='brand-voice-ind-b';const t=g('bv-ind-in')||getRefContext('ref_brand_ind');if(!t)return alert('Please enter text or save reference documents first.');data={text:t+context,person:g('bv-person'),role:g('bv-prole')};}
   else if(name==='vs-cal'){module='vs-cal';rid='vs-cal-r';bid='vs-cal-b';const t=g('tg-ref');if(!t)return alert('Please enter reference texts.');data={text:t};}
   else if(name==='text-gen'){module='text-gen';rid='text-gen-r';bid='text-gen-b';const t=g('tg-task');if(!t)return alert('Please enter a briefing.');data={text:t,format:g('tg-fmt'),audience:g('tg-aud'),tone:g('tg-tone'),language:g('tg-lang'),length:g('tg-len'),voiceProfile:(voiceProf||'')+context};}
   else if(name==='profiling'){module='rp';rid='profiling-r';bid='profiling-b';const t=g('rp-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('rp-name'),industry:g('rp-industry')};}
