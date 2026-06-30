@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: rhetoriq
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rhetoriq-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ANTHROPIC_API_KEY
+        sync: false   # set manually in Render dashboard
+      - key: ADVISOR_EMAIL
+        sync: false
+      - key: ADVISOR_PASSWORD
+        sync: false
+      - key: ADVISOR_NAME
+        value: Lorena Lienhard
+      - key: NODE_ENV
+        value: production
+
+databases:
+  - name: rhetoriq-db
+    databaseName: rhetoriq
+    user: rhetoriq
+    plan: free

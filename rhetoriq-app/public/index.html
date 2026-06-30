@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="RhetorIQ">
+<meta name="theme-color" content="#111">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>RhetorIQ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #ffffff;
+  --surface: #fafafa;
+  --surface2: #f3f3f1;
+  --border: #e8e8e6;
+  --border-strong: #ccccca;
+  --text: #111110;
+  --text-muted: #88887f;
+  --text-dim: #bfbfbb;
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); font-size:13px; }
+
+/* ── LOGIN SCREEN ── */
+#login-screen {
+  position:fixed; inset:0; background:var(--bg); z-index:999;
+  display:flex; align-items:center; justify-content:center;
+}
+#login-screen.hidden { display:none; }
+.login-box { width:360px; max-width:90vw; padding:48px 40px; border:1px solid var(--border); }
+.login-logo { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:400; margin-bottom:4px; }
+.login-sub { font-size:10px; letter-spacing:0.17em; text-transform:uppercase; color:var(--text-dim); margin-bottom:36px; }
+.login-label { font-size:8.5px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); margin-bottom:7px; display:block; }
+.login-input { width:100%; background:var(--surface); border:1px solid var(--border); color:var(--text); font-family:'Inter',sans-serif; font-size:13px; padding:10px 13px; outline:none; margin-bottom:14px; }
+.login-input:focus { border-color:var(--border-strong); }
+.login-btn { width:100%; padding:12px; background:var(--text); color:#fff; border:none; font-family:'Inter',sans-serif; font-size:12px; font-weight:500; cursor:pointer; margin-top:8px; letter-spacing:0.03em; }
+.login-btn:hover { opacity:0.85; }
+.login-error { font-size:11.5px; color:#c00; margin-top:10px; display:none; }
+.login-divider { text-align:center; font-size:10px; color:var(--text-dim); margin:20px 0; }
+.client-token-link { font-size:11px; color:var(--text-muted); text-align:center; cursor:pointer; text-decoration:underline; }
+
+/* CLIENT TOKEN FORM */
+#client-token-form { display:none; }
+
+/* INSTALL BANNER */
+#install-banner { display:none; position:fixed; top:0; left:0; right:0; z-index:300; background:var(--text); color:#fff; padding:11px 20px; padding-top:calc(11px + var(--safe-top)); font-size:12px; align-items:center; justify-content:space-between; gap:12px; }
+#install-banner.show { display:flex; }
+#install-banner button { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:#fff; padding:5px 14px; border-radius:3px; font-size:11px; font-family:'Inter',sans-serif; cursor:pointer; }
+#install-banner .dismiss { background:none; border:none; font-size:16px; opacity:0.5; cursor:pointer; padding:0 4px; }
+#ios-hint { display:none; position:fixed; bottom:calc(80px + var(--safe-bottom)); left:50%; transform:translateX(-50%); background:var(--text); color:#fff; padding:14px 18px; border-radius:6px; font-size:12px; line-height:1.6; text-align:center; z-index:300; width:260px; }
+#ios-hint.show { display:block; }
+#ios-hint .close-hint { margin-top:8px; display:inline-block; color:var(--text-dim); cursor:pointer; font-size:11px; }
+
+/* MODE BADGE */
+.mode-badge { display:inline-flex; align-items:center; gap:5px; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-dim); padding:3px 8px; border:1px solid var(--border); margin-top:6px; }
+.mode-badge.advisor { color:var(--text); border-color:var(--border-strong); }
+
+/* LAYOUT */
+.app { display:flex; height:100%; }
+
+/* SIDEBAR */
+.sidebar { width:220px; flex-shrink:0; background:var(--bg); border-right:1px solid var(--border); display:flex; flex-direction:column; height:100%; overflow-y:auto; padding-top:var(--safe-top); }
+.sidebar-logo { padding:26px 24px 20px; border-bottom:1px solid var(--border); }
+.logo-word { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:var(--text); letter-spacing:0.01em; }
+.logo-sub { font-size:8.5px; letter-spacing:0.17em; text-transform:uppercase; color:var(--text-dim); margin-top:4px; }
+
+.nav-section { padding:18px 24px 6px; }
+.nav-section-label { font-size:8px; letter-spacing:0.18em; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; }
+.nav-item { display:flex; align-items:center; gap:9px; padding:7px 0; cursor:pointer; }
+.nav-dot { width:4px; height:4px; border-radius:50%; background:var(--text-dim); flex-shrink:0; transition:background 0.12s; }
+.nav-label { font-size:12px; color:var(--text-muted); font-weight:300; line-height:1.3; transition:color 0.12s; }
+.nav-item:hover .nav-label { color:var(--text); }
+.nav-item:hover .nav-dot { background:var(--text); }
+.nav-item.active .nav-label { color:var(--text); font-weight:500; }
+.nav-item.active .nav-dot { background:var(--text); }
+
+.nav-item.advisor-only { display:none; }
+body.advisor-mode .nav-item.advisor-only { display:flex; }
+
+.sidebar-footer { margin-top:auto; padding:16px 24px; border-top:1px solid var(--border); padding-bottom:calc(16px + var(--safe-bottom)); }
+.user-name { font-size:11.5px; font-weight:500; color:var(--text); }
+.user-role { font-size:10px; color:var(--text-dim); margin-top:2px; }
+.logout-btn { font-size:10px; color:var(--text-dim); cursor:pointer; margin-top:8px; text-decoration:underline; }
+.logout-btn:hover { color:var(--text); }
+
+/* CLIENT BAR */
+.client-bar { display:none; background:var(--surface2); border-bottom:1px solid var(--border); padding:8px 36px; align-items:center; gap:10px; font-size:11.5px; }
+body.advisor-mode .client-bar { display:flex; }
+.client-select { background:var(--bg); border:1px solid var(--border); font-family:'Inter',sans-serif; font-size:11.5px; color:var(--text); padding:5px 10px; outline:none; cursor:pointer; }
+.client-label { color:var(--text-muted); font-size:11px; }
+.new-client-btn { margin-left:auto; font-size:11px; padding:5px 14px; border:1px solid var(--border-strong); background:var(--text); color:#fff; cursor:pointer; font-family:'Inter',sans-serif; font-weight:500; letter-spacing:0.02em; transition:opacity 0.12s; }
+.new-client-btn:hover { opacity:0.82; }
+
+/* WS STATUS */
+.ws-dot { width:6px; height:6px; border-radius:50%; background:var(--text-dim); display:inline-block; margin-right:4px; transition:background 0.3s; }
+.ws-dot.connected { background:#3a3; }
+
+/* MAIN */
+.main { flex:1; display:flex; flex-direction:column; min-width:0; height:100%; }
+.topbar { flex-shrink:0; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 36px; height:calc(56px + var(--safe-top)); padding-top:var(--safe-top); background:var(--bg); }
+.topbar-title { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; color:var(--text); }
+.topbar-crumb { font-size:10px; color:var(--text-dim); margin-top:2px; letter-spacing:0.02em; }
+.topbar-right { display:flex; gap:8px; align-items:center; }
+.btn { font-size:11.5px; padding:7px 15px; font-family:'Inter',sans-serif; font-weight:400; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--text-muted); transition:all 0.12s; }
+.btn:hover { border-color:var(--border-strong); color:var(--text); }
+.btn-dark { background:var(--text); color:#fff; border-color:var(--text); font-weight:500; }
+.btn-dark:hover { opacity:0.85; color:#fff; }
+.btn.advisor-only { display:none; }
+body.advisor-mode .btn.advisor-only { display:inline-block; }
+
+/* CONTENT */
+.content { flex:1; overflow-y:auto; padding:32px 36px; padding-bottom:calc(32px + var(--safe-bottom)); -webkit-overflow-scrolling:touch; }
+.panel { display:none; }
+.panel.active { display:block; }
+
+/* DASHBOARD */
+.dash-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); margin-bottom:32px; }
+.stat-block { background:var(--bg); padding:22px 24px; }
+.stat-n { font-family:'Cormorant Garamond',serif; font-size:38px; font-weight:300; color:var(--text); line-height:1; margin-bottom:5px; }
+.stat-l { font-size:9px; text-transform:uppercase; letter-spacing:0.14em; color:var(--text-dim); }
+.stat-block.advisor-only { display:none; }
+body.advisor-mode .stat-block.advisor-only { display:block; }
+
+.modules-label { font-size:9px; text-transform:uppercase; letter-spacing:0.16em; color:var(--text-dim); margin-bottom:14px; }
+.module-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--border); border:1px solid var(--border); }
+.module-tile { background:var(--bg); padding:20px 22px; cursor:pointer; transition:background 0.12s; position:relative; }
+.module-tile:hover { background:var(--surface); }
+.module-tile::after { content:'→'; position:absolute; right:18px; top:50%; transform:translateY(-50%); color:var(--text-dim); font-size:13px; opacity:0; transition:opacity 0.12s; }
+.module-tile:hover::after { opacity:1; }
+.tile-tag { font-size:8.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; }
+.tile-name { font-family:'Cormorant Garamond',serif; font-size:15px; font-weight:400; color:var(--text); margin-bottom:5px; }
+.tile-desc { font-size:11px; color:var(--text-muted); line-height:1.55; font-weight:300; }
+.tile-span2 { grid-column:span 2; }
+
+/* MODULE VIEW */
+.module-header { margin-bottom:28px; padding-bottom:24px; border-bottom:1px solid var(--border); }
+.module-title { font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:300; color:var(--text); margin-bottom:8px; }
+.module-sub { font-size:12px; color:var(--text-muted); line-height:1.7; max-width:560px; font-weight:300; }
+
+.field-label { font-size:8.5px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; display:block; }
+.input-block { margin-bottom:18px; }
+textarea { width:100%; background:var(--surface); border:1px solid var(--border); color:var(--text); font-family:'Inter',sans-serif; font-size:12.5px; line-height:1.7; padding:13px 15px; resize:vertical; min-height:130px; outline:none; transition:border-color 0.12s; font-weight:300; }
+textarea:focus { border-color:var(--border-strong); }
+textarea::placeholder { color:var(--text-dim); }
+select, input[type="text"], input[type="email"], input[type="password"] { width:100%; background:var(--surface); border:1px solid var(--border); color:var(--text); font-family:'Inter',sans-serif; font-size:12.5px; padding:9px 13px; outline:none; transition:border-color 0.12s; -webkit-appearance:none; font-weight:300; }
+select:focus, input:focus { border-color:var(--border-strong); }
+.input-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
+.run-btn { padding:11px 28px; background:var(--text); color:#fff; border:none; font-family:'Inter',sans-serif; font-size:12px; font-weight:500; cursor:pointer; transition:opacity 0.12s; letter-spacing:0.03em; }
+.run-btn:hover { opacity:0.82; }
+
+/* RESULT */
+.result-box { display:none; border:1px solid var(--border); margin-top:20px; }
+.result-box.visible { display:block; }
+.result-top { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); background:var(--surface); }
+.result-tag { font-size:8.5px; text-transform:uppercase; letter-spacing:0.15em; color:var(--text-muted); font-weight:500; }
+.copy-btn { font-size:10.5px; padding:4px 12px; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.12s; }
+.copy-btn:hover { border-color:var(--border-strong); color:var(--text); }
+.result-body { padding:20px; font-size:13px; line-height:1.85; color:var(--text); white-space:pre-wrap; font-weight:300; }
+
+/* LOADING */
+.loading { display:flex; align-items:center; gap:8px; padding:24px 20px; color:var(--text-muted); font-size:12px; }
+.dot { width:4px; height:4px; border-radius:50%; background:var(--text); animation:pulse 1.2s ease-in-out infinite; }
+.dot:nth-child(2){animation-delay:.2s} .dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{opacity:.15;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* TABS */
+.tab-row { display:flex; margin-bottom:24px; border-bottom:1px solid var(--border); }
+.tab { padding:9px 18px; font-size:12px; cursor:pointer; border:none; border-bottom:2px solid transparent; color:var(--text-muted); background:transparent; font-family:'Inter',sans-serif; font-weight:400; transition:all 0.12s; margin-bottom:-1px; }
+.tab.active { color:var(--text); border-bottom-color:var(--text); font-weight:500; }
+.tab:hover:not(.active) { color:var(--text); }
+
+/* HISTORY */
+.history-row { display:flex; align-items:center; justify-content:space-between; padding:13px 0; border-bottom:1px solid var(--border); }
+.history-title { font-size:13px; color:var(--text); margin-bottom:3px; }
+.history-meta { font-size:10.5px; color:var(--text-dim); }
+.history-badge { font-size:9.5px; padding:3px 10px; border:1px solid var(--border); color:var(--text-muted); background:var(--surface); white-space:nowrap; }
+
+/* CLIENT CARDS */
+.advisor-panel { display:none; }
+body.advisor-mode .advisor-panel { display:block; }
+.client-card { border:1px solid var(--border); padding:18px 20px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; }
+.client-card-name { font-size:13.5px; font-weight:500; color:var(--text); margin-bottom:3px; }
+.client-card-meta { font-size:11px; color:var(--text-muted); }
+.client-card-badge { font-size:9.5px; padding:3px 10px; border:1px solid var(--border); color:var(--text-muted); font-family:monospace; }
+
+/* MODAL */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:200; align-items:center; justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal { background:var(--bg); border:1px solid var(--border); padding:32px; width:440px; max-width:90vw; }
+.modal-title { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:400; color:var(--text); margin-bottom:6px; }
+.modal-sub { font-size:12px; color:var(--text-muted); margin-bottom:24px; font-weight:300; }
+.modal-field { margin-bottom:16px; }
+.modal-actions { display:flex; gap:10px; margin-top:24px; justify-content:flex-end; }
+
+/* MOBILE */
+.mobile-header { display:none; background:var(--bg); border-bottom:1px solid var(--border); padding:14px 20px; padding-top:calc(14px + var(--safe-top)); flex-shrink:0; }
+.mobile-page { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.mobile-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--bg); border-top:1px solid var(--border); padding:6px 0 calc(6px + var(--safe-bottom)); z-index:100; }
+.mobile-nav-inner { display:flex; justify-content:space-around; }
+.mnav-item { display:flex; flex-direction:column; align-items:center; gap:3px; padding:5px 8px; cursor:pointer; min-width:52px; }
+.mnav-icon { font-size:16px; color:var(--text-dim); transition:color 0.12s; }
+.mnav-label { font-size:8.5px; color:var(--text-dim); letter-spacing:0.04em; transition:color 0.12s; }
+.mnav-item.active .mnav-icon, .mnav-item.active .mnav-label { color:var(--text); }
+
+/* LIVE BADGE */
+.live-badge { display:none; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:#3a3; border:1px solid #3a3; padding:2px 7px; }
+body.client-mode .live-badge { display:inline-block; }
+
+@media(max-width:768px){
+  .sidebar,.topbar,.client-bar{display:none!important}
+  .mobile-header,.mobile-nav{display:block}
+  .app{flex-direction:column}
+  .main{height:100%}
+  .content{padding:18px 18px calc(80px + var(--safe-bottom))}
+  .dash-stats{grid-template-columns:repeat(2,1fr)}
+  .module-grid{grid-template-columns:1fr}
+  .tile-span2{grid-column:span 1!important}
+  .input-row{grid-template-columns:1fr}
+  .module-title{font-size:24px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">RhetorIQ</div>
+    <div class="login-sub">by Lorena Lienhard</div>
+
+    <!-- Advisor form -->
+    <div id="advisor-login-form">
+      <label class="login-label">Email</label>
+      <input class="login-input" type="email" id="login-email" placeholder="advisor@example.com" autocomplete="email">
+      <label class="login-label">Password</label>
+      <input class="login-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+      <button class="login-btn" onclick="loginAdvisor()">Sign in as Advisor</button>
+      <div class="login-error" id="login-error"></div>
+      <div class="login-divider">or</div>
+      <div class="client-token-link" onclick="showClientForm()">I have a client access token</div>
+    </div>
+
+    <!-- Client token form -->
+    <div id="client-token-form">
+      <label class="login-label">Client Access Token</label>
+      <input class="login-input" type="text" id="client-token-input" placeholder="Paste your token here">
+      <button class="login-btn" onclick="loginClient()">Open Client View</button>
+      <div class="login-error" id="client-error"></div>
+      <div class="login-divider">or</div>
+      <div class="client-token-link" onclick="showAdvisorForm()">Sign in as Advisor</div>
+    </div>
+  </div>
+</div>
+
+<!-- INSTALL BANNER -->
+<div id="install-banner">
+  <span>Install RhetorIQ as an app</span>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button onclick="installApp()">Install</button>
+    <button class="dismiss" onclick="document.getElementById('install-banner').classList.remove('show')">✕</button>
+  </div>
+</div>
+<div id="ios-hint">
+  <span style="font-size:20px;display:block;margin-bottom:6px">⬆</span>
+  Tap <strong>Share</strong> →<br><strong>"Add to Home Screen"</strong><br>to install RhetorIQ.
+  <br><span class="close-hint" onclick="document.getElementById('ios-hint').classList.remove('show')">Dismiss</span>
+</div>
+
+<!-- NEW CLIENT MODAL -->
+<div class="modal-overlay" id="new-client-modal">
+  <div class="modal">
+    <div class="modal-title">New Client</div>
+    <div class="modal-sub">Add a new client. They will receive a dedicated access token.</div>
+    <div class="modal-field">
+      <label class="field-label">Company Name</label>
+      <input type="text" id="nc-name" placeholder="e.g. Acme AG">
+    </div>
+    <div class="modal-field">
+      <label class="field-label">Industry</label>
+      <select id="nc-industry">
+        <option>Financial Services</option><option>Industry / Manufacturing</option>
+        <option>Tech / SaaS</option><option>Healthcare</option>
+        <option>Education</option><option>Public Sector</option><option>Other</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label class="field-label">Primary Contact</label>
+      <input type="text" id="nc-contact" placeholder="e.g. CEO Martin Meier">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-dark" onclick="addClient()">Add Client</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-word">RhetorIQ</div>
+      <div class="logo-sub">by Lorena Lienhard</div>
+      <div class="mode-badge advisor-only advisor">Advisor Mode</div>
+      <div class="mode-badge" id="client-badge-sidebar" style="display:none"></div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Overview</div>
+      <div class="nav-item active" onclick="showPanel('dashboard',this)">
+        <div class="nav-dot"></div><div class="nav-label">Dashboard</div>
+      </div>
+      <div class="nav-item advisor-only" onclick="showPanel('clients',this)">
+        <div class="nav-dot"></div><div class="nav-label">Clients</div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Analysis</div>
+      <div class="nav-item" onclick="showPanel('profiling',this)">
+        <div class="nav-dot"></div><div class="nav-label">Executive Rhetoric Profiling</div>
+      </div>
+      <div class="nav-item" onclick="showPanel('fingerprint',this)">
+        <div class="nav-dot"></div><div class="nav-label">Communication Fingerprint</div>
+      </div>
+      <div class="nav-item" onclick="showPanel('language',this)">
+        <div class="nav-dot"></div><div class="nav-label">Language Analytics</div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Prevention</div>
+      <div class="nav-item" onclick="showPanel('risk',this)">
+        <div class="nav-dot"></div><div class="nav-label">Risk Management</div>
+      </div>
+      <div class="nav-item" onclick="showPanel('stress',this)">
+        <div class="nav-dot"></div><div class="nav-label">Argument Stress Test</div>
+      </div>
+      <div class="nav-item" onclick="showPanel('impact',this)">
+        <div class="nav-dot"></div><div class="nav-label">Strategic Impact Simulation</div>
+      </div>
+      <div class="nav-item" onclick="showPanel('actionability',this)">
+        <div class="nav-dot"></div><div class="nav-label">Actionability Scanner</div>
+      </div>
+      <div class="nav-item" onclick="showPanel('thread',this)">
+        <div class="nav-dot"></div><div class="nav-label">Thread Cleaner</div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Leadership</div>
+      <div class="nav-item" onclick="showPanel('voice',this)">
+        <div class="nav-dot"></div><div class="nav-label">Voice Signature</div>
+      </div>
+      <div class="nav-item" onclick="showPanel('review',this)">
+        <div class="nav-dot"></div><div class="nav-label">Performance Review</div>
+      </div>
+      <div class="nav-item" onclick="showPanel('recognition',this)">
+        <div class="nav-dot"></div><div class="nav-label">Recognition Writer</div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Log</div>
+      <div class="nav-item" onclick="showPanel('history',this);loadHistory()">
+        <div class="nav-dot"></div><div class="nav-label">All Analyses</div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-name" id="sidebar-user-name">—</div>
+      <div class="user-role" id="sidebar-user-role">—</div>
+      <div class="logout-btn" onclick="logout()">Sign out</div>
+    </div>
+  </nav>
+
+  <div class="main">
+    <!-- MOBILE HEADER -->
+    <div class="mobile-header">
+      <div class="logo-word">RhetorIQ</div>
+      <div class="mobile-page" id="mobile-page">Dashboard</div>
+    </div>
+
+    <!-- CLIENT BAR -->
+    <div class="client-bar">
+      <span class="client-label">Active client</span>
+      <select class="client-select" id="active-client-select" onchange="switchClient(this.value)">
+        <option value="">— Select client —</option>
+      </select>
+      <span class="ws-dot" id="ws-dot"></span>
+      <button class="new-client-btn" onclick="openModal()">+ New Client</button>
+    </div>
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div class="topbar-crumb" id="topbar-crumb">Overview of all modules</div>
+      </div>
+      <div class="topbar-right">
+        <span class="live-badge">Live</span>
+        <button class="btn" onclick="showInstallHint()">Install App</button>
+        <button class="btn btn-dark advisor-only" onclick="openModal()">+ New Client</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="dash-stats">
+          <div class="stat-block advisor-only">
+            <div class="stat-n" id="stat-clients">0</div>
+            <div class="stat-l">Active Clients</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-n" id="stat-analyses">0</div>
+            <div class="stat-l">Analyses Run</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-n">11</div>
+            <div class="stat-l">Modules</div>
+          </div>
+        </div>
+
+        <div class="modules-label">Analysis</div>
+        <div class="module-grid" style="margin-bottom:1px">
+          <div class="module-tile" onclick="showPanel('profiling',null)">
+            <div class="tile-tag">Profiling</div>
+            <div class="tile-name">Executive Rhetoric Profiling</div>
+            <div class="tile-desc">Rhetorical DNA of a leader — argumentation logic, persuasion patterns, strategic blind spots.</div>
+          </div>
+          <div class="module-tile" onclick="showPanel('fingerprint',null)">
+            <div class="tile-tag">Development</div>
+            <div class="tile-name">Communication Fingerprint</div>
+            <div class="tile-desc">How does an executive's language shift over time — under pressure, in crisis, at peak performance?</div>
+          </div>
+          <div class="module-tile tile-span2" onclick="showPanel('language',null)">
+            <div class="tile-tag">Diagnostics</div>
+            <div class="tile-name">Language Analytics</div>
+            <div class="tile-desc">Where does leadership rhetoric and lived company culture diverge?</div>
+          </div>
+        </div>
+
+        <div class="modules-label" style="margin-top:24px">Prevention</div>
+        <div class="module-grid" style="margin-bottom:1px">
+          <div class="module-tile" onclick="showPanel('risk',null)">
+            <div class="tile-tag">Prevention</div><div class="tile-name">Risk Management</div>
+            <div class="tile-desc">Identify reception risks before communication goes out.</div>
+          </div>
+          <div class="module-tile" onclick="showPanel('stress',null)">
+            <div class="tile-tag">Preparation</div><div class="tile-name">Argument Stress Test</div>
+            <div class="tile-desc">Strongest counterarguments from three perspectives.</div>
+          </div>
+          <div class="module-tile" onclick="showPanel('impact',null)">
+            <div class="tile-tag">Simulation</div><div class="tile-name">Strategic Impact Simulation</div>
+            <div class="tile-desc">Simulate stakeholder reactions before any major announcement.</div>
+          </div>
+          <div class="module-tile" onclick="showPanel('actionability',null)">
+            <div class="tile-tag">Clarity</div><div class="tile-name">Actionability Scanner</div>
+            <div class="tile-desc">Identify vague directives and translate them into precise, operational language.</div>
+          </div>
+          <div class="module-tile tile-span2" onclick="showPanel('thread',null)">
+            <div class="tile-tag">Decision Logic</div><div class="tile-name">Thread Cleaner</div>
+            <div class="tile-desc">50 emails → half a page decision matrix.</div>
+          </div>
+        </div>
+
+        <div class="modules-label" style="margin-top:24px">Leadership</div>
+        <div class="module-grid">
+          <div class="module-tile" onclick="showPanel('voice',null)">
+            <div class="tile-tag">Ghostwriting</div><div class="tile-name">Voice Signature</div>
+            <div class="tile-desc">Calibrate the linguistic signature — generate texts in the authentic voice.</div>
+          </div>
+          <div class="module-tile" onclick="showPanel('review',null)">
+            <div class="tile-tag">HR</div><div class="tile-name">Performance Review</div>
+            <div class="tile-desc">Keywords in — rhetorically precise, development-oriented feedback out.</div>
+          </div>
+          <div class="module-tile tile-span2" onclick="showPanel('recognition',null)">
+            <div class="tile-tag">Leadership Culture</div><div class="tile-name">Recognition Writer</div>
+            <div class="tile-desc">Culturally calibrated, authentic praise — tailored to the recipient type.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLIENTS (advisor only) -->
+      <div class="panel advisor-panel" id="panel-clients">
+        <div class="module-header">
+          <div class="module-title">Clients</div>
+          <div class="module-sub">Manage your client workspace. Each client gets a dedicated access token.</div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+          <button class="btn btn-dark" onclick="openModal()">+ New Client</button>
+        </div>
+        <div id="client-list">
+          <div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No clients yet.</div>
+        </div>
+      </div>
+
+      <!-- EXECUTIVE RHETORIC PROFILING -->
+      <div class="panel" id="panel-profiling">
+        <div class="module-header">
+          <div class="module-title">Executive Rhetoric Profiling</div>
+          <div class="module-sub">Enter texts from a leader. The system analyses the rhetorical architecture: argumentation logic, Ethos/Pathos/Logos distribution, linguistic signatures, and strategic blind spots.</div>
+        </div>
+        <div class="input-block">
+          <label class="field-label">Texts from the leader</label>
+          <textarea id="rp-input" placeholder="Speeches, emails, LinkedIn posts, internal memos — separate multiple texts with ---."></textarea>
+        </div>
+        <div class="input-row">
+          <div><label class="field-label">Name / Role</label><input type="text" id="rp-name" placeholder="e.g. CEO Martin Meier"></div>
+          <div><label class="field-label">Industry</label>
+            <select id="rp-industry"><option value="">Select industry</option>
+              <option>Financial Services</option><option>Industry / Manufacturing</option>
+              <option>Tech / SaaS</option><option>Healthcare</option>
+              <option>Education</option><option>Public Sector</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <button class="run-btn" onclick="run('rp')">Create Rhetoric Profile</button>
+        <div class="result-box" id="rp-result">
+          <div class="result-top"><span class="result-tag">Executive Rhetoric Profile</span><button class="copy-btn" onclick="copyResult('rp-body')">Copy</button></div>
+          <div class="result-body" id="rp-body"></div>
+        </div>
+      </div>
+
+      <!-- COMMUNICATION FINGERPRINT -->
+      <div class="panel" id="panel-fingerprint">
+        <div class="module-header">
+          <div class="module-title">Communication Fingerprint</div>
+          <div class="module-sub">Enter texts from different points in time or contexts. Reveals how language shifts — under pressure, in crisis, at peak performance.</div>
+        </div>
+        <div class="input-block">
+          <label class="field-label">Texts — separated by time or context (use --- with a date/context label)</label>
+          <textarea id="cf-input" placeholder="2024-01 — Quarterly Report&#10;[text]&#10;---&#10;2024-06 — Crisis Communication&#10;[text]" style="min-height:160px"></textarea>
+        </div>
+        <div class="input-row">
+          <div><label class="field-label">Name / Role</label><input type="text" id="cf-name" placeholder="e.g. CFO Anna Berger"></div>
+          <div><label class="field-label">Analysis Focus</label>
+            <select id="cf-focus">
+              <option>Overall development</option><option>Behaviour under pressure</option>
+              <option>Crisis rhetoric vs. normal operations</option>
+              <option>Trust-building over time</option><option>Tone drift</option>
+            </select>
+          </div>
+        </div>
+        <button class="run-btn" onclick="run('cf')">Analyse Fingerprint</button>
+        <div class="result-box" id="cf-result">
+          <div class="result-top"><span class="result-tag">Communication Fingerprint Report</span><button class="copy-btn" onclick="copyResult('cf-body')">Copy</button></div>
+          <div class="result-body" id="cf-body"></div>
+        </div>
+      </div>
+
+      <!-- LANGUAGE ANALYTICS -->
+      <div class="panel" id="panel-language">
+        <div class="module-header">
+          <div class="module-title">Language Analytics</div>
+          <div class="module-sub">Diagnoses where leadership rhetoric and lived culture diverge — and where language builds or erodes trust.</div>
+        </div>
+        <div class="input-block">
+          <label class="field-label">Internal texts — separate with ---</label>
+          <textarea id="la-input" placeholder="Texts from multiple hierarchy levels significantly increase diagnostic accuracy." style="min-height:160px"></textarea>
+        </div>
+        <div class="input-row">
+          <div><label class="field-label">Company Size</label>
+            <select id="la-size">
+              <option>10–50 employees</option><option>50–200 employees</option>
+              <option>200–1,000 employees</option><option>1,000+ employees</option>
+            </select>
+          </div>
+          <div><label class="field-label">Analysis Focus</label>
+            <select id="la-focus">
+              <option>Leadership vs. employee communication</option>
+              <option>Cultural consistency</option><option>Change communication</option>
+              <option>Trust climate in language</option>
+            </select>
+          </div>
+        </div>
+        <button class="run-btn" onclick="run('la')">Run Language Analytics</button>
+        <div class="result-box" id="la-result">
+          <div class="result-top"><span class="result-tag">Language Analytics Report</span><button class="copy-btn" onclick="copyResult('la-body')">Copy</button></div>
+          <div class="result-body" id="la-body"></div>
+        </div>
+      </div>
+
+      <!-- RISK MANAGEMENT -->
+      <div class="panel" id="panel-risk">
+        <div class="module-header">
+          <div class="module-title">Risk Management</div>
+          <div class="module-sub">Enter communication before it goes out. Evaluates reception risks, flags dangerous formulations, recommends corrections.</div>
+        </div>
+        <div class="input-block">
+          <label class="field-label">Planned communication</label>
+          <textarea id="rm-input" placeholder="Press release, CEO statement, internal announcement, investor letter..."></textarea>
+        </div>
+        <div class="input-row">
+          <div><label class="field-label">Target audience</label>
+            <select id="rm-audience"><option value="">Select audience</option>
+              <option>Employees</option><option>Investors</option><option>Media / Public</option>
+              <option>Customers</option><option>Board / Executive team</option><option>All simultaneously</option>
+            </select>
+          </div>
+          <div><label class="field-label">Context</label>
+            <select id="rm-context"><option value="">Select situation</option>
+              <option>Strategy shift</option><option>Layoffs / Restructuring</option>
+              <option>Merger / Acquisition</option><option>Crisis / Reputational damage</option>
+              <option>New product / Launch</option><option>Cultural change</option>
+            </select>
+          </div>
+        </div>
+        <button class="run-btn" onclick="run('rm')">Run Risk Analysis</button>
+        <div class="result-box" id="rm-result">
+          <div class="result-top"><span class="result-tag">Communication Risk Assessment</span><button class="copy-btn" onclick="copyResult('rm-body')">Copy</button></div>
+          <div class="result-body" id="rm-body"></div>
+        </div>
+      </div>
+
+      <!-- ARGUMENT STRESS TEST -->
+      <div class="panel" id="panel-stress">
+        <div class="module-header">
+          <div class="module-title">Argument Stress Test</div>
+          <div class="module-sub">Enter a thesis or position. The system generates the strongest counterarguments from three perspectives.</div>
+        </div>
+        <div class="input-block">
+          <label class="field-label">Thesis / Position / Key Message</label>
+          <textarea id="st-input" style="min-height:110px" placeholder='e.g. "We are introducing a new performance evaluation system that variabilises 20% of bonuses."'></textarea>
+        </div>
+        <div class="input-row">
+          <div><label class="field-label">Perspectives to test</label>
+            <select id="st-perspectives">
+              <option>All three (Media, Employees, Competitors)</option>
+              <option>Media / Public</option><option>Employees / Works council</option>
+              <option>Investors / Analysts</option><option>Critics / NGOs</option>
+            </select>
+          </div>
+          <div><label class="field-label">Intensity</label>
+            <select id="st-intensity">
+              <option>Moderate — fair criticism</option>
+              <option>Sharp — aggressive questioning</option>
+              <option>Maximum — hardest possible attack</option>
+            </select>
+          </div>
+        </div>
+        <button class="run-btn" onclick="run('st')">Run Stress Test</button>
+        <div class="result-box" id="st-result">
+          <div class="result-top"><span class="result-tag">Argument Stress Test Report</span><button class="copy-btn" onclick="copyResult('st-body')">Copy</button></div>
+          <div class="result-body" id="st-body"></div>
+        </div>
+      </div>
+
+      <!-- STRATEGIC IMPACT SIMULATION -->
+      <div class="panel" id="panel-impact">
+        <div class="module-header">
+          <div class="module-title">Strategic Impact Simulation</div>
+          <div class="module-sub">Simulates how different stakeholder groups will react — strategic adjustments before it's too late.</div>
+        </div>
+        <div class="input-block">
+          <label class="field-label">Planned communication</label>
+          <textarea id="si-input" placeholder="Merger announcement, layoffs, strategy shift, leadership change..."></textarea>
+        </div>
+        <div class="input-row">
+          <div><label class="field-label">Stakeholders to simulate</label>
+            <select id="si-stakeholders">
+              <option>All groups</option><option>Employees only</option>
+              <option>Media only</option><option>Investors only</option>
+              <option>Employees + Media</option>
+            </select>
+          </div>
+          <div><label class="field-label">Strategic context</label>
+            <select id="si-severity">
+              <option>Low — routine change</option><option>Medium — noticeable impact</option>
+              <option>High — significant transformation</option><option>Critical — existential crisis</option>
+            </select>
+          </div>
+        </div>
+        <button class="run-btn" onclick="run('si')">Run Impact Simulation</button>
+        <div class="result-box" id="si-result">
+          <div class="result-top"><span class="result-tag">Strategic Impact Report</span><button class="copy-btn" onclick="copyResult('si-body')">Copy</button></div>
+          <div class="result-body" id="si-body"></div>
+        </div>
+      </div>
+
+      <!-- ACTIONABILITY SCANNER -->
+      <div class="panel" id="panel-actionability">
+        <div class="module-header">
+          <div class="module-title">Actionability Scanner</div>
+          <div class="module-sub">Scans for vagueness, missing deadlines, and unclear responsibilities — translates into operational language.</div>
+        </div>
+        <div class="input-block">
+          <label class="field-label">Instruction / Briefing / Delegation</label>
+          <textarea id="as-input" placeholder='e.g. "We should take a look at the customer satisfaction topic and see what we can improve."'></textarea>
+        </div>
+        <div class="input-row">
+          <div><label class="field-label">Context</label>
+            <select id="as-context">
+              <option>Email delegation</option><option>Meeting minutes</option>
+              <option>Project briefing</option><option>Strategy document</option>
+              <option>Verbal instruction to be written up</option>
+            </select>
+          </div>
+          <div><label class="field-label">Recipient</label>
+            <select id="as-recipient">
+              <option>Direct reports</option><option>Project team</option>
+              <option>Department head</option><option>External partners</option>
+            </select>
+          </div>
+        </div>
+        <button class="run-btn" onclick="run('as')">Scan for Actionability</button>
+        <div class="result-box" id="as-result">
+          <div class="result-top"><span class="result-tag">Actionability Report</span><button class="copy-btn" onclick="copyResult('as-body')">Copy</button></div>
+          <div class="result-body" id="as-body"></div>
+        </div>
+      </div>
+
+      <!-- THREAD CLEANER -->
+      <div class="panel" id="panel-thread">
+        <div class="module-header">
+          <div class="module-title">Thread Cleaner</div>
+          <div class="module-sub">Extracts the logical decision structure from an email or chat thread.</div>
+        </div>
+        <div class="input-block">
+          <label class="field-label">Full thread (paste entirely)</label>
+          <textarea id="tc-input" placeholder="Paste the complete thread here." style="min-height:180px"></textarea>
+        </div>
+        <div class="input-row">
+          <div><label class="field-label">Source</label>
+            <select id="tc-source">
+              <option>Email thread</option><option>Teams chat</option>
+              <option>Slack channel</option><option>Meeting chat</option>
+            </select>
+          </div>
+          <div><label class="field-label">Output goal</label>
+            <select id="tc-goal">
+              <option>Decision matrix for CEO / Executive team</option>
+              <option>Action recommendation for project lead</option>
+              <option>Summary for absent participants</option>
+              <option>Identify next steps</option>
+            </select>
+          </div>
+        </div>
+        <button class="run-btn" onclick="run('tc')">Clean Thread</button>
+        <div class="result-box" id="tc-result">
+          <div class="result-top"><span class="result-tag">Thread — Decision Matrix</span><button class="copy-btn" onclick="copyResult('tc-body')">Copy</button></div>
+          <div class="result-body" id="tc-body"></div>
+        </div>
+      </div>
+
+      <!-- VOICE SIGNATURE -->
+      <div class="panel" id="panel-voice">
+        <div class="module-header">
+          <div class="module-title">Voice Signature</div>
+          <div class="module-sub">One-time calibration of the linguistic signature — then scalable text generation in the authentic voice of the executive.</div>
+        </div>
+        <div class="tab-row">
+          <button class="tab active" onclick="switchTab(this,'vs-cal','vs-gen')">Calibrate</button>
+          <button class="tab" onclick="switchTab(this,'vs-gen','vs-cal')">Generate</button>
+        </div>
+        <div id="vs-cal">
+          <div class="input-block">
+            <label class="field-label">Reference texts (3–5, separate with ---)</label>
+            <textarea id="vs-ref" placeholder="LinkedIn posts, speeches, emails, interviews."></textarea>
+          </div>
+          <button class="run-btn" onclick="run('vs-cal')">Calibrate Voice Signature</button>
+          <div class="result-box" id="vs-cal-result">
+            <div class="result-top"><span class="result-tag">Voice Signature Profile</span><button class="copy-btn" onclick="copyResult('vs-cal-body')">Copy</button></div>
+            <div class="result-body" id="vs-cal-body"></div>
+          </div>
+        </div>
+        <div id="vs-gen" style="display:none">
+          <div class="input-block">
+            <label class="field-label">Briefing</label>
+            <textarea id="vs-task" placeholder="e.g. LinkedIn post on transformation, 200 words, with a concrete call-to-action" style="min-height:100px"></textarea>
+          </div>
+          <div class="input-row">
+            <div><label class="field-label">Format</label>
+              <select id="vs-format">
+                <option>LinkedIn Post</option><option>Internal email</option>
+                <option>Speech / Keynote excerpt</option><option>Newsletter</option>
+                <option>Press quote</option><option>Town Hall intro</option>
+              </select>
+            </div>
+            <div><label class="field-label">Tone</label>
+              <select id="vs-tone">
+                <option>From Voice Signature</option><option>Motivating</option>
+                <option>Direct / Factual</option><option>Visionary</option><option>Empathetic</option>
+              </select>
+            </div>
+          </div>
+          <button class="run-btn" onclick="run('vs-gen')">Generate Text</button>
+          <div class="result-box" id="vs-gen-result">
+            <div class="result-top"><span class="result-tag">Generated Text</span><button class="copy-btn" onclick="copyResult('vs-gen-body')">Copy</button></div>
+            <div class="result-body" id="vs-gen-body"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PERFORMANCE REVIEW -->
+      <div class="panel" id="panel-review">
+        <div class="module-header">
+          <div class="module-title">Performance Review</div>
+          <div class="module-sub">Enter keywords and observations. The system formulates rhetorically precise, development-oriented feedback.</div>
+        </div>
+        <div class="input-block">
+          <label class="field-label">Raw feedback (keywords, observations)</label>
+          <textarea id="pr-input" placeholder='e.g. "often late, delivers strong quality, takes little ownership, saved the client project last month"'></textarea>
+        </div>
+        <div class="input-row">
+          <div><label class="field-label">Person's role</label><input type="text" id="pr-role" placeholder="e.g. Senior Analyst, Project Manager"></div>
+          <div><label class="field-label">Format</label>
+            <select id="pr-format">
+              <option>Written appraisal (HR document)</option>
+              <option>Verbal feedback (conversation guide)</option>
+              <option>360° feedback</option><option>Probationary review</option>
+            </select>
+          </div>
+        </div>
+        <button class="run-btn" onclick="run('pr')">Formulate Feedback</button>
+        <div class="result-box" id="pr-result">
+          <div class="result-top"><span class="result-tag">Performance Review</span><button class="copy-btn" onclick="copyResult('pr-body')">Copy</button></div>
+          <div class="result-body" id="pr-body"></div>
+        </div>
+      </div>
+
+      <!-- RECOGNITION WRITER -->
+      <div class="panel" id="panel-recognition">
+        <div class="module-header">
+          <div class="module-title">Recognition Writer</div>
+          <div class="module-sub">Describe a concrete achievement. The system formulates culturally calibrated, authentic recognition.</div>
+        </div>
+        <div class="input-block">
+          <label class="field-label">What did the person specifically do?</label>
+          <textarea id="rw-input" style="min-height:100px" placeholder='e.g. "Müller worked over the weekend to rescue the database migration and secured the entire product launch"'></textarea>
+        </div>
+        <div class="input-row">
+          <div><label class="field-label">Recipient type</label>
+            <select id="rw-type">
+              <option>The Analyst — wants praise for precision and logic</option>
+              <option>The Executor — wants recognition for impact and results</option>
+              <option>The Team Player — wants to be seen for contribution to the group</option>
+              <option>The Visionary — wants appreciation for ideas and courage</option>
+              <option>The Pragmatist — wants direct, factual acknowledgement</option>
+            </select>
+          </div>
+          <div><label class="field-label">Format</label>
+            <select id="rw-format">
+              <option>Verbal recognition (conversation guide)</option>
+              <option>Written acknowledgement (email / Slack)</option>
+              <option>Public praise (team meeting / All-Hands)</option>
+              <option>Formal recognition (annual report / HR document)</option>
+            </select>
+          </div>
+        </div>
+        <button class="run-btn" onclick="run('rw')">Write Recognition</button>
+        <div class="result-box" id="rw-result">
+          <div class="result-top"><span class="result-tag">Recognition — Calibrated</span><button class="copy-btn" onclick="copyResult('rw-body')">Copy</button></div>
+          <div class="result-body" id="rw-body"></div>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="panel" id="panel-history">
+        <div class="module-header">
+          <div class="module-title">All Analyses</div>
+          <div class="module-sub">Persistent log of all analyses.</div>
+        </div>
+        <div id="history-list">
+          <div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">Loading…</div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+
+    <!-- MOBILE NAV -->
+    <nav class="mobile-nav">
+      <div class="mobile-nav-inner">
+        <div class="mnav-item active" id="mn-dashboard" onclick="showPanel('dashboard',null);setMNav('dashboard')">
+          <div class="mnav-icon">⌂</div><div class="mnav-label">Home</div>
+        </div>
+        <div class="mnav-item" id="mn-profiling" onclick="showPanel('profiling',null);setMNav('profiling')">
+          <div class="mnav-icon">◈</div><div class="mnav-label">Profile</div>
+        </div>
+        <div class="mnav-item" id="mn-risk" onclick="showPanel('risk',null);setMNav('risk')">
+          <div class="mnav-icon">◎</div><div class="mnav-label">Risk</div>
+        </div>
+        <div class="mnav-item" id="mn-voice" onclick="showPanel('voice',null);setMNav('voice')">
+          <div class="mnav-icon">◇</div><div class="mnav-label">Voice</div>
+        </div>
+        <div class="mnav-item" id="mn-more" onclick="showPanel('thread',null);setMNav('more')">
+          <div class="mnav-icon">⋯</div><div class="mnav-label">More</div>
+        </div>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+const API = ''; // same origin in production; set to 'http://localhost:3001' for local dev
+
+// ── STATE ─────────────────────────────────────────────────────
+let authToken = localStorage.getItem('riq-token');
+let currentUser = null;
+let isAdvisor = false;
+let activeClientId = null;
+let clientList = [];
+let analysisCount = 0;
+let wsConnection = null;
+let _voiceProfile = null;
+
+// ── AUTH ──────────────────────────────────────────────────────
+function showClientForm() {
+  document.getElementById('advisor-login-form').style.display = 'none';
+  document.getElementById('client-token-form').style.display = 'block';
+}
+function showAdvisorForm() {
+  document.getElementById('client-token-form').style.display = 'none';
+  document.getElementById('advisor-login-form').style.display = 'block';
+}
+
+async function loginAdvisor() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  try {
+    const r = await fetch(API + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.error || 'Login failed'; err.style.display = 'block'; return; }
+    authToken = d.token;
+    localStorage.setItem('riq-token', authToken);
+    initApp(d.user, 'advisor');
+  } catch(e) {
+    err.textContent = 'Connection error'; err.style.display = 'block';
+  }
+}
+
+async function loginClient() {
+  const token = document.getElementById('client-token-input').value.trim();
+  const err = document.getElementById('client-error');
+  err.style.display = 'none';
+  try {
+    const r = await fetch(API + '/auth/client-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
+    });
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.error || 'Invalid token'; err.style.display = 'block'; return; }
+    authToken = d.token;
+    localStorage.setItem('riq-token', authToken);
+    initApp(d.client, 'client');
+  } catch(e) {
+    err.textContent = 'Connection error'; err.style.display = 'block';
+  }
+}
+
+function logout() {
+  authToken = null;
+  currentUser = null;
+  localStorage.removeItem('riq-token');
+  if (wsConnection) wsConnection.close();
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.body.classList.remove('advisor-mode', 'client-mode');
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+async function initApp(user, role) {
+  currentUser = user;
+  isAdvisor = role === 'advisor';
+
+  document.getElementById('login-screen').classList.add('hidden');
+
+  if (isAdvisor) {
+    document.body.classList.add('advisor-mode');
+    document.getElementById('sidebar-user-name').textContent = user.name || user.email;
+    document.getElementById('sidebar-user-role').textContent = 'Executive Communication Advisor';
+    await loadClients();
+  } else {
+    document.body.classList.add('client-mode');
+    document.getElementById('sidebar-user-name').textContent = user.name || user.clientName;
+    document.getElementById('sidebar-user-role').textContent = 'Powered by RhetorIQ';
+    const badge = document.getElementById('client-badge-sidebar');
+    badge.textContent = user.name || user.clientName;
+    badge.style.display = 'inline-flex';
+  }
+
+  connectWebSocket();
+  updateAnalysisCount();
+}
+
+// Try auto-login from stored token
+async function tryAutoLogin() {
+  if (!authToken) return;
+  try {
+    // Decode JWT to check expiry
+    const payload = JSON.parse(atob(authToken.split('.')[1]));
+    if (payload.exp * 1000 < Date.now()) { localStorage.removeItem('riq-token'); return; }
+    if (payload.role === 'advisor') {
+      initApp({ id: payload.id, name: payload.name, email: payload.email }, 'advisor');
+    } else {
+      initApp({ id: payload.clientId, name: payload.clientName }, 'client');
+    }
+  } catch { localStorage.removeItem('riq-token'); }
+}
+
+// ── WEBSOCKET ─────────────────────────────────────────────────
+function connectWebSocket() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const host = API ? API.replace(/^https?/, proto) : `${proto}://${location.host}`;
+  wsConnection = new WebSocket(`${host}/ws`);
+
+  const dot = document.getElementById('ws-dot');
+  wsConnection.onopen = () => { if (dot) dot.classList.add('connected'); };
+  wsConnection.onclose = () => {
+    if (dot) dot.classList.remove('connected');
+    setTimeout(connectWebSocket, 3000); // auto-reconnect
+  };
+  wsConnection.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'analysis') handleIncomingAnalysis(msg.analysis);
+    } catch {}
+  };
+}
+
+function handleIncomingAnalysis(analysis) {
+  // In client mode: show result live when advisor runs an analysis
+  analysisCount++;
+  document.getElementById('stat-analyses').textContent = analysisCount;
+  // Flash the relevant result box if the module panel is active
+  const bodyEl = document.getElementById(analysis.module + '-body');
+  if (bodyEl) {
+    const box = document.getElementById(analysis.module + '-result');
+    if (box) { box.classList.add('visible'); bodyEl.textContent = analysis.result; }
+  }
+}
+
+// ── CLIENT MANAGEMENT ─────────────────────────────────────────
+async function loadClients() {
+  try {
+    const r = await apiFetch('/api/clients');
+    clientList = await r.json();
+    renderClients();
+  } catch {}
+}
+
+function renderClients() {
+  document.getElementById('stat-clients').textContent = clientList.length;
+
+  const list = document.getElementById('client-list');
+  const sel = document.getElementById('active-client-select');
+
+  if (!clientList.length) {
+    list.innerHTML = '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No clients yet.</div>';
+    sel.innerHTML = '<option value="">— Select client —</option>';
+    return;
+  }
+
+  list.innerHTML = clientList.map(c => `
+    <div class="client-card">
+      <div>
+        <div class="client-card-name">${c.name}</div>
+        <div class="client-card-meta">${c.industry || ''} · ${c.contact || ''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <code class="client-card-badge">${c.token.substring(0,16)}…</code>
+        <button class="btn" style="font-size:10px;padding:4px 10px" onclick="copyToken('${c.token}')">Copy token</button>
+      </div>
+    </div>
+  `).join('');
+
+  sel.innerHTML = '<option value="">— Select client —</option>' +
+    clientList.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+function copyToken(token) {
+  navigator.clipboard.writeText(token).catch(()=>{});
+  alert('Client access token copied!\n\nShare this token with your client — they use it to log in at:\n' + location.origin);
+}
+
+function switchClient(id) { activeClientId = id || null; }
+
+function openModal() { document.getElementById('new-client-modal').classList.add('show'); }
+function closeModal() { document.getElementById('new-client-modal').classList.remove('show'); }
+
+async function addClient() {
+  const name = document.getElementById('nc-name').value.trim();
+  if (!name) return;
+  const industry = document.getElementById('nc-industry').value;
+  const contact = document.getElementById('nc-contact').value.trim();
+  try {
+    const r = await apiFetch('/api/clients', { method:'POST', body: JSON.stringify({ name, industry, contact }) });
+    const client = await r.json();
+    clientList.unshift(client);
+    renderClients();
+    closeModal();
+    document.getElementById('nc-name').value = '';
+    document.getElementById('nc-contact').value = '';
+    showPanel('clients', null);
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// ── API HELPER ────────────────────────────────────────────────
+function apiFetch(path, options = {}) {
+  return fetch(API + path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + authToken,
+      ...(options.headers || {})
+    }
+  });
+}
+
+// ── ANALYSIS ──────────────────────────────────────────────────
+function updateAnalysisCount() {
+  apiFetch('/api/analyze/history').then(r => r.json()).then(rows => {
+    analysisCount = rows.length;
+    document.getElementById('stat-analyses').textContent = analysisCount;
+  }).catch(()=>{});
+}
+
+async function loadHistory() {
+  const clientId = activeClientId || '';
+  const r = await apiFetch('/api/analyze/history' + (clientId ? '?clientId='+clientId : ''));
+  const rows = await r.json();
+  const el = document.getElementById('history-list');
+  if (!rows.length) { el.innerHTML = '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No analyses yet.</div>'; return; }
+  el.innerHTML = rows.map(h => {
+    const d = new Date(h.created_at).toLocaleString('en-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `<div class="history-row"><div><div class="history-title">${h.module_label||h.module}</div><div class="history-meta">${d}</div></div><div class="history-badge">${h.module}</div></div>`;
+  }).join('');
+}
+
+// ── MODULE RUNNERS ────────────────────────────────────────────
+async function run(id) {
+  let module, data, bodyElId, resultElId;
+
+  if (id==='rp') {
+    const text = document.getElementById('rp-input').value.trim(); if (!text) return;
+    module = 'rp'; bodyElId = 'rp-body'; resultElId = 'rp-result';
+    data = { text, name: document.getElementById('rp-name').value.trim(), industry: document.getElementById('rp-industry').value };
+  } else if (id==='cf') {
+    const text = document.getElementById('cf-input').value.trim(); if (!text) return;
+    module = 'cf'; bodyElId = 'cf-body'; resultElId = 'cf-result';
+    data = { text, name: document.getElementById('cf-name').value.trim(), focus: document.getElementById('cf-focus').value };
+  } else if (id==='la') {
+    const text = document.getElementById('la-input').value.trim(); if (!text) return;
+    module = 'la'; bodyElId = 'la-body'; resultElId = 'la-result';
+    data = { text, size: document.getElementById('la-size').value, focus: document.getElementById('la-focus').value };
+  } else if (id==='rm') {
+    const text = document.getElementById('rm-input').value.trim(); if (!text) return;
+    module = 'rm'; bodyElId = 'rm-body'; resultElId = 'rm-result';
+    data = { text, audience: document.getElementById('rm-audience').value, context: document.getElementById('rm-context').value };
+  } else if (id==='st') {
+    const text = document.getElementById('st-input').value.trim(); if (!text) return;
+    module = 'st'; bodyElId = 'st-body'; resultElId = 'st-result';
+    data = { text, perspectives: document.getElementById('st-perspectives').value, intensity: document.getElementById('st-intensity').value };
+  } else if (id==='si') {
+    const text = document.getElementById('si-input').value.trim(); if (!text) return;
+    module = 'si'; bodyElId = 'si-body'; resultElId = 'si-result';
+    data = { text, stakeholders: document.getElementById('si-stakeholders').value, severity: document.getElementById('si-severity').value };
+  } else if (id==='as') {
+    const text = document.getElementById('as-input').value.trim(); if (!text) return;
+    module = 'as'; bodyElId = 'as-body'; resultElId = 'as-result';
+    data = { text, context: document.getElementById('as-context').value, recipient: document.getElementById('as-recipient').value };
+  } else if (id==='tc') {
+    const text = document.getElementById('tc-input').value.trim(); if (!text) return;
+    module = 'tc'; bodyElId = 'tc-body'; resultElId = 'tc-result';
+    data = { text, source: document.getElementById('tc-source').value, goal: document.getElementById('tc-goal').value };
+  } else if (id==='vs-cal') {
+    const text = document.getElementById('vs-ref').value.trim(); if (!text) return;
+    module = 'vs-cal'; bodyElId = 'vs-cal-body'; resultElId = 'vs-cal-result';
+    data = { text };
+  } else if (id==='vs-gen') {
+    const text = document.getElementById('vs-task').value.trim(); if (!text) return;
+    module = 'vs-gen'; bodyElId = 'vs-gen-body'; resultElId = 'vs-gen-result';
+    data = { text, format: document.getElementById('vs-format').value, tone: document.getElementById('vs-tone').value, voiceProfile: _voiceProfile };
+  } else if (id==='pr') {
+    const text = document.getElementById('pr-input').value.trim(); if (!text) return;
+    module = 'pr'; bodyElId = 'pr-body'; resultElId = 'pr-result';
+    data = { text, role: document.getElementById('pr-role').value, format: document.getElementById('pr-format').value };
+  } else if (id==='rw') {
+    const text = document.getElementById('rw-input').value.trim(); if (!text) return;
+    module = 'rw'; bodyElId = 'rw-body'; resultElId = 'rw-result';
+    data = { text, type: document.getElementById('rw-type').value, format: document.getElementById('rw-format').value };
+  } else return;
+
+  const resultBox = document.getElementById(resultElId);
+  const bodyEl = document.getElementById(bodyElId);
+  resultBox.classList.add('visible');
+  bodyEl.innerHTML = '<div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:8px">Analysing...</span></div>';
+
+  try {
+    const r = await apiFetch('/api/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ module, clientId: activeClientId, data })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    bodyEl.textContent = d.result;
+    if (module === 'vs-cal') _voiceProfile = d.result;
+    analysisCount++;
+    document.getElementById('stat-analyses').textContent = analysisCount;
+  } catch(e) {
+    bodyEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+// ── UI HELPERS ────────────────────────────────────────────────
+const meta = {
+  dashboard:     ['Dashboard','Overview of all modules'],
+  clients:       ['Clients','Manage your client workspace'],
+  profiling:     ['Executive Rhetoric Profiling','Analyse rhetorical architecture'],
+  fingerprint:   ['Communication Fingerprint','Language development over time'],
+  language:      ['Language Analytics','Company culture through language'],
+  risk:          ['Risk Management','Evaluate communication before sending'],
+  stress:        ['Argument Stress Test','Anticipate counterarguments'],
+  impact:        ['Strategic Impact Simulation','Simulate stakeholder reactions'],
+  actionability: ['Actionability Scanner','Translate vagueness into clarity'],
+  thread:        ['Thread Cleaner','Decision logic from communication threads'],
+  voice:         ['Voice Signature','Calibrate the linguistic signature'],
+  review:        ['Performance Review','Development-oriented feedback'],
+  recognition:   ['Recognition Writer','Calibrated authentic recognition'],
+  history:       ['All Analyses','Persistent analysis log']
+};
+
+function showPanel(name, navEl) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const panel = document.getElementById('panel-'+name);
+  if (panel) panel.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+  const t = meta[name]||[name,''];
+  const tt=document.getElementById('topbar-title');
+  const tc=document.getElementById('topbar-crumb');
+  const mp=document.getElementById('mobile-page');
+  if(tt) tt.textContent=t[0];
+  if(tc) tc.textContent=t[1];
+  if(mp) mp.textContent=t[0];
+  document.querySelector('.content').scrollTop=0;
+}
+
+function setMNav(id) {
+  document.querySelectorAll('.mnav-item').forEach(n=>n.classList.remove('active'));
+  const el=document.getElementById('mn-'+id);
+  if(el) el.classList.add('active');
+  else document.getElementById('mn-more').classList.add('active');
+}
+
+function switchTab(btn, showId, hideId) {
+  document.querySelectorAll('#panel-voice .tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(showId).style.display='block';
+  document.getElementById(hideId).style.display='none';
+}
+
+function copyResult(id) { navigator.clipboard.writeText(document.getElementById(id).textContent).catch(()=>{}); }
+
+// ── PWA ──────────────────────────────────────────────────────
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById('install-banner').classList.add('show');
+});
+window.addEventListener('appinstalled', () => document.getElementById('install-banner').classList.remove('show'));
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => { deferredPrompt=null; document.getElementById('install-banner').classList.remove('show'); });
+}
+function showInstallHint() {
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+    document.getElementById('ios-hint').classList.add('show');
+    setTimeout(()=>document.getElementById('ios-hint').classList.remove('show'),6000);
+  } else if (deferredPrompt) installApp();
+  else alert('Open RhetorIQ in Chrome or Edge — the install icon appears in the address bar.');
+}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+// Enter key on login
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') loginAdvisor(); });
+document.getElementById('client-token-input').addEventListener('keydown', e => { if (e.key === 'Enter') loginClient(); });
+
+// ── BOOT ──────────────────────────────────────────────────────
+tryAutoLogin();
+</script>
+</body>
+</html>
