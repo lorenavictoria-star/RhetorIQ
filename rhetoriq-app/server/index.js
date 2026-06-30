@@ -37,6 +37,8 @@ app.use(express.json({ limit: '2mb' }));
 app.use('/auth', require('./routes/auth'));
 app.use('/api/clients', require('./routes/clients'));
 app.use('/api/analyze', require('./routes/analyze'));
+app.use('/api/people', require('./routes/people'));
+app.use('/api/memory', require('./routes/memory'));
 
 // Health check
 app.get('/health', (_, res) => res.json({ ok: true }));

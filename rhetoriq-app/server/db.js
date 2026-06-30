@@ -34,6 +34,34 @@ async function init() {
       result TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS people (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      role TEXT,
+      department TEXT,
+      notes TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS people_profiles (
+      id SERIAL PRIMARY KEY,
+      person_id INTEGER REFERENCES people(id) ON DELETE CASCADE,
+      profile_type TEXT NOT NULL,
+      content TEXT NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(person_id, profile_type)
+    );
+
+    CREATE TABLE IF NOT EXISTS company_memory (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+      memory_type TEXT NOT NULL,
+      content TEXT NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(client_id, memory_type)
+    );
   `);
 }
 
