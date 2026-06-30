@@ -275,11 +275,20 @@ body.adv .vubtn{display:block}
 .cinp:focus{border-color:var(--tx)}
 .csnd{padding:8px 14px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px}
 
-/* QUICK ACTIONS */
-.qactions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
-.qa{padding:9px 16px;border:1.5px solid var(--bd);border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;background:#fff;color:var(--tx);font-family:'Inter',sans-serif;transition:all .15s;text-align:left}
-.qa:hover{border-color:var(--tx);background:var(--sf)}
-.qa-icon{font-size:14px;margin-right:4px}
+/* MOST USED ROW */
+.mu-row{margin-bottom:24px}
+.mu-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:10px}
+.mu-pills{display:flex;gap:8px;flex-wrap:wrap}
+.mu-pill{padding:8px 16px;border:1.5px solid var(--bd);border-radius:4px;font-size:13px;font-weight:500;cursor:pointer;background:#fff;color:var(--tx);font-family:'Inter',sans-serif;transition:border-color .15s}
+.mu-pill:hover{border-color:var(--tx)}
+.mu-pill.featured{border-color:var(--tx);background:var(--tx);color:#fff}
+.mu-pill.featured:hover{background:#333}
+
+/* BROWSE TOGGLE */
+.browse-toggle{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;cursor:pointer;user-select:none}
+.browse-lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
+.browse-arr{font-size:12px;color:var(--mu);transition:transform .2s}
+.browse-arr.open{transform:rotate(180deg)}
 
 /* VOICE BUTTON */
 .vbtn{padding:12px 14px;background:#fff;border:1.5px solid var(--bd);border-radius:4px;cursor:pointer;font-size:16px;align-self:flex-end;flex-shrink:0;transition:all .15s}
@@ -411,7 +420,7 @@ body.adv .vubtn{display:block}
       <button class="nb active" id="nav-home" onclick="goHome()">Home</button>
       <button class="nb" id="nav-brand-voice" onclick="goPage('brand-voice')">Brand Voice</button>
       <button class="nb ao" id="nav-people" onclick="goPage('people')">People</button>
-      <button class="nb ao" id="nav-memory" onclick="goPage('memory')">Memory</button>
+      <button class="nb ao" id="nav-memory" onclick="goPage('memory')">Context</button>
       <button class="nb" id="nav-history" onclick="goPage('history');loadHistory()">History</button>
       <button class="nb ao" id="nav-clients" onclick="goPage('clients')">Clients</button>
     </nav>
@@ -444,12 +453,12 @@ body.adv .vubtn{display:block}
         <div class="rstat" id="rstat"></div>
       </div>
 
-      <!-- Quick Actions -->
-      <div class="qactions">
-        <button class="qa" onclick="quickAction('I have a meeting in 1 hour and need to prepare')"><span class="qa-icon">&#9200;</span>Meeting in 1 hour</button>
-        <button class="qa" onclick="quickAction('Something just happened and I need an immediate crisis response')"><span class="qa-icon">&#128308;</span>Something just happened</button>
-        <button class="qa" onclick="quickAction('I need to write something — speech, email, or announcement')"><span class="qa-icon">&#9998;</span>I need to write something</button>
-        <button class="qa" onclick="quickAction('Check this before I send it — what could go wrong?')"><span class="qa-icon">&#128269;</span>Check before I send</button>
+      <!-- Most Used Row -->
+      <div class="mu-row" id="mu-row">
+        <div class="mu-label">Quick access</div>
+        <div class="mu-pills" id="mu-pills">
+          <button class="mu-pill featured" onclick="goModule('pre-meeting')">Pre-Meeting Brief</button>
+        </div>
       </div>
 
       <!-- Memory Banner (shown when client selected and memory exists) -->
@@ -467,6 +476,7 @@ body.adv .vubtn{display:block}
         </div>
       </div>
 
+      <!-- Browse All Modules toggle + grid wrapper -->
       <!-- Health Score Widget -->
       <div class="hs-widget" id="hs-widget" style="display:none">
         <div class="hs-top">
@@ -483,28 +493,34 @@ body.adv .vubtn{display:block}
         <div class="hs-result" id="hs-result"></div>
       </div>
 
-      <div class="stats">
-        <div class="stat ao"><div class="sn" id="stat-clients">0</div><div class="sl">Clients</div></div>
-        <div class="stat ao"><div class="sn" id="stat-people">0</div><div class="sl">People</div></div>
-        <div class="stat"><div class="sn" id="stat-analyses">0</div><div class="sl">Analyses</div></div>
-        <div class="stat"><div class="sn">16</div><div class="sl">Modules</div></div>
+      <div class="stats" id="stats-row" style="display:none">
+        <div class="stat ao" id="stat-clients-box"><div class="sn" id="stat-clients">0</div><div class="sl">Client</div></div>
+        <div class="stat ao" id="stat-people-box"><div class="sn" id="stat-people">0</div><div class="sl">People</div></div>
+        <div class="stat" id="stat-analyses-box"><div class="sn" id="stat-analyses">0</div><div class="sl">Analyses</div></div>
       </div>
+
+      <!-- Browse All Modules -->
+      <div class="browse-toggle" onclick="toggleModuleGrid()">
+        <span class="browse-lbl">All modules</span>
+        <span class="browse-arr" id="browse-arr">&#9660;</span>
+      </div>
+      <div id="module-grid-wrap" style="display:none">
 
       <!-- Section tabs (Concept B) -->
       <div class="stabs">
         <button class="stab active" onclick="filterMods('all',this)">All</button>
-        <button class="stab" onclick="filterMods('foundation',this)">1 &mdash; Foundation</button>
-        <button class="stab" onclick="filterMods('prevention',this)">2 &mdash; Prevention</button>
-        <button class="stab" onclick="filterMods('efficiency',this)">3 &mdash; Efficiency</button>
-        <button class="stab" onclick="filterMods('creation',this)">4 &mdash; Creation</button>
-        <button class="stab" onclick="filterMods('growth',this)">5 &mdash; Growth</button>
+        <button class="stab" onclick="filterMods('foundation',this)">Foundation</button>
+        <button class="stab" onclick="filterMods('prevention',this)">Prevention</button>
+        <button class="stab" onclick="filterMods('efficiency',this)">Efficiency</button>
+        <button class="stab" onclick="filterMods('creation',this)">Creation</button>
+        <button class="stab" onclick="filterMods('growth',this)">Growth</button>
       </div>
 
       <div class="mgrid">
         <!-- FOUNDATION -->
         <div class="mcard span3 g-foundation" onclick="goPage('brand-voice')"><div class="ctag">&#9670; Foundation &mdash; Master Reference</div><div class="cname">Brand Voice DNA</div><div class="cdesc">How does this company or person communicate? Paste any texts &mdash; get a complete language profile back.</div></div>
         <div class="mcard g-foundation" onclick="goModule('profiling')"><div class="ctag">Foundation</div><div class="cname">Rhetoric Profile</div><div class="cdesc">How does this company, team, or leader communicate? What patterns repeat? Where are the weak points?</div></div>
-        <div class="mcard g-foundation" onclick="goModule('language')"><div class="ctag">Foundation</div><div class="cname">Language Analytics</div><div class="cdesc">Paste texts from leadership, board, and employees. See where the official message and the lived reality diverge.</div></div>
+        <div class="mcard g-foundation" onclick="goModule('language')"><div class="ctag">Foundation</div><div class="cname">Culture Sync</div><div class="cdesc">Paste texts from leadership, board, and employees. See where the official message and the lived reality diverge.</div></div>
         <!-- PREVENTION -->
         <div class="mcard span2 g-prevention" onclick="goModule('pre-meeting')"><span class="new-badge">NEW</span><div class="ctag">Prevention &mdash; Preparation</div><div class="cname">Pre-Meeting Brief</div><div class="cdesc">Meeting in 1 hour? Get a full brief: the 3 hardest moments, your opening, key messages, what not to say, and a stakeholder map.</div></div>
         <div class="mcard g-prevention" onclick="goModule('risk')"><div class="ctag">Prevention</div><div class="cname">Risk Management</div><div class="cdesc">Ready to send? Paste the text first. Get a clear list of what could go wrong.</div></div>
@@ -514,7 +530,7 @@ body.adv .vubtn{display:block}
         <!-- EFFICIENCY -->
         <div class="mcard g-efficiency" onclick="goModule('actionability')"><div class="ctag">Efficiency</div><div class="cname">Clarity Check</div><div class="cdesc">Vague message? Paste it in. Get a version that is direct, clear, and actionable.</div></div>
         <div class="mcard g-efficiency" onclick="goModule('thread')"><div class="ctag">Efficiency</div><div class="cname">Decision Digest</div><div class="cdesc">Paste emails, meeting notes, Slack threads, board minutes &mdash; anything messy. Get: what was decided, what is open, who acts.</div></div>
-        <div class="mcard span3 g-efficiency" onclick="goModule('rh-translate')"><span class="new-badge">NEW</span><div class="ctag">Efficiency &mdash; Swiss</div><div class="cname">Rhetorical Translation</div><div class="cdesc">Translate any text from DE to FR to EN to IT &mdash; keeping the exact tone, authority, and argumentation style. Not just words &mdash; full rhetorical impact.</div></div>
+        <div class="mcard span3 g-efficiency" onclick="goModule('rh-translate')"><span class="new-badge">NEW</span><div class="ctag">Efficiency</div><div class="cname">Rhetorical Translation</div><div class="cdesc">Translate any text from DE to FR to EN to IT &mdash; keeping the exact tone, authority, and argumentation style. Not just words &mdash; full rhetorical impact.</div></div>
         <!-- CREATION -->
         <div class="mcard span2 g-creation" onclick="goModule('text-gen')"><div class="ctag">&#9670; Creation &mdash; Ghostwriter</div><div class="cname">Text Generator</div><div class="cdesc">Briefing in, finished text out. LinkedIn, speech, press release, email &mdash; any format, in the authentic brand voice.</div></div>
         <div class="mcard g-creation" onclick="goModule('review')"><div class="ctag">Creation &mdash; HR</div><div class="cname">Write Feedback</div><div class="cdesc">Rough notes about an employee in, precise written performance feedback out.</div></div>
@@ -524,6 +540,7 @@ body.adv .vubtn{display:block}
         <div class="mcard g-growth" onclick="goModule('debrief')"><span class="new-badge">NEW</span><div class="ctag">Growth &mdash; Audit</div><div class="cname">Debriefing</div><div class="cdesc">After a speech or announcement: what worked, what didn&rsquo;t, where did the audience react differently than expected?</div></div>
         <div class="mcard g-growth" onclick="goModule('fingerprint')"><div class="ctag">Growth</div><div class="cname">Language Over Time</div><div class="cdesc">How has the language of a person, a team, or the whole company shifted &mdash; under pressure, in crisis, after a leadership change?</div></div>
       </div>
+      </div><!-- /module-grid-wrap -->
     </div>
 
     <!-- BRAND VOICE -->
@@ -698,9 +715,15 @@ function connectWS(){
 
 // STATS
 async function loadStats(){
-  try{const r=await api('/api/analyze/history'+(clientId?'?clientId='+clientId:''));const d=await r.json();document.getElementById('stat-analyses').textContent=d.length;}catch{}
-  document.getElementById('stat-clients').textContent=clients.length;
-  document.getElementById('stat-people').textContent=people.length;
+  let analyses=0;
+  try{const r=await api('/api/analyze/history'+(clientId?'?clientId='+clientId:''));const d=await r.json();analyses=d.length;}catch{}
+  const nc=clients.length,np=people.length;
+  document.getElementById('stat-analyses').textContent=analyses;
+  document.getElementById('stat-clients').textContent=nc;
+  document.getElementById('stat-people').textContent=np;
+  const row=document.getElementById('stats-row');
+  if(row)row.style.display=(nc>0||np>0||analyses>0)?'flex':'none';
+  buildMostUsed();
 }
 
 // CLIENTS
@@ -893,6 +916,33 @@ function goPage(name){
   if(name==='memory')renderMemory();
 }
 function setMN(id){document.querySelectorAll('.mni').forEach(n=>n.classList.remove('active'));const el=document.getElementById('mn-'+id);if(el)el.classList.add('active');}
+
+// TOGGLE MODULE GRID
+function toggleModuleGrid(){
+  const wrap=document.getElementById('module-grid-wrap');
+  const arr=document.getElementById('browse-arr');
+  const open=wrap.style.display==='block';
+  wrap.style.display=open?'none':'block';
+  arr.classList.toggle('open',!open);
+}
+
+// MOST USED ROW — top 5 from history + always Pre-Meeting Brief first
+async function buildMostUsed(){
+  const pills=document.getElementById('mu-pills');
+  if(!pills)return;
+  const MOD_LABELS={'rp':'Rhetoric Profile','cf':'Language Over Time','la':'Culture Sync','rm':'Risk Management','st':'Challenger Test','si':'Simulate Impact','crisis':'Instant Crisis Response','as':'Clarity Check','tc':'Decision Digest','rh-translate':'Rhetorical Translation','text-gen':'Text Generator','pr':'Write Feedback','rw':'Write Appreciation','sparring':'2-Min. Training','debrief':'Debriefing','brand-voice-co':'Voice Profile','brand-voice-ind':'Voice Profile','pre-meeting':'Pre-Meeting Brief'};
+  const MOD_PAGE={'rp':'profiling','cf':'fingerprint','la':'language','rm':'risk','st':'stress','si':'impact','crisis':'crisis','as':'actionability','tc':'thread','rh-translate':'rh-translate','text-gen':'text-gen','pr':'review','rw':'recognition','sparring':'sparring','debrief':'debrief','brand-voice-co':'brand-voice','brand-voice-ind':'brand-voice','pre-meeting':'pre-meeting'};
+  let extra=[];
+  try{
+    const r=await api('/api/analyze/history'+(clientId?'?clientId='+clientId:''));
+    const rows=await r.json();
+    const counts={};
+    rows.forEach(h=>{if(h.module&&h.module!=='pre-meeting')counts[h.module]=(counts[h.module]||0)+1;});
+    extra=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([mod])=>({mod,page:MOD_PAGE[mod]||mod,label:MOD_LABELS[mod]||mod}));
+  }catch{}
+  pills.innerHTML=`<button class="mu-pill featured" onclick="goModule('pre-meeting')">Pre-Meeting Brief</button>`
+    +extra.map(m=>`<button class="mu-pill" onclick="${m.page==='brand-voice'?"goPage('brand-voice')":`goModule('${m.page}')`}">${m.label}</button>`).join('');
+}
 
 // MODULE FILTER (Concept B)
 function filterMods(group,btn){
