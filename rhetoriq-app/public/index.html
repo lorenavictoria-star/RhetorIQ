@@ -4,272 +4,238 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="RhetorIQ">
 <meta name="theme-color" content="#111">
-<link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="./icon-192.png">
 <title>RhetorIQ</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500;600&display=swap');
 :root {
-  --bg:#ffffff; --surface:#fafafa; --surface2:#f3f3f1;
-  --border:#e8e8e6; --border-strong:#ccccca;
-  --text:#111110; --text-muted:#88887f; --text-dim:#bfbfbb;
+  --bg:#ffffff; --surface:#f7f7f5; --border:#e5e5e3;
+  --text:#111; --muted:#888; --dim:#bbb;
   --safe-top:env(safe-area-inset-top); --safe-bottom:env(safe-area-inset-bottom);
-  --accent:#111110;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
+body{font-size:15px;line-height:1.6}
 
 /* LOGIN */
-#login-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center}
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px}
 #login-screen.hidden{display:none}
-.login-box{width:360px;max-width:90vw;padding:48px 40px;border:1px solid var(--border)}
-.login-logo{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;margin-bottom:4px}
-.login-sub{font-size:10px;letter-spacing:0.17em;text-transform:uppercase;color:var(--text-dim);margin-bottom:36px}
-.login-label{font-size:8.5px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);margin-bottom:7px;display:block}
-.login-input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:10px 13px;outline:none;margin-bottom:14px}
-.login-input:focus{border-color:var(--border-strong)}
-.login-btn{width:100%;padding:12px;background:var(--text);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;margin-top:8px;letter-spacing:0.03em}
-.login-btn:hover{opacity:0.85}
-.login-error{font-size:11.5px;color:#c00;margin-top:10px;display:none}
-.login-divider{text-align:center;font-size:10px;color:var(--text-dim);margin:20px 0}
-.client-token-link{font-size:11px;color:var(--text-muted);text-align:center;cursor:pointer;text-decoration:underline}
-#client-token-form{display:none}
+.login-box{width:100%;max-width:380px}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;margin-bottom:4px}
+.login-tagline{font-size:13px;color:var(--muted);margin-bottom:40px}
+.field-group{margin-bottom:16px}
+.field-label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:6px}
+.field-input{width:100%;padding:14px 16px;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:15px;color:var(--text);background:var(--surface);outline:none;border-radius:4px}
+.field-input:focus{border-color:#111}
+.login-btn{width:100%;padding:15px;background:#111;color:#fff;border:none;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;cursor:pointer;border-radius:4px;margin-top:8px}
+.login-btn:hover{background:#333}
+.login-err{color:#c00;font-size:13px;margin-top:8px;display:none}
+.login-switch{text-align:center;margin-top:20px;font-size:13px;color:var(--muted)}
+.login-switch a{color:#111;cursor:pointer;text-decoration:underline}
+#client-form{display:none}
 
-/* INSTALL */
-#install-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:300;background:var(--text);color:#fff;padding:11px 20px;padding-top:calc(11px + var(--safe-top));font-size:12px;align-items:center;justify-content:space-between;gap:12px}
-#install-banner.show{display:flex}
-#install-banner button{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 14px;border-radius:3px;font-size:11px;font-family:'Inter',sans-serif;cursor:pointer}
-#install-banner .dismiss{background:none;border:none;font-size:16px;opacity:0.5;cursor:pointer;padding:0 4px}
-#ios-hint{display:none;position:fixed;bottom:calc(80px + var(--safe-bottom));left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:14px 18px;border-radius:6px;font-size:12px;line-height:1.6;text-align:center;z-index:300;width:260px}
-#ios-hint.show{display:block}
+/* APP SHELL */
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 
-/* MODE BADGE */
-.mode-badge{display:inline-flex;align-items:center;gap:5px;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);padding:3px 8px;border:1px solid var(--border);margin-top:6px}
-.mode-badge.advisor{color:var(--text);border-color:var(--border-strong)}
-
-/* LAYOUT */
-.app{display:flex;height:100%}
-
-/* SIDEBAR */
-.sidebar{width:220px;flex-shrink:0;background:var(--bg);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100%;overflow-y:auto;padding-top:var(--safe-top)}
-.sidebar-logo{padding:26px 24px 20px;border-bottom:1px solid var(--border)}
-.logo-word{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;color:var(--text);letter-spacing:0.01em}
-.logo-sub{font-size:8.5px;letter-spacing:0.17em;text-transform:uppercase;color:var(--text-dim);margin-top:4px}
-.nav-section{padding:18px 24px 6px}
-.nav-section-label{font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px}
-.nav-item{display:flex;align-items:center;gap:9px;padding:7px 0;cursor:pointer}
-.nav-dot{width:4px;height:4px;border-radius:50%;background:var(--text-dim);flex-shrink:0;transition:background 0.12s}
-.nav-label{font-size:12px;color:var(--text-muted);font-weight:300;line-height:1.3;transition:color 0.12s}
-.nav-item:hover .nav-label{color:var(--text)}
-.nav-item:hover .nav-dot{background:var(--text)}
-.nav-item.active .nav-label{color:var(--text);font-weight:500}
-.nav-item.active .nav-dot{background:var(--text)}
-.nav-item.advisor-only{display:none}
-body.advisor-mode .nav-item.advisor-only{display:flex}
-.sidebar-footer{margin-top:auto;padding:16px 24px;border-top:1px solid var(--border);padding-bottom:calc(16px + var(--safe-bottom))}
-.user-name{font-size:11.5px;font-weight:500;color:var(--text)}
-.user-role{font-size:10px;color:var(--text-dim);margin-top:2px}
-.logout-btn{font-size:10px;color:var(--text-dim);cursor:pointer;margin-top:8px;text-decoration:underline}
-.logout-btn:hover{color:var(--text)}
+/* HEADER */
+.header{flex-shrink:0;border-bottom:1.5px solid var(--border);padding:0 32px;padding-top:var(--safe-top);height:calc(60px + var(--safe-top));display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
+.header-logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;cursor:pointer}
+.header-nav{display:flex;gap:4px;align-items:center}
+.nav-btn{padding:8px 14px;font-size:13px;font-weight:500;color:var(--muted);background:none;border:none;cursor:pointer;border-radius:4px;font-family:'Inter',sans-serif}
+.nav-btn:hover{background:var(--surface);color:var(--text)}
+.nav-btn.active{color:var(--text);background:var(--surface)}
+.nav-btn.advisor-only{display:none}
+body.advisor .nav-btn.advisor-only{display:inline-block}
+.header-user{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:12px}
+.signout-btn{font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline;background:none;border:none;font-family:'Inter',sans-serif}
+.ws-dot{width:7px;height:7px;border-radius:50%;background:var(--dim);display:inline-block}
+.ws-dot.on{background:#4a4}
 
 /* CLIENT BAR */
-.client-bar{display:none;background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 36px;align-items:center;gap:10px;font-size:11.5px}
-body.advisor-mode .client-bar{display:flex}
-.client-select{background:var(--bg);border:1px solid var(--border);font-family:'Inter',sans-serif;font-size:11.5px;color:var(--text);padding:5px 10px;outline:none;cursor:pointer}
-.client-label{color:var(--text-muted);font-size:11px}
-.new-client-btn{margin-left:auto;font-size:11px;padding:5px 14px;border:1px solid var(--border-strong);background:var(--text);color:#fff;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;transition:opacity 0.12s}
-.new-client-btn:hover{opacity:0.82}
-.ws-dot{width:6px;height:6px;border-radius:50%;background:var(--text-dim);display:inline-block;margin-right:4px;transition:background 0.3s}
-.ws-dot.connected{background:#3a3}
-
-/* MAIN */
-.main{flex:1;display:flex;flex-direction:column;min-width:0;height:100%}
-.topbar{flex-shrink:0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 36px;height:calc(56px + var(--safe-top));padding-top:var(--safe-top);background:var(--bg)}
-.topbar-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;color:var(--text)}
-.topbar-crumb{font-size:10px;color:var(--text-dim);margin-top:2px;letter-spacing:0.02em}
-.topbar-right{display:flex;gap:8px;align-items:center}
-.btn{font-size:11.5px;padding:7px 15px;font-family:'Inter',sans-serif;font-weight:400;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-muted);transition:all 0.12s}
-.btn:hover{border-color:var(--border-strong);color:var(--text)}
-.btn-dark{background:var(--text);color:#fff;border-color:var(--text);font-weight:500}
-.btn-dark:hover{opacity:0.85;color:#fff}
-.btn.advisor-only{display:none}
-body.advisor-mode .btn.advisor-only{display:inline-block}
+.client-bar{display:none;background:var(--surface);border-bottom:1px solid var(--border);padding:10px 32px;align-items:center;gap:12px;flex-shrink:0}
+body.advisor .client-bar{display:flex}
+.client-bar select{padding:8px 12px;border:1.5px solid var(--border);background:#fff;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);border-radius:4px;outline:none;cursor:pointer}
+.client-bar-label{font-size:13px;color:var(--muted)}
+.new-client-btn{margin-left:auto;padding:8px 18px;background:#111;color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px}
+.new-client-btn:hover{background:#333}
 
 /* CONTENT */
-.content{flex:1;overflow-y:auto;padding:32px 36px;padding-bottom:calc(32px + var(--safe-bottom));-webkit-overflow-scrolling:touch}
-.panel{display:none}
-.panel.active{display:block}
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.page{display:none;padding:36px 32px;max-width:860px;margin:0 auto;padding-bottom:calc(36px + var(--safe-bottom))}
+.page.active{display:block}
 
-/* SMART ROUTER */
-.smart-router{border:1px solid var(--border);padding:24px 28px;margin-bottom:32px;background:var(--surface)}
-.smart-router-label{font-size:8.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;display:block}
-.smart-router-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--text);margin-bottom:6px}
-.smart-router-sub{font-size:11.5px;color:var(--text-muted);font-weight:300;margin-bottom:16px}
-.smart-router-row{display:flex;gap:10px;align-items:flex-start}
-.smart-router textarea{min-height:80px;flex:1;background:var(--bg)}
-.smart-router-btn{padding:11px 22px;background:var(--text);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:11.5px;font-weight:500;cursor:pointer;white-space:nowrap;transition:opacity 0.12s;flex-shrink:0;margin-top:0}
-.smart-router-btn:hover{opacity:0.82}
-.router-hint{font-size:10.5px;color:var(--text-dim);margin-top:8px}
+/* HOME */
+.smart-router-section{background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:28px;margin-bottom:36px}
+.section-eyebrow{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px}
+.smart-router-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;margin-bottom:6px}
+.smart-router-sub{font-size:14px;color:var(--muted);margin-bottom:18px}
+.router-row{display:flex;gap:10px;align-items:flex-start}
+.router-textarea{flex:1;padding:14px 16px;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:#fff;resize:none;height:80px;outline:none;border-radius:4px}
+.router-textarea:focus{border-color:#111}
+.router-btn{padding:14px 22px;background:#111;color:#fff;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border-radius:4px;white-space:nowrap;flex-shrink:0}
+.router-btn:hover{background:#333}
+.router-status{font-size:13px;color:var(--muted);margin-top:10px;min-height:20px}
 
-/* DASHBOARD STATS */
-.dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:32px}
-.stat-block{background:var(--bg);padding:22px 24px}
-.stat-n{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:300;color:var(--text);line-height:1;margin-bottom:5px}
-.stat-l{font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:var(--text-dim)}
-.stat-block.advisor-only{display:none}
-body.advisor-mode .stat-block.advisor-only{display:block}
-.modules-label{font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:var(--text-dim);margin-bottom:14px}
-.module-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border:1px solid var(--border)}
-.module-tile{background:var(--bg);padding:20px 22px;cursor:pointer;transition:background 0.12s;position:relative}
-.module-tile:hover{background:var(--surface)}
-.module-tile::after{content:'&rarr;';position:absolute;right:18px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:13px;opacity:0;transition:opacity 0.12s}
-.module-tile:hover::after{opacity:1}
-.tile-tag{font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px}
-.tile-name{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:400;color:var(--text);margin-bottom:5px}
-.tile-desc{font-size:11px;color:var(--text-muted);line-height:1.55;font-weight:300}
-.tile-span2{grid-column:span 2}
+.modules-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:16px}
+.module-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.module-card{border:1.5px solid var(--border);border-radius:8px;padding:22px;cursor:pointer;background:#fff;transition:all 0.15s}
+.module-card:hover{border-color:#111;box-shadow:0 2px 12px rgba(0,0,0,0.08)}
+.card-tag{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px}
+.card-name{font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px}
+.card-desc{font-size:13px;color:var(--muted);line-height:1.55}
+.module-card.featured{grid-column:span 2;background:var(--surface)}
 
-/* MODULE */
-.module-header{margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid var(--border)}
-.module-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:300;color:var(--text);margin-bottom:8px}
-.module-sub{font-size:12px;color:var(--text-muted);line-height:1.7;max-width:560px;font-weight:300}
-.field-label{font-size:8.5px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;display:block}
-.input-block{margin-bottom:18px}
-textarea{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:12.5px;line-height:1.7;padding:13px 15px;resize:vertical;min-height:130px;outline:none;transition:border-color 0.12s;font-weight:300}
-textarea:focus{border-color:var(--border-strong)}
-textarea::placeholder{color:var(--text-dim)}
-select,input[type="text"],input[type="email"],input[type="password"]{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:12.5px;padding:9px 13px;outline:none;transition:border-color 0.12s;-webkit-appearance:none;font-weight:300}
-select:focus,input:focus{border-color:var(--border-strong)}
-.input-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
-.run-btn{padding:11px 28px;background:var(--text);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:opacity 0.12s;letter-spacing:0.03em}
-.run-btn:hover{opacity:0.82}
+/* MODULE PAGE */
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;margin-bottom:28px;background:none;border:none;font-family:'Inter',sans-serif;padding:0}
+.back-btn:hover{color:var(--text)}
+.module-title{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:400;margin-bottom:8px}
+.module-desc{font-size:15px;color:var(--muted);max-width:600px;margin-bottom:28px}
+.form-label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:8px}
+.form-group{margin-bottom:20px}
+textarea{width:100%;padding:14px 16px;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--surface);resize:vertical;min-height:140px;outline:none;border-radius:4px;line-height:1.7}
+textarea:focus{border-color:#111;background:#fff}
+textarea::placeholder{color:var(--dim)}
+select,input[type="text"]{width:100%;padding:12px 14px;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--surface);outline:none;border-radius:4px;-webkit-appearance:none}
+select:focus,input[type="text"]:focus{border-color:#111;background:#fff}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.run-btn{padding:15px 36px;background:#111;color:#fff;border:none;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;cursor:pointer;border-radius:4px;margin-top:4px}
+.run-btn:hover{background:#333}
 
 /* FILE UPLOAD */
-.file-upload-area{border:1px dashed var(--border-strong);padding:12px 16px;margin-bottom:18px;cursor:pointer;transition:all 0.12s;display:flex;align-items:center;gap:10px}
-.file-upload-area:hover{border-color:var(--text);background:var(--surface)}
-.file-upload-area input[type="file"]{display:none}
-.upload-icon{font-size:16px;color:var(--text-dim)}
-.upload-text{font-size:11px;color:var(--text-muted);font-weight:300}
-.upload-text strong{color:var(--text);font-weight:500}
-.file-badge{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;padding:3px 10px;border:1px solid var(--border);background:var(--surface2);margin-top:6px;color:var(--text-muted)}
-.file-badge .remove-file{cursor:pointer;color:var(--text-dim);font-size:12px}
-.file-badge .remove-file:hover{color:var(--text)}
+.upload-zone{border:1.5px dashed var(--border);border-radius:6px;padding:14px 18px;margin-bottom:16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.15s}
+.upload-zone:hover{border-color:#111;background:var(--surface)}
+.upload-icon{font-size:20px;color:var(--dim)}
+.upload-text{font-size:13px;color:var(--muted)}
+.upload-text strong{color:var(--text)}
+.upload-zone input[type="file"]{display:none}
+.file-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.file-tag{font-size:12px;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:20px;display:flex;align-items:center;gap:6px;color:var(--muted)}
+.file-tag button{background:none;border:none;cursor:pointer;font-size:14px;color:var(--dim);line-height:1}
 
 /* RESULT */
-.result-box{display:none;border:1px solid var(--border);margin-top:20px}
-.result-box.visible{display:block}
-.result-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface)}
-.result-tag{font-size:8.5px;text-transform:uppercase;letter-spacing:0.15em;color:var(--text-muted);font-weight:500}
-.copy-btn{font-size:10.5px;padding:4px 12px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.12s}
-.copy-btn:hover{border-color:var(--border-strong);color:var(--text)}
-.result-body{padding:20px;font-size:13px;line-height:1.85;color:var(--text);white-space:pre-wrap;font-weight:300}
-.loading{display:flex;align-items:center;gap:8px;padding:24px 20px;color:var(--text-muted);font-size:12px}
-.dot{width:4px;height:4px;border-radius:50%;background:var(--text);animation:pulse 1.2s ease-in-out infinite}
+.result-box{display:none;margin-top:24px;border:1.5px solid var(--border);border-radius:8px;overflow:hidden}
+.result-box.show{display:block}
+.result-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--border)}
+.result-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)}
+.copy-btn{padding:6px 14px;background:#fff;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:4px;color:var(--text)}
+.copy-btn:hover{border-color:#111}
+.result-body{padding:22px;font-size:14px;line-height:1.85;white-space:pre-wrap;color:var(--text)}
+.spinner{display:flex;gap:5px;padding:22px;align-items:center}
+.dot{width:5px;height:5px;border-radius:50%;background:#111;animation:blink 1.2s infinite}
 .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
-@keyframes pulse{0%,80%,100%{opacity:.15;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
-
-/* TABS */
-.tab-row{display:flex;margin-bottom:24px;border-bottom:1px solid var(--border)}
-.tab{padding:9px 18px;font-size:12px;cursor:pointer;border:none;border-bottom:2px solid transparent;color:var(--text-muted);background:transparent;font-family:'Inter',sans-serif;font-weight:400;transition:all 0.12s;margin-bottom:-1px}
-.tab.active{color:var(--text);border-bottom-color:var(--text);font-weight:500}
-.tab:hover:not(.active){color:var(--text)}
+@keyframes blink{0%,80%,100%{opacity:.15}40%{opacity:1}}
 
 /* BRAND VOICE TOGGLE */
-.brand-toggle{display:flex;gap:0;margin-bottom:28px;border:1px solid var(--border)}
-.brand-toggle-btn{flex:1;padding:10px 20px;font-size:12px;cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif;color:var(--text-muted);font-weight:400;transition:all 0.12s}
-.brand-toggle-btn.active{background:var(--text);color:#fff;font-weight:500}
+.toggle-row{display:flex;border:1.5px solid var(--border);border-radius:6px;margin-bottom:24px;overflow:hidden}
+.toggle-btn{flex:1;padding:12px;background:#fff;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;cursor:pointer;color:var(--muted)}
+.toggle-btn.active{background:#111;color:#fff;font-weight:600}
 .brand-section{display:none}
 .brand-section.active{display:block}
 
-/* HISTORY */
-.history-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)}
-.history-title{font-size:13px;color:var(--text);margin-bottom:3px}
-.history-meta{font-size:10.5px;color:var(--text-dim)}
-.history-badge{font-size:9.5px;padding:3px 10px;border:1px solid var(--border);color:var(--text-muted);background:var(--surface);white-space:nowrap}
+/* TEXT GEN TABS */
+.tab-row{display:flex;gap:0;border-bottom:1.5px solid var(--border);margin-bottom:24px}
+.tab{padding:10px 20px;background:none;border:none;border-bottom:2px solid transparent;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;margin-bottom:-1.5px}
+.tab.active{color:#111;border-bottom-color:#111}
 
-/* CLIENTS */
-.advisor-panel{display:none}
-body.advisor-mode .advisor-panel{display:block}
-.client-card{border:1px solid var(--border);padding:18px 20px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
-.client-card-name{font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:3px}
-.client-card-meta{font-size:11px;color:var(--text-muted)}
-.client-card-badge{font-size:9.5px;padding:3px 10px;border:1px solid var(--border);color:var(--text-muted);font-family:monospace}
+/* CLIENTS PAGE */
+.clients-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400}
+.client-card{border:1.5px solid var(--border);border-radius:8px;padding:20px 24px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.client-name{font-size:16px;font-weight:600;margin-bottom:3px}
+.client-meta{font-size:13px;color:var(--muted)}
+.client-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.btn-outline{padding:8px 14px;background:#fff;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;border-radius:4px;color:var(--text);font-weight:500}
+.btn-outline:hover{border-color:#111}
+.btn-danger{padding:8px 14px;background:#fff;border:1.5px solid #e00;font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;border-radius:4px;color:#c00;font-weight:500}
+.btn-danger:hover{background:#fff0f0}
+.token-code{font-family:monospace;font-size:11px;background:var(--surface);padding:4px 8px;border-radius:3px;color:var(--muted);margin-top:6px;display:inline-block}
+
+/* HISTORY */
+.history-item{padding:16px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.history-module{font-size:14px;font-weight:500}
+.history-date{font-size:12px;color:var(--muted)}
+.history-badge{font-size:11px;padding:3px 10px;background:var(--surface);border:1px solid var(--border);border-radius:20px;color:var(--muted);white-space:nowrap}
+
+/* STATS BAR */
+.stats-bar{display:flex;gap:12px;margin-bottom:32px}
+.stat{text-align:center;flex:1;padding:18px;border:1.5px solid var(--border);border-radius:8px;background:#fff}
+.stat-n{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;line-height:1}
+.stat-l{font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-top:4px}
+.stat.advisor-only{display:none}
+body.advisor .stat.advisor-only{display:block}
 
 /* MODAL */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center}
-.modal-overlay.show{display:flex}
-.modal{background:var(--bg);border:1px solid var(--border);padding:32px;width:440px;max-width:90vw}
-.modal-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--text);margin-bottom:6px}
-.modal-sub{font-size:12px;color:var(--text-muted);margin-bottom:24px;font-weight:300}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center;padding:24px}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:10px;padding:32px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,0.15)}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
 .modal-field{margin-bottom:16px}
-.modal-actions{display:flex;gap:10px;margin-top:24px;justify-content:flex-end}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
+.modal-actions button{padding:10px 20px;border-radius:4px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.btn-cancel{background:#fff;border:1.5px solid var(--border);color:var(--muted)}
+.btn-confirm{background:#111;border:1.5px solid #111;color:#fff}
+.btn-confirm:hover{background:#333}
 
-/* VIDEO SECTION */
-.video-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:20px}
-.video-card{border:1px solid var(--border);background:var(--surface);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;cursor:pointer;transition:background 0.12s;position:relative;overflow:hidden}
-.video-card:hover{background:var(--surface2)}
-.video-card video{width:100%;height:100%;object-fit:cover;display:none}
-.video-card.has-video video{display:block}
+/* VIDEOS */
+.video-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.video-card{border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
+.video-thumb{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;cursor:pointer;background:var(--surface)}
+.video-thumb video{width:100%;height:100%;object-fit:cover;display:none}
+.video-card.has-video .video-thumb video{display:block}
 .video-card.has-video .video-placeholder{display:none}
-.video-placeholder{text-align:center;padding:20px}
-.video-play-icon{font-size:28px;color:var(--text-dim);margin-bottom:6px}
-.video-label{font-size:11px;color:var(--text-muted);font-weight:300}
-.video-upload-btn{position:absolute;bottom:8px;right:8px;font-size:9.5px;padding:4px 10px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer;font-family:'Inter',sans-serif;display:none}
-body.advisor-mode .video-upload-btn{display:block}
+.video-placeholder{text-align:center;padding:24px}
+.play-icon{font-size:36px;color:var(--dim);margin-bottom:6px}
+.video-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.video-footer-name{font-size:13px;font-weight:600}
+.upload-video-btn{font-size:12px;padding:5px 12px;background:#fff;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;display:none}
+body.advisor .upload-video-btn{display:block}
+.upload-video-btn:hover{border-color:#111}
 .video-card input[type="file"]{display:none}
 
-/* CHATBOT */
-#chatbot-btn{position:fixed;bottom:calc(24px + var(--safe-bottom));right:24px;width:46px;height:46px;background:var(--text);border:none;border-radius:50%;cursor:pointer;z-index:150;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.18);transition:opacity 0.12s}
-#chatbot-btn:hover{opacity:0.85}
-#chatbot-panel{position:fixed;bottom:calc(80px + var(--safe-bottom));right:24px;width:340px;max-height:460px;background:var(--bg);border:1px solid var(--border);z-index:150;display:none;flex-direction:column;box-shadow:0 4px 24px rgba(0,0,0,0.12)}
-#chatbot-panel.open{display:flex}
-.chat-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.chat-header-title{font-size:12px;font-weight:500;color:var(--text)}
-.chat-header-sub{font-size:10px;color:var(--text-dim)}
-.chat-close{background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-dim)}
-.chat-messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
-.chat-msg{font-size:12px;line-height:1.65;max-width:85%;font-weight:300}
-.chat-msg.user{align-self:flex-end;background:var(--text);color:#fff;padding:8px 12px}
-.chat-msg.assistant{align-self:flex-start;background:var(--surface2);color:var(--text);padding:8px 12px}
-.chat-msg.assistant a{color:var(--text);text-decoration:underline;cursor:pointer}
-.chat-input-row{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
-.chat-input{flex:1;border:1px solid var(--border);background:var(--surface);font-family:'Inter',sans-serif;font-size:12px;padding:8px 10px;outline:none;color:var(--text)}
-.chat-input:focus{border-color:var(--border-strong)}
-.chat-send{padding:8px 14px;background:var(--text);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer}
+/* EMPTY STATE */
+.empty{text-align:center;padding:60px 24px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:0.4}
+.empty-text{font-size:15px}
 
-/* LIVE BADGE */
-.live-badge{display:none;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#3a3;border:1px solid #3a3;padding:2px 7px}
-body.client-mode .live-badge{display:inline-block}
+/* CHATBOT */
+#chat-btn{position:fixed;bottom:calc(24px + var(--safe-bottom));right:24px;width:52px;height:52px;background:#111;border:none;border-radius:50%;cursor:pointer;z-index:200;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.2);font-size:22px;color:#fff}
+#chat-btn:hover{background:#333}
+#chat-panel{position:fixed;bottom:calc(88px + var(--safe-bottom));right:24px;width:340px;max-height:480px;background:#fff;border:1.5px solid var(--border);border-radius:12px;z-index:200;display:none;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,0.12);overflow:hidden}
+#chat-panel.open{display:flex}
+.chat-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.chat-head-title{font-size:14px;font-weight:600}
+.chat-head-sub{font-size:11px;color:var(--muted)}
+.chat-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);line-height:1}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.chat-msg{font-size:13px;line-height:1.6;padding:10px 13px;border-radius:8px;max-width:88%}
+.chat-msg.user{background:#111;color:#fff;align-self:flex-end;border-radius:8px 8px 2px 8px}
+.chat-msg.bot{background:var(--surface);color:var(--text);align-self:flex-start;border-radius:8px 8px 8px 2px}
+.chat-foot{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.chat-input{flex:1;padding:9px 12px;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:13px;outline:none;border-radius:6px;color:var(--text)}
+.chat-input:focus{border-color:#111}
+.chat-send{padding:9px 16px;background:#111;color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px}
 
 /* MOBILE */
-.mobile-header{display:none;background:var(--bg);border-bottom:1px solid var(--border);padding:14px 20px;padding-top:calc(14px + var(--safe-top));flex-shrink:0}
-.mobile-page{font-size:11px;color:var(--text-muted);margin-top:2px}
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);padding:6px 0 calc(6px + var(--safe-bottom));z-index:100}
-.mobile-nav-inner{display:flex;justify-content:space-around}
-.mnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 8px;cursor:pointer;min-width:52px}
-.mnav-icon{font-size:16px;color:var(--text-dim);transition:color 0.12s}
-.mnav-label{font-size:8.5px;color:var(--text-dim);letter-spacing:0.04em;transition:color 0.12s}
-.mnav-item.active .mnav-icon,.mnav-item.active .mnav-label{color:var(--text)}
-
-@media(max-width:768px){
-  .sidebar,.topbar,.client-bar{display:none!important}
-  .mobile-header,.mobile-nav{display:block}
-  .app{flex-direction:column}
-  .main{height:100%}
-  .content{padding:18px 18px calc(80px + var(--safe-bottom))}
-  .dash-stats{grid-template-columns:repeat(2,1fr)}
+@media(max-width:700px){
+  .header{padding:0 18px;padding-top:var(--safe-top)}
+  .header-nav{display:none}
+  .page{padding:20px 18px;padding-bottom:calc(80px + var(--safe-bottom))}
   .module-grid{grid-template-columns:1fr}
-  .tile-span2{grid-column:span 1!important}
-  .input-row{grid-template-columns:1fr}
-  .module-title{font-size:24px}
-  .smart-router-row{flex-direction:column}
-  #chatbot-panel{width:calc(100vw - 32px);right:16px}
+  .module-card.featured{grid-column:span 1}
+  .row-2{grid-template-columns:1fr}
+  .stats-bar{gap:8px}
   .video-grid{grid-template-columns:1fr}
+  .router-row{flex-direction:column}
+  .client-bar{padding:10px 18px}
+  .mobile-nav{display:flex}
+  #chat-panel{width:calc(100vw - 32px);right:16px}
 }
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1.5px solid var(--border);padding:8px 0;padding-bottom:calc(8px + var(--safe-bottom));z-index:100;justify-content:space-around}
+.m-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;cursor:pointer;min-width:60px}
+.m-nav-icon{font-size:20px;color:var(--dim)}
+.m-nav-label{font-size:10px;color:var(--muted);font-weight:500}
+.m-nav-item.active .m-nav-icon,.m-nav-item.active .m-nav-label{color:#111}
 </style>
 </head>
 <body>
@@ -278,990 +244,575 @@ body.client-mode .live-badge{display:inline-block}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">RhetorIQ</div>
-    <div class="login-sub">by Lorena Lienhard</div>
-    <div id="advisor-login-form">
-      <label class="login-label">Email</label>
-      <input class="login-input" type="email" id="login-email" placeholder="advisor@example.com" autocomplete="email">
-      <label class="login-label">Password</label>
-      <input class="login-input" type="password" id="login-password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" autocomplete="current-password">
-      <button class="login-btn" onclick="loginAdvisor()">Sign in as Advisor</button>
-      <div class="login-error" id="login-error"></div>
-      <div class="login-divider">or</div>
-      <div class="client-token-link" onclick="showClientForm()">I have a client access token</div>
+    <div class="login-tagline">Executive Communication by Lorena Lienhard</div>
+    <div id="advisor-form">
+      <div class="field-group"><label class="field-label">Email</label><input class="field-input" type="email" id="adv-email" autocomplete="email" placeholder="your@email.com"></div>
+      <div class="field-group"><label class="field-label">Password</label><input class="field-input" type="password" id="adv-pw" autocomplete="current-password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"></div>
+      <button class="login-btn" onclick="loginAdvisor()">Sign in</button>
+      <div class="login-err" id="adv-err"></div>
+      <div class="login-switch">Client? <a onclick="showForm('client-form','advisor-form')">Enter your access token</a></div>
     </div>
-    <div id="client-token-form">
-      <label class="login-label">Client Access Token</label>
-      <input class="login-input" type="text" id="client-token-input" placeholder="Paste your token here">
+    <div id="client-form">
+      <div class="field-group"><label class="field-label">Access Token</label><input class="field-input" type="text" id="cl-token" placeholder="Paste your token here"></div>
       <button class="login-btn" onclick="loginClient()">Open Client View</button>
-      <div class="login-error" id="client-error"></div>
-      <div class="login-divider">or</div>
-      <div class="client-token-link" onclick="showAdvisorForm()">Sign in as Advisor</div>
+      <div class="login-err" id="cl-err"></div>
+      <div class="login-switch"><a onclick="showForm('advisor-form','client-form')">Back to Advisor login</a></div>
     </div>
   </div>
-</div>
-
-<div id="install-banner">
-  <span>Install RhetorIQ as an app</span>
-  <div style="display:flex;gap:8px;align-items:center">
-    <button onclick="installApp()">Install</button>
-    <button class="dismiss" onclick="document.getElementById('install-banner').classList.remove('show')">&times;</button>
-  </div>
-</div>
-<div id="ios-hint">
-  <span style="font-size:20px;display:block;margin-bottom:6px">&#11014;</span>
-  Tap <strong>Share</strong> &rarr;<br><strong>"Add to Home Screen"</strong>
-  <br><span style="margin-top:8px;display:inline-block;color:var(--text-dim);cursor:pointer;font-size:11px" onclick="document.getElementById('ios-hint').classList.remove('show')">Dismiss</span>
 </div>
 
 <!-- NEW CLIENT MODAL -->
-<div class="modal-overlay" id="new-client-modal">
+<div class="overlay" id="new-client-overlay">
   <div class="modal">
-    <div class="modal-title">New Client</div>
-    <div class="modal-sub">Add a new client. They will receive a dedicated access token.</div>
+    <div class="modal-title">Add New Client</div>
+    <div class="modal-sub">Create a client workspace with a secure access token.</div>
     <div class="modal-field"><label class="field-label">Company Name</label><input type="text" id="nc-name" placeholder="e.g. Acme AG"></div>
-    <div class="modal-field"><label class="field-label">Industry</label>
-      <select id="nc-industry"><option>Financial Services</option><option>Industry / Manufacturing</option><option>Tech / SaaS</option><option>Healthcare</option><option>Education</option><option>Public Sector</option><option>Other</option></select>
-    </div>
+    <div class="modal-field"><label class="field-label">Industry</label><select id="nc-industry"><option>Financial Services</option><option>Industry / Manufacturing</option><option>Tech / SaaS</option><option>Healthcare</option><option>Education</option><option>Public Sector</option><option>Other</option></select></div>
     <div class="modal-field"><label class="field-label">Primary Contact</label><input type="text" id="nc-contact" placeholder="e.g. CEO Martin Meier"></div>
     <div class="modal-actions">
-      <button class="btn" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-dark" onclick="addClient()">Add Client</button>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" onclick="addClient()">Create Client</button>
     </div>
   </div>
 </div>
 
+<!-- APP -->
+<div class="app" id="app" style="display:none">
+  <header class="header">
+    <div class="header-logo" onclick="goHome()">RhetorIQ</div>
+    <nav class="header-nav">
+      <button class="nav-btn active" id="nav-home" onclick="goHome()">Home</button>
+      <button class="nav-btn" id="nav-brand-voice" onclick="goPage('brand-voice')">Brand Voice</button>
+      <button class="nav-btn" id="nav-videos" onclick="goPage('videos')">Tutorials</button>
+      <button class="nav-btn" id="nav-history" onclick="goPage('history');loadHistory()">History</button>
+      <button class="nav-btn advisor-only" id="nav-clients" onclick="goPage('clients')">Clients</button>
+    </nav>
+    <div class="header-user">
+      <span class="ws-dot" id="ws-dot"></span>
+      <span id="user-name-display"></span>
+      <button class="signout-btn" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <div class="client-bar">
+    <span class="client-bar-label">Client:</span>
+    <select id="client-select" onchange="switchClient(this.value)"><option value="">Select client</option></select>
+    <button class="new-client-btn" onclick="openModal()">+ New Client</button>
+  </div>
+
+  <div class="content">
+
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+      <div class="smart-router-section">
+        <div class="section-eyebrow">Smart Prompt</div>
+        <div class="smart-router-title">What would you like to do?</div>
+        <div class="smart-router-sub">Describe your task &mdash; RhetorIQ automatically opens the right module.</div>
+        <div class="router-row">
+          <textarea class="router-textarea" id="router-input" placeholder='e.g. "Check if this press release could cause problems" or "Write a LinkedIn post for our CEO"'></textarea>
+          <button class="router-btn" onclick="routePrompt()">&#8594; Go</button>
+        </div>
+        <div class="router-status" id="router-status"></div>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat advisor-only"><div class="stat-n" id="stat-clients">0</div><div class="stat-l">Clients</div></div>
+        <div class="stat"><div class="stat-n" id="stat-analyses">0</div><div class="stat-l">Analyses</div></div>
+        <div class="stat"><div class="stat-n">12</div><div class="stat-l">Modules</div></div>
+      </div>
+
+      <div class="modules-title">All Modules</div>
+      <div class="module-grid">
+        <div class="module-card featured" onclick="goPage('brand-voice')">
+          <div class="card-tag">&#9670; Foundation</div>
+          <div class="card-name">Brand Voice DNA</div>
+          <div class="card-desc">Extract the complete communication fingerprint of a company or person. The master reference for all future content.</div>
+        </div>
+        <div class="module-card" onclick="goModule('profiling')"><div class="card-tag">Analysis</div><div class="card-name">Executive Rhetoric Profiling</div><div class="card-desc">Rhetorical DNA of a leader &mdash; argumentation, persuasion patterns, blind spots.</div></div>
+        <div class="module-card" onclick="goModule('fingerprint')"><div class="card-tag">Analysis</div><div class="card-name">Communication Fingerprint</div><div class="card-desc">How does language shift over time &mdash; under pressure, in crisis, at peak performance?</div></div>
+        <div class="module-card" onclick="goModule('language')"><div class="card-tag">Analysis</div><div class="card-name">Language Analytics</div><div class="card-desc">Where does leadership rhetoric and lived culture diverge?</div></div>
+        <div class="module-card" onclick="goModule('risk')"><div class="card-tag">Prevention</div><div class="card-name">Risk Management</div><div class="card-desc">Identify communication risks before anything goes out.</div></div>
+        <div class="module-card" onclick="goModule('stress')"><div class="card-tag">Prevention</div><div class="card-name">Argument Stress Test</div><div class="card-desc">Strongest counterarguments from multiple perspectives.</div></div>
+        <div class="module-card" onclick="goModule('impact')"><div class="card-tag">Prevention</div><div class="card-name">Strategic Impact Simulation</div><div class="card-desc">Simulate stakeholder reactions before any major announcement.</div></div>
+        <div class="module-card" onclick="goModule('actionability')"><div class="card-tag">Prevention</div><div class="card-name">Actionability Scanner</div><div class="card-desc">Translate vague directives into precise, operational language.</div></div>
+        <div class="module-card" onclick="goModule('thread')"><div class="card-tag">Prevention</div><div class="card-name">Thread Cleaner</div><div class="card-desc">50 emails &rarr; one clear decision matrix.</div></div>
+        <div class="module-card featured" onclick="goModule('text-gen')"><div class="card-tag">&#9670; Creation</div><div class="card-name">Text Generator</div><div class="card-desc">LinkedIn, website rewrite, press releases, speeches, B2B/B2C, internal docs &mdash; in the authentic brand voice.</div></div>
+        <div class="module-card" onclick="goModule('review')"><div class="card-tag">Creation</div><div class="card-name">Performance Review</div><div class="card-desc">Keywords in &mdash; rhetorically precise, development-oriented feedback out.</div></div>
+        <div class="module-card" onclick="goModule('recognition')"><div class="card-tag">Creation</div><div class="card-name">Recognition Writer</div><div class="card-desc">Authentic, calibrated recognition &mdash; tailored to the recipient.</div></div>
+      </div>
+    </div>
+
+    <!-- BRAND VOICE -->
+    <div class="page" id="page-brand-voice">
+      <button class="back-btn" onclick="goHome()">&#8592; Home</button>
+      <div class="module-title">Brand Voice DNA</div>
+      <div class="module-desc">Extract the complete linguistic fingerprint of a company or individual. The master reference for all communication.</div>
+      <div class="toggle-row">
+        <button class="toggle-btn active" onclick="switchBrand('company',this)">Company</button>
+        <button class="toggle-btn" onclick="switchBrand('individual',this)">Individual Person</button>
+      </div>
+      <div class="brand-section active" id="brand-company">
+        <div class="row-2">
+          <div class="form-group"><label class="form-label">Company Name</label><input type="text" id="bv-company" placeholder="e.g. Acme AG"></div>
+          <div class="form-group"><label class="form-label">Industry</label><select id="bv-industry"><option value="">Select</option><option>Financial Services</option><option>Industry / Manufacturing</option><option>Tech / SaaS</option><option>Healthcare</option><option>Education</option><option>Public Sector</option><option>Consulting</option><option>Other</option></select></div>
+        </div>
+        <div class="form-group"><label class="form-label">Core Values (optional)</label><input type="text" id="bv-values" placeholder="e.g. Precision, Trust, Swiss Quality"></div>
+        <div class="form-group"><label class="form-label">Target Audiences</label><input type="text" id="bv-audiences" placeholder="e.g. B2B CFOs, HR Directors, Investors"></div>
+        <div class="form-group">
+          <label class="form-label">Source Texts &mdash; website, reports, emails (separate with ---)</label>
+          <div class="upload-zone" onclick="document.getElementById('bv-co-file').click()"><span class="upload-icon">&#8679;</span><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><input type="file" id="bv-co-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-co-input','bv-co-tags')"></div>
+          <div class="file-tags" id="bv-co-tags"></div>
+          <textarea id="bv-co-input" placeholder="Paste company texts here. The more diverse, the more precise the DNA profile."></textarea>
+        </div>
+        <button class="run-btn" onclick="runModule('brand-voice-co')">Extract Brand Voice DNA</button>
+        <div class="result-box" id="brand-voice-co-result"><div class="result-header"><span class="result-label">Brand Voice DNA &mdash; Company</span><button class="copy-btn" onclick="copyResult('brand-voice-co-body')">Copy</button></div><div class="result-body" id="brand-voice-co-body"></div></div>
+      </div>
+      <div class="brand-section" id="brand-individual">
+        <div class="row-2">
+          <div class="form-group"><label class="form-label">Name</label><input type="text" id="bv-person" placeholder="e.g. CEO Anna Berger"></div>
+          <div class="form-group"><label class="form-label">Role / Context</label><input type="text" id="bv-person-role" placeholder="e.g. CEO, keynote speaker"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reference Texts &mdash; speeches, emails, LinkedIn posts (separate with ---)</label>
+          <div class="upload-zone" onclick="document.getElementById('bv-ind-file').click()"><span class="upload-icon">&#8679;</span><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><input type="file" id="bv-ind-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-ind-input','bv-ind-tags')"></div>
+          <div class="file-tags" id="bv-ind-tags"></div>
+          <textarea id="bv-ind-input" placeholder="Include texts from different contexts &mdash; formal and informal, internal and external."></textarea>
+        </div>
+        <button class="run-btn" onclick="runModule('brand-voice-ind')">Extract Voice DNA</button>
+        <div class="result-box" id="brand-voice-ind-result"><div class="result-header"><span class="result-label">Brand Voice DNA &mdash; Individual</span><button class="copy-btn" onclick="copyResult('brand-voice-ind-body')">Copy</button></div><div class="result-body" id="brand-voice-ind-body"></div></div>
+      </div>
+    </div>
+
+    <!-- MODULE (dynamic) -->
+    <div class="page" id="page-module">
+      <button class="back-btn" onclick="goHome()">&#8592; Home</button>
+      <div class="module-title" id="mod-title"></div>
+      <div class="module-desc" id="mod-desc"></div>
+      <div id="mod-form"></div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div class="page" id="page-clients">
+      <div class="clients-header"><div class="page-title">Clients</div><button class="new-client-btn" onclick="openModal()">+ New Client</button></div>
+      <div id="clients-list"><div class="empty"><div class="empty-icon">&#128101;</div><div class="empty-text">No clients yet.</div></div></div>
+    </div>
+
+    <!-- VIDEOS -->
+    <div class="page" id="page-videos">
+      <div class="page-title" style="margin-bottom:8px">Video Tutorials</div>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:28px">Step-by-step guides for every module.</p>
+      <div class="video-grid" id="video-grid"></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="page-history">
+      <div class="page-title" style="margin-bottom:24px">Analysis History</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Analyses are automatically deleted after 30 days.</p>
+      <div id="history-list"><div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-text">No analyses yet.</div></div></div>
+    </div>
+
+  </div>
+
+  <nav class="mobile-nav">
+    <div class="m-nav-item active" id="mn-home" onclick="goHome();setMN('home')"><div class="m-nav-icon">&#8962;</div><div class="m-nav-label">Home</div></div>
+    <div class="m-nav-item" id="mn-brand" onclick="goPage('brand-voice');setMN('brand')"><div class="m-nav-icon">&#9670;</div><div class="m-nav-label">Brand</div></div>
+    <div class="m-nav-item" id="mn-history" onclick="goPage('history');loadHistory();setMN('history')"><div class="m-nav-icon">&#128203;</div><div class="m-nav-label">History</div></div>
+    <div class="m-nav-item" id="mn-clients" style="display:none" onclick="goPage('clients');setMN('clients')"><div class="m-nav-icon">&#128101;</div><div class="m-nav-label">Clients</div></div>
+  </nav>
+</div>
+
 <!-- CHATBOT -->
-<button id="chatbot-btn" onclick="toggleChat()" title="Help & Navigation">&#128172;</button>
-<div id="chatbot-panel">
-  <div class="chat-header">
-    <div><div class="chat-header-title">RhetorIQ Assistant</div><div class="chat-header-sub">Ask me anything about the modules</div></div>
+<button id="chat-btn" onclick="toggleChat()">&#128172;</button>
+<div id="chat-panel">
+  <div class="chat-head">
+    <div><div class="chat-head-title">RhetorIQ Assistant</div><div class="chat-head-sub">Ask me anything</div></div>
     <button class="chat-close" onclick="toggleChat()">&times;</button>
   </div>
-  <div class="chat-messages" id="chat-messages">
-    <div class="chat-msg assistant">Hello! I'm your RhetorIQ guide. Ask me which module to use, how to get the best results, or what any feature does.</div>
+  <div class="chat-msgs" id="chat-msgs">
+    <div class="chat-msg bot">Hello! I can explain any module and help you get the best results. What would you like to know?</div>
   </div>
-  <div class="chat-input-row">
-    <input class="chat-input" id="chat-input" placeholder="Ask a question&#8230;" onkeydown="if(event.key==='Enter')sendChat()">
+  <div class="chat-foot">
+    <input class="chat-input" id="chat-input" placeholder="Ask a question&hellip;" onkeydown="if(event.key==='Enter')sendChat()">
     <button class="chat-send" onclick="sendChat()">Send</button>
   </div>
 </div>
 
-<div class="app">
-  <nav class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-word">RhetorIQ</div>
-      <div class="logo-sub">by Lorena Lienhard</div>
-      <div class="mode-badge advisor-only advisor">Advisor Mode</div>
-      <div class="mode-badge" id="client-badge-sidebar" style="display:none"></div>
-    </div>
-    <div class="nav-section">
-      <div class="nav-section-label">Overview</div>
-      <div class="nav-item active" onclick="showPanel('dashboard',this)"><div class="nav-dot"></div><div class="nav-label">Dashboard</div></div>
-      <div class="nav-item advisor-only" onclick="showPanel('clients',this)"><div class="nav-dot"></div><div class="nav-label">Clients</div></div>
-    </div>
-    <div class="nav-section">
-      <div class="nav-section-label">Foundation</div>
-      <div class="nav-item" onclick="showPanel('brand-voice',this)"><div class="nav-dot"></div><div class="nav-label">Brand Voice DNA</div></div>
-    </div>
-    <div class="nav-section">
-      <div class="nav-section-label">Analysis</div>
-      <div class="nav-item" onclick="showPanel('profiling',this)"><div class="nav-dot"></div><div class="nav-label">Executive Rhetoric Profiling</div></div>
-      <div class="nav-item" onclick="showPanel('fingerprint',this)"><div class="nav-dot"></div><div class="nav-label">Communication Fingerprint</div></div>
-      <div class="nav-item" onclick="showPanel('language',this)"><div class="nav-dot"></div><div class="nav-label">Language Analytics</div></div>
-    </div>
-    <div class="nav-section">
-      <div class="nav-section-label">Prevention</div>
-      <div class="nav-item" onclick="showPanel('risk',this)"><div class="nav-dot"></div><div class="nav-label">Risk Management</div></div>
-      <div class="nav-item" onclick="showPanel('stress',this)"><div class="nav-dot"></div><div class="nav-label">Argument Stress Test</div></div>
-      <div class="nav-item" onclick="showPanel('impact',this)"><div class="nav-dot"></div><div class="nav-label">Strategic Impact Simulation</div></div>
-      <div class="nav-item" onclick="showPanel('actionability',this)"><div class="nav-dot"></div><div class="nav-label">Actionability Scanner</div></div>
-      <div class="nav-item" onclick="showPanel('thread',this)"><div class="nav-dot"></div><div class="nav-label">Thread Cleaner</div></div>
-    </div>
-    <div class="nav-section">
-      <div class="nav-section-label">Creation</div>
-      <div class="nav-item" onclick="showPanel('text-gen',this)"><div class="nav-dot"></div><div class="nav-label">Text Generator</div></div>
-      <div class="nav-item" onclick="showPanel('review',this)"><div class="nav-dot"></div><div class="nav-label">Performance Review</div></div>
-      <div class="nav-item" onclick="showPanel('recognition',this)"><div class="nav-dot"></div><div class="nav-label">Recognition Writer</div></div>
-    </div>
-    <div class="nav-section">
-      <div class="nav-section-label">Resources</div>
-      <div class="nav-item" onclick="showPanel('videos',this)"><div class="nav-dot"></div><div class="nav-label">Video Tutorials</div></div>
-      <div class="nav-item" onclick="showPanel('history',this);loadHistory()"><div class="nav-dot"></div><div class="nav-label">All Analyses</div></div>
-    </div>
-    <div class="sidebar-footer">
-      <div class="user-name" id="sidebar-user-name">&mdash;</div>
-      <div class="user-role" id="sidebar-user-role">&mdash;</div>
-      <div class="logout-btn" onclick="logout()">Sign out</div>
-    </div>
-  </nav>
-
-  <div class="main">
-    <div class="mobile-header">
-      <div class="logo-word">RhetorIQ</div>
-      <div class="mobile-page" id="mobile-page">Dashboard</div>
-    </div>
-    <div class="client-bar">
-      <span class="client-label">Active client</span>
-      <select class="client-select" id="active-client-select" onchange="switchClient(this.value)"><option value="">&mdash; Select client &mdash;</option></select>
-      <span class="ws-dot" id="ws-dot"></span>
-      <button class="new-client-btn" onclick="openModal()">+ New Client</button>
-    </div>
-    <div class="topbar">
-      <div>
-        <div class="topbar-title" id="topbar-title">Dashboard</div>
-        <div class="topbar-crumb" id="topbar-crumb">Overview of all modules</div>
-      </div>
-      <div class="topbar-right">
-        <span class="live-badge">Live</span>
-        <button class="btn" onclick="showInstallHint()">Install App</button>
-        <button class="btn btn-dark advisor-only" onclick="openModal()">+ New Client</button>
-      </div>
-    </div>
-
-    <div class="content">
-
-      <!-- DASHBOARD -->
-      <div class="panel active" id="panel-dashboard">
-        <!-- Smart Router -->
-        <div class="smart-router">
-          <span class="smart-router-label">Smart Prompt</span>
-          <div class="smart-router-title">What do you want to analyse or create?</div>
-          <div class="smart-router-sub">Describe your goal &mdash; RhetorIQ automatically routes to the right module.</div>
-          <div class="smart-router-row">
-            <textarea id="router-input" placeholder='e.g. "I want to check if this press release could cause problems with employees" or "Write a LinkedIn post for our CEO"' style="min-height:80px"></textarea>
-            <button class="smart-router-btn" onclick="routePrompt()">&rarr; Analyse</button>
-          </div>
-          <div class="router-hint" id="router-hint"></div>
-        </div>
-
-        <div class="dash-stats">
-          <div class="stat-block advisor-only"><div class="stat-n" id="stat-clients">0</div><div class="stat-l">Active Clients</div></div>
-          <div class="stat-block"><div class="stat-n" id="stat-analyses">0</div><div class="stat-l">Analyses Run</div></div>
-          <div class="stat-block"><div class="stat-n">12</div><div class="stat-l">Modules</div></div>
-        </div>
-
-        <div class="modules-label">Foundation</div>
-        <div class="module-grid" style="margin-bottom:1px">
-          <div class="module-tile tile-span2" onclick="showPanel('brand-voice',null)">
-            <div class="tile-tag">Brand DNA</div>
-            <div class="tile-name">Brand Voice DNA</div>
-            <div class="tile-desc">The complete linguistic fingerprint of a company or individual &mdash; the master reference for all communication. Company-wide or person-specific.</div>
-          </div>
-        </div>
-
-        <div class="modules-label" style="margin-top:24px">Analysis</div>
-        <div class="module-grid" style="margin-bottom:1px">
-          <div class="module-tile" onclick="showPanel('profiling',null)"><div class="tile-tag">Profiling</div><div class="tile-name">Executive Rhetoric Profiling</div><div class="tile-desc">Rhetorical DNA of a leader &mdash; argumentation logic, persuasion patterns, strategic blind spots.</div></div>
-          <div class="module-tile" onclick="showPanel('fingerprint',null)"><div class="tile-tag">Development</div><div class="tile-name">Communication Fingerprint</div><div class="tile-desc">How does language shift over time &mdash; under pressure, in crisis, at peak performance?</div></div>
-          <div class="module-tile tile-span2" onclick="showPanel('language',null)"><div class="tile-tag">Diagnostics</div><div class="tile-name">Language Analytics</div><div class="tile-desc">Where does leadership rhetoric and lived culture diverge? Diagnosis through internal texts.</div></div>
-        </div>
-
-        <div class="modules-label" style="margin-top:24px">Prevention</div>
-        <div class="module-grid" style="margin-bottom:1px">
-          <div class="module-tile" onclick="showPanel('risk',null)"><div class="tile-tag">Prevention</div><div class="tile-name">Risk Management</div><div class="tile-desc">Identify reception risks before communication goes out.</div></div>
-          <div class="module-tile" onclick="showPanel('stress',null)"><div class="tile-tag">Preparation</div><div class="tile-name">Argument Stress Test</div><div class="tile-desc">Strongest counterarguments from three perspectives.</div></div>
-          <div class="module-tile" onclick="showPanel('impact',null)"><div class="tile-tag">Simulation</div><div class="tile-name">Strategic Impact Simulation</div><div class="tile-desc">Simulate stakeholder reactions before any major announcement.</div></div>
-          <div class="module-tile" onclick="showPanel('actionability',null)"><div class="tile-tag">Clarity</div><div class="tile-name">Actionability Scanner</div><div class="tile-desc">Translate vague directives into precise, operational language.</div></div>
-          <div class="module-tile tile-span2" onclick="showPanel('thread',null)"><div class="tile-tag">Decision Logic</div><div class="tile-name">Thread Cleaner</div><div class="tile-desc">50 emails &rarr; half a page decision matrix.</div></div>
-        </div>
-
-        <div class="modules-label" style="margin-top:24px">Creation</div>
-        <div class="module-grid">
-          <div class="module-tile tile-span2" onclick="showPanel('text-gen',null)"><div class="tile-tag">Text Generator</div><div class="tile-name">Text Generator</div><div class="tile-desc">LinkedIn posts, website copy, B2B/B2C texts, press releases, speeches, internal documents &mdash; generated in the authentic brand or personal voice.</div></div>
-          <div class="module-tile" onclick="showPanel('review',null)"><div class="tile-tag">HR</div><div class="tile-name">Performance Review</div><div class="tile-desc">Keywords in &mdash; rhetorically precise, development-oriented feedback out.</div></div>
-          <div class="module-tile" onclick="showPanel('recognition',null)"><div class="tile-tag">Leadership Culture</div><div class="tile-name">Recognition Writer</div><div class="tile-desc">Culturally calibrated, authentic praise &mdash; tailored to the recipient type.</div></div>
-        </div>
-      </div>
-
-      <!-- CLIENTS -->
-      <div class="panel advisor-panel" id="panel-clients">
-        <div class="module-header"><div class="module-title">Clients</div><div class="module-sub">Manage your client workspace. Each client gets a dedicated access token.</div></div>
-        <div style="display:flex;justify-content:flex-end;margin-bottom:16px"><button class="btn btn-dark" onclick="openModal()">+ New Client</button></div>
-        <div id="client-list"><div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No clients yet.</div></div>
-      </div>
-
-      <!-- BRAND VOICE DNA -->
-      <div class="panel" id="panel-brand-voice">
-        <div class="module-header">
-          <div class="module-title">Brand Voice DNA</div>
-          <div class="module-sub">Extract the complete linguistic fingerprint &mdash; for an entire company or a specific individual. This becomes the master reference for all communication, ghostwriting, and content strategy.</div>
-        </div>
-        <div class="brand-toggle">
-          <button class="brand-toggle-btn active" onclick="switchBrandMode('company',this)">Company</button>
-          <button class="brand-toggle-btn" onclick="switchBrandMode('individual',this)">Individual Person</button>
-        </div>
-
-        <!-- COMPANY -->
-        <div class="brand-section active" id="brand-company">
-          <div class="input-row">
-            <div><label class="field-label">Company Name</label><input type="text" id="bv-company" placeholder="e.g. Acme AG"></div>
-            <div><label class="field-label">Industry</label>
-              <select id="bv-industry"><option value="">Select</option><option>Financial Services</option><option>Industry / Manufacturing</option><option>Tech / SaaS</option><option>Healthcare</option><option>Education</option><option>Public Sector</option><option>Retail / Consumer</option><option>Consulting</option><option>Other</option></select>
-            </div>
-          </div>
-          <div class="input-block">
-            <label class="field-label">Core Values / Brand Positioning (optional)</label>
-            <input type="text" id="bv-values" placeholder="e.g. Precision, Trust, Swiss Quality">
-          </div>
-          <div class="input-block">
-            <label class="field-label">Primary Target Audiences</label>
-            <input type="text" id="bv-audiences" placeholder="e.g. B2B CFOs, HR Directors, International Investors">
-          </div>
-          <div class="input-block">
-            <label class="field-label">Source texts &mdash; website copy, annual reports, marketing materials, internal communications (separate with ---)</label>
-            <textarea id="bv-co-input" placeholder="Paste company texts here. The more diverse (website, reports, emails, social media), the more precise the DNA profile." style="min-height:180px"></textarea>
-          </div>
-          <div class="file-upload-area" onclick="triggerUpload('bv-co-file','bv-co-input')">
-            <input type="file" id="bv-co-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-co-input')">
-            <span class="upload-icon">&uarr;</span>
-            <div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><div class="upload-text" style="margin-top:2px">or drag & drop &#183; multiple files supported</div></div>
-          </div>
-          <div id="bv-co-files"></div>
-          <button class="run-btn" onclick="run('brand-voice-co')">Extract Brand Voice DNA</button>
-          <div class="result-box" id="bv-co-result">
-            <div class="result-top"><span class="result-tag">Brand Voice DNA &mdash; Company</span><button class="copy-btn" onclick="copyResult('bv-co-body')">Copy</button></div>
-            <div class="result-body" id="bv-co-body"></div>
-          </div>
-        </div>
-
-        <!-- INDIVIDUAL -->
-        <div class="brand-section" id="brand-individual">
-          <div class="input-row">
-            <div><label class="field-label">Name</label><input type="text" id="bv-person" placeholder="e.g. CEO Anna Berger"></div>
-            <div><label class="field-label">Role / Context</label><input type="text" id="bv-person-role" placeholder="e.g. CEO, keynote speaker, LinkedIn author"></div>
-          </div>
-          <div class="input-block">
-            <label class="field-label">Reference texts &mdash; speeches, emails, LinkedIn posts, interviews (separate with ---)</label>
-            <textarea id="bv-ind-input" placeholder="The more diverse the sources, the more precise the voice profile. Include texts from different contexts &mdash; formal and informal, internal and external." style="min-height:180px"></textarea>
-          </div>
-          <div class="file-upload-area" onclick="triggerUpload('bv-ind-file','bv-ind-input')">
-            <input type="file" id="bv-ind-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-ind-input')">
-            <span class="upload-icon">&uarr;</span>
-            <div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div><div class="upload-text" style="margin-top:2px">or drag & drop &#183; multiple files supported</div></div>
-          </div>
-          <div id="bv-ind-files"></div>
-          <button class="run-btn" onclick="run('brand-voice-ind')">Extract Voice DNA</button>
-          <div class="result-box" id="bv-ind-result">
-            <div class="result-top"><span class="result-tag">Brand Voice DNA &mdash; Individual</span><button class="copy-btn" onclick="copyResult('bv-ind-body')">Copy</button></div>
-            <div class="result-body" id="bv-ind-body"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- EXECUTIVE RHETORIC PROFILING -->
-      <div class="panel" id="panel-profiling">
-        <div class="module-header"><div class="module-title">Executive Rhetoric Profiling</div><div class="module-sub">Analyses the rhetorical architecture of leadership texts: argumentation logic, Ethos/Pathos/Logos distribution, linguistic signatures, and strategic blind spots.</div></div>
-        <div class="input-block"><label class="field-label">Texts from the leader</label><textarea id="rp-input" placeholder="Speeches, emails, LinkedIn posts, internal memos &mdash; separate with ---."></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('rp-file','rp-input')"><input type="file" id="rp-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'rp-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div></div></div>
-        <div id="rp-files"></div>
-        <div class="input-row">
-          <div><label class="field-label">Name / Role</label><input type="text" id="rp-name" placeholder="e.g. CEO Martin Meier"></div>
-          <div><label class="field-label">Industry</label><select id="rp-industry"><option value="">Select industry</option><option>Financial Services</option><option>Industry / Manufacturing</option><option>Tech / SaaS</option><option>Healthcare</option><option>Education</option><option>Public Sector</option><option>Other</option></select></div>
-        </div>
-        <button class="run-btn" onclick="run('rp')">Create Rhetoric Profile</button>
-        <div class="result-box" id="rp-result"><div class="result-top"><span class="result-tag">Executive Rhetoric Profile</span><button class="copy-btn" onclick="copyResult('rp-body')">Copy</button></div><div class="result-body" id="rp-body"></div></div>
-      </div>
-
-      <!-- COMMUNICATION FINGERPRINT -->
-      <div class="panel" id="panel-fingerprint">
-        <div class="module-header"><div class="module-title">Communication Fingerprint</div><div class="module-sub">Reveals how language shifts over time &mdash; under pressure, in crisis, at peak performance.</div></div>
-        <div class="input-block"><label class="field-label">Texts &mdash; separated by time or context (use --- with a date/context label)</label><textarea id="cf-input" placeholder="2024-01 &mdash; Quarterly Report&#10;[text]&#10;---&#10;2024-06 &mdash; Crisis Communication&#10;[text]" style="min-height:160px"></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('cf-file','cf-input')"><input type="file" id="cf-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'cf-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div></div></div>
-        <div id="cf-files"></div>
-        <div class="input-row">
-          <div><label class="field-label">Name / Role</label><input type="text" id="cf-name" placeholder="e.g. CFO Anna Berger"></div>
-          <div><label class="field-label">Analysis Focus</label><select id="cf-focus"><option>Overall development</option><option>Behaviour under pressure</option><option>Crisis rhetoric vs. normal operations</option><option>Trust-building over time</option><option>Tone drift</option></select></div>
-        </div>
-        <button class="run-btn" onclick="run('cf')">Analyse Fingerprint</button>
-        <div class="result-box" id="cf-result"><div class="result-top"><span class="result-tag">Communication Fingerprint Report</span><button class="copy-btn" onclick="copyResult('cf-body')">Copy</button></div><div class="result-body" id="cf-body"></div></div>
-      </div>
-
-      <!-- LANGUAGE ANALYTICS -->
-      <div class="panel" id="panel-language">
-        <div class="module-header"><div class="module-title">Language Analytics</div><div class="module-sub">Diagnoses where leadership rhetoric and lived culture diverge.</div></div>
-        <div class="input-block"><label class="field-label">Internal texts &mdash; separate with ---</label><textarea id="la-input" placeholder="Emails, meeting minutes, strategy papers, HR communications." style="min-height:160px"></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('la-file','la-input')"><input type="file" id="la-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'la-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx</div></div></div>
-        <div id="la-files"></div>
-        <div class="input-row">
-          <div><label class="field-label">Company Size</label><select id="la-size"><option>10&#8211;50 employees</option><option>50&#8211;200 employees</option><option>200&#8211;1,000 employees</option><option>1,000+ employees</option></select></div>
-          <div><label class="field-label">Analysis Focus</label><select id="la-focus"><option>Leadership vs. employee communication</option><option>Cultural consistency</option><option>Change communication</option><option>Trust climate in language</option></select></div>
-        </div>
-        <button class="run-btn" onclick="run('la')">Run Language Analytics</button>
-        <div class="result-box" id="la-result"><div class="result-top"><span class="result-tag">Language Analytics Report</span><button class="copy-btn" onclick="copyResult('la-body')">Copy</button></div><div class="result-body" id="la-body"></div></div>
-      </div>
-
-      <!-- RISK MANAGEMENT -->
-      <div class="panel" id="panel-risk">
-        <div class="module-header"><div class="module-title">Risk Management</div><div class="module-sub">Evaluates reception risks, flags dangerous formulations, recommends corrections &mdash; before communication goes out.</div></div>
-        <div class="input-block"><label class="field-label">Planned communication</label><textarea id="rm-input" placeholder="Press release, CEO statement, internal announcement, investor letter..."></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('rm-file','rm-input')"><input type="file" id="rm-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'rm-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload document</strong> &mdash; .txt, .pdf, .docx</div></div></div>
-        <div id="rm-files"></div>
-        <div class="input-row">
-          <div><label class="field-label">Target audience</label><select id="rm-audience"><option value="">Select audience</option><option>Employees</option><option>Investors</option><option>Media / Public</option><option>Customers</option><option>Board / Executive team</option><option>All simultaneously</option></select></div>
-          <div><label class="field-label">Context</label><select id="rm-context"><option value="">Select situation</option><option>Strategy shift</option><option>Layoffs / Restructuring</option><option>Merger / Acquisition</option><option>Crisis / Reputational damage</option><option>New product / Launch</option><option>Cultural change</option></select></div>
-        </div>
-        <button class="run-btn" onclick="run('rm')">Run Risk Analysis</button>
-        <div class="result-box" id="rm-result"><div class="result-top"><span class="result-tag">Communication Risk Assessment</span><button class="copy-btn" onclick="copyResult('rm-body')">Copy</button></div><div class="result-body" id="rm-body"></div></div>
-      </div>
-
-      <!-- ARGUMENT STRESS TEST -->
-      <div class="panel" id="panel-stress">
-        <div class="module-header"><div class="module-title">Argument Stress Test</div><div class="module-sub">Generates the strongest counterarguments from multiple perspectives. Preparation for interviews, board meetings, shareholder assemblies.</div></div>
-        <div class="input-block"><label class="field-label">Thesis / Position / Key Message</label><textarea id="st-input" style="min-height:110px" placeholder='e.g. "We are introducing a new performance evaluation system that variabilises 20% of bonuses."'></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('st-file','st-input')"><input type="file" id="st-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'st-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
-        <div id="st-files"></div>
-        <div class="input-row">
-          <div><label class="field-label">Perspectives</label><select id="st-perspectives"><option>All three (Media, Employees, Competitors)</option><option>Media / Public</option><option>Employees / Works council</option><option>Investors / Analysts</option><option>Critics / NGOs</option></select></div>
-          <div><label class="field-label">Intensity</label><select id="st-intensity"><option>Moderate &mdash; fair criticism</option><option>Sharp &mdash; aggressive questioning</option><option>Maximum &mdash; hardest possible attack</option></select></div>
-        </div>
-        <button class="run-btn" onclick="run('st')">Run Stress Test</button>
-        <div class="result-box" id="st-result"><div class="result-top"><span class="result-tag">Argument Stress Test Report</span><button class="copy-btn" onclick="copyResult('st-body')">Copy</button></div><div class="result-body" id="st-body"></div></div>
-      </div>
-
-      <!-- STRATEGIC IMPACT SIMULATION -->
-      <div class="panel" id="panel-impact">
-        <div class="module-header"><div class="module-title">Strategic Impact Simulation</div><div class="module-sub">Simulates how different stakeholder groups will react &mdash; strategic adjustments before it's too late.</div></div>
-        <div class="input-block"><label class="field-label">Planned communication</label><textarea id="si-input" placeholder="Merger announcement, layoffs, strategy shift, leadership change..."></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('si-file','si-input')"><input type="file" id="si-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'si-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
-        <div id="si-files"></div>
-        <div class="input-row">
-          <div><label class="field-label">Stakeholders</label><select id="si-stakeholders"><option>All groups</option><option>Employees only</option><option>Media only</option><option>Investors only</option><option>Employees + Media</option></select></div>
-          <div><label class="field-label">Strategic context</label><select id="si-severity"><option>Low &mdash; routine change</option><option>Medium &mdash; noticeable impact</option><option>High &mdash; significant transformation</option><option>Critical &mdash; existential crisis</option></select></div>
-        </div>
-        <button class="run-btn" onclick="run('si')">Run Impact Simulation</button>
-        <div class="result-box" id="si-result"><div class="result-top"><span class="result-tag">Strategic Impact Report</span><button class="copy-btn" onclick="copyResult('si-body')">Copy</button></div><div class="result-body" id="si-body"></div></div>
-      </div>
-
-      <!-- ACTIONABILITY SCANNER -->
-      <div class="panel" id="panel-actionability">
-        <div class="module-header"><div class="module-title">Actionability Scanner</div><div class="module-sub">Scans for vagueness, missing deadlines, unclear responsibilities &mdash; translates into operational language.</div></div>
-        <div class="input-block"><label class="field-label">Instruction / Briefing / Delegation</label><textarea id="as-input" placeholder='e.g. "We should take a look at the customer satisfaction topic and see what we can improve."'></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('as-file','as-input')"><input type="file" id="as-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'as-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
-        <div id="as-files"></div>
-        <div class="input-row">
-          <div><label class="field-label">Context</label><select id="as-context"><option>Email delegation</option><option>Meeting minutes</option><option>Project briefing</option><option>Strategy document</option><option>Verbal instruction to be written up</option></select></div>
-          <div><label class="field-label">Recipient</label><select id="as-recipient"><option>Direct reports</option><option>Project team</option><option>Department head</option><option>External partners</option></select></div>
-        </div>
-        <button class="run-btn" onclick="run('as')">Scan for Actionability</button>
-        <div class="result-box" id="as-result"><div class="result-top"><span class="result-tag">Actionability Report</span><button class="copy-btn" onclick="copyResult('as-body')">Copy</button></div><div class="result-body" id="as-body"></div></div>
-      </div>
-
-      <!-- THREAD CLEANER -->
-      <div class="panel" id="panel-thread">
-        <div class="module-header"><div class="module-title">Thread Cleaner</div><div class="module-sub">Extracts the logical decision structure from email chains, Teams or Slack threads.</div></div>
-        <div class="input-block"><label class="field-label">Full thread &mdash; paste entirely</label><textarea id="tc-input" placeholder="Paste the complete thread here." style="min-height:180px"></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('tc-file','tc-input')"><input type="file" id="tc-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'tc-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
-        <div id="tc-files"></div>
-        <div class="input-row">
-          <div><label class="field-label">Source</label><select id="tc-source"><option>Email thread</option><option>Teams chat</option><option>Slack channel</option><option>Meeting chat</option></select></div>
-          <div><label class="field-label">Output goal</label><select id="tc-goal"><option>Decision matrix for CEO / Executive team</option><option>Action recommendation for project lead</option><option>Summary for absent participants</option><option>Identify next steps</option></select></div>
-        </div>
-        <button class="run-btn" onclick="run('tc')">Clean Thread</button>
-        <div class="result-box" id="tc-result"><div class="result-top"><span class="result-tag">Thread &mdash; Decision Matrix</span><button class="copy-btn" onclick="copyResult('tc-body')">Copy</button></div><div class="result-body" id="tc-body"></div></div>
-      </div>
-
-      <!-- TEXT GENERATOR -->
-      <div class="panel" id="panel-text-gen">
-        <div class="module-header">
-          <div class="module-title">Text Generator</div>
-          <div class="module-sub">Generate publication-ready texts in any format &mdash; in the authentic brand or personal voice. From LinkedIn posts to website rewrites, B2B pitches to internal communications.</div>
-        </div>
-        <div class="tab-row">
-          <button class="tab active" onclick="switchTab(this,'tg-cal-section','tg-gen-section')">1. Calibrate Voice</button>
-          <button class="tab" onclick="switchTab(this,'tg-gen-section','tg-cal-section')">2. Generate Text</button>
-        </div>
-
-        <div id="tg-cal-section">
-          <div class="module-sub" style="margin-bottom:20px">Optional: calibrate the voice/brand first for more authentic output. Or skip to Generate and describe the desired style in the briefing.</div>
-          <div class="input-block"><label class="field-label">Reference texts (paste or upload &mdash; the voice to write in)</label><textarea id="tg-ref" placeholder="LinkedIn posts, website copy, speeches, emails, annual report sections &mdash; separate with ---."></textarea></div>
-          <div class="file-upload-area" onclick="triggerUpload('tg-ref-file','tg-ref')"><input type="file" id="tg-ref-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload reference documents</strong></div></div></div>
-          <div id="tg-ref-files"></div>
-          <button class="run-btn" onclick="run('vs-cal')">Calibrate Voice Profile</button>
-          <div class="result-box" id="vs-cal-result"><div class="result-top"><span class="result-tag">Voice Profile</span><button class="copy-btn" onclick="copyResult('vs-cal-body')">Copy</button></div><div class="result-body" id="vs-cal-body"></div></div>
-        </div>
-
-        <div id="tg-gen-section" style="display:none">
-          <div class="input-block"><label class="field-label">Briefing / Content to work with</label><textarea id="tg-task" placeholder="Describe what you want to create &mdash; or paste source content to rewrite. Include key messages, facts, tone guidance." style="min-height:120px"></textarea></div>
-          <div class="file-upload-area" onclick="triggerUpload('tg-task-file','tg-task')"><input type="file" id="tg-task-file" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload source document to rewrite</strong></div></div></div>
-          <div id="tg-task-files"></div>
-          <div class="input-row">
-            <div><label class="field-label">Format</label>
-              <select id="tg-format">
-                <optgroup label="Digital / Social">
-                  <option>LinkedIn Post</option>
-                  <option>LinkedIn Article</option>
-                  <option>Instagram Caption</option>
-                  <option>Twitter / X Thread</option>
-                  <option>Newsletter</option>
-                </optgroup>
-                <optgroup label="Website">
-                  <option>Website &mdash; Homepage (B2C)</option>
-                  <option>Website &mdash; Homepage (B2B)</option>
-                  <option>Website &mdash; About / Company</option>
-                  <option>Website &mdash; Product / Service Page</option>
-                  <option>Website &mdash; Landing Page</option>
-                  <option>Website &mdash; Full rewrite</option>
-                </optgroup>
-                <optgroup label="External Communication">
-                  <option>Press Release</option>
-                  <option>Press Quote</option>
-                  <option>Investor Letter</option>
-                  <option>Customer Letter</option>
-                  <option>Partner / B2B Proposal</option>
-                  <option>Crisis Statement</option>
-                  <option>External Email</option>
-                </optgroup>
-                <optgroup label="Internal Communication">
-                  <option>Internal Announcement</option>
-                  <option>Internal Email</option>
-                  <option>Town Hall Intro / Script</option>
-                  <option>All-Hands Presentation Script</option>
-                  <option>Internal Document Rewrite</option>
-                </optgroup>
-                <optgroup label="Speaking">
-                  <option>Speech / Keynote</option>
-                  <option>Keynote Excerpt</option>
-                  <option>Talking Points</option>
-                  <option>Interview Preparation</option>
-                </optgroup>
-                <optgroup label="HR / Leadership">
-                  <option>Job Posting (B2C tone)</option>
-                  <option>Job Posting (B2B tone)</option>
-                  <option>Employer Branding Text</option>
-                  <option>Leadership Memo</option>
-                </optgroup>
-              </select>
-            </div>
-            <div><label class="field-label">Audience</label>
-              <select id="tg-audience">
-                <option>B2B &mdash; Senior Executives (C-Suite)</option>
-                <option>B2B &mdash; HR / People Leaders</option>
-                <option>B2B &mdash; Finance / Investors</option>
-                <option>B2B &mdash; General Business Audience</option>
-                <option>B2C &mdash; General Consumer</option>
-                <option>B2C &mdash; Premium / Luxury Segment</option>
-                <option>Internal &mdash; All Employees</option>
-                <option>Internal &mdash; Leadership Team</option>
-                <option>Media / Journalists</option>
-                <option>Investors / Analysts</option>
-              </select>
-            </div>
-          </div>
-          <div class="input-row">
-            <div><label class="field-label">Tone</label>
-              <select id="tg-tone">
-                <option>From Voice Profile (if calibrated)</option>
-                <option>Authoritative & Direct</option>
-                <option>Visionary & Inspiring</option>
-                <option>Warm & Human</option>
-                <option>Precise & Data-driven</option>
-                <option>Provocative & Bold</option>
-                <option>Swiss / European &mdash; understated</option>
-                <option>International &mdash; globally neutral</option>
-              </select>
-            </div>
-            <div><label class="field-label">Language</label>
-              <select id="tg-language">
-                <option>English</option>
-                <option>German</option>
-                <option>French</option>
-                <option>Italian</option>
-                <option>Spanish</option>
-              </select>
-            </div>
-          </div>
-          <div class="input-block"><label class="field-label">Length guidance (optional)</label><input type="text" id="tg-length" placeholder="e.g. 200 words, 3 paragraphs, max. 1 page"></div>
-          <button class="run-btn" onclick="run('text-gen')">Generate Text</button>
-          <div class="result-box" id="tg-result"><div class="result-top"><span class="result-tag">Generated Text</span><button class="copy-btn" onclick="copyResult('tg-body')">Copy</button></div><div class="result-body" id="tg-body"></div></div>
-        </div>
-      </div>
-
-      <!-- PERFORMANCE REVIEW -->
-      <div class="panel" id="panel-review">
-        <div class="module-header"><div class="module-title">Performance Review</div><div class="module-sub">Formulates rhetorically precise, development-oriented feedback &mdash; psycholinguistically calibrated, clear in substance.</div></div>
-        <div class="input-block"><label class="field-label">Raw feedback (keywords, observations)</label><textarea id="pr-input" placeholder='e.g. "often late, delivers strong quality, takes little ownership, saved the client project last month"'></textarea></div>
-        <div class="file-upload-area" onclick="triggerUpload('pr-file','pr-input')"><input type="file" id="pr-file" accept=".txt,.pdf,.docx" onchange="handleFiles(this,'pr-input')"><span class="upload-icon">&uarr;</span><div><div class="upload-text"><strong>Upload document</strong></div></div></div>
-        <div id="pr-files"></div>
-        <div class="input-row">
-          <div><label class="field-label">Person's role</label><input type="text" id="pr-role" placeholder="e.g. Senior Analyst, Project Manager"></div>
-          <div><label class="field-label">Format</label><select id="pr-format"><option>Written appraisal (HR document)</option><option>Verbal feedback (conversation guide)</option><option>360&#176; feedback</option><option>Probationary review</option></select></div>
-        </div>
-        <button class="run-btn" onclick="run('pr')">Formulate Feedback</button>
-        <div class="result-box" id="pr-result"><div class="result-top"><span class="result-tag">Performance Review</span><button class="copy-btn" onclick="copyResult('pr-body')">Copy</button></div><div class="result-body" id="pr-body"></div></div>
-      </div>
-
-      <!-- RECOGNITION WRITER -->
-      <div class="panel" id="panel-recognition">
-        <div class="module-header"><div class="module-title">Recognition Writer</div><div class="module-sub">Culturally calibrated, authentic recognition &mdash; precise, free of AI-kitsch, psychologically targeted.</div></div>
-        <div class="input-block"><label class="field-label">What did the person specifically do?</label><textarea id="rw-input" style="min-height:100px" placeholder='e.g. "M&#252;ller worked over the weekend to rescue the database migration and secured the entire product launch"'></textarea></div>
-        <div class="input-row">
-          <div><label class="field-label">Recipient type</label><select id="rw-type"><option>The Analyst &mdash; wants praise for precision and logic</option><option>The Executor &mdash; wants recognition for impact and results</option><option>The Team Player &mdash; wants to be seen for contribution to the group</option><option>The Visionary &mdash; wants appreciation for ideas and courage</option><option>The Pragmatist &mdash; wants direct, factual acknowledgement</option></select></div>
-          <div><label class="field-label">Format</label><select id="rw-format"><option>Verbal recognition (conversation guide)</option><option>Written acknowledgement (email / Slack)</option><option>Public praise (team meeting / All-Hands)</option><option>Formal recognition (annual report / HR document)</option></select></div>
-        </div>
-        <button class="run-btn" onclick="run('rw')">Write Recognition</button>
-        <div class="result-box" id="rw-result"><div class="result-top"><span class="result-tag">Recognition &mdash; Calibrated</span><button class="copy-btn" onclick="copyResult('rw-body')">Copy</button></div><div class="result-body" id="rw-body"></div></div>
-      </div>
-
-      <!-- VIDEOS -->
-      <div class="panel" id="panel-videos">
-        <div class="module-header">
-          <div class="module-title">Video Tutorials</div>
-          <div class="module-sub">Step-by-step guides for each module. Learn how to get the best results from RhetorIQ.</div>
-        </div>
-        <div class="video-grid" id="video-grid">
-          <!-- Videos will be rendered here -->
-        </div>
-        <div style="margin-top:20px;font-size:11px;color:var(--text-dim);font-weight:300" id="video-advisor-note"></div>
-      </div>
-
-      <!-- HISTORY -->
-      <div class="panel" id="panel-history">
-        <div class="module-header"><div class="module-title">All Analyses</div><div class="module-sub">Persistent log of all analyses.</div></div>
-        <div id="history-list"><div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">Loading&#8230;</div></div>
-      </div>
-
-    </div><!-- /content -->
-
-    <nav class="mobile-nav">
-      <div class="mobile-nav-inner">
-        <div class="mnav-item active" id="mn-dashboard" onclick="showPanel('dashboard',null);setMNav('dashboard')"><div class="mnav-icon">&#8962;</div><div class="mnav-label">Home</div></div>
-        <div class="mnav-item" id="mn-brand-voice" onclick="showPanel('brand-voice',null);setMNav('brand-voice')"><div class="mnav-icon">&#9673;</div><div class="mnav-label">Brand</div></div>
-        <div class="mnav-item" id="mn-risk" onclick="showPanel('risk',null);setMNav('risk')"><div class="mnav-icon">&#9678;</div><div class="mnav-label">Risk</div></div>
-        <div class="mnav-item" id="mn-text-gen" onclick="showPanel('text-gen',null);setMNav('text-gen')"><div class="mnav-icon">&#9671;</div><div class="mnav-label">Generate</div></div>
-        <div class="mnav-item" id="mn-more" onclick="showPanel('thread',null);setMNav('more')"><div class="mnav-icon">&#8943;</div><div class="mnav-label">More</div></div>
-      </div>
-    </nav>
-  </div>
-</div>
-
-<!-- PDF.js + Mammoth for client-side file extraction -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script>
-if (typeof pdfjsLib !== 'undefined') pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-// &#9472;&#9472; CONFIG &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-const API = 'https://rhetoriq-jib0.onrender.com';
+const API='https://rhetoriq-jib0.onrender.com';
+let authToken=localStorage.getItem('riq-token');
+let isAdvisor=false;
+let activeClientId=null;
+let clientList=[];
+let chatHistory=[];
+let voiceProfile=null;
 
-// &#9472;&#9472; STATE &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-let authToken = localStorage.getItem('riq-token');
-let currentUser = null;
-let isAdvisor = false;
-let activeClientId = null;
-let clientList = [];
-let analysisCount = 0;
-let wsConnection = null;
-let _voiceProfile = null;
-let chatHistory = [];
+function showForm(show,hide){document.getElementById(show).style.display='block';document.getElementById(hide).style.display='none';}
+function apiFetch(path,opts={}){return fetch(API+path,{...opts,headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken,...(opts.headers||{})}});}
 
-// &#9472;&#9472; VIDEO DATA &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-const VIDEO_MODULES = [
-  { id:'intro', label:'Introduction to RhetorIQ', desc:'Overview of all modules and how to get started' },
-  { id:'brand-voice', label:'Brand Voice DNA', desc:'How to extract the linguistic fingerprint of a company or person' },
-  { id:'risk', label:'Risk Management', desc:'Identifying communication risks before they happen' },
-  { id:'text-gen', label:'Text Generator', desc:'Creating texts in any format and authentic voice' },
-  { id:'profiling', label:'Executive Rhetoric Profiling', desc:'Analysing the rhetorical architecture of leadership texts' },
-  { id:'stress', label:'Argument Stress Test', desc:'Preparing for tough questions and counterarguments' },
-];
-
-function renderVideos() {
-  const grid = document.getElementById('video-grid');
-  const note = document.getElementById('video-advisor-note');
-  const videos = JSON.parse(localStorage.getItem('riq-videos') || '{}');
-  grid.innerHTML = VIDEO_MODULES.map(m => {
-    const src = videos[m.id] || '';
-    return `<div class="video-card${src?' has-video':''}" id="vcard-${m.id}">
-      ${src ? `<video src="${src}" controls></video>` : `
-      <div class="video-placeholder">
-        <div class="video-play-icon">&#9655;</div>
-        <div class="tile-name" style="font-size:14px;margin-bottom:4px">${m.label}</div>
-        <div class="video-label">${m.desc}</div>
-      </div>`}
-      <button class="video-upload-btn" onclick="uploadVideo('${m.id}')">Upload video</button>
-      <input type="file" id="vfile-${m.id}" accept="video/*" style="display:none" onchange="saveVideo('${m.id}',this)">
-    </div>`;
-  }).join('');
-  if (isAdvisor) note.textContent = 'Click "Upload video" on any card to add a tutorial video.';
+// AUTH
+async function loginAdvisor(){
+  const email=document.getElementById('adv-email').value.trim();
+  const pw=document.getElementById('adv-pw').value;
+  const err=document.getElementById('adv-err');err.style.display='none';
+  try{
+    const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
+    const d=await r.json();
+    if(!r.ok){err.textContent=d.error||'Login failed';err.style.display='block';return;}
+    authToken=d.token;localStorage.setItem('riq-token',authToken);bootApp(d.user,'advisor');
+  }catch{err.textContent='Connection error';err.style.display='block';}
+}
+async function loginClient(){
+  const token=document.getElementById('cl-token').value.trim();
+  const err=document.getElementById('cl-err');err.style.display='none';
+  try{
+    const r=await fetch(API+'/auth/client-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})});
+    const d=await r.json();
+    if(!r.ok){err.textContent=d.error||'Invalid token';err.style.display='block';return;}
+    authToken=d.token;localStorage.setItem('riq-token',authToken);bootApp(d.client,'client');
+  }catch{err.textContent='Connection error';err.style.display='block';}
+}
+function logout(){authToken=null;localStorage.removeItem('riq-token');location.reload();}
+async function tryAutoLogin(){
+  if(!authToken)return;
+  try{
+    const p=JSON.parse(atob(authToken.split('.')[1]));
+    if(p.exp*1000<Date.now()){localStorage.removeItem('riq-token');return;}
+    if(p.role==='advisor')bootApp({id:p.id,name:p.name,email:p.email},'advisor');
+    else bootApp({id:p.clientId,name:p.clientName},'client');
+  }catch{localStorage.removeItem('riq-token');}
 }
 
-function uploadVideo(id) { document.getElementById('vfile-'+id).click(); }
-function saveVideo(id, input) {
-  const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const videos = JSON.parse(localStorage.getItem('riq-videos') || '{}');
-    videos[id] = e.target.result;
-    localStorage.setItem('riq-videos', JSON.stringify(videos));
-    renderVideos();
-  };
-  reader.readAsDataURL(file);
-}
-
-// &#9472;&#9472; FILE UPLOAD &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-function triggerUpload(fileInputId, targetTextareaId) {
-  document.getElementById(fileInputId).click();
-}
-
-async function handleFiles(input, targetId) {
-  const files = Array.from(input.files);
-  const badgeContainer = document.getElementById(input.id.replace('-file','').replace(/-file\d*/,'') + '-files') ||
-    input.closest('.panel')?.querySelector('[id$="-files"]');
-
-  for (const file of files) {
-    try {
-      const text = await extractText(file);
-      const ta = document.getElementById(targetId);
-      ta.value = ta.value ? ta.value + '\n---\n' + text : text;
-      if (badgeContainer) {
-        const badge = document.createElement('div');
-        badge.className = 'file-badge';
-        badge.innerHTML = `&#128196; ${file.name} <span class="remove-file" onclick="this.parentElement.remove()">&times;</span>`;
-        badgeContainer.appendChild(badge);
-      }
-    } catch(e) {
-      alert('Could not read ' + file.name + ': ' + e.message);
-    }
-  }
-  input.value = '';
-}
-
-async function extractText(file) {
-  const name = file.name.toLowerCase();
-  if (name.endsWith('.txt')) {
-    return new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = e => res(e.target.result);
-      r.onerror = rej;
-      r.readAsText(file);
-    });
-  } else if (name.endsWith('.pdf')) {
-    if (typeof pdfjsLib === 'undefined') throw new Error('PDF library not loaded');
-    const ab = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
-    let text = '';
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      text += content.items.map(s => s.str).join(' ') + '\n';
-    }
-    return text;
-  } else if (name.endsWith('.docx')) {
-    if (typeof mammoth === 'undefined') throw new Error('DOCX library not loaded');
-    const ab = await file.arrayBuffer();
-    const result = await mammoth.extractRawText({ arrayBuffer: ab });
-    return result.value;
-  }
-  throw new Error('Unsupported file type. Use .txt, .pdf, or .docx');
-}
-
-// drag & drop on upload areas
-document.addEventListener('dragover', e => { if(e.target.closest('.file-upload-area')) e.preventDefault(); });
-document.addEventListener('drop', e => {
-  const area = e.target.closest('.file-upload-area');
-  if (!area) return;
-  e.preventDefault();
-  const fileInput = area.querySelector('input[type="file"]');
-  const targetId = area.getAttribute('data-target') || area.nextElementSibling?.nextElementSibling?.id;
-  if (fileInput && e.dataTransfer.files.length) {
-    const dt = new DataTransfer();
-    Array.from(e.dataTransfer.files).forEach(f => dt.items.add(f));
-    fileInput.files = dt.files;
-    fileInput.dispatchEvent(new Event('change'));
-  }
-});
-
-// &#9472;&#9472; SMART ROUTER &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-async function routePrompt() {
-  const text = document.getElementById('router-input').value.trim();
-  if (!text) return;
-  const hint = document.getElementById('router-hint');
-  hint.textContent = 'Routing&#8230;';
-  try {
-    const r = await apiFetch('/api/analyze/route', { method:'POST', body: JSON.stringify({ text }) });
-    const d = await r.json();
-    const module = d.module;
-    const moduleNames = {
-      profiling:'Executive Rhetoric Profiling', fingerprint:'Communication Fingerprint',
-      language:'Language Analytics', risk:'Risk Management', stress:'Argument Stress Test',
-      impact:'Strategic Impact Simulation', actionability:'Actionability Scanner',
-      thread:'Thread Cleaner', 'text-gen':'Text Generator', review:'Performance Review',
-      recognition:'Recognition Writer', 'brand-voice':'Brand Voice DNA'
-    };
-    const name = moduleNames[module] || module;
-    hint.textContent = `&rarr; Routing to: ${name}`;
-    setTimeout(() => {
-      showPanel(module === 'brand-voice' ? 'brand-voice' : module, null);
-      // Pre-fill the main textarea of the target module
-      const mainTA = document.querySelector(`#panel-${module} textarea`);
-      if (mainTA && !mainTA.value) mainTA.value = text;
-      hint.textContent = '';
-    }, 800);
-  } catch(e) {
-    hint.textContent = 'Could not route &mdash; please select a module manually.';
-  }
-}
-
-// &#9472;&#9472; BRAND VOICE TOGGLE &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-function switchBrandMode(mode, btn) {
-  document.querySelectorAll('.brand-toggle-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.brand-section').forEach(s => s.classList.remove('active'));
-  document.getElementById('brand-' + mode).classList.add('active');
-}
-
-// &#9472;&#9472; AUTH &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-function showClientForm() { document.getElementById('advisor-login-form').style.display='none'; document.getElementById('client-token-form').style.display='block'; }
-function showAdvisorForm() { document.getElementById('client-token-form').style.display='none'; document.getElementById('advisor-login-form').style.display='block'; }
-
-async function loginAdvisor() {
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  const err = document.getElementById('login-error');
-  err.style.display = 'none';
-  try {
-    const r = await fetch(API + '/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ email, password }) });
-    const d = await r.json();
-    if (!r.ok) { err.textContent = d.error||'Login failed'; err.style.display='block'; return; }
-    authToken = d.token; localStorage.setItem('riq-token', authToken);
-    initApp(d.user, 'advisor');
-  } catch(e) { err.textContent='Connection error'; err.style.display='block'; }
-}
-
-async function loginClient() {
-  const token = document.getElementById('client-token-input').value.trim();
-  const err = document.getElementById('client-error');
-  err.style.display = 'none';
-  try {
-    const r = await fetch(API + '/auth/client-login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ token }) });
-    const d = await r.json();
-    if (!r.ok) { err.textContent = d.error||'Invalid token'; err.style.display='block'; return; }
-    authToken = d.token; localStorage.setItem('riq-token', authToken);
-    initApp(d.client, 'client');
-  } catch(e) { err.textContent='Connection error'; err.style.display='block'; }
-}
-
-function logout() {
-  authToken = null; currentUser = null;
-  localStorage.removeItem('riq-token');
-  if (wsConnection) wsConnection.close();
-  document.getElementById('login-screen').classList.remove('hidden');
-  document.body.classList.remove('advisor-mode','client-mode');
-}
-
-// &#9472;&#9472; INIT &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-async function initApp(user, role) {
-  currentUser = user; isAdvisor = role === 'advisor';
+// BOOT
+async function bootApp(user,role){
+  isAdvisor=role==='advisor';
   document.getElementById('login-screen').classList.add('hidden');
-  if (isAdvisor) {
-    document.body.classList.add('advisor-mode');
-    document.getElementById('sidebar-user-name').textContent = user.name||user.email;
-    document.getElementById('sidebar-user-role').textContent = 'Executive Communication Advisor';
-    await loadClients();
-  } else {
-    document.body.classList.add('client-mode');
-    document.getElementById('sidebar-user-name').textContent = user.name||user.clientName;
-    document.getElementById('sidebar-user-role').textContent = 'Powered by RhetorIQ';
-    const badge = document.getElementById('client-badge-sidebar');
-    badge.textContent = user.name||user.clientName; badge.style.display='inline-flex';
-  }
-  connectWebSocket();
-  updateAnalysisCount();
-  renderVideos();
+  document.getElementById('app').style.display='flex';
+  document.getElementById('user-name-display').textContent=user.name||user.email||'';
+  if(isAdvisor){document.body.classList.add('advisor');document.getElementById('mn-clients').style.display='flex';await loadClients();}
+  connectWS();loadStats();renderVideos();
 }
 
-async function tryAutoLogin() {
-  if (!authToken) return;
-  try {
-    const payload = JSON.parse(atob(authToken.split('.')[1]));
-    if (payload.exp * 1000 < Date.now()) { localStorage.removeItem('riq-token'); return; }
-    if (payload.role === 'advisor') initApp({ id:payload.id, name:payload.name, email:payload.email }, 'advisor');
-    else initApp({ id:payload.clientId, name:payload.clientName }, 'client');
-  } catch { localStorage.removeItem('riq-token'); }
+// WEBSOCKET
+function connectWS(){
+  const proto=location.protocol==='https:'?'wss':'ws';
+  const ws=new WebSocket(API.replace(/^https?/,proto)+'/ws');
+  const dot=document.getElementById('ws-dot');
+  ws.onopen=()=>dot.classList.add('on');
+  ws.onclose=()=>{dot.classList.remove('on');setTimeout(connectWS,3000);};
+  ws.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.type==='analysis')loadStats();}catch{}};
 }
 
-// &#9472;&#9472; WEBSOCKET &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-function connectWebSocket() {
-  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  const host = API.replace(/^https?/, proto);
-  wsConnection = new WebSocket(host + '/ws');
-  const dot = document.getElementById('ws-dot');
-  wsConnection.onopen = () => { if(dot) dot.classList.add('connected'); };
-  wsConnection.onclose = () => { if(dot) dot.classList.remove('connected'); setTimeout(connectWebSocket, 3000); };
-  wsConnection.onmessage = e => {
-    try { const msg = JSON.parse(e.data); if(msg.type==='analysis') handleIncomingAnalysis(msg.analysis); } catch {}
-  };
+// STATS
+async function loadStats(){
+  try{const r=await apiFetch('/api/analyze/history');const d=await r.json();document.getElementById('stat-analyses').textContent=d.length;}catch{}
+  document.getElementById('stat-clients').textContent=clientList.length;
 }
 
-function handleIncomingAnalysis(analysis) {
-  analysisCount++;
-  document.getElementById('stat-analyses').textContent = analysisCount;
-  const bodyEl = document.getElementById(analysis.module + '-body');
-  if (bodyEl) { const box = document.getElementById(analysis.module + '-result'); if(box) { box.classList.add('visible'); bodyEl.textContent = analysis.result; } }
+// CLIENTS
+async function loadClients(){
+  try{const r=await apiFetch('/api/clients');clientList=await r.json();renderClients();}catch{}
+}
+function renderClients(){
+  document.getElementById('stat-clients').textContent=clientList.length;
+  const sel=document.getElementById('client-select');
+  sel.innerHTML='<option value="">Select client</option>'+clientList.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  const list=document.getElementById('clients-list');
+  if(!clientList.length){list.innerHTML='<div class="empty"><div class="empty-icon">&#128101;</div><div class="empty-text">No clients yet.</div></div>';return;}
+  list.innerHTML=clientList.map(c=>`
+    <div class="client-card">
+      <div>
+        <div class="client-name">${c.name}</div>
+        <div class="client-meta">${c.industry||''} &mdash; ${c.contact||''}</div>
+        <div class="token-code">${c.token.substring(0,24)}&hellip;</div>
+      </div>
+      <div class="client-actions">
+        <button class="btn-outline" onclick="copyToken('${c.token}')">Copy Token</button>
+        <button class="btn-danger" onclick="deleteClientData(${c.id},'${c.name}')">Delete All Data</button>
+      </div>
+    </div>`).join('');
+}
+function switchClient(id){activeClientId=id||null;}
+function copyToken(t){navigator.clipboard.writeText(t).catch(()=>{});alert('Token copied!\n\nShare this with your client. They use it to log in at:\n'+location.origin);}
+async function deleteClientData(clientId,name){
+  if(!confirm('Delete ALL analyses for "'+name+'"?\n\nThis cannot be undone.'))return;
+  try{
+    const r=await apiFetch('/api/analyze/client/'+clientId,{method:'DELETE'});
+    const d=await r.json();
+    alert('Done. '+d.deleted+' analysis records deleted.');
+    loadStats();
+  }catch{alert('Error deleting data.');}
+}
+function openModal(){document.getElementById('new-client-overlay').classList.add('show');}
+function closeModal(){document.getElementById('new-client-overlay').classList.remove('show');}
+async function addClient(){
+  const name=document.getElementById('nc-name').value.trim();
+  if(!name)return alert('Please enter a company name.');
+  try{
+    const r=await apiFetch('/api/clients',{method:'POST',body:JSON.stringify({name,industry:document.getElementById('nc-industry').value,contact:document.getElementById('nc-contact').value.trim()})});
+    const c=await r.json();clientList.unshift(c);renderClients();closeModal();
+    document.getElementById('nc-name').value='';document.getElementById('nc-contact').value='';
+    goPage('clients');
+  }catch(e){alert('Error: '+e.message);}
 }
 
-// &#9472;&#9472; CLIENT MANAGEMENT &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-async function loadClients() {
-  try { const r = await apiFetch('/api/clients'); clientList = await r.json(); renderClients(); } catch {}
-}
-
-function renderClients() {
-  document.getElementById('stat-clients').textContent = clientList.length;
-  const list = document.getElementById('client-list');
-  const sel = document.getElementById('active-client-select');
-  if (!clientList.length) { list.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No clients yet.</div>'; sel.innerHTML='<option value="">&mdash; Select client &mdash;</option>'; return; }
-  list.innerHTML = clientList.map(c=>`<div class="client-card"><div><div class="client-card-name">${c.name}</div><div class="client-card-meta">${c.industry||''} &#183; ${c.contact||''}</div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><code class="client-card-badge">${c.token.substring(0,16)}&#8230;</code><button class="btn" style="font-size:10px;padding:4px 10px" onclick="copyToken('${c.token}')">Copy token</button></div></div>`).join('');
-  sel.innerHTML = '<option value="">&mdash; Select client &mdash;</option>' + clientList.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-}
-
-function copyToken(token) { navigator.clipboard.writeText(token).catch(()=>{}); alert('Token copied! Share with your client &mdash; they use it to sign in at:\n' + location.origin); }
-function switchClient(id) { activeClientId = id || null; }
-function openModal() { document.getElementById('new-client-modal').classList.add('show'); }
-function closeModal() { document.getElementById('new-client-modal').classList.remove('show'); }
-
-async function addClient() {
-  const name = document.getElementById('nc-name').value.trim(); if(!name) return;
-  try {
-    const r = await apiFetch('/api/clients', { method:'POST', body:JSON.stringify({ name, industry:document.getElementById('nc-industry').value, contact:document.getElementById('nc-contact').value.trim() }) });
-    const client = await r.json();
-    clientList.unshift(client); renderClients(); closeModal();
-    document.getElementById('nc-name').value=''; document.getElementById('nc-contact').value='';
-    showPanel('clients',null);
-  } catch(e) { alert('Error: '+e.message); }
-}
-
-// &#9472;&#9472; API HELPER &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-function apiFetch(path, options={}) {
-  return fetch(API+path, { ...options, headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken,...(options.headers||{})} });
-}
-
-// &#9472;&#9472; ANALYSIS COUNT &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-function updateAnalysisCount() {
-  apiFetch('/api/analyze/history').then(r=>r.json()).then(rows=>{ analysisCount=rows.length; document.getElementById('stat-analyses').textContent=analysisCount; }).catch(()=>{});
-}
-
-async function loadHistory() {
-  const r = await apiFetch('/api/analyze/history' + (activeClientId?'?clientId='+activeClientId:''));
-  const rows = await r.json();
-  const el = document.getElementById('history-list');
-  if(!rows.length) { el.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:20px 0;font-weight:300">No analyses yet.</div>'; return; }
-  el.innerHTML = rows.map(h=>{const d=new Date(h.created_at).toLocaleString('en-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});return `<div class="history-row"><div><div class="history-title">${h.module_label||h.module}</div><div class="history-meta">${d}</div></div><div class="history-badge">${h.module}</div></div>`;}).join('');
-}
-
-// &#9472;&#9472; CHATBOT &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-function toggleChat() { document.getElementById('chatbot-panel').classList.toggle('open'); }
-
-async function sendChat() {
-  const input = document.getElementById('chat-input');
-  const msg = input.value.trim(); if(!msg) return;
-  input.value = '';
-  const msgs = document.getElementById('chat-messages');
-  msgs.innerHTML += `<div class="chat-msg user">${msg}</div>`;
-  msgs.scrollTop = msgs.scrollHeight;
-  chatHistory.push({ role:'user', content:msg });
-  try {
-    const r = await apiFetch('/api/analyze/chat', { method:'POST', body:JSON.stringify({ message:msg, history:chatHistory.slice(-6) }) });
-    const d = await r.json();
-    chatHistory.push({ role:'assistant', content:d.reply });
-    msgs.innerHTML += `<div class="chat-msg assistant">${d.reply}</div>`;
-    msgs.scrollTop = msgs.scrollHeight;
-  } catch(e) {
-    msgs.innerHTML += `<div class="chat-msg assistant" style="color:#c00">Error &mdash; please try again.</div>`;
-  }
-}
-
-// &#9472;&#9472; MODULE RUNNERS &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-async function run(id) {
-  let module, data, bodyElId, resultElId;
-
-  if(id==='rp'){ const text=document.getElementById('rp-input').value.trim(); if(!text)return; module='rp'; bodyElId='rp-body'; resultElId='rp-result'; data={text,name:document.getElementById('rp-name').value.trim(),industry:document.getElementById('rp-industry').value}; }
-  else if(id==='cf'){ const text=document.getElementById('cf-input').value.trim(); if(!text)return; module='cf'; bodyElId='cf-body'; resultElId='cf-result'; data={text,name:document.getElementById('cf-name').value.trim(),focus:document.getElementById('cf-focus').value}; }
-  else if(id==='la'){ const text=document.getElementById('la-input').value.trim(); if(!text)return; module='la'; bodyElId='la-body'; resultElId='la-result'; data={text,size:document.getElementById('la-size').value,focus:document.getElementById('la-focus').value}; }
-  else if(id==='rm'){ const text=document.getElementById('rm-input').value.trim(); if(!text)return; module='rm'; bodyElId='rm-body'; resultElId='rm-result'; data={text,audience:document.getElementById('rm-audience').value,context:document.getElementById('rm-context').value}; }
-  else if(id==='st'){ const text=document.getElementById('st-input').value.trim(); if(!text)return; module='st'; bodyElId='st-body'; resultElId='st-result'; data={text,perspectives:document.getElementById('st-perspectives').value,intensity:document.getElementById('st-intensity').value}; }
-  else if(id==='si'){ const text=document.getElementById('si-input').value.trim(); if(!text)return; module='si'; bodyElId='si-body'; resultElId='si-result'; data={text,stakeholders:document.getElementById('si-stakeholders').value,severity:document.getElementById('si-severity').value}; }
-  else if(id==='as'){ const text=document.getElementById('as-input').value.trim(); if(!text)return; module='as'; bodyElId='as-body'; resultElId='as-result'; data={text,context:document.getElementById('as-context').value,recipient:document.getElementById('as-recipient').value}; }
-  else if(id==='tc'){ const text=document.getElementById('tc-input').value.trim(); if(!text)return; module='tc'; bodyElId='tc-body'; resultElId='tc-result'; data={text,source:document.getElementById('tc-source').value,goal:document.getElementById('tc-goal').value}; }
-  else if(id==='vs-cal'){ const text=(document.getElementById('tg-ref')||{}).value?.trim()||(document.getElementById('vs-ref')||{}).value?.trim(); if(!text)return; module='vs-cal'; bodyElId='vs-cal-body'; resultElId='vs-cal-result'; data={text}; }
-  else if(id==='text-gen'){ const text=document.getElementById('tg-task').value.trim(); if(!text)return; module='text-gen'; bodyElId='tg-body'; resultElId='tg-result'; data={text,format:document.getElementById('tg-format').value,audience:document.getElementById('tg-audience').value,tone:document.getElementById('tg-tone').value,language:document.getElementById('tg-language').value,length:document.getElementById('tg-length').value,voiceProfile:_voiceProfile}; }
-  else if(id==='brand-voice-co'){ const text=document.getElementById('bv-co-input').value.trim(); if(!text)return; module='brand-voice-co'; bodyElId='bv-co-body'; resultElId='bv-co-result'; data={text,company:document.getElementById('bv-company').value,industry:document.getElementById('bv-industry').value,values:document.getElementById('bv-values').value,audiences:document.getElementById('bv-audiences').value}; }
-  else if(id==='brand-voice-ind'){ const text=document.getElementById('bv-ind-input').value.trim(); if(!text)return; module='brand-voice-ind'; bodyElId='bv-ind-body'; resultElId='bv-ind-result'; data={text,person:document.getElementById('bv-person').value,role:document.getElementById('bv-person-role').value}; }
-  else if(id==='pr'){ const text=document.getElementById('pr-input').value.trim(); if(!text)return; module='pr'; bodyElId='pr-body'; resultElId='pr-result'; data={text,role:document.getElementById('pr-role').value,format:document.getElementById('pr-format').value}; }
-  else if(id==='rw'){ const text=document.getElementById('rw-input').value.trim(); if(!text)return; module='rw'; bodyElId='rw-body'; resultElId='rw-result'; data={text,type:document.getElementById('rw-type').value,format:document.getElementById('rw-format').value}; }
-  else return;
-
-  const resultBox = document.getElementById(resultElId);
-  const bodyEl = document.getElementById(bodyElId);
-  resultBox.classList.add('visible');
-  bodyEl.innerHTML = '<div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:8px">Analysing&#8230;</span></div>';
-
-  try {
-    const r = await apiFetch('/api/analyze', { method:'POST', body:JSON.stringify({ module, clientId:activeClientId, data }) });
-    const d = await r.json();
-    if(!r.ok) throw new Error(d.error);
-    bodyEl.textContent = d.result;
-    if(module==='vs-cal') _voiceProfile = d.result;
-    analysisCount++; document.getElementById('stat-analyses').textContent = analysisCount;
-  } catch(e) {
-    bodyEl.textContent = 'Error: ' + e.message;
-  }
-}
-
-// &#9472;&#9472; UI HELPERS &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-const meta = {
-  dashboard:['Dashboard','Smart prompt &#183; All modules'],
-  clients:['Clients','Manage your client workspace'],
-  'brand-voice':['Brand Voice DNA','Company or individual linguistic fingerprint'],
-  profiling:['Executive Rhetoric Profiling','Analyse rhetorical architecture'],
-  fingerprint:['Communication Fingerprint','Language development over time'],
-  language:['Language Analytics','Company culture through language'],
-  risk:['Risk Management','Evaluate communication before sending'],
-  stress:['Argument Stress Test','Anticipate counterarguments'],
-  impact:['Strategic Impact Simulation','Simulate stakeholder reactions'],
-  actionability:['Actionability Scanner','Translate vagueness into clarity'],
-  thread:['Thread Cleaner','Decision logic from communication threads'],
-  'text-gen':['Text Generator','LinkedIn &#183; Website &#183; B2B &#183; Press &#183; Internal'],
-  review:['Performance Review','Development-oriented feedback'],
-  recognition:['Recognition Writer','Calibrated authentic recognition'],
-  videos:['Video Tutorials','Step-by-step guides for every module'],
-  history:['All Analyses','Persistent analysis log']
-};
-
-function showPanel(name,navEl) {
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  const panel=document.getElementById('panel-'+name); if(panel) panel.classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  if(navEl) navEl.classList.add('active');
-  const t=meta[name]||[name,''];
-  const tt=document.getElementById('topbar-title'); const tc=document.getElementById('topbar-crumb'); const mp=document.getElementById('mobile-page');
-  if(tt) tt.textContent=t[0]; if(tc) tc.textContent=t[1]; if(mp) mp.textContent=t[0];
+// NAVIGATION
+function goHome(){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-home').classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('nav-home').classList.add('active');
   document.querySelector('.content').scrollTop=0;
 }
+function goPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
+  document.querySelector('.content').scrollTop=0;
+}
+function setMN(id){document.querySelectorAll('.m-nav-item').forEach(n=>n.classList.remove('active'));const el=document.getElementById('mn-'+id);if(el)el.classList.add('active');}
 
-function setMNav(id) { document.querySelectorAll('.mnav-item').forEach(n=>n.classList.remove('active')); const el=document.getElementById('mn-'+id); if(el) el.classList.add('active'); else document.getElementById('mn-more').classList.add('active'); }
+// SMART ROUTER
+const MODULE_NAMES={profiling:'Executive Rhetoric Profiling',fingerprint:'Communication Fingerprint',language:'Language Analytics',risk:'Risk Management',stress:'Argument Stress Test',impact:'Strategic Impact Simulation',actionability:'Actionability Scanner',thread:'Thread Cleaner','text-gen':'Text Generator',review:'Performance Review',recognition:'Recognition Writer','brand-voice':'Brand Voice DNA','brand-voice-co':'Brand Voice DNA','brand-voice-ind':'Brand Voice DNA','vs-gen':'Text Generator','vs-cal':'Text Generator'};
 
-function switchTab(btn, showId, hideId) {
-  const panel = btn.closest('.panel');
-  panel.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+async function routePrompt(){
+  const text=document.getElementById('router-input').value.trim();
+  if(!text){document.getElementById('router-status').textContent='Please describe what you would like to do.';return;}
+  const status=document.getElementById('router-status');
+  status.textContent='Analysing your request...';
+  try{
+    const r=await apiFetch('/api/analyze/route',{method:'POST',body:JSON.stringify({text})});
+    const d=await r.json();
+    let module=(d.module||'').trim().toLowerCase().replace(/[^a-z-]/g,'');
+    if(module==='brand-voice-co'||module==='brand-voice-ind')module='brand-voice';
+    if(module==='vs-gen'||module==='vs-cal')module='text-gen';
+    const name=MODULE_NAMES[module]||'the right module';
+    status.textContent='Opening: '+name+'...';
+    setTimeout(()=>{
+      status.textContent='';
+      if(module==='brand-voice'){goPage('brand-voice');}
+      else{goModule(module,text);}
+      document.getElementById('router-input').value='';
+    },600);
+  }catch{status.textContent='Could not route &mdash; please choose a module below.';}
+}
+
+// MODULE CONFIG
+const MCFG={
+  profiling:{title:'Executive Rhetoric Profiling',desc:'Analyse the rhetorical architecture of leadership texts: argumentation logic, persuasion patterns, and strategic blind spots.',mainField:'rp-input',mainPlaceholder:'Speeches, emails, LinkedIn posts, internal memos &mdash; separate with ---.'},
+  fingerprint:{title:'Communication Fingerprint',desc:'Reveals how language shifts across time &mdash; under pressure, in crisis, at peak performance.',mainField:'cf-input',mainPlaceholder:'Use "---" between different time periods, e.g. "2024-01 Report [text] --- 2024-06 Crisis [text]"'},
+  language:{title:'Language Analytics',desc:'Diagnoses where leadership rhetoric and lived culture diverge.',mainField:'la-input',mainPlaceholder:'Paste internal company texts here (emails, meeting minutes, strategy papers).'},
+  risk:{title:'Risk Management',desc:'Evaluates communication risks before anything goes out.',mainField:'rm-input',mainPlaceholder:'Press release, CEO statement, internal announcement...'},
+  stress:{title:'Argument Stress Test',desc:'Generates the strongest counterarguments from multiple perspectives.',mainField:'st-input',mainPlaceholder:'"We are introducing a new performance evaluation system..."'},
+  impact:{title:'Strategic Impact Simulation',desc:'Simulates how different stakeholder groups will react &mdash; before it is too late.',mainField:'si-input',mainPlaceholder:'Merger announcement, layoffs, strategy shift, leadership change...'},
+  actionability:{title:'Actionability Scanner',desc:'Scans for vagueness and rewrites into precise, operational language.',mainField:'as-input',mainPlaceholder:'"We should take a look at the customer satisfaction topic..."'},
+  thread:{title:'Thread Cleaner',desc:'Extracts the logical decision structure from email chains or chat threads.',mainField:'tc-input',mainPlaceholder:'Paste the complete thread here.',mainHeight:'200px'},
+  review:{title:'Performance Review',desc:'Keywords in &mdash; rhetorically precise, development-oriented feedback out.',mainField:'pr-input',mainPlaceholder:'"Often late, delivers strong quality, saved the client project last month"'},
+  recognition:{title:'Recognition Writer',desc:'Authentic, calibrated recognition &mdash; tailored to the recipient type.',mainField:'rw-input',mainPlaceholder:'"Meier worked over the weekend to rescue the database migration..."'}
+};
+
+const MSELECTS={
+  profiling:[{id:'rp-industry',label:'Industry',opts:['Financial Services','Industry / Manufacturing','Tech / SaaS','Healthcare','Education','Public Sector','Other']},{id:'rp-name',label:'Name / Role',type:'text',placeholder:'e.g. CEO Martin Meier'}],
+  fingerprint:[{id:'cf-name',label:'Name / Role',type:'text',placeholder:'e.g. CFO Anna Berger'},{id:'cf-focus',label:'Focus',opts:['Overall development','Behaviour under pressure','Crisis vs. normal operations','Trust-building over time','Tone drift']}],
+  language:[{id:'la-size',label:'Company Size',opts:['10&ndash;50 employees','50&ndash;200 employees','200&ndash;1,000 employees','1,000+ employees']},{id:'la-focus',label:'Focus',opts:['Leadership vs. employee communication','Cultural consistency','Change communication','Trust climate']}],
+  risk:[{id:'rm-audience',label:'Target Audience',opts:['Employees','Investors','Media / Public','Customers','Board / Executive team','All simultaneously']},{id:'rm-context',label:'Situation',opts:['Strategy shift','Layoffs / Restructuring','Merger / Acquisition','Crisis','New product / Launch','Cultural change']}],
+  stress:[{id:'st-perspectives',label:'Perspectives',opts:['All (Media, Employees, Competitors)','Media / Public','Employees / Works council','Investors / Analysts','Critics / NGOs']},{id:'st-intensity',label:'Intensity',opts:['Moderate &mdash; fair criticism','Sharp &mdash; aggressive questioning','Maximum &mdash; hardest possible attack']}],
+  impact:[{id:'si-stakeholders',label:'Stakeholders',opts:['All groups','Employees only','Media only','Investors only','Employees + Media']},{id:'si-severity',label:'Impact Level',opts:['Low &mdash; routine change','Medium &mdash; noticeable impact','High &mdash; significant transformation','Critical &mdash; existential crisis']}],
+  actionability:[{id:'as-context',label:'Format',opts:['Email delegation','Meeting minutes','Project briefing','Strategy document','Verbal instruction']},{id:'as-recipient',label:'Recipient',opts:['Direct reports','Project team','Department head','External partners']}],
+  thread:[{id:'tc-source',label:'Source',opts:['Email thread','Teams chat','Slack channel','Meeting chat']},{id:'tc-goal',label:'Output Goal',opts:['Decision matrix for CEO','Action recommendation for project lead','Summary for absent participants','Identify next steps']}],
+  review:[{id:'pr-role',label:"Person's Role",type:'text',placeholder:'e.g. Senior Analyst'},{id:'pr-format',label:'Format',opts:['Written appraisal (HR document)','Verbal feedback (conversation guide)','360&deg; feedback','Probationary review']}],
+  recognition:[{id:'rw-type',label:'Recipient Type',opts:['The Analyst &mdash; values precision','The Executor &mdash; values impact','The Team Player &mdash; values group contribution','The Visionary &mdash; values ideas','The Pragmatist &mdash; wants direct acknowledgement']},{id:'rw-format',label:'Format',opts:['Verbal recognition','Written acknowledgement (email)','Public praise (team meeting)','Formal recognition (HR document)']}]
+};
+
+function goModule(name,prefill){
+  const cfg=MCFG[name];
+  if(!cfg){if(name==='text-gen')buildTextGen(prefill);return;}
+  const form=document.getElementById('mod-form');
+  document.getElementById('mod-title').textContent=cfg.title;
+  document.getElementById('mod-desc').innerHTML=cfg.desc;
+
+  const selects=MSELECTS[name]||[];
+  let html=`<div class="upload-zone" onclick="document.getElementById('mf-${name}').click()"><span class="upload-icon">&#8679;</span><div class="upload-text"><strong>Upload document</strong> &mdash; .txt, .pdf, .docx (optional)</div><input type="file" id="mf-${name}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'${cfg.mainField}','mt-${name}')"></div>`;
+  html+=`<div class="file-tags" id="mt-${name}"></div>`;
+  html+=`<div class="form-group"><label class="form-label">Text</label><textarea id="${cfg.mainField}" placeholder="${cfg.mainPlaceholder||''}" style="${cfg.mainHeight?'min-height:'+cfg.mainHeight:''}"></textarea></div>`;
+  if(selects.length){
+    html+=`<div class="row-2">`;
+    selects.forEach(s=>{
+      if(s.type==='text'){html+=`<div class="form-group"><label class="form-label">${s.label}</label><input type="text" id="${s.id}" placeholder="${s.placeholder||''}"></div>`;}
+      else{html+=`<div class="form-group"><label class="form-label">${s.label}</label><select id="${s.id}">${s.opts.map(o=>`<option>${o}</option>`).join('')}</select></div>`;}
+    });
+    html+=`</div>`;
+  }
+  html+=`<button class="run-btn" onclick="runModule('${name}')">Run Analysis</button>`;
+  html+=`<div class="result-box" id="${name}-result"><div class="result-header"><span class="result-label">Result</span><button class="copy-btn" onclick="copyResult('${name}-body')">Copy</button></div><div class="result-body" id="${name}-body"></div></div>`;
+  form.innerHTML=html;
+  if(prefill){const ta=document.getElementById(cfg.mainField);if(ta)ta.value=prefill;}
+  goPage('module');
+}
+
+function buildTextGen(prefill){
+  document.getElementById('mod-title').textContent='Text Generator';
+  document.getElementById('mod-desc').innerHTML='Generate publication-ready texts in any format &mdash; in the authentic brand or personal voice.';
+  document.getElementById('mod-form').innerHTML=`
+  <div class="tab-row">
+    <button class="tab active" onclick="switchTab(this,'tg-cal','tg-gen')">1. Calibrate Voice (optional)</button>
+    <button class="tab" onclick="switchTab(this,'tg-gen','tg-cal')">2. Generate Text</button>
+  </div>
+  <div id="tg-cal">
+    <p style="font-size:14px;color:var(--muted);margin-bottom:16px">Paste reference texts to calibrate the voice. Or skip to step 2 and describe the desired style in the briefing.</p>
+    <div class="upload-zone" onclick="document.getElementById('tg-ref-f').click()"><span class="upload-icon">&#8679;</span><div class="upload-text"><strong>Upload reference documents</strong></div><input type="file" id="tg-ref-f" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref','tg-ref-tags')"></div>
+    <div class="file-tags" id="tg-ref-tags"></div>
+    <div class="form-group"><label class="form-label">Reference Texts</label><textarea id="tg-ref" placeholder="LinkedIn posts, website copy, speeches, emails &mdash; separate with ---."></textarea></div>
+    <button class="run-btn" onclick="runModule('vs-cal')">Calibrate Voice Profile</button>
+    <div class="result-box" id="vs-cal-result"><div class="result-header"><span class="result-label">Voice Profile</span><button class="copy-btn" onclick="copyResult('vs-cal-body')">Copy</button></div><div class="result-body" id="vs-cal-body"></div></div>
+  </div>
+  <div id="tg-gen" style="display:none">
+    <div class="upload-zone" onclick="document.getElementById('tg-task-f').click()"><span class="upload-icon">&#8679;</span><div class="upload-text"><strong>Upload source document to rewrite</strong></div><input type="file" id="tg-task-f" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task','tg-task-tags')"></div>
+    <div class="file-tags" id="tg-task-tags"></div>
+    <div class="form-group"><label class="form-label">Briefing / Content</label><textarea id="tg-task" placeholder="Describe what you want to create, or paste source content to rewrite." style="min-height:120px"></textarea></div>
+    <div class="row-2">
+      <div class="form-group"><label class="form-label">Format</label>
+        <select id="tg-format">
+          <optgroup label="Social / Digital"><option>LinkedIn Post</option><option>LinkedIn Article</option><option>Newsletter</option><option>Twitter / X Thread</option></optgroup>
+          <optgroup label="Website"><option>Website Homepage (B2C)</option><option>Website Homepage (B2B)</option><option>Website &mdash; Full rewrite</option><option>Product / Service Page</option><option>Landing Page</option></optgroup>
+          <optgroup label="External"><option>Press Release</option><option>Investor Letter</option><option>Customer Letter</option><option>Crisis Statement</option><option>B2B Proposal</option></optgroup>
+          <optgroup label="Internal"><option>Internal Announcement</option><option>Internal Email</option><option>Town Hall Script</option><option>Leadership Memo</option></optgroup>
+          <optgroup label="Speaking"><option>Speech / Keynote</option><option>Talking Points</option><option>Interview Preparation</option></optgroup>
+          <optgroup label="HR"><option>Job Posting</option><option>Employer Branding Text</option></optgroup>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Audience</label>
+        <select id="tg-audience"><option>B2B &mdash; C-Suite</option><option>B2B &mdash; HR Leaders</option><option>B2B &mdash; Finance / Investors</option><option>B2B &mdash; General Business</option><option>B2C &mdash; General Consumer</option><option>B2C &mdash; Premium / Luxury</option><option>Internal &mdash; All Employees</option><option>Internal &mdash; Leadership Team</option><option>Media / Journalists</option></select>
+      </div>
+    </div>
+    <div class="row-2">
+      <div class="form-group"><label class="form-label">Tone</label>
+        <select id="tg-tone"><option>From Voice Profile (if calibrated)</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European &mdash; understated</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Language</label>
+        <select id="tg-language"><option>English</option><option>German</option><option>French</option><option>Italian</option><option>Spanish</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Length (optional)</label><input type="text" id="tg-length" placeholder="e.g. 200 words, 3 paragraphs, max. 1 page"></div>
+    <button class="run-btn" onclick="runModule('text-gen')">Generate Text</button>
+    <div class="result-box" id="text-gen-result"><div class="result-header"><span class="result-label">Generated Text</span><button class="copy-btn" onclick="copyResult('text-gen-body')">Copy</button></div><div class="result-body" id="text-gen-body"></div></div>
+  </div>`;
+  if(prefill){const ta=document.getElementById('tg-task');if(ta)ta.value=prefill;}
+  goPage('module');
+}
+
+function switchTab(btn,showId,hideId){
+  btn.closest('.tab-row').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById(showId).style.display='block';
   document.getElementById(hideId).style.display='none';
 }
 
-function copyResult(id) { navigator.clipboard.writeText(document.getElementById(id).textContent).catch(()=>{}); }
+function g(id){const el=document.getElementById(id);return el?el.value:'';}
 
-// &#9472;&#9472; PWA &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-let deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('install-banner').classList.add('show');});
-window.addEventListener('appinstalled',()=>document.getElementById('install-banner').classList.remove('show'));
-function installApp(){if(!deferredPrompt)return;deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById('install-banner').classList.remove('show');});}
-function showInstallHint(){if(/iphone|ipad|ipod/i.test(navigator.userAgent)){document.getElementById('ios-hint').classList.add('show');setTimeout(()=>document.getElementById('ios-hint').classList.remove('show'),6000);}else if(deferredPrompt)installApp();else alert('Open RhetorIQ in Chrome or Edge &mdash; install icon appears in address bar.');}
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+async function runModule(name){
+  let module,data,resultId,bodyId;
+  if(name==='brand-voice-co'){module='brand-voice-co';resultId='brand-voice-co-result';bodyId='brand-voice-co-body';const t=g('bv-co-input');if(!t)return alert('Please enter text.');data={text:t,company:g('bv-company'),industry:g('bv-industry'),values:g('bv-values'),audiences:g('bv-audiences')};}
+  else if(name==='brand-voice-ind'){module='brand-voice-ind';resultId='brand-voice-ind-result';bodyId='brand-voice-ind-body';const t=g('bv-ind-input');if(!t)return alert('Please enter text.');data={text:t,person:g('bv-person'),role:g('bv-person-role')};}
+  else if(name==='vs-cal'){module='vs-cal';resultId='vs-cal-result';bodyId='vs-cal-body';const t=g('tg-ref');if(!t)return alert('Please enter reference texts.');data={text:t};}
+  else if(name==='text-gen'){module='text-gen';resultId='text-gen-result';bodyId='text-gen-body';const t=g('tg-task');if(!t)return alert('Please enter a briefing.');data={text:t,format:g('tg-format'),audience:g('tg-audience'),tone:g('tg-tone'),language:g('tg-language'),length:g('tg-length'),voiceProfile};}
+  else if(name==='profiling'){module='rp';resultId='profiling-result';bodyId='profiling-body';const t=g('rp-input');if(!t)return alert('Please enter text.');data={text:t,name:g('rp-name'),industry:g('rp-industry')};}
+  else if(name==='fingerprint'){module='cf';resultId='fingerprint-result';bodyId='fingerprint-body';const t=g('cf-input');if(!t)return alert('Please enter text.');data={text:t,name:g('cf-name'),focus:g('cf-focus')};}
+  else if(name==='language'){module='la';resultId='language-result';bodyId='language-body';const t=g('la-input');if(!t)return alert('Please enter text.');data={text:t,size:g('la-size'),focus:g('la-focus')};}
+  else if(name==='risk'){module='rm';resultId='risk-result';bodyId='risk-body';const t=g('rm-input');if(!t)return alert('Please enter text.');data={text:t,audience:g('rm-audience'),context:g('rm-context')};}
+  else if(name==='stress'){module='st';resultId='stress-result';bodyId='stress-body';const t=g('st-input');if(!t)return alert('Please enter text.');data={text:t,perspectives:g('st-perspectives'),intensity:g('st-intensity')};}
+  else if(name==='impact'){module='si';resultId='impact-result';bodyId='impact-body';const t=g('si-input');if(!t)return alert('Please enter text.');data={text:t,stakeholders:g('si-stakeholders'),severity:g('si-severity')};}
+  else if(name==='actionability'){module='as';resultId='actionability-result';bodyId='actionability-body';const t=g('as-input');if(!t)return alert('Please enter text.');data={text:t,context:g('as-context'),recipient:g('as-recipient')};}
+  else if(name==='thread'){module='tc';resultId='thread-result';bodyId='thread-body';const t=g('tc-input');if(!t)return alert('Please enter text.');data={text:t,source:g('tc-source'),goal:g('tc-goal')};}
+  else if(name==='review'){module='pr';resultId='review-result';bodyId='review-body';const t=g('pr-input');if(!t)return alert('Please enter text.');data={text:t,role:g('pr-role'),format:g('pr-format')};}
+  else if(name==='recognition'){module='rw';resultId='recognition-result';bodyId='recognition-body';const t=g('rw-input');if(!t)return alert('Please enter text.');data={text:t,type:g('rw-type'),format:g('rw-format')};}
+  else return;
 
-// Enter keys
-document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')loginAdvisor();});
-document.getElementById('client-token-input').addEventListener('keydown',e=>{if(e.key==='Enter')loginClient();});
+  const box=document.getElementById(resultId);const body=document.getElementById(bodyId);
+  box.classList.add('show');
+  body.innerHTML='<div class="spinner"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:10px;color:var(--muted);font-size:14px">Analysing&hellip;</span></div>';
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+  try{
+    const r=await apiFetch('/api/analyze',{method:'POST',body:JSON.stringify({module,clientId:activeClientId,data})});
+    const d=await r.json();if(!r.ok)throw new Error(d.error);
+    body.textContent=d.result;
+    if(module==='vs-cal')voiceProfile=d.result;
+    loadStats();
+  }catch(e){body.textContent='Error: '+e.message;}
+}
 
-// &#9472;&#9472; BOOT &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
+// FILE UPLOAD
+async function handleFiles(input,targetId,tagsId){
+  for(const file of Array.from(input.files)){
+    try{
+      const text=await extractText(file);
+      const ta=document.getElementById(targetId);if(ta)ta.value=ta.value?ta.value+'\n---\n'+text:text;
+      const tags=document.getElementById(tagsId);
+      if(tags){const tag=document.createElement('div');tag.className='file-tag';tag.innerHTML='&#128196; '+file.name+' <button onclick="this.parentElement.remove()" title="Remove">&times;</button>';tags.appendChild(tag);}
+    }catch(e){alert('Could not read '+file.name+': '+e.message);}
+  }
+  input.value='';
+}
+async function extractText(file){
+  const n=file.name.toLowerCase();
+  if(n.endsWith('.txt'))return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsText(file);});
+  if(n.endsWith('.pdf')){if(typeof pdfjsLib==='undefined')throw new Error('PDF library loading, try again in a moment.');const ab=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:ab}).promise;let t='';for(let i=1;i<=pdf.numPages;i++){const p=await pdf.getPage(i);const c=await p.getTextContent();t+=c.items.map(s=>s.str).join(' ')+'\n';}return t;}
+  if(n.endsWith('.docx')){if(typeof mammoth==='undefined')throw new Error('DOCX library loading, try again in a moment.');const ab=await file.arrayBuffer();const res=await mammoth.extractRawText({arrayBuffer:ab});return res.value;}
+  throw new Error('Please use .txt, .pdf, or .docx files');
+}
+
+// HISTORY
+async function loadHistory(){
+  const el=document.getElementById('history-list');
+  el.innerHTML='<div class="empty"><div class="empty-icon">&#8987;</div><div class="empty-text">Loading...</div></div>';
+  try{
+    const r=await apiFetch('/api/analyze/history'+(activeClientId?'?clientId='+activeClientId:''));
+    const rows=await r.json();
+    if(!rows.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-text">No analyses yet.</div></div>';return;}
+    el.innerHTML=rows.map(h=>{const d=new Date(h.created_at).toLocaleString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});return `<div class="history-item"><div><div class="history-module">${h.module_label||h.module}</div><div class="history-date">${d}</div></div><span class="history-badge">${h.module}</span></div>`;}).join('');
+  }catch{el.innerHTML='<div class="empty"><div class="empty-icon">&#9888;</div><div class="empty-text">Could not load history.</div></div>';}
+}
+
+// BRAND VOICE TOGGLE
+function switchBrand(mode,btn){
+  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  document.querySelectorAll('.brand-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('brand-'+mode).classList.add('active');
+}
+
+function copyResult(id){navigator.clipboard.writeText(document.getElementById(id).textContent).catch(()=>{});}
+
+// CHATBOT
+function toggleChat(){document.getElementById('chat-panel').classList.toggle('open');}
+async function sendChat(){
+  const input=document.getElementById('chat-input');const msg=input.value.trim();if(!msg)return;input.value='';
+  const msgs=document.getElementById('chat-msgs');
+  msgs.innerHTML+=`<div class="chat-msg user">${msg}</div>`;msgs.scrollTop=msgs.scrollHeight;
+  chatHistory.push({role:'user',content:msg});
+  try{
+    const r=await apiFetch('/api/analyze/chat',{method:'POST',body:JSON.stringify({message:msg,history:chatHistory.slice(-6)})});
+    const d=await r.json();chatHistory.push({role:'assistant',content:d.reply});
+    msgs.innerHTML+=`<div class="chat-msg bot">${d.reply}</div>`;msgs.scrollTop=msgs.scrollHeight;
+  }catch{msgs.innerHTML+=`<div class="chat-msg bot" style="color:#c00">Error &mdash; try again.</div>`;}
+}
+
+// VIDEOS
+const VIDS=[{id:'intro',name:'Introduction',sub:'Overview and getting started'},{id:'brand',name:'Brand Voice DNA',sub:'Extract the linguistic fingerprint'},{id:'risk',name:'Risk Management',sub:'Find risks before sending'},{id:'textgen',name:'Text Generator',sub:'Create texts in any format'},{id:'profiling',name:'Rhetoric Profiling',sub:'Analyse leadership communication'},{id:'stress',name:'Stress Test',sub:'Prepare for tough questions'}];
+function renderVideos(){
+  const grid=document.getElementById('video-grid');
+  const stored=JSON.parse(localStorage.getItem('riq-videos')||'{}');
+  grid.innerHTML=VIDS.map(m=>{const src=stored[m.id]||'';return `<div class="video-card${src?' has-video':''}"><div class="video-thumb">${src?`<video src="${src}" controls></video>`:`<div class="video-placeholder"><div class="play-icon">&#9654;</div><div style="font-size:14px;font-weight:600;margin-bottom:4px">${m.name}</div><div style="font-size:12px;color:var(--muted)">${m.sub}</div></div>`}</div><div class="video-footer"><span class="video-footer-name">${m.name}</span><button class="upload-video-btn" onclick="document.getElementById('vf-${m.id}').click()">Upload</button></div><input type="file" id="vf-${m.id}" accept="video/*" onchange="saveVideo('${m.id}',this)"></div>`;}).join('');
+}
+function saveVideo(id,input){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{const s=JSON.parse(localStorage.getItem('riq-videos')||'{}');s[id]=e.target.result;localStorage.setItem('riq-videos',JSON.stringify(s));renderVideos();};reader.readAsDataURL(file);}
+
+// KEYBOARD SHORTCUTS
+document.getElementById('adv-pw').addEventListener('keydown',e=>{if(e.key==='Enter')loginAdvisor();});
+document.getElementById('cl-token').addEventListener('keydown',e=>{if(e.key==='Enter')loginClient();});
+
 tryAutoLogin();
 </script>
 </body>

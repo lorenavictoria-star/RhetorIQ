@@ -197,6 +197,20 @@ router.post('/chat', requireAuth, async (req, res) => {
   }
 });
 
+// DELETE /api/analyze/client/:clientId — delete all analyses for a client
+router.delete('/client/:clientId', requireAuth, async (req, res) => {
+  try {
+    const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+    const { rowCount } = await pool.query(
+      'DELETE FROM analyses WHERE client_id = $1 AND advisor_id = $2',
+      [req.params.clientId, advisorId]
+    );
+    res.json({ deleted: rowCount });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // POST /api/analyze/route — smart module router
 router.post('/route', requireAuth, async (req, res) => {
   try {
