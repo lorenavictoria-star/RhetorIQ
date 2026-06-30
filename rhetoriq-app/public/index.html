@@ -32,33 +32,57 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
 /* SHELL */
 .app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 
-/* HEADER */
-.hdr{flex-shrink:0;border-bottom:1.5px solid var(--bd);padding:0 28px;padding-top:var(--safe-top);height:calc(56px + var(--safe-top));display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
-.hlogo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;cursor:pointer;flex-shrink:0}
-.hnav{display:flex;gap:2px;margin:0 16px}
-.nb{padding:7px 13px;font-size:13px;font-weight:500;color:var(--mu);background:none;border:none;cursor:pointer;border-radius:4px;font-family:'Inter',sans-serif;white-space:nowrap}
-.nb:hover{background:var(--sf);color:var(--tx)}
-.nb.active{color:var(--tx);background:var(--sf)}
-.nb.ao{display:none}
-body.adv .nb.ao{display:inline-block}
+/* HEADER — Version C */
+.hdr{flex-shrink:0;border-bottom:1px solid var(--bd);padding:0 24px;padding-top:var(--safe-top);height:calc(52px + var(--safe-top));display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
+.hlogo{font-family:'Inter',sans-serif;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;flex-shrink:0;color:var(--tx)}
+.hnav{display:none!important}
+.nb{display:none}
 .hright{display:flex;align-items:center;gap:10px;flex-shrink:0}
-.wsd{width:7px;height:7px;border-radius:50%;background:var(--dm);display:inline-block;flex-shrink:0}
-.wsd.on{background:#4a4}
-.huname{font-size:12px;color:var(--mu)}
-.sout{font-size:12px;color:var(--mu);cursor:pointer;text-decoration:underline;background:none;border:none;font-family:'Inter',sans-serif}
+.wsd{display:none}
+.huname{display:none}
+.sout{font-size:12px;color:var(--mu);cursor:pointer;background:none;border:none;font-family:'Inter',sans-serif;text-decoration:none;letter-spacing:.02em}
+.sout:hover{color:var(--tx)}
 
 /* CLIENT BAR */
-.cbar{display:none;background:var(--sf);border-bottom:1px solid var(--bd);padding:8px 28px;align-items:center;gap:10px;flex-shrink:0}
+.cbar{display:none;background:var(--bg);border-bottom:1px solid var(--bd);padding:6px 24px;align-items:center;gap:10px;flex-shrink:0}
 body.adv .cbar{display:flex}
-.cbar-lbl{font-size:12px;color:var(--mu);flex-shrink:0}
-.cbar select{padding:7px 12px;border:1.5px solid var(--bd);background:#fff;font-family:'Inter',sans-serif;font-size:13px;color:var(--tx);border-radius:4px;outline:none;cursor:pointer}
-.ncbtn{margin-left:auto;padding:7px 16px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px;flex-shrink:0}
+.cbar-lbl{font-size:11px;color:var(--mu);flex-shrink:0;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.cbar select{padding:6px 12px;border:1px solid var(--bd);background:var(--sf);font-family:'Inter',sans-serif;font-size:13px;color:var(--tx);border-radius:4px;outline:none;cursor:pointer}
+.ncbtn{margin-left:auto;padding:6px 14px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:4px;flex-shrink:0}
 .ncbtn:hover{background:#333}
 
 /* CONTENT */
 .content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.page{display:none;padding:28px 28px;max-width:920px;margin:0 auto;padding-bottom:calc(28px + var(--safe-bottom))}
+.page{display:none;padding:24px 28px;max-width:860px;margin:0 auto;padding-bottom:calc(80px + var(--safe-bottom))}
 .page.active{display:block}
+
+/* MODULES LIST PAGE */
+.mod-search-wrap{margin-bottom:16px}
+.mod-search-inp{width:100%;padding:11px 14px;border:1px solid var(--bd);background:var(--sf);font-family:'Inter',sans-serif;font-size:14px;color:var(--tx);border-radius:6px;outline:none}
+.mod-search-inp:focus{border-color:var(--tx);background:#fff}
+.mlist-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+.mlist-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--bd);background:#fff;color:var(--mu);font-family:'Inter',sans-serif}
+.mlist-pill:hover{border-color:var(--tx);color:var(--tx)}
+.mlist-pill.active{background:var(--tx);color:#fff;border-color:var(--tx)}
+.mrow{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--bd);cursor:pointer;transition:opacity .1s}
+.mrow:hover{opacity:.7}
+.mrow:last-child{border-bottom:none}
+.mrow-left{display:flex;flex-direction:column;gap:3px}
+.mrow-name{font-size:15px;font-weight:500;color:var(--tx)}
+.mrow-tag{font-size:11px;color:var(--mu);font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.mrow-arr{font-size:18px;color:var(--dm)}
+.mrow.mrow-feat .mrow-name{font-weight:600}
+.mrow-new{font-size:9px;font-weight:700;letter-spacing:.08em;background:var(--tx);color:#fff;padding:2px 6px;border-radius:10px;margin-left:8px;vertical-align:middle}
+.mrow-crisis .mrow-name{color:var(--red)}
+
+/* PASTE INTELLIGENCE */
+.pi-banner{display:none;background:#f7f7f5;border:1px solid var(--bd);border-radius:6px;padding:12px 16px;margin-top:10px;margin-bottom:0;align-items:center;justify-content:space-between;gap:10px}
+.pi-banner.show{display:flex}
+.pi-text{font-size:13px;color:var(--tx)}
+.pi-text strong{font-weight:600}
+.pi-actions{display:flex;gap:6px;flex-shrink:0}
+.pi-go{padding:6px 14px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:4px}
+.pi-dismiss{background:none;border:none;font-size:16px;color:var(--mu);cursor:pointer;padding:0 4px}
 
 /* SECTION TABS (Concept B) */
 .stabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px}
@@ -80,14 +104,14 @@ body.adv .cbar{display:flex}
 .cname{font-size:15px;font-weight:600;color:var(--tx);margin-bottom:5px;line-height:1.3}
 .cdesc{font-size:12px;color:var(--mu);line-height:1.5}
 
-/* SMART ROUTER */
-.router-box{background:var(--sf);border:1.5px solid var(--bd);border-radius:8px;padding:22px;margin-bottom:24px}
-.router-title{font-size:14px;font-weight:600;margin-bottom:3px}
-.router-sub{font-size:12px;color:var(--mu);margin-bottom:14px}
+/* SMART ROUTER — Version C */
+.router-box{background:var(--sf);border:none;border-radius:10px;padding:20px;margin-bottom:20px}
+.router-title{font-size:13px;font-weight:600;letter-spacing:.02em;margin-bottom:2px}
+.router-sub{font-size:12px;color:var(--mu);margin-bottom:12px}
 .router-row{display:flex;gap:8px;align-items:flex-start}
-.rtarea{flex:1;padding:12px 14px;border:1.5px solid var(--bd);font-family:'Inter',sans-serif;font-size:13px;color:var(--tx);background:#fff;resize:none;height:66px;outline:none;border-radius:4px}
-.rtarea:focus{border-color:var(--tx)}
-.rbtn{padding:12px 20px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px;white-space:nowrap;flex-shrink:0;align-self:flex-end}
+.rtarea{flex:1;padding:13px 14px;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--tx);background:#fff;resize:none;height:72px;outline:none;border-radius:6px;line-height:1.6}
+.rtarea::placeholder{color:var(--dm)}
+.rbtn{padding:11px 18px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px;white-space:nowrap;flex-shrink:0;align-self:flex-end;letter-spacing:.02em}
 .rbtn:hover{background:#333}
 .rstat{font-size:12px;color:var(--mu);margin-top:8px;min-height:18px}
 
@@ -338,26 +362,26 @@ body.adv .vubtn{display:block}
 .mtabpanel{display:none}
 .mtabpanel.active{display:block}
 
+/* BOTTOM NAV — always visible, Version C */
+.mnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--bd);padding:8px 0;padding-bottom:calc(8px + var(--safe-bottom));z-index:100;justify-content:space-around}
+.mni{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 14px;cursor:pointer;min-width:52px}
+.mni-i{font-size:20px;color:var(--dm)}
+.mni-l{font-size:10px;color:var(--mu);font-weight:500;letter-spacing:.02em}
+.mni.active .mni-i,.mni.active .mni-l{color:var(--tx)}
+
 /* MOBILE */
 @media(max-width:700px){
   .hdr{padding:0 16px;padding-top:var(--safe-top)}
-  .hnav{display:none}
-  .page{padding:16px 16px;padding-bottom:calc(72px + var(--safe-bottom))}
+  .page{padding:16px 16px;padding-bottom:calc(84px + var(--safe-bottom))}
   .mgrid{grid-template-columns:1fr 1fr}
   .mcard.span3{grid-column:span 2}
   .row2{grid-template-columns:1fr}
   .stats{gap:6px}
   .vgrid{grid-template-columns:1fr}
   .router-row{flex-direction:column}
-  .cbar{padding:8px 16px}
-  .mnav{display:flex}
+  .cbar{padding:6px 16px}
   #cpanel{width:calc(100vw - 24px);right:12px}
 }
-.mnav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1.5px solid var(--bd);padding:6px 0;padding-bottom:calc(6px + var(--safe-bottom));z-index:100;justify-content:space-around}
-.mni{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 10px;cursor:pointer;min-width:48px}
-.mni-i{font-size:18px;color:var(--dm)}
-.mni-l{font-size:9px;color:var(--mu);font-weight:500}
-.mni.active .mni-i,.mni.active .mni-l{color:var(--tx)}
 </style>
 </head>
 <body>
@@ -428,16 +452,8 @@ body.adv .vubtn{display:block}
 <div class="app" id="app" style="display:none">
   <header class="hdr">
     <div class="hlogo" onclick="goHome()">RhetorIQ</div>
-    <nav class="hnav">
-      <button class="nb active" id="nav-home" onclick="goHome()">Home</button>
-      <button class="nb" id="nav-brand-voice" onclick="goPage('brand-voice')">Brand Voice</button>
-      <button class="nb ao" id="nav-people" onclick="goPage('people')">People</button>
-      <button class="nb ao" id="nav-memory" onclick="goPage('memory')">Context</button>
-      <button class="nb" id="nav-history" onclick="goPage('history');loadHistory()">History</button>
-      <button class="nb ao" id="nav-clients" onclick="goPage('clients')">Clients</button>
-    </nav>
     <div class="hright">
-      <span class="wsd" id="ws-dot"></span>
+      <span class="wsd" id="ws-dot" style="display:none"></span>
       <span class="huname" id="uname"></span>
       <button class="sout" onclick="logout()">Sign out</button>
     </div>
@@ -463,6 +479,13 @@ body.adv .vubtn{display:block}
           <button class="rbtn" onclick="routePrompt()">&#8594; Go</button>
         </div>
         <div class="rstat" id="rstat"></div>
+        <div class="pi-banner" id="pi-banner">
+          <div class="pi-text" id="pi-text"></div>
+          <div class="pi-actions">
+            <button class="pi-go" id="pi-go-btn"></button>
+            <button class="pi-dismiss" onclick="document.getElementById('pi-banner').classList.remove('show')">&times;</button>
+          </div>
+        </div>
       </div>
 
       <!-- Most Used Row -->
@@ -655,6 +678,22 @@ body.adv .vubtn{display:block}
       <div class="vgrid" id="vgrid"></div>
     </div>
 
+    <!-- MODULES LIST -->
+    <div class="page" id="page-modules">
+      <div class="mod-search-wrap">
+        <input class="mod-search-inp" id="mod-search" placeholder="Search modules..." oninput="filterModsList(this.value)">
+      </div>
+      <div class="mlist-filters">
+        <button class="mlist-pill active" onclick="filterModsCat('all',this)">All</button>
+        <button class="mlist-pill" onclick="filterModsCat('foundation',this)">Foundation</button>
+        <button class="mlist-pill" onclick="filterModsCat('prevention',this)">Prevention</button>
+        <button class="mlist-pill" onclick="filterModsCat('efficiency',this)">Efficiency</button>
+        <button class="mlist-pill" onclick="filterModsCat('creation',this)">Creation</button>
+        <button class="mlist-pill" onclick="filterModsCat('growth',this)">Growth</button>
+      </div>
+      <div id="modules-list"></div>
+    </div>
+
     <!-- HISTORY -->
     <div class="page" id="page-history">
       <div class="page-title" style="margin-bottom:6px">History</div>
@@ -666,11 +705,19 @@ body.adv .vubtn{display:block}
 
   <nav class="mnav">
     <div class="mni active" id="mn-home" onclick="goHome();setMN('home')"><div class="mni-i">&#8962;</div><div class="mni-l">Home</div></div>
-    <div class="mni" id="mn-brand" onclick="goPage('brand-voice');setMN('brand')"><div class="mni-i">&#9670;</div><div class="mni-l">Brand</div></div>
-    <div class="mni" id="mn-people" style="display:none" onclick="goPage('people');setMN('people');loadPeople()"><div class="mni-i">&#128101;</div><div class="mni-l">People</div></div>
+    <div class="mni" id="mn-modules" onclick="goPage('modules');setMN('modules');renderModulesList()"><div class="mni-i">&#9783;</div><div class="mni-l">Modules</div></div>
+    <div class="mni" id="mn-people" onclick="goPage('people');setMN('people');loadPeople()"><div class="mni-i">&#128101;</div><div class="mni-l">People</div></div>
     <div class="mni" id="mn-hist" onclick="goPage('history');loadHistory();setMN('hist')"><div class="mni-i">&#128203;</div><div class="mni-l">History</div></div>
-    <div class="mni" id="mn-cl" style="display:none" onclick="goPage('clients');setMN('cl')"><div class="mni-i">&#127970;</div><div class="mni-l">Clients</div></div>
+    <div class="mni" id="mn-more" onclick="toggleMore()"><div class="mni-i">&#8943;</div><div class="mni-l">More</div></div>
   </nav>
+
+  <div id="more-menu" style="display:none;position:fixed;bottom:70px;right:12px;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);z-index:200;min-width:180px;overflow:hidden">
+    <div onclick="goPage('brand-voice');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Brand Voice</div>
+    <div onclick="goPage('memory');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Context</div>
+    <div class="ao-item" onclick="goPage('clients');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none">Clients</div>
+    <div onclick="goPage('videos');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Videos</div>
+    <div onclick="logout()" style="padding:13px 18px;font-size:14px;cursor:pointer;color:var(--mu)">Sign out</div>
+  </div>
 </div>
 
 <button id="cbtn" onclick="toggleChat()">&#128172;</button>
@@ -718,7 +765,8 @@ async function boot(user,role){
     document.getElementById('mn-people').style.display='flex';
     await loadClients();
   }
-  connectWS();loadStats();renderVids();
+  if(isAdv){document.querySelectorAll('.ao-item').forEach(el=>el.style.display='block');}
+  connectWS();loadStats();renderVids();initPasteIntelligence();
 }
 
 // WS
@@ -933,6 +981,8 @@ function goPage(name){
   if(name==='people')loadPeople();
   if(name==='memory')renderMemory();
   if(name==='brand-voice')loadBrandVoiceRefs();
+  if(name==='modules')renderModulesList();
+  if(name==='history')loadHistory();
 }
 function setMN(id){document.querySelectorAll('.mni').forEach(n=>n.classList.remove('active'));const el=document.getElementById('mn-'+id);if(el)el.classList.add('active');}
 
@@ -1262,6 +1312,97 @@ function renderVids(){
   grid.innerHTML=VIDS.map(m=>{const src=stored[m.id]||'';return `<div class="vc${src?' hv':''}"><div class="vthumb">${src?`<video src="${src}" controls></video>`:`<div class="vph"><div style="font-size:28px;color:var(--dm);margin-bottom:6px">&#9654;</div><div style="font-size:13px;font-weight:600;margin-bottom:2px">${m.name}</div><div style="font-size:12px;color:var(--mu)">${m.sub}</div></div>`}</div><div class="vfoot"><span class="vfn">${m.name}</span><button class="vubtn" onclick="document.getElementById('vf-${m.id}').click()">Upload</button></div><input type="file" id="vf-${m.id}" accept="video/*" onchange="saveVid('${m.id}',this)"></div>`;}).join('');
 }
 function saveVid(id,input){const f=input.files[0];if(!f)return;const reader=new FileReader();reader.onload=e=>{const s=JSON.parse(localStorage.getItem('riq-vids')||'{}');s[id]=e.target.result;localStorage.setItem('riq-vids',JSON.stringify(s));renderVids();};reader.readAsDataURL(f);}
+
+// MORE MENU
+function toggleMore(){const m=document.getElementById('more-menu');m.style.display=m.style.display==='block'?'none':'block';}
+function hideMore(){document.getElementById('more-menu').style.display='none';}
+document.addEventListener('click',e=>{const m=document.getElementById('more-menu');if(m&&!m.contains(e.target)&&!document.getElementById('mn-more').contains(e.target))m.style.display='none';});
+
+// MODULES LIST PAGE
+const ALL_MODULES=[
+  {key:'pre-meeting',name:'Meeting Prep',cat:'prevention',tag:'Prevention',feat:true,isNew:true},
+  {key:'arg-reaction',name:'Argument / Reaction Preview',cat:'prevention',tag:'Prevention',isNew:true},
+  {key:'crisis',name:'Crisis Response',cat:'prevention',tag:'Prevention — Emergency',crisis:true},
+  {key:'risk',name:'Risk Scan',cat:'prevention',tag:'Prevention'},
+  {key:'profiling',name:'How We Communicate',cat:'foundation',tag:'Foundation'},
+  {key:'fingerprint',name:'Language Over Time',cat:'growth',tag:'Growth'},
+  {key:'actionability',name:'Clarity Check',cat:'efficiency',tag:'Efficiency'},
+  {key:'thread',name:'Notes to Tasks',cat:'efficiency',tag:'Efficiency'},
+  {key:'rh-translate',name:'Translate',cat:'efficiency',tag:'Efficiency',isNew:true},
+  {key:'text-gen',name:'Write',cat:'creation',tag:'Creation'},
+  {key:'review',name:'Write Feedback',cat:'creation',tag:'Creation — HR'},
+  {key:'recognition',name:'Write Appreciation',cat:'creation',tag:'Creation — HR'},
+  {key:'sparring',name:'2-Min. Training',cat:'growth',tag:'Growth',isNew:true},
+  {key:'debrief',name:'Debrief',cat:'growth',tag:'Growth',isNew:true},
+  {key:'brand-voice',name:'Brand Voice',cat:'foundation',tag:'Foundation — Master Reference'},
+];
+let modsCatFilter='all',modsSearch='';
+function renderModulesList(){
+  const list=document.getElementById('modules-list');if(!list)return;
+  const q=modsSearch.toLowerCase();
+  const filtered=ALL_MODULES.filter(m=>{
+    const matchCat=modsCatFilter==='all'||m.cat===modsCatFilter;
+    const matchQ=!q||m.name.toLowerCase().includes(q)||m.tag.toLowerCase().includes(q);
+    return matchCat&&matchQ;
+  });
+  if(!filtered.length){list.innerHTML='<div style="color:var(--mu);font-size:14px;padding:20px 0">No modules found.</div>';return;}
+  list.innerHTML=filtered.map(m=>`
+    <div class="mrow${m.feat?' mrow-feat':''}${m.crisis?' mrow-crisis':''}" onclick="${m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`}">
+      <div class="mrow-left">
+        <div class="mrow-name">${m.name}${m.isNew?'<span class="mrow-new">New</span>':''}</div>
+        <div class="mrow-tag">${m.tag}</div>
+      </div>
+      <div class="mrow-arr">&#8250;</div>
+    </div>`).join('');
+}
+function filterModsList(q){modsSearch=q;renderModulesList();}
+function filterModsCat(cat,btn){
+  modsCatFilter=cat;
+  document.querySelectorAll('.mlist-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderModulesList();
+}
+
+// PASTE INTELLIGENCE
+const PI_RULES=[
+  {test:t=>t.split(/\s+/).length>180&&/@|from:|to:|subject:/i.test(t),mod:'thread',label:'Long email thread detected.',cta:'Notes to Tasks'},
+  {test:t=>t.split(/\s+/).length>180&&/\n.*\n.*\n/g.test(t),mod:'thread',label:'Long messy content detected.',cta:'Notes to Tasks'},
+  {test:t=>/\bcrisis\b|urgent|breaking|immediately|accident|incident|scandal/i.test(t),mod:'crisis',label:'Crisis language detected.',cta:'Crisis Response'},
+  {test:t=>/press release|media statement|public statement|announces|we are pleased to announce/i.test(t),mod:'risk',label:'Public statement detected.',cta:'Run Risk Scan first'},
+  {test:t=>/\bpushback\b|critics?|opposition|counterargument|challenge us|they will say/i.test(t),mod:'arg-reaction',label:'Anticipating pushback?',cta:'Argument / Reaction Preview'},
+  {test:t=>/feedback|performance review|appraisal|probation|annual review/i.test(t),mod:'review',label:'HR content detected.',cta:'Write Feedback'},
+  {test:t=>/meeting|agenda|tomorrow|presentation|board|all-hands|town hall/i.test(t),mod:'pre-meeting',label:'Upcoming meeting detected.',cta:'Meeting Prep'},
+  {test:t=>/translate|übersetz|auf (french|deutsch|english|italian)|en français|auf englisch/i.test(t),mod:'rh-translate',label:'Translation needed?',cta:'Translate'},
+];
+let piTimer=null;
+function initPasteIntelligence(){
+  const ta=document.getElementById('router-input');if(!ta)return;
+  ta.addEventListener('input',()=>{
+    clearTimeout(piTimer);
+    piTimer=setTimeout(()=>checkPasteIntelligence(ta.value),600);
+  });
+}
+function checkPasteIntelligence(text){
+  const banner=document.getElementById('pi-banner');
+  const piText=document.getElementById('pi-text');
+  const piBtn=document.getElementById('pi-go-btn');
+  if(!text||text.trim().length<40){banner.classList.remove('show');return;}
+  for(const rule of PI_RULES){
+    if(rule.test(text)){
+      piText.innerHTML=`<strong>${rule.label}</strong> Open ${rule.cta}?`;
+      piBtn.textContent=rule.cta+' →';
+      piBtn.onclick=()=>{
+        banner.classList.remove('show');
+        if(rule.mod==='brand-voice')goPage('brand-voice');
+        else goModule(rule.mod,text);
+        document.getElementById('router-input').value='';
+      };
+      banner.classList.add('show');
+      return;
+    }
+  }
+  banner.classList.remove('show');
+}
 
 // PRE-MEETING FORM
 function buildPreMeeting(prefill,form){
