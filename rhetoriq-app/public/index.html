@@ -1027,7 +1027,7 @@ function applyLang(){
   // History page
   s('hist-title',t.hist_title);s('hist-sub',t.hist_sub);s('hist-empty',t.hist_empty);
   // Re-render module list with correct lang if open
-  if(document.getElementById('page-modules')?.style.display!=='none')renderModulesList();
+  if(document.getElementById('page-modules')?.classList.contains('active')&&typeof ALL_MODULES!=='undefined')renderModulesList();
 }
 function toggleLang(){
   LANG=LANG==='en'?'de':'en';
