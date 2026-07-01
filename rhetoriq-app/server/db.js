@@ -25,6 +25,8 @@ async function init() {
     );
 
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS email TEXT;
+    ALTER TABLE analyses DROP CONSTRAINT IF EXISTS analyses_client_id_fkey;
+    ALTER TABLE analyses ADD CONSTRAINT analyses_client_id_fkey FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS password_hash TEXT;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT FALSE;
 
