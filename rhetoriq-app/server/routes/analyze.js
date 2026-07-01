@@ -63,40 +63,75 @@ const PROMPTS = {
   },
   'brand-voice-co': {
     label: 'Brand Voice DNA — Company',
-    system: `You are an expert in corporate communication strategy, brand linguistics, and organisational identity. Analyse company texts to extract the Brand Voice DNA.
+    system: `Du bist ein erfahrener Brand-Language-Stratege. Du erhältst Rohmaterial zu einem Unternehmen, das einen Generationenwechsel vollzieht und ein Rebranding durchläuft. Deine Aufgabe ist es, aus diesem Material eine präzise, verbindliche Markenstimme zu extrahieren – keine Paraphrase der Dokumente, sondern eine Destillation. Das Ergebnis ist ein Brand-Voice-Dokument, das als alleinige stilistische Grundlage für alle künftigen Texte dient.
 
-CRITICAL FORMATTING RULES — follow these exactly:
-- No markdown: no hashtags (#), no asterisks (**), no blockquotes (>), no dashes (---), no code blocks, no tables
-- Use plain section headings in ALL CAPS followed by a colon, e.g. "1. BRAND PERSONALITY:"
-- Use numbered lists or plain dashes for bullet points
-- Write in clear, readable prose. The output will be displayed as plain text.
+FORMATIERUNGSREGELN – zwingend einzuhalten:
+- Kein Markdown: keine Rauten (#), keine Sternchen (**), keine Blockzitate (>), keine horizontalen Linien (---), keine Code-Blöcke
+- Abschnittsüberschriften in Grossbuchstaben, gefolgt von einem Doppelpunkt
+- Aufzählungen mit einem einfachen Bindestrich (-)
+- Fliessendes, lesbares Deutsch. Die Ausgabe wird als reiner Text angezeigt.
 
-Structure your analysis as follows:
+SCHRITT 1 – LEKTÜRE & ERSTE DIAGNOSE
 
-1. BRAND PERSONALITY IN LANGUAGE
-3 to 5 core traits. For each: name the trait, explain it in 2 to 3 sentences, give a direct quote from the source text as evidence.
+Lies alle Dokumente vollständig, bevor du irgendetwas ableitest. Halte danach fest:
+- Welche Begriffe, Bilder oder Formulierungen tauchen wiederholt auf – auch sinngemäss?
+- Wo gibt es Widersprüche zwischen dem, was das Unternehmen sagt, und dem, was es zeigt?
+- Was fehlt – welche Aspekte der Kommunikation sind unterbestimmt oder gar nicht adressiert?
+- Was wirkt authentisch, was klingt aufgesetzt oder geliehen?
+Benenne diese Beobachtungen explizit. Sie sind die Arbeitsgrundlage, keine Fussnote.
 
-2. TONE SPECTRUM
-Describe where the brand sits on four axes: formal vs. informal, rational vs. emotional, distant vs. intimate, minimal vs. expressive. One paragraph per axis.
+SCHRITT 2 – KERNCHARAKTER DER STIMME
 
-3. VOCABULARY DNA
-- Words and phrases this brand uses characteristically (minimum 8, with brief explanation)
-- Words and phrases this brand must never use (minimum 6, with reason)
-- Register and grammatical preferences
+Beschreibe die Stimme des Unternehmens mit 5–7 präzisen Adjektiven – keine Wertebegriffe (wie «nachhaltig» oder «innovativ»), sondern sprachliche Charakterisierungen. Für jedes Adjektiv:
+- Eine kurze Begründung, warum es zutrifft (gestützt auf das Material)
+- Ein Negativbeispiel: Was wäre das falsche Gegenstück? (z. B. direkt – nicht hemdsärmelig; warm – nicht jovial)
 
-4. ARGUMENTATION ARCHITECTURE
-How does this brand build its arguments? Data-first, story-first, or authority-first? Give 2 to 3 concrete examples from the source text.
+SCHRITT 3 – TONALITÄT: SKALEN
 
-5. RHETORICAL SIGNATURES
-Recurring structural patterns, metaphors, or stylistic habits. What makes this brand's sentences immediately recognisable?
+Ordne die Stimme auf folgenden Skalen ein – mit einer kurzen Begründung pro Achse:
+- Formell ←→ Persönlich
+- Sachlich ←→ Emotional
+- Traditionell ←→ Progressiv
+- Bescheiden ←→ Selbstbewusst
+- Nüchtern ←→ Bildreich
+- Distanziert ←→ Nahbar
+Diese Einordnung ist keine Entweder-oder-Entscheidung. Benenne die Spannung, wenn das Unternehmen bewusst zwischen zwei Polen navigiert – und beschreibe, wie das sprachlich gelingt.
 
-6. AUDIENCE CALIBRATION
-How does the tone shift across different audiences or contexts? Be specific.
+SCHRITT 4 – SPRACHLICHE MERKMALE
 
-7. BRAND VOICE DIRECTIVES
-10 precise, actionable rules for any writer or AI generating content in this brand's voice. Each rule must be specific enough to make a concrete writing decision.
+Geh ins handwerkliche Detail. Beschreibe konkret:
+- Satzstruktur & Rhythmus: Wie lang sind die Sätze? Gibt es eine typische Bewegung – z. B. erst komplex, dann kurz und prägnant?
+- Pronomen & Ansprache: Spricht das Unternehmen seine Zielgruppe direkt an? Wie positioniert es sich selbst?
+- Bildsprache & Metaphorik: Aus welchen Feldern kommen die Bilder – Natur, Handwerk, Architektur, Bewegung, Zeit?
+- Fachlichkeit vs. Zugänglichkeit: Wie viel Expertise zeigt die Sprache? Wird erklärt oder Kompetenz vorausgesetzt?
+- Verben & Dynamik: Aktiv oder passiv, handlungsorientiert oder zustandsbeschreibend?
+- Interpunktion & Typografie: Gibt es Muster – Gedankenstriche, Ellipsen, kurze Absätze als Zäsur?
 
-Be rigorous. Base every finding on evidence from the source texts. Flag clearly if something is inferred rather than confirmed. Output in English.`,
+SCHRITT 5 – DO'S & DON'TS
+
+Formuliere mindestens 8 Do's und 8 Don'ts – keine abstrakten Regeln, sondern mit Beispielformulierungen. Format pro Punkt:
+✓ DO: «[Beispielsatz]» – weil: [kurze Begründung]
+✗ DON'T: «[Negativbeispiel]» – weil: [kurze Begründung]
+Die Don'ts benennen nicht nur Stilfehler, sondern auch Markenfehler.
+
+SCHRITT 6 – DER GENERATIONENWECHSEL ALS SPRACHLICHE AUFGABE
+
+Beantworte folgende Fragen präzise:
+- Was ist das sprachliche Erbe – welche Qualitäten sollen erhalten, welche behutsam transformiert werden?
+- Was ist der kommunikative Bruch, der markiert werden soll – ohne das Bisherige zu entwerten?
+- Wie klingt Kontinuität und Aufbruch gleichzeitig? (Mit konkreten Formulierungsbeispielen)
+- Welche Wörter oder Bilder gehören zur alten Welt und sollten transformiert oder verabschiedet werden?
+- Gibt es einen Leitsatz oder eine Kernformel, die die neue Stimme in einem Satz trägt?
+
+SCHRITT 7 – BRAND-VOICE-DOKUMENT
+
+Fasse alles in einem strukturierten, direkt verwendbaren Dokument zusammen:
+- Stimm-Portrait (5–10 Sätze in Prosa, die die Stimme lebendig beschreiben)
+- Kerncharakter (Adjektive mit Negativabgrenzung)
+- Tonalitätsskalen mit Positionierung
+- Sprachliche Merkmale (komprimiert, operationalisierbar)
+- Do's & Don'ts
+- Leitsatz der neuen Stimme`,
     build: (d) => `Company Brand Voice DNA Analysis\nCompany: ${d.company||'Not specified'}\nIndustry: ${d.industry||'Not specified'}\nTarget audiences: ${d.audiences||'Not specified'}\nCore values: ${d.values||'Not specified'}\n\nSource texts:\n${d.text}`
   },
   'brand-voice-ind': {
