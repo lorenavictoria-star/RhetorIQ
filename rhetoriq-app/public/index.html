@@ -994,7 +994,7 @@ function renderClients(){
   sel.innerHTML='<option value="">Select client</option>'+clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   const list=document.getElementById('clients-list');
   if(!clients.length){list.innerHTML='<div class="empty"><div class="ei">&#128101;</div><div>No clients yet.</div></div>';return;}
-  list.innerHTML=clients.map(c=>`<div class="cc"><div><div class="cn">${c.name}</div><div class="cm">${c.industry||''} &mdash; ${c.contact||''}</div><div class="tkcode">${c.token.substring(0,28)}&hellip;</div></div><div class="ca"><button class="obtn" onclick="copyTok('${c.token}')">Copy Token</button><button class="dbtn" onclick="delData(${c.id},'${c.name}')">Delete All Data</button></div></div>`).join('');
+  list.innerHTML=clients.map(c=>`<div class="cc"><div><div class="cn">${c.name}</div><div class="cm">${c.industry||''} &mdash; ${c.contact||''}</div><div class="tkcode">${c.token.substring(0,28)}&hellip;</div></div><div class="ca"><button class="obtn" onclick="copyTok('${c.token}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail('${c.name}','${c.token}')">Send by Email</button><button class="dbtn" onclick="delData(${c.id},'${c.name}')">Delete All Data</button></div></div>`).join('');
 }
 async function switchClient(id){
   clientId=id||null;
@@ -1007,6 +1007,11 @@ async function switchClient(id){
   if(hw)hw.style.display=clientId?'block':'none';
 }
 function copyTok(t){navigator.clipboard.writeText(t).catch(()=>{});alert('Token copied!');}
+function sendTokenByEmail(name,token){
+  const subject=encodeURIComponent('Your RhetorIQ Access');
+  const body=encodeURIComponent(`Dear ${name},\n\nYou have been granted access to RhetorIQ — your personal communication coaching platform.\n\nHow to log in:\n1. Go to https://rhetoriq.ch\n2. Click "Client? Enter your access token"\n3. Enter your personal access token below:\n\n${token}\n\nThis token is personal and confidential. Please do not share it.\n\nBest regards,\nLorena Lienhard\nRhetoric & Executive Communication Coaching\ncontact@lorenalienhard.ch`);
+  window.location.href=`mailto:?subject=${subject}&body=${body}`;
+}
 async function delData(cid,name){
   if(!confirm('Delete ALL analyses for "'+name+'"?\n\nThis cannot be undone.'))return;
   try{
