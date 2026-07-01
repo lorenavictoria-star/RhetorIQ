@@ -907,13 +907,13 @@ body.adv .vubtn{display:block}
     <div class="mni" id="mn-people" onclick="goPage('people');setMN('people');loadPeople()"><div class="mni-i" style="font-size:14px">&#9711;</div><div class="mni-l" id="mn-people-l">People</div></div>
     <div class="mni" id="mn-hist" onclick="goPage('history');loadHistory();setMN('hist')"><div class="mni-i" style="font-size:14px">&#9700;</div><div class="mni-l" id="mn-hist-l">History</div></div>
     <div class="mni ao" id="mn-reviews" onclick="openReviewPanel();setMN('reviews')" style="display:none;position:relative"><div class="mni-i">&#9998;</div><div class="mni-l">Reviews</div><span class="rev-badge" id="rev-badge"></span></div>
-    <div class="mni ao" id="mn-advisor" onclick="goPage('advisor');loadAdvisorDashboard();setMN('advisor')" style="display:none"><div class="mni-i" style="font-size:14px">&#9783;</div><div class="mni-l">Dashboard</div></div>
     <div class="mni" id="mn-more" onclick="toggleMore()"><div class="mni-i">&#8943;</div><div class="mni-l" id="mn-more-l">More</div></div>
   </nav>
 
   <div id="more-menu" style="display:none;position:fixed;bottom:70px;right:12px;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);z-index:200;min-width:190px;overflow:hidden">
     <div id="mm-context" onclick="goPage('memory');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Context</div>
     <div id="mm-clients" class="ao-item" onclick="goPage('clients');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none">Clients</div>
+    <div id="mm-advisor" class="ao-item" onclick="goPage('advisor');loadAdvisorDashboard();hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none">Dashboard</div>
     <div id="mm-videos" onclick="goPage('videos');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Videos</div>
     <div id="mm-contact" onclick="goPage('contact');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Contact</div>
     <div id="mm-datasec" onclick="goPage('datasec');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Data Security &amp; Privacy</div>
@@ -1274,7 +1274,7 @@ async function boot(user,role){
   if(isAdv){
     document.querySelectorAll('.ao-item').forEach(el=>el.style.display='block');
     document.getElementById('mn-reviews').style.display='flex';
-    document.getElementById('mn-advisor').style.display='flex';
+    document.getElementById('mm-advisor').style.display='block';
     loadAdvisorReviews();
     setInterval(loadAdvisorReviews,60000);
   }
