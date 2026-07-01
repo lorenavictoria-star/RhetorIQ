@@ -41,6 +41,7 @@ app.use('/api/people', require('./routes/people'));
 app.use('/api/memory', require('./routes/memory'));
 app.use('/api/subscriptions', require('./routes/subscriptions'));
 app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/klaviyo', require('./routes/klaviyo'));
 
 // Health check
 app.get('/health', (_, res) => res.json({ ok: true }));

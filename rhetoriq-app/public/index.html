@@ -764,7 +764,10 @@ body.adv .vubtn{display:block}
     <div class="page" id="page-clients">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
         <div class="page-title" id="clients-title">Clients</div>
-        <button class="add-btn" id="clients-add-btn" onclick="openModal('nc-ov')">+ New Client</button>
+        <div style="display:flex;gap:8px">
+          <button class="add-btn" style="background:#f5f5f5;color:var(--tx);border:1.5px solid var(--bd)" onclick="downloadClients()" id="clients-export-btn">⬇ Excel</button>
+          <button class="add-btn" id="clients-add-btn" onclick="openModal('nc-ov')">+ New Client</button>
+        </div>
       </div>
       <div id="clients-list"><div class="empty"><div class="ei">&#9711;</div><div id="clients-empty">No clients yet.</div></div></div>
     </div>
@@ -997,7 +1000,13 @@ const T={
     np_strengths:'Strengths',np_strengths_ph:'e.g. Excellent at simplifying complex topics.',
     np_weak:'Weak points',np_weak_ph:'e.g. Tends to over-explain. Gets defensive under criticism.',
     np_prefs:'Preferences (what they respond well to)',np_prefs_ph:'e.g. Short bullet points. Always lead with the bottom line.',
-    btn_cancel:'Cancel',btn_save:'Save'
+    btn_cancel:'Cancel',btn_save:'Save',
+    // LinkedIn & Klaviyo
+    li_profile_lbl:'LinkedIn Profile / About (optional)',
+    li_profile_ph:"Paste the About section and recent posts of the LinkedIn profile here — so the output matches the person's authentic voice.",
+    klv_apikey:'Klaviyo Private API Key',klv_subject:'Email Subject',
+    klv_subject_ph:'e.g. Our March Newsletter',klv_send:'Save as Draft in Klaviyo',
+    clients_export:'⬇ Excel'
   },
   de:{
     nav_home:'Start',nav_modules:'Module',nav_brand:'Marke',nav_people:'Personen',nav_hist:'Verlauf',nav_more:'Mehr',
@@ -1063,7 +1072,12 @@ const T={
     np_strengths:'Stärken',np_strengths_ph:'z.B. Hervorragend darin, komplexe Themen zu vereinfachen.',
     np_weak:'Schwächen',np_weak_ph:'z.B. Neigt dazu, zu viel zu erklären. Wird unter Kritik defensiv.',
     np_prefs:'Präferenzen (was gut ankommt)',np_prefs_ph:'z.B. Kurze Stichpunkte. Immer mit dem Fazit beginnen.',
-    btn_cancel:'Abbrechen',btn_save:'Speichern'
+    btn_cancel:'Abbrechen',btn_save:'Speichern',
+    li_profile_lbl:'LinkedIn-Profil / About (optional)',
+    li_profile_ph:'About-Bereich und aktuelle Posts des LinkedIn-Profils einfügen — damit der Output der authentischen Stimme der Person entspricht.',
+    klv_apikey:'Klaviyo Private API-Key',klv_subject:'E-Mail Betreff',
+    klv_subject_ph:'z.B. Unser März-Newsletter',klv_send:'Als Entwurf in Klaviyo speichern',
+    clients_export:'⬇ Excel'
   }
 };
 function applyLang(){
@@ -1722,8 +1736,18 @@ function buildTextGen(prefill,form){
         <div class="fg2"><label class="fl2">${tl.tg_language}</label><select id="tg-lang-${t.id}"><option>Deutsch</option><option>English</option><option>Français</option><option>Italiano</option></select></div>
         <div class="fg2"><label class="fl2">${tl.tg_length}</label><input type="text" id="tg-len-${t.id}" placeholder="${tl.tg_length_ph}"></div>
       </div>
+      ${t.id==='linkedin'?`<div class="fg2" style="margin-top:4px"><label class="fl2">${tl.li_profile_lbl||'LinkedIn Profile / About (optional)'}</label><textarea id="tg-li-profile" placeholder="${tl.li_profile_ph||'Paste the About section and recent posts of the LinkedIn profile here — so the output matches the person\'s authentic voice.'}" style="min-height:80px;font-size:12px"></textarea></div>`:''}
+      ${t.id==='newsletter'?`<div class="klaviyo-box" id="klaviyo-box-${t.id}" style="display:none;margin-top:12px;padding:14px;border:1.5px solid #e0d4f5;border-radius:8px;background:#f9f6ff">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7c3aed;margin-bottom:10px">Klaviyo</div>
+        <div class="row2">
+          <div class="fg2"><label class="fl2">${tl.klv_apikey||'Private API Key'}</label><input type="password" id="klv-key-${t.id}" placeholder="pk_…"></div>
+          <div class="fg2"><label class="fl2">${tl.klv_subject||'Email Subject'}</label><input type="text" id="klv-subject-${t.id}" placeholder="${tl.klv_subject_ph||'e.g. Our March Newsletter'}"></div>
+        </div>
+        <button class="runbtn" style="margin-top:8px;background:#7c3aed;border-color:#7c3aed" onclick="sendToKlaviyo('${t.id}')">${tl.klv_send||'Save as Draft in Klaviyo'}</button>
+        <div id="klv-status-${t.id}" style="font-size:11px;color:var(--mu);margin-top:6px"></div>
+      </div>`:''}
       <button class="runbtn" onclick="runMod('text-gen','${t.id}')">${tl.tg_generate}</button>
-      <div class="rbox" id="text-gen-r-${t.id}"><div class="rhead"><span class="rlbl">${tl.tg_result}</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b-${t.id}')">${tl.btn_copy}</button></div></div><div class="rbody" id="text-gen-b-${t.id}"></div></div>
+      <div class="rbox" id="text-gen-r-${t.id}"><div class="rhead"><span class="rlbl">${tl.tg_result}</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b-${t.id}')">${tl.btn_copy}</button>${t.id==='newsletter'?`<button class="exbtn" style="background:#f9f6ff;border-color:#e0d4f5;color:#7c3aed" onclick="document.getElementById('klaviyo-box-${t.id}').style.display='block'">Klaviyo</button>`:''}</div></div><div class="rbody" id="text-gen-b-${t.id}"></div></div>
       ${subSection(t)}
     </div>`).join('');
 
@@ -1862,7 +1886,7 @@ async function runMod(name){
   if(name==='brand-voice-co'){module='brand-voice-co';rid='brand-voice-co-r';bid='brand-voice-co-b';const t=g('bv-co-in')||getRefContext('ref_brand_co');if(!t)return alert('Please enter text or save reference documents first.');data={text:t+context,company:g('bv-company'),industry:g('bv-industry'),values:g('bv-values'),audiences:g('bv-audiences')};}
   else if(name==='brand-voice-ind'){module='brand-voice-ind';rid='brand-voice-ind-r';bid='brand-voice-ind-b';const t=g('bv-ind-in')||getRefContext('ref_brand_ind');if(!t)return alert('Please enter text or save reference documents first.');data={text:t+context,person:g('bv-person'),role:g('bv-prole')};}
   else if(name==='vs-cal'){module='vs-cal';rid='vs-cal-r';bid='vs-cal-b';const t=g('tg-ref');if(!t)return alert('Please enter reference texts.');data={text:t};}
-  else if(name==='text-gen'){const fid=arguments[1]||'custom';module='text-gen';rid='text-gen-r-'+fid;bid='text-gen-b-'+fid;const t=g('tg-task-'+fid);if(!t)return alert('Please enter a briefing.');const ref=g('tg-ref-'+fid);data={text:t,format:g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:g('tg-tone-'+fid),language:g('tg-lang-'+fid),length:g('tg-len-'+fid),voiceProfile:(voiceProf||'')+context+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
+  else if(name==='text-gen'){const fid=arguments[1]||'custom';module='text-gen';rid='text-gen-r-'+fid;bid='text-gen-b-'+fid;const t=g('tg-task-'+fid);if(!t)return alert('Please enter a briefing.');const ref=g('tg-ref-'+fid);const liProf=fid==='linkedin'?(g('tg-li-profile')||''):'';const liCtx=liProf?'\n\n---LINKEDIN PROFILE---\n'+liProf:'';data={text:t,format:g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:g('tg-tone-'+fid),language:g('tg-lang-'+fid),length:g('tg-len-'+fid),voiceProfile:(voiceProf||'')+context+liCtx+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
   else if(name==='profiling'){module='rp';rid='profiling-r';bid='profiling-b';const t=g('rp-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('rp-name'),industry:g('rp-industry')};}
   else if(name==='fingerprint'){module='cf';rid='fingerprint-r';bid='fingerprint-b';const t=g('cf-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('cf-name'),focus:g('cf-focus')};}
   else if(name==='language'){module='la';rid='language-r';bid='language-b';const t=g('la-in');if(!t)return alert('Please enter text.');data={text:t+context,size:g('la-size'),focus:g('la-focus')};}
@@ -1989,6 +2013,38 @@ async function sendToAdvisor(bodyId,moduleLabel,btn){
       rbox.appendChild(c);
     }
   }catch(e){btn.disabled=false;btn.textContent=T[LANG]?.btn_send_advisor||'Send to Advisor';alert('Error sending.');}
+}
+
+// ── KLAVIYO ───────────────────────────────────────────────────
+async function sendToKlaviyo(fid){
+  const apiKey=document.getElementById('klv-key-'+fid)?.value?.trim();
+  const subject=document.getElementById('klv-subject-'+fid)?.value?.trim();
+  const content=document.getElementById('text-gen-b-'+fid)?.textContent?.trim();
+  const status=document.getElementById('klv-status-'+fid);
+  if(!apiKey){status.textContent='Please enter your Klaviyo API key.';return;}
+  if(!content){status.textContent='Please generate a newsletter first.';return;}
+  status.textContent='Sending to Klaviyo…';
+  try{
+    const r=await api('/api/klaviyo/draft',{method:'POST',body:JSON.stringify({apiKey,subject,content})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Klaviyo error');
+    status.style.color='#7c3aed';
+    status.textContent=`✓ Template "${d.templateName}" created in Klaviyo — open your Klaviyo dashboard to use it.`;
+  }catch(e){status.style.color='var(--red)';status.textContent='Error: '+e.message;}
+}
+
+// ── EXPORT CLIENTS CSV ────────────────────────────────────────
+function downloadClients(){
+  const url=API+'/api/clients/export';
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='rhetoriq-clients.csv';
+  // Pass auth token via query param workaround (GET download)
+  fetch(url,{headers:{'Authorization':'Bearer '+token}})
+    .then(r=>r.blob()).then(blob=>{
+      const u=URL.createObjectURL(blob);
+      a.href=u;a.click();URL.revokeObjectURL(u);
+    });
 }
 
 let reviewPollInterval=null;

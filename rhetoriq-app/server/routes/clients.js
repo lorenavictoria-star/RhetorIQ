@@ -1,7 +1,27 @@
 const express = require('express');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 const { pool } = require('../db');
 const { requireAdvisor } = require('../middleware/auth');
+
+async function sendTokenEmail(clientName, token) {
+  const to = process.env.ADVISOR_EMAIL;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!to || !user || !pass) return;
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: { user, pass }
+  });
+  await transporter.sendMail({
+    from: `"RhetorIQ" <${user}>`,
+    to,
+    subject: `RhetorIQ — Neuer Klient: ${clientName}`,
+    text: `Neuer Klient wurde angelegt:\n\nName: ${clientName}\nToken: ${token}\n\nTeilen Sie diesen Token mit Ihrem Klienten — damit kann er sich in der App einloggen.\n\nhttps://rhetoriq.ch`
+  });
+}
 
 const router = express.Router();
 
@@ -32,10 +52,31 @@ router.post('/', requireAdvisor, async (req, res) => {
       'INSERT INTO clients (advisor_id, name, industry, contact, slug, token) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
       [req.user.id, name, industry || '', contact || '', slug, token]
     );
+    sendTokenEmail(name, token).catch(e => console.error('Email error:', e.message));
     res.status(201).json(rows[0]);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/clients/export — CSV for Excel
+router.get('/export', requireAdvisor, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT name, industry, contact, token, created_at FROM clients WHERE advisor_id = $1 ORDER BY created_at DESC',
+      [req.user.id]
+    );
+    const esc = v => `"${(v || '').replace(/"/g, '""')}"`;
+    const csv = [
+      ['Name', 'Industry', 'Contact', 'Token', 'Created'].map(esc).join(','),
+      ...rows.map(r => [r.name, r.industry, r.contact, r.token, new Date(r.created_at).toLocaleDateString('de-CH')].map(esc).join(','))
+    ].join('\r\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="rhetoriq-clients.csv"');
+    res.send('﻿' + csv); // BOM for Excel UTF-8
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
