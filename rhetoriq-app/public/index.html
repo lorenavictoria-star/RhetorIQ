@@ -308,11 +308,18 @@ body.adv .vubtn{display:block}
 .ei{font-size:36px;margin-bottom:10px;opacity:.35}
 
 /* CHAT */
-#cbtn{position:fixed;bottom:calc(20px + var(--safe-bottom));right:20px;width:48px;height:48px;background:var(--tx);border:none;border-radius:50%;cursor:pointer;z-index:200;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.18);font-size:20px;color:#fff}
+#cbtn{position:fixed;bottom:calc(20px + var(--safe-bottom));right:20px;width:48px;height:48px;background:var(--tx);border:none;border-radius:50%;cursor:pointer;z-index:200;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.18);font-size:22px;color:#fff}
 #cbtn:hover{background:#333}
-#cpanel{position:fixed;bottom:calc(80px + var(--safe-bottom));right:20px;width:320px;max-height:460px;background:#fff;border:1.5px solid var(--bd);border-radius:12px;z-index:200;display:none;flex-direction:column;box-shadow:0 6px 28px rgba(0,0,0,.1);overflow:hidden}
+#cpanel{position:fixed;bottom:calc(80px + var(--safe-bottom));right:20px;width:340px;max-height:520px;background:#fff;border:1.5px solid var(--bd);border-radius:12px;z-index:200;display:none;flex-direction:column;box-shadow:0 6px 28px rgba(0,0,0,.12);overflow:hidden}
 #cpanel.open{display:flex}
-.chd{padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.chd{padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:var(--tx)}
+.cht{font-size:13px;font-weight:700;color:#fff}
+.chsub{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px}
+.chc{background:none;border:none;color:rgba(255,255,255,.8);font-size:20px;cursor:pointer;line-height:1;padding:0}
+.chc:hover{color:#fff}
+.chat-quickreplies{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chat-qr-btn{background:none;border:1px solid var(--bd);border-radius:20px;padding:5px 12px;font-size:11px;font-family:'Inter',sans-serif;color:var(--tx);cursor:pointer;transition:border-color .15s}
+.chat-qr-btn:hover{border-color:var(--tx)}
 .cht{font-size:14px;font-weight:600}
 .chc{background:none;border:none;font-size:18px;cursor:pointer;color:var(--mu)}
 .cms{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
@@ -817,11 +824,39 @@ body.adv .vubtn{display:block}
   </div>
 </div>
 
-<button id="cbtn" onclick="toggleChat()">&#128172;</button>
+<button id="cbtn" onclick="toggleChat()">&#9697;</button>
 <div id="cpanel">
-  <div class="chd"><div><div class="cht">RhetorIQ Assistant</div></div><button class="chc" onclick="toggleChat()">&times;</button></div>
-  <div class="cms" id="chat-msgs"><div class="cm2 b">Hello! Ask me what any module does, or how to get the best results.</div></div>
-  <div class="cft"><input class="cinp" id="chat-input" placeholder="Ask anything&hellip;" onkeydown="if(event.key==='Enter')sendChat()"><button class="csnd" onclick="sendChat()">Send</button></div>
+  <div class="chd">
+    <div><div class="cht">RhetorIQ Assistant</div><div class="chsub">Ask anything about the platform</div></div>
+    <button class="chc" onclick="toggleChat()">&times;</button>
+  </div>
+  <div class="cms" id="chat-msgs">
+    <div class="cm2 b">Hello — I am the RhetorIQ assistant. What can I help you with?</div>
+    <div class="chat-quickreplies" id="chat-qr">
+      <button class="chat-qr-btn" onclick="chatQuick('What modules does RhetorIQ have?')">What modules are there?</button>
+      <button class="chat-qr-btn" onclick="chatQuick('How does Crisis Response work?')">Crisis Response</button>
+      <button class="chat-qr-btn" onclick="chatQuick('How does the Text Generator work?')">Text Generator</button>
+      <button class="chat-qr-btn" onclick="chatQuick('What is Brand Voice?')">Brand Voice</button>
+      <button class="chat-qr-btn" onclick="chatQuick('I would like a demo or more information about pricing.')">Pricing / Demo</button>
+    </div>
+  </div>
+  <div class="cft"><input class="cinp" id="chat-input" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')sendChat()"><button class="csnd" onclick="sendChat()">Send</button></div>
+</div>
+
+<!-- Contact request overlay (triggered by pricing/demo chat intent) -->
+<div id="chat-contact-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:10px;max-width:420px;width:100%;padding:28px 24px;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">Get in touch</div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:18px">Lorena Lienhard will get back to you personally.</div>
+    <div class="fg2"><label class="fl2">Your name</label><input type="text" id="cc-name" placeholder="Anna Muster"></div>
+    <div class="fg2"><label class="fl2">Your email</label><input type="email" id="cc-email" placeholder="anna@company.com"></div>
+    <div class="fg2"><label class="fl2">Message (optional)</label><textarea id="cc-msg" placeholder="What are you looking for?" style="min-height:70px"></textarea></div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="runbtn" style="margin-top:0;flex:1" onclick="submitChatContact()">Send</button>
+      <button style="background:none;border:1px solid var(--bd);border-radius:4px;padding:8px 16px;cursor:pointer;font-size:13px" onclick="document.getElementById('chat-contact-ov').style.display='none'">Cancel</button>
+    </div>
+    <div id="cc-status" style="font-size:12px;color:var(--dm);margin-top:10px;text-align:center"></div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -1689,16 +1724,52 @@ function switchBrand(mode,btn){document.querySelectorAll('.togbtn').forEach(b=>b
 function cp(id){navigator.clipboard.writeText(document.getElementById(id).textContent).catch(()=>{});}
 function toggleChat(){document.getElementById('cpanel').classList.toggle('open');}
 
+function chatQuick(msg){
+  document.getElementById('chat-qr')?.remove();
+  document.getElementById('chat-input').value=msg;
+  sendChat();
+}
+
 async function sendChat(){
   const inp=document.getElementById('chat-input');const msg=inp.value.trim();if(!msg)return;inp.value='';
+  document.getElementById('chat-qr')?.remove();
   const msgs=document.getElementById('chat-msgs');
-  msgs.innerHTML+=`<div class="cm2 u">${msg}</div>`;msgs.scrollTop=msgs.scrollHeight;
+  msgs.innerHTML+=`<div class="cm2 u">${msg}</div>`;
+  msgs.innerHTML+=`<div class="cm2 b" id="chat-typing"><span style="color:var(--mu);font-size:12px">…</span></div>`;
+  msgs.scrollTop=msgs.scrollHeight;
   chatHist.push({role:'user',content:msg});
+  const CONTACT_TRIGGER=/pric|demo|kosten|preis|access|zugang|contact|kontakt|buchen|book|anfrage|request|anmeld/i;
+  if(CONTACT_TRIGGER.test(msg)){
+    document.getElementById('chat-typing')?.remove();
+    msgs.innerHTML+=`<div class="cm2 b">I would be happy to connect you with Lorena directly. Please fill in your details and she will get back to you personally.</div>`;
+    msgs.scrollTop=msgs.scrollHeight;
+    chatHist.push({role:'assistant',content:'Contact form shown.'});
+    setTimeout(()=>{document.getElementById('chat-contact-ov').style.display='flex';},400);
+    return;
+  }
   try{
-    const r=await api('/api/analyze/chat',{method:'POST',body:JSON.stringify({message:msg,history:chatHist.slice(-6)})});
-    const d=await r.json();chatHist.push({role:'assistant',content:d.reply});
-    msgs.innerHTML+=`<div class="cm2 b">${d.reply}</div>`;msgs.scrollTop=msgs.scrollHeight;
-  }catch{msgs.innerHTML+=`<div class="cm2 b" style="color:var(--red)">Error &mdash; try again.</div>`;}
+    const r=await api('/api/analyze/chat',{method:'POST',body:JSON.stringify({message:msg,history:chatHist.slice(-8)})});
+    const d=await r.json();
+    document.getElementById('chat-typing')?.remove();
+    chatHist.push({role:'assistant',content:d.reply});
+    msgs.innerHTML+=`<div class="cm2 b">${d.reply.replace(/\n/g,'<br>')}</div>`;
+    msgs.scrollTop=msgs.scrollHeight;
+  }catch{
+    document.getElementById('chat-typing')?.remove();
+    msgs.innerHTML+=`<div class="cm2 b" style="color:var(--red)">Error — please try again.</div>`;
+  }
+}
+
+function submitChatContact(){
+  const name=document.getElementById('cc-name').value.trim();
+  const email=document.getElementById('cc-email').value.trim();
+  const msg=document.getElementById('cc-msg').value.trim();
+  if(!name||!email){document.getElementById('cc-status').textContent='Please enter your name and email.';return;}
+  const subject=encodeURIComponent('RhetorIQ — Anfrage von '+name);
+  const body=encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${msg||'—'}`);
+  window.location.href=`mailto:contact@lorenalienhard.ch?subject=${subject}&body=${body}`;
+  document.getElementById('cc-status').textContent='Opening your email client…';
+  setTimeout(()=>{document.getElementById('chat-contact-ov').style.display='none';},1500);
 }
 
 // VIDEOS
