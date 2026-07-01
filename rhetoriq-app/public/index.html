@@ -1731,7 +1731,9 @@ function buildTextGen(prefill,form){
     {id:'linkedin',abbr:'LI',label:'LinkedIn',sub:'Post · Article · Comment',fmtLabel:'LinkedIn Format',fmtOpts:['LinkedIn Post','LinkedIn Article','LinkedIn Comment / Reply'],hasSubscription:true},
     {id:'newsletter',abbr:'NL',label:'Newsletter',sub:'Edition · Section · Teaser',fmtLabel:'Newsletter Format',fmtOpts:['Newsletter — Full Edition','Newsletter — Single Section','Newsletter — Teaser / Preview'],hasSubscription:true},
     {id:'email',abbr:'EM',label:'Email',sub:'External · Internal · Formal',fmtLabel:'Email Type',fmtOpts:['External — Client / Partner','External — Press / Media','Internal — Team Update','Internal — Leadership Memo','Formal — Investor Letter','Formal — Customer Letter'],hasSubscription:false},
-    {id:'custom',abbr:'EF',label:'Custom',sub:'Speech · Press Release · Other',fmtLabel:'Format',fmtOpts:['Speech / Keynote','Talking Points','Press Release','B2B Proposal','Website Copy','Internal Announcement','Town Hall Script','Other / Custom'],hasSubscription:false},
+    {id:'speech',abbr:'SP',label:'Speech',sub:'Keynote · Opening · Town Hall',fmtLabel:'Speech Format',fmtOpts:['Keynote / Conference Speech','Opening Remarks','Town Hall Address','Award Ceremony Speech','Closing Statement','Other Speech'],hasSubscription:false},
+    {id:'press',abbr:'PR',label:'Press Release',sub:'Launch · Crisis · Strategy',fmtLabel:'Press Release Type',fmtOpts:['Product / Service Launch','Strategy Announcement','Leadership / Personnel Change','Partnership / Acquisition','Crisis / Correction','Financial Results'],hasSubscription:false},
+    {id:'custom',abbr:'EF',label:'Custom',sub:'Proposal · Website · Other',fmtLabel:'Format',fmtOpts:['Talking Points','B2B Proposal','Website Copy','Internal Announcement','Other / Custom'],hasSubscription:false},
   ];
   const tilesHtml=tileData.map(t=>`
     <div class="tg-tile" id="tg-tile-${t.id}" onclick="tgOpenTile('${t.id}')">
@@ -1993,8 +1995,7 @@ async function runMod(name){
   else if(name==='debrief'){module='debrief';rid='debrief-r';bid='debrief-b';const orig=g('db-orig');const fb=g('db-feedback');if(!orig||!fb)return alert('Please enter both the original communication and the real feedback.');data={original:orig,feedback:fb+context,context:g('db-ctx')};}
   else if(name==='review'){module='pr';rid='review-r';bid='review-b';const t=g('pr-in');if(!t)return alert('Please enter text.');data={text:t+context,role:g('pr-role'),format:g('pr-fmt')};}
   else if(name==='recognition'){module='rw';rid='recognition-r';bid='recognition-b';const t=g('rw-in');if(!t)return alert('Please enter text.');data={text:t+context,type:g('rw-type'),format:g('rw-fmt')};}
-  else if(name==='ghostwriter'){module='ghostwriter';rid='ghostwriter-r';bid='ghostwriter-b';const t=g('gw-in');const briefing=g('gw-briefing');if(!t)return alert('Please paste past texts so the AI can learn the voice.');if(!briefing)return alert('Please enter a briefing for what to write.');data={text:t+context,format:g('gw-format'),audience:g('gw-audience'),briefing,length:g('gw-length'),voiceProfile:voiceProf||''};}
-  else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';bid='crisis-toolkit-b';const t=g('ctk-in');if(!t)return alert('Please describe the crisis situation.');data={text:t+context,crisisType:g('ctk-type'),company:g('ctk-company'),audiences:g('ctk-aud')};}
+else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';bid='crisis-toolkit-b';const t=g('ctk-in');if(!t)return alert('Please describe the crisis situation.');data={text:t+context,crisisType:g('ctk-type'),company:g('ctk-company'),audiences:g('ctk-aud')};}
   else if(name==='before-after'){module='before-after';rid='before-after-r';bid='before-after-b';const t=g('ba-in');if(!t)return alert('Please enter the original text.');data={text:t,goal:g('ba-goal'),audience:g('ba-aud'),tone:g('ba-tone')};}
   else if(name==='competitive-check'){module='competitive-check';rid='competitive-check-r';bid='competitive-check-b';const t=g('cc-in');if(!t)return alert('Please enter your key messages.');data={text:t,industry:g('cc-industry'),company:g('cc-company'),audience:g('cc-aud')};}
   else if(name==='arg-pushback'){module='st';rid='arg-pushback-r';bid='arg-pushback-b';const t=g('ar-push-in');if(!t)return alert('Please enter text.');data={text:t+context,perspectives:g('ar-push-persp'),intensity:g('ar-push-int')};}
@@ -2373,7 +2374,6 @@ const ALL_MODULES=[
   {key:'actionability',name:'Clarity Check',cat:'efficiency',tag:'Efficiency'},
   {key:'thread',name:'Notes to Tasks',cat:'efficiency',tag:'Efficiency'},
   {key:'rh-translate',name:'Translate',cat:'efficiency',tag:'Efficiency',isNew:true},
-  {key:'ghostwriter',name:'Ghostwriter Mode',cat:'growth',tag:'Growth',isNew:true},
   {key:'before-after',name:'Before / After',cat:'growth',tag:'Growth',isNew:true},
   {key:'sparring',name:'2-Min. Training',cat:'growth',tag:'Growth',isNew:true},
   {key:'debrief',name:'Debrief',cat:'growth',tag:'Growth',isNew:true},
