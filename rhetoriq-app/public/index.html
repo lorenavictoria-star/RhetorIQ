@@ -654,7 +654,7 @@ body.adv .vubtn{display:block}
             <div class="router-sub" id="router-sub">Describe your task &mdash; RhetorIQ opens the right module automatically.</div>
             <div class="router-row">
               <textarea class="rtarea" id="router-input" placeholder='e.g. "Check if this press release could backfire" or "Write a speech for our CEO" or "Crisis: supplier just announced bankruptcy"'></textarea>
-              <button class="vbtn" id="voice-btn" onclick="toggleVoice()" title="Voice input">&#127908;</button>
+              <button class="vbtn" id="voice-btn" onclick="toggleVoice()" title="Voice input">&#127908;</button><button class="vbtn" id="voice-lang-btn" onclick="toggleVoiceLang()" title="Voice language" style="font-size:10px;font-weight:700;letter-spacing:.04em;padding:0 7px;min-width:36px">DE</button>
               <button class="rbtn" onclick="routePrompt()"><span id="rbtn-txt">&#8594; Go</span></button>
             </div>
             <div class="rstat" id="rstat"></div>
@@ -1392,7 +1392,7 @@ async function boot(user,role){
     loadAdvisorReviews();
     setInterval(loadAdvisorReviews,60000);
   }
-  connectWS();loadStats();renderVids();initPasteIntelligence();renderHomeModuleList();
+  connectWS();loadStats();renderVids();initPasteIntelligence();renderHomeModuleList();const _vlb=document.getElementById('voice-lang-btn');if(_vlb)_vlb.textContent=voiceLang.toUpperCase();
 }
 
 // WS
@@ -2708,12 +2708,19 @@ function quickAction(text){
 
 // VOICE INPUT
 let voiceRec=null;
+let voiceLang=localStorage.getItem('riq-voice-lang')||'de';
+function toggleVoiceLang(){
+  voiceLang=voiceLang==='de'?'en':'de';
+  localStorage.setItem('riq-voice-lang',voiceLang);
+  const btn=document.getElementById('voice-lang-btn');
+  if(btn)btn.textContent=voiceLang.toUpperCase();
+}
 function toggleVoice(){
   const btn=document.getElementById('voice-btn');
   if(!('SpeechRecognition' in window||'webkitSpeechRecognition' in window)){alert('Voice input is not supported in this browser. Please use Chrome.');return;}
   if(voiceRec){voiceRec.stop();voiceRec=null;btn.classList.remove('recording');return;}
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  voiceRec=new SR();voiceRec.lang='';voiceRec.continuous=false;voiceRec.interimResults=false;
+  voiceRec=new SR();voiceRec.lang=voiceLang==='de'?'de-CH':'en-US';voiceRec.continuous=false;voiceRec.interimResults=false;
   voiceRec.onresult=e=>{const t=e.results[0][0].transcript;const inp=document.getElementById('router-input');inp.value=(inp.value?inp.value+' ':'')+t;};
   voiceRec.onend=()=>{voiceRec=null;btn.classList.remove('recording');};
   voiceRec.onerror=()=>{voiceRec=null;btn.classList.remove('recording');};
