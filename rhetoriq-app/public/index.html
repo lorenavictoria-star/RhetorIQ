@@ -820,8 +820,8 @@ body.adv .vubtn{display:block}
       </div>
       <div class="mlist-filters">
         <button class="mlist-pill active" id="pill-all" onclick="filterModsCat('all',this)">All</button>
-        <button class="mlist-pill" id="pill-foundation" onclick="filterModsCat('foundation',this)">Foundation</button>
-        <button class="mlist-pill" id="pill-creation" onclick="filterModsCat('creation',this)">Creation</button>
+        <button class="mlist-pill" id="pill-foundation" onclick="filterModsCat('foundation',this)">Basis</button>
+        <button class="mlist-pill" id="pill-creation" onclick="filterModsCat('creation',this)">Writing</button>
         <button class="mlist-pill" id="pill-prevention" onclick="filterModsCat('prevention',this)">Prevention</button>
         <button class="mlist-pill" id="pill-efficiency" onclick="filterModsCat('efficiency',this)">Efficiency</button>
         <button class="mlist-pill" id="pill-growth" onclick="filterModsCat('growth',this)">Growth</button>
@@ -987,7 +987,7 @@ const T={
     router_ph:'e.g. “Check if this press release could backfire” or “Write a speech for our CEO” or “Crisis: supplier just announced bankruptcy”',
     qa_tag1:'Preparation',qa_name1:'Meeting Prep',qa_desc1:'Brief, agenda & people context — before any meeting',
     qa_tag2:'Emergency',qa_name2:'Crisis Response',qa_desc2:'Immediate framing for unexpected situations',
-    qa_tag3:'Creation',qa_name3:'Text Generator',qa_desc3:'LinkedIn, newsletter, email, speech — in your exact voice',
+    qa_tag3:'Writing',qa_name3:'Text Generator',qa_desc3:'LinkedIn, newsletter, email, speech — in your exact voice',
     cbar_lbl:'Client:',cbar_new:'+ New Client',
     hdr_signout:'Sign out',
     contact_title:'Contact',
@@ -1061,7 +1061,7 @@ const T={
     router_ph:'z.B. „Könnte diese Pressemitteilung nach hinten losgehen?” oder „Rede für unsere CEO schreiben” oder „Krise: Lieferant hat soeben Insolvenz angemeldet”',
     qa_tag1:'Vorbereitung',qa_name1:'Meeting-Vorbereitung',qa_desc1:'Brief, Agenda & Personenkontext — vor jedem Meeting',
     qa_tag2:'Notfall',qa_name2:'Krisenreaktion',qa_desc2:'Sofortige Einordnung unerwarteter Situationen',
-    qa_tag3:'Erstellung',qa_name3:'Text Generator',qa_desc3:'LinkedIn, Newsletter, E-Mail, Rede — in Ihrer eigenen Stimme',
+    qa_tag3:'Writing',qa_name3:'Text Generator',qa_desc3:'LinkedIn, Newsletter, E-Mail, Rede — in Ihrer eigenen Stimme',
     cbar_lbl:'Klient:',cbar_new:'+ Neuer Klient',
     hdr_signout:'Abmelden',
     contact_title:'Kontakt',
@@ -1594,7 +1594,7 @@ function toggleHomeRight(){
 function renderHomeModuleList(){
   const list=document.getElementById('hm-list');
   if(!list)return;
-  const CAT_LABEL={foundation:'Foundation',creation:'Creation',prevention:'Prevention',efficiency:'Efficiency',growth:'Growth'};
+  const CAT_LABEL={foundation:'Basis',creation:'Writing',prevention:'Prevention',efficiency:'Efficiency',growth:'Growth'};
   const catOrder=['foundation','creation','prevention','efficiency','growth'];
   let html='';
   let lastCat='';
@@ -2361,11 +2361,11 @@ document.addEventListener('click',e=>{const m=document.getElementById('more-menu
 
 // MODULES LIST PAGE
 const ALL_MODULES=[
-  {key:'profiling',name:'How We Communicate',cat:'foundation',tag:'Foundation'},
-  {key:'brand-voice',name:'Brand Voice',cat:'foundation',tag:'Foundation — Master Reference'},
-  {key:'text-gen',name:'Text Generator',cat:'creation',tag:'Creation'},
-  {key:'review',name:'Feedback Writer',cat:'creation',tag:'Creation — HR'},
-  {key:'recognition',name:'Appreciation Writer',cat:'creation',tag:'Creation — HR'},
+  {key:'profiling',name:'How We Communicate',cat:'foundation',tag:'Basis'},
+  {key:'brand-voice',name:'Brand Voice',cat:'foundation',tag:'Basis — Master Reference'},
+  {key:'text-gen',name:'Text Generator',cat:'creation',tag:'Writing'},
+  {key:'review',name:'Feedback Writer',cat:'creation',tag:'Writing — HR'},
+  {key:'recognition',name:'Appreciation Writer',cat:'creation',tag:'Writing — HR'},
   {key:'pre-meeting',name:'Meeting Prep',cat:'prevention',tag:'Prevention',feat:true,isNew:true},
   {key:'arg-reaction',name:'Argument / Reaction Preview',cat:'prevention',tag:'Prevention',isNew:true},
   {key:'crisis',name:'Crisis Response',cat:'prevention',tag:'Prevention — Emergency',crisis:true},
