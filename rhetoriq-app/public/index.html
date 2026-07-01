@@ -726,10 +726,18 @@ body.adv .vubtn{display:block}
         <div class="fg2"><label class="fl2">Core Values (optional)</label><input type="text" id="bv-values" placeholder="e.g. Precision, Trust, Swiss Quality"></div>
         <div class="fg2"><label class="fl2">Target Audiences</label><input type="text" id="bv-audiences" placeholder="e.g. B2B CFOs, HR Directors, Investors"></div>
         <div class="fg2">
-          <label class="fl2">Source Texts &mdash; website, reports, emails (separate with ---)</label>
+          <label class="fl2">Website URL (optional — content will be fetched automatically)</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="url" id="bv-url" placeholder="https://example.com" style="flex:1">
+            <button class="tg-save-ref" id="bv-fetch-btn" onclick="fetchWebsite()" style="white-space:nowrap">Fetch Website</button>
+          </div>
+          <div id="bv-fetch-status" style="font-size:11px;color:var(--mu);margin-top:4px"></div>
+        </div>
+        <div class="fg2">
+          <label class="fl2">Source Texts &mdash; website copy, reports, emails (separate with ---)</label>
           <div class="upzone" onclick="document.getElementById('bv-co-f').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload documents</strong> &mdash; .txt, .pdf, .docx (saved by advisor, always available)</div><input type="file" id="bv-co-f" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'bv-co-in','bv-co-tags')"></div>
           <div class="ftags" id="bv-co-tags"></div>
-          <textarea id="bv-co-in" placeholder="Paste company texts here, or upload documents above. Advisor can save these permanently so they are always pre-loaded."></textarea>
+          <textarea id="bv-co-in" placeholder="Paste company texts here, or upload documents above. Website content appears here after fetching."></textarea>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
           <button class="save-ref-btn" onclick="saveAsReference('ref_brand_co','bv-co-in')">&#128204; Save as Reference</button>
@@ -2198,6 +2206,27 @@ function klvAutoLoad(fid){
   const keyEl=document.getElementById('klv-key-'+fid);
   if(keyEl&&!keyEl.value)keyEl.value=saved;
   klvConnect(fid);
+}
+
+// ── WEBSITE FETCH ─────────────────────────────────────────────
+async function fetchWebsite(){
+  const url=document.getElementById('bv-url')?.value?.trim();
+  const status=document.getElementById('bv-fetch-status');
+  const btn=document.getElementById('bv-fetch-btn');
+  const ta=document.getElementById('bv-co-in');
+  if(!url){if(status)status.textContent='Please enter a URL.';return;}
+  btn.disabled=true;btn.textContent='Fetching…';
+  if(status){status.style.color='var(--mu)';status.textContent='Fetching website content…';}
+  try{
+    const r=await api('/api/fetch-website',{method:'POST',body:JSON.stringify({url})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Could not fetch website');
+    const existing=ta.value.trim();
+    ta.value=(existing?existing+'\n\n---\n\n':'')+d.text;
+    if(status){status.style.color='var(--dm)';status.textContent=`✓ ${d.chars} characters fetched from ${url}`;}
+  }catch(e){
+    if(status){status.style.color='var(--red)';status.textContent='Error: '+e.message;}
+  }finally{btn.disabled=false;btn.textContent='Fetch Website';}
 }
 
 // ── TONE CALIBRATOR ───────────────────────────────────────────
