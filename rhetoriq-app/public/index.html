@@ -211,6 +211,24 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .svbtn:hover{background:#333}
 .exbtn{color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff}
 .exbtn:hover{background:#dceeff;border-color:#1a5a9a}
+.advbtn{color:#2a7a2a;border-color:#b0d9b0;background:#f0fff0;padding:5px 12px;border:1.5px solid #b0d9b0;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:4px}
+.advbtn:hover{background:#d4f4d4;border-color:#2a7a2a}
+.advbtn.sent{color:var(--mu);border-color:var(--bd);background:#fff;cursor:default}
+.rev-badge{display:none;position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#c00;border-radius:50%;font-size:9px;font-weight:700;color:#fff;align-items:center;justify-content:center}
+.rev-badge.show{display:flex}
+.rev-panel{position:fixed;top:0;right:0;width:380px;max-width:100vw;height:100vh;background:#fff;border-left:1.5px solid var(--bd);z-index:500;display:none;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,.1)}
+.rev-panel.open{display:flex}
+.rev-panel-hd{padding:16px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.rev-panel-title{font-size:14px;font-weight:700}
+.rev-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--mu)}
+.rev-list{flex:1;overflow-y:auto;padding:12px}
+.rev-card{border:1.5px solid var(--bd);border-radius:8px;padding:14px;margin-bottom:10px;background:#fff}
+.rev-card-meta{font-size:10px;color:var(--mu);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.rev-card-orig{font-size:12px;color:var(--mu);white-space:pre-wrap;margin-bottom:10px;max-height:100px;overflow-y:auto;border-left:3px solid var(--bd);padding-left:10px}
+.rev-card-edit{width:100%;min-height:120px;font-size:13px;font-family:'Inter',sans-serif;border:1.5px solid var(--bd);border-radius:6px;padding:10px;resize:vertical;outline:none}
+.rev-card-edit:focus{border-color:var(--tx)}
+.rev-savebtn{margin-top:8px;padding:8px 18px;background:var(--tx);color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+.rev-savebtn:hover{background:#333}
 .rbody{padding:20px;font-size:14px;line-height:1.85;white-space:pre-wrap;color:var(--tx)}
 .spin{display:flex;gap:5px;padding:20px;align-items:center}
 .dot{width:5px;height:5px;border-radius:50%;background:var(--tx);animation:blink 1.2s infinite}
@@ -334,13 +352,14 @@ body.adv .vubtn{display:block}
 /* HOME TWO-COLUMN LAYOUT */
 .home-grid{display:flex;gap:0;align-items:start}
 .home-left{flex:1;min-width:0}
-.home-right{display:flex;flex-direction:row;align-items:start;gap:0;margin-left:12px;flex-shrink:0}
-.home-right-arrow{width:24px;display:flex;flex-direction:column;align-items:center;padding-top:2px;cursor:pointer;flex-shrink:0}
-.home-right-arrow-btn{background:none;border:1px solid var(--bd);border-radius:4px;width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--mu);padding:0;line-height:1}
-.home-right-arrow-btn:hover{border-color:var(--tx);color:var(--tx)}
-.home-right-panel{width:190px;overflow:hidden;transition:width .2s,opacity .15s;opacity:1}
-.home-right-panel.hidden{width:0;opacity:0;pointer-events:none}
-.home-right-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:10px;white-space:nowrap}
+.home-right{flex-shrink:0;margin-left:10px;width:28px;transition:width .0s}
+.home-right.open{width:196px}
+.home-right-hdr{display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px;gap:6px}
+.home-right-toggle{background:none;border:1px solid var(--bd);border-radius:4px;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--mu);padding:0;flex-shrink:0;line-height:1}
+.home-right-toggle:hover{border-color:var(--tx);color:var(--tx)}
+.home-right-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);white-space:nowrap;overflow:hidden;flex:1}
+.home-right-body{display:none}
+.home-right.open .home-right-body{display:block}
 .hm-list{display:flex;flex-direction:column;gap:5px}
 .hm-item{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;border:1.5px solid var(--bd);border-radius:6px;cursor:pointer;background:#fff;transition:border-color .15s}
 .hm-item:hover{border-color:#999}
@@ -350,6 +369,7 @@ body.adv .vubtn{display:block}
 .hm-cat-divider{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dm);padding:10px 0 4px;border-bottom:1px solid var(--bd);margin-bottom:5px}
 
 /* QUICK ACCESS CARDS */
+.qa-heading{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:8px}
 .qa-section{display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
 .qa-card{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border:1.5px solid var(--bd);border-radius:6px;cursor:pointer;background:#fff;transition:border-color .15s}
 .qa-card:hover{border-color:#aaa}
@@ -568,6 +588,7 @@ body.adv .vubtn{display:block}
           </div>
 
           <!-- Quick Access Cards -->
+          <div class="qa-heading" id="qa-heading">Quick Access</div>
           <div class="qa-section">
             <div class="qa-card" onclick="goModule('pre-meeting')">
               <div class="qa-card-left">
@@ -640,12 +661,12 @@ body.adv .vubtn{display:block}
         </div><!-- /home-left -->
 
         <!-- RIGHT COLUMN: all modules -->
-        <div class="home-right">
-          <div class="home-right-arrow">
-            <button class="home-right-arrow-btn" id="home-right-btn" onclick="toggleHomeRight()" title="Show modules">&#8249;</button>
+        <div class="home-right" id="home-right">
+          <div class="home-right-hdr">
+            <span class="home-right-title" id="home-right-title"></span>
+            <button class="home-right-toggle" id="home-right-btn" onclick="toggleHomeRight()" title="Show modules">&#8249;</button>
           </div>
-          <div class="home-right-panel hidden" id="home-right-panel">
-            <div class="home-right-title">All Modules</div>
+          <div class="home-right-body">
             <div class="hm-list" id="hm-list"></div>
           </div>
         </div>
@@ -810,7 +831,7 @@ body.adv .vubtn{display:block}
     <!-- DATA SECURITY PAGE -->
     <div class="page" id="page-datasec">
       <button class="back" onclick="goHome()">&#8592; Home</button>
-      <div class="page-title" style="margin-bottom:6px">Data Security &amp; Privacy</div>
+      <div class="page-title" id="datasec-page-title" style="margin-bottom:6px">Data Security &amp; Privacy</div>
       <div style="font-size:12px;color:var(--mu);margin-bottom:28px;text-transform:uppercase;letter-spacing:.08em;font-weight:600">How RhetorIQ handles your data</div>
       <div style="display:flex;flex-direction:column;gap:20px;max-width:620px">
         <div class="dsec-block">
@@ -843,6 +864,7 @@ body.adv .vubtn{display:block}
     <div class="mni" id="mn-brand" onclick="goPage('brand-voice');setMN('brand')"><div class="mni-i">&#9670;</div><div class="mni-l" id="mn-brand-l">Brand</div></div>
     <div class="mni" id="mn-people" onclick="goPage('people');setMN('people');loadPeople()"><div class="mni-i">&#128101;</div><div class="mni-l" id="mn-people-l">People</div></div>
     <div class="mni" id="mn-hist" onclick="goPage('history');loadHistory();setMN('hist')"><div class="mni-i">&#128203;</div><div class="mni-l" id="mn-hist-l">History</div></div>
+    <div class="mni ao" id="mn-reviews" onclick="openReviewPanel();setMN('reviews')" style="display:none;position:relative"><div class="mni-i">&#9998;</div><div class="mni-l">Reviews</div><span class="rev-badge" id="rev-badge"></span></div>
     <div class="mni" id="mn-more" onclick="toggleMore()"><div class="mni-i">&#8943;</div><div class="mni-l" id="mn-more-l">More</div></div>
   </nav>
 
@@ -854,6 +876,15 @@ body.adv .vubtn{display:block}
     <div id="mm-datasec" onclick="goPage('datasec');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Data Security &amp; Privacy</div>
     <div id="mm-signout" onclick="logout()" style="padding:13px 18px;font-size:14px;cursor:pointer;color:var(--mu)">Sign out</div>
   </div>
+</div>
+
+<!-- Advisor Review Panel -->
+<div class="rev-panel" id="rev-panel">
+  <div class="rev-panel-hd">
+    <span class="rev-panel-title" id="rev-panel-title">Review Queue</span>
+    <button class="rev-close" onclick="document.getElementById('rev-panel').classList.remove('open')">&times;</button>
+  </div>
+  <div class="rev-list" id="rev-list"><div style="padding:20px;color:var(--mu);font-size:13px" id="rev-empty">No pending reviews.</div></div>
 </div>
 
 <button id="cbtn" onclick="toggleChat()">&#9697;</button>
@@ -872,7 +903,7 @@ body.adv .vubtn{display:block}
       <button class="chat-qr-btn" onclick="chatQuick('I would like a demo or more information about pricing.')">Pricing / Demo</button>
     </div>
   </div>
-  <div class="cft"><input class="cinp" id="chat-input" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')sendChat()"><button class="csnd" onclick="sendChat()">Send</button></div>
+  <div class="cft"><input class="cinp" id="chat-input" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')sendChat()"><button class="csnd" id="chat-send-btn" onclick="sendChat()">Send</button></div>
 </div>
 
 <!-- Contact request overlay (triggered by pricing/demo chat intent) -->
@@ -904,7 +935,7 @@ let LANG=localStorage.getItem('riq-lang')||'en';
 const T={
   en:{
     nav_home:'Home',nav_modules:'Modules',nav_brand:'Brand',nav_people:'People',nav_hist:'History',nav_more:'More',
-    mm_context:'Context',mm_clients:'Clients',mm_videos:'Videos',mm_contact:'Contact',mm_signout:'Sign out',
+    mm_context:'Context',mm_clients:'Clients',mm_videos:'Videos',mm_contact:'Contact',mm_datasec:'Data Security',mm_signout:'Sign out',
     router_title:'What would you like to do?',
     router_sub:'Describe your task — RhetorIQ opens the right module automatically.',
     router_go:'→ Go',
@@ -916,15 +947,28 @@ const T={
     hdr_signout:'Sign out',
     contact_title:'Contact',
     contact_role:'Rhetoric & executive communication coaching<br>for leaders in business, finance and education.',
-    lang_btn:'DE'
+    lang_btn:'DE',
+    home_right_title:'All Modules', qa_heading:'Quick Access',
+    btn_generate:'Generate',btn_copy:'Copy',btn_word:'Word',btn_send_advisor:'Send to Advisor',
+    btn_save_memory:'Save to Memory',btn_calibrate:'Calibrate Voice Profile',
+    lbl_result:'Result',lbl_briefing:'Briefing / Content',lbl_audience:'Audience',lbl_tone:'Tone',
+    lbl_language:'Language',lbl_length:'Length (optional)',lbl_format:'Format',lbl_template:'Template / Reference (optional)',
+    lbl_ref_save:'Save as Reference',lbl_back:'← Back',
+    review_sent:'Sent to advisor — you will be notified when the revision is ready.',
+    review_done:'Your advisor has revised this text.',
+    review_queue:'Review Queue',review_none:'No pending reviews.',
+    review_save:'Save & send to client',review_editing:'Editing…',
+    chat_greeting:'Hello — I am the RhetorIQ assistant. What can I help you with?',
+    chat_ph:'Ask anything…',chat_send:'Send',
+    datasec_title:'Data Security & Privacy'
   },
   de:{
     nav_home:'Start',nav_modules:'Module',nav_brand:'Marke',nav_people:'Personen',nav_hist:'Verlauf',nav_more:'Mehr',
-    mm_context:'Kontext',mm_clients:'Klienten',mm_videos:'Videos',mm_contact:'Kontakt',mm_signout:'Abmelden',
+    mm_context:'Kontext',mm_clients:'Klienten',mm_videos:'Videos',mm_contact:'Kontakt',mm_datasec:'Datenschutz',mm_signout:'Abmelden',
     router_title:'Was möchten Sie tun?',
     router_sub:'Beschreiben Sie Ihre Aufgabe — RhetorIQ öffnet automatisch das richtige Modul.',
     router_go:'→ Los',
-    router_ph:'z.B. „Könnte diese Pressemitteilung nach hinten losgehen?“ oder „Rede für unsere CEO schreiben“ oder „Krise: Lieferant hat soeben Insolvenz angemeldet“',
+    router_ph:'z.B. „Könnte diese Pressemitteilung nach hinten losgehen?” oder „Rede für unsere CEO schreiben” oder „Krise: Lieferant hat soeben Insolvenz angemeldet”',
     qa_tag1:'Vorbereitung',qa_name1:'Meeting-Vorbereitung',qa_desc1:'Brief, Agenda & Personenkontext — vor jedem Meeting',
     qa_tag2:'Notfall',qa_name2:'Krisenreaktion',qa_desc2:'Sofortige Einordnung unerwarteter Situationen',
     qa_tag3:'Erstellung',qa_name3:'Text Generator',qa_desc3:'LinkedIn, Newsletter, E-Mail, Rede — in Ihrer eigenen Stimme',
@@ -932,7 +976,20 @@ const T={
     hdr_signout:'Abmelden',
     contact_title:'Kontakt',
     contact_role:'Rhetorik & Führungskommunikation<br>für Führungskräfte in Wirtschaft, Finanzen und Bildung.',
-    lang_btn:'EN'
+    lang_btn:'EN',
+    home_right_title:'Alle Module', qa_heading:'Schnellzugriff',
+    btn_generate:'Generieren',btn_copy:'Kopieren',btn_word:'Word',btn_send_advisor:'An Beraterin senden',
+    btn_save_memory:'In Speicher sichern',btn_calibrate:'Stimmprofil kalibrieren',
+    lbl_result:'Ergebnis',lbl_briefing:'Briefing / Inhalt',lbl_audience:'Zielgruppe',lbl_tone:'Ton',
+    lbl_language:'Sprache',lbl_length:'Länge (optional)',lbl_format:'Format',lbl_template:'Vorlage / Referenz (optional)',
+    lbl_ref_save:'Als Referenz speichern',lbl_back:'← Zurück',
+    review_sent:'An die Beraterin gesendet — Sie werden benachrichtigt, sobald die Überarbeitung bereit ist.',
+    review_done:'Ihre Beraterin hat diesen Text überarbeitet.',
+    review_queue:'Überarbeitungsanfragen',review_none:'Keine offenen Anfragen.',
+    review_save:'Speichern & an Klient senden',review_editing:'Wird bearbeitet…',
+    chat_greeting:'Hallo — ich bin der RhetorIQ-Assistent. Wie kann ich Ihnen helfen?',
+    chat_ph:'Stellen Sie eine Frage…',chat_send:'Senden',
+    datasec_title:'Datenschutz & Datensicherheit'
   }
 };
 function applyLang(){
@@ -942,7 +999,7 @@ function applyLang(){
   s('mn-home-l',t.nav_home);s('mn-modules-l',t.nav_modules);s('mn-brand-l',t.nav_brand);
   s('mn-people-l',t.nav_people);s('mn-hist-l',t.nav_hist);s('mn-more-l',t.nav_more);
   s('mm-context',t.mm_context);s('mm-clients',t.mm_clients);s('mm-videos',t.mm_videos);
-  s('mm-contact',t.mm_contact);s('mm-signout',t.mm_signout);
+  s('mm-contact',t.mm_contact);s('mm-datasec',t.mm_datasec);s('mm-signout',t.mm_signout);
   s('router-title',t.router_title);s('router-sub',t.router_sub);s('rbtn-txt',t.router_go);
   const ri=document.getElementById('router-input');if(ri)ri.placeholder=t.router_ph;
   s('qa-tag1',t.qa_tag1);s('qa-name1',t.qa_name1);s('qa-desc1',t.qa_desc1);
@@ -950,6 +1007,14 @@ function applyLang(){
   s('qa-tag3',t.qa_tag3);s('qa-name3',t.qa_name3);s('qa-desc3',t.qa_desc3);
   s('cbar-lbl',t.cbar_lbl);s('cbar-new',t.cbar_new);
   s('hdr-signout',t.hdr_signout);
+  s('home-right-title',t.home_right_title);
+  s('qa-heading',t.qa_heading);
+  s('datasec-page-title',t.datasec_title);
+  const ci=document.getElementById('chat-input');if(ci)ci.placeholder=t.chat_ph;
+  s('chat-send-btn',t.chat_send);
+  document.querySelectorAll('.cpbtn').forEach(b=>b.textContent=t.btn_copy);
+  document.querySelectorAll('.exbtn').forEach(b=>b.textContent=t.btn_word);
+  document.querySelectorAll('.advbtn').forEach(b=>b.textContent=t.btn_send_advisor);
   s('contact-title',t.contact_title);h('contact-role',t.contact_role);
   s('lang-toggle',t.lang_btn);
 }
@@ -981,7 +1046,7 @@ pre{font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:pre-wrap;lin
   setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},100);
 }
 
-// Auto-inject Word button into every result box when it becomes visible
+// Auto-inject Word + Send-to-Advisor buttons into every result box when visible
 (function(){
   const addExportBtn=(rbox)=>{
     if(rbox.querySelector('.exbtn'))return;
@@ -991,10 +1056,18 @@ pre{font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:pre-wrap;lin
     if(!btns||!body)return;
     const title=lbl?lbl.textContent.trim():'Result';
     const id=body.id;
+    // Word button
     const btn=document.createElement('button');
-    btn.className='exbtn';btn.textContent='Word';
+    btn.className='exbtn';btn.textContent=T[LANG]?.btn_word||'Word';
     btn.onclick=()=>exportDoc(id,title);
     btns.insertBefore(btn,btns.firstChild);
+    // Send to Advisor button (only for clients, not advisor)
+    if(!isAdv){
+      const abtn=document.createElement('button');
+      abtn.className='advbtn';abtn.textContent=T[LANG]?.btn_send_advisor||'Send to Advisor';
+      abtn.onclick=()=>sendToAdvisor(id,title,abtn);
+      btns.appendChild(abtn);
+    }
   };
   const observer=new MutationObserver(mutations=>{
     mutations.forEach(m=>{
@@ -1046,7 +1119,12 @@ async function boot(user,role){
     clientId=user.id||null;
     if(clientId){await loadPeople();await loadMemory();setTimeout(()=>checkDueSubscriptions(),800);}
   }
-  if(isAdv){document.querySelectorAll('.ao-item').forEach(el=>el.style.display='block');}
+  if(isAdv){
+    document.querySelectorAll('.ao-item').forEach(el=>el.style.display='block');
+    document.getElementById('mn-reviews').style.display='flex';
+    loadAdvisorReviews();
+    setInterval(loadAdvisorReviews,60000);
+  }
   connectWS();loadStats();renderVids();initPasteIntelligence();renderHomeModuleList();
 }
 
@@ -1057,7 +1135,7 @@ function connectWS(){
   const dot=document.getElementById('ws-dot');
   ws.onopen=()=>dot.classList.add('on');
   ws.onclose=()=>{dot.classList.remove('on');setTimeout(connectWS,3000);};
-  ws.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.type==='analysis')loadStats();}catch{}};
+  ws.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.type==='analysis')loadStats();if(m.type==='review_new'&&isAdv){loadAdvisorReviews();}if(m.type==='review_done'&&!isAdv)handleReviewDoneWS(m);}catch{}};
 }
 
 // STATS
@@ -1341,11 +1419,12 @@ function loadBrandVoiceRefs(){
 function toggleModuleGrid(){}
 
 function toggleHomeRight(){
-  const panel=document.getElementById('home-right-panel');
+  const wr=document.getElementById('home-right');
   const btn=document.getElementById('home-right-btn');
-  const open=panel.classList.toggle('hidden');
-  btn.innerHTML=open?'&#8249;':'&#8250;';
-  btn.title=open?'Show modules':'Hide modules';
+  const isNowOpen=wr.classList.toggle('open');
+  btn.innerHTML=isNowOpen?'&#8250;':'&#8249;';
+  btn.title=isNowOpen?'Hide modules':'Show modules';
+  if(isNowOpen) renderHomeModuleList();
 }
 
 function renderHomeModuleList(){
@@ -1790,6 +1869,82 @@ async function sendChat(){
     document.getElementById('chat-typing')?.remove();
     msgs.innerHTML+=`<div class="cm2 b" style="color:var(--red)">Error — please try again.</div>`;
   }
+}
+
+// ── SEND TO ADVISOR / REVIEW SYSTEM ──────────────────────────
+async function sendToAdvisor(bodyId,moduleLabel,btn){
+  const body=document.getElementById(bodyId);
+  const text=body?.textContent?.trim();
+  if(!text)return;
+  btn.disabled=true;btn.textContent='Sending…';
+  try{
+    const r=await api('/api/reviews',{method:'POST',body:JSON.stringify({clientId,moduleLabel,originalText:text})});
+    const d=await r.json();
+    btn.classList.add('sent');
+    btn.textContent=T[LANG]?.review_sent_short||'Sent';
+    btn.title=T[LANG]?.review_sent||'Sent to advisor';
+    // Show confirmation below the result box
+    const rbox=btn.closest('.rbox');
+    if(rbox&&!rbox.querySelector('.adv-confirm')){
+      const c=document.createElement('div');
+      c.className='adv-confirm';
+      c.style.cssText='font-size:11px;color:#2a7a2a;padding:8px 16px;border-top:1px solid var(--bd)';
+      c.textContent=T[LANG]?.review_sent||'Sent to advisor — you will be notified when the revision is ready.';
+      rbox.appendChild(c);
+    }
+  }catch(e){btn.disabled=false;btn.textContent=T[LANG]?.btn_send_advisor||'Send to Advisor';alert('Error sending.');}
+}
+
+let reviewPollInterval=null;
+async function loadAdvisorReviews(){
+  const list=document.getElementById('rev-list');
+  const empty=document.getElementById('rev-empty');
+  if(!list)return;
+  try{
+    const r=await api('/api/reviews');
+    const reviews=await r.json();
+    const pending=reviews.filter(rv=>rv.status==='pending');
+    // Update badge
+    const badge=document.getElementById('rev-badge');
+    if(badge){badge.textContent=pending.length;badge.classList.toggle('show',pending.length>0);}
+    if(!pending.length){list.innerHTML=`<div style="padding:20px;color:var(--mu);font-size:13px">${T[LANG]?.review_none||'No pending reviews.'}</div>`;return;}
+    list.innerHTML=pending.map(rv=>`
+      <div class="rev-card" id="rvc-${rv.id}">
+        <div class="rev-card-meta">${rv.module_label||'Result'} &mdash; ${new Date(rv.created_at).toLocaleDateString('de-CH')}</div>
+        <div class="rev-card-orig">${rv.original_text}</div>
+        <textarea class="rev-card-edit" id="rev-edit-${rv.id}">${rv.original_text}</textarea>
+        <button class="rev-savebtn" onclick="saveReview(${rv.id})">${T[LANG]?.review_save||'Save & send to client'}</button>
+      </div>`).join('');
+  }catch(e){}
+}
+
+async function saveReview(id){
+  const ta=document.getElementById('rev-edit-'+id);
+  const text=ta?.value?.trim();
+  if(!text)return;
+  const btn=ta.nextElementSibling;
+  btn.disabled=true;btn.textContent=T[LANG]?.review_editing||'Saving…';
+  try{
+    await api('/api/reviews/'+id,{method:'PUT',body:JSON.stringify({editedText:text})});
+    document.getElementById('rvc-'+id)?.remove();
+    loadAdvisorReviews();
+  }catch(e){btn.disabled=false;btn.textContent=T[LANG]?.review_save||'Save & send to client';}
+}
+
+function openReviewPanel(){
+  document.getElementById('rev-panel').classList.add('open');
+  loadAdvisorReviews();
+}
+
+function handleReviewDoneWS(msg){
+  // Client receives edited text via WS
+  if(msg.clientId!==clientId)return;
+  // Find any rbox that was sent for this review and show updated text
+  const note=document.createElement('div');
+  note.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--tx);color:#fff;padding:12px 24px;border-radius:8px;z-index:9999;font-size:13px;font-weight:600';
+  note.textContent=T[LANG]?.review_done||'Your advisor has revised this text.';
+  document.body.appendChild(note);
+  setTimeout(()=>note.remove(),4000);
 }
 
 function submitChatContact(){
