@@ -325,18 +325,15 @@ body.adv .vubtn{display:block}
 .csnd{padding:8px 14px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px}
 
 /* HOME TWO-COLUMN LAYOUT */
-.home-grid{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start}
-.home-left{min-width:0}
-.home-right{width:200px;transition:width .2s}
-.home-right.collapsed{width:28px;overflow:hidden}
-.home-right-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:6px}
-.home-right-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);white-space:nowrap}
-.home-right-toggle{background:none;border:1px solid var(--bd);border-radius:4px;width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--mu);flex-shrink:0;padding:0}
-.home-right-toggle:hover{border-color:var(--tx);color:var(--tx)}
-.home-right-body{transition:opacity .15s}
-.home-right.collapsed .home-right-body{opacity:0;pointer-events:none}
-.home-right.collapsed .home-right-title{opacity:0}
-.home-right-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:0}
+.home-grid{display:flex;gap:0;align-items:start}
+.home-left{flex:1;min-width:0}
+.home-right{display:flex;flex-direction:row;align-items:start;gap:0;margin-left:12px;flex-shrink:0}
+.home-right-arrow{width:24px;display:flex;flex-direction:column;align-items:center;padding-top:2px;cursor:pointer;flex-shrink:0}
+.home-right-arrow-btn{background:none;border:1px solid var(--bd);border-radius:4px;width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--mu);padding:0;line-height:1}
+.home-right-arrow-btn:hover{border-color:var(--tx);color:var(--tx)}
+.home-right-panel{width:190px;overflow:hidden;transition:width .2s,opacity .15s;opacity:1}
+.home-right-panel.hidden{width:0;opacity:0;pointer-events:none}
+.home-right-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:10px;white-space:nowrap}
 .hm-list{display:flex;flex-direction:column;gap:5px}
 .hm-item{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;border:1.5px solid var(--bd);border-radius:6px;cursor:pointer;background:#fff;transition:border-color .15s}
 .hm-item:hover{border-color:#999}
@@ -633,12 +630,12 @@ body.adv .vubtn{display:block}
         </div><!-- /home-left -->
 
         <!-- RIGHT COLUMN: all modules -->
-        <div class="home-right" id="home-right">
-          <div class="home-right-hdr">
-            <span class="home-right-title">All Modules</span>
-            <button class="home-right-toggle" onclick="toggleHomeRight()" id="home-right-btn" title="Collapse">&#8250;</button>
+        <div class="home-right">
+          <div class="home-right-arrow">
+            <button class="home-right-arrow-btn" id="home-right-btn" onclick="toggleHomeRight()" title="Show modules">&#8249;</button>
           </div>
-          <div class="home-right-body">
+          <div class="home-right-panel hidden" id="home-right-panel">
+            <div class="home-right-title">All Modules</div>
             <div class="hm-list" id="hm-list"></div>
           </div>
         </div>
@@ -1277,11 +1274,11 @@ function loadBrandVoiceRefs(){
 function toggleModuleGrid(){}
 
 function toggleHomeRight(){
-  const col=document.getElementById('home-right');
+  const panel=document.getElementById('home-right-panel');
   const btn=document.getElementById('home-right-btn');
-  const collapsed=col.classList.toggle('collapsed');
-  btn.innerHTML=collapsed?'&#8249;':'&#8250;';
-  btn.title=collapsed?'Expand':'Collapse';
+  const open=panel.classList.toggle('hidden');
+  btn.innerHTML=open?'&#8249;':'&#8250;';
+  btn.title=open?'Show modules':'Hide modules';
 }
 
 function renderHomeModuleList(){
