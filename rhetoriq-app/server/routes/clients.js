@@ -8,18 +8,28 @@ const { requireAdvisor } = require('../middleware/auth');
 function makeTransporter() {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
-  if (!user || !pass) return null;
+  if (!user || !pass) {
+    console.error('SMTP not configured: SMTP_USER or SMTP_PASS missing');
+    return null;
+  }
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: 587,
-    secure: false,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: process.env.SMTP_SECURE === 'true',
     auth: { user, pass }
   });
+}
+
+// FROM address: use SMTP_FROM env var if set, otherwise fall back to SMTP_USER
+function fromAddress() {
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  return `"Lorena Lienhard" <${from}>`;
 }
 
 async function sendWelcomeEmail({ clientType, salutation, lastName, companyName, email, password, lang }) {
   const transporter = makeTransporter();
   if (!transporter || !email) return;
+  console.log(`Sending welcome email to ${email} (lang: ${lang}, type: ${clientType})`);
 
   const isDE = lang === 'de';
   const isCompany = clientType === 'company';
@@ -48,12 +58,13 @@ async function sendWelcomeEmail({ clientType, salutation, lastName, companyName,
     ? `${salutationLine}\n\n${intro}\n\nIhre Zugangsdaten:\n\nPlattform: https://rhetoriq.ch\nE-Mail: ${email}\nPasswort: ${password}\n\nBeim ersten Login werden Sie gebeten, ein eigenes Passwort zu vergeben. Danach ist Ihr Zugang vollständig personalisiert und gesichert.\n\nIch freue mich darauf, gemeinsam mit Ihnen zu arbeiten.\n\nHerzlich,\nLorena Lienhard\nRhetoric & Executive Communication Coaching\ncontact@lorenalienhard.ch · 079 957 39 76 · lorenalienhard.ch`
     : `${salutationLine}\n\n${intro}\n\nYour login details:\n\nPlatform: https://rhetoriq.ch\nEmail: ${email}\nPassword: ${password}\n\nOn your first login, you will be prompted to set your own password. After that, your access is fully personalised and secured.\n\nI look forward to working with you.\n\nWarm regards,\nLorena Lienhard\nRhetoric & Executive Communication Coaching\ncontact@lorenalienhard.ch · +41 79 957 39 76 · lorenalienhard.ch`;
 
-  await transporter.sendMail({
-    from: '"Lorena Lienhard" <contact@lorenalienhard.ch>',
+  const info = await transporter.sendMail({
+    from: fromAddress(),
     to: email,
     subject,
     text: body
   });
+  console.log(`Welcome email sent: ${info.messageId} → ${email}`);
 }
 
 async function sendTokenEmail(clientName, token) {
@@ -68,7 +79,7 @@ async function sendTokenEmail(clientName, token) {
     auth: { user, pass }
   });
   await transporter.sendMail({
-    from: `"RhetorIQ" <${user}>`,
+    from: fromAddress(),
     to,
     subject: `RhetorIQ — Neuer Klient: ${clientName}`,
     text: `Neuer Klient wurde angelegt:\n\nName: ${clientName}\nToken: ${token}\n\nTeilen Sie diesen Token mit Ihrem Klienten — damit kann er sich in der App einloggen.\n\nhttps://rhetoriq.ch`
@@ -121,7 +132,7 @@ router.post('/', requireAdvisor, async (req, res) => {
         email,
         password: initialPassword,
         lang: emailLang || 'de'
-      }).catch(e => console.error('Welcome email error:', e.message));
+      }).catch(e => console.error('Welcome email error:', e.message, e.code || ''));
     } else {
       sendTokenEmail(name, token).catch(e => console.error('Email error:', e.message));
     }
@@ -170,7 +181,7 @@ router.post('/:id/send-token', requireAdvisor, async (req, res) => {
     if (!transporter) return res.status(500).json({ error: 'SMTP not configured' });
 
     await transporter.sendMail({
-      from: '"Lorena Lienhard" <contact@lorenalienhard.ch>',
+      from: fromAddress(),
       to,
       subject: `RhetorIQ – Ihr persönlicher Zugangscode / Your personal access token`,
       text: `Access Token für ${client.name} / Access token for ${client.name}:\n\n${client.token}\n\nPlattform / Platform: https://rhetoriq.ch\n\n--\nLorena Lienhard\ncontact@lorenalienhard.ch`
