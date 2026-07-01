@@ -73,7 +73,7 @@ body.adv .cbar{display:flex}
 .mrow-arr{font-size:18px;color:var(--dm)}
 .mrow.mrow-feat .mrow-name{font-weight:600}
 .mrow-new{font-size:9px;font-weight:700;letter-spacing:.08em;background:var(--tx);color:#fff;padding:2px 6px;border-radius:10px;margin-left:8px;vertical-align:middle}
-.mrow-crisis .mrow-name{color:var(--red)}
+.mrow-crisis .mrow-name{color:var(--tx)}
 
 /* PASTE INTELLIGENCE */
 .pi-banner{display:none;background:#f7f7f5;border:1px solid var(--bd);border-radius:6px;padding:12px 16px;margin-top:10px;margin-bottom:0;align-items:center;justify-content:space-between;gap:10px}
@@ -325,10 +325,18 @@ body.adv .vubtn{display:block}
 .csnd{padding:8px 14px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px}
 
 /* HOME TWO-COLUMN LAYOUT */
-.home-grid{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+.home-grid{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start}
 .home-left{min-width:0}
-.home-right{}
-.home-right-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:10px}
+.home-right{width:200px;transition:width .2s}
+.home-right.collapsed{width:28px;overflow:hidden}
+.home-right-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:6px}
+.home-right-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);white-space:nowrap}
+.home-right-toggle{background:none;border:1px solid var(--bd);border-radius:4px;width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--mu);flex-shrink:0;padding:0}
+.home-right-toggle:hover{border-color:var(--tx);color:var(--tx)}
+.home-right-body{transition:opacity .15s}
+.home-right.collapsed .home-right-body{opacity:0;pointer-events:none}
+.home-right.collapsed .home-right-title{opacity:0}
+.home-right-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:0}
 .hm-list{display:flex;flex-direction:column;gap:5px}
 .hm-item{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;border:1.5px solid var(--bd);border-radius:6px;cursor:pointer;background:#fff;transition:border-color .15s}
 .hm-item:hover{border-color:#999}
@@ -625,9 +633,14 @@ body.adv .vubtn{display:block}
         </div><!-- /home-left -->
 
         <!-- RIGHT COLUMN: all modules -->
-        <div class="home-right">
-          <div class="home-right-title">All Modules</div>
-          <div class="hm-list" id="hm-list"></div>
+        <div class="home-right" id="home-right">
+          <div class="home-right-hdr">
+            <span class="home-right-title">All Modules</span>
+            <button class="home-right-toggle" onclick="toggleHomeRight()" id="home-right-btn" title="Collapse">&#8250;</button>
+          </div>
+          <div class="home-right-body">
+            <div class="hm-list" id="hm-list"></div>
+          </div>
         </div>
 
       </div><!-- /home-grid -->
@@ -1263,6 +1276,14 @@ function loadBrandVoiceRefs(){
 // TOGGLE MODULE GRID
 function toggleModuleGrid(){}
 
+function toggleHomeRight(){
+  const col=document.getElementById('home-right');
+  const btn=document.getElementById('home-right-btn');
+  const collapsed=col.classList.toggle('collapsed');
+  btn.innerHTML=collapsed?'&#8249;':'&#8250;';
+  btn.title=collapsed?'Expand':'Collapse';
+}
+
 function renderHomeModuleList(){
   const list=document.getElementById('hm-list');
   if(!list)return;
@@ -1277,7 +1298,7 @@ function renderHomeModuleList(){
       lastCat=m.cat;
     }
     const dest=m.key==='brand-voice'?`goPage('brand-voice')`:`goModule('${m.key}')`;
-    html+=`<div class="hm-item" onclick="${dest}"><div><div class="hm-item-name">${m.name}${m.isNew?' <span style="font-size:9px;background:var(--tx);color:#fff;border-radius:3px;padding:1px 4px;vertical-align:middle">NEW</span>':''}</div></div><div class="hm-item-arr">&#8594;</div></div>`;
+    html+=`<div class="hm-item" onclick="${dest}"><div class="hm-item-name">${m.name}</div><div class="hm-item-arr">&#8594;</div></div>`;
   });
   list.innerHTML=html;
 }
@@ -1727,7 +1748,7 @@ function renderModulesList(){
   list.innerHTML=filtered.map(m=>`
     <div class="mrow${m.feat?' mrow-feat':''}${m.crisis?' mrow-crisis':''}" onclick="${m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`}">
       <div class="mrow-left">
-        <div class="mrow-name">${m.name}${m.isNew?'<span class="mrow-new">New</span>':''}</div>
+        <div class="mrow-name">${m.name}</div>
         <div class="mrow-tag">${m.tag}</div>
       </div>
       <div class="mrow-arr">&#8250;</div>
