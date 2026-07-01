@@ -369,6 +369,9 @@ body.adv .vubtn{display:block}
 .mu-pill.featured:hover{background:#333}
 
 /* CONTACT PAGE */
+.dsec-block{border:1.5px solid var(--bd);border-radius:8px;padding:18px 20px;background:#fff}
+.dsec-title{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--tx);margin-bottom:8px}
+.dsec-body{font-size:13px;color:var(--mu);line-height:1.65}
 .contact-card{border:1.5px solid var(--bd);border-radius:10px;padding:24px 26px;background:#fff;margin-bottom:16px}
 .contact-tagline{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--tx);margin-bottom:4px;font-style:italic}
 .contact-role{font-size:13px;color:var(--mu);margin-bottom:24px;line-height:1.5}
@@ -804,6 +807,34 @@ body.adv .vubtn{display:block}
       </div>
     </div>
 
+    <!-- DATA SECURITY PAGE -->
+    <div class="page" id="page-datasec">
+      <button class="back" onclick="goHome()">&#8592; Home</button>
+      <div class="page-title" style="margin-bottom:6px">Data Security &amp; Privacy</div>
+      <div style="font-size:12px;color:var(--mu);margin-bottom:28px;text-transform:uppercase;letter-spacing:.08em;font-weight:600">How RhetorIQ handles your data</div>
+      <div style="display:flex;flex-direction:column;gap:20px;max-width:620px">
+        <div class="dsec-block">
+          <div class="dsec-title">Processing</div>
+          <div class="dsec-body">RhetorIQ processes all inputs exclusively via the Anthropic API — one of the most rigorously audited AI infrastructures available. No content entered into RhetorIQ is stored on external servers, sold to third parties, or used to train AI models.</div>
+        </div>
+        <div class="dsec-block">
+          <div class="dsec-title">Session Isolation</div>
+          <div class="dsec-body">Each session is isolated: data entered in one client workspace is never accessible to another. Your inputs are processed in real time and treated as strictly confidential.</div>
+        </div>
+        <div class="dsec-block">
+          <div class="dsec-title">Legal Compliance</div>
+          <div class="dsec-body">Lorena Lienhard operates RhetorIQ in strict compliance with Swiss data protection law (DSG) and the European General Data Protection Regulation (GDPR).</div>
+        </div>
+        <div class="dsec-block">
+          <div class="dsec-title">Confidentiality Standard</div>
+          <div class="dsec-body">Sensitive communications — merger announcements, performance reviews, internal strategy documents — are treated with the same confidentiality as a privileged advisory relationship. What you enter stays between you, RhetorIQ, and Lorena Lienhard.</div>
+        </div>
+        <div style="border-top:1px solid var(--bd);padding-top:20px;font-size:12px;color:var(--mu);line-height:1.7">
+          Questions about data handling? <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /content -->
 
   <nav class="mnav">
@@ -820,6 +851,7 @@ body.adv .vubtn{display:block}
     <div id="mm-clients" class="ao-item" onclick="goPage('clients');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none">Clients</div>
     <div id="mm-videos" onclick="goPage('videos');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Videos</div>
     <div id="mm-contact" onclick="goPage('contact');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Contact</div>
+    <div id="mm-datasec" onclick="goPage('datasec');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Data Security &amp; Privacy</div>
     <div id="mm-signout" onclick="logout()" style="padding:13px 18px;font-size:14px;cursor:pointer;color:var(--mu)">Sign out</div>
   </div>
 </div>
