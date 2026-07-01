@@ -237,6 +237,38 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 
 /* CRISIS ALERT */
 .crisis-alert{background:#fff8f8;border:1.5px solid #f0c0c0;border-radius:6px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:#a00;font-weight:500}
+/* TONE CALIBRATOR */
+.tone-cal-box{border:1px solid var(--bd);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.tone-cal-hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer;user-select:none}
+.tone-cal-hdr:hover{background:var(--sl)}
+.tone-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:0 14px}
+.tone-lbl{font-size:10px;color:var(--mu);white-space:nowrap;min-width:78px}
+.tone-lbl:last-child{text-align:right}
+.tone-row input[type=range]{flex:1;accent-color:var(--tx)}
+/* ADVISOR DASHBOARD */
+.adv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.adv-stat{background:var(--sl);border-radius:8px;padding:14px 12px;text-align:center}
+.adv-stat-n{font-size:26px;font-weight:800;color:var(--tx)}
+.adv-stat-l{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-top:2px}
+.adv-client-card{border:1px solid var(--bd);border-radius:8px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.adv-client-card:hover{border-color:var(--tx)}
+.adv-client-name{font-size:14px;font-weight:600;color:var(--tx)}
+.adv-client-meta{font-size:11px;color:var(--mu);margin-top:2px}
+.adv-client-bar{display:flex;align-items:center;gap:8px;margin-top:8px}
+.adv-bar-track{flex:1;height:4px;background:var(--bd);border-radius:2px;overflow:hidden}
+.adv-bar-fill{height:100%;background:var(--tx);border-radius:2px;transition:width .3s}
+.adv-timeline{margin-top:10px;padding:10px 0 4px;border-top:1px solid var(--bd);display:none}
+.adv-tl-item{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--bd)}
+.adv-tl-item:last-child{border-bottom:none}
+.adv-tl-dot{width:7px;height:7px;border-radius:50%;background:var(--tx);flex-shrink:0}
+.adv-tl-mod{font-size:12px;color:var(--tx);font-weight:500}
+.adv-tl-date{font-size:10px;color:var(--mu);margin-left:auto}
+.adv-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:18px 0 8px}
+.adv-feed-item{display:flex;align-items:baseline;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:12px}
+.adv-feed-item:last-child{border-bottom:none}
+.adv-feed-client{font-weight:600;color:var(--tx)}
+.adv-feed-mod{color:var(--mu)}
+.adv-feed-date{font-size:10px;color:var(--mu);margin-left:auto;flex-shrink:0}
 
 /* BRAND TOGGLE */
 .tog{display:flex;border:1.5px solid var(--bd);border-radius:6px;margin-bottom:20px;overflow:hidden;display:inline-flex}
@@ -802,6 +834,13 @@ body.adv .vubtn{display:block}
       <div id="hist-list"><div class="empty"><div class="ei">◤</div><div id="hist-empty">No analyses yet.</div></div></div>
     </div>
 
+    <!-- ADVISOR DASHBOARD -->
+    <div class="page ao" id="page-advisor" style="display:none">
+      <div class="page-title" style="margin-bottom:4px">Dashboard</div>
+      <p style="font-size:12px;color:var(--mu);margin-bottom:18px">Overview of all clients and activity.</p>
+      <div id="adv-dash-content"><div class="empty"><div class="ei">&#9711;</div><div>Loading…</div></div></div>
+    </div>
+
     <!-- CONTACT -->
     <div class="page" id="page-contact">
       <div class="page-title" id="contact-title" style="margin-bottom:6px">Contact</div>
@@ -868,6 +907,7 @@ body.adv .vubtn{display:block}
     <div class="mni" id="mn-people" onclick="goPage('people');setMN('people');loadPeople()"><div class="mni-i" style="font-size:14px">&#9711;</div><div class="mni-l" id="mn-people-l">People</div></div>
     <div class="mni" id="mn-hist" onclick="goPage('history');loadHistory();setMN('hist')"><div class="mni-i" style="font-size:14px">&#9700;</div><div class="mni-l" id="mn-hist-l">History</div></div>
     <div class="mni ao" id="mn-reviews" onclick="openReviewPanel();setMN('reviews')" style="display:none;position:relative"><div class="mni-i">&#9998;</div><div class="mni-l">Reviews</div><span class="rev-badge" id="rev-badge"></span></div>
+    <div class="mni ao" id="mn-advisor" onclick="goPage('advisor');loadAdvisorDashboard();setMN('advisor')" style="display:none"><div class="mni-i" style="font-size:14px">&#9783;</div><div class="mni-l">Dashboard</div></div>
     <div class="mni" id="mn-more" onclick="toggleMore()"><div class="mni-i">&#8943;</div><div class="mni-l" id="mn-more-l">More</div></div>
   </nav>
 
@@ -1004,6 +1044,7 @@ const T={
     // LinkedIn & Klaviyo
     li_profile_lbl:'LinkedIn Profile / About (optional)',
     li_profile_ph:"Paste the About section and recent posts of the LinkedIn profile here — so the output matches the person's authentic voice.",
+    tone_cal:'Tone Calibrator',tone_conv:'Conversational',tone_formal:'Formal',tone_dipl:'Diplomatic',tone_direct:'Direct',
     klv_apikey:'Klaviyo Private API Key',klv_connect:'Connect',klv_subject:'Email Subject',
     klv_subject_ph:'e.g. Our March Newsletter',klv_send:'Save as Draft in Klaviyo',
     klv_tpl_lbl:'Use existing template as style reference',klv_tpl_none:'— choose template —',
@@ -1076,6 +1117,7 @@ const T={
     btn_cancel:'Abbrechen',btn_save:'Speichern',
     li_profile_lbl:'LinkedIn-Profil / About (optional)',
     li_profile_ph:'About-Bereich und aktuelle Posts des LinkedIn-Profils einfügen — damit der Output der authentischen Stimme der Person entspricht.',
+    tone_cal:'Ton-Kalibrator',tone_conv:'Gesprächig',tone_formal:'Formell',tone_dipl:'Diplomatisch',tone_direct:'Direkt',
     klv_apikey:'Klaviyo Private API-Key',klv_connect:'Verbinden',klv_subject:'E-Mail Betreff',
     klv_subject_ph:'z.B. Unser März-Newsletter',klv_send:'Als Entwurf in Klaviyo speichern',
     klv_tpl_lbl:'Vorhandene Vorlage als Stil-Referenz verwenden',klv_tpl_none:'— Vorlage wählen —',
@@ -1232,6 +1274,7 @@ async function boot(user,role){
   if(isAdv){
     document.querySelectorAll('.ao-item').forEach(el=>el.style.display='block');
     document.getElementById('mn-reviews').style.display='flex';
+    document.getElementById('mn-advisor').style.display='flex';
     loadAdvisorReviews();
     setInterval(loadAdvisorReviews,60000);
   }
@@ -1634,6 +1677,10 @@ const MDEFS={
   review:{title:'Feedback Writer',desc:'Rough notes about an employee in, precise written performance feedback out.',mf:'pr-in',ph:'"Often late, delivers strong quality, saved the client project last month, struggles with prioritisation..."',api:'pr',people:true,fields:[{id:'pr-role',type:'text',lbl:"Employee's Role",ph:'e.g. Senior Analyst, Project Manager'},{id:'pr-fmt',type:'sel',lbl:'Format',opts:['Written appraisal (HR document)','Verbal feedback (conversation guide)','360 feedback','Probationary review']}]},
   recognition:{title:'Appreciation Writer',desc:'Write a recognition for any employee that feels personal and genuine &mdash; not generic copy-paste.',mf:'rw-in',ph:'"Meier worked over the weekend to rescue the database migration. The client noticed. Said it was the best handover they ever received."',api:'rw',people:true,fields:[{id:'rw-type',type:'sel',lbl:'Recipient Type',opts:['The Analyst &mdash; values precision and evidence','The Executor &mdash; values impact and results','The Team Player &mdash; values group contribution','The Visionary &mdash; values ideas and vision','The Pragmatist &mdash; wants direct acknowledgement']},{id:'rw-fmt',type:'sel',lbl:'Format',opts:['Verbal recognition (conversation)','Written acknowledgement (email)','Public praise (team meeting)','Formal recognition (HR document)']}]},
   'text-gen':{title:'Text Generator',desc:'Briefing in, finished text out. LinkedIn, speech, press release, email &mdash; any format, in the authentic brand voice.',api:'text-gen',special:'textgen'},
+  'ghostwriter':{title:'Ghostwriter Mode',desc:'Paste past texts — emails, posts, speeches. The AI extracts your exact voice and writes new content that sounds authentically like you. No prompting required.',mf:'gw-in',ph:'Paste past texts here — emails, LinkedIn posts, speeches, memos. The more diverse, the better the style match.',api:'ghostwriter',mh:'160px',twopart:true,fields:[{id:'gw-format',type:'sel',lbl:'Format',opts:['LinkedIn Post','Email','Internal Announcement','Speech / Opening','Newsletter Section','Press Release','Custom']},{id:'gw-audience',type:'text',lbl:'Target Audience',ph:'e.g. Board, employees, media, LinkedIn followers'},{id:'gw-briefing',type:'ta',lbl:'What to write (briefing)',ph:'e.g. Announce our Q1 results with optimism but realism. Mention the new HR strategy without details yet.'},{id:'gw-length',type:'text',lbl:'Length guidance',ph:'e.g. 200 words, 3 paragraphs'}]},
+  'crisis-toolkit':{title:'Crisis Communication Toolkit',desc:'Something happened. Get a complete communication kit in 2 minutes: internal statement, press release, employee FAQ, social media holding, action checklist.',mf:'ctk-in',ph:'Describe the situation with hard facts: what happened, when, who is affected, what is publicly known.',api:'crisis-toolkit',alert:true,fields:[{id:'ctk-type',type:'sel',lbl:'Crisis Type',opts:['Reputational damage / Shitstorm','Workplace accident / Safety incident','Media leak / Unwanted disclosure','Leadership scandal','Product failure / Recall','Financial irregularity','Cybersecurity incident','Other']},{id:'ctk-company',type:'text',lbl:'Company / Context',ph:'e.g. Acme AG, Swiss SME, 200 employees'},{id:'ctk-aud',type:'text',lbl:'Affected Stakeholders',ph:'e.g. Employees, media, investors, customers'}]},
+  'before-after':{title:'Before / After',desc:'Paste any text. Get a diagnosis of what is weak, a fully improved version, and a clear explanation of every change made.',mf:'ba-in',ph:'Paste the original text here — email, statement, announcement, speech section, LinkedIn post...',api:'before-after',fields:[{id:'ba-goal',type:'sel',lbl:'Improvement Goal',opts:['General improvement','More clarity & directness','More authority & presence','Warmer & more human','Stronger argumentation','Shorter & sharper']},{id:'ba-aud',type:'text',lbl:'Target Audience',ph:'e.g. Employees, investors, media'},{id:'ba-tone',type:'sel',lbl:'Tone Target',opts:['Keep existing tone','More formal','More conversational','Swiss / European — understated','International executive']}]},
+  'competitive-check':{title:'Competitive Message Check',desc:'Paste your key messages. Get a similarity score vs. your industry, a list of what makes you sound generic, and a rewrite that actually differentiates.',mf:'cc-in',ph:'Paste your 3–5 key messages or positioning statements here.',api:'competitive-check',mh:'120px',fields:[{id:'cc-industry',type:'sel',lbl:'Industry',opts:['Financial Services','Industry / Manufacturing','Tech / SaaS','Healthcare','Education','Public Sector','Consulting','Other']},{id:'cc-company',type:'text',lbl:'Company / Brand',ph:'e.g. Acme AG'},{id:'cc-aud',type:'text',lbl:'Target Audience',ph:'e.g. B2B clients, investors, talent market'}]},
   'pre-meeting':{title:'Meeting Prep',desc:'Meeting in 1 hour? Get a complete brief: the 3 hardest moments, your opening line, key messages, what not to say, and a stakeholder map.',api:'pre-meeting',special:'premeeting'},
   'arg-reaction':{title:'Argument / Reaction Preview',desc:'Three tools in one: get the hardest pushback, simulate how stakeholders will react, and check if the leadership message matches company reality.',api:'arg-reaction',special:'argreaction'}
 };
@@ -1759,6 +1806,16 @@ function buildTextGen(prefill,form){
           <div id="klv-tpl-preview-${t.id}" style="font-size:11px;color:var(--mu);margin-top:4px;max-height:60px;overflow:hidden"></div>
         </div>
       </div>`:''}
+      <div class="tone-cal-box">
+        <div class="tone-cal-hdr" onclick="toggleToneCal('${t.id}')">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)">${tl.tone_cal||'Tone Calibrator'}</span>
+          <span id="tone-cal-arrow-${t.id}" style="font-size:16px;color:var(--mu);line-height:1">+</span>
+        </div>
+        <div id="tone-cal-body-${t.id}" style="display:none;padding-bottom:12px">
+          <div class="tone-row"><span class="tone-lbl">${tl.tone_conv||'Conversational'}</span><input type="range" id="tone-formal-${t.id}" min="0" max="100" value="50"><span class="tone-lbl" style="text-align:right">${tl.tone_formal||'Formal'}</span></div>
+          <div class="tone-row"><span class="tone-lbl">${tl.tone_dipl||'Diplomatic'}</span><input type="range" id="tone-edge-${t.id}" min="0" max="100" value="50"><span class="tone-lbl" style="text-align:right">${tl.tone_direct||'Direct'}</span></div>
+        </div>
+      </div>
       <button class="runbtn" onclick="runMod('text-gen','${t.id}')">${tl.tg_generate}</button>
       <div class="rbox" id="text-gen-r-${t.id}"><div class="rhead"><span class="rlbl">${tl.tg_result}</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b-${t.id}')">${tl.btn_copy}</button>${t.id==='newsletter'?`<button class="exbtn" style="background:#f9f6ff;border-color:#e0d4f5;color:#7c3aed" onclick="klvSavePrompt('${t.id}')">→ Klaviyo</button>`:''}</div></div><div class="rbody" id="text-gen-b-${t.id}"></div>
         ${t.id==='newsletter'?`<div id="klv-save-area-${t.id}" style="display:none;padding:10px;border-top:1px solid #e0d4f5">
@@ -1906,7 +1963,11 @@ async function runMod(name){
   if(name==='brand-voice-co'){module='brand-voice-co';rid='brand-voice-co-r';bid='brand-voice-co-b';const t=g('bv-co-in')||getRefContext('ref_brand_co');if(!t)return alert('Please enter text or save reference documents first.');data={text:t+context,company:g('bv-company'),industry:g('bv-industry'),values:g('bv-values'),audiences:g('bv-audiences')};}
   else if(name==='brand-voice-ind'){module='brand-voice-ind';rid='brand-voice-ind-r';bid='brand-voice-ind-b';const t=g('bv-ind-in')||getRefContext('ref_brand_ind');if(!t)return alert('Please enter text or save reference documents first.');data={text:t+context,person:g('bv-person'),role:g('bv-prole')};}
   else if(name==='vs-cal'){module='vs-cal';rid='vs-cal-r';bid='vs-cal-b';const t=g('tg-ref');if(!t)return alert('Please enter reference texts.');data={text:t};}
-  else if(name==='text-gen'){const fid=arguments[1]||'custom';module='text-gen';rid='text-gen-r-'+fid;bid='text-gen-b-'+fid;const t=g('tg-task-'+fid);if(!t)return alert('Please enter a briefing.');const ref=g('tg-ref-'+fid);const liProf=fid==='linkedin'?(g('tg-li-profile')||''):'';const liCtx=liProf?'\n\n---LINKEDIN PROFILE---\n'+liProf:'';data={text:t,format:g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:g('tg-tone-'+fid),language:g('tg-lang-'+fid),length:g('tg-len-'+fid),voiceProfile:(voiceProf||'')+context+liCtx+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
+  else if(name==='text-gen'){const fid=arguments[1]||'custom';module='text-gen';rid='text-gen-r-'+fid;bid='text-gen-b-'+fid;const t=g('tg-task-'+fid);if(!t)return alert('Please enter a briefing.');const ref=g('tg-ref-'+fid);const liProf=fid==='linkedin'?(g('tg-li-profile')||''):'';const liCtx=liProf?'\n\n---LINKEDIN PROFILE---\n'+liProf:'';
+    let baseTone=g('tg-tone-'+fid)||'';
+    const tCalBody=document.getElementById('tone-cal-body-'+fid);
+    if(tCalBody&&tCalBody.style.display!=='none'){const fv=parseInt(document.getElementById('tone-formal-'+fid)?.value||50);const ev=parseInt(document.getElementById('tone-edge-'+fid)?.value||50);const fd=fv<33?'conversational':fv>66?'formal':'semi-formal';const ed=ev<33?'diplomatic':ev>66?'very direct':'balanced';baseTone=baseTone+` Tone calibration: ${fd}, ${ed}.`;}
+    data={text:t,format:g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:baseTone,language:g('tg-lang-'+fid),length:g('tg-len-'+fid),voiceProfile:(voiceProf||'')+context+liCtx+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
   else if(name==='profiling'){module='rp';rid='profiling-r';bid='profiling-b';const t=g('rp-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('rp-name'),industry:g('rp-industry')};}
   else if(name==='fingerprint'){module='cf';rid='fingerprint-r';bid='fingerprint-b';const t=g('cf-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('cf-name'),focus:g('cf-focus')};}
   else if(name==='language'){module='la';rid='language-r';bid='language-b';const t=g('la-in');if(!t)return alert('Please enter text.');data={text:t+context,size:g('la-size'),focus:g('la-focus')};}
@@ -1921,6 +1982,10 @@ async function runMod(name){
   else if(name==='debrief'){module='debrief';rid='debrief-r';bid='debrief-b';const orig=g('db-orig');const fb=g('db-feedback');if(!orig||!fb)return alert('Please enter both the original communication and the real feedback.');data={original:orig,feedback:fb+context,context:g('db-ctx')};}
   else if(name==='review'){module='pr';rid='review-r';bid='review-b';const t=g('pr-in');if(!t)return alert('Please enter text.');data={text:t+context,role:g('pr-role'),format:g('pr-fmt')};}
   else if(name==='recognition'){module='rw';rid='recognition-r';bid='recognition-b';const t=g('rw-in');if(!t)return alert('Please enter text.');data={text:t+context,type:g('rw-type'),format:g('rw-fmt')};}
+  else if(name==='ghostwriter'){module='ghostwriter';rid='ghostwriter-r';bid='ghostwriter-b';const t=g('gw-in');const briefing=g('gw-briefing');if(!t)return alert('Please paste past texts so the AI can learn the voice.');if(!briefing)return alert('Please enter a briefing for what to write.');data={text:t+context,format:g('gw-format'),audience:g('gw-audience'),briefing,length:g('gw-length'),voiceProfile:voiceProf||''};}
+  else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';bid='crisis-toolkit-b';const t=g('ctk-in');if(!t)return alert('Please describe the crisis situation.');data={text:t+context,crisisType:g('ctk-type'),company:g('ctk-company'),audiences:g('ctk-aud')};}
+  else if(name==='before-after'){module='before-after';rid='before-after-r';bid='before-after-b';const t=g('ba-in');if(!t)return alert('Please enter the original text.');data={text:t,goal:g('ba-goal'),audience:g('ba-aud'),tone:g('ba-tone')};}
+  else if(name==='competitive-check'){module='competitive-check';rid='competitive-check-r';bid='competitive-check-b';const t=g('cc-in');if(!t)return alert('Please enter your key messages.');data={text:t,industry:g('cc-industry'),company:g('cc-company'),audience:g('cc-aud')};}
   else if(name==='arg-pushback'){module='st';rid='arg-pushback-r';bid='arg-pushback-b';const t=g('ar-push-in');if(!t)return alert('Please enter text.');data={text:t+context,perspectives:g('ar-push-persp'),intensity:g('ar-push-int')};}
   else if(name==='arg-reactions'){module='si';rid='arg-reactions-r';bid='arg-reactions-b';const t=g('ar-react-in');if(!t)return alert('Please enter text.');data={text:t+context,stakeholders:g('ar-react-sth'),severity:g('ar-react-sev')};}
   else if(name==='arg-culture'){module='la';rid='arg-culture-r';bid='arg-culture-b';const t=g('ar-cult-in');if(!t)return alert('Please enter text.');data={text:t+context,size:g('ar-cult-size'),focus:g('ar-cult-focus')};}
@@ -2123,6 +2188,72 @@ function klvAutoLoad(fid){
   klvConnect(fid);
 }
 
+// ── TONE CALIBRATOR ───────────────────────────────────────────
+function toggleToneCal(fid){
+  const body=document.getElementById('tone-cal-body-'+fid);
+  const arrow=document.getElementById('tone-cal-arrow-'+fid);
+  if(!body)return;
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  if(arrow)arrow.textContent=open?'−':'+';
+}
+
+// ── ADVISOR DASHBOARD ─────────────────────────────────────────
+async function loadAdvisorDashboard(){
+  const el=document.getElementById('adv-dash-content');
+  if(!el)return;
+  el.innerHTML='<div class="empty"><div class="ei">&#8987;</div><div>Loading…</div></div>';
+  try{
+    const r=await api('/api/advisor/dashboard');
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error);
+    const {stats,clients,recent}=d;
+    const fmtDate=s=>s?new Date(s).toLocaleDateString('de-CH'):'—';
+    const fmtDateShort=s=>s?new Date(s).toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit'}):'—';
+    const maxA=clients.reduce((m,c)=>Math.max(m,parseInt(c.total_analyses)||0),1);
+    el.innerHTML=`
+      <div class="adv-stats">
+        <div class="adv-stat"><div class="adv-stat-n">${stats.total_clients||0}</div><div class="adv-stat-l">Clients</div></div>
+        <div class="adv-stat"><div class="adv-stat-n">${stats.analyses_30d||0}</div><div class="adv-stat-l">Analyses (30d)</div></div>
+        <div class="adv-stat"><div class="adv-stat-n">${stats.active_clients_7d||0}</div><div class="adv-stat-l">Active (7d)</div></div>
+      </div>
+      <div class="adv-section-title">Clients</div>
+      ${clients.length?clients.map(c=>{
+        const pct=Math.round((parseInt(c.total_analyses)||0)/maxA*100);
+        return`<div class="adv-client-card" onclick="advToggleTimeline('${c.id}',this)">
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <div class="adv-client-name">${c.name}</div>
+            <div style="font-size:11px;color:var(--mu)">${c.total_analyses} ${parseInt(c.total_analyses)===1?'analysis':'analyses'}</div>
+          </div>
+          <div class="adv-client-meta">${c.industry||'—'} · Last active ${fmtDate(c.last_activity)}</div>
+          <div class="adv-client-bar"><div class="adv-bar-track"><div class="adv-bar-fill" style="width:${pct}%"></div></div><span style="font-size:10px;color:var(--mu)">${c.analyses_7d||0} this week</span></div>
+          <div class="adv-timeline" id="adv-tl-${c.id}"><div style="font-size:11px;color:var(--mu);padding:4px 0">Loading timeline…</div></div>
+        </div>`;
+      }).join(''):'<div style="color:var(--mu);font-size:13px">No clients yet.</div>'}
+      <div class="adv-section-title">Recent Activity</div>
+      <div>${recent.length?recent.map(a=>`
+        <div class="adv-feed-item">
+          <div class="adv-feed-client">${a.client_name}</div>
+          <div class="adv-feed-mod">${a.module_label||a.module}</div>
+          <div class="adv-feed-date">${fmtDateShort(a.created_at)}</div>
+        </div>`).join(''):'<div style="color:var(--mu);font-size:13px">No activity yet.</div>'}</div>`;
+  }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;}
+}
+
+async function advToggleTimeline(clientId,card){
+  const tl=document.getElementById('adv-tl-'+clientId);
+  if(!tl)return;
+  const open=tl.style.display==='block';
+  if(open){tl.style.display='none';return;}
+  tl.style.display='block';
+  try{
+    const r=await api('/api/advisor/timeline/'+clientId);
+    const rows=await r.json();
+    if(!rows.length){tl.innerHTML='<div style="font-size:11px;color:var(--mu);padding:4px 0">No analyses yet.</div>';return;}
+    tl.innerHTML=rows.map(a=>`<div class="adv-tl-item"><div class="adv-tl-dot"></div><div class="adv-tl-mod">${a.module_label||a.module}</div><div class="adv-tl-date">${new Date(a.created_at).toLocaleDateString('de-CH')}</div></div>`).join('');
+  }catch(e){tl.innerHTML=`<div style="font-size:11px;color:var(--red)">Error loading timeline.</div>`;}
+}
+
 // ── EXPORT CLIENTS CSV ────────────────────────────────────────
 function downloadClients(){
   const url=API+'/api/clients/export';
@@ -2229,8 +2360,12 @@ const ALL_MODULES=[
   {key:'thread',name:'Notes to Tasks',cat:'efficiency',tag:'Efficiency'},
   {key:'rh-translate',name:'Translate',cat:'efficiency',tag:'Efficiency',isNew:true},
   {key:'fingerprint',name:'Language Over Time',cat:'growth',tag:'Growth'},
+  {key:'ghostwriter',name:'Ghostwriter Mode',cat:'growth',tag:'Growth',isNew:true},
+  {key:'before-after',name:'Before / After',cat:'growth',tag:'Growth',isNew:true},
   {key:'sparring',name:'2-Min. Training',cat:'growth',tag:'Growth',isNew:true},
   {key:'debrief',name:'Debrief',cat:'growth',tag:'Growth',isNew:true},
+  {key:'crisis-toolkit',name:'Crisis Communication Toolkit',cat:'prevention',tag:'Prevention — Emergency',crisis:true,isNew:true},
+  {key:'competitive-check',name:'Competitive Message Check',cat:'prevention',tag:'Prevention',isNew:true},
 ];
 let modsCatFilter='all',modsSearch='';
 function renderModulesList(){
