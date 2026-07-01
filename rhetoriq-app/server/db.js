@@ -24,6 +24,10 @@ async function init() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS email TEXT;
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS password_hash TEXT;
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT FALSE;
+
     CREATE TABLE IF NOT EXISTS analyses (
       id SERIAL PRIMARY KEY,
       client_id INTEGER REFERENCES clients(id),
@@ -61,6 +65,17 @@ async function init() {
       content TEXT NOT NULL,
       updated_at TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(client_id, memory_type)
+    );
+
+    CREATE TABLE IF NOT EXISTS review_requests (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+      module_label TEXT,
+      original_text TEXT NOT NULL,
+      edited_text TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS content_subscriptions (

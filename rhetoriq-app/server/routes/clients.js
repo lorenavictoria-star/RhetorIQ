@@ -1,5 +1,6 @@
 const express = require('express');
 const crypto = require('crypto');
+const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 const { pool } = require('../db');
 const { requireAdvisor } = require('../middleware/auth');
@@ -42,15 +43,22 @@ router.get('/', requireAdvisor, async (req, res) => {
 // POST /api/clients
 router.post('/', requireAdvisor, async (req, res) => {
   try {
-    const { name, industry, contact } = req.body;
+    const { name, industry, contact, email, initialPassword } = req.body;
     if (!name) return res.status(400).json({ error: 'Name required' });
 
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') + '-' + Date.now().toString(36);
     const token = crypto.randomBytes(24).toString('hex');
 
+    let passwordHash = null;
+    let mustChange = false;
+    if (email && initialPassword) {
+      passwordHash = await bcrypt.hash(initialPassword, 12);
+      mustChange = true;
+    }
+
     const { rows } = await pool.query(
-      'INSERT INTO clients (advisor_id, name, industry, contact, slug, token) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-      [req.user.id, name, industry || '', contact || '', slug, token]
+      'INSERT INTO clients (advisor_id, name, industry, contact, slug, token, email, password_hash, must_change_password) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',
+      [req.user.id, name, industry || '', contact || '', slug, token, email || null, passwordHash, mustChange]
     );
     sendTokenEmail(name, token).catch(e => console.error('Email error:', e.message));
     res.status(201).json(rows[0]);

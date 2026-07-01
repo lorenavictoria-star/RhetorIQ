@@ -530,11 +530,34 @@ body.adv .vubtn{display:block}
       <div class="lsw">Client? <a onclick="sf('client-form','advisor-form')">Enter your access token</a></div>
     </div>
     <div id="client-form">
-      <div class="fg"><label class="fl">Access Token</label><input class="fi" type="text" id="cl-token" placeholder="Paste your token here"></div>
-      <button class="lbtn" onclick="loginClient()">Open Client View</button>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button id="cl-tab-token" class="lbtn" style="flex:1;font-size:13px;padding:8px" onclick="switchClientTab('token')">Access Token</button>
+        <button id="cl-tab-pw" class="lbtn" style="flex:1;background:var(--bg2);color:var(--tx);font-size:13px;padding:8px;border:1.5px solid var(--bd)" onclick="switchClientTab('pw')">Email &amp; Password</button>
+      </div>
+      <div id="cl-token-form">
+        <div class="fg"><label class="fl">Access Token</label><input class="fi" type="text" id="cl-token" placeholder="Paste your token here"></div>
+        <button class="lbtn" onclick="loginClient()">Open Client View</button>
+      </div>
+      <div id="cl-pw-form" style="display:none">
+        <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="cl-email" autocomplete="email" placeholder="your@email.com"></div>
+        <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="cl-password" autocomplete="current-password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"></div>
+        <button class="lbtn" onclick="loginClientPassword()">Sign in</button>
+      </div>
       <div class="lerr" id="cl-err"></div>
       <div class="lsw"><a onclick="sf('advisor-form','client-form')">Back</a></div>
     </div>
+  </div>
+</div>
+
+<!-- PASSWORD CHANGE SCREEN (shown after first login) -->
+<div id="pw-change-screen" style="display:none;position:fixed;inset:0;background:#fff;z-index:9999;align-items:center;justify-content:center">
+  <div class="lbox">
+    <div class="llogo">RhetorIQ</div>
+    <div class="ltag" style="margin-bottom:20px">Please set your personal password to continue.</div>
+    <div class="fg"><label class="fl">New Password</label><input class="fi" type="password" id="new-pw1" placeholder="Minimum 8 characters"></div>
+    <div class="fg"><label class="fl">Confirm Password</label><input class="fi" type="password" id="new-pw2" placeholder="Repeat password"></div>
+    <button class="lbtn" onclick="submitNewPassword()">Set Password</button>
+    <div class="lerr" id="pw-change-err"></div>
   </div>
 </div>
 
@@ -546,6 +569,11 @@ body.adv .vubtn{display:block}
     <div class="mf"><label class="fl">Company Name</label><input type="text" id="nc-name" placeholder="e.g. Acme AG"></div>
     <div class="mf"><label class="fl">Industry</label><select id="nc-industry"><option>Financial Services</option><option>Industry / Manufacturing</option><option>Tech / SaaS</option><option>Healthcare</option><option>Education</option><option>Public Sector</option><option>Other</option></select></div>
     <div class="mf"><label class="fl">Primary Contact</label><input type="text" id="nc-contact" placeholder="e.g. CEO Martin Meier"></div>
+    <div class="mf" style="border-top:1px solid var(--bd);margin-top:12px;padding-top:12px">
+      <label class="fl" style="font-size:12px;color:var(--tx2)">Client Login (optional — enables email & password access)</label>
+      <input type="email" id="nc-email" placeholder="client@email.com" style="margin-bottom:8px" class="fi">
+      <input type="password" id="nc-initpw" placeholder="Set initial password (min. 8 characters)" class="fi">
+    </div>
     <div class="mact"><button class="mcanc" onclick="closeModal('nc-ov')">Cancel</button><button class="mconf" onclick="addClient()">Create</button></div>
   </div>
 </div>
@@ -1269,6 +1297,59 @@ async function loginAdvisor(){
   const e=document.getElementById('adv-email').value.trim(),p=document.getElementById('adv-pw').value,err=document.getElementById('adv-err');err.style.display='none';
   try{const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,password:p})});const d=await r.json();if(!r.ok){err.textContent=d.error||'Login failed';err.style.display='block';return;}token=d.token;localStorage.setItem('riq-token',token);boot(d.user,'advisor');}catch{err.textContent='Connection error';err.style.display='block';}
 }
+function switchClientTab(tab){
+  const isToken=tab==='token';
+  document.getElementById('cl-token-form').style.display=isToken?'block':'none';
+  document.getElementById('cl-pw-form').style.display=isToken?'none':'block';
+  document.getElementById('cl-tab-token').style.background=isToken?'var(--acc)':'var(--bg2)';
+  document.getElementById('cl-tab-token').style.color=isToken?'#fff':'var(--tx)';
+  document.getElementById('cl-tab-token').style.border=isToken?'none':'1.5px solid var(--bd)';
+  document.getElementById('cl-tab-pw').style.background=isToken?'var(--bg2)':'var(--acc)';
+  document.getElementById('cl-tab-pw').style.color=isToken?'var(--tx)':'#fff';
+  document.getElementById('cl-tab-pw').style.border=isToken?'1.5px solid var(--bd)':'none';
+  document.getElementById('cl-err').style.display='none';
+}
+
+async function loginClientPassword(){
+  const err=document.getElementById('cl-err');
+  const email=document.getElementById('cl-email').value.trim();
+  const pw=document.getElementById('cl-password').value;
+  if(!email||!pw){err.textContent='Please enter email and password';err.style.display='block';return;}
+  err.style.display='none';
+  try{
+    const r=await fetch(API+'/auth/client-password-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
+    const d=await r.json();
+    if(!r.ok){err.textContent=d.error||'Invalid credentials';err.style.display='block';return;}
+    token=d.token;
+    localStorage.setItem('riq-token',token);
+    if(d.mustChangePassword){
+      document.getElementById('login-screen').classList.add('hidden');
+      const s=document.getElementById('pw-change-screen');
+      s.style.display='flex';
+    } else {
+      boot(d.client,'client');
+    }
+  }catch{err.textContent='Connection error';err.style.display='block';}
+}
+
+async function submitNewPassword(){
+  const err=document.getElementById('pw-change-err');
+  const p1=document.getElementById('new-pw1').value;
+  const p2=document.getElementById('new-pw2').value;
+  if(p1.length<8){err.textContent='Password must be at least 8 characters';err.style.display='block';return;}
+  if(p1!==p2){err.textContent='Passwords do not match';err.style.display='block';return;}
+  err.style.display='none';
+  try{
+    const r=await fetch(API+'/auth/client-change-password',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({newPassword:p1})});
+    const d=await r.json();
+    if(!r.ok){err.textContent=d.error||'Error';err.style.display='block';return;}
+    token=d.token;
+    localStorage.setItem('riq-token',token);
+    document.getElementById('pw-change-screen').style.display='none';
+    boot(d.client,'client');
+  }catch{err.textContent='Connection error';err.style.display='block';}
+}
+
 async function loginClient(){
   const t=document.getElementById('cl-token').value.trim(),err=document.getElementById('cl-err');err.style.display='none';
   try{const r=await fetch(API+'/auth/client-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});const d=await r.json();if(!r.ok){err.textContent=d.error||'Invalid token';err.style.display='block';return;}token=d.token;localStorage.setItem('riq-token',token);boot(d.client,'client');}catch{err.textContent='Connection error';err.style.display='block';}
@@ -1374,7 +1455,8 @@ function openModal(id){document.getElementById(id).classList.add('show');}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 async function addClient(){
   const name=document.getElementById('nc-name').value.trim();if(!name)return alert('Please enter a company name.');
-  try{const r=await api('/api/clients',{method:'POST',body:JSON.stringify({name,industry:document.getElementById('nc-industry').value,contact:document.getElementById('nc-contact').value.trim()})});const c=await r.json();clients.unshift(c);renderClients();closeModal('nc-ov');document.getElementById('nc-name').value='';document.getElementById('nc-contact').value='';goPage('clients');}catch(e){alert('Error: '+e.message);}
+  const email=document.getElementById('nc-email').value.trim();const initpw=document.getElementById('nc-initpw').value;if(email&&initpw&&initpw.length<8)return alert('Initial password must be at least 8 characters.');const body={name,industry:document.getElementById('nc-industry').value,contact:document.getElementById('nc-contact').value.trim()};if(email&&initpw){body.email=email;body.initialPassword=initpw;}
+  try{const r=await api('/api/clients',{method:'POST',body:JSON.stringify(body)});const c=await r.json();clients.unshift(c);renderClients();closeModal('nc-ov');document.getElementById('nc-name').value='';document.getElementById('nc-contact').value='';document.getElementById('nc-email').value='';document.getElementById('nc-initpw').value='';goPage('clients');}catch(e){alert('Error: '+e.message);}
 }
 
 // PEOPLE DIRECTORY
