@@ -525,21 +525,21 @@ body.adv .vubtn{display:block}
       <button class="mtab" onclick="switchMTab(this,'np-t3')">Triggers &amp; Preferences</button>
     </div>
     <div class="mtabpanel active" id="np-t1">
-      <div class="mf"><label class="fl">Full Name</label><input type="text" id="np-name" placeholder="e.g. Anna Berger"></div>
-      <div class="mf"><label class="fl">Role / Position</label><input type="text" id="np-role" placeholder="e.g. CEO, CFO, Head of HR"></div>
-      <div class="mf"><label class="fl">Department (optional)</label><input type="text" id="np-dept" placeholder="e.g. Executive Board, Communications"></div>
-      <div class="mf"><label class="fl">Notes (optional)</label><textarea id="np-notes" style="min-height:70px" placeholder="General context, what to keep in mind..."></textarea></div>
+      <div class="mf"><label class="fl" id="np-lbl-name">Full Name</label><input type="text" id="np-name" placeholder="e.g. Anna Berger"></div>
+      <div class="mf"><label class="fl" id="np-lbl-role">Role / Position</label><input type="text" id="np-role" placeholder="e.g. CEO, CFO, Head of HR"></div>
+      <div class="mf"><label class="fl" id="np-lbl-dept">Department (optional)</label><input type="text" id="np-dept" placeholder="e.g. Executive Board, Communications"></div>
+      <div class="mf"><label class="fl" id="np-lbl-notes">Notes (optional)</label><textarea id="np-notes" style="min-height:70px" placeholder="General context, what to keep in mind…"></textarea></div>
     </div>
     <div class="mtabpanel" id="np-t2">
-      <div class="mf"><label class="fl">How they communicate</label><textarea id="np-commstyle" style="min-height:80px" placeholder="e.g. Very direct, dislikes small talk. Prefers data over stories. Formal in writing, informal verbally."></textarea></div>
-      <div class="mf"><label class="fl">Strengths</label><textarea id="np-strengths" style="min-height:60px" placeholder="e.g. Excellent at simplifying complex topics. Strong presence in 1-on-1s."></textarea></div>
-      <div class="mf"><label class="fl">Weak points</label><textarea id="np-weaknesses" style="min-height:60px" placeholder="e.g. Tends to over-explain. Loses audience in town halls. Gets defensive under criticism."></textarea></div>
+      <div class="mf"><label class="fl" id="np-lbl-comm">How they communicate</label><textarea id="np-commstyle" style="min-height:80px" placeholder="e.g. Very direct, dislikes small talk."></textarea></div>
+      <div class="mf"><label class="fl" id="np-lbl-str">Strengths</label><textarea id="np-strengths" style="min-height:60px" placeholder="e.g. Excellent at simplifying complex topics."></textarea></div>
+      <div class="mf"><label class="fl" id="np-lbl-weak">Weak points</label><textarea id="np-weaknesses" style="min-height:60px" placeholder="e.g. Tends to over-explain."></textarea></div>
     </div>
     <div class="mtabpanel" id="np-t3">
-      <div class="mf"><label class="fl">Known triggers (what upsets or derails them)</label><textarea id="np-triggers" style="min-height:80px" placeholder="e.g. Being interrupted. Questions about budget. Any reference to the 2022 restructuring."></textarea></div>
-      <div class="mf"><label class="fl">Preferences (what they respond well to)</label><textarea id="np-prefs" style="min-height:80px" placeholder="e.g. Short bullet points. Always lead with the bottom line. Use numbers. Avoid emotional language."></textarea></div>
+      <div class="mf"><label class="fl" id="np-lbl-trig">Known triggers (what upsets or derails them)</label><textarea id="np-triggers" style="min-height:80px" placeholder="e.g. Being interrupted. Questions about budget."></textarea></div>
+      <div class="mf"><label class="fl" id="np-lbl-prefs">Preferences (what they respond well to)</label><textarea id="np-prefs" style="min-height:80px" placeholder="e.g. Short bullet points. Always lead with the bottom line."></textarea></div>
     </div>
-    <div class="mact"><button class="mcanc" onclick="closeModal('np-ov')">Cancel</button><button class="mconf" onclick="savePerson()">Save</button></div>
+    <div class="mact"><button class="mcanc" id="np-btn-cancel" onclick="closeModal('np-ov')">Cancel</button><button class="mconf" id="np-btn-save" onclick="savePerson()">Save</button></div>
   </div>
 </div>
 
@@ -680,8 +680,8 @@ body.adv .vubtn{display:block}
       <div class="mtitle">Brand Voice</div>
       <div class="mdesc">How does this company or person communicate? Paste any texts &mdash; get a complete language profile that becomes the master reference for all other modules.</div>
       <div class="tog">
-        <button class="togbtn active" onclick="switchBrand('company',this)">Company</button>
-        <button class="togbtn" onclick="switchBrand('individual',this)">Individual</button>
+        <button class="togbtn active" id="bv-tab-co" onclick="switchBrand('company',this)">Company</button>
+        <button class="togbtn" id="bv-tab-ind" onclick="switchBrand('individual',this)">Individual</button>
       </div>
       <div class="bsec active" id="brand-company">
         <div id="ref-banner-co"></div>
@@ -741,38 +741,38 @@ body.adv .vubtn{display:block}
     <div class="page" id="page-people">
       <div class="pdir-header">
         <div>
-          <div class="page-title">People Directory</div>
-          <div style="font-size:13px;color:var(--mu);margin-top:3px">Profiles are saved permanently and used as context in all modules.</div>
+          <div class="page-title" id="people-title">People Directory</div>
+          <div id="people-sub" style="font-size:13px;color:var(--mu);margin-top:3px">Profiles are saved permanently and used as context in all modules.</div>
         </div>
-        <button class="add-btn" onclick="openAddPerson()">+ Add Person</button>
+        <button class="add-btn" id="people-add-btn" onclick="openAddPerson()">+ Add Person</button>
       </div>
-      <div id="people-list"><div class="empty"><div class="ei">&#9711;</div><div>No people yet. Add the CEO, board members, HR leads...</div></div></div>
+      <div id="people-list"><div class="empty"><div class="ei">&#9711;</div><div id="people-empty">No people yet. Add the CEO, board members, HR leads…</div></div></div>
     </div>
 
     <!-- COMPANY MEMORY -->
     <div class="page" id="page-memory">
       <div class="pdir-header">
         <div>
-          <div class="page-title">Company Memory</div>
-          <div style="font-size:13px;color:var(--mu);margin-top:3px">Saved permanently. Injected as context into every analysis.</div>
+          <div class="page-title" id="memory-title">Company Memory</div>
+          <div id="memory-sub" style="font-size:13px;color:var(--mu);margin-top:3px">Saved permanently. Injected as context into every analysis.</div>
         </div>
       </div>
-      <div id="memory-list"><div class="empty"><div class="ei">&#129504;</div><div>No memory saved yet. Run a Brand Voice DNA and click &ldquo;Save to Memory&rdquo;.</div></div></div>
+      <div id="memory-list"><div class="empty"><div class="ei">&#129504;</div><div id="memory-empty">No memory saved yet.</div></div></div>
     </div>
 
     <!-- CLIENTS -->
     <div class="page" id="page-clients">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <div class="page-title">Clients</div>
-        <button class="add-btn" onclick="openModal('nc-ov')">+ New Client</button>
+        <div class="page-title" id="clients-title">Clients</div>
+        <button class="add-btn" id="clients-add-btn" onclick="openModal('nc-ov')">+ New Client</button>
       </div>
-      <div id="clients-list"><div class="empty"><div class="ei">&#9711;</div><div>No clients yet.</div></div></div>
+      <div id="clients-list"><div class="empty"><div class="ei">&#9711;</div><div id="clients-empty">No clients yet.</div></div></div>
     </div>
 
     <!-- VIDEOS -->
     <div class="page" id="page-videos">
-      <div class="page-title" style="margin-bottom:6px">Video Tutorials</div>
-      <p style="color:var(--mu);font-size:13px;margin-bottom:24px">Step-by-step guides for every module.</p>
+      <div class="page-title" id="videos-title" style="margin-bottom:6px">Video Tutorials</div>
+      <p id="videos-sub" style="color:var(--mu);font-size:13px;margin-bottom:24px">Step-by-step guides for every module.</p>
       <div class="vgrid" id="vgrid"></div>
     </div>
 
@@ -962,7 +962,42 @@ const T={
     review_save:'Save & send to client',review_editing:'Editing…',
     chat_greeting:'Hello — I am the RhetorIQ assistant. What can I help you with?',
     chat_ph:'Ask anything…',chat_send:'Send',
-    datasec_title:'Data Security & Privacy'
+    datasec_title:'Data Security & Privacy',
+    // Pages
+    people_title:'People Directory',people_sub:'Profiles are saved permanently and used as context in all modules.',people_add:'+ Add Person',people_empty:'No people yet. Add the CEO, board members, HR leads…',
+    memory_title:'Company Memory',memory_sub:'Saved permanently. Injected as context into every analysis.',
+    clients_title:'Clients',clients_add:'+ New Client',clients_empty:'No clients yet.',
+    videos_title:'Video Tutorials',videos_sub:'Step-by-step guides for every module.',
+    // Brand Voice
+    brand_co:'Company',brand_ind:'Individual',
+    bv_extract:'Extract Brand Voice',bv_save_mem:'Save to Memory',bv_save_ref:'📌 Save as Reference',
+    // Form builder
+    form_upload:'Upload document',form_upload_sub:'.txt, .pdf, .docx (optional)',
+    form_text:'Text',form_run:'Run Analysis',form_result:'Result',
+    form_upload_docs:'Upload documents',form_upload_docs_sub:'.txt, .pdf, .docx (saved by advisor, always available)',
+    // Text Generator panels
+    tg_back:'← Back',tg_template_lbl:'Template / Reference (optional)',tg_upload_tpl:'Upload template',
+    tg_tpl_sub:'Your own examples — so the output matches your exact style',
+    tg_tpl_ph:'Paste examples — separate with ---.',tg_save_ref:'Save as Reference',
+    tg_source_upload:'Upload source document',
+    tg_briefing:'Briefing / Content',tg_briefing_ph:'What should be created, or content to rewrite.',
+    tg_audience:'Target Audience',tg_tone:'Tone',tg_language:'Language',
+    tg_length:'Length (optional)',tg_length_ph:'e.g. 200 words',
+    tg_generate:'Generate',tg_result:'Generated Text',
+    tg_sub_enable:'Enable automatic suggestions',
+    tg_sub_desc:'RhetorIQ generates 3 version suggestions at your rhythm and shows them as a notification at next login.',
+    tg_freq:'Frequency',tg_freq_w:'Weekly',tg_freq_bw:'Every 2 weeks',tg_freq_m:'Monthly',
+    tg_topic:'Topic / Focus (optional)',tg_topic_ph:'e.g. Leadership, Sustainability, Product news',tg_save_settings:'Save settings',
+    // People modal
+    np_fullname:'Full Name',np_fullname_ph:'e.g. Anna Berger',
+    np_role:'Role / Position',np_role_ph:'e.g. CEO, CFO, Head of HR',
+    np_dept:'Department (optional)',np_dept_ph:'e.g. Executive Board, Communications',
+    np_notes:'Notes (optional)',np_notes_ph:'General context, what to keep in mind…',
+    np_comm:'How they communicate',np_comm_ph:'e.g. Very direct, dislikes small talk. Prefers data over stories.',
+    np_strengths:'Strengths',np_strengths_ph:'e.g. Excellent at simplifying complex topics.',
+    np_weak:'Weak points',np_weak_ph:'e.g. Tends to over-explain. Gets defensive under criticism.',
+    np_prefs:'Preferences (what they respond well to)',np_prefs_ph:'e.g. Short bullet points. Always lead with the bottom line.',
+    btn_cancel:'Cancel',btn_save:'Save'
   },
   de:{
     nav_home:'Start',nav_modules:'Module',nav_brand:'Marke',nav_people:'Personen',nav_hist:'Verlauf',nav_more:'Mehr',
@@ -993,7 +1028,42 @@ const T={
     review_save:'Speichern & an Klient senden',review_editing:'Wird bearbeitet…',
     chat_greeting:'Hallo — ich bin der RhetorIQ-Assistent. Wie kann ich Ihnen helfen?',
     chat_ph:'Stellen Sie eine Frage…',chat_send:'Senden',
-    datasec_title:'Datenschutz & Datensicherheit'
+    datasec_title:'Datenschutz & Datensicherheit',
+    // Pages
+    people_title:'Personen-Verzeichnis',people_sub:'Profile werden dauerhaft gespeichert und als Kontext in alle Module eingebunden.',people_add:'+ Person hinzufügen',people_empty:'Noch keine Personen. Fügen Sie CEO, Vorstand, HR-Leads hinzu…',
+    memory_title:'Unternehmensgedächtnis',memory_sub:'Dauerhaft gespeichert. Wird als Kontext in jede Analyse eingebunden.',
+    clients_title:'Klienten',clients_add:'+ Neuer Klient',clients_empty:'Noch keine Klienten.',
+    videos_title:'Video-Tutorials',videos_sub:'Schritt-für-Schritt-Anleitungen für jedes Modul.',
+    // Brand Voice
+    brand_co:'Unternehmen',brand_ind:'Individual',
+    bv_extract:'Markenstimme extrahieren',bv_save_mem:'In Speicher sichern',bv_save_ref:'📌 Als Referenz speichern',
+    // Form builder
+    form_upload:'Dokument hochladen',form_upload_sub:'.txt, .pdf, .docx (optional)',
+    form_text:'Text',form_run:'Analyse starten',form_result:'Ergebnis',
+    form_upload_docs:'Dokumente hochladen',form_upload_docs_sub:'.txt, .pdf, .docx (vom Berater gespeichert, immer verfügbar)',
+    // Text Generator panels
+    tg_back:'← Zurück',tg_template_lbl:'Vorlage / Referenz (optional)',tg_upload_tpl:'Vorlage hochladen',
+    tg_tpl_sub:'Eigene Beispiele — damit der Output exakt Ihrem Stil entspricht',
+    tg_tpl_ph:'Beispiele einfügen — mit --- trennen.',tg_save_ref:'Als Referenz speichern',
+    tg_source_upload:'Quelldokument hochladen',
+    tg_briefing:'Briefing / Inhalt',tg_briefing_ph:'Was soll erstellt werden, oder Inhalt zum Umschreiben.',
+    tg_audience:'Zielgruppe',tg_tone:'Ton',tg_language:'Sprache',
+    tg_length:'Länge (optional)',tg_length_ph:'z.B. 200 Wörter',
+    tg_generate:'Generieren',tg_result:'Generierter Text',
+    tg_sub_enable:'Automatische Vorschläge aktivieren',
+    tg_sub_desc:'RhetorIQ generiert 3 Versions-Vorschläge nach Ihrem Rhythmus und zeigt diese beim nächsten Login als Benachrichtigung an.',
+    tg_freq:'Rhythmus',tg_freq_w:'Wöchentlich',tg_freq_bw:'Alle 2 Wochen',tg_freq_m:'Monatlich',
+    tg_topic:'Thema / Fokus (optional)',tg_topic_ph:'z.B. Leadership, Nachhaltigkeit, Produktnews',tg_save_settings:'Einstellung speichern',
+    // People modal
+    np_fullname:'Vollständiger Name',np_fullname_ph:'z.B. Anna Berger',
+    np_role:'Rolle / Position',np_role_ph:'z.B. CEO, CFO, Head of HR',
+    np_dept:'Abteilung (optional)',np_dept_ph:'z.B. Vorstand, Kommunikation',
+    np_notes:'Notizen (optional)',np_notes_ph:'Allgemeiner Kontext, was zu beachten ist…',
+    np_comm:'Kommunikationsstil',np_comm_ph:'z.B. Sehr direkt, kein Small Talk. Bevorzugt Daten statt Geschichten.',
+    np_strengths:'Stärken',np_strengths_ph:'z.B. Hervorragend darin, komplexe Themen zu vereinfachen.',
+    np_weak:'Schwächen',np_weak_ph:'z.B. Neigt dazu, zu viel zu erklären. Wird unter Kritik defensiv.',
+    np_prefs:'Präferenzen (was gut ankommt)',np_prefs_ph:'z.B. Kurze Stichpunkte. Immer mit dem Fazit beginnen.',
+    btn_cancel:'Abbrechen',btn_save:'Speichern'
   }
 };
 function applyLang(){
@@ -1026,6 +1096,21 @@ function applyLang(){
   s('pill-all',t.mod_all);
   // History page
   s('hist-title',t.hist_title);s('hist-sub',t.hist_sub);s('hist-empty',t.hist_empty);
+  // People page
+  s('people-title',t.people_title);s('people-sub',t.people_sub);s('people-add-btn',t.people_add);s('people-empty',t.people_empty);
+  // Memory page
+  s('memory-title',t.memory_title);s('memory-sub',t.memory_sub);s('memory-empty',t.memory_empty);
+  // Clients page
+  s('clients-title',t.clients_title);s('clients-add-btn',t.clients_add);s('clients-empty',t.clients_empty);
+  // Videos page
+  s('videos-title',t.videos_title);s('videos-sub',t.videos_sub);
+  // Brand Voice tabs
+  s('bv-tab-co',t.brand_co);s('bv-tab-ind',t.brand_ind);
+  // People modal
+  s('np-lbl-name',t.np_fullname);s('np-lbl-role',t.np_role);s('np-lbl-dept',t.np_dept);
+  s('np-lbl-notes',t.np_notes);s('np-lbl-comm',t.np_comm);s('np-lbl-str',t.np_strengths);
+  s('np-lbl-weak',t.np_weak);s('np-lbl-trig',t.np_prefs);s('np-lbl-prefs',t.np_prefs);
+  s('np-btn-cancel',t.btn_cancel);s('np-btn-save',t.btn_save);
   // Re-render module list with correct lang if open
   if(document.getElementById('page-modules')?.classList.contains('active')&&typeof ALL_MODULES!=='undefined')renderModulesList();
 }
@@ -1072,13 +1157,11 @@ pre{font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:pre-wrap;lin
     btn.className='exbtn';btn.textContent=T[LANG]?.btn_word||'Word';
     btn.onclick=()=>exportDoc(id,title);
     btns.insertBefore(btn,btns.firstChild);
-    // Send to Advisor button (only for clients, not advisor)
-    if(!isAdv){
-      const abtn=document.createElement('button');
-      abtn.className='advbtn';abtn.textContent=T[LANG]?.btn_send_advisor||'Send to Advisor';
-      abtn.onclick=()=>sendToAdvisor(id,title,abtn);
-      btns.appendChild(abtn);
-    }
+    // Send to Advisor button
+    const abtn=document.createElement('button');
+    abtn.className='advbtn';abtn.textContent=T[LANG]?.btn_send_advisor||'Send to Advisor';
+    abtn.onclick=()=>sendToAdvisor(id,title,abtn);
+    btns.appendChild(abtn);
   };
   const observer=new MutationObserver(mutations=>{
     mutations.forEach(m=>{
@@ -1556,14 +1639,15 @@ function buildForm(name,def,prefill,form){
   if(def.alert)h+=`<div class="crisis-alert">&#128308; Crisis Mode: you will receive 3 ready-to-use response strategies. Choose and adapt.</div>`+privBadge();
   else if(name==='risk'||name==='stress')h+=privBadge();
   if(def.people&&people.length)h+=buildPeopleSelector();
-  h+=`<div class="upzone" onclick="document.getElementById('mf-${name}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload document</strong> &mdash; .txt, .pdf, .docx (optional)</div><input type="file" id="mf-${name}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'${def.mf}','mt-${name}')"></div>`;
+  const tl=T[LANG]||T.en;
+  h+=`<div class="upzone" onclick="document.getElementById('mf-${name}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.form_upload}</strong> &mdash; ${tl.form_upload_sub}</div><input type="file" id="mf-${name}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'${def.mf}','mt-${name}')"></div>`;
   h+=`<div class="ftags" id="mt-${name}"></div>`;
-  h+=`<div class="fg2"><label class="fl2">Text</label><textarea id="${def.mf}" placeholder="${def.ph||''}" style="min-height:${def.mh||'130px'}"></textarea></div>`;
+  h+=`<div class="fg2"><label class="fl2">${tl.form_text}</label><textarea id="${def.mf}" placeholder="${def.ph||''}" style="min-height:${def.mh||'130px'}"></textarea></div>`;
   if(def.twopart){const f2=def.fields.find(f=>f.type==='ta');if(f2)h+=`<div class="fg2"><label class="fl2">${f2.lbl}</label><textarea id="${f2.id}" placeholder="${f2.ph||''}"></textarea></div>`;}
   const others=def.fields.filter(f=>f.type!=='ta');
   if(others.length){h+=`<div class="row2">`;others.forEach(f=>{if(f.type==='text')h+=`<div class="fg2"><label class="fl2">${f.lbl}</label><input type="text" id="${f.id}" placeholder="${f.ph||''}"></div>`;else h+=`<div class="fg2"><label class="fl2">${f.lbl}</label><select id="${f.id}">${f.opts.map(o=>`<option>${o}</option>`).join('')}</select></div>`;});h+=`</div>`;}
-  h+=`<button class="runbtn${def.alert?' crisis-btn':''}" onclick="runMod('${name}')">${def.alert?'&#128308; Activate Crisis Response':'Run Analysis'}</button>`;
-  h+=`<div class="rbox" id="${name}-r"><div class="rhead"><span class="rlbl">Result</span><div class="rbtns"><button class="cpbtn" onclick="cp('${name}-b')">Copy</button>${def.people&&people.length?`<button class="svbtn" onclick="saveResultToPerson('${name}-b','${def.api}')">Save to Person</button>`:''}</div></div><div class="rbody" id="${name}-b"></div></div>`;
+  h+=`<button class="runbtn${def.alert?' crisis-btn':''}" onclick="runMod('${name}')">${def.alert?`&#128308; ${tl.form_run}`:tl.form_run}</button>`;
+  h+=`<div class="rbox" id="${name}-r"><div class="rhead"><span class="rlbl">${tl.form_result}</span><div class="rbtns"><button class="cpbtn" onclick="cp('${name}-b')">${tl.btn_copy}</button>${def.people&&people.length?`<button class="svbtn" onclick="saveResultToPerson('${name}-b','${def.api}')">${tl.btn_save_memory}</button>`:''}</div></div><div class="rbody" id="${name}-b"></div></div>`;
   form.innerHTML=h;
   if(prefill){const ta=document.getElementById(def.mf);if(ta)ta.value=prefill;}
 }
@@ -1582,63 +1666,64 @@ function buildTextGen(prefill,form){
       <div class="tg-tile-sub">${t.sub}</div>
     </div>`).join('');
 
+  const tl=T[LANG]||T.en;
   const subSection=(t)=>t.hasSubscription?`
     <div class="tg-sub-box" id="tg-sub-box-${t.id}">
       <div class="tg-sub-header">
         <label class="tg-sub-toggle-lbl">
           <input type="checkbox" id="tg-sub-enabled-${t.id}" onchange="tgSubToggle('${t.id}')">
-          <span>Automatische Vorschläge aktivieren</span>
+          <span>${tl.tg_sub_enable}</span>
         </label>
       </div>
       <div class="tg-sub-body" id="tg-sub-body-${t.id}" style="display:none">
-        <p style="font-size:11px;color:var(--mu);margin:0 0 10px">RhetorIQ generiert 3 Versions-Vorschläge nach Ihrem Rhythmus und zeigt diese beim nächsten Login als Benachrichtigung an.</p>
+        <p style="font-size:11px;color:var(--mu);margin:0 0 10px">${tl.tg_sub_desc}</p>
         <div class="row2">
-          <div class="fg2"><label class="fl2">Rhythmus</label>
+          <div class="fg2"><label class="fl2">${tl.tg_freq}</label>
             <select id="tg-sub-freq-${t.id}">
-              <option value="weekly">Wöchentlich</option>
-              <option value="biweekly">Alle 2 Wochen</option>
-              <option value="monthly">Monatlich</option>
+              <option value="weekly">${tl.tg_freq_w}</option>
+              <option value="biweekly">${tl.tg_freq_bw}</option>
+              <option value="monthly">${tl.tg_freq_m}</option>
             </select>
           </div>
-          <div class="fg2"><label class="fl2">Thema / Fokus (optional)</label>
-            <input type="text" id="tg-sub-topic-${t.id}" placeholder="z.B. Leadership, Nachhaltigkeit, Produktnews">
+          <div class="fg2"><label class="fl2">${tl.tg_topic}</label>
+            <input type="text" id="tg-sub-topic-${t.id}" placeholder="${tl.tg_topic_ph}">
           </div>
         </div>
-        <button class="tg-save-ref" onclick="saveTgSubscription('${t.id}')">Einstellung speichern</button>
+        <button class="tg-save-ref" onclick="saveTgSubscription('${t.id}')">${tl.tg_save_settings}</button>
         <span id="tg-sub-status-${t.id}" style="font-size:11px;color:var(--dm);margin-left:8px"></span>
       </div>
     </div>`:'';
 
   const panelsHtml=tileData.map(t=>`
     <div class="tg-panel" id="tg-panel-${t.id}" style="display:none">
-      <button class="tg-back" onclick="tgCloseTile('${t.id}')">← Zurueck</button>
+      <button class="tg-back" onclick="tgCloseTile('${t.id}')">${tl.tg_back}</button>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
         <div class="tg-tile-abbr" style="width:32px;height:32px;font-size:11px">${t.abbr}</div>
         <span style="font-size:15px;font-weight:700;color:var(--tx)">${t.label}</span>
       </div>
       <div style="margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:6px">Vorlage / Referenz (optional)</div>
-        <div class="upzone" onclick="document.getElementById('tg-rf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Vorlage hochladen</strong><br><span style="font-size:11px;color:var(--mu)">Eigene Beispiele — damit der Output exakt Ihrem Stil entspricht</span></div><input type="file" id="tg-rf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref-${t.id}','tg-rt-${t.id}')"></div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:6px">${tl.tg_template_lbl}</div>
+        <div class="upzone" onclick="document.getElementById('tg-rf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.tg_upload_tpl}</strong><br><span style="font-size:11px;color:var(--mu)">${tl.tg_tpl_sub}</span></div><input type="file" id="tg-rf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref-${t.id}','tg-rt-${t.id}')"></div>
         <div class="ftags" id="tg-rt-${t.id}"></div>
-        <textarea id="tg-ref-${t.id}" placeholder="Beispiele einfügen — mit --- trennen." style="margin-top:6px;min-height:70px;font-size:12px"></textarea>
-        <button class="tg-save-ref" onclick="saveTgRef('${t.id}')">Als Referenz speichern</button>
+        <textarea id="tg-ref-${t.id}" placeholder="${tl.tg_tpl_ph}" style="margin-top:6px;min-height:70px;font-size:12px"></textarea>
+        <button class="tg-save-ref" onclick="saveTgRef('${t.id}')">${tl.tg_save_ref}</button>
         <div id="tg-ref-status-${t.id}" style="font-size:11px;color:var(--dm);margin-top:4px"></div>
       </div>
       <div class="fg2"><label class="fl2">${t.fmtLabel}</label><select id="tg-fmt-${t.id}">${t.fmtOpts.map(o=>`<option>${o}</option>`).join('')}</select></div>
       ${people.length?buildPeopleSelector():''}
-      <div class="upzone" onclick="document.getElementById('tg-tf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Quelldokument hochladen</strong></div><input type="file" id="tg-tf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task-${t.id}','tg-tt-${t.id}')"></div>
+      <div class="upzone" onclick="document.getElementById('tg-tf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.tg_source_upload}</strong></div><input type="file" id="tg-tf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task-${t.id}','tg-tt-${t.id}')"></div>
       <div class="ftags" id="tg-tt-${t.id}"></div>
-      <div class="fg2"><label class="fl2">Briefing / Inhalt</label><textarea id="tg-task-${t.id}" placeholder="Was soll erstellt werden, oder Inhalt zum Umschreiben." style="min-height:100px"></textarea></div>
+      <div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px"></textarea></div>
       <div class="row2">
-        <div class="fg2"><label class="fl2">Zielgruppe</label><select id="tg-aud-${t.id}"><option>B2B — C-Suite</option><option>B2B — HR Leaders</option><option>B2B — Finance / Investors</option><option>B2B — General Business</option><option>B2C — General Consumer</option><option>Internal — All Employees</option><option>Internal — Leadership Team</option><option>Media / Journalists</option></select></div>
-        <div class="fg2"><label class="fl2">Ton</label><select id="tg-tone-${t.id}"><option>Aus Voice Profile</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European — understated</option></select></div>
+        <div class="fg2"><label class="fl2">${tl.tg_audience}</label><select id="tg-aud-${t.id}"><option>B2B — C-Suite</option><option>B2B — HR Leaders</option><option>B2B — Finance / Investors</option><option>B2B — General Business</option><option>B2C — General Consumer</option><option>Internal — All Employees</option><option>Internal — Leadership Team</option><option>Media / Journalists</option></select></div>
+        <div class="fg2"><label class="fl2">${tl.tg_tone}</label><select id="tg-tone-${t.id}"><option>Aus Voice Profile</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European — understated</option></select></div>
       </div>
       <div class="row2">
-        <div class="fg2"><label class="fl2">Sprache</label><select id="tg-lang-${t.id}"><option>Deutsch</option><option>English</option><option>Français</option><option>Italiano</option></select></div>
-        <div class="fg2"><label class="fl2">Länge (optional)</label><input type="text" id="tg-len-${t.id}" placeholder="z.B. 200 Wörter"></div>
+        <div class="fg2"><label class="fl2">${tl.tg_language}</label><select id="tg-lang-${t.id}"><option>Deutsch</option><option>English</option><option>Français</option><option>Italiano</option></select></div>
+        <div class="fg2"><label class="fl2">${tl.tg_length}</label><input type="text" id="tg-len-${t.id}" placeholder="${tl.tg_length_ph}"></div>
       </div>
-      <button class="runbtn" onclick="runMod('text-gen','${t.id}')">Generieren</button>
-      <div class="rbox" id="text-gen-r-${t.id}"><div class="rhead"><span class="rlbl">Generierter Text</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b-${t.id}')">Copy</button></div></div><div class="rbody" id="text-gen-b-${t.id}"></div></div>
+      <button class="runbtn" onclick="runMod('text-gen','${t.id}')">${tl.tg_generate}</button>
+      <div class="rbox" id="text-gen-r-${t.id}"><div class="rhead"><span class="rlbl">${tl.tg_result}</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b-${t.id}')">${tl.btn_copy}</button></div></div><div class="rbody" id="text-gen-b-${t.id}"></div></div>
       ${subSection(t)}
     </div>`).join('');
 
