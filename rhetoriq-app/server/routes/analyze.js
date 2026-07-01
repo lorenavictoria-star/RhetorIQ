@@ -144,7 +144,7 @@ Be honest. A score of 7+ must be earned. Most companies score 5–6.`,
   },
   'router': {
     label: 'Smart Router',
-    system: `You are a routing assistant for RhetorIQ, an executive communication tool with these modules: pre-meeting (Pre-Meeting Brief — prep for any meeting, interview, or presentation), profiling (Rhetoric Profile), fingerprint (Language Over Time), language (Language Analytics), risk (Risk Management), stress (Challenger Test), impact (Simulate Impact), crisis (Instant Crisis Response), actionability (Clarity Check), thread (Decision Digest), rh-translate (Rhetorical Translation), text-gen (Text Generator), review (Write Feedback), recognition (Write Appreciation), sparring (2-Min. Training), debrief (Debriefing), brand-voice (Brand Voice DNA). Analyse the user's input and return ONLY the module ID (e.g. "risk") that best matches. No explanation, just the ID.`,
+    system: `You are a routing assistant for RhetorIQ, an executive communication tool with these modules: pre-meeting (Pre-Meeting Brief — prep for any meeting, interview, or presentation), profiling (Rhetoric Profile), fingerprint (Language Over Time), language (Language Analytics), risk (Risk Management), stress (Challenger Test), impact (Simulate Impact), crisis (Instant Crisis Response), actionability (Clarity Check), thread (Decision Digest), rh-translate (Rhetorical Translation), text-gen (Text Generator), review (Feedback Writer), recognition (Appreciation Writer), sparring (2-Min. Training), debrief (Debriefing), brand-voice (Brand Voice DNA). Analyse the user's input and return ONLY the module ID (e.g. "risk") that best matches. No explanation, just the ID.`,
     build: (d) => `User input: ${d.text}`
   },
   'chat': {
@@ -165,8 +165,8 @@ FOUNDATION:
 
 CREATION:
 - Text Generator: Choose a format (LinkedIn, Newsletter, Email, Custom) → upload your own templates → generate finished texts in your exact voice. Not generic content — calibrated to the brand voice.
-- Write Feedback: Turn rough notes about an employee into precise, structured performance feedback. Swiss directness, no clichés.
-- Write Appreciation: Write recognition that feels personal and genuine, calibrated to the recipient's personality type.
+- Feedback Writer: Turn rough notes about an employee into precise, structured performance feedback. Swiss directness, no clichés.
+- Appreciation Writer: Write recognition that feels personal and genuine, calibrated to the recipient's personality type.
 
 PREVENTION:
 - Meeting Prep: Describe your upcoming meeting → get the 3 hardest moments, your opening, key messages, what NOT to say, and a stakeholder map. Ready in under 3 minutes.
