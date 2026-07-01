@@ -746,7 +746,7 @@ body.adv .vubtn{display:block}
         </div>
         <button class="add-btn" onclick="openAddPerson()">+ Add Person</button>
       </div>
-      <div id="people-list"><div class="empty"><div class="ei">&#128101;</div><div>No people yet. Add the CEO, board members, HR leads...</div></div></div>
+      <div id="people-list"><div class="empty"><div class="ei">&#9711;</div><div>No people yet. Add the CEO, board members, HR leads...</div></div></div>
     </div>
 
     <!-- COMPANY MEMORY -->
@@ -766,7 +766,7 @@ body.adv .vubtn{display:block}
         <div class="page-title">Clients</div>
         <button class="add-btn" onclick="openModal('nc-ov')">+ New Client</button>
       </div>
-      <div id="clients-list"><div class="empty"><div class="ei">&#128101;</div><div>No clients yet.</div></div></div>
+      <div id="clients-list"><div class="empty"><div class="ei">&#9711;</div><div>No clients yet.</div></div></div>
     </div>
 
     <!-- VIDEOS -->
@@ -862,8 +862,8 @@ body.adv .vubtn{display:block}
     <div class="mni active" id="mn-home" onclick="goHome();setMN('home')"><div class="mni-i">&#8962;</div><div class="mni-l" id="mn-home-l">Home</div></div>
     <div class="mni" id="mn-modules" onclick="goPage('modules');setMN('modules');renderModulesList()"><div class="mni-i">&#9783;</div><div class="mni-l" id="mn-modules-l">Modules</div></div>
     <div class="mni" id="mn-brand" onclick="goPage('brand-voice');setMN('brand')"><div class="mni-i">&#9670;</div><div class="mni-l" id="mn-brand-l">Brand</div></div>
-    <div class="mni" id="mn-people" onclick="goPage('people');setMN('people');loadPeople()"><div class="mni-i">&#128101;</div><div class="mni-l" id="mn-people-l">People</div></div>
-    <div class="mni" id="mn-hist" onclick="goPage('history');loadHistory();setMN('hist')"><div class="mni-i">&#128203;</div><div class="mni-l" id="mn-hist-l">History</div></div>
+    <div class="mni" id="mn-people" onclick="goPage('people');setMN('people');loadPeople()"><div class="mni-i">&#9711;</div><div class="mni-l" id="mn-people-l">People</div></div>
+    <div class="mni" id="mn-hist" onclick="goPage('history');loadHistory();setMN('hist')"><div class="mni-i">&#9700;</div><div class="mni-l" id="mn-hist-l">History</div></div>
     <div class="mni ao" id="mn-reviews" onclick="openReviewPanel();setMN('reviews')" style="display:none;position:relative"><div class="mni-i">&#9998;</div><div class="mni-l">Reviews</div><span class="rev-badge" id="rev-badge"></span></div>
     <div class="mni" id="mn-more" onclick="toggleMore()"><div class="mni-i">&#8943;</div><div class="mni-l" id="mn-more-l">More</div></div>
   </nav>
@@ -1158,7 +1158,7 @@ function renderClients(){
   const sel=document.getElementById('client-select');
   sel.innerHTML='<option value="">Select client</option>'+clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   const list=document.getElementById('clients-list');
-  if(!clients.length){list.innerHTML='<div class="empty"><div class="ei">&#128101;</div><div>No clients yet.</div></div>';return;}
+  if(!clients.length){list.innerHTML='<div class="empty"><div class="ei">&#9711;</div><div>No clients yet.</div></div>';return;}
   list.innerHTML=clients.map(c=>`<div class="cc"><div><div class="cn">${c.name}</div><div class="cm">${c.industry||''} &mdash; ${c.contact||''}</div><div class="tkcode">${c.token.substring(0,28)}&hellip;</div></div><div class="ca"><button class="obtn" onclick="copyTok('${c.token}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail('${c.name}','${c.token}')">Send by Email</button><button class="dbtn" onclick="delData(${c.id},'${c.name}')">Delete All Data</button></div></div>`).join('');
 }
 async function switchClient(id){
@@ -1199,8 +1199,8 @@ async function loadPeople(){
 }
 function renderPeople(){
   const list=document.getElementById('people-list');
-  if(!clientId){list.innerHTML='<div class="empty"><div class="ei">&#128101;</div><div>Select a client first.</div></div>';return;}
-  if(!people.length){list.innerHTML='<div class="empty"><div class="ei">&#128101;</div><div>No people yet.<br>Add the CEO, board members, HR leads...</div></div>';return;}
+  if(!clientId){list.innerHTML='<div class="empty"><div class="ei">&#9711;</div><div>Select a client first.</div></div>';return;}
+  if(!people.length){list.innerHTML='<div class="empty"><div class="ei">&#9711;</div><div>No people yet.<br>Add the CEO, board members, HR leads...</div></div>';return;}
   const PROFILE_TYPES=[{key:'rhetoric',label:'Rhetoric Profile'},{key:'fingerprint',label:'Language Over Time'},{key:'voice',label:'Voice DNA'}];
   list.innerHTML=people.map(p=>{
     const profMap={};(p.profiles||[]).forEach(pr=>profMap[pr.profile_type]=pr);
