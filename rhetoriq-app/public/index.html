@@ -779,24 +779,24 @@ body.adv .vubtn{display:block}
     <!-- MODULES LIST -->
     <div class="page" id="page-modules">
       <div class="mod-search-wrap">
-        <input class="mod-search-inp" id="mod-search" placeholder="Search modules..." oninput="filterModsList(this.value)">
+        <input class="mod-search-inp" id="mod-search" placeholder="Search modules…" oninput="filterModsList(this.value)">
       </div>
       <div class="mlist-filters">
-        <button class="mlist-pill active" onclick="filterModsCat('all',this)">All</button>
-        <button class="mlist-pill" onclick="filterModsCat('foundation',this)">Foundation</button>
-        <button class="mlist-pill" onclick="filterModsCat('creation',this)">Creation</button>
-        <button class="mlist-pill" onclick="filterModsCat('prevention',this)">Prevention</button>
-        <button class="mlist-pill" onclick="filterModsCat('efficiency',this)">Efficiency</button>
-        <button class="mlist-pill" onclick="filterModsCat('growth',this)">Growth</button>
+        <button class="mlist-pill active" id="pill-all" onclick="filterModsCat('all',this)">All</button>
+        <button class="mlist-pill" id="pill-foundation" onclick="filterModsCat('foundation',this)">Foundation</button>
+        <button class="mlist-pill" id="pill-creation" onclick="filterModsCat('creation',this)">Creation</button>
+        <button class="mlist-pill" id="pill-prevention" onclick="filterModsCat('prevention',this)">Prevention</button>
+        <button class="mlist-pill" id="pill-efficiency" onclick="filterModsCat('efficiency',this)">Efficiency</button>
+        <button class="mlist-pill" id="pill-growth" onclick="filterModsCat('growth',this)">Growth</button>
       </div>
       <div id="modules-list"></div>
     </div>
 
     <!-- HISTORY -->
     <div class="page" id="page-history">
-      <div class="page-title" style="margin-bottom:6px">History</div>
-      <p style="font-size:12px;color:var(--mu);margin-bottom:18px">Analyses are automatically deleted after 30 days.</p>
-      <div id="hist-list"><div class="empty"><div class="ei">&#128203;</div><div>No analyses yet.</div></div></div>
+      <div class="page-title" id="hist-title" style="margin-bottom:6px">History</div>
+      <p id="hist-sub" style="font-size:12px;color:var(--mu);margin-bottom:18px">Analyses are automatically deleted after 30 days.</p>
+      <div id="hist-list"><div class="empty"><div class="ei">◤</div><div id="hist-empty">No analyses yet.</div></div></div>
     </div>
 
     <!-- CONTACT -->
@@ -949,7 +949,9 @@ const T={
     contact_role:'Rhetoric & executive communication coaching<br>for leaders in business, finance and education.',
     lang_btn:'DE',
     home_right_title:'All Modules', qa_heading:'Quick Access',
-    btn_generate:'Generate',btn_copy:'Copy',btn_word:'Word',btn_send_advisor:'Send to Advisor',
+    mod_search_ph:'Search modules…',mod_all:'All',mod_none:'No modules found.',
+    hist_title:'History',hist_sub:'Analyses are automatically deleted after 30 days.',hist_empty:'No analyses yet.',
+    btn_generate:'Generate',btn_copy:'Copy',btn_word:'Word',btn_send_advisor:'Send to Advisor',review_sent_short:'Sent ✓',
     btn_save_memory:'Save to Memory',btn_calibrate:'Calibrate Voice Profile',
     lbl_result:'Result',lbl_briefing:'Briefing / Content',lbl_audience:'Audience',lbl_tone:'Tone',
     lbl_language:'Language',lbl_length:'Length (optional)',lbl_format:'Format',lbl_template:'Template / Reference (optional)',
@@ -978,7 +980,9 @@ const T={
     contact_role:'Rhetorik & Führungskommunikation<br>für Führungskräfte in Wirtschaft, Finanzen und Bildung.',
     lang_btn:'EN',
     home_right_title:'Alle Module', qa_heading:'Schnellzugriff',
-    btn_generate:'Generieren',btn_copy:'Kopieren',btn_word:'Word',btn_send_advisor:'An Beraterin senden',
+    mod_search_ph:'Module suchen…',mod_all:'Alle',mod_none:'Keine Module gefunden.',
+    hist_title:'Verlauf',hist_sub:'Analysen werden nach 30 Tagen automatisch gelöscht.',hist_empty:'Noch keine Analysen.',
+    btn_generate:'Generieren',btn_copy:'Kopieren',btn_word:'Word',btn_send_advisor:'An Beraterin senden',review_sent_short:'Gesendet ✓',
     btn_save_memory:'In Speicher sichern',btn_calibrate:'Stimmprofil kalibrieren',
     lbl_result:'Ergebnis',lbl_briefing:'Briefing / Inhalt',lbl_audience:'Zielgruppe',lbl_tone:'Ton',
     lbl_language:'Sprache',lbl_length:'Länge (optional)',lbl_format:'Format',lbl_template:'Vorlage / Referenz (optional)',
@@ -1014,9 +1018,16 @@ function applyLang(){
   s('chat-send-btn',t.chat_send);
   document.querySelectorAll('.cpbtn').forEach(b=>b.textContent=t.btn_copy);
   document.querySelectorAll('.exbtn').forEach(b=>b.textContent=t.btn_word);
-  document.querySelectorAll('.advbtn').forEach(b=>b.textContent=t.btn_send_advisor);
+  document.querySelectorAll('.advbtn:not(.sent)').forEach(b=>b.textContent=t.btn_send_advisor);
   s('contact-title',t.contact_title);h('contact-role',t.contact_role);
   s('lang-toggle',t.lang_btn);
+  // Modules page
+  const ms=document.getElementById('mod-search');if(ms)ms.placeholder=t.mod_search_ph;
+  s('pill-all',t.mod_all);
+  // History page
+  s('hist-title',t.hist_title);s('hist-sub',t.hist_sub);s('hist-empty',t.hist_empty);
+  // Re-render module list with correct lang if open
+  if(document.getElementById('page-modules')?.style.display!=='none')renderModulesList();
 }
 function toggleLang(){
   LANG=LANG==='en'?'de':'en';
@@ -1999,7 +2010,7 @@ function renderModulesList(){
     const matchQ=!q||m.name.toLowerCase().includes(q)||m.tag.toLowerCase().includes(q);
     return matchCat&&matchQ;
   });
-  if(!filtered.length){list.innerHTML='<div style="color:var(--mu);font-size:14px;padding:20px 0">No modules found.</div>';return;}
+  if(!filtered.length){list.innerHTML=`<div style="color:var(--mu);font-size:14px;padding:20px 0">${T[LANG]?.mod_none||'No modules found.'}</div>`;return;}
   list.innerHTML=filtered.map(m=>`
     <div class="mrow${m.feat?' mrow-feat':''}${m.crisis?' mrow-crisis':''}" onclick="${m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`}">
       <div class="mrow-left">

@@ -40,6 +40,7 @@ app.use('/api/analyze', require('./routes/analyze'));
 app.use('/api/people', require('./routes/people'));
 app.use('/api/memory', require('./routes/memory'));
 app.use('/api/subscriptions', require('./routes/subscriptions'));
+app.use('/api/reviews', require('./routes/reviews'));
 
 // Health check
 app.get('/health', (_, res) => res.json({ ok: true }));
