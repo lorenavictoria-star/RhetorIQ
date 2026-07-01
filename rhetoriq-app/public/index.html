@@ -324,8 +324,21 @@ body.adv .vubtn{display:block}
 .cinp:focus{border-color:var(--tx)}
 .csnd{padding:8px 14px;background:var(--tx);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px}
 
+/* HOME TWO-COLUMN LAYOUT */
+.home-grid{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+.home-left{min-width:0}
+.home-right{}
+.home-right-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:10px}
+.hm-list{display:flex;flex-direction:column;gap:5px}
+.hm-item{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;border:1.5px solid var(--bd);border-radius:6px;cursor:pointer;background:#fff;transition:border-color .15s}
+.hm-item:hover{border-color:#999}
+.hm-item-cat{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mu);margin-bottom:1px}
+.hm-item-name{font-size:12px;font-weight:600;color:var(--tx)}
+.hm-item-arr{font-size:13px;color:var(--dm);flex-shrink:0}
+.hm-cat-divider{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dm);padding:10px 0 4px;border-bottom:1px solid var(--bd);margin-bottom:5px}
+
 /* QUICK ACCESS CARDS */
-.qa-section{display:flex;flex-direction:column;gap:7px;margin-bottom:24px}
+.qa-section{display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
 .qa-card{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border:1.5px solid var(--bd);border-radius:6px;cursor:pointer;background:#fff;transition:border-color .15s}
 .qa-card:hover{border-color:#aaa}
 .qa-card-left{display:flex;flex-direction:column;gap:1px}
@@ -421,6 +434,7 @@ body.adv .vubtn{display:block}
   .page{padding:16px 16px;padding-bottom:calc(84px + var(--safe-bottom))}
   .mgrid{grid-template-columns:1fr 1fr}
   .mcard.span3{grid-column:span 2}
+  .home-grid{grid-template-columns:1fr}
   .row2{grid-template-columns:1fr}
   .stats{gap:6px}
   .vgrid{grid-template-columns:1fr}
@@ -516,137 +530,107 @@ body.adv .vubtn{display:block}
 
     <!-- HOME -->
     <div class="page active" id="page-home">
+      <div class="home-grid">
 
-      <div class="router-box">
-        <div class="router-title" id="router-title">What would you like to do?</div>
-        <div class="router-sub" id="router-sub">Describe your task &mdash; RhetorIQ opens the right module automatically.</div>
-        <div class="router-row">
-          <textarea class="rtarea" id="router-input" placeholder='e.g. "Check if this press release could backfire" or "Write a speech for our CEO" or "Crisis: supplier just announced bankruptcy"'></textarea>
-          <button class="vbtn" id="voice-btn" onclick="toggleVoice()" title="Voice input">&#127908;</button>
-          <button class="rbtn" onclick="routePrompt()"><span id="rbtn-txt">&#8594; Go</span></button>
-        </div>
-        <div class="rstat" id="rstat"></div>
-        <div class="pi-banner" id="pi-banner">
-          <div class="pi-text" id="pi-text"></div>
-          <div class="pi-actions">
-            <button class="pi-go" id="pi-go-btn"></button>
-            <button class="pi-dismiss" onclick="document.getElementById('pi-banner').classList.remove('show')">&times;</button>
+        <!-- LEFT COLUMN -->
+        <div class="home-left">
+          <div class="router-box">
+            <div class="router-title" id="router-title">What would you like to do?</div>
+            <div class="router-sub" id="router-sub">Describe your task &mdash; RhetorIQ opens the right module automatically.</div>
+            <div class="router-row">
+              <textarea class="rtarea" id="router-input" placeholder='e.g. "Check if this press release could backfire" or "Write a speech for our CEO" or "Crisis: supplier just announced bankruptcy"'></textarea>
+              <button class="vbtn" id="voice-btn" onclick="toggleVoice()" title="Voice input">&#127908;</button>
+              <button class="rbtn" onclick="routePrompt()"><span id="rbtn-txt">&#8594; Go</span></button>
+            </div>
+            <div class="rstat" id="rstat"></div>
+            <div class="pi-banner" id="pi-banner">
+              <div class="pi-text" id="pi-text"></div>
+              <div class="pi-actions">
+                <button class="pi-go" id="pi-go-btn"></button>
+                <button class="pi-dismiss" onclick="document.getElementById('pi-banner').classList.remove('show')">&times;</button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Quick Access Cards -->
-      <div class="qa-section">
-        <div class="qa-card" onclick="goModule('pre-meeting')">
-          <div class="qa-card-left">
-            <div class="qa-tag" id="qa-tag1">Preparation</div>
-            <div class="qa-name" id="qa-name1">Meeting Prep</div>
-            <div class="qa-desc" id="qa-desc1">Brief, agenda &amp; people context — before any meeting</div>
+          <!-- Quick Access Cards -->
+          <div class="qa-section">
+            <div class="qa-card" onclick="goModule('pre-meeting')">
+              <div class="qa-card-left">
+                <div class="qa-tag" id="qa-tag1">Preparation</div>
+                <div class="qa-name" id="qa-name1">Meeting Prep</div>
+                <div class="qa-desc" id="qa-desc1">Brief, agenda &amp; people context — before any meeting</div>
+              </div>
+              <div class="qa-arr">&#8594;</div>
+            </div>
+            <div class="qa-card" onclick="goModule('crisis')">
+              <div class="qa-card-left">
+                <div class="qa-tag" id="qa-tag2">Emergency</div>
+                <div class="qa-name" id="qa-name2">Crisis Response</div>
+                <div class="qa-desc" id="qa-desc2">Immediate framing for unexpected situations</div>
+              </div>
+              <div class="qa-arr">&#8594;</div>
+            </div>
+            <div class="qa-card" onclick="goModule('text-gen')">
+              <div class="qa-card-left">
+                <div class="qa-tag" id="qa-tag3">Creation</div>
+                <div class="qa-name" id="qa-name3">Text Generator</div>
+                <div class="qa-desc" id="qa-desc3">LinkedIn, newsletter, email, speech — in your exact voice</div>
+              </div>
+              <div class="qa-arr">&#8594;</div>
+            </div>
           </div>
-          <div class="qa-arr">&#8594;</div>
-        </div>
-        <div class="qa-card" onclick="goModule('crisis')">
-          <div class="qa-card-left">
-            <div class="qa-tag" id="qa-tag2">Emergency</div>
-            <div class="qa-name" id="qa-name2">Crisis Response</div>
-            <div class="qa-desc" id="qa-desc2">Immediate framing for unexpected situations</div>
+
+          <!-- Most Used Row (hidden, kept for JS compat) -->
+          <div class="mu-row" id="mu-row">
+            <div class="mu-label">Recently used</div>
+            <div class="mu-pills" id="mu-pills"></div>
           </div>
-          <div class="qa-arr">&#8594;</div>
-        </div>
-        <div class="qa-card" onclick="goModule('text-gen')">
-          <div class="qa-card-left">
-            <div class="qa-tag" id="qa-tag3">Creation</div>
-            <div class="qa-name" id="qa-name3">Text Generator</div>
-            <div class="qa-desc" id="qa-desc3">Speeches, emails, statements — built for your voice</div>
+
+          <!-- Memory Banner -->
+          <div class="mem-banner" id="mem-banner" style="display:none">
+            <div class="mem-header" onclick="toggleMemBanner()">
+              <div>
+                <div class="mem-title">&#9670; Company Memory</div>
+                <div class="mem-sub" id="mem-banner-sub">Loading...</div>
+              </div>
+              <button class="mem-toggle" id="mem-toggle-btn">Show &#9660;</button>
+            </div>
+            <div class="mem-body" id="mem-body">
+              <div class="mem-chips" id="mem-chips"></div>
+              <button class="mem-edit" onclick="goPage('memory')">Edit memory &rarr;</button>
+            </div>
           </div>
-          <div class="qa-arr">&#8594;</div>
-        </div>
-      </div>
 
-      <!-- Most Used Row (hidden, kept for JS compat) -->
-      <div class="mu-row" id="mu-row">
-        <div class="mu-label">Recently used</div>
-        <div class="mu-pills" id="mu-pills"></div>
-      </div>
-
-      <!-- Memory Banner (shown when client selected and memory exists) -->
-      <div class="mem-banner" id="mem-banner" style="display:none">
-        <div class="mem-header" onclick="toggleMemBanner()">
-          <div>
-            <div class="mem-title">&#9670; Company Memory</div>
-            <div class="mem-sub" id="mem-banner-sub">Loading...</div>
+          <!-- Health Score Widget -->
+          <div class="hs-widget" id="hs-widget" style="display:none">
+            <div class="hs-top">
+              <div>
+                <div class="hs-title">&#9670; Communication Health Score</div>
+                <div style="font-size:12px;color:var(--mu);margin-top:2px">Based on your last 90 days of module usage</div>
+              </div>
+              <div style="text-align:right">
+                <div class="hs-score" id="hs-score">&#8212;</div>
+                <div class="hs-label">/ 10</div>
+              </div>
+            </div>
+            <button class="hs-genbtn" id="hs-btn" onclick="generateHealthScore()">Generate Score</button>
+            <div class="hs-result" id="hs-result"></div>
           </div>
-          <button class="mem-toggle" id="mem-toggle-btn">Show &#9660;</button>
-        </div>
-        <div class="mem-body" id="mem-body">
-          <div class="mem-chips" id="mem-chips"></div>
-          <button class="mem-edit" onclick="goPage('memory')">Edit memory &rarr;</button>
-        </div>
-      </div>
 
-      <!-- Browse All Modules toggle + grid wrapper -->
-      <!-- Health Score Widget -->
-      <div class="hs-widget" id="hs-widget" style="display:none">
-        <div class="hs-top">
-          <div>
-            <div class="hs-title">&#9670; Communication Health Score</div>
-            <div style="font-size:12px;color:var(--mu);margin-top:2px">Based on your last 90 days of module usage</div>
+          <div class="stats" id="stats-row" style="display:none">
+            <div class="stat ao" id="stat-clients-box"><div class="sn" id="stat-clients">0</div><div class="sl">Client</div></div>
+            <div class="stat ao" id="stat-people-box"><div class="sn" id="stat-people">0</div><div class="sl">People</div></div>
+            <div class="stat" id="stat-analyses-box"><div class="sn" id="stat-analyses">0</div><div class="sl">Analyses</div></div>
           </div>
-          <div style="text-align:right">
-            <div class="hs-score" id="hs-score">&#8212;</div>
-            <div class="hs-label">/ 10</div>
-          </div>
+        </div><!-- /home-left -->
+
+        <!-- RIGHT COLUMN: all modules -->
+        <div class="home-right">
+          <div class="home-right-title">All Modules</div>
+          <div class="hm-list" id="hm-list"></div>
         </div>
-        <button class="hs-genbtn" id="hs-btn" onclick="generateHealthScore()">Generate Score</button>
-        <div class="hs-result" id="hs-result"></div>
-      </div>
 
-      <div class="stats" id="stats-row" style="display:none">
-        <div class="stat ao" id="stat-clients-box"><div class="sn" id="stat-clients">0</div><div class="sl">Client</div></div>
-        <div class="stat ao" id="stat-people-box"><div class="sn" id="stat-people">0</div><div class="sl">People</div></div>
-        <div class="stat" id="stat-analyses-box"><div class="sn" id="stat-analyses">0</div><div class="sl">Analyses</div></div>
-      </div>
-
-      <!-- Browse All Modules -->
-      <div class="browse-toggle" onclick="toggleModuleGrid()">
-        <span class="browse-lbl">All modules</span>
-        <span class="browse-arr" id="browse-arr">&#9660;</span>
-      </div>
-      <div id="module-grid-wrap" style="display:none">
-
-      <!-- Section tabs (Concept B) -->
-      <div class="stabs">
-        <button class="stab active" onclick="filterMods('all',this)">All</button>
-        <button class="stab" onclick="filterMods('foundation',this)">Foundation</button>
-        <button class="stab" onclick="filterMods('prevention',this)">Prevention</button>
-        <button class="stab" onclick="filterMods('efficiency',this)">Efficiency</button>
-        <button class="stab" onclick="filterMods('creation',this)">Creation</button>
-        <button class="stab" onclick="filterMods('growth',this)">Growth</button>
-      </div>
-
-      <div class="mgrid">
-        <!-- FOUNDATION -->
-        <div class="mcard span3 g-foundation" onclick="goPage('brand-voice')"><div class="ctag">&#9670; Foundation &mdash; Master Reference</div><div class="cname">Brand Voice</div><div class="cdesc">How does this company or person communicate? Paste any texts &mdash; get a complete language profile back.</div></div>
-        <div class="mcard span2 g-foundation" onclick="goModule('profiling')"><div class="ctag">Foundation</div><div class="cname">How We Communicate</div><div class="cdesc">How does this company, team, or leader communicate? What patterns repeat? Where are the weak points?</div></div>
-        <!-- PREVENTION -->
-        <div class="mcard g-prevention g-foundation" onclick="goModule('pre-meeting')"><span class="new-badge">NEW</span><div class="ctag">Preparation</div><div class="cname">Meeting Prep</div><div class="cdesc">Meeting in 1 hour? Get the 3 hardest moments, your opening, key messages, what not to say, and a stakeholder map.</div></div>
-        <div class="mcard span2 g-prevention" onclick="goModule('arg-reaction')"><span class="new-badge">NEW</span><div class="ctag">Prevention</div><div class="cname">Argument / Reaction Preview</div><div class="cdesc">Three tools in one: get the hardest pushback, simulate how stakeholders will react, and check if leadership message matches company reality.</div></div>
-        <div class="mcard g-prevention" onclick="goModule('risk')"><div class="ctag">Prevention</div><div class="cname">Risk Scan</div><div class="cdesc">Ready to send? Paste the text first. Get a clear list of what could go wrong.</div></div>
-        <div class="mcard red-btn g-prevention" onclick="goModule('crisis')"><span class="new-badge" style="background:#c00">&#128308; NOW</span><div class="ctag" style="color:#a00">Prevention &mdash; Emergency</div><div class="cname">Crisis Response</div><div class="cdesc">Something just happened. Paste the facts. Get 3 statements ready to use in 2 minutes.</div></div>
-        <!-- EFFICIENCY -->
-        <div class="mcard g-efficiency" onclick="goModule('actionability')"><div class="ctag">Efficiency</div><div class="cname">Clarity Check</div><div class="cdesc">Vague message? Paste it in. Get a version that is direct, clear, and actionable.</div></div>
-        <div class="mcard g-efficiency" onclick="goModule('thread')"><div class="ctag">Efficiency</div><div class="cname">Notes to Tasks</div><div class="cdesc">Paste emails, meeting notes, Slack threads, board minutes &mdash; anything messy. Get: what was decided, what is open, who acts.</div></div>
-        <div class="mcard span3 g-efficiency" onclick="goModule('rh-translate')"><span class="new-badge">NEW</span><div class="ctag">Efficiency</div><div class="cname">Translate</div><div class="cdesc">Translate any text from DE to FR to EN to IT &mdash; keeping the exact tone, authority, and argumentation style. Not just words &mdash; full rhetorical impact.</div></div>
-        <!-- CREATION -->
-        <div class="mcard span2 g-creation" onclick="goModule('text-gen')"><div class="ctag">&#9670; Creation &mdash; Ghostwriter</div><div class="cname">Text Generator</div><div class="cdesc">Briefing in, finished text out. LinkedIn, speech, press release, email &mdash; any format, in the authentic brand voice.</div></div>
-        <div class="mcard g-creation" onclick="goModule('review')"><div class="ctag">Creation &mdash; HR</div><div class="cname">Write Feedback</div><div class="cdesc">Rough notes about an employee in, precise written performance feedback out.</div></div>
-        <div class="mcard g-creation" onclick="goModule('recognition')"><div class="ctag">Creation &mdash; HR</div><div class="cname">Write Appreciation</div><div class="cdesc">Write a recognition for any employee that feels personal and genuine &mdash; not generic copy-paste.</div></div>
-        <!-- GROWTH -->
-        <div class="mcard g-growth" onclick="goModule('sparring')"><span class="new-badge">NEW</span><div class="ctag">Growth &mdash; Coaching</div><div class="cname">2-Min. Training</div><div class="cdesc">3 short personal exercises based on known communication weaknesses. Each takes 2 minutes.</div></div>
-        <div class="mcard g-growth" onclick="goModule('debrief')"><span class="new-badge">NEW</span><div class="ctag">Growth &mdash; Audit</div><div class="cname">Debriefing</div><div class="cdesc">After a speech or announcement: what worked, what didn&rsquo;t, where did the audience react differently than expected?</div></div>
-        <div class="mcard g-growth" onclick="goModule('fingerprint')"><div class="ctag">Growth</div><div class="cname">Language Over Time</div><div class="cdesc">How has the language of a person, a team, or the whole company shifted &mdash; under pressure, in crisis, after a leadership change?</div></div>
-      </div>
-      </div><!-- /module-grid-wrap -->
+      </div><!-- /home-grid -->
     </div>
 
     <!-- BRAND VOICE -->
@@ -759,9 +743,9 @@ body.adv .vubtn{display:block}
       <div class="mlist-filters">
         <button class="mlist-pill active" onclick="filterModsCat('all',this)">All</button>
         <button class="mlist-pill" onclick="filterModsCat('foundation',this)">Foundation</button>
+        <button class="mlist-pill" onclick="filterModsCat('creation',this)">Creation</button>
         <button class="mlist-pill" onclick="filterModsCat('prevention',this)">Prevention</button>
         <button class="mlist-pill" onclick="filterModsCat('efficiency',this)">Efficiency</button>
-        <button class="mlist-pill" onclick="filterModsCat('creation',this)">Creation</button>
         <button class="mlist-pill" onclick="filterModsCat('growth',this)">Growth</button>
       </div>
       <div id="modules-list"></div>
@@ -986,7 +970,7 @@ async function boot(user,role){
     if(clientId){await loadPeople();await loadMemory();setTimeout(()=>checkDueSubscriptions(),800);}
   }
   if(isAdv){document.querySelectorAll('.ao-item').forEach(el=>el.style.display='block');}
-  connectWS();loadStats();renderVids();initPasteIntelligence();
+  connectWS();loadStats();renderVids();initPasteIntelligence();renderHomeModuleList();
 }
 
 // WS
@@ -1277,12 +1261,25 @@ function loadBrandVoiceRefs(){
 }
 
 // TOGGLE MODULE GRID
-function toggleModuleGrid(){
-  const wrap=document.getElementById('module-grid-wrap');
-  const arr=document.getElementById('browse-arr');
-  const open=wrap.style.display==='block';
-  wrap.style.display=open?'none':'block';
-  arr.classList.toggle('open',!open);
+function toggleModuleGrid(){}
+
+function renderHomeModuleList(){
+  const list=document.getElementById('hm-list');
+  if(!list)return;
+  const CAT_LABEL={foundation:'Foundation',creation:'Creation',prevention:'Prevention',efficiency:'Efficiency',growth:'Growth'};
+  const catOrder=['foundation','creation','prevention','efficiency','growth'];
+  let html='';
+  let lastCat='';
+  const sorted=[...ALL_MODULES].sort((a,b)=>catOrder.indexOf(a.cat)-catOrder.indexOf(b.cat));
+  sorted.forEach(m=>{
+    if(m.cat!==lastCat){
+      html+=`<div class="hm-cat-divider">${CAT_LABEL[m.cat]||m.cat}</div>`;
+      lastCat=m.cat;
+    }
+    const dest=m.key==='brand-voice'?`goPage('brand-voice')`:`goModule('${m.key}')`;
+    html+=`<div class="hm-item" onclick="${dest}"><div><div class="hm-item-name">${m.name}${m.isNew?' <span style="font-size:9px;background:var(--tx);color:#fff;border-radius:3px;padding:1px 4px;vertical-align:middle">NEW</span>':''}</div></div><div class="hm-item-arr">&#8594;</div></div>`;
+  });
+  list.innerHTML=html;
 }
 
 // MOST USED ROW — top 5 from history + always Pre-Meeting Brief first
@@ -1401,7 +1398,7 @@ function buildTextGen(prefill,form){
     {id:'linkedin',abbr:'LI',label:'LinkedIn',sub:'Post · Article · Comment',fmtLabel:'LinkedIn Format',fmtOpts:['LinkedIn Post','LinkedIn Article','LinkedIn Comment / Reply'],hasSubscription:true},
     {id:'newsletter',abbr:'NL',label:'Newsletter',sub:'Edition · Section · Teaser',fmtLabel:'Newsletter Format',fmtOpts:['Newsletter — Full Edition','Newsletter — Single Section','Newsletter — Teaser / Preview'],hasSubscription:true},
     {id:'email',abbr:'EM',label:'Email',sub:'External · Internal · Formal',fmtLabel:'Email Type',fmtOpts:['External — Client / Partner','External — Press / Media','Internal — Team Update','Internal — Leadership Memo','Formal — Investor Letter','Formal — Customer Letter'],hasSubscription:false},
-    {id:'custom',abbr:'EF',label:'Eigenes Format',sub:'Rede · Pressemitteilung · Custom',fmtLabel:'Format',fmtOpts:['Speech / Keynote','Talking Points','Press Release','B2B Proposal','Website Copy','Internal Announcement','Town Hall Script','Other / Custom'],hasSubscription:false},
+    {id:'custom',abbr:'EF',label:'Custom',sub:'Speech · Press Release · Other',fmtLabel:'Format',fmtOpts:['Speech / Keynote','Talking Points','Press Release','B2B Proposal','Website Copy','Internal Announcement','Town Hall Script','Other / Custom'],hasSubscription:false},
   ];
   const tilesHtml=tileData.map(t=>`
     <div class="tg-tile" id="tg-tile-${t.id}" onclick="tgOpenTile('${t.id}')">
