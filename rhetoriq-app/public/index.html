@@ -180,13 +180,26 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .tg-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
 .tg-tile{border:1.5px solid var(--bd);border-radius:8px;padding:16px 14px;cursor:pointer;background:#fff;transition:border-color .15s,box-shadow .15s;text-align:center}
 .tg-tile:hover{border-color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.07)}
-.tg-tile-icon{font-size:22px;margin-bottom:6px}
+.tg-tile-abbr{width:36px;height:36px;border-radius:6px;background:var(--tx);color:#fff;font-size:11px;font-weight:800;letter-spacing:.05em;display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
 .tg-tile-label{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:3px}
 .tg-tile-sub{font-size:10px;color:var(--mu);line-height:1.4}
 .tg-back{background:none;border:none;font-size:12px;color:var(--dm);cursor:pointer;padding:0;margin-bottom:14px;font-weight:600;letter-spacing:.03em}
 .tg-back:hover{color:var(--tx)}
 .tg-save-ref{background:none;border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--mu);cursor:pointer;padding:4px 10px;margin-top:6px}
 .tg-save-ref:hover{border-color:var(--tx);color:var(--tx)}
+.tg-sub-box{margin-top:24px;border-top:1px solid var(--bd);padding-top:16px}
+.tg-sub-header{display:flex;align-items:center;gap:8px}
+.tg-sub-toggle-lbl{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tx)}
+.tg-sub-toggle-lbl input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--tx)}
+.tg-sub-body{margin-top:12px;background:var(--sf);border-radius:6px;padding:12px 14px}
+.sub-notif-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}
+.sub-notif-card{background:#fff;border-radius:10px;width:100%;max-width:560px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.18)}
+.sub-notif-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:#fff;z-index:1}
+.sub-notif-badge{width:28px;height:28px;border-radius:5px;background:var(--tx);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sub-notif-close{margin-left:auto;background:none;border:none;font-size:20px;cursor:pointer;color:var(--mu);line-height:1}
+.sub-notif-body{padding:16px}
+.sub-notif-version{border:1px solid var(--bd);border-radius:6px;padding:12px 14px;margin-bottom:10px}
+.sub-notif-vnum{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:6px}
 .rbox{display:none;margin-top:20px;border:1.5px solid var(--bd);border-radius:8px;overflow:hidden}
 .rbox.show{display:block}
 .rhead{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--sf);border-bottom:1px solid var(--bd)}
@@ -968,6 +981,9 @@ async function boot(user,role){
     document.getElementById('mn-cl').style.display='flex';
     document.getElementById('mn-people').style.display='flex';
     await loadClients();
+  } else {
+    clientId=user.id||null;
+    if(clientId){await loadPeople();await loadMemory();setTimeout(()=>checkDueSubscriptions(),800);}
   }
   if(isAdv){document.querySelectorAll('.ao-item').forEach(el=>el.style.display='block');}
   connectWS();loadStats();renderVids();initPasteIntelligence();
@@ -1010,7 +1026,7 @@ async function switchClient(id){
   clientId=id||null;
   people=[];
   memory=[];
-  if(clientId){await loadPeople();await loadMemory();}
+  if(clientId){await loadPeople();await loadMemory();setTimeout(()=>checkDueSubscriptions(),800);}
   loadStats();
   updateMemBanner();
   const hw=document.getElementById('hs-widget');
@@ -1382,52 +1398,83 @@ function buildForm(name,def,prefill,form){
 
 function buildTextGen(prefill,form){
   const tileData=[
-    {id:'linkedin',icon:'💼',label:'LinkedIn',sub:'Post · Article · Comment',fmtLabel:'LinkedIn Format',fmtOpts:['LinkedIn Post','LinkedIn Article','LinkedIn Comment / Reply']},
-    {id:'newsletter',icon:'📰',label:'Newsletter',sub:'Edition · Section · Teaser',fmtLabel:'Newsletter Format',fmtOpts:['Newsletter — Full Edition','Newsletter — Single Section','Newsletter — Teaser / Preview']},
-    {id:'email',icon:'✉️',label:'Email',sub:'External · Internal · Formal',fmtLabel:'Email Type',fmtOpts:['External — Client / Partner','External — Press / Media','Internal — Team Update','Internal — Leadership Memo','Formal — Investor Letter','Formal — Customer Letter']},
-    {id:'custom',icon:'✏️',label:'Eigenes Format',sub:'Speech · Press Release · Custom',fmtLabel:'Format',fmtOpts:['Speech / Keynote','Talking Points','Press Release','B2B Proposal','Website Copy','Internal Announcement','Town Hall Script','Other / Custom']},
+    {id:'linkedin',abbr:'LI',label:'LinkedIn',sub:'Post · Article · Comment',fmtLabel:'LinkedIn Format',fmtOpts:['LinkedIn Post','LinkedIn Article','LinkedIn Comment / Reply'],hasSubscription:true},
+    {id:'newsletter',abbr:'NL',label:'Newsletter',sub:'Edition · Section · Teaser',fmtLabel:'Newsletter Format',fmtOpts:['Newsletter — Full Edition','Newsletter — Single Section','Newsletter — Teaser / Preview'],hasSubscription:true},
+    {id:'email',abbr:'EM',label:'Email',sub:'External · Internal · Formal',fmtLabel:'Email Type',fmtOpts:['External — Client / Partner','External — Press / Media','Internal — Team Update','Internal — Leadership Memo','Formal — Investor Letter','Formal — Customer Letter'],hasSubscription:false},
+    {id:'custom',abbr:'EF',label:'Eigenes Format',sub:'Rede · Pressemitteilung · Custom',fmtLabel:'Format',fmtOpts:['Speech / Keynote','Talking Points','Press Release','B2B Proposal','Website Copy','Internal Announcement','Town Hall Script','Other / Custom'],hasSubscription:false},
   ];
   const tilesHtml=tileData.map(t=>`
     <div class="tg-tile" id="tg-tile-${t.id}" onclick="tgOpenTile('${t.id}')">
-      <div class="tg-tile-icon">${t.icon}</div>
+      <div class="tg-tile-abbr">${t.abbr}</div>
       <div class="tg-tile-label">${t.label}</div>
       <div class="tg-tile-sub">${t.sub}</div>
     </div>`).join('');
+
+  const subSection=(t)=>t.hasSubscription?`
+    <div class="tg-sub-box" id="tg-sub-box-${t.id}">
+      <div class="tg-sub-header">
+        <label class="tg-sub-toggle-lbl">
+          <input type="checkbox" id="tg-sub-enabled-${t.id}" onchange="tgSubToggle('${t.id}')">
+          <span>Automatische Vorschläge aktivieren</span>
+        </label>
+      </div>
+      <div class="tg-sub-body" id="tg-sub-body-${t.id}" style="display:none">
+        <p style="font-size:11px;color:var(--mu);margin:0 0 10px">RhetorIQ generiert 3 Versions-Vorschläge nach Ihrem Rhythmus und zeigt diese beim nächsten Login als Benachrichtigung an.</p>
+        <div class="row2">
+          <div class="fg2"><label class="fl2">Rhythmus</label>
+            <select id="tg-sub-freq-${t.id}">
+              <option value="weekly">Wöchentlich</option>
+              <option value="biweekly">Alle 2 Wochen</option>
+              <option value="monthly">Monatlich</option>
+            </select>
+          </div>
+          <div class="fg2"><label class="fl2">Thema / Fokus (optional)</label>
+            <input type="text" id="tg-sub-topic-${t.id}" placeholder="z.B. Leadership, Nachhaltigkeit, Produktnews">
+          </div>
+        </div>
+        <button class="tg-save-ref" onclick="saveTgSubscription('${t.id}')">Einstellung speichern</button>
+        <span id="tg-sub-status-${t.id}" style="font-size:11px;color:var(--dm);margin-left:8px"></span>
+      </div>
+    </div>`:'';
+
   const panelsHtml=tileData.map(t=>`
     <div class="tg-panel" id="tg-panel-${t.id}" style="display:none">
-      <button class="tg-back" onclick="tgCloseTile('${t.id}')">← Back</button>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-        <span style="font-size:20px">${t.icon}</span>
+      <button class="tg-back" onclick="tgCloseTile('${t.id}')">← Zurueck</button>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div class="tg-tile-abbr" style="width:32px;height:32px;font-size:11px">${t.abbr}</div>
         <span style="font-size:15px;font-weight:700;color:var(--tx)">${t.label}</span>
       </div>
       <div style="margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:6px">Template / Reference (optional)</div>
-        <div class="upzone" onclick="document.getElementById('tg-rf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload template for ${t.label}</strong><br><span style="font-size:11px;color:var(--mu)">Your past examples — used to match your style exactly</span></div><input type="file" id="tg-rf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref-${t.id}','tg-rt-${t.id}')"></div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:6px">Vorlage / Referenz (optional)</div>
+        <div class="upzone" onclick="document.getElementById('tg-rf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Vorlage hochladen</strong><br><span style="font-size:11px;color:var(--mu)">Eigene Beispiele — damit der Output exakt Ihrem Stil entspricht</span></div><input type="file" id="tg-rf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref-${t.id}','tg-rt-${t.id}')"></div>
         <div class="ftags" id="tg-rt-${t.id}"></div>
-        <textarea id="tg-ref-${t.id}" placeholder="Paste existing ${t.label} examples here — separate with ---." style="margin-top:6px;min-height:70px;font-size:12px"></textarea>
-        <button class="tg-save-ref" onclick="saveTgRef('${t.id}')">Save as Reference</button>
+        <textarea id="tg-ref-${t.id}" placeholder="Beispiele einfügen — mit --- trennen." style="margin-top:6px;min-height:70px;font-size:12px"></textarea>
+        <button class="tg-save-ref" onclick="saveTgRef('${t.id}')">Als Referenz speichern</button>
         <div id="tg-ref-status-${t.id}" style="font-size:11px;color:var(--dm);margin-top:4px"></div>
       </div>
       <div class="fg2"><label class="fl2">${t.fmtLabel}</label><select id="tg-fmt-${t.id}">${t.fmtOpts.map(o=>`<option>${o}</option>`).join('')}</select></div>
       ${people.length?buildPeopleSelector():''}
-      <div class="upzone" onclick="document.getElementById('tg-tf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload source document</strong></div><input type="file" id="tg-tf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task-${t.id}','tg-tt-${t.id}')"></div>
+      <div class="upzone" onclick="document.getElementById('tg-tf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Quelldokument hochladen</strong></div><input type="file" id="tg-tf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task-${t.id}','tg-tt-${t.id}')"></div>
       <div class="ftags" id="tg-tt-${t.id}"></div>
-      <div class="fg2"><label class="fl2">Briefing / Content</label><textarea id="tg-task-${t.id}" placeholder="Describe what to create, or paste content to rewrite." style="min-height:100px"></textarea></div>
+      <div class="fg2"><label class="fl2">Briefing / Inhalt</label><textarea id="tg-task-${t.id}" placeholder="Was soll erstellt werden, oder Inhalt zum Umschreiben." style="min-height:100px"></textarea></div>
       <div class="row2">
-        <div class="fg2"><label class="fl2">Audience</label><select id="tg-aud-${t.id}"><option>B2B — C-Suite</option><option>B2B — HR Leaders</option><option>B2B — Finance / Investors</option><option>B2B — General Business</option><option>B2C — General Consumer</option><option>Internal — All Employees</option><option>Internal — Leadership Team</option><option>Media / Journalists</option></select></div>
-        <div class="fg2"><label class="fl2">Tone</label><select id="tg-tone-${t.id}"><option>From Voice Profile</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European — understated</option></select></div>
+        <div class="fg2"><label class="fl2">Zielgruppe</label><select id="tg-aud-${t.id}"><option>B2B — C-Suite</option><option>B2B — HR Leaders</option><option>B2B — Finance / Investors</option><option>B2B — General Business</option><option>B2C — General Consumer</option><option>Internal — All Employees</option><option>Internal — Leadership Team</option><option>Media / Journalists</option></select></div>
+        <div class="fg2"><label class="fl2">Ton</label><select id="tg-tone-${t.id}"><option>Aus Voice Profile</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European — understated</option></select></div>
       </div>
       <div class="row2">
-        <div class="fg2"><label class="fl2">Language</label><select id="tg-lang-${t.id}"><option>English</option><option>German</option><option>French</option><option>Italian</option></select></div>
-        <div class="fg2"><label class="fl2">Length (optional)</label><input type="text" id="tg-len-${t.id}" placeholder="e.g. 200 words"></div>
+        <div class="fg2"><label class="fl2">Sprache</label><select id="tg-lang-${t.id}"><option>Deutsch</option><option>English</option><option>Français</option><option>Italiano</option></select></div>
+        <div class="fg2"><label class="fl2">Länge (optional)</label><input type="text" id="tg-len-${t.id}" placeholder="z.B. 200 Wörter"></div>
       </div>
-      <button class="runbtn" onclick="runMod('text-gen','${t.id}')">Generate ${t.label}</button>
-      <div class="rbox" id="text-gen-r-${t.id}"><div class="rhead"><span class="rlbl">Generated Text</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b-${t.id}')">Copy</button></div></div><div class="rbody" id="text-gen-b-${t.id}"></div></div>
+      <button class="runbtn" onclick="runMod('text-gen','${t.id}')">Generieren</button>
+      <div class="rbox" id="text-gen-r-${t.id}"><div class="rhead"><span class="rlbl">Generierter Text</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b-${t.id}')">Copy</button></div></div><div class="rbody" id="text-gen-b-${t.id}"></div></div>
+      ${subSection(t)}
     </div>`).join('');
+
   form.innerHTML=`
     <div id="tg-tiles" class="tg-tiles">${tilesHtml}</div>
     ${panelsHtml}`;
   loadTgRefs();
+  loadTgSubscriptions();
   if(prefill){tgOpenTile('custom');const ta=document.getElementById('tg-task-custom');if(ta)ta.value=prefill;}
 }
 
@@ -1440,15 +1487,21 @@ function tgCloseTile(id){
   document.getElementById('tg-panel-'+id).style.display='none';
   document.getElementById('tg-tiles').style.display='grid';
 }
+function tgSubToggle(id){
+  const enabled=document.getElementById('tg-sub-enabled-'+id)?.checked;
+  const body=document.getElementById('tg-sub-body-'+id);
+  if(body)body.style.display=enabled?'block':'none';
+  if(!enabled)saveTgSubscription(id,false);
+}
 async function saveTgRef(id){
   const val=document.getElementById('tg-ref-'+id)?.value?.trim();
   if(!val)return;
   const status=document.getElementById('tg-ref-status-'+id);
-  status.textContent='Saving…';
+  status.textContent='Speichern…';
   try{
     await api('/api/memory',{method:'POST',body:JSON.stringify({clientId,type:'ref_tg_'+id,content:val})});
-    status.textContent='✓ Saved';
-  }catch(e){status.textContent='Error saving';}
+    status.textContent='Gespeichert';
+  }catch(e){status.textContent='Fehler beim Speichern';}
 }
 async function loadTgRef(id){
   try{
@@ -1457,11 +1510,78 @@ async function loadTgRef(id){
       const ta=document.getElementById('tg-ref-'+id);
       if(ta&&!ta.value)ta.value=r.content;
       const st=document.getElementById('tg-ref-status-'+id);
-      if(st)st.textContent='✓ Reference loaded from memory';
+      if(st)st.textContent='Referenz aus Speicher geladen';
     }
   }catch(e){}
 }
 function loadTgRefs(){['linkedin','newsletter','email','custom'].forEach(id=>loadTgRef(id));}
+async function saveTgSubscription(id,forceDisabled){
+  const enabled=forceDisabled===false?false:(document.getElementById('tg-sub-enabled-'+id)?.checked||false);
+  const freq=document.getElementById('tg-sub-freq-'+id)?.value||'weekly';
+  const topic=document.getElementById('tg-sub-topic-'+id)?.value||'';
+  const status=document.getElementById('tg-sub-status-'+id);
+  if(status)status.textContent='Speichern…';
+  try{
+    await api('/api/subscriptions',{method:'POST',body:JSON.stringify({clientId,format:id,frequency:freq,topicHint:topic,enabled})});
+    if(status)status.textContent='Gespeichert';
+  }catch(e){if(status)status.textContent='Fehler';}
+}
+async function loadTgSubscriptions(){
+  try{
+    const rows=await api('/api/subscriptions?clientId='+encodeURIComponent(clientId));
+    if(!Array.isArray(rows))return;
+    rows.forEach(row=>{
+      const cb=document.getElementById('tg-sub-enabled-'+row.format);
+      if(cb){cb.checked=row.enabled;if(row.enabled){const b=document.getElementById('tg-sub-body-'+row.format);if(b)b.style.display='block';}}
+      const fq=document.getElementById('tg-sub-freq-'+row.format);
+      if(fq)fq.value=row.frequency||'weekly';
+      const tp=document.getElementById('tg-sub-topic-'+row.format);
+      if(tp&&row.topic_hint)tp.value=row.topic_hint;
+    });
+  }catch(e){}
+}
+async function checkDueSubscriptions(){
+  try{
+    const due=await api('/api/subscriptions/due?clientId='+encodeURIComponent(clientId));
+    if(!Array.isArray(due)||!due.length)return;
+    for(const sub of due){
+      await generateSubscriptionNotification(sub);
+    }
+  }catch(e){}
+}
+async function generateSubscriptionNotification(sub){
+  const fmtLabel=sub.format==='linkedin'?'LinkedIn Post':'Newsletter';
+  const topicHint=sub.topic_hint?` Fokus-Thema: ${sub.topic_hint}.`:'';
+  const prompt=`Generiere 3 verschiedene ${fmtLabel}-Versionen als Vorschlag für einen Executive Coach. ${topicHint} Jede Version soll einen anderen Blickwinkel haben. Trenne die Versionen klar mit "--- Version 1 ---", "--- Version 2 ---", "--- Version 3 ---". Sprache: Deutsch. Ton: professionell, direkt, zeitgemäss. Kein leeres Füllwort, kein Jargon.`;
+  showSubNotifLoading(sub.format,fmtLabel);
+  try{
+    const r=await api('/api/analyze',{method:'POST',body:JSON.stringify({module:'text-gen',clientId,data:{text:prompt,format:fmtLabel,voiceProfile:getMemoryContext()}})});
+    showSubNotif(sub.format,fmtLabel,r.result||r.text||'');
+    await api('/api/subscriptions/mark-sent',{method:'POST',body:JSON.stringify({clientId,format:sub.format})});
+  }catch(e){hideSubNotif(sub.format);}
+}
+function showSubNotifLoading(id,label){
+  let overlay=document.getElementById('sub-notif-overlay');
+  if(!overlay){overlay=document.createElement('div');overlay.id='sub-notif-overlay';overlay.className='sub-notif-overlay';document.body.appendChild(overlay);}
+  const card=document.createElement('div');card.className='sub-notif-card';card.id='sub-notif-'+id;
+  card.innerHTML=`<div class="sub-notif-head"><span class="sub-notif-badge">${id==='linkedin'?'LI':'NL'}</span><strong>${label} — Neue Vorschläge</strong><button class="sub-notif-close" onclick="hideSubNotif('${id}')">×</button></div><div class="sub-notif-body"><div class="spin"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:10px;font-size:13px;color:var(--mu)">Generiert 3 Versionen…</span></div></div>`;
+  overlay.appendChild(card);
+  overlay.style.display='flex';
+}
+function showSubNotif(id,label,text){
+  const card=document.getElementById('sub-notif-'+id);
+  if(!card)return;
+  const parts=text.split(/---\s*Version\s*\d+\s*---/i).map(s=>s.trim()).filter(Boolean);
+  let html='';
+  parts.forEach((p,i)=>{html+=`<div class="sub-notif-version"><div class="sub-notif-vnum">Version ${i+1}</div><pre style="white-space:pre-wrap;font-family:inherit;font-size:13px;margin:0">${p}</pre><button class="cpbtn" style="margin-top:8px" onclick="navigator.clipboard.writeText(${JSON.stringify(p)})">Copy</button></div>`;});
+  card.querySelector('.sub-notif-body').innerHTML=html||`<pre style="white-space:pre-wrap;font-size:13px">${text}</pre>`;
+}
+function hideSubNotif(id){
+  const card=document.getElementById('sub-notif-'+id);
+  if(card)card.remove();
+  const overlay=document.getElementById('sub-notif-overlay');
+  if(overlay&&!overlay.children.length)overlay.style.display='none';
+}
 
 function stab(btn,show,hide){btn.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById(show).style.display='block';document.getElementById(hide).style.display='none';}
 

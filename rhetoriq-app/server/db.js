@@ -62,6 +62,17 @@ async function init() {
       updated_at TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(client_id, memory_type)
     );
+
+    CREATE TABLE IF NOT EXISTS content_subscriptions (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+      format TEXT NOT NULL,
+      frequency TEXT NOT NULL,
+      topic_hint TEXT,
+      enabled BOOLEAN NOT NULL DEFAULT TRUE,
+      last_sent_at TIMESTAMPTZ,
+      UNIQUE(client_id, format)
+    );
   `);
 }
 
