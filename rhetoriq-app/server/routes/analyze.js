@@ -206,7 +206,9 @@ RULES:
 - Be concise and practical. No long introductions.
 - If asked a general question about rhetoric, communication, or leadership communication: answer it — you have expertise in this area.
 - Never make up features that don't exist.
-- Keep answers under 150 words unless a detailed explanation is genuinely needed.`,
+- Keep answers under 150 words unless a detailed explanation is genuinely needed.
+- NEVER use markdown formatting: no asterisks for bold (**text**), no hashtags for headers, no bullet dashes preceded by asterisks. Use plain text only. Structure with line breaks if needed.
+- NEVER use emojis of any kind.`,
     build: (d) => d.message
   },
   pr: {
