@@ -136,7 +136,6 @@ body.adv .cbar{display:flex}
 .sl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-top:3px}
 .stat.ao{display:none}
 body.adv .stat.ao{display:block}
-body.adv #mm-advisor{display:block!important}
 body.adv #mm-clients{display:block!important}
 
 /* MODULE PAGE */
@@ -837,11 +836,11 @@ body.adv .vubtn{display:block}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
         <div class="page-title" id="clients-title">Clients</div>
         <div style="display:flex;gap:8px">
-          <button class="add-btn" style="background:#f5f5f5;color:var(--tx);border:1.5px solid var(--bd)" onclick="downloadClients()" id="clients-export-btn">⬇ Excel</button>
+          <button class="add-btn" style="background:#f5f5f5;color:var(--tx);border:1.5px solid var(--bd)" onclick="downloadClients()" id="clients-export-btn">&#11015; Excel</button>
           <button class="add-btn" id="clients-add-btn" onclick="openModal('nc-ov')">+ New Client</button>
         </div>
       </div>
-      <div id="clients-list"><div class="empty"><div class="ei">&#9711;</div><div id="clients-empty">No clients yet.</div></div></div>
+      <div id="adv-dash-content"><div class="empty"><div class="ei">&#9711;</div><div>Loading&#8230;</div></div></div>
     </div>
 
     <!-- VIDEOS -->
@@ -873,11 +872,7 @@ body.adv .vubtn{display:block}
       <p id="hist-sub" style="font-size:12px;color:var(--mu);margin-bottom:18px">Analyses are automatically deleted after 30 days.</p>
       <div id="hist-list"><div class="empty"><div class="ei">◤</div><div id="hist-empty">No analyses yet.</div></div></div>
     </div>
-
-    <!-- ADVISOR DASHBOARD -->
-    <div class="page" id="page-advisor">
-      <div class="page-title" style="margin-bottom:4px">Dashboard</div>
-      <p style="font-size:12px;color:var(--mu);margin-bottom:18px">Overview of all clients and activity.</p>
+<p style="font-size:12px;color:var(--mu);margin-bottom:18px">Overview of all clients and activity.</p>
       <div id="adv-dash-content"><div class="empty"><div class="ei">&#9711;</div><div>Loading…</div></div></div>
     </div>
 
@@ -952,8 +947,7 @@ body.adv .vubtn{display:block}
 
   <div id="more-menu" style="display:none;position:fixed;bottom:70px;right:12px;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);z-index:200;min-width:190px;overflow:hidden">
     <div id="mm-context" onclick="goPage('memory');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Context</div>
-    <div id="mm-clients" class="ao-item" onclick="goPage('clients');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none">Clients</div>
-    <div id="mm-advisor" class="ao-item" onclick="goPage('advisor');loadAdvisorDashboard();hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none">Dashboard</div>
+    <div id="mm-clients" class="ao-item" onclick="goPage('clients');loadAdvisorDashboard();hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none">Clients</div>
     <div id="mm-videos" onclick="goPage('videos');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Videos</div>
     <div id="mm-contact" onclick="goPage('contact');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Contact</div>
     <div id="mm-datasec" onclick="goPage('datasec');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Data Security &amp; Privacy</div>
@@ -1370,7 +1364,7 @@ async function boot(user,role){
     document.body.classList.add('adv');
     document.getElementById('mn-cl').style.display='flex';
     document.getElementById('mn-people').style.display='flex';
-    await loadClients();
+    await loadAdvisorDashboard();
   } else {
     clientId=user.id||null;
     if(clientId){await loadPeople();await loadMemory();setTimeout(()=>checkDueSubscriptions(),800);}
@@ -1378,7 +1372,6 @@ async function boot(user,role){
   if(isAdv){
     document.querySelectorAll('.ao-item').forEach(el=>el.style.display='block');
     document.getElementById('mn-reviews').style.display='flex';
-    document.getElementById('mm-advisor').style.display='block';
     loadAdvisorReviews();
     setInterval(loadAdvisorReviews,60000);
   }
@@ -1456,7 +1449,7 @@ function closeModal(id){document.getElementById(id).classList.remove('show');}
 async function addClient(){
   const name=document.getElementById('nc-name').value.trim();if(!name)return alert('Please enter a company name.');
   const email=document.getElementById('nc-email').value.trim();const initpw=document.getElementById('nc-initpw').value;if(email&&initpw&&initpw.length<8)return alert('Initial password must be at least 8 characters.');const body={name,industry:document.getElementById('nc-industry').value,contact:document.getElementById('nc-contact').value.trim()};if(email&&initpw){body.email=email;body.initialPassword=initpw;}
-  try{const r=await api('/api/clients',{method:'POST',body:JSON.stringify(body)});const c=await r.json();clients.unshift(c);renderClients();closeModal('nc-ov');document.getElementById('nc-name').value='';document.getElementById('nc-contact').value='';document.getElementById('nc-email').value='';document.getElementById('nc-initpw').value='';goPage('clients');}catch(e){alert('Error: '+e.message);}
+  try{const r=await api('/api/clients',{method:'POST',body:JSON.stringify(body)});const c=await r.json();clients.unshift(c);loadAdvisorDashboard();closeModal('nc-ov');document.getElementById('nc-name').value='';document.getElementById('nc-contact').value='';document.getElementById('nc-email').value='';document.getElementById('nc-initpw').value='';goPage('clients');}catch(e){alert('Error: '+e.message);}
 }
 
 // PEOPLE DIRECTORY
@@ -2343,39 +2336,55 @@ async function loadAdvisorDashboard(){
     const r=await api('/api/advisor/dashboard');
     const d=await r.json();
     if(!r.ok)throw new Error(d.error);
-    const {stats,clients,recent}=d;
+    const {stats,clients:dashClients,recent}=d;
+    // sync global clients array + dropdowns
+    try{const rc=await api('/api/clients');clients=await rc.json();}catch{}
+    document.getElementById('stat-clients').textContent=clients.length;
+    const sel=document.getElementById('client-select');
+    if(sel)sel.innerHTML='<option value="">Select client</option>'+clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
     const fmtDate=s=>s?new Date(s).toLocaleDateString('de-CH'):'—';
     const fmtDateShort=s=>s?new Date(s).toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit'}):'—';
-    const maxA=clients.reduce((m,c)=>Math.max(m,parseInt(c.total_analyses)||0),1);
+    const maxA=dashClients.reduce((m,c)=>Math.max(m,parseInt(c.total_analyses)||0),1);
+    // build a token lookup from global clients array
+    const tokMap=Object.fromEntries(clients.map(c=>[String(c.id),c.token]));
     el.innerHTML=`
       <div class="adv-stats">
         <div class="adv-stat"><div class="adv-stat-n">${stats.total_clients||0}</div><div class="adv-stat-l">Clients</div></div>
         <div class="adv-stat"><div class="adv-stat-n">${stats.analyses_30d||0}</div><div class="adv-stat-l">Analyses (30d)</div></div>
         <div class="adv-stat"><div class="adv-stat-n">${stats.active_clients_7d||0}</div><div class="adv-stat-l">Active (7d)</div></div>
       </div>
-      <div class="adv-section-title">Clients</div>
-      ${clients.length?clients.map(c=>{
+      ${dashClients.length?dashClients.map(c=>{
         const pct=Math.round((parseInt(c.total_analyses)||0)/maxA*100);
-        return`<div class="adv-client-card" onclick="advToggleTimeline('${c.id}',this)">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div class="adv-client-name">${c.name}</div>
-            <div style="display:flex;align-items:center;gap:8px">
+        const tok=tokMap[String(c.id)]||'';
+        const tokShort=tok?tok.substring(0,24)+'…':'—';
+        return`<div class="adv-client-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div class="adv-client-name">${c.name}</div>
+              <div class="adv-client-meta">${c.industry||'—'} · ${c.contact||'—'}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
               <span style="font-size:11px;color:var(--mu)">${c.total_analyses} ${parseInt(c.total_analyses)===1?'analysis':'analyses'}</span>
-              <button class="dbtn" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();deleteClient(${c.id},'${c.name}').then(()=>loadAdvisorDashboard())">Delete</button>
             </div>
           </div>
-          <div class="adv-client-meta">${c.industry||'—'} · Last active ${fmtDate(c.last_activity)}</div>
-          <div class="adv-client-bar"><div class="adv-bar-track"><div class="adv-bar-fill" style="width:${pct}%"></div></div><span style="font-size:10px;color:var(--mu)">${c.analyses_7d||0} this week</span></div>
-          <div class="adv-timeline" id="adv-tl-${c.id}"><div style="font-size:11px;color:var(--mu);padding:4px 0">Loading timeline…</div></div>
+          <div class="adv-client-bar" style="margin-top:8px"><div class="adv-bar-track"><div class="adv-bar-fill" style="width:${pct}%"></div></div><span style="font-size:10px;color:var(--mu)">${c.analyses_7d||0} this week · Last active ${fmtDate(c.last_activity)}</span></div>
+          ${tok?`<div class="tkcode" style="margin-top:8px;font-size:11px">${tokShort}</div>`:''}
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
+            ${tok?`<button class="obtn" onclick="copyTok('${tok}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail('${c.name}','${tok}')">Send by Email</button>`:''}
+            <button class="obtn" onclick="advToggleTimeline('${c.id}',this)">Activity</button>
+            <button class="dbtn" onclick="delData(${c.id},'${c.name}')">Delete Data</button>
+            <button class="dbtn" onclick="deleteClient(${c.id},'${c.name}').then(()=>loadAdvisorDashboard())">Delete Client</button>
+          </div>
+          <div class="adv-timeline" id="adv-tl-${c.id}" style="display:none"></div>
         </div>`;
-      }).join(''):'<div style="color:var(--mu);font-size:13px">No clients yet.</div>'}
-      <div class="adv-section-title">Recent Activity</div>
-      <div>${recent.length?recent.map(a=>`
+      }).join(''):'<div style="color:var(--mu);font-size:13px;padding:16px 0">No clients yet.</div>'}
+      ${recent.length?`<div class="adv-section-title" style="margin-top:24px">Recent Activity</div>
+      <div>${recent.map(a=>`
         <div class="adv-feed-item">
           <div class="adv-feed-client">${a.client_name}</div>
           <div class="adv-feed-mod">${a.module_label||a.module}</div>
           <div class="adv-feed-date">${fmtDateShort(a.created_at)}</div>
-        </div>`).join(''):'<div style="color:var(--mu);font-size:13px">No activity yet.</div>'}</div>`;
+        </div>`).join('')}</div>`:''}`;
   }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;}
 }
 
