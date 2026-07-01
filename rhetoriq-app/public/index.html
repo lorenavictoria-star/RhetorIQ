@@ -177,6 +177,16 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .ftag button{background:none;border:none;cursor:pointer;font-size:14px;color:var(--dm);line-height:1}
 
 /* RESULT */
+.tg-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+.tg-tile{border:1.5px solid var(--bd);border-radius:8px;padding:16px 14px;cursor:pointer;background:#fff;transition:border-color .15s,box-shadow .15s;text-align:center}
+.tg-tile:hover{border-color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.tg-tile-icon{font-size:22px;margin-bottom:6px}
+.tg-tile-label{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:3px}
+.tg-tile-sub{font-size:10px;color:var(--mu);line-height:1.4}
+.tg-back{background:none;border:none;font-size:12px;color:var(--dm);cursor:pointer;padding:0;margin-bottom:14px;font-weight:600;letter-spacing:.03em}
+.tg-back:hover{color:var(--tx)}
+.tg-save-ref{background:none;border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--mu);cursor:pointer;padding:4px 10px;margin-top:6px}
+.tg-save-ref:hover{border-color:var(--tx);color:var(--tx)}
 .rbox{display:none;margin-top:20px;border:1.5px solid var(--bd);border-radius:8px;overflow:hidden}
 .rbox.show{display:block}
 .rhead{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--sf);border-bottom:1px solid var(--bd)}
@@ -533,7 +543,7 @@ body.adv .vubtn{display:block}
         <div class="qa-card" onclick="goModule('text-gen')">
           <div class="qa-card-left">
             <div class="qa-tag" id="qa-tag3">Creation</div>
-            <div class="qa-name" id="qa-name3">Write</div>
+            <div class="qa-name" id="qa-name3">Text Generator</div>
             <div class="qa-desc" id="qa-desc3">Speeches, emails, statements — built for your voice</div>
           </div>
           <div class="qa-arr">&#8594;</div>
@@ -827,7 +837,7 @@ const T={
     router_ph:'e.g. “Check if this press release could backfire” or “Write a speech for our CEO” or “Crisis: supplier just announced bankruptcy”',
     qa_tag1:'Preparation',qa_name1:'Meeting Prep',qa_desc1:'Brief, agenda & people context — before any meeting',
     qa_tag2:'Emergency',qa_name2:'Crisis Response',qa_desc2:'Immediate framing for unexpected situations',
-    qa_tag3:'Creation',qa_name3:'Write',qa_desc3:'Speeches, emails, statements — built for your voice',
+    qa_tag3:'Creation',qa_name3:'Text Generator',qa_desc3:'LinkedIn, newsletter, email, speech — in your exact voice',
     cbar_lbl:'Client:',cbar_new:'+ New Client',
     hdr_signout:'Sign out',
     contact_title:'Contact',
@@ -843,7 +853,7 @@ const T={
     router_ph:'z.B. „Könnte diese Pressemitteilung nach hinten losgehen?“ oder „Rede für unsere CEO schreiben“ oder „Krise: Lieferant hat soeben Insolvenz angemeldet“',
     qa_tag1:'Vorbereitung',qa_name1:'Meeting-Vorbereitung',qa_desc1:'Brief, Agenda & Personenkontext — vor jedem Meeting',
     qa_tag2:'Notfall',qa_name2:'Krisenreaktion',qa_desc2:'Sofortige Einordnung unerwarteter Situationen',
-    qa_tag3:'Erstellung',qa_name3:'Schreiben',qa_desc3:'Reden, E-Mails, Statements — nach Ihrer Stimme',
+    qa_tag3:'Erstellung',qa_name3:'Text Generator',qa_desc3:'LinkedIn, Newsletter, E-Mail, Rede — in Ihrer eigenen Stimme',
     cbar_lbl:'Klient:',cbar_new:'+ Neuer Klient',
     hdr_signout:'Abmelden',
     contact_title:'Kontakt',
@@ -1371,35 +1381,87 @@ function buildForm(name,def,prefill,form){
 }
 
 function buildTextGen(prefill,form){
+  const tileData=[
+    {id:'linkedin',icon:'💼',label:'LinkedIn',sub:'Post · Article · Comment',fmtLabel:'LinkedIn Format',fmtOpts:['LinkedIn Post','LinkedIn Article','LinkedIn Comment / Reply']},
+    {id:'newsletter',icon:'📰',label:'Newsletter',sub:'Edition · Section · Teaser',fmtLabel:'Newsletter Format',fmtOpts:['Newsletter — Full Edition','Newsletter — Single Section','Newsletter — Teaser / Preview']},
+    {id:'email',icon:'✉️',label:'Email',sub:'External · Internal · Formal',fmtLabel:'Email Type',fmtOpts:['External — Client / Partner','External — Press / Media','Internal — Team Update','Internal — Leadership Memo','Formal — Investor Letter','Formal — Customer Letter']},
+    {id:'custom',icon:'✏️',label:'Eigenes Format',sub:'Speech · Press Release · Custom',fmtLabel:'Format',fmtOpts:['Speech / Keynote','Talking Points','Press Release','B2B Proposal','Website Copy','Internal Announcement','Town Hall Script','Other / Custom']},
+  ];
+  const tilesHtml=tileData.map(t=>`
+    <div class="tg-tile" id="tg-tile-${t.id}" onclick="tgOpenTile('${t.id}')">
+      <div class="tg-tile-icon">${t.icon}</div>
+      <div class="tg-tile-label">${t.label}</div>
+      <div class="tg-tile-sub">${t.sub}</div>
+    </div>`).join('');
+  const panelsHtml=tileData.map(t=>`
+    <div class="tg-panel" id="tg-panel-${t.id}" style="display:none">
+      <button class="tg-back" onclick="tgCloseTile('${t.id}')">← Back</button>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <span style="font-size:20px">${t.icon}</span>
+        <span style="font-size:15px;font-weight:700;color:var(--tx)">${t.label}</span>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:6px">Template / Reference (optional)</div>
+        <div class="upzone" onclick="document.getElementById('tg-rf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload template for ${t.label}</strong><br><span style="font-size:11px;color:var(--mu)">Your past examples — used to match your style exactly</span></div><input type="file" id="tg-rf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref-${t.id}','tg-rt-${t.id}')"></div>
+        <div class="ftags" id="tg-rt-${t.id}"></div>
+        <textarea id="tg-ref-${t.id}" placeholder="Paste existing ${t.label} examples here — separate with ---." style="margin-top:6px;min-height:70px;font-size:12px"></textarea>
+        <button class="tg-save-ref" onclick="saveTgRef('${t.id}')">Save as Reference</button>
+        <div id="tg-ref-status-${t.id}" style="font-size:11px;color:var(--dm);margin-top:4px"></div>
+      </div>
+      <div class="fg2"><label class="fl2">${t.fmtLabel}</label><select id="tg-fmt-${t.id}">${t.fmtOpts.map(o=>`<option>${o}</option>`).join('')}</select></div>
+      ${people.length?buildPeopleSelector():''}
+      <div class="upzone" onclick="document.getElementById('tg-tf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload source document</strong></div><input type="file" id="tg-tf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task-${t.id}','tg-tt-${t.id}')"></div>
+      <div class="ftags" id="tg-tt-${t.id}"></div>
+      <div class="fg2"><label class="fl2">Briefing / Content</label><textarea id="tg-task-${t.id}" placeholder="Describe what to create, or paste content to rewrite." style="min-height:100px"></textarea></div>
+      <div class="row2">
+        <div class="fg2"><label class="fl2">Audience</label><select id="tg-aud-${t.id}"><option>B2B — C-Suite</option><option>B2B — HR Leaders</option><option>B2B — Finance / Investors</option><option>B2B — General Business</option><option>B2C — General Consumer</option><option>Internal — All Employees</option><option>Internal — Leadership Team</option><option>Media / Journalists</option></select></div>
+        <div class="fg2"><label class="fl2">Tone</label><select id="tg-tone-${t.id}"><option>From Voice Profile</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European — understated</option></select></div>
+      </div>
+      <div class="row2">
+        <div class="fg2"><label class="fl2">Language</label><select id="tg-lang-${t.id}"><option>English</option><option>German</option><option>French</option><option>Italian</option></select></div>
+        <div class="fg2"><label class="fl2">Length (optional)</label><input type="text" id="tg-len-${t.id}" placeholder="e.g. 200 words"></div>
+      </div>
+      <button class="runbtn" onclick="runMod('text-gen','${t.id}')">Generate ${t.label}</button>
+      <div class="rbox" id="text-gen-r-${t.id}"><div class="rhead"><span class="rlbl">Generated Text</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b-${t.id}')">Copy</button></div></div><div class="rbody" id="text-gen-b-${t.id}"></div></div>
+    </div>`).join('');
   form.innerHTML=`
-  <div class="tabs"><button class="tab active" onclick="stab(this,'tg-cal','tg-gen')">1. Calibrate Voice (optional)</button><button class="tab" onclick="stab(this,'tg-gen','tg-cal')">2. Generate Text</button></div>
-  <div id="tg-cal">
-    <p style="font-size:13px;color:var(--mu);margin-bottom:14px">Paste reference texts to calibrate the voice. Or skip to step 2.</p>
-    <div class="upzone" onclick="document.getElementById('tg-rf').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload reference documents</strong></div><input type="file" id="tg-rf" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref','tg-rt')"></div>
-    <div class="ftags" id="tg-rt"></div>
-    <div class="fg2"><label class="fl2">Reference Texts</label><textarea id="tg-ref" placeholder="LinkedIn posts, website copy, speeches, emails &mdash; separate with ---."></textarea></div>
-    <button class="runbtn" onclick="runMod('vs-cal')">Calibrate Voice Profile</button>
-    <div class="rbox" id="vs-cal-r"><div class="rhead"><span class="rlbl">Voice Profile</span><div class="rbtns"><button class="cpbtn" onclick="cp('vs-cal-b')">Copy</button><button class="svbtn" onclick="saveToMemory('brand_voice','vs-cal-b')">Save to Memory</button></div></div><div class="rbody" id="vs-cal-b"></div></div>
-  </div>
-  <div id="tg-gen" style="display:none">
-    ${people.length?buildPeopleSelector():''}
-    <div class="upzone" onclick="document.getElementById('tg-tf').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Upload source document</strong></div><input type="file" id="tg-tf" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task','tg-tt')"></div>
-    <div class="ftags" id="tg-tt"></div>
-    <div class="fg2"><label class="fl2">Briefing / Content</label><textarea id="tg-task" placeholder="Describe what to create, or paste content to rewrite." style="min-height:110px"></textarea></div>
-    <div class="row2">
-      <div class="fg2"><label class="fl2">Format</label><select id="tg-fmt"><optgroup label="Social / Digital"><option>LinkedIn Post</option><option>LinkedIn Article</option><option>Newsletter</option></optgroup><optgroup label="Website"><option>Website Homepage (B2B)</option><option>Website Homepage (B2C)</option><option>Website &mdash; Full rewrite</option><option>Landing Page</option></optgroup><optgroup label="External"><option>Press Release</option><option>Investor Letter</option><option>Customer Letter</option><option>Crisis Statement</option><option>B2B Proposal</option></optgroup><optgroup label="Internal"><option>Internal Announcement</option><option>Internal Email</option><option>Town Hall Script</option><option>Leadership Memo</option></optgroup><optgroup label="Speaking"><option>Speech / Keynote</option><option>Talking Points</option><option>Interview Preparation</option></optgroup><optgroup label="HR"><option>Job Posting</option><option>Employer Branding Text</option></optgroup></select></div>
-      <div class="fg2"><label class="fl2">Audience</label><select id="tg-aud"><option>B2B &mdash; C-Suite</option><option>B2B &mdash; HR Leaders</option><option>B2B &mdash; Finance / Investors</option><option>B2B &mdash; General Business</option><option>B2C &mdash; General Consumer</option><option>Internal &mdash; All Employees</option><option>Internal &mdash; Leadership Team</option><option>Media / Journalists</option></select></div>
-    </div>
-    <div class="row2">
-      <div class="fg2"><label class="fl2">Tone</label><select id="tg-tone"><option>From Voice Profile (if calibrated)</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European &mdash; understated</option></select></div>
-      <div class="fg2"><label class="fl2">Language</label><select id="tg-lang"><option>English</option><option>German</option><option>French</option><option>Italian</option></select></div>
-    </div>
-    <div class="fg2"><label class="fl2">Length (optional)</label><input type="text" id="tg-len" placeholder="e.g. 200 words, 3 paragraphs"></div>
-    <button class="runbtn" onclick="runMod('text-gen')">Generate Text</button>
-    <div class="rbox" id="text-gen-r"><div class="rhead"><span class="rlbl">Generated Text</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b')">Copy</button></div></div><div class="rbody" id="text-gen-b"></div></div>
-  </div>`;
-  if(prefill){const ta=document.getElementById('tg-task');if(ta)ta.value=prefill;}
+    <div id="tg-tiles" class="tg-tiles">${tilesHtml}</div>
+    ${panelsHtml}`;
+  loadTgRefs();
+  if(prefill){tgOpenTile('custom');const ta=document.getElementById('tg-task-custom');if(ta)ta.value=prefill;}
 }
+
+function tgOpenTile(id){
+  document.getElementById('tg-tiles').style.display='none';
+  document.getElementById('tg-panel-'+id).style.display='block';
+  loadTgRef(id);
+}
+function tgCloseTile(id){
+  document.getElementById('tg-panel-'+id).style.display='none';
+  document.getElementById('tg-tiles').style.display='grid';
+}
+async function saveTgRef(id){
+  const val=document.getElementById('tg-ref-'+id)?.value?.trim();
+  if(!val)return;
+  const status=document.getElementById('tg-ref-status-'+id);
+  status.textContent='Saving…';
+  try{
+    await api('/api/memory',{method:'POST',body:JSON.stringify({clientId,type:'ref_tg_'+id,content:val})});
+    status.textContent='✓ Saved';
+  }catch(e){status.textContent='Error saving';}
+}
+async function loadTgRef(id){
+  try{
+    const r=await api('/api/memory?clientId='+encodeURIComponent(clientId)+'&type=ref_tg_'+id);
+    if(r&&r.content){
+      const ta=document.getElementById('tg-ref-'+id);
+      if(ta&&!ta.value)ta.value=r.content;
+      const st=document.getElementById('tg-ref-status-'+id);
+      if(st)st.textContent='✓ Reference loaded from memory';
+    }
+  }catch(e){}
+}
+function loadTgRefs(){['linkedin','newsletter','email','custom'].forEach(id=>loadTgRef(id));}
 
 function stab(btn,show,hide){btn.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById(show).style.display='block';document.getElementById(hide).style.display='none';}
 
@@ -1423,7 +1485,7 @@ async function runMod(name){
   if(name==='brand-voice-co'){module='brand-voice-co';rid='brand-voice-co-r';bid='brand-voice-co-b';const t=g('bv-co-in')||getRefContext('ref_brand_co');if(!t)return alert('Please enter text or save reference documents first.');data={text:t+context,company:g('bv-company'),industry:g('bv-industry'),values:g('bv-values'),audiences:g('bv-audiences')};}
   else if(name==='brand-voice-ind'){module='brand-voice-ind';rid='brand-voice-ind-r';bid='brand-voice-ind-b';const t=g('bv-ind-in')||getRefContext('ref_brand_ind');if(!t)return alert('Please enter text or save reference documents first.');data={text:t+context,person:g('bv-person'),role:g('bv-prole')};}
   else if(name==='vs-cal'){module='vs-cal';rid='vs-cal-r';bid='vs-cal-b';const t=g('tg-ref');if(!t)return alert('Please enter reference texts.');data={text:t};}
-  else if(name==='text-gen'){module='text-gen';rid='text-gen-r';bid='text-gen-b';const t=g('tg-task');if(!t)return alert('Please enter a briefing.');data={text:t,format:g('tg-fmt'),audience:g('tg-aud'),tone:g('tg-tone'),language:g('tg-lang'),length:g('tg-len'),voiceProfile:(voiceProf||'')+context};}
+  else if(name==='text-gen'){const fid=arguments[1]||'custom';module='text-gen';rid='text-gen-r-'+fid;bid='text-gen-b-'+fid;const t=g('tg-task-'+fid);if(!t)return alert('Please enter a briefing.');const ref=g('tg-ref-'+fid);data={text:t,format:g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:g('tg-tone-'+fid),language:g('tg-lang-'+fid),length:g('tg-len-'+fid),voiceProfile:(voiceProf||'')+context+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
   else if(name==='profiling'){module='rp';rid='profiling-r';bid='profiling-b';const t=g('rp-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('rp-name'),industry:g('rp-industry')};}
   else if(name==='fingerprint'){module='cf';rid='fingerprint-r';bid='fingerprint-b';const t=g('cf-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('cf-name'),focus:g('cf-focus')};}
   else if(name==='language'){module='la';rid='language-r';bid='language-b';const t=g('la-in');if(!t)return alert('Please enter text.');data={text:t+context,size:g('la-size'),focus:g('la-focus')};}
@@ -1519,21 +1581,21 @@ document.addEventListener('click',e=>{const m=document.getElementById('more-menu
 
 // MODULES LIST PAGE
 const ALL_MODULES=[
+  {key:'profiling',name:'How We Communicate',cat:'foundation',tag:'Foundation'},
+  {key:'brand-voice',name:'Brand Voice',cat:'foundation',tag:'Foundation — Master Reference'},
+  {key:'text-gen',name:'Text Generator',cat:'creation',tag:'Creation'},
+  {key:'review',name:'Write Feedback',cat:'creation',tag:'Creation — HR'},
+  {key:'recognition',name:'Write Appreciation',cat:'creation',tag:'Creation — HR'},
   {key:'pre-meeting',name:'Meeting Prep',cat:'prevention',tag:'Prevention',feat:true,isNew:true},
   {key:'arg-reaction',name:'Argument / Reaction Preview',cat:'prevention',tag:'Prevention',isNew:true},
   {key:'crisis',name:'Crisis Response',cat:'prevention',tag:'Prevention — Emergency',crisis:true},
   {key:'risk',name:'Risk Scan',cat:'prevention',tag:'Prevention'},
-  {key:'profiling',name:'How We Communicate',cat:'foundation',tag:'Foundation'},
-  {key:'fingerprint',name:'Language Over Time',cat:'growth',tag:'Growth'},
   {key:'actionability',name:'Clarity Check',cat:'efficiency',tag:'Efficiency'},
   {key:'thread',name:'Notes to Tasks',cat:'efficiency',tag:'Efficiency'},
   {key:'rh-translate',name:'Translate',cat:'efficiency',tag:'Efficiency',isNew:true},
-  {key:'text-gen',name:'Write',cat:'creation',tag:'Creation'},
-  {key:'review',name:'Write Feedback',cat:'creation',tag:'Creation — HR'},
-  {key:'recognition',name:'Write Appreciation',cat:'creation',tag:'Creation — HR'},
+  {key:'fingerprint',name:'Language Over Time',cat:'growth',tag:'Growth'},
   {key:'sparring',name:'2-Min. Training',cat:'growth',tag:'Growth',isNew:true},
   {key:'debrief',name:'Debrief',cat:'growth',tag:'Growth',isNew:true},
-  {key:'brand-voice',name:'Brand Voice',cat:'foundation',tag:'Foundation — Master Reference'},
 ];
 let modsCatFilter='all',modsSearch='';
 function renderModulesList(){
