@@ -1004,8 +1004,9 @@ const T={
     // LinkedIn & Klaviyo
     li_profile_lbl:'LinkedIn Profile / About (optional)',
     li_profile_ph:"Paste the About section and recent posts of the LinkedIn profile here — so the output matches the person's authentic voice.",
-    klv_apikey:'Klaviyo Private API Key',klv_subject:'Email Subject',
+    klv_apikey:'Klaviyo Private API Key',klv_connect:'Connect',klv_subject:'Email Subject',
     klv_subject_ph:'e.g. Our March Newsletter',klv_send:'Save as Draft in Klaviyo',
+    klv_tpl_lbl:'Use existing template as style reference',klv_tpl_none:'— choose template —',
     clients_export:'⬇ Excel'
   },
   de:{
@@ -1075,8 +1076,9 @@ const T={
     btn_cancel:'Abbrechen',btn_save:'Speichern',
     li_profile_lbl:'LinkedIn-Profil / About (optional)',
     li_profile_ph:'About-Bereich und aktuelle Posts des LinkedIn-Profils einfügen — damit der Output der authentischen Stimme der Person entspricht.',
-    klv_apikey:'Klaviyo Private API-Key',klv_subject:'E-Mail Betreff',
+    klv_apikey:'Klaviyo Private API-Key',klv_connect:'Verbinden',klv_subject:'E-Mail Betreff',
     klv_subject_ph:'z.B. Unser März-Newsletter',klv_send:'Als Entwurf in Klaviyo speichern',
+    klv_tpl_lbl:'Vorhandene Vorlage als Stil-Referenz verwenden',klv_tpl_none:'— Vorlage wählen —',
     clients_export:'⬇ Excel'
   }
 };
@@ -1737,17 +1739,34 @@ function buildTextGen(prefill,form){
         <div class="fg2"><label class="fl2">${tl.tg_length}</label><input type="text" id="tg-len-${t.id}" placeholder="${tl.tg_length_ph}"></div>
       </div>
       ${t.id==='linkedin'?`<div class="fg2" style="margin-top:4px"><label class="fl2">${tl.li_profile_lbl||'LinkedIn Profile / About (optional)'}</label><textarea id="tg-li-profile" placeholder="${tl.li_profile_ph||'Paste the About section and recent posts of the LinkedIn profile here — so the output matches the person\'s authentic voice.'}" style="min-height:80px;font-size:12px"></textarea></div>`:''}
-      ${t.id==='newsletter'?`<div class="klaviyo-box" id="klaviyo-box-${t.id}" style="display:none;margin-top:12px;padding:14px;border:1.5px solid #e0d4f5;border-radius:8px;background:#f9f6ff">
+      ${t.id==='newsletter'?`<div class="klaviyo-box" id="klaviyo-box-${t.id}" style="margin-bottom:14px;padding:14px;border:1.5px solid #e0d4f5;border-radius:8px;background:#f9f6ff">
         <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7c3aed;margin-bottom:10px">Klaviyo</div>
-        <div class="row2">
-          <div class="fg2"><label class="fl2">${tl.klv_apikey||'Private API Key'}</label><input type="password" id="klv-key-${t.id}" placeholder="pk_…"></div>
-          <div class="fg2"><label class="fl2">${tl.klv_subject||'Email Subject'}</label><input type="text" id="klv-subject-${t.id}" placeholder="${tl.klv_subject_ph||'e.g. Our March Newsletter'}"></div>
+        <div id="klv-connect-row-${t.id}">
+          <div class="fg2"><label class="fl2">${tl.klv_apikey||'Private API Key'}</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="password" id="klv-key-${t.id}" placeholder="pk_…" style="flex:1" oninput="klvOnKeyInput('${t.id}')">
+              <button id="klv-connect-btn-${t.id}" class="tg-save-ref" style="white-space:nowrap;background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="klvConnect('${t.id}')">${tl.klv_connect||'Connect'}</button>
+            </div>
+          </div>
+          <div id="klv-status-${t.id}" style="font-size:11px;color:var(--mu);margin-top:4px"></div>
         </div>
-        <button class="runbtn" style="margin-top:8px;background:#7c3aed;border-color:#7c3aed" onclick="sendToKlaviyo('${t.id}')">${tl.klv_send||'Save as Draft in Klaviyo'}</button>
-        <div id="klv-status-${t.id}" style="font-size:11px;color:var(--mu);margin-top:6px"></div>
+        <div id="klv-templates-row-${t.id}" style="display:none;margin-top:10px">
+          <div class="fg2"><label class="fl2">${tl.klv_tpl_lbl||'Use existing template as style reference'}</label>
+            <select id="klv-tpl-sel-${t.id}" onchange="klvUseTemplate('${t.id}')">
+              <option value="">${tl.klv_tpl_none||'— choose template —'}</option>
+            </select>
+          </div>
+          <div id="klv-tpl-preview-${t.id}" style="font-size:11px;color:var(--mu);margin-top:4px;max-height:60px;overflow:hidden"></div>
+        </div>
       </div>`:''}
       <button class="runbtn" onclick="runMod('text-gen','${t.id}')">${tl.tg_generate}</button>
-      <div class="rbox" id="text-gen-r-${t.id}"><div class="rhead"><span class="rlbl">${tl.tg_result}</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b-${t.id}')">${tl.btn_copy}</button>${t.id==='newsletter'?`<button class="exbtn" style="background:#f9f6ff;border-color:#e0d4f5;color:#7c3aed" onclick="document.getElementById('klaviyo-box-${t.id}').style.display='block'">Klaviyo</button>`:''}</div></div><div class="rbody" id="text-gen-b-${t.id}"></div></div>
+      <div class="rbox" id="text-gen-r-${t.id}"><div class="rhead"><span class="rlbl">${tl.tg_result}</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b-${t.id}')">${tl.btn_copy}</button>${t.id==='newsletter'?`<button class="exbtn" style="background:#f9f6ff;border-color:#e0d4f5;color:#7c3aed" onclick="klvSavePrompt('${t.id}')">→ Klaviyo</button>`:''}</div></div><div class="rbody" id="text-gen-b-${t.id}"></div>
+        ${t.id==='newsletter'?`<div id="klv-save-area-${t.id}" style="display:none;padding:10px;border-top:1px solid #e0d4f5">
+          <div class="fg2"><label class="fl2">${tl.klv_subject||'Email Subject'}</label><input type="text" id="klv-subject-${t.id}" placeholder="${tl.klv_subject_ph||'e.g. Our March Newsletter'}"></div>
+          <button class="runbtn" style="margin-top:8px;background:#7c3aed;border-color:#7c3aed" onclick="sendToKlaviyo('${t.id}')">${tl.klv_send||'Save as Draft in Klaviyo'}</button>
+          <div id="klv-save-status-${t.id}" style="font-size:11px;color:var(--mu);margin-top:6px"></div>
+        </div>`:''}
+      </div>
       ${subSection(t)}
     </div>`).join('');
 
@@ -1763,6 +1782,7 @@ function tgOpenTile(id){
   document.getElementById('tg-tiles').style.display='none';
   document.getElementById('tg-panel-'+id).style.display='block';
   loadTgRef(id);
+  if(id==='newsletter')klvAutoLoad('newsletter');
 }
 function tgCloseTile(id){
   document.getElementById('tg-panel-'+id).style.display='none';
@@ -2016,21 +2036,91 @@ async function sendToAdvisor(bodyId,moduleLabel,btn){
 }
 
 // ── KLAVIYO ───────────────────────────────────────────────────
+function klvOnKeyInput(fid){
+  // clear connected state when key is changed
+  document.getElementById('klv-templates-row-'+fid).style.display='none';
+  document.getElementById('klv-status-'+fid).textContent='';
+}
+
+async function klvConnect(fid){
+  const keyEl=document.getElementById('klv-key-'+fid);
+  const apiKey=keyEl?.value?.trim();
+  const status=document.getElementById('klv-status-'+fid);
+  const btn=document.getElementById('klv-connect-btn-'+fid);
+  if(!apiKey){status.textContent='Please enter your Klaviyo Private API Key.';return;}
+  btn.disabled=true;btn.textContent='Connecting…';status.textContent='';
+  try{
+    const r=await api('/api/klaviyo/templates?apiKey='+encodeURIComponent(apiKey));
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Klaviyo error');
+    localStorage.setItem('klv_key_'+fid,apiKey);
+    klvPopulateTemplates(fid,d.templates);
+    status.style.color='#7c3aed';
+    status.textContent=`✓ Connected — ${d.templates.length} template${d.templates.length!==1?'s':''} loaded.`;
+    btn.textContent='Reconnect';
+  }catch(e){
+    status.style.color='var(--red)';status.textContent='Error: '+e.message;
+    btn.textContent='Connect';
+  }finally{btn.disabled=false;}
+}
+
+function klvPopulateTemplates(fid,templates){
+  const sel=document.getElementById('klv-tpl-sel-'+fid);
+  const row=document.getElementById('klv-templates-row-'+fid);
+  if(!sel||!row)return;
+  // store for preview use
+  sel._tplData=templates;
+  const tl=T[LANG]||T.en;
+  sel.innerHTML=`<option value="">${tl.klv_tpl_none||'— choose template —'}</option>`+
+    templates.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  row.style.display=templates.length?'block':'none';
+}
+
+function klvUseTemplate(fid){
+  const sel=document.getElementById('klv-tpl-sel-'+fid);
+  const preview=document.getElementById('klv-tpl-preview-'+fid);
+  const refArea=document.getElementById('tg-ref-'+fid);
+  if(!sel)return;
+  const id=sel.value;
+  if(!id){if(preview)preview.textContent='';return;}
+  const tpl=(sel._tplData||[]).find(t=>t.id===id);
+  if(!tpl)return;
+  // strip HTML tags for the style reference text
+  const stripped=(tpl.html||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,2000);
+  if(refArea){
+    refArea.value=stripped;
+    if(preview)preview.textContent='✓ Template text injected as style reference above.';
+    if(preview)preview.style.color='#7c3aed';
+  }
+}
+
+function klvSavePrompt(fid){
+  const area=document.getElementById('klv-save-area-'+fid);
+  if(area)area.style.display=area.style.display==='none'?'block':'none';
+}
+
 async function sendToKlaviyo(fid){
-  const apiKey=document.getElementById('klv-key-'+fid)?.value?.trim();
+  const apiKey=localStorage.getItem('klv_key_'+fid)||document.getElementById('klv-key-'+fid)?.value?.trim();
   const subject=document.getElementById('klv-subject-'+fid)?.value?.trim();
   const content=document.getElementById('text-gen-b-'+fid)?.textContent?.trim();
-  const status=document.getElementById('klv-status-'+fid);
-  if(!apiKey){status.textContent='Please enter your Klaviyo API key.';return;}
-  if(!content){status.textContent='Please generate a newsletter first.';return;}
-  status.textContent='Sending to Klaviyo…';
+  const status=document.getElementById('klv-save-status-'+fid);
+  if(!apiKey){if(status)status.textContent='Please connect your Klaviyo account first.';return;}
+  if(!content){if(status)status.textContent='Please generate a newsletter first.';return;}
+  if(status)status.textContent='Sending to Klaviyo…';
   try{
     const r=await api('/api/klaviyo/draft',{method:'POST',body:JSON.stringify({apiKey,subject,content})});
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||'Klaviyo error');
-    status.style.color='#7c3aed';
-    status.textContent=`✓ Template "${d.templateName}" created in Klaviyo — open your Klaviyo dashboard to use it.`;
-  }catch(e){status.style.color='var(--red)';status.textContent='Error: '+e.message;}
+    if(status){status.style.color='#7c3aed';status.textContent=`✓ Template "${d.templateName}" created in Klaviyo — open your Klaviyo dashboard to use it.`;}
+  }catch(e){if(status){status.style.color='var(--red)';status.textContent='Error: '+e.message;}}
+}
+
+function klvAutoLoad(fid){
+  const saved=localStorage.getItem('klv_key_'+fid);
+  if(!saved)return;
+  const keyEl=document.getElementById('klv-key-'+fid);
+  if(keyEl&&!keyEl.value)keyEl.value=saved;
+  klvConnect(fid);
 }
 
 // ── EXPORT CLIENTS CSV ────────────────────────────────────────
