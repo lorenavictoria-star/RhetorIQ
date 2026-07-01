@@ -1439,10 +1439,17 @@ async function switchClient(id){
   if(hw)hw.style.display=clientId?'block':'none';
 }
 function copyTok(t){navigator.clipboard.writeText(t).catch(()=>{});alert('Token copied!');}
-function sendTokenByEmail(name,token){
-  const subject=encodeURIComponent('Your RhetorIQ Access');
-  const body=encodeURIComponent(`Dear ${name},\n\nYou have been granted access to RhetorIQ — your personal communication coaching platform.\n\nHow to log in:\n1. Go to https://rhetoriq.ch\n2. Click "Client? Enter your access token"\n3. Enter your personal access token below:\n\n${token}\n\nThis token is personal and confidential. Please do not share it.\n\nBest regards,\nLorena Lienhard\nRhetoric & Executive Communication Coaching\ncontact@lorenalienhard.ch`);
-  window.location.href=`mailto:?subject=${subject}&body=${body}`;
+async function sendTokenByEmail(name,token,clientId){
+  const storedClient=clients.find(c=>c.id==clientId);
+  const storedEmail=storedClient&&storedClient.email?storedClient.email:'';
+  const email=prompt('Send token to email address:',storedEmail);
+  if(!email)return;
+  try{
+    const r=await api('/api/clients/'+clientId+'/send-token',{method:'POST',body:JSON.stringify({email})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Error');
+    alert('Token sent to '+email);
+  }catch(e){alert('Error: '+e.message);}
 }
 async function deleteClient(cid,name){
   if(!confirm('Delete client "'+name+'" and ALL their data?\n\nThis cannot be undone.'))return;
@@ -2410,7 +2417,7 @@ async function loadAdvisorDashboard(){
           <div class="adv-client-bar" style="margin-top:8px"><div class="adv-bar-track"><div class="adv-bar-fill" style="width:${pct}%"></div></div><span style="font-size:10px;color:var(--mu)">${c.analyses_7d||0} this week · Last active ${fmtDate(c.last_activity)}</span></div>
           ${tok?`<div class="tkcode" style="margin-top:8px;font-size:11px">${tokShort}</div>`:''}
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
-            ${tok?`<button class="obtn" onclick="copyTok('${tok}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail('${c.name}','${tok}')">Send by Email</button>`:''}
+            ${tok?`<button class="obtn" onclick="copyTok('${tok}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail('${c.name}','${tok}','${c.id}')">Send by Email</button>`:''}
             <button class="obtn" onclick="advToggleTimeline('${c.id}',this)">Activity</button>
             <button class="dbtn" onclick="delData(${c.id},'${c.name}')">Delete Data</button>
             <button class="dbtn" onclick="deleteClient(${c.id},'${c.name}').then(()=>loadAdvisorDashboard())">Delete Client</button>

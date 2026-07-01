@@ -153,6 +153,36 @@ router.get('/export', requireAdvisor, async (req, res) => {
   }
 });
 
+// POST /api/clients/:id/send-token — send token email to a given address
+router.post('/:id/send-token', requireAdvisor, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM clients WHERE id = $1 AND advisor_id = $2',
+      [req.params.id, req.user.id]
+    );
+    const client = rows[0];
+    if (!client) return res.status(404).json({ error: 'Client not found' });
+
+    const to = req.body.email || client.email;
+    if (!to) return res.status(400).json({ error: 'No email address available' });
+
+    const transporter = makeTransporter();
+    if (!transporter) return res.status(500).json({ error: 'SMTP not configured' });
+
+    await transporter.sendMail({
+      from: '"Lorena Lienhard" <contact@lorenalienhard.ch>',
+      to,
+      subject: `RhetorIQ – Ihr persönlicher Zugangscode / Your personal access token`,
+      text: `Access Token für ${client.name} / Access token for ${client.name}:\n\n${client.token}\n\nPlattform / Platform: https://rhetoriq.ch\n\n--\nLorena Lienhard\ncontact@lorenalienhard.ch`
+    });
+
+    res.json({ ok: true, sentTo: to });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // DELETE /api/clients/:id
 router.delete('/:id', requireAdvisor, async (req, res) => {
   try {
