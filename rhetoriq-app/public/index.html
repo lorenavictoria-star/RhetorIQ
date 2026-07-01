@@ -2713,7 +2713,7 @@ function toggleVoice(){
   if(!('SpeechRecognition' in window||'webkitSpeechRecognition' in window)){alert('Voice input is not supported in this browser. Please use Chrome.');return;}
   if(voiceRec){voiceRec.stop();voiceRec=null;btn.classList.remove('recording');return;}
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  voiceRec=new SR();voiceRec.lang='en-US';voiceRec.continuous=false;voiceRec.interimResults=false;
+  voiceRec=new SR();voiceRec.lang=LANG==='de'?'de-CH':'en-US';voiceRec.continuous=false;voiceRec.interimResults=false;
   voiceRec.onresult=e=>{const t=e.results[0][0].transcript;const inp=document.getElementById('router-input');inp.value=(inp.value?inp.value+' ':'')+t;};
   voiceRec.onend=()=>{voiceRec=null;btn.classList.remove('recording');};
   voiceRec.onerror=()=>{voiceRec=null;btn.classList.remove('recording');};
