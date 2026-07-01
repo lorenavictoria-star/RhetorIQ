@@ -137,6 +137,7 @@ body.adv .cbar{display:flex}
 .stat.ao{display:none}
 body.adv .stat.ao{display:block}
 body.adv #mm-advisor{display:block!important}
+body.adv #mm-clients{display:block!important}
 
 /* MODULE PAGE */
 .back{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--mu);cursor:pointer;margin-bottom:24px;background:none;border:none;font-family:'Inter',sans-serif;padding:0}
@@ -2231,9 +2232,12 @@ async function loadAdvisorDashboard(){
       ${clients.length?clients.map(c=>{
         const pct=Math.round((parseInt(c.total_analyses)||0)/maxA*100);
         return`<div class="adv-client-card" onclick="advToggleTimeline('${c.id}',this)">
-          <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <div style="display:flex;justify-content:space-between;align-items:center">
             <div class="adv-client-name">${c.name}</div>
-            <div style="font-size:11px;color:var(--mu)">${c.total_analyses} ${parseInt(c.total_analyses)===1?'analysis':'analyses'}</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:11px;color:var(--mu)">${c.total_analyses} ${parseInt(c.total_analyses)===1?'analysis':'analyses'}</span>
+              <button class="dbtn" style="font-size:10px;padding:2px 8px" onclick="event.stopPropagation();deleteClient(${c.id},'${c.name}').then(()=>loadAdvisorDashboard())">Delete</button>
+            </div>
           </div>
           <div class="adv-client-meta">${c.industry||'—'} · Last active ${fmtDate(c.last_activity)}</div>
           <div class="adv-client-bar"><div class="adv-bar-track"><div class="adv-bar-fill" style="width:${pct}%"></div></div><span style="font-size:10px;color:var(--mu)">${c.analyses_7d||0} this week</span></div>
