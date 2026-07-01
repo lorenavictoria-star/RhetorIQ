@@ -182,10 +182,12 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .rhead{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--sf);border-bottom:1px solid var(--bd)}
 .rlbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
 .rbtns{display:flex;gap:6px}
-.cpbtn,.svbtn{padding:5px 12px;background:#fff;border:1.5px solid var(--bd);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:4px;color:var(--tx)}
-.cpbtn:hover,.svbtn:hover{border-color:var(--tx)}
+.cpbtn,.svbtn,.exbtn{padding:5px 12px;background:#fff;border:1.5px solid var(--bd);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:4px;color:var(--tx)}
+.cpbtn:hover,.svbtn:hover,.exbtn:hover{border-color:var(--tx)}
 .svbtn{background:var(--tx);color:#fff;border-color:var(--tx)}
 .svbtn:hover{background:#333}
+.exbtn{color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff}
+.exbtn:hover{background:#dceeff;border-color:#1a5a9a}
 .rbody{padding:20px;font-size:14px;line-height:1.85;white-space:pre-wrap;color:var(--tx)}
 .spin{display:flex;gap:5px;padding:20px;align-items:center}
 .dot{width:5px;height:5px;border-radius:50%;background:var(--tx);animation:blink 1.2s infinite}
@@ -873,6 +875,59 @@ function toggleLang(){
   applyLang();
 }
 applyLang();
+
+// ── WORD EXPORT ───────────────────────────────────────────────
+function exportDoc(bodyId, title){
+  const el=document.getElementById(bodyId);
+  if(!el||!el.textContent.trim())return;
+  const content=el.textContent.trim();
+  const date=new Date().toLocaleDateString('de-CH');
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8"><title>${title}</title>
+<style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#111;margin:2cm}
+h1{font-size:16pt;font-weight:600;margin-bottom:6pt;color:#111}
+p.meta{font-size:9pt;color:#888;margin-bottom:24pt}
+pre{font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:pre-wrap;line-height:1.7}</style></head>
+<body><h1>${title}</h1><p class="meta">RhetorIQ &mdash; ${date}</p><pre>${content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></body></html>`;
+  const blob=new Blob(['﻿'+html],{type:'application/msword'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=(title||'RhetorIQ').replace(/[^a-z0-9äöüÄÖÜ\s]/gi,'_').trim()+'.doc';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},100);
+}
+
+// Auto-inject Word button into every result box when it becomes visible
+(function(){
+  const addExportBtn=(rbox)=>{
+    if(rbox.querySelector('.exbtn'))return;
+    const btns=rbox.querySelector('.rbtns');
+    const lbl=rbox.querySelector('.rlbl');
+    const body=rbox.querySelector('.rbody');
+    if(!btns||!body)return;
+    const title=lbl?lbl.textContent.trim():'Result';
+    const id=body.id;
+    const btn=document.createElement('button');
+    btn.className='exbtn';btn.textContent='Word';
+    btn.onclick=()=>exportDoc(id,title);
+    btns.insertBefore(btn,btns.firstChild);
+  };
+  const observer=new MutationObserver(mutations=>{
+    mutations.forEach(m=>{
+      if(m.type==='attributes'&&m.attributeName==='class'){
+        const el=m.target;
+        if(el.classList.contains('rbox')&&el.classList.contains('show'))addExportBtn(el);
+      }
+      m.addedNodes.forEach(n=>{
+        if(n.nodeType===1){
+          if(n.classList?.contains('rbox'))addExportBtn(n);
+          n.querySelectorAll?.('.rbox').forEach(addExportBtn);
+        }
+      });
+    });
+  });
+  observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+})();
 
 function sf(s,h){document.getElementById(s).style.display='block';document.getElementById(h).style.display='none';}
 function api(path,o={}){return fetch(API+path,{...o,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(o.headers||{})}});}
