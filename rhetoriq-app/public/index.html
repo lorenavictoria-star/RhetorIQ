@@ -873,6 +873,12 @@ body.adv .vubtn{display:block}
 
     <!-- MODULES LIST -->
     <div class="page" id="page-modules">
+      <div style="margin-bottom:14px">
+        <button onclick="openOnboarding()" style="width:100%;padding:14px 16px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">&#8679;</span>
+          <div><div>New Client Onboarding</div><div style="font-size:11px;font-weight:400;opacity:.85">Upload all documents at once — AI sorts and saves them to the right place</div></div>
+        </button>
+      </div>
       <div class="mod-search-wrap">
         <input class="mod-search-inp" id="mod-search" placeholder="Search modules…" oninput="filterModsList(this.value)">
       </div>
@@ -1002,6 +1008,46 @@ body.adv .vubtn{display:block}
     </div>
   </div>
   <div class="cft"><input class="cinp" id="chat-input" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')sendChat()"><button class="csnd" id="chat-send-btn" onclick="sendChat()">Send</button></div>
+</div>
+
+<!-- Client Onboarding Modal -->
+<div id="onboarding-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto">
+  <div style="background:var(--bg);border-radius:12px;max-width:680px;width:100%;padding:28px 24px;box-shadow:0 8px 40px rgba(0,0,0,.2);margin:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="font-size:16px;font-weight:700">New Client Onboarding</div>
+      <button onclick="closeOnboarding()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mu);line-height:1">&times;</button>
+    </div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:18px">Upload all documents for this client — emails, speeches, reports, Brand Voice, PDFs, Word files, audio or video. The AI reads each one and saves it to the right place automatically.</div>
+
+    <div id="ob-drop-zone" ondragover="event.preventDefault();this.style.borderColor='var(--acc)';this.style.background='#f5f0ff'" ondragleave="this.style.borderColor='var(--bd)';this.style.background=''" ondrop="obHandleDrop(event)" onclick="document.getElementById('ob-file-input').click()" style="border:2px dashed var(--bd);border-radius:8px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:12px">
+      <div style="font-size:28px;margin-bottom:8px">&#8679;</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">Drop files here or click to choose</div>
+      <div style="font-size:12px;color:var(--mu)">PDF · Word · TXT · MP3 · MP4 · WAV · MOV · and more — up to 30 files at once</div>
+    </div>
+    <input type="file" id="ob-file-input" multiple accept=".txt,.pdf,.docx,.doc,.mp3,.mp4,.wav,.m4a,.ogg,.webm,.mov,.avi,.aac,.flac" style="display:none" onchange="obHandleFiles(this.files)">
+
+    <div id="ob-file-list" style="display:none;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:var(--mu);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Files selected</div>
+      <div id="ob-file-items" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+
+    <div id="ob-results" style="display:none;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:var(--mu);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Results</div>
+      <div id="ob-result-items" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+
+    <div id="ob-brand-voice-note" style="display:none;background:#f5f0ff;border:1px solid #e0d4f5;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px">
+      <strong>&#9670; Brand Voice source texts collected.</strong><br>
+      <span style="color:var(--mu)">Go to the Brand Voice module and click "Extract Brand Voice" — the source texts are ready.</span>
+    </div>
+
+    <div id="ob-status" style="font-size:12px;color:var(--mu);min-height:16px;margin-bottom:10px"></div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="obtn" onclick="closeOnboarding()">Close</button>
+      <button id="ob-run-btn" class="bv-btn bv-btn-primary" onclick="runOnboarding()" style="display:none">Analyse & Save All</button>
+    </div>
+  </div>
 </div>
 
 <!-- Contact request overlay (triggered by pricing/demo chat intent) -->
@@ -2184,6 +2230,119 @@ function hideSubNotif(id){
 function stab(btn,show,hide){btn.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById(show).style.display='block';document.getElementById(hide).style.display='none';}
 
 function g(id){const el=document.getElementById(id);return el?el.value:'';}
+
+// ── ONBOARDING ────────────────────────────────────────────────
+let _obFiles=[];
+function openOnboarding(){
+  if(!clientId)return alert('Please select a client first.');
+  _obFiles=[];
+  document.getElementById('ob-file-input').value='';
+  document.getElementById('ob-file-list').style.display='none';
+  document.getElementById('ob-file-items').innerHTML='';
+  document.getElementById('ob-results').style.display='none';
+  document.getElementById('ob-result-items').innerHTML='';
+  document.getElementById('ob-brand-voice-note').style.display='none';
+  document.getElementById('ob-status').textContent='';
+  document.getElementById('ob-run-btn').style.display='none';
+  document.getElementById('ob-drop-zone').style.display='block';
+  document.getElementById('onboarding-ov').style.display='flex';
+}
+function closeOnboarding(){document.getElementById('onboarding-ov').style.display='none';}
+function obHandleDrop(e){
+  e.preventDefault();
+  document.getElementById('ob-drop-zone').style.borderColor='var(--bd)';
+  document.getElementById('ob-drop-zone').style.background='';
+  obHandleFiles(e.dataTransfer.files);
+}
+function obHandleFiles(files){
+  _obFiles=[..._obFiles,...Array.from(files)];
+  renderObFileList();
+}
+function obRemoveFile(i){_obFiles.splice(i,1);renderObFileList();}
+function renderObFileList(){
+  const list=document.getElementById('ob-file-list');
+  const items=document.getElementById('ob-file-items');
+  if(!_obFiles.length){list.style.display='none';document.getElementById('ob-run-btn').style.display='none';return;}
+  list.style.display='block';
+  document.getElementById('ob-run-btn').style.display='inline-block';
+  items.innerHTML=_obFiles.map((f,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--panel);border-radius:6px;font-size:13px"><span>&#128196; ${f.name} <span style="color:var(--mu);font-size:11px">(${(f.size/1024).toFixed(0)} KB)</span></span><button onclick="obRemoveFile(${i})" style="background:none;border:none;cursor:pointer;color:var(--mu);font-size:15px">&times;</button></div>`).join('');
+}
+const OB_CAT_LABELS={
+  brand_voice_source:'&#9670; Brand Voice source',
+  brand_voice_analysis:'&#9670; Brand Voice (existing analysis)',
+  ref_speech:'&#128196; Reference → Speech',
+  ref_linkedin:'&#128196; Reference → LinkedIn',
+  ref_email:'&#128196; Reference → Email',
+  ref_newsletter:'&#128196; Reference → Newsletter',
+  ref_press:'&#128196; Reference → Press Release',
+  ref_website:'&#128196; Reference → Website',
+  key_facts:'&#128203; Memory → Key Facts',
+  people_voice:'&#9711; Voice DNA source',
+  skip:'&#8212; Not used'
+};
+async function runOnboarding(){
+  if(!_obFiles.length)return;
+  const status=document.getElementById('ob-status');
+  const runBtn=document.getElementById('ob-run-btn');
+  runBtn.disabled=true;runBtn.textContent='Processing…';
+  document.getElementById('ob-results').style.display='none';
+  document.getElementById('ob-brand-voice-note').style.display='none';
+  status.textContent='Extracting text from files…';
+
+  // Extract text client-side for PDF/DOCX/TXT, then send all as text to backend
+  const AUDIO_VIDEO=/\.(mp3|mp4|wav|m4a|ogg|webm|mov|avi|aac|flac)$/i;
+  const fd=new FormData();
+  fd.append('clientId',clientId);
+
+  for(const file of _obFiles){
+    if(AUDIO_VIDEO.test(file.name)){
+      // Send raw audio/video — backend can't transcribe without AssemblyAI but we include it
+      fd.append('files',file,file.name);
+    } else {
+      try{
+        const text=await extractText(file);
+        const blob=new Blob([text],{type:'text/plain'});
+        fd.append('files',blob,file.name+'.txt');
+      }catch{
+        fd.append('files',file,file.name);
+      }
+    }
+  }
+
+  status.textContent='AI is analysing and sorting your documents…';
+  try{
+    const r=await fetch('/api/onboard',{method:'POST',headers:{Authorization:'Bearer '+localStorage.getItem('token')},body:fd});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.error);
+
+    const resEl=document.getElementById('ob-result-items');
+    resEl.innerHTML=data.results.map(res=>{
+      const catLabel=OB_CAT_LABELS[res.category]||res.category||'—';
+      const color=res.status==='error'?'#dc2626':res.status==='skipped'?'var(--mu)':'#16a34a';
+      return `<div style="padding:10px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div style="font-size:13px;font-weight:600">${res.filename}</div>
+          <div style="font-size:11px;color:${color};white-space:nowrap;font-weight:600">${res.status==='done'?'&#10003; Saved':res.status==='skipped'?'Skipped':'Error'}</div>
+        </div>
+        <div style="font-size:12px;color:var(--mu);margin-top:3px">${catLabel}</div>
+        ${res.summary?`<div style="font-size:12px;color:var(--tx);margin-top:4px;font-style:italic">${res.summary}</div>`:''}
+        ${res.saved?`<div style="font-size:11px;color:#16a34a;margin-top:4px">→ ${res.saved}</div>`:''}
+        ${res.status==='error'?`<div style="font-size:11px;color:#dc2626;margin-top:4px">${res.summary}</div>`:''}
+      </div>`;
+    }).join('');
+
+    document.getElementById('ob-results').style.display='block';
+    document.getElementById('ob-file-list').style.display='none';
+    document.getElementById('ob-drop-zone').style.display='none';
+    runBtn.style.display='none';
+    if(data.brandVoiceSourceCount>0)document.getElementById('ob-brand-voice-note').style.display='block';
+    status.textContent=`Done — ${data.results.filter(r=>r.status==='done').length} of ${data.results.length} files saved.`;
+    loadMemory();
+  }catch(e){
+    status.textContent='Error: '+e.message;
+    runBtn.disabled=false;runBtn.textContent='Analyse & Save All';
+  }
+}
 
 let _pvState={};
 function openPersonVoiceGenerate(pid,name,role){
