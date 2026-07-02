@@ -1929,7 +1929,8 @@ function buildTextGen(prefill,form){
     {id:'email',abbr:'EM',label:'Email',sub:'External · Internal · Formal',fmtLabel:'Email Type',fmtOpts:['External — Client / Partner','External — Press / Media','Internal — Team Update','Internal — Leadership Memo','Formal — Investor Letter','Formal — Customer Letter'],hasSubscription:false},
     {id:'speech',abbr:'SP',label:'Speech',sub:'Keynote · Opening · Town Hall',fmtLabel:'Speech Format',fmtOpts:['Keynote / Conference Speech','Opening Remarks','Town Hall Address','Award Ceremony Speech','Closing Statement','Other Speech'],hasSubscription:false},
     {id:'press',abbr:'PR',label:'Press Release',sub:'Launch · Crisis · Strategy',fmtLabel:'Press Release Type',fmtOpts:['Product / Service Launch','Strategy Announcement','Leadership / Personnel Change','Partnership / Acquisition','Crisis / Correction','Financial Results'],hasSubscription:false},
-    {id:'custom',abbr:'EF',label:'Custom',sub:'Proposal · Website · Other',fmtLabel:'Format',fmtOpts:['Talking Points','B2B Proposal','Website Copy','Internal Announcement','Other / Custom'],hasSubscription:false},
+    {id:'website',abbr:'WB',label:'Website',sub:'Homepage · About · Landing Page',fmtLabel:'Page Type',fmtOpts:['Homepage Hero','About Us / Team','Service / Product Page','Landing Page','FAQ','Other'],hasSubscription:false},
+    {id:'custom',abbr:'EF',label:'Custom',sub:'Proposal · Announcement · Other',fmtLabel:'Format',fmtOpts:['Talking Points','B2B Proposal','Internal Announcement','Other / Custom'],hasSubscription:false},
   ];
   const tilesHtml=tileData.map(t=>`
     <div class="tg-tile" id="tg-tile-${t.id}" onclick="tgOpenTile('${t.id}')">
@@ -2080,7 +2081,7 @@ async function loadTgRef(id){
     }
   }catch(e){}
 }
-function loadTgRefs(){['linkedin','newsletter','email','custom'].forEach(id=>loadTgRef(id));}
+function loadTgRefs(){['linkedin','newsletter','email','speech','press','website','custom'].forEach(id=>loadTgRef(id));}
 async function saveTgSubscription(id,forceDisabled){
   const enabled=forceDisabled===false?false:(document.getElementById('tg-sub-enabled-'+id)?.checked||false);
   const freq=document.getElementById('tg-sub-freq-'+id)?.value||'weekly';
