@@ -791,11 +791,10 @@ body.adv .vubtn{display:block}
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
           <button class="bv-btn" onclick="openImportMemory('brand_voice','brand-voice-co-b','brand-voice-co-r')">Import to Memory</button>
-          <button class="bv-btn" onclick="loadFromMemory('brand_voice','brand-voice-co-b','brand-voice-co-r')">Load from Memory</button>
           <button class="bv-btn bv-btn-primary" onclick="runMod('brand-voice-co')">Extract Brand Voice</button>
         </div>
         <div class="rbox" id="brand-voice-co-r">
-          <div class="rhead"><span class="rlbl">Brand Voice &mdash; Company</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-co-b')">Copy</button><button class="obtn" onclick="loadFromMemory('brand_voice','brand-voice-co-b','brand-voice-co-r')">Load from Memory</button></div></div>
+          <div class="rhead"><span class="rlbl">Brand Voice &mdash; Company</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-co-b')">Copy</button></div></div>
           <div class="rbody" id="brand-voice-co-b"></div>
         </div>
       </div>
@@ -813,11 +812,10 @@ body.adv .vubtn{display:block}
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
           <button class="bv-btn" onclick="openImportMemory('brand_voice','brand-voice-ind-b','brand-voice-ind-r')">Import to Memory</button>
-          <button class="bv-btn" onclick="loadFromMemory('brand_voice','brand-voice-ind-b','brand-voice-ind-r')">Load from Memory</button>
           <button class="bv-btn bv-btn-primary" onclick="runMod('brand-voice-ind')">Extract Brand Voice</button>
         </div>
         <div class="rbox" id="brand-voice-ind-r">
-          <div class="rhead"><span class="rlbl">Brand Voice &mdash; Individual</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-ind-b')">Copy</button><button class="obtn" onclick="loadFromMemory('brand_voice','brand-voice-ind-b','brand-voice-ind-r')">Load from Memory</button></div></div>
+          <div class="rhead"><span class="rlbl">Brand Voice &mdash; Individual</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-ind-b')">Copy</button></div></div>
           <div class="rbody" id="brand-voice-ind-b"></div>
         </div>
       </div>
@@ -1644,6 +1642,14 @@ async function submitImportMemory(){
     alert('Brand Voice saved to memory.');
   }catch{alert('Error saving.');}
 }
+function autoLoadBrandVoice(){
+  const item=memory.find(m=>m.memory_type==='brand_voice');
+  if(!item)return;
+  const coEl=document.getElementById('brand-voice-co-b');
+  const indEl=document.getElementById('brand-voice-ind-b');
+  if(coEl&&!coEl.textContent.trim()){coEl.textContent=item.content;document.getElementById('brand-voice-co-r').classList.add('show');}
+  if(indEl&&!indEl.textContent.trim()){indEl.textContent=item.content;document.getElementById('brand-voice-ind-r').classList.add('show');}
+}
 function loadFromMemory(type,targetId,boxId){
   if(!clientId)return alert('Please select a client first.');
   const item=memory.find(m=>m.memory_type===type);
@@ -1698,7 +1704,7 @@ function goPage(name){
   document.querySelector('.content').scrollTop=0;
   if(name==='people')loadPeople();
   if(name==='memory')renderMemory();
-  if(name==='brand-voice')loadBrandVoiceRefs();
+  if(name==='brand-voice'){loadBrandVoiceRefs();autoLoadBrandVoice();}
   if(name==='modules')renderModulesList();
   if(name==='history')loadHistory();
 }
