@@ -44,6 +44,7 @@ app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/klaviyo', require('./routes/klaviyo'));
 app.use('/api/advisor', require('./routes/advisor'));
 app.use('/api/fetch-website', require('./routes/fetchWebsite'));
+app.use('/api/transcribe', require('./routes/transcribe'));
 
 // Health check
 app.get('/health', (_, res) => res.json({ ok: true }));

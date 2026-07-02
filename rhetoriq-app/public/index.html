@@ -1009,8 +1009,13 @@ body.adv .vubtn{display:block}
   <div style="background:var(--bg);border-radius:10px;max-width:600px;width:100%;padding:28px 24px;box-shadow:0 8px 40px rgba(0,0,0,.18)">
     <div style="font-size:15px;font-weight:700;margin-bottom:2px">Generate Voice DNA</div>
     <div id="pv-gen-name" style="font-size:12px;color:var(--mu);margin-bottom:14px"></div>
+    <div id="pv-drop-zone" ondragover="event.preventDefault();this.style.borderColor='var(--acc)'" ondragleave="this.style.borderColor='var(--bd)'" ondrop="pvHandleDrop(event)" style="border:2px dashed var(--bd);border-radius:8px;padding:16px;text-align:center;cursor:pointer;margin-bottom:10px;font-size:13px;color:var(--mu);transition:border-color .2s" onclick="document.getElementById('pv-file-input').click()">
+      Drop files here or click to upload<br><span style="font-size:11px">PDF · Word · TXT · MP3 · MP4 · WAV · M4A · MOV · OGG and more</span>
+    </div>
+    <input type="file" id="pv-file-input" multiple accept=".txt,.pdf,.docx,.doc,.mp3,.mp4,.wav,.m4a,.ogg,.webm,.mov,.avi,.aac,.flac" style="display:none" onchange="pvHandleFiles(this.files)">
+    <div id="pv-file-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
     <label class="fl2">Texts by this person — emails, speeches, posts, memos (separate with ---)</label>
-    <textarea id="pv-gen-text" style="width:100%;height:200px;padding:10px;font-size:13px;font-family:'Inter',sans-serif;border:1.5px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);resize:vertical;box-sizing:border-box;margin-top:6px" placeholder="Paste texts here — the more diverse, the better the voice profile."></textarea>
+    <textarea id="pv-gen-text" style="width:100%;height:160px;padding:10px;font-size:13px;font-family:'Inter',sans-serif;border:1.5px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);resize:vertical;box-sizing:border-box;margin-top:6px" placeholder="Paste texts here — or upload files above. The more diverse, the better the voice profile."></textarea>
     <div id="pv-gen-status" style="font-size:12px;color:var(--mu);margin-top:8px;min-height:16px"></div>
     <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
       <button class="obtn" onclick="document.getElementById('person-voice-generate-ov').style.display='none'">Cancel</button>
@@ -2186,7 +2191,52 @@ function openPersonVoiceGenerate(pid,name,role){
   document.getElementById('pv-gen-name').textContent=name+(role?' — '+role:'');
   document.getElementById('pv-gen-text').value='';
   document.getElementById('pv-gen-status').textContent='';
+  document.getElementById('pv-file-tags').innerHTML='';
+  document.getElementById('pv-drop-zone').style.borderColor='var(--bd)';
   document.getElementById('person-voice-generate-ov').style.display='flex';
+}
+function pvHandleDrop(e){
+  e.preventDefault();
+  document.getElementById('pv-drop-zone').style.borderColor='var(--bd)';
+  pvHandleFiles(e.dataTransfer.files);
+}
+async function pvHandleFiles(files){
+  const status=document.getElementById('pv-gen-status');
+  const tags=document.getElementById('pv-file-tags');
+  const ta=document.getElementById('pv-gen-text');
+  const AUDIO_VIDEO=/\.(mp3|mp4|wav|m4a|ogg|webm|mov|avi|aac|flac)$/i;
+  for(const file of Array.from(files)){
+    const tag=document.createElement('div');
+    tag.className='ftag';tag.innerHTML='&#128196; '+file.name+' <button onclick="this.parentElement.remove()">&times;</button>';
+    tags.appendChild(tag);
+    if(AUDIO_VIDEO.test(file.name)){
+      status.textContent='Uploading '+file.name+' for transcription…';
+      try{
+        const fd=new FormData();fd.append('file',file);
+        const r=await fetch('/api/transcribe',{method:'POST',headers:{Authorization:'Bearer '+localStorage.getItem('token')},body:fd});
+        const j=await r.json();if(!r.ok)throw new Error(j.error);
+        status.textContent='Transcribing '+file.name+'…';
+        let text='';
+        for(let i=0;i<120;i++){
+          await new Promise(r=>setTimeout(r,3000));
+          const pr=await fetch('/api/transcribe/'+j.jobId,{headers:{Authorization:'Bearer '+localStorage.getItem('token')}});
+          const pj=await pr.json();
+          if(pj.status==='done'){text=pj.text;break;}
+          if(pj.status==='error')throw new Error(pj.error);
+          status.textContent='Transcribing '+file.name+'… ('+pj.status+')';
+        }
+        if(!text)throw new Error('Transcription timeout');
+        ta.value=ta.value?ta.value+'\n---\n'+text:text;
+        status.textContent='Transcription done: '+file.name;
+      }catch(err){status.textContent='Error: '+err.message;}
+    } else {
+      try{
+        const text=await extractText(file);
+        ta.value=ta.value?ta.value+'\n---\n'+text:text;
+        status.textContent='Loaded: '+file.name;
+      }catch(err){status.textContent='Error reading '+file.name+': '+err.message;}
+    }
+  }
 }
 function openPersonVoiceImport(pid,name){
   _pvState={pid,name};
