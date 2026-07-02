@@ -649,6 +649,12 @@ body.adv .vubtn{display:block}
 
     <!-- HOME -->
     <div class="page active" id="page-home">
+      <div id="onboarding-home-btn" style="margin-bottom:16px">
+        <button onclick="openOnboarding()" style="width:100%;padding:14px 16px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">&#8679;</span>
+          <div><div>New Client Onboarding</div><div style="font-size:11px;font-weight:400;opacity:.85">Upload all documents at once — AI sorts and saves them to the right place</div></div>
+        </button>
+      </div>
       <div class="home-grid">
 
         <!-- LEFT COLUMN -->
@@ -669,14 +675,6 @@ body.adv .vubtn{display:block}
                 <button class="pi-dismiss" onclick="document.getElementById('pi-banner').classList.remove('show')">&times;</button>
               </div>
             </div>
-          </div>
-
-          <!-- Onboarding Button -->
-          <div id="onboarding-home-btn" style="margin-bottom:14px">
-            <button onclick="openOnboarding()" style="width:100%;padding:14px 16px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px">
-              <span style="font-size:18px">&#8679;</span>
-              <div><div>New Client Onboarding</div><div style="font-size:11px;font-weight:400;opacity:.85">Upload all documents at once — AI sorts and saves them to the right place</div></div>
-            </button>
           </div>
 
           <!-- Quick Access Cards -->
