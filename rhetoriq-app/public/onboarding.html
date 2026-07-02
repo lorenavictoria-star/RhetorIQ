@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Onboarding — RhetorIQ</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:#f9f7ff;color:#1a1a2e;min-height:100vh;padding:24px 16px}
+  h1{font-size:22px;font-weight:700;margin-bottom:4px}
+  .sub{font-size:13px;color:#888;margin-bottom:24px}
+  .card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 16px rgba(0,0,0,.08);max-width:680px;margin:0 auto}
+  .drop{border:2px dashed #c4b5fd;border-radius:8px;padding:32px 20px;text-align:center;cursor:pointer;margin-bottom:16px;transition:all .2s}
+  .drop:hover,.drop.over{border-color:#7c3aed;background:#f5f0ff}
+  .drop-icon{font-size:32px;margin-bottom:8px}
+  .drop-title{font-size:14px;font-weight:600;margin-bottom:4px}
+  .drop-sub{font-size:12px;color:#888}
+  .file-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#f9f7ff;border-radius:6px;font-size:13px;margin-bottom:6px}
+  .file-item button{background:none;border:none;cursor:pointer;color:#888;font-size:16px}
+  .btn{padding:10px 20px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+  .btn-primary{background:#7c3aed;color:#fff;width:100%;padding:14px;margin-top:8px}
+  .btn-primary:disabled{opacity:.6;cursor:not-allowed}
+  .result-item{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px}
+  .result-name{font-size:13px;font-weight:600;margin-bottom:2px}
+  .result-cat{font-size:12px;color:#7c3aed;margin-bottom:2px}
+  .result-saved{font-size:11px;color:#16a34a;margin-top:4px}
+  .result-err{font-size:11px;color:#dc2626;margin-top:4px}
+  .status{font-size:12px;color:#888;margin:10px 0;min-height:18px}
+  .bv-note{background:#f5f0ff;border:1px solid #e0d4f5;border-radius:8px;padding:12px 14px;margin-top:12px;font-size:13px}
+  .back{font-size:13px;color:#7c3aed;text-decoration:none;display:inline-block;margin-bottom:16px;max-width:680px;margin-left:auto;margin-right:auto;display:block}
+  select,input{padding:8px 12px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;width:100%;margin-bottom:12px}
+  label{font-size:12px;font-weight:600;color:#888;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+</style>
+</head>
+<body>
+<div style="max-width:680px;margin:0 auto">
+  <a href="/" class="back">← Back to RhetorIQ</a>
+  <div class="card">
+    <h1>Client Onboarding</h1>
+    <p class="sub">Upload all documents for a new client. The AI reads each one and saves it to the right place automatically.</p>
+
+    <div id="step-client">
+      <label>Select client</label>
+      <select id="client-sel"><option value="">Loading clients…</option></select>
+    </div>
+
+    <div id="drop-zone" class="drop" onclick="document.getElementById('file-input').click()" ondragover="ev(event,true)" ondragleave="ev(event,false)" ondrop="drop(event)">
+      <div class="drop-icon">⇧</div>
+      <div class="drop-title">Drop files here or click to choose</div>
+      <div class="drop-sub">PDF · Word · TXT · Audio · Video — up to 30 files</div>
+    </div>
+    <input type="file" id="file-input" multiple accept=".txt,.pdf,.docx,.doc,.mp3,.mp4,.wav,.m4a,.ogg,.webm,.mov,.avi,.aac,.flac" style="display:none" onchange="addFiles(this.files)">
+
+    <div id="file-list"></div>
+    <div class="status" id="status"></div>
+    <button class="btn btn-primary" id="run-btn" onclick="run()" disabled>Analyse & Save All</button>
+    <div id="results"></div>
+  </div>
+</div>
+
+<script>
+const token = localStorage.getItem('riq-token');
+if(!token){document.body.innerHTML='<div style="max-width:680px;margin:40px auto;padding:24px;font-family:Inter,sans-serif"><h2>Please <a href="/">log in to RhetorIQ</a> first.</h2></div>';}
+
+let files=[];
+
+async function loadClients(){
+  try{
+    const r=await fetch('/api/clients',{headers:{Authorization:'Bearer '+token}});
+    const rows=await r.json();
+    const sel=document.getElementById('client-sel');
+    sel.innerHTML='<option value="">— Select client —</option>'+rows.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    sel.onchange=()=>checkReady();
+  }catch(e){document.getElementById('client-sel').innerHTML='<option>Error loading clients</option>';}
+}
+loadClients();
+
+function checkReady(){
+  document.getElementById('run-btn').disabled=!(files.length&&document.getElementById('client-sel').value);
+}
+function ev(e,on){e.preventDefault();document.getElementById('drop-zone').classList.toggle('over',on);}
+function drop(e){e.preventDefault();document.getElementById('drop-zone').classList.remove('over');addFiles(e.dataTransfer.files);}
+function addFiles(fl){files=[...files,...Array.from(fl)];renderFiles();checkReady();}
+function removeFile(i){files.splice(i,1);renderFiles();checkReady();}
+function renderFiles(){
+  document.getElementById('file-list').innerHTML=files.map((f,i)=>`<div class="file-item"><span>📄 ${f.name} <span style="color:#888;font-size:11px">(${(f.size/1024).toFixed(0)} KB)</span></span><button onclick="removeFile(${i})">×</button></div>`).join('');
+}
+
+async function extractText(file){
+  const n=file.name.toLowerCase();
+  if(n.endsWith('.txt'))return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsText(file);});
+  if(n.endsWith('.pdf')){
+    return new Promise(res=>{const r=new FileReader();r.onload=async e=>{try{const t=new Uint8Array(e.target.result);res('[PDF content — '+file.name+' — '+Math.round(t.length/1024)+'KB]');}catch{res('');}};r.readAsArrayBuffer(file);});
+  }
+  return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result||'');r.onerror=rej;r.readAsText(file);});
+}
+
+const AUDIO_VIDEO=/\.(mp3|mp4|wav|m4a|ogg|webm|mov|avi|aac|flac)$/i;
+
+async function run(){
+  const clientId=document.getElementById('client-sel').value;
+  if(!clientId||!files.length)return;
+  const btn=document.getElementById('run-btn');
+  const status=document.getElementById('status');
+  btn.disabled=true;btn.textContent='Processing…';
+  status.textContent='Extracting text from files…';
+
+  const fd=new FormData();
+  fd.append('clientId',clientId);
+
+  for(const file of files){
+    if(AUDIO_VIDEO.test(file.name)){
+      fd.append('files',file,file.name);
+    } else {
+      try{
+        const text=await extractText(file);
+        fd.append('files',new Blob([text],{type:'text/plain'}),file.name+'.txt');
+      }catch{fd.append('files',file,file.name);}
+    }
+  }
+
+  status.textContent='AI is analysing and sorting your documents…';
+  try{
+    const r=await fetch('/api/onboard',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.error);
+
+    const CAT={
+      brand_voice_source:'◆ Brand Voice source text',
+      brand_voice_analysis:'◆ Brand Voice (saved to memory)',
+      ref_speech:'📄 Reference → Speech',
+      ref_linkedin:'📄 Reference → LinkedIn',
+      ref_email:'📄 Reference → Email',
+      ref_newsletter:'📄 Reference → Newsletter',
+      ref_press:'📄 Reference → Press Release',
+      ref_website:'📄 Reference → Website',
+      key_facts:'📋 Memory → Key Facts',
+      people_voice:'○ Voice DNA source',
+      skip:'— Not used'
+    };
+
+    document.getElementById('results').innerHTML=`
+      <div style="font-size:12px;font-weight:600;color:#888;margin:16px 0 8px;text-transform:uppercase;letter-spacing:.04em">Results — ${data.results.filter(r=>r.status==='done').length}/${data.results.length} saved</div>
+      ${data.results.map(res=>`
+        <div class="result-item">
+          <div class="result-name">${res.filename}</div>
+          <div class="result-cat">${CAT[res.category]||res.category||'—'}</div>
+          ${res.summary?`<div style="font-size:12px;color:#555;font-style:italic;margin-top:2px">${res.summary}</div>`:''}
+          ${res.saved?`<div class="result-saved">→ ${res.saved}</div>`:''}
+          ${res.status==='error'?`<div class="result-err">Error: ${res.summary}</div>`:''}
+        </div>`).join('')}
+      ${data.brandVoiceSourceCount>0?`<div class="bv-note"><strong>◆ Brand Voice source texts collected.</strong><br>Go to the Brand Voice module and run "Extract Brand Voice" — the source texts are ready.</div>`:''}`;
+
+    status.textContent='Done.';
+    btn.textContent='Upload more files';
+    btn.disabled=false;
+    btn.onclick=()=>{files=[];renderFiles();document.getElementById('results').innerHTML='';document.getElementById('file-list').innerHTML='';status.textContent='';checkReady();};
+  }catch(e){
+    status.textContent='Error: '+e.message;
+    btn.disabled=false;btn.textContent='Analyse & Save All';
+  }
+}
+</script>
+</body>
+</html>

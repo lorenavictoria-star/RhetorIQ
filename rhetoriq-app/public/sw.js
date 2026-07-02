@@ -1,5 +1,5 @@
-const CACHE = 'rhetoriq-v54';
-const ASSETS = ['./index.html', './manifest.json'];
+const CACHE = 'rhetoriq-v55';
+const ASSETS = ['./index.html', './manifest.json', './onboarding.html'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
