@@ -1005,6 +1005,31 @@ body.adv .vubtn{display:block}
 </div>
 
 <!-- Contact request overlay (triggered by pricing/demo chat intent) -->
+<div id="person-voice-generate-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--bg);border-radius:10px;max-width:600px;width:100%;padding:28px 24px;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+    <div style="font-size:15px;font-weight:700;margin-bottom:2px">Generate Voice DNA</div>
+    <div id="pv-gen-name" style="font-size:12px;color:var(--mu);margin-bottom:14px"></div>
+    <label class="fl2">Texts by this person — emails, speeches, posts, memos (separate with ---)</label>
+    <textarea id="pv-gen-text" style="width:100%;height:200px;padding:10px;font-size:13px;font-family:'Inter',sans-serif;border:1.5px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);resize:vertical;box-sizing:border-box;margin-top:6px" placeholder="Paste texts here — the more diverse, the better the voice profile."></textarea>
+    <div id="pv-gen-status" style="font-size:12px;color:var(--mu);margin-top:8px;min-height:16px"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+      <button class="obtn" onclick="document.getElementById('person-voice-generate-ov').style.display='none'">Cancel</button>
+      <button class="bv-btn bv-btn-primary" onclick="runPersonVoiceGenerate()">Generate & Save</button>
+    </div>
+  </div>
+</div>
+<div id="person-voice-import-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--bg);border-radius:10px;max-width:560px;width:100%;padding:28px 24px;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+    <div style="font-size:15px;font-weight:700;margin-bottom:2px">Import Voice DNA</div>
+    <div id="pv-imp-name" style="font-size:12px;color:var(--mu);margin-bottom:14px"></div>
+    <label class="fl2">Paste existing Voice DNA analysis</label>
+    <textarea id="pv-imp-text" style="width:100%;height:200px;padding:10px;font-size:13px;font-family:'Inter',sans-serif;border:1.5px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);resize:vertical;box-sizing:border-box;margin-top:6px" placeholder="Paste Voice DNA here..."></textarea>
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+      <button class="obtn" onclick="document.getElementById('person-voice-import-ov').style.display='none'">Cancel</button>
+      <button class="bv-btn bv-btn-primary" onclick="submitPersonVoiceImport()">Save to Profile</button>
+    </div>
+  </div>
+</div>
 <div id="import-memory-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--bg);border-radius:10px;max-width:560px;width:100%;padding:28px 24px;box-shadow:0 8px 40px rgba(0,0,0,.18)">
     <div style="font-size:15px;font-weight:700;margin-bottom:4px">Import Brand Voice to Memory</div>
@@ -1530,6 +1555,7 @@ function renderPeople(){
       const done=profMap[t.key];
       return `<span class="prof-tag${done?' done':''}" title="${done?'Click to view':'No profile yet &mdash; run the module first'}" onclick="viewPersonProfile(${p.id},'${t.key}','${t.label}')">${t.label}${done?' &#10003;':' &mdash;'}</span>`;
     }).join('');
+    const hasVoice=!!profMap['voice'];
     return `<div class="pcard">
       <div class="pcard-top">
         <div class="pcard-info"><div class="pname">${p.name}</div><div class="prole">${p.role||''}${p.department?' &mdash; '+p.department:''}</div></div>
@@ -1540,6 +1566,11 @@ function renderPeople(){
       </div>
       ${p.notes?`<div style="font-size:12px;color:var(--mu);margin-top:8px;font-style:italic">${p.notes}</div>`:''}
       <div class="pcard-profiles">${chips}</div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="obtn" style="font-size:12px" onclick="openPersonVoiceGenerate(${p.id},'${p.name.replace(/'/g,"\\'")}','${p.role||''}')">&#9670; Generate Voice DNA</button>
+        <button class="obtn" style="font-size:12px" onclick="openPersonVoiceImport(${p.id},'${p.name.replace(/'/g,"\\'")}')">&#8593; Import Voice DNA</button>
+        ${hasVoice?`<button class="obtn" style="font-size:12px" onclick="viewPersonProfile(${p.id},'voice','Voice DNA')">View Voice DNA</button>`:''}
+      </div>
     </div>`;
   }).join('');
 }
@@ -1995,6 +2026,7 @@ function buildTextGen(prefill,form){
         <div class="fg2"><label class="fl2">${tl.tg_length}</label><input type="text" id="tg-len-${t.id}" placeholder="${tl.tg_length_ph}"></div>
       </div>
       ${t.id==='linkedin'?`<div class="fg2" style="margin-top:4px"><label class="fl2">${tl.li_profile_lbl||'LinkedIn Profile / About (optional)'}</label><textarea id="tg-li-profile" placeholder="${tl.li_profile_ph||'Paste the About section and recent posts of the LinkedIn profile here — so the output matches the person\'s authentic voice.'}" style="min-height:80px;font-size:12px"></textarea></div>`:''}
+      ${t.id==='speech'?`<div class="fg2"><label class="fl2">Speaker — Voice DNA (optional)</label><select id="tg-speech-person"><option value="">— Brand Voice (default) —</option>${people.filter(p=>(p.profiles||[]).some(pr=>pr.profile_type==='voice')).map(p=>`<option value="${p.id}">${p.name}${p.role?' — '+p.role:''}</option>`).join('')}</select></div>`:''}
       ${t.id==='newsletter'?`<div class="klaviyo-box" id="klaviyo-box-${t.id}" style="margin-bottom:14px;padding:14px;border:1.5px solid #e0d4f5;border-radius:8px;background:#f9f6ff">
         <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7c3aed;margin-bottom:10px">Klaviyo</div>
         <div id="klv-connect-row-${t.id}">
@@ -2154,6 +2186,42 @@ function stab(btn,show,hide){btn.closest('.tabs').querySelectorAll('.tab').forEa
 
 function g(id){const el=document.getElementById(id);return el?el.value:'';}
 
+let _pvState={};
+function openPersonVoiceGenerate(pid,name,role){
+  _pvState={pid,name};
+  document.getElementById('pv-gen-name').textContent=name+(role?' — '+role:'');
+  document.getElementById('pv-gen-text').value='';
+  document.getElementById('pv-gen-status').textContent='';
+  document.getElementById('person-voice-generate-ov').style.display='flex';
+}
+function openPersonVoiceImport(pid,name){
+  _pvState={pid,name};
+  document.getElementById('pv-imp-name').textContent=name;
+  document.getElementById('pv-imp-text').value='';
+  document.getElementById('person-voice-import-ov').style.display='flex';
+}
+async function runPersonVoiceGenerate(){
+  const text=document.getElementById('pv-gen-text').value.trim();
+  if(!text)return alert('Please paste texts first.');
+  const status=document.getElementById('pv-gen-status');
+  status.textContent='Generating Voice DNA…';
+  try{
+    const r=await api('/api/analyze',{method:'POST',body:JSON.stringify({module:'brand-voice-ind',clientId,data:{text,person:_pvState.name,role:''}})});
+    const d=await r.json();if(!r.ok)throw new Error(d.error);
+    await savePersonProfile(_pvState.pid,'voice',d.result);
+    status.textContent='Voice DNA saved.';
+    setTimeout(()=>{document.getElementById('person-voice-generate-ov').style.display='none';loadPeople();},800);
+  }catch(e){status.textContent='Error: '+e.message;}
+}
+async function submitPersonVoiceImport(){
+  const content=document.getElementById('pv-imp-text').value.trim();
+  if(!content)return alert('Please paste the Voice DNA first.');
+  try{
+    await savePersonProfile(_pvState.pid,'voice',content);
+    document.getElementById('person-voice-import-ov').style.display='none';
+    loadPeople();
+  }catch(e){alert('Error: '+e.message);}
+}
 async function saveResultToPerson(srcId,profileType){
   const content=document.getElementById(srcId)?.textContent?.trim();
   if(!content)return alert('No result to save yet.');
@@ -2176,7 +2244,9 @@ async function runMod(name){
     let baseTone=g('tg-tone-'+fid)||'';
     const tCalBody=document.getElementById('tone-cal-body-'+fid);
     if(tCalBody&&tCalBody.style.display!=='none'){const fv=parseInt(document.getElementById('tone-formal-'+fid)?.value||50);const ev=parseInt(document.getElementById('tone-edge-'+fid)?.value||50);const fd=fv<33?'conversational':fv>66?'formal':'semi-formal';const ed=ev<33?'diplomatic':ev>66?'very direct':'balanced';baseTone=baseTone+` Tone calibration: ${fd}, ${ed}.`;}
-    data={text:t,format:g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:baseTone,language:g('tg-lang-'+fid),length:g('tg-len-'+fid),voiceProfile:(voiceProf||'')+context+liCtx+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
+    let speechVoiceCtx='';
+    if(fid==='speech'){const spPid=document.getElementById('tg-speech-person')?.value;if(spPid){const spPerson=people.find(p=>p.id==spPid);const spVoice=spPerson&&(spPerson.profiles||[]).find(pr=>pr.profile_type==='voice');if(spVoice)speechVoiceCtx='\n\n---SPEAKER VOICE DNA ('+spPerson.name+(spPerson.role?' — '+spPerson.role:'')+')---\n'+spVoice.content;}}
+    data={text:t,format:g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:baseTone,language:g('tg-lang-'+fid),length:g('tg-len-'+fid),voiceProfile:(voiceProf||'')+context+liCtx+speechVoiceCtx+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
   else if(name==='profiling'){module='rp';rid='profiling-r';bid='profiling-b';const t=g('rp-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('rp-name'),industry:g('rp-industry')};}
   else if(name==='fingerprint'){module='cf';rid='fingerprint-r';bid='fingerprint-b';const t=g('cf-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('cf-name'),focus:g('cf-focus')};}
   else if(name==='language'){module='la';rid='language-r';bid='language-b';const t=g('la-in');if(!t)return alert('Please enter text.');data={text:t+context,size:g('la-size'),focus:g('la-focus')};}
