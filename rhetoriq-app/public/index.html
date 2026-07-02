@@ -791,6 +791,7 @@ body.adv .vubtn{display:block}
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
           <button class="bv-btn" onclick="saveAsReference('ref_brand_co','bv-co-in')">Save as Reference</button>
+          <button class="bv-btn" onclick="openImportMemory('brand_voice','brand-voice-co-b','brand-voice-co-r')">Import to Memory</button>
           <button class="bv-btn" onclick="loadFromMemory('brand_voice','brand-voice-co-b','brand-voice-co-r')">Load from Memory</button>
           <button class="bv-btn bv-btn-primary" onclick="runMod('brand-voice-co')">Extract Brand Voice</button>
         </div>
@@ -813,6 +814,7 @@ body.adv .vubtn{display:block}
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
           <button class="bv-btn" onclick="saveAsReference('ref_brand_ind','bv-ind-in')">Save as Reference</button>
+          <button class="bv-btn" onclick="openImportMemory('brand_voice','brand-voice-ind-b','brand-voice-ind-r')">Import to Memory</button>
           <button class="bv-btn" onclick="loadFromMemory('brand_voice','brand-voice-ind-b','brand-voice-ind-r')">Load from Memory</button>
           <button class="bv-btn bv-btn-primary" onclick="runMod('brand-voice-ind')">Extract Brand Voice</button>
         </div>
@@ -1007,6 +1009,17 @@ body.adv .vubtn{display:block}
 </div>
 
 <!-- Contact request overlay (triggered by pricing/demo chat intent) -->
+<div id="import-memory-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--bg);border-radius:10px;max-width:560px;width:100%;padding:28px 24px;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">Import Brand Voice to Memory</div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:16px">Paste your existing Brand Voice analysis. It will be saved directly to this client's memory and used as context in all modules.</div>
+    <textarea id="import-memory-text" style="width:100%;height:220px;padding:10px;font-size:13px;font-family:'Inter',sans-serif;border:1.5px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);resize:vertical;box-sizing:border-box" placeholder="Paste Brand Voice analysis here..."></textarea>
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+      <button class="obtn" onclick="closeImportMemory()">Cancel</button>
+      <button class="bv-btn bv-btn-primary" onclick="submitImportMemory()">Save to Memory</button>
+    </div>
+  </div>
+</div>
 <div id="chat-contact-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:10px;max-width:420px;width:100%;padding:28px 24px;box-shadow:0 8px 40px rgba(0,0,0,.18)">
     <div style="font-size:15px;font-weight:700;margin-bottom:4px">Get in touch</div>
@@ -1609,6 +1622,29 @@ function renderMemory(){
     const d=new Date(m.updated_at).toLocaleDateString('de-CH');
     return `<div class="mem-page-section"><div class="mem-page-hd"><span class="mem-page-type">${LABELS[m.memory_type]||m.memory_type}</span><div class="mem-actions"><span class="mem-page-date">Updated ${d}</span><button class="obtn" style="margin-left:8px" onclick="deleteMemory('${m.memory_type}')">Delete</button></div></div><div class="mem-page-body">${m.content.substring(0,600)}${m.content.length>600?'\n\n[...]':''}</div></div>`;
   }).join('');
+}
+let _importMemoryState={};
+function openImportMemory(type,targetId,boxId){
+  if(!clientId)return alert('Please select a client first.');
+  _importMemoryState={type,targetId,boxId};
+  document.getElementById('import-memory-text').value='';
+  document.getElementById('import-memory-ov').style.display='flex';
+}
+function closeImportMemory(){
+  document.getElementById('import-memory-ov').style.display='none';
+}
+async function submitImportMemory(){
+  const content=document.getElementById('import-memory-text').value.trim();
+  if(!content)return alert('Please paste your Brand Voice text first.');
+  const {type,targetId,boxId}=_importMemoryState;
+  try{
+    await api('/api/memory/'+clientId+'/'+type,{method:'PUT',body:JSON.stringify({content})});
+    await loadMemory();
+    const el=document.getElementById(targetId);
+    if(el){el.textContent=content;document.getElementById(boxId).classList.add('show');}
+    closeImportMemory();
+    alert('Brand Voice saved to memory.');
+  }catch{alert('Error saving.');}
 }
 function loadFromMemory(type,targetId,boxId){
   if(!clientId)return alert('Please select a client first.');
