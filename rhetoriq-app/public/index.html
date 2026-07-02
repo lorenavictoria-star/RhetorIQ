@@ -1548,13 +1548,8 @@ function renderPeople(){
   const list=document.getElementById('people-list');
   if(!clientId){list.innerHTML='<div class="empty"><div class="ei">&#9711;</div><div>Select a client first.</div></div>';return;}
   if(!people.length){list.innerHTML='<div class="empty"><div class="ei">&#9711;</div><div>No people yet.<br>Add the CEO, board members, HR leads...</div></div>';return;}
-  const PROFILE_TYPES=[{key:'rhetoric',label:'Rhetoric Profile'},{key:'fingerprint',label:'Language Over Time'},{key:'voice',label:'Voice DNA'}];
   list.innerHTML=people.map(p=>{
     const profMap={};(p.profiles||[]).forEach(pr=>profMap[pr.profile_type]=pr);
-    const chips=PROFILE_TYPES.map(t=>{
-      const done=profMap[t.key];
-      return `<span class="prof-tag${done?' done':''}" title="${done?'Click to view':'No profile yet &mdash; run the module first'}" onclick="viewPersonProfile(${p.id},'${t.key}','${t.label}')">${t.label}${done?' &#10003;':' &mdash;'}</span>`;
-    }).join('');
     const hasVoice=!!profMap['voice'];
     return `<div class="pcard">
       <div class="pcard-top">
@@ -1565,7 +1560,6 @@ function renderPeople(){
         </div>
       </div>
       ${p.notes?`<div style="font-size:12px;color:var(--mu);margin-top:8px;font-style:italic">${p.notes}</div>`:''}
-      <div class="pcard-profiles">${chips}</div>
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
         <button class="obtn" style="font-size:12px" onclick="openPersonVoiceGenerate(${p.id},'${p.name.replace(/'/g,"\\'")}','${p.role||''}')">&#9670; Generate Voice DNA</button>
         <button class="obtn" style="font-size:12px" onclick="openPersonVoiceImport(${p.id},'${p.name.replace(/'/g,"\\'")}')">&#8593; Import Voice DNA</button>
