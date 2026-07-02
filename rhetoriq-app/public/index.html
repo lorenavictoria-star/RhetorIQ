@@ -796,7 +796,7 @@ body.adv .vubtn{display:block}
           <button class="bv-btn bv-btn-primary" onclick="runMod('brand-voice-co')">Extract Brand Voice</button>
         </div>
         <div class="rbox" id="brand-voice-co-r">
-          <div class="rhead"><span class="rlbl">Brand Voice &mdash; Company</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-co-b')">Copy</button><button class="obtn" onclick="loadFromMemory('brand_voice','brand-voice-co-b','brand-voice-co-r')">Load from Memory</button><button class="svbtn" onclick="saveToMemory('brand_voice','brand-voice-co-b')">Save to Memory</button></div></div>
+          <div class="rhead"><span class="rlbl">Brand Voice &mdash; Company</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-co-b')">Copy</button><button class="obtn" onclick="loadFromMemory('brand_voice','brand-voice-co-b','brand-voice-co-r')">Load from Memory</button></div></div>
           <div class="rbody" id="brand-voice-co-b"></div>
         </div>
       </div>
@@ -819,7 +819,7 @@ body.adv .vubtn{display:block}
           <button class="bv-btn bv-btn-primary" onclick="runMod('brand-voice-ind')">Extract Brand Voice</button>
         </div>
         <div class="rbox" id="brand-voice-ind-r">
-          <div class="rhead"><span class="rlbl">Brand Voice &mdash; Individual</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-ind-b')">Copy</button><button class="obtn" onclick="loadFromMemory('brand_voice','brand-voice-ind-b','brand-voice-ind-r')">Load from Memory</button><button class="svbtn" onclick="saveToMemory('brand_voice','brand-voice-ind-b')">Save to Memory</button></div></div>
+          <div class="rhead"><span class="rlbl">Brand Voice &mdash; Individual</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-ind-b')">Copy</button><button class="obtn" onclick="loadFromMemory('brand_voice','brand-voice-ind-b','brand-voice-ind-r')">Load from Memory</button></div></div>
           <div class="rbody" id="brand-voice-ind-b"></div>
         </div>
       </div>
@@ -2206,6 +2206,9 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
     body.textContent=d.result;
     if(module==='vs-cal')voiceProf=d.result;
     if(['crisis','si','st'].includes(module))showDebriefNudge(module,rid);
+    if(['brand-voice-co','brand-voice-ind'].includes(module)&&clientId){
+      api('/api/memory/'+clientId+'/brand_voice',{method:'PUT',body:JSON.stringify({content:d.result})}).then(()=>loadMemory()).catch(()=>{});
+    }
     loadStats();
   }catch(e){body.textContent='Error: '+e.message;}
 }
