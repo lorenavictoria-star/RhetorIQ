@@ -892,7 +892,7 @@ body.adv .vubtn{display:block}
     <!-- HISTORY -->
     <div class="page" id="page-history">
       <div class="page-title" id="hist-title" style="margin-bottom:6px">History</div>
-      <p id="hist-sub" style="font-size:12px;color:var(--mu);margin-bottom:18px">Analyses are automatically deleted after 30 days.</p>
+      <p id="hist-sub" style="font-size:12px;color:var(--mu);margin-bottom:18px">Grouped by module. Delete entries manually.</p>
       <div id="hist-list"><div class="empty"><div class="ei">◤</div><div id="hist-empty">No analyses yet.</div></div></div>
     </div>
 <p style="font-size:12px;color:var(--mu);margin-bottom:18px">Overview of all clients and activity.</p>
@@ -2199,8 +2199,18 @@ async function loadHistory(){
   try{
     const r=await api('/api/analyze/history'+(clientId?'?clientId='+clientId:''));const rows=await r.json();
     if(!rows.length){el.innerHTML='<div class="empty"><div class="ei">&#128203;</div><div>No analyses yet.</div></div>';return;}
-    el.innerHTML=rows.map(h=>{const d=new Date(h.created_at).toLocaleString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});return `<div class="hi"><div><div class="hm">${h.module_label||h.module}</div><div class="hd">${d}</div></div><span class="hb">${h.module}</span></div>`;}).join('');
+    const groups={};
+    rows.forEach(h=>{const k=h.module_label||h.module;if(!groups[k])groups[k]=[];groups[k].push(h);});
+    el.innerHTML=Object.entries(groups).map(([label,items])=>`
+      <div style="margin-bottom:24px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:8px">${label}</div>
+        ${items.map(h=>{const d=new Date(h.created_at).toLocaleString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});return `<div class="hi" style="display:flex;align-items:center;justify-content:space-between"><div><div class="hd">${d}</div></div><button class="obtn" style="font-size:11px;padding:4px 10px;color:var(--red);border-color:var(--red)" onclick="deleteAnalysis(${h.id})">Delete</button></div>`;}).join('')}
+      </div>`).join('');
   }catch{el.innerHTML='<div class="empty"><div class="ei">&#9888;</div><div>Could not load.</div></div>';}
+}
+async function deleteAnalysis(id){
+  if(!confirm('Delete this analysis?'))return;
+  try{await api('/api/analyze/'+id,{method:'DELETE'});loadHistory();}catch{alert('Error deleting.');}
 }
 
 // UTILS
@@ -2769,7 +2779,7 @@ function showDebriefNudge(modName,resultId){
 }
 
 // PRIVACY BADGE HTML
-function privBadge(){return '<div class="priv-badge">&#128274; Data not stored for AI training &mdash; results auto-deleted after 30 days</div>';}
+function privBadge(){return '<div class="priv-badge">&#128274; Data not stored for AI training</div>';}
 
 // KEYBOARD
 document.getElementById('adv-pw').addEventListener('keydown',e=>{if(e.key==='Enter')loginAdvisor();});

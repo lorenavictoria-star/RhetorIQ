@@ -71,26 +71,11 @@ async function seedAdvisor() {
   console.log(`✓ Advisor account created: ${email}`);
 }
 
-// ── Auto-cleanup: delete analyses older than RETENTION_DAYS ──
-async function cleanupOldAnalyses() {
-  const days = parseInt(process.env.RETENTION_DAYS || '30', 10);
-  try {
-    const { rowCount } = await pool.query(
-      `DELETE FROM analyses WHERE created_at < NOW() - INTERVAL '${days} days'`
-    );
-    if (rowCount > 0) console.log(`Cleanup: deleted ${rowCount} analyses older than ${days} days`);
-  } catch (e) {
-    console.error('Cleanup error:', e.message);
-  }
-}
-
 // ── Boot ──────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
 
 (async () => {
   await init();
   await seedAdvisor();
-  await cleanupOldAnalyses();
-  setInterval(cleanupOldAnalyses, 24 * 60 * 60 * 1000); // daily
   server.listen(PORT, () => console.log(`RhetorIQ server running on :${PORT}`));
 })();
