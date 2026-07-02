@@ -1,4 +1,4 @@
-const CACHE = 'rhetoriq-v50';
+const CACHE = 'rhetoriq-v51';
 const ASSETS = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
