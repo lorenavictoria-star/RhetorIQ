@@ -1971,8 +1971,7 @@ function buildTextGen(prefill,form){
         <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:6px">${tl.tg_template_lbl}</div>
         <div class="upzone" onclick="document.getElementById('tg-rf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.tg_upload_tpl}</strong><br><span style="font-size:11px;color:var(--mu)">${tl.tg_tpl_sub}</span></div><input type="file" id="tg-rf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref-${t.id}','tg-rt-${t.id}')"></div>
         <div class="ftags" id="tg-rt-${t.id}"></div>
-        <textarea id="tg-ref-${t.id}" placeholder="${tl.tg_tpl_ph}" style="margin-top:6px;min-height:70px;font-size:12px"></textarea>
-        <button class="tg-save-ref" onclick="saveTgRef('${t.id}')">${tl.tg_save_ref}</button>
+        <textarea id="tg-ref-${t.id}" placeholder="${tl.tg_tpl_ph}" style="margin-top:6px;min-height:70px;font-size:12px" onblur="saveTgRef('${t.id}')"></textarea>
         <div id="tg-ref-status-${t.id}" style="font-size:11px;color:var(--dm);margin-top:4px"></div>
       </div>
       <div class="fg2"><label class="fl2">${t.fmtLabel}</label><select id="tg-fmt-${t.id}">${t.fmtOpts.map(o=>`<option>${o}</option>`).join('')}</select></div>
@@ -2221,6 +2220,7 @@ async function handleFiles(input,targetId,tagsId){
       if(tags){const tag=document.createElement('div');tag.className='ftag';tag.innerHTML='&#128196; '+file.name+' <button onclick="this.parentElement.remove()">&times;</button>';tags.appendChild(tag);}
     }catch(e){alert('Could not read '+file.name+': '+e.message);}
   }input.value='';
+  if(targetId.startsWith('tg-ref-')){const id=targetId.replace('tg-ref-','');saveTgRef(id);}
 }
 async function extractText(file){
   const n=file.name.toLowerCase();
