@@ -448,6 +448,10 @@ body.adv .vubtn{display:block}
 .ref-load-btn{font-size:12px;color:#1a5a9a;text-decoration:underline;cursor:pointer;background:none;border:none;font-family:'Inter',sans-serif;margin-top:8px;display:block}
 .save-ref-btn{padding:9px 18px;background:#f0f7ff;border:1.5px solid #b8d4f0;color:#1a5a9a;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px;margin-right:8px}
 .save-ref-btn:hover{background:#dceeff}
+.bv-btn{padding:9px 18px;background:var(--bg);border:1.5px solid var(--bd);color:var(--tx);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border-radius:4px}
+.bv-btn:hover{border-color:var(--tx)}
+.bv-btn.bv-btn-primary{background:var(--tx);color:#fff;border-color:var(--tx);font-weight:600}
+.bv-btn.bv-btn-primary:hover{background:#333}
 
 /* BROWSE TOGGLE */
 .browse-toggle{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;cursor:pointer;user-select:none}
@@ -786,9 +790,9 @@ body.adv .vubtn{display:block}
           <textarea id="bv-co-in" placeholder="Paste company texts here, or upload documents above. Website content appears here after fetching."></textarea>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
-          <button class="save-ref-btn" onclick="saveAsReference('ref_brand_co','bv-co-in')">&#128204; Save as Reference</button>
-          <button class="obtn" style="margin-top:0" onclick="loadFromMemory('brand_voice','brand-voice-co-b','brand-voice-co-r')">&#8593; Load from Memory</button>
-          <button class="runbtn" style="margin-top:0" onclick="runMod('brand-voice-co')">Extract Brand Voice</button>
+          <button class="bv-btn" onclick="saveAsReference('ref_brand_co','bv-co-in')">Save as Reference</button>
+          <button class="bv-btn" onclick="loadFromMemory('brand_voice','brand-voice-co-b','brand-voice-co-r')">Load from Memory</button>
+          <button class="bv-btn bv-btn-primary" onclick="runMod('brand-voice-co')">Extract Brand Voice</button>
         </div>
         <div class="rbox" id="brand-voice-co-r">
           <div class="rhead"><span class="rlbl">Brand Voice &mdash; Company</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-co-b')">Copy</button><button class="obtn" onclick="loadFromMemory('brand_voice','brand-voice-co-b','brand-voice-co-r')">Load from Memory</button><button class="svbtn" onclick="saveToMemory('brand_voice','brand-voice-co-b')">Save to Memory</button></div></div>
@@ -808,9 +812,9 @@ body.adv .vubtn{display:block}
           <textarea id="bv-ind-in" placeholder="Include texts from different contexts &mdash; formal and informal, internal and external."></textarea>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
-          <button class="save-ref-btn" onclick="saveAsReference('ref_brand_ind','bv-ind-in')">&#128204; Save as Reference</button>
-          <button class="obtn" style="margin-top:0" onclick="loadFromMemory('brand_voice','brand-voice-ind-b','brand-voice-ind-r')">&#8593; Load from Memory</button>
-          <button class="runbtn" style="margin-top:0" onclick="runMod('brand-voice-ind')">Extract Brand Voice</button>
+          <button class="bv-btn" onclick="saveAsReference('ref_brand_ind','bv-ind-in')">Save as Reference</button>
+          <button class="bv-btn" onclick="loadFromMemory('brand_voice','brand-voice-ind-b','brand-voice-ind-r')">Load from Memory</button>
+          <button class="bv-btn bv-btn-primary" onclick="runMod('brand-voice-ind')">Extract Brand Voice</button>
         </div>
         <div class="rbox" id="brand-voice-ind-r">
           <div class="rhead"><span class="rlbl">Brand Voice &mdash; Individual</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-ind-b')">Copy</button><button class="obtn" onclick="loadFromMemory('brand_voice','brand-voice-ind-b','brand-voice-ind-r')">Load from Memory</button><button class="svbtn" onclick="saveToMemory('brand_voice','brand-voice-ind-b')">Save to Memory</button></div></div>
