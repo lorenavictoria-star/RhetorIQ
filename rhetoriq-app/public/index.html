@@ -148,7 +148,7 @@ body.adv .adv-only{display:block!important}
 .sl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-top:3px}
 .stat.ao{display:none}
 body.adv .stat.ao{display:block}
-body.adv #mm-clients{display:block!important}
+body.adv #mn-clients{display:flex!important}
 
 /* MODULE PAGE */
 .back{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--mu);cursor:pointer;margin-bottom:24px;background:none;border:none;font-family:'Instrument Sans',sans-serif;padding:0}
@@ -790,11 +790,6 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
             <div class="home-eyebrow" id="home-eyebrow">Communication intelligence</div>
             <h1 class="home-h1" id="home-h1">The platform for<br><strong>executive voice.</strong></h1>
             <p class="home-sub" id="home-sub"></p>
-            <div class="adv-only" style="display:none;margin-bottom:12px">
-              <select id="home-client-select" onchange="switchClient(this.value)" style="padding:8px 12px;border:1.5px solid var(--bd);border-radius:4px;font-size:13px;color:var(--tx);background:var(--sf);outline:none;width:100%;cursor:pointer">
-                <option value="">— Select client —</option>
-              </select>
-            </div>
             <div class="router-row">
               <textarea class="rtarea" id="router-input" placeholder='e.g. "Write a speech for our AGM" or "Crisis: supplier announced bankruptcy"' onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();routePrompt()}"></textarea>
               <button class="vbtn" id="voice-btn" onclick="toggleVoice()" title="Voice input"><i class="ti ti-microphone" aria-hidden="true"></i></button><button class="vbtn" id="voice-lang-btn" onclick="toggleVoiceLang()" title="Voice language" style="font-size:10px;font-weight:700;letter-spacing:.04em;padding:0 7px;min-width:36px">DE</button>
@@ -1112,14 +1107,14 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div class="mni" id="mn-modules" onclick="goPage('modules');setMN('modules');renderModulesList()"><div class="mni-i">&#9783;</div><div class="mni-l" id="mn-modules-l">Modules</div></div>
     <div class="mni" id="mn-brand" onclick="goPage('brand-voice');setMN('brand')"><div class="mni-i">&#9670;</div><div class="mni-l" id="mn-brand-l">Brand</div></div>
     <div class="mni" id="mn-people" onclick="goPage('people');setMN('people');loadPeople()"><div class="mni-i" style="font-size:14px">&#9711;</div><div class="mni-l" id="mn-people-l">People</div></div>
-    <div class="mni" id="mn-hist" onclick="goPage('history');loadHistory();setMN('hist')"><div class="mni-i" style="font-size:14px">&#9700;</div><div class="mni-l" id="mn-hist-l">History</div></div>
+    <div class="mni ao" id="mn-clients" onclick="goPage('clients');loadAdvisorDashboard();setMN('clients')" style="display:none"><div class="mni-i">&#9635;</div><div class="mni-l">Clients</div></div>
     <div class="mni ao" id="mn-reviews" onclick="openReviewPanel();setMN('reviews')" style="display:none;position:relative"><div class="mni-i">&#9998;</div><div class="mni-l">Reviews</div><span class="rev-badge" id="rev-badge"></span></div>
     <div class="mni" id="mn-more" onclick="toggleMore()"><div class="mni-i">&#8943;</div><div class="mni-l" id="mn-more-l">More</div></div>
   </nav>
 
   <div id="more-menu" style="display:none;position:fixed;bottom:70px;right:12px;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);z-index:200;min-width:190px;overflow:hidden">
     <div id="mm-context" onclick="goPage('memory');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Memory</div>
-    <div id="mm-clients" class="ao-item" onclick="goPage('clients');loadAdvisorDashboard();hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none">Clients</div>
+    <div id="mm-history" onclick="goPage('history');loadHistory();hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">History</div>
     <div id="mm-videos" onclick="goPage('videos');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Videos</div>
     <div id="mm-contact" onclick="goPage('contact');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Contact</div>
     <div id="mm-datasec" onclick="goPage('datasec');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Data Security &amp; Privacy</div>
