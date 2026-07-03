@@ -62,11 +62,11 @@ Return: {"category":"<one of the category keys>","personName":"<only if people_v
 
 async function saveToMemory(clientId, advisorId, type, content) {
   await pool.query(
-    `INSERT INTO company_memory (client_id, advisor_id, memory_type, content)
-     VALUES ($1,$2,$3,$4)
+    `INSERT INTO company_memory (client_id, memory_type, content)
+     VALUES ($1,$2,$3)
      ON CONFLICT (client_id, memory_type)
      DO UPDATE SET content = EXCLUDED.content, updated_at = NOW()`,
-    [clientId, advisorId, type, content]
+    [clientId, type, content]
   );
 }
 
