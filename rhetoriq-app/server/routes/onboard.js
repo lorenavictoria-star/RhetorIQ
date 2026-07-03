@@ -86,20 +86,16 @@ router.post('/', requireAuth, upload.array('files', 30), async (req, res) => {
   if (!clientId) return res.status(400).json({ error: 'clientId required' });
   const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
 
-  const results = [];
   const brandVoiceSources = [];
 
-  for (const file of req.files) {
+  async function processFile(file) {
     const result = { filename: file.originalname, status: 'processing', category: null, summary: null, saved: null };
     try {
-      // Extract text from buffer (UTF-8 for txt, raw for others we'll try)
       let text = '';
       const name = file.originalname.toLowerCase();
       if (name.endsWith('.txt')) {
         text = file.buffer.toString('utf-8');
       } else if (name.endsWith('.pdf') || name.endsWith('.docx') || name.endsWith('.doc')) {
-        // We'll send the text extraction signal to frontend — these are handled client-side
-        // but if they arrive here as text/plain fallback, use buffer
         text = file.buffer.toString('utf-8').replace(/[^\x20-\x7E\n\r\tÀ-ɏЀ-ӿ]/g, ' ');
       } else {
         text = file.buffer.toString('utf-8');
@@ -108,8 +104,7 @@ router.post('/', requireAuth, upload.array('files', 30), async (req, res) => {
       if (!text.trim()) {
         result.status = 'skipped';
         result.summary = 'Empty or unreadable file';
-        results.push(result);
-        continue;
+        return result;
       }
 
       const cat = await categorize(file.originalname, text);
@@ -148,8 +143,10 @@ router.post('/', requireAuth, upload.array('files', 30), async (req, res) => {
       result.status = 'error';
       result.summary = e.message;
     }
-    results.push(result);
+    return result;
   }
+
+  const results = await Promise.all(req.files.map(processFile));
 
   // If brand voice sources collected, save them as raw ref for advisor to trigger manually
   if (brandVoiceSources.length) {
