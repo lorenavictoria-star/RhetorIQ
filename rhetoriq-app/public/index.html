@@ -526,13 +526,6 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
 .llogo .llogo-iq{color:var(--ac)}
 
 /* ── LEFT NAV ────────────────────────────────────────────────── */
-.lnav{position:fixed;left:0;top:calc(52px + var(--safe-top));bottom:calc(56px + var(--safe-bottom));width:52px;border-right:0.5px solid var(--bd);background:var(--bg);z-index:50;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:3px}
-.lnav-item{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;color:var(--mu);font-size:17px;transition:all var(--t-fast);position:relative}
-.lnav-item:hover{background:var(--acl);color:var(--ac)}
-.lnav-item.active{background:var(--acl);color:var(--ac)}
-.lnav-sep{width:22px;height:0.5px;background:var(--bd);margin:5px 0;flex-shrink:0}
-.content{padding-left:52px}
-@media(max-width:700px){.lnav{display:none}.content{padding-left:0}}
 
 /* ── HOME HERO ───────────────────────────────────────────────── */
 .home-hero{position:relative;overflow:hidden;padding-bottom:24px;margin-bottom:24px;border-bottom:0.5px solid var(--bd)}
@@ -774,14 +767,6 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <button class="ncbtn" onclick="openOnboarding()" style="background:var(--acc);color:#fff;border-color:var(--acc)">&#8679; Onboarding</button>
   </div>
 
-  <nav class="lnav" id="lnav">
-    <div class="lnav-item active" id="lnav-home" onclick="goPage('home')" title="Home"><i class="ti ti-home" aria-hidden="true"></i></div>
-    <div class="lnav-item" id="lnav-modules" onclick="goPage('modules')" title="Modules"><i class="ti ti-layout-grid" aria-hidden="true"></i></div>
-    <div class="lnav-sep"></div>
-    <div class="lnav-item" id="lnav-memory" onclick="goPage('memory')" title="Memory"><i class="ti ti-database" aria-hidden="true"></i></div>
-    <div class="lnav-item" id="lnav-people" onclick="goPage('people')" title="People"><i class="ti ti-users" aria-hidden="true"></i></div>
-    <div class="lnav-item" id="lnav-history" onclick="goPage('history')" title="History"><i class="ti ti-history" aria-hidden="true"></i></div>
-  </nav>
 
   <div class="content">
 
