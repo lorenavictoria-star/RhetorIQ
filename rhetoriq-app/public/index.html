@@ -1453,6 +1453,18 @@ function applyLang(){
   s('np-btn-cancel',t.btn_cancel);s('np-btn-save',t.btn_save);
   // Re-render module list with correct lang if open
   if(document.getElementById('page-modules')?.classList.contains('active')&&typeof ALL_MODULES!=='undefined')renderModulesList();
+  // Re-render current module form (preserving values)
+  const modPage=document.getElementById('page-module');
+  if(modPage?.classList.contains('active')&&window._currentModule){
+    const form=document.getElementById('mod-form');
+    const saved={};
+    if(form)form.querySelectorAll('input,textarea,select').forEach(el=>{if(el.id)saved[el.id]=el.value;});
+    goModule(window._currentModule);
+    setTimeout(()=>{
+      Object.entries(saved).forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.value=val;});
+      if(window._currentTgTile)tgOpenTile(window._currentTgTile);
+    },30);
+  }
 }
 function toggleLang(){
   LANG=LANG==='en'?'de':'en';
@@ -2189,6 +2201,7 @@ const MDEFS={
 };
 
 function goModule(name,prefill){
+  window._currentModule=name;window._currentTgTile=null;
   const def=MDEFS[name];if(!def)return;
   document.getElementById('mod-title').innerHTML=def.title;
   document.getElementById('mod-desc').innerHTML=def.desc;
@@ -2342,6 +2355,7 @@ function buildTextGen(prefill,form){
 }
 
 function tgOpenTile(id){
+  window._currentTgTile=id;
   document.getElementById('tg-tiles').style.display='none';
   document.getElementById('tg-panel-'+id).style.display='block';
   loadTgRef(id);
