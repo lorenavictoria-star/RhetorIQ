@@ -7,12 +7,12 @@
 <meta name="theme-color" content="#111">
 <title>RhetorIQ</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Instrument+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;1,200;1,300;1,400&family=Instrument+Sans:wght@300;400;500;600&display=swap');
 :root{
   /* Palette */
-  --bg:#FAFAF8;--sf:#F2EFE9;--bd:#DDD9D2;--tx:#141210;--mu:#686058;--dm:#ABA49C;--red:#C02020;
-  /* Accent — warm bronze, used sparingly */
-  --ac:#8B6440;--ac-light:#F5EDE3;
+  --bg:#FFFFFF;--sf:#F4F4F2;--bd:#E2E0DC;--tx:#0E0D0B;--mu:#747068;--dm:#ABA49C;--red:#C02020;
+  /* Accent — Porsche Racing Green */
+  --ac:#1B4D2E;--acl:#EAF2ED;--ac-light:#EAF2ED;--acc:#1B4D2E;
   /* Transitions */
   --t-fast:120ms ease;--t-base:200ms ease;
   /* Safe areas */
@@ -25,7 +25,7 @@ html,body{height:100%;font-family:'Instrument Sans',sans-serif;background:var(--
 #login-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px}
 #login-screen.hidden{display:none}
 .lbox{width:100%;max-width:380px}
-.llogo{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;margin-bottom:4px}
+.llogo{font-family:'Spectral',serif;font-size:32px;font-weight:400;margin-bottom:4px}
 .ltag{font-size:13px;color:var(--mu);margin-bottom:40px}
 .fl{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:6px}
 .fi{width:100%;padding:14px 16px;border:1.5px solid var(--bd);font-family:'Instrument Sans',sans-serif;font-size:15px;color:var(--tx);background:var(--sf);outline:none;border-radius:4px}
@@ -141,7 +141,7 @@ body.adv .cbar{display:flex}
 /* STATS */
 .stats{display:flex;gap:10px;margin-bottom:24px}
 .stat{flex:1;padding:14px;border:1.5px solid var(--bd);border-radius:8px;text-align:center;background:#fff}
-.sn{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;line-height:1}
+.sn{font-family:'Spectral',serif;font-size:36px;font-weight:300;line-height:1}
 .sl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-top:3px}
 .stat.ao{display:none}
 body.adv .stat.ao{display:block}
@@ -150,7 +150,7 @@ body.adv #mm-clients{display:block!important}
 /* MODULE PAGE */
 .back{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--mu);cursor:pointer;margin-bottom:24px;background:none;border:none;font-family:'Instrument Sans',sans-serif;padding:0}
 .back:hover{color:var(--tx)}
-.mtitle{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;margin-bottom:6px}
+.mtitle{font-family:'Spectral',serif;font-size:32px;font-weight:400;margin-bottom:6px}
 .mdesc{font-size:14px;color:var(--mu);max-width:620px;margin-bottom:24px;line-height:1.6}
 .fl2{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:7px}
 .fg2{margin-bottom:18px}
@@ -296,7 +296,7 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 
 /* PEOPLE DIRECTORY PAGE */
 .pdir-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.page-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400}
+.page-title{font-family:'Spectral',serif;font-size:32px;font-weight:400}
 .add-btn{padding:9px 18px;background:var(--tx);color:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px}
 .add-btn:hover{background:#333}
 .pcard{border:1.5px solid var(--bd);border-radius:8px;padding:18px 20px;margin-bottom:10px;background:#fff}
@@ -341,7 +341,7 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center;padding:24px}
 .ov.show{display:flex}
 .modal{background:#fff;border-radius:10px;padding:28px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,.15);max-height:90vh;overflow-y:auto}
-.modal h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;margin-bottom:4px}
+.modal h2{font-family:'Spectral',serif;font-size:24px;font-weight:400;margin-bottom:4px}
 .modal p{font-size:13px;color:var(--mu);margin-bottom:20px}
 .mf{margin-bottom:14px}
 .mact{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
@@ -437,7 +437,7 @@ body.adv .vubtn{display:block}
 .dsec-title{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--tx);margin-bottom:8px}
 .dsec-body{font-size:13px;color:var(--mu);line-height:1.65}
 .contact-card{border:1.5px solid var(--bd);border-radius:10px;padding:24px 26px;background:#fff;margin-bottom:16px}
-.contact-tagline{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--tx);margin-bottom:4px;font-style:italic}
+.contact-tagline{font-family:'Spectral',serif;font-size:22px;font-weight:400;color:var(--tx);margin-bottom:4px;font-style:italic}
 .contact-role{font-size:13px;color:var(--mu);margin-bottom:24px;line-height:1.5}
 .contact-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--bd);font-size:14px}
 .contact-row:last-child{border-bottom:none}
@@ -478,7 +478,7 @@ body.adv .vubtn{display:block}
 .hs-widget{border:1.5px solid var(--bd);border-radius:8px;padding:20px;margin-bottom:24px;background:#fff}
 .hs-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .hs-title{font-size:14px;font-weight:600}
-.hs-score{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300;line-height:1;color:var(--tx)}
+.hs-score{font-family:'Spectral',serif;font-size:48px;font-weight:300;line-height:1;color:var(--tx)}
 .hs-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-top:2px}
 .hs-result{font-size:13px;line-height:1.7;color:var(--tx);white-space:pre-wrap;margin-top:12px;display:none}
 .hs-result.show{display:block}
@@ -515,19 +515,71 @@ body.adv .vubtn{display:block}
 :focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:2px}
 button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 
-/* ── LOGO — Cormorant for brand character ────────────────────── */
-.hlogo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;letter-spacing:.02em;text-transform:none}
-.llogo{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;letter-spacing:.01em}
+/* ── LOGO — Spectral serif, green IQ ────────────────────────── */
+.hlogo{font-family:'Spectral',serif;font-size:18px;font-weight:300;letter-spacing:.02em;text-transform:none;display:flex;align-items:center;gap:9px}
+.hlogo-mark{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--ac);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hlogo-dot{width:5px;height:5px;border-radius:50%;background:var(--ac);display:block}
+.hlogo-iq{color:var(--ac)}
+.llogo{font-family:'Spectral',serif;font-size:36px;font-weight:300;letter-spacing:.01em}
+.llogo .llogo-iq{color:var(--ac)}
+
+/* ── LEFT NAV ────────────────────────────────────────────────── */
+.lnav{position:fixed;left:0;top:calc(52px + var(--safe-top));bottom:calc(56px + var(--safe-bottom));width:52px;border-right:0.5px solid var(--bd);background:var(--bg);z-index:50;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:3px}
+.lnav-item{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;color:var(--mu);font-size:17px;transition:all var(--t-fast);position:relative}
+.lnav-item:hover{background:var(--acl);color:var(--ac)}
+.lnav-item.active{background:var(--acl);color:var(--ac)}
+.lnav-sep{width:22px;height:0.5px;background:var(--bd);margin:5px 0;flex-shrink:0}
+.content{padding-left:52px}
+@media(max-width:700px){.lnav{display:none}.content{padding-left:0}}
+
+/* ── HOME HERO ───────────────────────────────────────────────── */
+.home-hero{position:relative;overflow:hidden;padding-bottom:24px;margin-bottom:24px;border-bottom:0.5px solid var(--bd)}
+.home-ghost{position:absolute;top:-14px;left:-10px;font-family:'Spectral',serif;font-style:italic;font-size:110px;font-weight:200;color:transparent;-webkit-text-stroke:0.5px #EAECE9;line-height:1;pointer-events:none;white-space:nowrap;letter-spacing:-.03em;user-select:none;z-index:0}
+.home-eyebrow{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--ac);margin-bottom:12px;display:flex;align-items:center;gap:9px;position:relative;z-index:1}
+.home-eyebrow::after{content:'';flex:0 0 28px;height:0.5px;background:var(--ac)}
+.home-h1{font-family:'Spectral',serif;font-style:italic;font-size:38px;font-weight:300;line-height:1.1;color:var(--tx);margin-bottom:6px;letter-spacing:-.01em;position:relative;z-index:1}
+.home-h1 strong{font-style:normal;font-weight:400;color:var(--ac)}
+.home-sub{font-size:12px;color:var(--mu);line-height:1.65;margin-bottom:20px;max-width:420px;position:relative;z-index:1}
+
+/* ── QA GRID 2-COL ───────────────────────────────────────────── */
+.qa-section{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+.qa-card{border:0.5px solid var(--bd);padding:14px 16px;cursor:pointer;transition:border-color var(--t-base),background var(--t-base);background:#fff;border-radius:0}
+.qa-card:hover{border-color:var(--ac);background:var(--acl)}
+.qa-card:hover .qa-arr{color:var(--ac)}
+.qa-card:hover .qa-name{color:var(--ac)}
+.qa-tag{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--ac);margin-bottom:4px}
+.qa-name{font-family:'Spectral',serif;font-size:14px;font-weight:300;color:var(--tx);margin-bottom:3px;transition:color var(--t-fast)}
+.qa-desc{font-size:10px;color:var(--mu);line-height:1.5}
+.qa-arr{font-size:11px;color:var(--bd);margin-top:8px;display:block;transition:color var(--t-fast)}
+.qa-card-wide{grid-column:span 2;display:flex;align-items:center;gap:14px;border:0.5px solid var(--bd);padding:11px 16px;cursor:pointer;background:var(--sf);transition:border-color var(--t-base),background var(--t-base)}
+.qa-card-wide:hover{border-color:var(--ac);background:var(--acl)}
+.qa-wide-icon{width:30px;height:30px;background:var(--ac);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0}
+.qa-wide-name{font-family:'Spectral',serif;font-size:13px;font-weight:300;color:var(--tx)}
+.qa-wide-desc{font-size:10px;color:var(--mu)}
+.qa-wide-arr{margin-left:auto;font-size:12px;color:var(--mu);flex-shrink:0}
+
+/* ── HOME RIGHT SIDEBAR ──────────────────────────────────────── */
+.home-right{flex-shrink:0;width:188px;margin-left:16px}
+.home-right-open{display:flex;flex-direction:column;gap:18px}
+.hr-block{}
+.hr-lbl{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--mu);margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid var(--bd)}
+.hr-score{font-family:'Spectral',serif;font-size:44px;font-weight:300;color:var(--ac);line-height:1}
+.hr-score-sub{font-size:9px;color:var(--mu);margin-top:3px;letter-spacing:.06em}
+.hr-tag{display:inline-block;font-size:8px;letter-spacing:.1em;text-transform:uppercase;background:var(--acl);color:var(--ac);padding:3px 7px;margin-bottom:4px;margin-right:3px}
+.hr-hist-item{display:flex;align-items:baseline;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--bd);font-size:11px}
+.hr-hist-item:last-child{border-bottom:none}
+.hr-hist-name{color:var(--tx)}
+.hr-hist-time{font-size:9px;color:var(--mu)}
 
 /* ── MODULE CARDS — richer hover ────────────────────────────── */
 .mcard{transition:border-color var(--t-base),box-shadow var(--t-base),transform var(--t-base)}
-.mcard:hover{border-color:var(--ac);box-shadow:0 4px 16px rgba(139,100,64,.1);transform:translateY(-1px)}
+.mcard:hover{border-color:var(--ac);box-shadow:0 4px 16px rgba(27,77,46,.1);transform:translateY(-1px)}
 .mcard.red-btn:hover{border-color:var(--red);transform:translateY(-1px)}
 .ctag{color:var(--ac)}
 
 /* ── QUICK-ACCESS & MODULE ROWS — consistent transitions ─────── */
 .qa-card{transition:border-color var(--t-base),box-shadow var(--t-base)}
-.qa-card:hover{border-color:var(--ac);box-shadow:0 2px 10px rgba(139,100,64,.08)}
+.qa-card:hover{border-color:var(--ac);box-shadow:0 2px 10px rgba(27,77,46,.08)}
 .mrow:hover{opacity:1;color:var(--ac)}
 .mrow:hover .mrow-name{color:var(--ac)}
 .mrow:hover .mrow-arr{color:var(--ac)}
@@ -593,7 +645,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="lbox">
-    <div class="llogo">RhetorIQ</div>
+    <div class="llogo">Rhetor<span class="llogo-iq">IQ</span></div>
     <div class="ltag">Executive Communication by Lorena Lienhard</div>
     <div id="advisor-form">
       <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="adv-email" autocomplete="email" placeholder="your@email.com"></div>
@@ -625,7 +677,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 <!-- PASSWORD CHANGE SCREEN (shown after first login) -->
 <div id="pw-change-screen" style="display:none;position:fixed;inset:0;background:#fff;z-index:9999;align-items:center;justify-content:center">
   <div class="lbox">
-    <div class="llogo">RhetorIQ</div>
+    <div class="llogo">Rhetor<span class="llogo-iq">IQ</span></div>
     <div class="ltag" style="margin-bottom:20px">Please set your personal password to continue.</div>
     <div class="fg"><label class="fl">New Password</label><input class="fi" type="password" id="new-pw1" placeholder="Minimum 8 characters"></div>
     <div class="fg"><label class="fl">Confirm Password</label><input class="fi" type="password" id="new-pw2" placeholder="Repeat password"></div>
@@ -700,7 +752,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 <!-- APP -->
 <div class="app" id="app" style="display:none">
   <header class="hdr">
-    <div class="hlogo" onclick="goHome()">RhetorIQ</div>
+    <div class="hlogo" onclick="goHome()"><span class="hlogo-mark"><span class="hlogo-dot"></span></span>Rhetor<span class="hlogo-iq">IQ</span></div>
     <div class="hright">
       <span class="wsd" id="ws-dot" style="display:none"></span>
       <span class="huname" id="uname"></span>
@@ -716,25 +768,38 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <button class="ncbtn" onclick="openOnboarding()" style="background:var(--acc);color:#fff;border-color:var(--acc)">&#8679; Onboarding</button>
   </div>
 
+  <nav class="lnav" id="lnav">
+    <div class="lnav-item active" id="lnav-home" onclick="goPage('home')" title="Home"><i class="ti ti-home" aria-hidden="true"></i></div>
+    <div class="lnav-item" id="lnav-modules" onclick="goPage('modules')" title="Modules"><i class="ti ti-layout-grid" aria-hidden="true"></i></div>
+    <div class="lnav-sep"></div>
+    <div class="lnav-item" id="lnav-memory" onclick="goPage('memory')" title="Memory"><i class="ti ti-database" aria-hidden="true"></i></div>
+    <div class="lnav-item" id="lnav-people" onclick="goPage('people')" title="People"><i class="ti ti-users" aria-hidden="true"></i></div>
+    <div class="lnav-item" id="lnav-history" onclick="goPage('history')" title="History"><i class="ti ti-history" aria-hidden="true"></i></div>
+  </nav>
+
   <div class="content">
 
     <!-- HOME -->
     <div class="page active" id="page-home">
-      <div id="onboarding-home-btn" style="margin-bottom:16px">
-        <button onclick="openOnboarding()" style="width:100%;padding:14px 16px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px">
-          <span style="font-size:18px">&#8679;</span>
-          <div><div>New Client Onboarding</div><div style="font-size:11px;font-weight:400;opacity:.85">Upload all documents at once — AI sorts and saves them to the right place</div></div>
+      <div id="onboarding-home-btn" style="display:none;margin-bottom:16px">
+        <button onclick="openOnboarding()" style="width:100%;padding:12px 16px;background:var(--acl);color:var(--ac);border:0.5px solid var(--ac);font-size:13px;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;font-family:'Instrument Sans',sans-serif">
+          <i class="ti ti-upload" aria-hidden="true"></i>
+          <div><div id="ob-btn-title">New Client Onboarding</div><div style="font-size:10px;font-weight:300;opacity:.8" id="ob-btn-sub">Upload all documents — AI sorts and saves them automatically</div></div>
         </button>
       </div>
       <div class="home-grid">
 
         <!-- LEFT COLUMN -->
         <div class="home-left">
-          <div class="router-box">
-            <div class="router-title" id="router-title">What would you like to do?</div>
-            <div class="router-sub" id="router-sub">Describe your task &mdash; RhetorIQ opens the right module automatically.</div>
+
+          <!-- HERO -->
+          <div class="home-hero">
+            <div class="home-ghost">Leadership</div>
+            <div class="home-eyebrow" id="home-eyebrow">Communication intelligence</div>
+            <h1 class="home-h1" id="home-h1">The platform for<br><strong>executive voice.</strong></h1>
+            <p class="home-sub" id="home-sub">For executives who understand that how you speak is inseparable from who you are.</p>
             <div class="router-row">
-              <textarea class="rtarea" id="router-input" placeholder='e.g. "Check if this press release could backfire" or "Write a speech for our CEO" or "Crisis: supplier just announced bankruptcy"'></textarea>
+              <textarea class="rtarea" id="router-input" placeholder='e.g. "Write a speech for our AGM" or "Crisis: supplier announced bankruptcy"'></textarea>
               <button class="vbtn" id="voice-btn" onclick="toggleVoice()" title="Voice input">&#127908;</button><button class="vbtn" id="voice-lang-btn" onclick="toggleVoiceLang()" title="Voice language" style="font-size:10px;font-weight:700;letter-spacing:.04em;padding:0 7px;min-width:36px">DE</button>
               <button class="rbtn" onclick="routePrompt()"><span id="rbtn-txt">&#8594; Go</span></button>
             </div>
@@ -748,32 +813,40 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
             </div>
           </div>
 
-          <!-- Quick Access Cards -->
-          <div class="qa-heading" id="qa-heading">Quick Access</div>
+          <!-- Quick Access -->
+          <div class="qa-heading" id="qa-heading" style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mu);margin-bottom:10px">Quick Access</div>
           <div class="qa-section">
             <div class="qa-card" onclick="goModule('pre-meeting')">
-              <div class="qa-card-left">
-                <div class="qa-tag" id="qa-tag1">Preparation</div>
-                <div class="qa-name" id="qa-name1">Meeting Prep</div>
-                <div class="qa-desc" id="qa-desc1">Brief, agenda &amp; people context — before any meeting</div>
-              </div>
-              <div class="qa-arr">&#8594;</div>
+              <div class="qa-tag" id="qa-tag1">Preparation</div>
+              <div class="qa-name" id="qa-name1">Meeting Prep</div>
+              <div class="qa-desc" id="qa-desc1">Brief, agenda &amp; people context</div>
+              <span class="qa-arr">↗</span>
             </div>
             <div class="qa-card" onclick="goModule('crisis')">
-              <div class="qa-card-left">
-                <div class="qa-tag" id="qa-tag2">Emergency</div>
-                <div class="qa-name" id="qa-name2">Crisis Response</div>
-                <div class="qa-desc" id="qa-desc2">Immediate framing for unexpected situations</div>
-              </div>
-              <div class="qa-arr">&#8594;</div>
+              <div class="qa-tag" id="qa-tag2">Emergency</div>
+              <div class="qa-name" id="qa-name2">Crisis Response</div>
+              <div class="qa-desc" id="qa-desc2">Immediate framing for unexpected situations</div>
+              <span class="qa-arr">↗</span>
             </div>
             <div class="qa-card" onclick="goModule('text-gen')">
-              <div class="qa-card-left">
-                <div class="qa-tag" id="qa-tag3">Creation</div>
-                <div class="qa-name" id="qa-name3">Text Generator</div>
-                <div class="qa-desc" id="qa-desc3">LinkedIn, newsletter, email, speech — in your exact voice</div>
+              <div class="qa-tag" id="qa-tag3">Creation</div>
+              <div class="qa-name" id="qa-name3">Text Generator</div>
+              <div class="qa-desc" id="qa-desc3">LinkedIn, email, speech — in your voice</div>
+              <span class="qa-arr">↗</span>
+            </div>
+            <div class="qa-card" onclick="goPage('people')">
+              <div class="qa-tag">People</div>
+              <div class="qa-name">Voice DNA</div>
+              <div class="qa-desc">Generate or view a person's voice profile</div>
+              <span class="qa-arr">↗</span>
+            </div>
+            <div class="qa-card-wide" onclick="goPage('modules')">
+              <div class="qa-wide-icon"><i class="ti ti-layout-grid" aria-hidden="true"></i></div>
+              <div>
+                <div class="qa-wide-name">Browse all modules</div>
+                <div class="qa-wide-desc">Risk Scan · Translate · 2-Min Training · How We Communicate</div>
               </div>
-              <div class="qa-arr">&#8594;</div>
+              <span class="qa-wide-arr">↗</span>
             </div>
           </div>
 
@@ -821,15 +894,29 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
           </div>
         </div><!-- /home-left -->
 
-        <!-- RIGHT COLUMN: all modules -->
+        <!-- RIGHT SIDEBAR -->
         <div class="home-right" id="home-right">
-          <div class="home-right-hdr">
-            <span class="home-right-title" id="home-right-title"></span>
-            <button class="home-right-toggle" id="home-right-btn" onclick="toggleHomeRight()" title="Show modules">&#8249;</button>
+          <div class="home-right-open">
+            <div class="hr-block">
+              <div class="hr-lbl" id="hr-score-lbl">Score</div>
+              <div class="hr-score" id="hs-score">—</div>
+              <div class="hr-score-sub" id="hr-score-sub">90-day average</div>
+            </div>
+            <div class="hr-block" id="hr-context-block">
+              <div class="hr-lbl" id="hr-ctx-lbl">Active context</div>
+              <div id="hr-context-tags"><span class="hr-tag" id="hr-ctx-loading">Loading…</span></div>
+            </div>
+            <div class="hr-block" id="hr-history-block">
+              <div class="hr-lbl" id="hr-hist-lbl">Recent</div>
+              <div id="hr-history-list"></div>
+            </div>
+            <div class="hr-block">
+              <button onclick="openOnboarding()" style="width:100%;padding:8px 10px;background:var(--acl);color:var(--ac);border:0.5px solid var(--ac);font-size:10px;font-weight:500;cursor:pointer;font-family:'Instrument Sans',sans-serif;letter-spacing:.04em;text-align:left;display:flex;align-items:center;gap:6px">
+                <i class="ti ti-upload" style="font-size:13px" aria-hidden="true"></i> <span id="hr-ob-lbl">Client Onboarding</span>
+              </button>
+            </div>
           </div>
-          <div class="home-right-body">
-            <div class="hm-list" id="hm-list"></div>
-          </div>
+          <div class="hm-list" id="hm-list" style="display:none"></div>
         </div>
 
       </div><!-- /home-grid -->
@@ -1861,6 +1948,28 @@ function goPage(name){
   if(name==='brand-voice'){loadBrandVoiceRefs();autoLoadBrandVoice();}
   if(name==='modules')renderModulesList();
   if(name==='history')loadHistory();
+  updateLnav(name);
+}
+function updateLnav(name){
+  document.querySelectorAll('.lnav-item').forEach(el=>el.classList.remove('active'));
+  const map={home:'lnav-home',modules:'lnav-modules',memory:'lnav-memory',people:'lnav-people',history:'lnav-history'};
+  const el=document.getElementById(map[name]);if(el)el.classList.add('active');
+}
+function updateHomeRightSidebar(){
+  const hist=JSON.parse(localStorage.getItem('riq-hist-'+clientId)||'[]').slice(0,3);
+  const el=document.getElementById('hr-history-list');
+  if(el)el.innerHTML=hist.length?hist.map(h=>`<div class="hr-hist-item"><span class="hr-hist-name">${h.name||h.module}</span><span class="hr-hist-time">${h.date||'—'}</span></div>`).join(''):'<div style="font-size:10px;color:var(--mu)">No recent sessions</div>';
+  if(window.memory){
+    const tags=[];
+    if(memory.brand_voice_co||memory.brand_voice_ind)tags.push('Brand Voice');
+    if(memory.key_facts)tags.push('Key Facts');
+    if(memory.people_count>0)tags.push((memory.people_count)+' people');
+    const tc=document.getElementById('hr-context-tags');
+    if(tc)tc.innerHTML=tags.length?tags.map(t=>`<span class="hr-tag">${t}</span>`).join(''):'<span style="font-size:10px;color:var(--mu)">No context loaded</span>';
+  } else {
+    const tc=document.getElementById('hr-context-tags');
+    if(tc)tc.innerHTML='<span style="font-size:10px;color:var(--mu)">Select a client</span>';
+  }
 }
 function setMN(id){document.querySelectorAll('.mni').forEach(n=>n.classList.remove('active'));const el=document.getElementById('mn-'+id);if(el)el.classList.add('active');}
 
