@@ -2528,20 +2528,35 @@ async function runOnboarding(){
     if(!r.ok)throw new Error(data.error);
 
     const resEl=document.getElementById('ob-result-items');
-    resEl.innerHTML=data.results.map(res=>{
-      const catLabel=OB_CAT_LABELS[res.category]||res.category||'—';
-      const color=res.status==='error'?'#dc2626':res.status==='skipped'?'var(--mu)':'#16a34a';
-      return `<div style="padding:10px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg)">
+    const saved=data.results.filter(r=>r.status==='done');
+    const skipped=data.results.filter(r=>r.status==='skipped'||r.status==='error');
+    const CAT_OPTS=['brand_voice_source','brand_voice_analysis','key_facts','ref_linkedin','ref_email','ref_speech','ref_newsletter','ref_press','ref_website'];
+    const CAT_NAMES={brand_voice_source:'Brand Voice Source',brand_voice_analysis:'Brand Voice (existing)',key_facts:'Key Facts',ref_linkedin:'Reference — LinkedIn',ref_email:'Reference — Email',ref_speech:'Reference — Speech',ref_newsletter:'Reference — Newsletter',ref_press:'Reference — Press',ref_website:'Reference — Website'};
+    window._obSkippedTexts=skipped.map(r=>r._text||'');
+    resEl.innerHTML=`
+      ${saved.length?`<div style="font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Saved — ${saved.length} files</div>`:''}
+      ${saved.map(res=>`<div style="padding:10px 12px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);margin-bottom:6px">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-          <div style="font-size:13px;font-weight:600">${res.filename}</div>
-          <div style="font-size:11px;color:${color};white-space:nowrap;font-weight:600">${res.status==='done'?'&#10003; Saved':res.status==='skipped'?'Skipped':'Error'}</div>
+          <div style="font-size:13px;font-weight:500">${res.filename}</div>
+          <div style="font-size:11px;color:#16a34a;white-space:nowrap;font-weight:600">✓ Saved</div>
         </div>
-        <div style="font-size:12px;color:var(--mu);margin-top:3px">${catLabel}</div>
-        ${res.summary?`<div style="font-size:12px;color:var(--tx);margin-top:4px;font-style:italic">${res.summary}</div>`:''}
-        ${res.saved?`<div style="font-size:11px;color:#16a34a;margin-top:4px">→ ${res.saved}</div>`:''}
-        ${res.status==='error'?`<div style="font-size:11px;color:#dc2626;margin-top:4px">${res.summary}</div>`:''}
-      </div>`;
-    }).join('');
+        <div style="font-size:12px;color:var(--mu);margin-top:2px">${OB_CAT_LABELS[res.category]||res.category||'—'}</div>
+        ${res.saved?`<div style="font-size:11px;color:#16a34a;margin-top:3px">→ ${res.saved}</div>`:''}
+      </div>`).join('')}
+      ${skipped.length?`<div style="font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 8px">Not categorized — assign manually</div>
+      ${skipped.map((res,i)=>`<div style="padding:12px;border:1.5px solid var(--bd);border-radius:6px;background:var(--sf);margin-bottom:8px" id="ob-skip-${i}">
+        <div style="font-size:13px;font-weight:500;margin-bottom:6px">${res.filename}</div>
+        ${res.summary?`<div style="font-size:12px;color:var(--mu);font-style:italic;margin-bottom:8px">${res.summary}</div>`:''}
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="ob-skip-cat-${i}" style="flex:1;padding:7px 10px;border:1.5px solid var(--bd);border-radius:4px;font-size:12px;background:#fff">
+            <option value="">— Choose category —</option>
+            ${CAT_OPTS.map(c=>`<option value="${c}">${CAT_NAMES[c]}</option>`).join('')}
+          </select>
+          <button class="runbtn" style="padding:7px 14px;font-size:11px" onclick="obSaveManual(${i},'${res.filename}')">Save</button>
+          <span id="ob-skip-st-${i}" style="font-size:11px;color:#16a34a"></span>
+        </div>
+      </div>`).join('')}`:''}`;
+    window._obSkippedResults=skipped;
 
     document.getElementById('ob-results').style.display='block';
     document.getElementById('ob-file-list').style.display='none';
@@ -2556,6 +2571,36 @@ async function runOnboarding(){
   }
 }
 
+async function obSaveManual(i,filename){
+  const cat=document.getElementById('ob-skip-cat-'+i).value;
+  if(!cat)return alert('Please choose a category first.');
+  const st=document.getElementById('ob-skip-st-'+i);
+  st.textContent='Saving…';st.style.color='var(--mu)';
+  try{
+    const memKey={
+      brand_voice_source:'ref_brand_voice_source',
+      brand_voice_analysis:'brand_voice',
+      key_facts:'key_facts',
+      ref_linkedin:'ref_tg_linkedin',
+      ref_email:'ref_tg_email',
+      ref_speech:'ref_tg_speech',
+      ref_newsletter:'ref_tg_newsletter',
+      ref_press:'ref_tg_press',
+      ref_website:'ref_tg_website'
+    }[cat];
+    const res=window._obSkippedResults[i];
+    const content=`[${filename}]\n${res.summary||''}`;
+    const existing=await api('/api/memory/'+clientId);
+    const mem=await existing.json();
+    const prev=mem.find(m=>m.memory_type===memKey);
+    const merged=prev?.content?prev.content+'\n\n---\n\n'+content:content;
+    await api('/api/memory/'+clientId+'/'+memKey,{method:'PUT',body:JSON.stringify({content:merged})});
+    st.textContent='✓ Saved';st.style.color='#16a34a';
+    document.getElementById('ob-skip-cat-'+i).disabled=true;
+    document.querySelector(`#ob-skip-${i} button`).disabled=true;
+    loadMemory();
+  }catch(e){st.textContent='Error';st.style.color='#dc2626';}
+}
 let _pvState={};
 function openPersonVoiceGenerate(pid,name,role){
   _pvState={pid,name};
