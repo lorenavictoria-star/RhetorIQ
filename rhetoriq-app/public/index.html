@@ -2489,7 +2489,7 @@ async function runOnboarding(){
 
   status.textContent='AI is analysing and sorting your documents…';
   try{
-    const r=await fetch('/api/onboard',{method:'POST',headers:{Authorization:'Bearer '+localStorage.getItem('token')},body:fd});
+    const r=await fetch('/api/onboard',{method:'POST',headers:{Authorization:'Bearer '+localStorage.getItem('riq-token')},body:fd});
     const data=await r.json();
     if(!r.ok)throw new Error(data.error);
 
@@ -2550,13 +2550,13 @@ async function pvHandleFiles(files){
       status.textContent='Uploading '+file.name+' for transcription…';
       try{
         const fd=new FormData();fd.append('file',file);
-        const r=await fetch('/api/transcribe',{method:'POST',headers:{Authorization:'Bearer '+localStorage.getItem('token')},body:fd});
+        const r=await fetch('/api/transcribe',{method:'POST',headers:{Authorization:'Bearer '+localStorage.getItem('riq-token')},body:fd});
         const j=await r.json();if(!r.ok)throw new Error(j.error);
         status.textContent='Transcribing '+file.name+'…';
         let text='';
         for(let i=0;i<120;i++){
           await new Promise(r=>setTimeout(r,3000));
-          const pr=await fetch('/api/transcribe/'+j.jobId,{headers:{Authorization:'Bearer '+localStorage.getItem('token')}});
+          const pr=await fetch('/api/transcribe/'+j.jobId,{headers:{Authorization:'Bearer '+localStorage.getItem('riq-token')}});
           const pj=await pr.json();
           if(pj.status==='done'){text=pj.text;break;}
           if(pj.status==='error')throw new Error(pj.error);
