@@ -57,6 +57,7 @@ button,input,select,textarea{font-family:'Instrument Sans',sans-serif}
 /* CLIENT BAR */
 .cbar{display:none;background:var(--bg);border-bottom:1px solid var(--bd);padding:6px 24px;align-items:center;gap:10px;flex-shrink:0}
 body.adv .cbar{display:flex}
+body.adv .adv-only{display:block!important}
 .cbar-lbl{font-size:11px;color:var(--mu);flex-shrink:0;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .cbar select{padding:6px 12px;border:1px solid var(--bd);background:var(--sf);font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);border-radius:4px;outline:none;cursor:pointer}
 .ncbtn{margin-left:auto;padding:6px 14px;background:var(--tx);color:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:4px;flex-shrink:0}
@@ -789,6 +790,11 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
             <div class="home-eyebrow" id="home-eyebrow">Communication intelligence</div>
             <h1 class="home-h1" id="home-h1">The platform for<br><strong>executive voice.</strong></h1>
             <p class="home-sub" id="home-sub"></p>
+            <div class="adv-only" style="display:none;margin-bottom:12px">
+              <select id="home-client-select" onchange="switchClient(this.value)" style="padding:8px 12px;border:1.5px solid var(--bd);border-radius:4px;font-size:13px;color:var(--tx);background:var(--sf);outline:none;width:100%;cursor:pointer">
+                <option value="">— Select client —</option>
+              </select>
+            </div>
             <div class="router-row">
               <textarea class="rtarea" id="router-input" placeholder='e.g. "Write a speech for our AGM" or "Crisis: supplier announced bankruptcy"' onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();routePrompt()}"></textarea>
               <button class="vbtn" id="voice-btn" onclick="toggleVoice()" title="Voice input"><i class="ti ti-microphone" aria-hidden="true"></i></button><button class="vbtn" id="voice-lang-btn" onclick="toggleVoiceLang()" title="Voice language" style="font-size:10px;font-weight:700;letter-spacing:.04em;padding:0 7px;min-width:36px">DE</button>
@@ -1654,7 +1660,10 @@ async function loadClients(){try{const r=await api('/api/clients');clients=await
 function renderClients(){
   document.getElementById('stat-clients').textContent=clients.length;
   const sel=document.getElementById('client-select');
-  sel.innerHTML='<option value="">Select client</option>'+clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  const opts='<option value="">Select client</option>'+clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  sel.innerHTML=opts;
+  const hsel=document.getElementById('home-client-select');
+  if(hsel)hsel.innerHTML='<option value="">— Select client —</option>'+clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   const list=document.getElementById('clients-list');
   if(!clients.length){list.innerHTML='<div class="empty"><div class="ei">&#9711;</div><div>No clients yet.</div></div>';return;}
   list.innerHTML=clients.map(c=>`<div class="cc"><div><div class="cn">${c.name}</div><div class="cm">${c.industry||''} &mdash; ${c.contact||''}</div><div class="tkcode">${c.token.substring(0,28)}&hellip;</div></div><div class="ca"><button class="obtn" onclick="copyTok('${c.token}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail('${c.name}','${c.token}')">Send by Email</button><button class="dbtn" onclick="delData(${c.id},'${c.name}')">Delete All Data</button><button class="dbtn" onclick="deleteClient(${c.id},'${c.name}')">Delete Client</button></div></div>`).join('');
@@ -1663,6 +1672,10 @@ async function switchClient(id){
   clientId=id||null;
   people=[];
   memory=[];
+  // keep both selectors in sync
+  const v=id||'';
+  const s1=document.getElementById('client-select');if(s1&&s1.value!==v)s1.value=v;
+  const s2=document.getElementById('home-client-select');if(s2&&s2.value!==v)s2.value=v;
   if(clientId){await loadPeople();await loadMemory();setTimeout(()=>checkDueSubscriptions(),800);}
   loadStats();
   updateMemBanner();
