@@ -1829,11 +1829,45 @@ function renderMemory(){
   const list=document.getElementById('memory-list');
   if(!clientId){list.innerHTML='<div class="empty"><div class="ei">&#129504;</div><div>Select a client first.</div></div>';return;}
   if(!memory.length){list.innerHTML='<div class="empty"><div class="ei">&#129504;</div><div>No memory saved yet.<br>Run Brand Voice DNA and click &ldquo;Save to Memory&rdquo;.</div></div>';return;}
-  const LABELS={brand_voice:'Brand Voice DNA',rhetoric_summary:'Rhetoric Summary',key_facts:'Key Facts',culture_notes:'Culture Notes'};
-  list.innerHTML=memory.map(m=>{
+  const LABELS={brand_voice:'Brand Voice DNA',rhetoric_summary:'Rhetoric Summary',key_facts:'Key Facts',culture_notes:'Culture Notes',ref_tg_linkedin:'Reference — LinkedIn',ref_tg_email:'Reference — Email',ref_tg_speech:'Reference — Speech',ref_tg_newsletter:'Reference — Newsletter',ref_tg_press:'Reference — Press',ref_tg_website:'Reference — Website',ref_brand_voice_source:'Brand Voice Sources'};
+  list.innerHTML=memory.map((m,i)=>{
     const d=new Date(m.updated_at).toLocaleDateString('de-CH');
-    return `<div class="mem-page-section"><div class="mem-page-hd"><span class="mem-page-type">${LABELS[m.memory_type]||m.memory_type}</span><div class="mem-actions"><span class="mem-page-date">Updated ${d}</span><button class="obtn" style="margin-left:8px" onclick="deleteMemory('${m.memory_type}')">Delete</button></div></div><div class="mem-page-body">${m.content.substring(0,600)}${m.content.length>600?'\n\n[...]':''}</div></div>`;
+    const label=LABELS[m.memory_type]||m.memory_type;
+    return `<div class="mem-page-section" id="mem-sec-${i}">
+      <div class="mem-page-hd">
+        <span class="mem-page-type">${label}</span>
+        <div class="mem-actions">
+          <span class="mem-page-date">Updated ${d}</span>
+          <button class="obtn" style="margin-left:8px" onclick="memEdit(${i})">Edit</button>
+          <button class="obtn" style="margin-left:4px;border-color:var(--red);color:var(--red)" onclick="deleteMemory('${m.memory_type}')">Delete</button>
+        </div>
+      </div>
+      <div class="mem-page-body" id="mem-body-${i}" onclick="memEdit(${i})" style="cursor:text;white-space:pre-wrap">${m.content}</div>
+      <textarea id="mem-ta-${i}" style="display:none;width:100%;min-height:200px;padding:12px;border:1.5px solid var(--ac);border-radius:4px;font-size:13px;line-height:1.7;resize:vertical;outline:none">${m.content}</textarea>
+      <div id="mem-btns-${i}" style="display:none;margin-top:8px;display:none;gap:8px">
+        <button class="runbtn" onclick="memSave(${i},'${m.memory_type}')">Save</button>
+        <button class="obtn" onclick="memCancel(${i})">Cancel</button>
+      </div>
+    </div>`;
   }).join('');
+}
+function memEdit(i){
+  document.getElementById('mem-body-'+i).style.display='none';
+  document.getElementById('mem-ta-'+i).style.display='block';
+  document.getElementById('mem-btns-'+i).style.display='flex';
+  document.getElementById('mem-ta-'+i).focus();
+}
+function memCancel(i){
+  document.getElementById('mem-body-'+i).style.display='block';
+  document.getElementById('mem-ta-'+i).style.display='none';
+  document.getElementById('mem-btns-'+i).style.display='none';
+}
+async function memSave(i,type){
+  const content=document.getElementById('mem-ta-'+i).value.trim();
+  try{
+    await api('/api/memory/'+clientId+'/'+type,{method:'PUT',body:JSON.stringify({content})});
+    await loadMemory();renderMemory();
+  }catch{alert('Error saving.');}
 }
 let _importMemoryState={};
 function openImportMemory(type,targetId,boxId){
