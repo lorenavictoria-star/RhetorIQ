@@ -1403,7 +1403,50 @@ const T={
     klv_apikey:'Klaviyo Private API-Key',klv_connect:'Verbinden',klv_subject:'E-Mail Betreff',
     klv_subject_ph:'z.B. Unser März-Newsletter',klv_send:'Als Entwurf in Klaviyo speichern',
     klv_tpl_lbl:'Vorhandene Vorlage als Stil-Referenz verwenden',klv_tpl_none:'— Vorlage wählen —',
-    clients_export:'⬇ Excel'
+    clients_export:'⬇ Excel',
+    // Module titles & descriptions (DE)
+    mdef_profiling_title:'Kommunikationsanalyse',
+    mdef_profiling_desc:'Wie kommuniziert dieses Unternehmen, Team oder diese Führungskraft? Welche Muster wiederholen sich? Wo liegen die Schwachstellen?',
+    mdef_fingerprint_title:'Sprache im Zeitverlauf',
+    mdef_fingerprint_desc:'Wie hat sich die Sprache einer Person, eines Teams oder des gesamten Unternehmens verändert — unter Druck, in Krisen, nach Führungswechseln, auf dem Höhepunkt der Leistung?',
+    mdef_language_title:'Sprachanalyse',
+    mdef_language_desc:'Fügen Sie Texte von Führungskräften, Vorstand, Managern und Mitarbeitern ein. Sehen Sie, wo offizielle Botschaft und gelebte Realität auseinanderklaffen.',
+    mdef_risk_title:'Risiko-Scan',
+    mdef_risk_desc:'Bereit zum Absenden? Fügen Sie den Text zuerst ein. Erhalten Sie eine klare Liste, was schiefgehen könnte.',
+    mdef_stress_title:'Gegner-Test',
+    mdef_stress_desc:'Was werden Kritiker sagen? Erhalten Sie die härtesten Gegenargumente, bevor Sie den Raum betreten.',
+    mdef_impact_title:'Wirkung simulieren',
+    mdef_impact_desc:'Vor jeder grossen Ankündigung: Wie werden Mitarbeitende, Medien, Investoren und andere Stakeholder reagieren?',
+    mdef_crisis_title:'Krisenreaktion',
+    mdef_crisis_desc:'Etwas ist passiert. Fakten einfügen. In 2 Minuten 3 einsatzbereite Statements erhalten.',
+    mdef_actionability_title:'Klarheits-Check',
+    mdef_actionability_desc:'Vage Botschaft? Einfügen. Erhalten Sie eine direkte, klare und handlungsorientierte Version.',
+    mdef_thread_title:'Notizen zu Aufgaben',
+    mdef_thread_desc:'Beliebig unstrukturiertes Material einfügen — E-Mails, Meetingnotizen, Slack-Threads, Protokolle. Zurück erhalten: Was entschieden wurde, was offen ist, wer handeln muss.',
+    mdef_translate_title:'Übersetzen',
+    mdef_translate_desc:'Beliebigen Text von DE nach FR, EN oder IT übersetzen — mit identischem Ton, Autorität und Argumentationsstruktur. Nicht nur Worte — volle rhetorische Wirkung.',
+    mdef_sparring_title:'2-Min. Training',
+    mdef_sparring_desc:'3 kurze persönliche Übungen basierend auf bekannten Kommunikationsschwächen. Jede dauert 2 Minuten.',
+    mdef_debrief_title:'Nachbesprechung',
+    mdef_debrief_desc:'Nach einer Rede oder Ankündigung: Was hat funktioniert, was nicht, wo hat das Publikum anders reagiert als erwartet?',
+    mdef_review_title:'Feedback-Schreiber',
+    mdef_review_desc:'Grobe Notizen zu einem Mitarbeitenden eingeben — präzises, schriftliches Leistungsfeedback erhalten.',
+    mdef_recognition_title:'Wertschätzungs-Schreiber',
+    mdef_recognition_desc:'Eine Anerkennung für Mitarbeitende verfassen, die persönlich und aufrichtig wirkt — kein generisches Copy-paste.',
+    mdef_textgen_title:'Text-Generator',
+    mdef_textgen_desc:'Briefing rein — fertiger Text raus. LinkedIn, Rede, Pressemitteilung, E-Mail — jedes Format, in der authentischen Markenstimme.',
+    mdef_ghostwriter_title:'Ghostwriter-Modus',
+    mdef_ghostwriter_desc:'Vergangene Texte einfügen — E-Mails, Posts, Reden. Die KI extrahiert Ihre exakte Stimme und schreibt neuen Inhalt, der authentisch wie Sie klingt.',
+    mdef_crisis_toolkit_title:'Krisen-Kommunikationspaket',
+    mdef_crisis_toolkit_desc:'Etwas ist passiert. In 2 Minuten ein vollständiges Kommunikationspaket erhalten: interne Mitteilung, Pressemitteilung, Mitarbeiter-FAQ, Social-Media-Statement, Massnahmen-Checkliste.',
+    mdef_before_after_title:'Vorher / Nachher',
+    mdef_before_after_desc:'Beliebigen Text einfügen. Eine Diagnose der Schwächen, eine vollständig verbesserte Version und eine klare Erklärung jeder Änderung erhalten.',
+    mdef_competitive_title:'Wettbewerbs-Botschafts-Check',
+    mdef_competitive_desc:'Kernbotschaften einfügen. Ähnlichkeits-Score mit der Branche, Liste der generischen Formulierungen und eine Überarbeitung, die wirklich differenziert, erhalten.',
+    mdef_premeeting_title:'Meeting-Vorbereitung',
+    mdef_premeeting_desc:'Meeting in 1 Stunde? Vollständigen Brief erhalten: die 3 schwierigsten Momente, Ihre Eröffnung, Kernbotschaften, was Sie nicht sagen sollten, und eine Stakeholder-Map.',
+    mdef_argreaction_title:'Argument / Reaktions-Vorschau',
+    mdef_argreaction_desc:'Drei Tools in einem: härteste Gegenfragen erhalten, Stakeholder-Reaktionen simulieren und prüfen, ob die Führungsbotschaft zur Unternehmensrealität passt.'
   }
 };
 function applyLang(){
@@ -2176,6 +2219,25 @@ function getSelectedPeople(){
 }
 
 // MODULE DEFINITIONS
+const MDEF_DE_KEY={
+  profiling:'profiling',fingerprint:'fingerprint',language:'language',risk:'risk',stress:'stress',
+  impact:'impact',crisis:'crisis',actionability:'actionability',thread:'thread',
+  'rh-translate':'translate',sparring:'sparring',debrief:'debrief',review:'review',
+  recognition:'recognition','text-gen':'textgen',ghostwriter:'ghostwriter',
+  'crisis-toolkit':'crisis_toolkit','before-after':'before_after',
+  'competitive-check':'competitive','pre-meeting':'premeeting','arg-reaction':'argreaction'
+};
+function getMdefLang(name,def){
+  if(LANG==='de'){
+    const k=MDEF_DE_KEY[name];
+    if(k){
+      const t=T.de['mdef_'+k+'_title'];
+      const d=T.de['mdef_'+k+'_desc'];
+      if(t||d)return Object.assign({},def,{title:t||def.title,desc:d||def.desc});
+    }
+  }
+  return def;
+}
 const MDEFS={
   profiling:{title:'How We Communicate',desc:'How does this company, team, or leader communicate? What patterns repeat? Where are the weak points?',mf:'rp-in',ph:'Paste speeches, emails, LinkedIn posts, reports, board communications. The more diverse, the deeper the analysis.',api:'rp',people:true,fields:[{id:'rp-name',type:'text',lbl:'Name / Company / Group',ph:'e.g. CEO Anna Berger, or "Executive Board Acme AG"'},{id:'rp-industry',type:'sel',lbl:'Industry',opts:['Financial Services','Industry / Manufacturing','Tech / SaaS','Healthcare','Education','Public Sector','Other']}]},
   fingerprint:{title:'Language Over Time',desc:'How has the language of a person, a team, or the whole company shifted &mdash; under pressure, in crisis, after a leadership change, at peak performance?',mf:'cf-in',ph:'Separate texts by time period using "---" and a date label, e.g. "2023-Q1 [text] --- 2024-Q1 [text]"',api:'cf',people:true,fields:[{id:'cf-name',type:'text',lbl:'Name / Company / Group',ph:'e.g. CEO Anna Berger, or "Acme AG communications 2022-2024"'},{id:'cf-focus',type:'sel',lbl:'Focus',opts:['Overall development','Behaviour under pressure','Crisis vs. normal operations','Trust-building over time','Tone drift','After leadership change']}]},
@@ -2202,7 +2264,7 @@ const MDEFS={
 
 function goModule(name,prefill){
   window._currentModule=name;window._currentTgTile=null;
-  const def=MDEFS[name];if(!def)return;
+  const def=getMdefLang(name,MDEFS[name]);if(!def)return;
   document.getElementById('mod-title').innerHTML=def.title;
   document.getElementById('mod-desc').innerHTML=def.desc;
   const form=document.getElementById('mod-form');
@@ -3189,14 +3251,16 @@ function renderModulesList(){
     return matchCat&&matchQ;
   });
   if(!filtered.length){list.innerHTML=`<div style="color:var(--mu);font-size:14px;padding:20px 0">${T[LANG]?.mod_none||'No modules found.'}</div>`;return;}
-  list.innerHTML=filtered.map(m=>`
-    <div class="mrow${m.feat?' mrow-feat':''}${m.crisis?' mrow-crisis':''}" onclick="${m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`}">
+  list.innerHTML=filtered.map(m=>{
+    const def=getMdefLang(m.key,MDEFS[m.key]);
+    const displayName=def?.title||m.name;
+    return `<div class="mrow${m.feat?' mrow-feat':''}${m.crisis?' mrow-crisis':''}" onclick="${m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`}">
       <div class="mrow-left">
-        <div class="mrow-name">${m.name}</div>
+        <div class="mrow-name">${displayName}</div>
         <div class="mrow-tag">${m.tag}</div>
       </div>
       <div class="mrow-arr">&#8250;</div>
-    </div>`).join('');
+    </div>`;}).join('');
 }
 function filterModsList(q){modsSearch=q;renderModulesList();}
 function filterModsCat(cat,btn){
