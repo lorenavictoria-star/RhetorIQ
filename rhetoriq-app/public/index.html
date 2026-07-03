@@ -2086,7 +2086,23 @@ async function routePrompt(){
     if(mod==='vs-cal'||mod==='vs-gen')mod='text-gen';
     const name=MNAMES[mod]||'the right module';
     s.textContent='Opening: '+name+'...';
-    setTimeout(()=>{s.textContent='';document.getElementById('router-input').value='';if(mod==='brand-voice')goPage('brand-voice');else goModule(mod,text);},600);
+    setTimeout(()=>{
+      s.textContent='';document.getElementById('router-input').value='';
+      if(mod==='brand-voice'){goPage('brand-voice');}
+      else if(mod==='text-gen'){
+        const low=text.toLowerCase();
+        let fmt='custom';
+        if(/linkedin/i.test(low))fmt='linkedin';
+        else if(/newsletter/i.test(low))fmt='newsletter';
+        else if(/\bemail\b|\bmail\b/i.test(low))fmt='email';
+        else if(/\bspeech\b|\brede\b|\bkeynote\b|\bvortrag\b/i.test(low))fmt='speech';
+        else if(/\bpress(e|emitteilung)?\b|\bpressrelease\b|\bmedia\b/i.test(low))fmt='press';
+        else if(/\bwebsite\b|\bwebseite\b|\bhomepage\b/i.test(low))fmt='website';
+        goModule('text-gen');
+        setTimeout(()=>{tgOpenTile(fmt);const ta=document.getElementById('tg-task-'+fmt);if(ta)ta.value=text;},80);
+      }
+      else{goModule(mod,text);}
+    },600);
   }catch{s.textContent='Could not route &mdash; please choose a module below.';}
 }
 
