@@ -808,9 +808,13 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div class="mf"><label class="fl">Industry</label><select id="nc-industry"><option>Financial Services</option><option>Industry / Manufacturing</option><option>Tech / SaaS</option><option>Healthcare</option><option>Education</option><option>Public Sector</option><option>Other</option></select></div>
     <div class="mf"><label class="fl">Primary Contact</label><input type="text" id="nc-contact" placeholder="e.g. CEO Martin Meier"></div>
     <div class="mf" style="border-top:1px solid var(--bd);margin-top:12px;padding-top:12px">
-      <label class="fl" style="font-size:12px;color:var(--tx2)">Client Login + Welcome Email (optional)</label>
-      <input type="email" id="nc-email" placeholder="Client email address" style="margin-bottom:8px" class="fi">
-      <input type="password" id="nc-initpw" placeholder="Initial password (min. 8 characters)" style="margin-bottom:8px" class="fi">
+      <label class="fl">Login-Zugangsdaten für Klient</label>
+      <div style="font-size:12px;color:var(--mu);margin-bottom:8px">Mit Email + Passwort kann der Klient sofort einloggen. Welcome-Email wird automatisch versendet.</div>
+      <input type="email" id="nc-email" placeholder="Email-Adresse des Klienten" style="margin-bottom:8px" class="fi">
+      <div style="position:relative">
+        <input type="text" id="nc-initpw" placeholder="Initiales Passwort (mind. 8 Zeichen)" style="margin-bottom:8px;padding-right:80px" class="fi">
+        <button type="button" onclick="document.getElementById('nc-initpw').value=Math.random().toString(36).slice(2,10)" style="position:absolute;right:8px;top:8px;font-size:11px;padding:3px 8px;border:1px solid var(--bd);border-radius:4px;background:var(--sf);cursor:pointer;font-family:inherit">Generate</button>
+      </div>
       <div style="display:flex;gap:8px">
         <button id="nc-lang-de" class="lbtn" style="flex:1;font-size:12px;padding:6px" onclick="ncSetLang('de')">Deutsch</button>
         <button id="nc-lang-en" class="lbtn" style="flex:1;background:var(--bg2);color:var(--tx);font-size:12px;padding:6px;border:1.5px solid var(--bd)" onclick="ncSetLang('en')">English</button>
