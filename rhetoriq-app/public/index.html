@@ -974,6 +974,10 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <div class="rbox" id="brand-voice-co-r">
           <div class="rhead"><span class="rlbl">Brand Voice &mdash; Company</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-co-b')">Copy</button></div></div>
           <div class="rbody" id="brand-voice-co-b"></div>
+          <div style="padding:10px 12px;border-top:1px solid var(--bd)" id="bv-co-prompt-area" style="display:none">
+            <button class="bv-btn bv-btn-primary" onclick="generateStarterPrompts('brand-voice-co-b')" id="bv-co-prompt-btn">&#9889; Generate Starter Prompts for all Modules</button>
+            <div id="bv-co-prompt-status" style="font-size:12px;color:var(--mu);margin-top:6px"></div>
+          </div>
         </div>
       </div>
       <div class="bsec" id="brand-individual">
@@ -995,6 +999,10 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <div class="rbox" id="brand-voice-ind-r">
           <div class="rhead"><span class="rlbl">Brand Voice &mdash; Individual</span><div class="rbtns"><button class="cpbtn" onclick="cp('brand-voice-ind-b')">Copy</button></div></div>
           <div class="rbody" id="brand-voice-ind-b"></div>
+          <div style="padding:10px 12px;border-top:1px solid var(--bd)">
+            <button class="bv-btn bv-btn-primary" onclick="generateStarterPrompts('brand-voice-ind-b')" id="bv-ind-prompt-btn">&#9889; Generate Starter Prompts for all Modules</button>
+            <div id="bv-ind-prompt-status" style="font-size:12px;color:var(--mu);margin-top:6px"></div>
+          </div>
         </div>
       </div>
       </div><!-- /bv-main-wrap -->
@@ -3018,6 +3026,18 @@ function buildTextGen(prefill,form){
         </div>
       </div>`:''}
       <div class="tone-cal-box">
+        <div class="tone-cal-hdr" onclick="toggleVorbild('${t.id}')">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)">Vorbild-Accounts</span>
+          <span id="vorbild-arrow-${t.id}" style="font-size:16px;color:var(--mu);line-height:1">+</span>
+        </div>
+        <div id="vorbild-body-${t.id}" style="display:none;padding-bottom:12px">
+          <div style="font-size:12px;color:var(--mu);margin-bottom:8px">Accounts oder Posts die stilistisch inspirieren — die KI lernt daraus den Ton.</div>
+          <div class="fg2"><label class="fl2">Account-Namen</label><input type="text" id="vorbild-accounts-${t.id}" placeholder="z.B. Simon Sinek, Brené Brown, Adam Grant" style="font-size:12px"></div>
+          <div class="fg2"><label class="fl2">Beispiel-Posts (3–5 einfügen)</label><textarea id="vorbild-posts-${t.id}" placeholder="Hier 3–5 Posts von inspirierenden Accounts einfügen — je ein Post mit --- getrennt." style="min-height:90px;font-size:12px" onblur="saveVorbild('${t.id}')"></textarea></div>
+          <div id="vorbild-status-${t.id}" style="font-size:11px;color:var(--dm);margin-top:2px"></div>
+        </div>
+      </div>
+      <div class="tone-cal-box">
         <div class="tone-cal-hdr" onclick="toggleToneCal('${t.id}')">
           <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)">${tl.tone_cal||'Tone Calibrator'}</span>
           <span id="tone-cal-arrow-${t.id}" style="font-size:16px;color:var(--mu);line-height:1">+</span>
@@ -3052,6 +3072,7 @@ function tgOpenTile(id){
   document.getElementById('tg-tiles').style.display='none';
   document.getElementById('tg-panel-'+id).style.display='block';
   loadTgRef(id);
+  loadVorbild(id);
   if(id==='newsletter')klvAutoLoad('newsletter');
 }
 function tgCloseTile(id){
@@ -3086,6 +3107,49 @@ async function loadTgRef(id){
   }catch(e){}
 }
 function loadTgRefs(){['linkedin','newsletter','email','speech','press','website','custom'].forEach(id=>loadTgRef(id));}
+
+function toggleVorbild(id){const b=document.getElementById('vorbild-body-'+id),a=document.getElementById('vorbild-arrow-'+id);const open=b.style.display==='none';b.style.display=open?'block':'none';if(a)a.textContent=open?'−':'+';}
+
+async function saveVorbild(id){
+  if(!clientId)return;
+  const accounts=document.getElementById('vorbild-accounts-'+id)?.value?.trim()||'';
+  const posts=document.getElementById('vorbild-posts-'+id)?.value?.trim()||'';
+  const combined=accounts||posts?JSON.stringify({accounts,posts}):'';
+  const status=document.getElementById('vorbild-status-'+id);
+  try{
+    await api('/api/memory',{method:'POST',body:JSON.stringify({clientId,type:'ref_vorbild_'+id,content:combined})});
+    if(status)status.textContent=combined?'Gespeichert ✓':'';
+  }catch(e){if(status)status.textContent='Fehler';}
+}
+
+async function loadVorbild(id){
+  if(!clientId)return;
+  try{
+    const r=await api('/api/memory?clientId='+clientId+'&type=ref_vorbild_'+id);
+    const d=await r.json();
+    if(d.content){
+      const parsed=JSON.parse(d.content);
+      const acc=document.getElementById('vorbild-accounts-'+id);
+      const posts=document.getElementById('vorbild-posts-'+id);
+      if(acc)acc.value=parsed.accounts||'';
+      if(posts)posts.value=parsed.posts||'';
+      if(parsed.accounts||parsed.posts){
+        const gear=document.getElementById('tg-gear-'+id);
+        if(gear&&!gear.querySelector('.mod-prompt-dot')){const d2=document.createElement('span');d2.className='mod-prompt-dot';gear.appendChild(d2);}
+      }
+    }
+  }catch(e){}
+}
+
+function getVorbildContext(id){
+  const accounts=document.getElementById('vorbild-accounts-'+id)?.value?.trim()||'';
+  const posts=document.getElementById('vorbild-posts-'+id)?.value?.trim()||'';
+  if(!accounts&&!posts)return '';
+  let ctx='\n\n---STYLE INSPIRATION---';
+  if(accounts)ctx+='\nInspiration accounts: '+accounts;
+  if(posts)ctx+='\n\nExample posts to learn tone from:\n'+posts;
+  return ctx;
+}
 async function saveTgSubscription(id,forceDisabled){
   const enabled=forceDisabled===false?false:(document.getElementById('tg-sub-enabled-'+id)?.checked||false);
   const freq=document.getElementById('tg-sub-freq-'+id)?.value||'weekly';
@@ -3421,7 +3485,8 @@ async function runMod(name){
     if(tCalBody&&tCalBody.style.display!=='none'){const fv=parseInt(document.getElementById('tone-formal-'+fid)?.value||50);const ev=parseInt(document.getElementById('tone-edge-'+fid)?.value||50);const fd=fv<33?'conversational':fv>66?'formal':'semi-formal';const ed=ev<33?'diplomatic':ev>66?'very direct':'balanced';baseTone=baseTone+` Tone calibration: ${fd}, ${ed}.`;}
     let speechVoiceCtx='';
     if(fid==='speech'){const spPid=document.getElementById('tg-speech-person')?.value;if(spPid){const spPerson=people.find(p=>p.id==spPid);const spVoice=spPerson&&(spPerson.profiles||[]).find(pr=>pr.profile_type==='voice');if(spVoice)speechVoiceCtx='\n\n---SPEAKER VOICE DNA ('+spPerson.name+(spPerson.role?' — '+spPerson.role:'')+')---\n'+spVoice.content;}}
-    data={text:t,format:g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:baseTone,language:g('tg-lang-'+fid),length:g('tg-len-'+fid),voiceProfile:(voiceProf||'')+context+liCtx+speechVoiceCtx+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
+    const vorbildCtx=getVorbildContext(fid);
+    data={text:t,format:g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:baseTone,language:g('tg-lang-'+fid),length:g('tg-len-'+fid),voiceProfile:(voiceProf||'')+context+liCtx+speechVoiceCtx+vorbildCtx+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
   else if(name==='profiling'){module='rp';rid='profiling-r';bid='profiling-b';const t=g('rp-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('rp-name'),industry:g('rp-industry')};}
   else if(name==='fingerprint'){module='cf';rid='fingerprint-r';bid='fingerprint-b';const t=g('cf-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('cf-name'),focus:g('cf-focus')};}
   else if(name==='language'){module='la';rid='language-r';bid='language-b';const t=g('la-in');if(!t)return alert('Please enter text.');data={text:t+context,size:g('la-size'),focus:g('la-focus')};}
@@ -4086,6 +4151,30 @@ function showDebriefNudge(modName,resultId){
   if(!nudge){nudge=document.createElement('div');nudge.className='debrief-nudge';nudge.id='dn-'+resultId;box.after(nudge);}
   nudge.innerHTML=`<div class="debrief-nudge-text"><strong>Debrief this later?</strong><br>After the meeting or announcement, run a Debriefing to capture what actually happened.</div><button class="dn-btn" onclick="goModule('debrief')">Open Debriefing</button><button class="dn-dismiss" onclick="this.closest('.debrief-nudge').classList.remove('show')">&times;</button>`;
   nudge.classList.add('show');
+}
+
+// GENERATE STARTER PROMPTS FROM BRAND VOICE
+async function generateStarterPrompts(sourceBodyId){
+  if(!clientId)return alert('Please select a client first.');
+  const brandVoice=document.getElementById(sourceBodyId)?.textContent?.trim();
+  if(!brandVoice)return alert('Brand Voice result is empty.');
+  const isInd=sourceBodyId.includes('ind');
+  const btnId=isInd?'bv-ind-prompt-btn':'bv-co-prompt-btn';
+  const statusId=isInd?'bv-ind-prompt-status':'bv-co-prompt-status';
+  const btn=document.getElementById(btnId);
+  const status=document.getElementById(statusId);
+  btn.disabled=true;btn.textContent='Generating…';
+  status.textContent='Analysing brand voice and generating module instructions…';
+  try{
+    const r=await api('/api/module-prompts/generate-starters',{method:'POST',body:JSON.stringify({clientId,brandVoice,type:isInd?'individual':'company'})});
+    const d=await r.json();
+    btn.textContent='✓ Prompts saved for '+d.count+' modules';
+    status.textContent='You can now fine-tune each module via the ⚙ icon.';
+  }catch(e){
+    btn.textContent='⚡ Generate Starter Prompts for all Modules';
+    btn.disabled=false;
+    status.textContent='Error: '+e.message;
+  }
 }
 
 // SET CLIENT PASSWORD
