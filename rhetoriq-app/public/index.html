@@ -55,12 +55,14 @@ button,input,select,textarea{font-family:'Instrument Sans',sans-serif}
 .sout:hover{color:var(--tx)}
 
 /* CLIENT BAR */
-.cbar{display:none;background:var(--bg);border-bottom:1px solid var(--bd);padding:6px 24px;align-items:center;gap:10px;flex-shrink:0}
+.cbar{display:none;background:var(--bg);border-bottom:2px solid var(--bd);padding:10px 24px;align-items:center;gap:12px;flex-shrink:0}
 body.adv .cbar{display:flex}
 body.adv .adv-only{display:block!important}
-.cbar-lbl{font-size:11px;color:var(--mu);flex-shrink:0;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
-.cbar select{padding:6px 12px;border:1px solid var(--bd);background:var(--sf);font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);border-radius:4px;outline:none;cursor:pointer}
-.ncbtn{margin-left:auto;padding:6px 14px;background:var(--tx);color:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:4px;flex-shrink:0}
+.cbar-lbl{font-size:12px;color:var(--mu);flex-shrink:0;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.cbar select{padding:8px 14px;border:1.5px solid var(--bd);background:#fff;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;color:var(--tx);border-radius:6px;outline:none;cursor:pointer;min-width:200px;transition:border-color .15s}
+.cbar select:focus,.cbar select[data-active="true"]{border-color:var(--ac);background:#fff}
+.cbar-active{border-color:var(--ac)!important;color:var(--ac)!important}
+.ncbtn{margin-left:auto;padding:8px 16px;background:var(--tx);color:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px;flex-shrink:0}
 .ncbtn:hover{background:#333}
 
 /* CONTENT */
@@ -636,6 +638,19 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   .mdesc{font-size:15px;max-width:100%}
   .home-right.open{width:240px}
   .hm-item-name{font-size:13px}
+  /* SPLIT VIEW */
+  #page-module #mod-form{display:grid;grid-template-columns:minmax(280px,44%) 1fr;column-gap:32px;align-items:start}
+  #page-module #mod-form .upzone,
+  #page-module #mod-form .ftags,
+  #page-module #mod-form .fg2,
+  #page-module #mod-form .row2,
+  #page-module #mod-form .runbtn,
+  #page-module #mod-form .ppl-sel-wrap,
+  #page-module #mod-form .tog,
+  #page-module #mod-form .tone-cal{grid-column:1}
+  #page-module #mod-form .rbox{grid-column:2;grid-row:1/20;position:sticky;top:20px;margin-top:0;max-height:calc(100vh - 160px);overflow-y:auto}
+  /* QUICK PANEL */
+  #quick-panel{width:280px}
 }
 @media(max-width:700px){
   .hdr{padding:0 16px;padding-top:var(--safe-top)}
@@ -1184,6 +1199,18 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   </div>
 </div>
 
+<!-- QUICK PANEL -->
+<div id="quick-panel" style="position:fixed;bottom:70px;right:0;width:240px;background:#fff;border:1px solid var(--bd);border-radius:10px 0 0 10px;box-shadow:-4px 0 20px rgba(0,0,0,.1);z-index:150;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;max-height:70vh">
+  <div style="padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu)">Quick Panel</span>
+    <button onclick="closeQuickPanel()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--mu);padding:0;line-height:1">&times;</button>
+  </div>
+  <div id="qp-list" style="overflow-y:auto;flex:1;padding:8px 0"></div>
+</div>
+<button id="qp-trigger" onclick="toggleQuickPanel()" title="Quick Panel" style="position:fixed;bottom:80px;right:0;background:var(--ac);color:#fff;border:none;border-radius:8px 0 0 8px;padding:10px 8px;cursor:pointer;z-index:149;display:none;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-family:'Instrument Sans',sans-serif;font-weight:600;letter-spacing:.04em;box-shadow:-2px 2px 8px rgba(0,0,0,.15)">
+  <i class="ti ti-layout-sidebar-right" style="font-size:16px"></i>
+</button>
+
 <!-- CMD+K PALETTE -->
 <div id="cmd-palette" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.4);backdrop-filter:blur(2px)" onclick="if(event.target===this)closePalette()">
   <div style="position:absolute;top:15%;left:50%;transform:translateX(-50%);width:min(560px,92vw);background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden">
@@ -1636,6 +1663,24 @@ pre{font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:pre-wrap;lin
     btn.className='exbtn';btn.textContent=T[LANG]?.btn_word||'Word';
     btn.onclick=()=>exportDoc(id,title);
     btns.insertBefore(btn,btns.firstChild);
+    // Save to Memory button
+    const membtn=document.createElement('button');
+    membtn.className='exbtn';membtn.title='Save to Memory';membtn.textContent='💾 Memory';
+    membtn.style.cssText='background:#f0faf4;border-color:#b6e4c8;color:var(--ac)';
+    membtn.onclick=async()=>{
+      if(!clientId)return alert('Select a client first.');
+      const content=body.innerText||body.textContent;
+      if(!content.trim())return;
+      const type=prompt('Save as memory type:\nbrand_voice / key_facts / rhetoric_summary / culture_notes','key_facts');
+      if(!type)return;
+      try{
+        await api('/api/memory/'+clientId+'/'+type,{method:'PUT',body:JSON.stringify({content})});
+        await loadMemory();
+        membtn.textContent='✓ Saved';membtn.style.background='var(--ac)';membtn.style.color='#fff';
+        setTimeout(()=>{membtn.textContent='💾 Memory';membtn.style.background='#f0faf4';membtn.style.color='var(--ac)';},2000);
+      }catch(e){alert('Error: '+e.message);}
+    };
+    btns.insertBefore(membtn,btns.firstChild);
     // Send to Advisor button
     const abtn=document.createElement('button');
     abtn.className='advbtn';abtn.textContent=T[LANG]?.btn_send_advisor||'Send to Advisor';
@@ -1725,6 +1770,105 @@ async function loginClient(){
   try{const r=await fetch(API+'/auth/client-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});const d=await r.json();if(!r.ok){err.textContent=d.error||'Invalid token';err.style.display='block';return;}token=d.token;localStorage.setItem('riq-token',token);boot(d.client,'client');}catch{err.textContent='Connection error';err.style.display='block';}
 }
 function logout(){token=null;localStorage.removeItem('riq-token');location.reload();}
+
+// ── SAVED TEMPLATES ───────────────────────────────────────────
+function getTpls(modKey){return JSON.parse(localStorage.getItem('riq-tpl-'+modKey)||'[]');}
+function saveTpls(modKey,arr){localStorage.setItem('riq-tpl-'+modKey,JSON.stringify(arr));}
+
+function saveTemplate(){
+  const modKey=window._currentModule;if(!modKey)return;
+  const def=MDEFS[modKey];if(!def)return;
+  const name=prompt('Template name (e.g. "Patientenbrief Orthopädie"):');
+  if(!name)return;
+  const fields={};
+  // collect all inputs in mod-form
+  document.querySelectorAll('#mod-form input,#mod-form textarea,#mod-form select').forEach(el=>{
+    if(el.id)fields[el.id]=el.value;
+  });
+  const tpls=getTpls(modKey);
+  tpls.push({name,fields,created:Date.now()});
+  saveTpls(modKey,tpls);
+  alert('Template saved: '+name);
+}
+
+function loadTemplate(){
+  const modKey=window._currentModule;if(!modKey)return;
+  const tpls=getTpls(modKey);
+  if(!tpls.length)return alert('No saved templates for this module yet.');
+  const names=tpls.map((t,i)=>`${i+1}. ${t.name}`).join('\n');
+  const idx=parseInt(prompt('Select template:\n'+names))-1;
+  if(isNaN(idx)||idx<0||idx>=tpls.length)return;
+  const tpl=tpls[idx];
+  Object.entries(tpl.fields).forEach(([id,val])=>{
+    const el=document.getElementById(id);if(el)el.value=val;
+  });
+}
+
+function deleteTemplate(){
+  const modKey=window._currentModule;if(!modKey)return;
+  const tpls=getTpls(modKey);
+  if(!tpls.length)return alert('No saved templates for this module yet.');
+  const names=tpls.map((t,i)=>`${i+1}. ${t.name}`).join('\n');
+  const idx=parseInt(prompt('Delete which template?\n'+names))-1;
+  if(isNaN(idx)||idx<0||idx>=tpls.length)return;
+  tpls.splice(idx,1);saveTpls(modKey,tpls);
+  alert('Template deleted.');
+}
+
+function injectTemplateBtn(){
+  const modKey=window._currentModule;if(!modKey||!MDEFS[modKey])return;
+  if(document.getElementById('tpl-bar'))return;
+  const form=document.getElementById('mod-form');if(!form)return;
+  const bar=document.createElement('div');
+  bar.id='tpl-bar';
+  bar.style.cssText='display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center';
+  bar.innerHTML=`<span style="font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Templates</span>
+    <button onclick="loadTemplate()" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:'Instrument Sans',sans-serif">Load ▾</button>
+    <button onclick="saveTemplate()" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:'Instrument Sans',sans-serif">Save</button>`;
+  form.insertBefore(bar,form.firstChild);
+}
+
+// ── QUICK PANEL ────────────────────────────────────────────────
+let _qpOpen=false;
+function toggleQuickPanel(){_qpOpen?closeQuickPanel():openQuickPanel();}
+function openQuickPanel(){
+  renderQuickPanel();
+  document.getElementById('quick-panel').style.transform='translateX(0)';
+  _qpOpen=true;
+}
+function closeQuickPanel(){
+  document.getElementById('quick-panel').style.transform='translateX(100%)';
+  _qpOpen=false;
+}
+function renderQuickPanel(){
+  const list=document.getElementById('qp-list');if(!list)return;
+  const favs=getFavs();
+  const storKey='riq-recent-'+(clientId||'global');
+  const recent=JSON.parse(localStorage.getItem(storKey)||'[]');
+  const pinned=(typeof ALL_MODULES!=='undefined'?ALL_MODULES:[]).filter(m=>favs.has(m.key)).slice(0,5);
+  const recentItems=recent.slice(0,5);
+  let html='';
+  if(pinned.length){
+    html+=`<div style="padding:6px 16px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu)">Pinned</div>`;
+    html+=pinned.map(m=>{
+      const def=getMdefLang(m.key,MDEFS[m.key]);
+      const name=def?.title||m.name;
+      return `<div onclick="closeQuickPanel();goModule('${m.key}')" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;transition:background .1s" onmouseenter="this.style.background='var(--sf)'" onmouseleave="this.style.background=''">
+        <span>${name}</span><span style="color:var(--mu);font-size:12px">↗</span></div>`;
+    }).join('');
+  }
+  if(recentItems.length){
+    html+=`<div style="padding:${pinned.length?'10px':'6px'} 16px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu)">Recent</div>`;
+    html+=recentItems.map(m=>`<div onclick="closeQuickPanel();goModule('${m.key}')" style="padding:10px 16px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between" onmouseenter="this.style.background='var(--sf)'" onmouseleave="this.style.background=''">
+      <span>${m.name}</span><span style="color:var(--mu);font-size:12px">↗</span></div>`).join('');
+  }
+  if(!pinned.length&&!recentItems.length){
+    html='<div style="padding:20px 16px;font-size:13px;color:var(--mu)">Use ☆ to pin modules here.</div>';
+  }
+  html+=`<div onclick="closeQuickPanel();openPalette()" style="padding:10px 16px;cursor:pointer;font-size:13px;color:var(--ac);display:flex;align-items:center;gap:6px" onmouseenter="this.style.background='var(--sf)'" onmouseleave="this.style.background=''">
+    <i class="ti ti-search" style="font-size:13px"></i> Search all modules</div>`;
+  list.innerHTML=html;
+}
 
 // ── QUICK ACCESS — PERSONALIZED ───────────────────────────────
 const QA_DEFAULTS=[
@@ -2076,8 +2220,11 @@ async function boot(user,role){
     setInterval(loadAdvisorReviews,60000);
   }
   connectWS();loadStats();renderVids();initPasteIntelligence();renderHomeModuleList();renderQuickAccess();
-  // show ⌘K label on desktop
-  if(window.innerWidth>=900){const lbl=document.getElementById('hdr-cmd-label');if(lbl)lbl.style.display='inline';}
+  // show ⌘K label + quick panel trigger on desktop
+  if(window.innerWidth>=900){
+    const lbl=document.getElementById('hdr-cmd-label');if(lbl)lbl.style.display='inline';
+    const qpt=document.getElementById('qp-trigger');if(qpt)qpt.style.display='flex';
+  }
   const _vlb=document.getElementById('voice-lang-btn');if(_vlb)_vlb.textContent=voiceLang.toUpperCase();
 }
 
@@ -2690,6 +2837,7 @@ function goModule(name,prefill){
   else if(def.special==='argreaction')buildArgReaction(prefill,form);
   else buildForm(name,def,prefill,form);
   goPage('module');
+  setTimeout(injectTemplateBtn,50);
 }
 
 function buildForm(name,def,prefill,form){
