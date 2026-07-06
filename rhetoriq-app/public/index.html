@@ -151,8 +151,17 @@ body.adv .adv-only{display:block!important}
 .stat.ao{display:none}
 body.adv .stat.ao{display:block}
 body.adv #mm-clients{display:flex!important}
+body.adv #mm-reviews{display:flex!important}
 body.adv #mm-module-builder{display:flex!important}
 body.adv #mm-usage{display:flex!important}
+body.adv #mm-advisor-section{display:block!important}
+/* MORE MENU TILES & ROWS */
+.mm-tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border:1px solid var(--bd);border-radius:8px;cursor:pointer;background:var(--sf);transition:border-color .15s,background .15s;text-align:center}
+.mm-tile:hover{border-color:var(--ac);background:var(--acl)}
+.mm-tile-i{font-size:20px;color:var(--mu);line-height:1}
+.mm-tile-l{font-size:12px;font-weight:600;color:var(--tx);line-height:1.2}
+.mm-row{padding:9px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--tx);transition:background .15s}
+.mm-row:hover{background:var(--sf)}
 
 /* MODULE PAGE */
 .back{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--mu);cursor:pointer;margin-bottom:24px;background:none;border:none;font-family:'Instrument Sans',sans-serif;padding:0}
@@ -1180,22 +1189,64 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div class="mni" id="mn-more" onclick="toggleMore()"><div class="mni-i">&#8943;</div><div class="mni-l" id="mn-more-l">More</div></div>
   </nav>
 
-  <div id="more-menu" style="display:none;position:fixed;bottom:70px;right:12px;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.1);z-index:200;min-width:200px;overflow:hidden">
-    <div style="padding:8px 18px 6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)">Workspace</div>
-    <div onclick="goPage('brand-voice');setMN('more');hideMore()" style="padding:11px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px"><span style="color:var(--mu)">&#9670;</span> Brand Voice</div>
-    <div onclick="goPage('people');loadPeople();setMN('more');hideMore()" style="padding:11px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px"><span style="color:var(--mu)">&#9711;</span> People</div>
-    <div id="mm-context" onclick="goPage('memory');setMN('more');hideMore()" style="padding:11px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px"><span style="color:var(--mu)">&#9632;</span> Memory</div>
-    <div id="mm-history" onclick="goPage('history');loadHistory();setMN('more');hideMore()" style="padding:11px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px"><span style="color:var(--mu)">&#9711;</span> History</div>
-    <div class="ao-item" id="mm-clients" onclick="goPage('clients');loadAdvisorDashboard();setMN('more');hideMore()" style="padding:11px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none;align-items:center;gap:10px"><span style="color:var(--mu)">&#9635;</span> Clients</div>
-    <div class="ao-item" id="mm-reviews" onclick="openReviewPanel();setMN('more');hideMore()" style="padding:11px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none;align-items:center;gap:10px;position:relative"><span style="color:var(--mu)">&#9998;</span> Reviews <span class="rev-badge" id="rev-badge"></span></div>
-    <div style="padding:8px 18px 6px;margin-top:4px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)">Advisor</div>
-    <div class="ao-item" onclick="goPage('module-builder');loadModuleBuilder();setMN('more');hideMore()" style="padding:11px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none;align-items:center;gap:10px" id="mm-module-builder"><span style="color:var(--mu)">&#9670;</span> Module Builder</div>
-    <div class="ao-item" onclick="goPage('usage');loadUsage();setMN('more');hideMore()" style="padding:11px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none;align-items:center;gap:10px" id="mm-usage"><span style="color:var(--mu)">&#9636;</span> Usage</div>
-    <div style="padding:8px 18px 6px;margin-top:4px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)">Info</div>
-    <div id="mm-videos" onclick="goPage('videos');hideMore()" style="padding:11px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px"><span style="color:var(--mu)">&#9654;</span> Videos</div>
-    <div id="mm-contact" onclick="goPage('contact');setMN('');hideMore()" style="padding:11px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px"><span style="color:var(--mu)">&#9993;</span> Contact</div>
-    <div id="mm-datasec" onclick="goPage('datasec');setMN('');hideMore()" style="padding:11px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px"><span style="color:var(--mu)">&#9679;</span> Data Security</div>
-    <div id="mm-signout" onclick="logout()" style="padding:11px 18px;font-size:14px;cursor:pointer;color:var(--mu);display:flex;align-items:center;gap:10px"><span>&#8594;</span> Sign out</div>
+  <div id="more-menu" style="display:none;position:fixed;bottom:70px;right:12px;background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.13);z-index:200;width:248px;overflow:hidden">
+
+    <!-- Workspace grid -->
+    <div style="padding:12px 12px 8px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)">Workspace</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 12px">
+      <div onclick="goPage('brand-voice');setMN('more');hideMore()" class="mm-tile">
+        <div class="mm-tile-i">&#9670;</div>
+        <div class="mm-tile-l">Brand Voice</div>
+      </div>
+      <div onclick="goPage('people');loadPeople();setMN('more');hideMore()" class="mm-tile">
+        <div class="mm-tile-i">&#9711;</div>
+        <div class="mm-tile-l">People</div>
+      </div>
+      <div id="mm-context" onclick="goPage('memory');setMN('more');hideMore()" class="mm-tile">
+        <div class="mm-tile-i">&#9632;</div>
+        <div class="mm-tile-l">Memory</div>
+      </div>
+      <div id="mm-history" onclick="goPage('history');loadHistory();setMN('more');hideMore()" class="mm-tile">
+        <div class="mm-tile-i">&#8634;</div>
+        <div class="mm-tile-l">History</div>
+      </div>
+      <div class="ao-item mm-tile" id="mm-clients" onclick="goPage('clients');loadAdvisorDashboard();setMN('more');hideMore()" style="display:none">
+        <div class="mm-tile-i">&#9635;</div>
+        <div class="mm-tile-l">Clients</div>
+      </div>
+      <div class="ao-item mm-tile" id="mm-reviews" onclick="openReviewPanel();setMN('more');hideMore()" style="display:none;position:relative">
+        <div class="mm-tile-i">&#9998;</div>
+        <div class="mm-tile-l">Reviews</div>
+        <span class="rev-badge" id="rev-badge" style="position:absolute;top:6px;right:6px"></span>
+      </div>
+    </div>
+
+    <!-- Advisor compact list -->
+    <div class="ao-item" id="mm-advisor-section" style="display:none;border-top:1px solid var(--bd)">
+      <div style="padding:10px 14px 6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)">Advisor</div>
+      <div class="ao-item mm-row" id="mm-module-builder" onclick="goPage('module-builder');loadModuleBuilder();setMN('more');hideMore()" style="display:none">
+        <i class="ti ti-puzzle" style="font-size:15px;color:var(--mu)"></i> Module Builder
+      </div>
+      <div class="ao-item mm-row" id="mm-usage" onclick="goPage('usage');loadUsage();setMN('more');hideMore()" style="display:none">
+        <i class="ti ti-chart-bar" style="font-size:15px;color:var(--mu)"></i> Usage
+      </div>
+    </div>
+
+    <!-- About collapsed -->
+    <div style="border-top:1px solid var(--bd);padding:4px 0">
+      <div onclick="document.getElementById('mm-about-body').style.display=document.getElementById('mm-about-body').style.display==='none'?'block':'none'" style="padding:10px 14px;font-size:13px;cursor:pointer;color:var(--mu);display:flex;align-items:center;justify-content:space-between">
+        <span>About & Info</span><span style="font-size:11px">&#9660;</span>
+      </div>
+      <div id="mm-about-body" style="display:none">
+        <div id="mm-videos" onclick="goPage('videos');hideMore()" class="mm-row"><i class="ti ti-player-play" style="font-size:14px;color:var(--mu)"></i> Videos</div>
+        <div id="mm-contact" onclick="goPage('contact');setMN('');hideMore()" class="mm-row"><i class="ti ti-mail" style="font-size:14px;color:var(--mu)"></i> Contact</div>
+        <div id="mm-datasec" onclick="goPage('datasec');setMN('');hideMore()" class="mm-row"><i class="ti ti-shield" style="font-size:14px;color:var(--mu)"></i> Data Security</div>
+      </div>
+    </div>
+
+    <div id="mm-signout" onclick="logout()" style="border-top:1px solid var(--bd);padding:11px 14px;font-size:13px;cursor:pointer;color:var(--mu);display:flex;align-items:center;gap:8px">
+      <i class="ti ti-logout" style="font-size:14px"></i> Sign out
+    </div>
   </div>
 </div>
 
