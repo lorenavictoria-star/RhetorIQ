@@ -708,6 +708,21 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   </div>
 </div>
 
+<!-- SET PASSWORD MODAL -->
+<div class="ov" id="sp-ov">
+  <div class="modal" style="max-width:400px">
+    <h2 style="margin-bottom:4px">Set Password</h2>
+    <div id="sp-subtitle" style="font-size:13px;color:var(--mu);margin-bottom:16px"></div>
+    <div class="mf"><label class="fl">Email</label><input type="email" id="sp-email" placeholder="client@example.com"></div>
+    <div class="mf"><label class="fl">New Password</label><input type="text" id="sp-password" placeholder="min. 6 characters"></div>
+    <div id="sp-err" style="color:#c0392b;font-size:13px;margin-bottom:8px;display:none"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+      <button class="lbtn" onclick="closeModal('sp-ov')">Cancel</button>
+      <button class="lbtn" id="sp-save-btn" onclick="saveSetPassword()" style="background:var(--ac);color:#fff;border:none">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODULE PROMPT MODAL -->
 <div class="ov" id="mp-ov">
   <div class="modal" style="max-width:520px">
@@ -3686,6 +3701,7 @@ async function loadAdvisorDashboard(){
           ${tok?`<div class="tkcode" style="margin-top:8px;font-size:11px">${tokShort}</div>`:''}
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
             ${tok?`<button class="obtn" onclick="copyTok('${tok}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail('${c.name}','${tok}','${c.id}')">Send by Email</button>`:''}
+            <button class="obtn" onclick="openSetPassword(${c.id},'${c.name}')">Set Password</button>
             <button class="obtn" onclick="advToggleTimeline('${c.id}',this)">Activity</button>
             <button class="dbtn" onclick="delData(${c.id},'${c.name}')">Delete Data</button>
             <button class="dbtn" onclick="deleteClient(${c.id},'${c.name}').then(()=>loadAdvisorDashboard())">Delete Client</button>
@@ -4041,6 +4057,31 @@ function showDebriefNudge(modName,resultId){
   if(!nudge){nudge=document.createElement('div');nudge.className='debrief-nudge';nudge.id='dn-'+resultId;box.after(nudge);}
   nudge.innerHTML=`<div class="debrief-nudge-text"><strong>Debrief this later?</strong><br>After the meeting or announcement, run a Debriefing to capture what actually happened.</div><button class="dn-btn" onclick="goModule('debrief')">Open Debriefing</button><button class="dn-dismiss" onclick="this.closest('.debrief-nudge').classList.remove('show')">&times;</button>`;
   nudge.classList.add('show');
+}
+
+// SET CLIENT PASSWORD
+let _spClientId=null;
+function openSetPassword(clientId,clientName){
+  _spClientId=clientId;
+  document.getElementById('sp-subtitle').textContent=clientName;
+  document.getElementById('sp-email').value='';
+  document.getElementById('sp-password').value='';
+  document.getElementById('sp-err').style.display='none';
+  document.getElementById('sp-save-btn').textContent='Save';
+  document.getElementById('sp-save-btn').disabled=false;
+  openModal('sp-ov');
+}
+async function saveSetPassword(){
+  const email=document.getElementById('sp-email').value.trim();
+  const password=document.getElementById('sp-password').value.trim();
+  const err=document.getElementById('sp-err');
+  const btn=document.getElementById('sp-save-btn');
+  if(password.length<6){err.textContent='Password must be at least 6 characters';err.style.display='block';return;}
+  btn.textContent='Saving…';btn.disabled=true;err.style.display='none';
+  try{
+    await api('/api/clients/'+_spClientId+'/set-password',{method:'POST',body:JSON.stringify({email,password})});
+    closeModal('sp-ov');
+  }catch(e){err.textContent='Error saving';err.style.display='block';btn.textContent='Save';btn.disabled=false;}
 }
 
 // MODULE PROMPT CUSTOMIZATION

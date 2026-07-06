@@ -188,6 +188,23 @@ router.post('/:id/send-token', requireAdvisor, async (req, res) => {
   }
 });
 
+// POST /api/clients/:id/set-password
+router.post('/:id/set-password', requireAdvisor, async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    const hash = await bcrypt.hash(password, 12);
+    const updates = [hash, req.params.id, req.user.id];
+    let q = 'UPDATE clients SET password_hash=$1, must_change_password=false';
+    if (email) { q += ', email=$4'; updates.push(email); }
+    q += ' WHERE id=$2 AND advisor_id=$3';
+    await pool.query(q, updates);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // DELETE /api/clients/:id
 router.delete('/:id', requireAdvisor, async (req, res) => {
   try {
