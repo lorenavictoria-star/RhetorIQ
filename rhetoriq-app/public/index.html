@@ -910,6 +910,12 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <button class="back" onclick="goPage('modules')">&#8592; Modules</button>
       <div class="mtitle">Brand Voice</div>
       <div class="mdesc">How does this company or person communicate? Paste any texts &mdash; get a complete language profile that becomes the master reference for all other modules.</div>
+      <div id="bv-no-client" style="display:none;padding:32px 0;text-align:center;color:var(--mu);font-size:14px">
+        <div style="font-size:28px;margin-bottom:12px">&#9670;</div>
+        <div>Please select a client first.</div>
+        <button onclick="goPage('clients');loadAdvisorDashboard();setMN('clients')" style="margin-top:16px;padding:8px 18px;border:1px solid var(--bd);border-radius:6px;background:var(--sf);font-size:13px;cursor:pointer;font-family:'Instrument Sans',sans-serif">Go to Clients</button>
+      </div>
+      <div id="bv-main-wrap">
       <div class="tog">
         <button class="togbtn active" id="bv-tab-co" onclick="switchBrand('company',this)">Company</button>
         <button class="togbtn" id="bv-tab-ind" onclick="switchBrand('individual',this)">Individual</button>
@@ -966,6 +972,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
           <div class="rbody" id="brand-voice-ind-b"></div>
         </div>
       </div>
+      </div><!-- /bv-main-wrap -->
     </div>
 
     <!-- DYNAMIC MODULE -->
@@ -1046,11 +1053,13 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 
     <!-- CONTACT -->
     <!-- USAGE -->
-    <div class="page" id="page-usage">
-      <div class="page-title" style="margin-bottom:4px">Usage</div>
-      <div style="font-size:13px;color:var(--mu);margin-bottom:24px">API calls per client — cost estimates based on Claude Sonnet 4.6 pricing</div>
-      <div id="usage-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px"></div>
-      <div id="usage-table"></div>
+    <div class="page" id="page-usage" style="padding-left:0;padding-right:0">
+      <div style="padding:0 16px">
+        <div class="page-title" style="margin-bottom:4px">Usage</div>
+        <div style="font-size:14px;color:var(--mu);margin-bottom:24px">API calls per client — cost estimates based on Claude Sonnet 4.6 pricing</div>
+      </div>
+      <div id="usage-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)"></div>
+      <div style="padding:24px 16px 0"><div id="usage-table"></div></div>
     </div>
 
     <div class="page" id="page-contact">
@@ -1676,45 +1685,31 @@ async function loadUsage(){
     const fmt=n=>'$'+(n).toFixed(2);
     const costM=fmt(d.totalThisMonth*d.costPerCall);
     const costAll=fmt(d.totalAllTime*d.costPerCall);
-    sum.innerHTML=`
-      <div style="padding:16px;border:1px solid var(--bd);border-radius:8px;background:var(--sf)">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:6px">This month</div>
-        <div style="font-size:28px;font-weight:300;font-family:'Spectral',serif;color:var(--tx)">${d.totalThisMonth}</div>
-        <div style="font-size:12px;color:var(--mu);margin-top:2px">calls · est. ${costM}</div>
-      </div>
-      <div style="padding:16px;border:1px solid var(--bd);border-radius:8px;background:var(--sf)">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:6px">All time</div>
-        <div style="font-size:28px;font-weight:300;font-family:'Spectral',serif;color:var(--tx)">${d.totalAllTime}</div>
-        <div style="font-size:12px;color:var(--mu);margin-top:2px">calls · est. ${costAll}</div>
-      </div>
-      <div style="padding:16px;border:1px solid var(--bd);border-radius:8px;background:var(--sf)">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:6px">Cost / call</div>
-        <div style="font-size:28px;font-weight:300;font-family:'Spectral',serif;color:var(--tx)">${fmt(d.costPerCall)}</div>
-        <div style="font-size:12px;color:var(--mu);margin-top:2px">avg estimate</div>
-      </div>`;
+    const card=(label,val,sub)=>`<div style="padding:20px 16px;border-right:1px solid var(--bd);background:var(--sf)"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:8px">${label}</div><div style="font-size:32px;font-weight:300;font-family:'Spectral',serif;color:var(--tx);line-height:1">${val}</div><div style="font-size:13px;color:var(--mu);margin-top:6px">${sub}</div></div>`;
+    sum.innerHTML=card('This month',d.totalThisMonth,`calls · est. ${costM}`)+card('All time',d.totalAllTime,`calls · est. ${costAll}`)+`<div style="padding:20px 16px;background:var(--sf)"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:8px">Cost / call</div><div style="font-size:32px;font-weight:300;font-family:'Spectral',serif;color:var(--tx);line-height:1">${fmt(d.costPerCall)}</div><div style="font-size:13px;color:var(--mu);margin-top:6px">avg estimate</div></div>`;
     if(!d.rows.length){tbl.innerHTML='<div style="color:var(--mu);font-size:13px;padding:20px 0">No analyses recorded yet.</div>';return;}
     tbl.innerHTML=`
-      <div style="display:grid;grid-template-columns:1fr 80px 80px 80px 90px 100px;gap:0;border:1px solid var(--bd);border-radius:8px;overflow:hidden">
-        <div style="padding:10px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd)">Client</div>
-        <div style="padding:10px 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">This month</div>
-        <div style="padding:10px 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Last month</div>
-        <div style="padding:10px 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Total</div>
-        <div style="padding:10px 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Est. cost</div>
-        <div style="padding:10px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd)">Last active</div>
+      <div style="display:grid;grid-template-columns:1fr 90px 90px 70px 90px 100px;gap:0;border:1px solid var(--bd);border-radius:8px;overflow:hidden">
+        <div style="padding:12px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd)">Client</div>
+        <div style="padding:12px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">This month</div>
+        <div style="padding:12px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Last month</div>
+        <div style="padding:12px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Total</div>
+        <div style="padding:12px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Est. cost</div>
+        <div style="padding:12px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd)">Last active</div>
         ${d.rows.map((row,i)=>{
           const border=i<d.rows.length-1?'border-bottom:1px solid var(--bd)':'';
           const last=row.last_activity?new Date(row.last_activity).toLocaleDateString('de-CH'):'—';
           const cost=fmt(row.total_calls*d.costPerCall);
           return `
-            <div style="padding:12px 14px;font-size:13px;font-weight:500;${border}">${row.client_name}</div>
-            <div style="padding:12px 8px;font-size:13px;text-align:right;color:var(--ac);font-weight:600;${border}">${row.this_month}</div>
-            <div style="padding:12px 8px;font-size:13px;text-align:right;color:var(--mu);${border}">${row.last_month}</div>
-            <div style="padding:12px 8px;font-size:13px;text-align:right;color:var(--mu);${border}">${row.total_calls}</div>
-            <div style="padding:12px 8px;font-size:13px;text-align:right;color:var(--mu);${border}">${cost}</div>
-            <div style="padding:12px 14px;font-size:12px;color:var(--mu);${border}">${last}</div>`;
+            <div style="padding:14px 16px;font-size:15px;font-weight:500;${border}">${row.client_name}</div>
+            <div style="padding:14px 10px;font-size:15px;text-align:right;color:var(--ac);font-weight:600;${border}">${row.this_month}</div>
+            <div style="padding:14px 10px;font-size:15px;text-align:right;color:var(--mu);${border}">${row.last_month}</div>
+            <div style="padding:14px 10px;font-size:15px;text-align:right;color:var(--mu);${border}">${row.total_calls}</div>
+            <div style="padding:14px 10px;font-size:15px;text-align:right;color:var(--mu);${border}">${cost}</div>
+            <div style="padding:14px 16px;font-size:13px;color:var(--mu);${border}">${last}</div>`;
         }).join('')}
       </div>
-      <div style="font-size:11px;color:var(--dm);margin-top:10px">Cost estimate based on avg 2,500 input + 1,000 output tokens/call at Claude Sonnet 4.6 pricing ($3/$15 per 1M tokens). Actual costs may vary.</div>`;
+      <div style="font-size:12px;color:var(--mu);margin-top:12px">Cost estimate based on avg 2,500 input + 1,000 output tokens/call at Claude Sonnet 4.6 pricing ($3/$15 per 1M tokens). Actual costs may vary.</div>`;
   }catch(e){sum.innerHTML=`<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;}
 }
 async function tryAutoLogin(){
@@ -2082,7 +2077,18 @@ function goPage(name){
   document.querySelector('.content').scrollTop=0;
   if(name==='people')loadPeople();
   if(name==='memory')renderMemory();
-  if(name==='brand-voice'){loadBrandVoiceRefs();autoLoadBrandVoice();}
+  if(name==='brand-voice'){
+    const bvWrap=document.getElementById('bv-main-wrap');
+    const bvNoClient=document.getElementById('bv-no-client');
+    if(!clientId){
+      if(bvWrap)bvWrap.style.display='none';
+      if(bvNoClient)bvNoClient.style.display='block';
+    } else {
+      if(bvWrap)bvWrap.style.display='block';
+      if(bvNoClient)bvNoClient.style.display='none';
+      loadBrandVoiceRefs();autoLoadBrandVoice();
+    }
+  }
   if(name==='modules')renderModulesList();
   if(name==='history')loadHistory();
   updateLnav(name);
