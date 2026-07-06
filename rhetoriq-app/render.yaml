@@ -2,6 +2,7 @@ services:
   - type: web
     name: rhetoriq
     runtime: node
+    region: frankfurt
     rootDir: server
     buildCommand: npm install
     startCommand: npm start
@@ -28,3 +29,4 @@ databases:
     databaseName: rhetoriq
     user: rhetoriq
     plan: free
+    region: frankfurt
