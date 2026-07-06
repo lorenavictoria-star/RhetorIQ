@@ -204,9 +204,9 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 
 /* RESULT */
 .tg-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
-.tg-tile{border:1.5px solid var(--bd);border-radius:8px;padding:16px 14px;cursor:pointer;background:#fff;transition:border-color .15s,box-shadow .15s;text-align:center}
+.tg-tile{border:1.5px solid var(--bd);border-radius:8px;padding:16px 14px;cursor:pointer;background:#fff;transition:border-color .15s,box-shadow .15s;text-align:left}
 .tg-tile:hover{border-color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.07)}
-.tg-tile-abbr{width:36px;height:36px;border-radius:6px;background:var(--tx);color:#fff;font-size:11px;font-weight:800;letter-spacing:.05em;display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
+.tg-tile-abbr{width:36px;height:36px;border-radius:6px;background:var(--tx);color:#fff;font-size:11px;font-weight:800;letter-spacing:.05em;display:flex;align-items:center;justify-content:center;margin:0 0 8px}
 .tg-tile-label{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:3px}
 .tg-tile-sub{font-size:10px;color:var(--mu);line-height:1.4}
 .tg-back{background:none;border:none;font-size:12px;color:var(--dm);cursor:pointer;padding:0;margin-bottom:14px;font-weight:600;letter-spacing:.03em}
@@ -412,14 +412,8 @@ body.adv .vubtn{display:block}
 /* HOME TWO-COLUMN LAYOUT */
 .home-grid{display:flex;gap:0;align-items:start}
 .home-left{flex:1;min-width:0}
-.home-right{flex-shrink:0;margin-left:10px;width:28px;transition:width .0s}
-.home-right.open{width:196px}
-.home-right-hdr{display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px;gap:6px}
-.home-right-toggle{background:none;border:1px solid var(--bd);border-radius:4px;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--mu);padding:0;flex-shrink:0;line-height:1}
-.home-right-toggle:hover{border-color:var(--tx);color:var(--tx)}
-.home-right-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);white-space:nowrap;overflow:hidden;flex:1}
-.home-right-body{display:none}
-.home-right.open .home-right-body{display:block}
+.ctx-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--ac);background:var(--acl);border:0.5px solid var(--ac);padding:3px 9px;border-radius:20px;letter-spacing:.02em;white-space:nowrap}
+.ctx-chip i{font-size:12px}
 .hm-list{display:flex;flex-direction:column;gap:5px}
 .hm-item{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;border:1.5px solid var(--bd);border-radius:6px;cursor:pointer;background:#fff;transition:border-color .15s}
 .hm-item:hover{border-color:#999}
@@ -567,18 +561,6 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
 .qa-wide-desc{font-size:10px;color:var(--mu)}
 .qa-wide-arr{margin-left:auto;font-size:12px;color:var(--mu);flex-shrink:0}
 
-/* ── HOME RIGHT SIDEBAR ──────────────────────────────────────── */
-.home-right{flex-shrink:0;width:188px;margin-left:16px}
-.home-right-open{display:flex;flex-direction:column;gap:18px}
-.hr-block{}
-.hr-lbl{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--mu);margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid var(--bd)}
-.hr-score{font-family:'Spectral',serif;font-size:44px;font-weight:300;color:var(--ac);line-height:1}
-.hr-score-sub{font-size:9px;color:var(--mu);margin-top:3px;letter-spacing:.06em}
-.hr-tag{display:inline-block;font-size:8px;letter-spacing:.1em;text-transform:uppercase;background:var(--acl);color:var(--ac);padding:3px 7px;margin-bottom:4px;margin-right:3px}
-.hr-hist-item{display:flex;align-items:baseline;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--bd);font-size:11px}
-.hr-hist-item:last-child{border-bottom:none}
-.hr-hist-name{color:var(--tx)}
-.hr-hist-time{font-size:9px;color:var(--mu)}
 
 /* ── MODULE CARDS — richer hover ────────────────────────────── */
 .mcard{transition:border-color var(--t-base),box-shadow var(--t-base),transform var(--t-base)}
@@ -645,7 +627,6 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   .mrow-tag{font-size:13px}
   .fl2{font-size:13px}
   .mdesc{font-size:15px;max-width:100%}
-  .home-right.open{width:240px}
   .hm-item-name{font-size:13px}
   /* SPLIT VIEW */
   #page-module #mod-form{display:grid;grid-template-columns:minmax(280px,44%) 1fr;column-gap:32px;align-items:start}
@@ -801,6 +782,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   <div class="cbar">
     <span class="cbar-lbl" id="cbar-lbl">Client:</span>
     <select id="client-select" onchange="switchClient(this.value)"><option value="">Select client</option></select>
+    <div id="ctx-chip-wrap" style="display:none"><span class="ctx-chip" id="ctx-chip"><i class="ti ti-brain" aria-hidden="true"></i><span id="ctx-chip-text">No context</span></span></div>
     <button class="ncbtn" id="cbar-new" onclick="openModal('nc-ov')">+ New Client</button>
     <button class="ncbtn" onclick="openOnboarding()" style="background:var(--acc);color:#fff;border-color:var(--acc)">&#8679; Onboarding</button>
   </div>
@@ -888,31 +870,6 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
             <div class="stat" id="stat-analyses-box"><div class="sn" id="stat-analyses">0</div><div class="sl">Analyses</div></div>
           </div>
         </div><!-- /home-left -->
-
-        <!-- RIGHT SIDEBAR -->
-        <div class="home-right" id="home-right">
-          <div class="home-right-open">
-            <div class="hr-block">
-              <div class="hr-lbl" id="hr-score-lbl">Score</div>
-              <div class="hr-score" id="hs-score">—</div>
-              <div class="hr-score-sub" id="hr-score-sub">90-day average</div>
-            </div>
-            <div class="hr-block" id="hr-context-block">
-              <div class="hr-lbl" id="hr-ctx-lbl">Active context</div>
-              <div id="hr-context-tags"><span class="hr-tag" id="hr-ctx-loading">Loading…</span></div>
-            </div>
-            <div class="hr-block" id="hr-history-block">
-              <div class="hr-lbl" id="hr-hist-lbl">Recent</div>
-              <div id="hr-history-list"></div>
-            </div>
-            <div class="hr-block">
-              <button onclick="openOnboarding()" style="width:100%;padding:8px 10px;background:var(--acl);color:var(--ac);border:0.5px solid var(--ac);font-size:10px;font-weight:500;cursor:pointer;font-family:'Instrument Sans',sans-serif;letter-spacing:.04em;text-align:left;display:flex;align-items:center;gap:6px">
-                <i class="ti ti-upload" style="font-size:13px" aria-hidden="true"></i> <span id="hr-ob-lbl">Client Onboarding</span>
-              </button>
-            </div>
-          </div>
-          <div class="hm-list" id="hm-list" style="display:none"></div>
-        </div>
 
       </div><!-- /home-grid -->
     </div>
@@ -1195,27 +1152,21 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div style="padding:12px 12px 8px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)">Workspace</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 12px">
       <div onclick="goPage('brand-voice');setMN('more');hideMore()" class="mm-tile">
-        <div class="mm-tile-i">&#9670;</div>
         <div class="mm-tile-l">Brand Voice</div>
       </div>
       <div onclick="goPage('people');loadPeople();setMN('more');hideMore()" class="mm-tile">
-        <div class="mm-tile-i">&#9711;</div>
         <div class="mm-tile-l">People</div>
       </div>
       <div id="mm-context" onclick="goPage('memory');setMN('more');hideMore()" class="mm-tile">
-        <div class="mm-tile-i">&#9632;</div>
         <div class="mm-tile-l">Memory</div>
       </div>
       <div id="mm-history" onclick="goPage('history');loadHistory();setMN('more');hideMore()" class="mm-tile">
-        <div class="mm-tile-i">&#8634;</div>
         <div class="mm-tile-l">History</div>
       </div>
       <div class="ao-item mm-tile" id="mm-clients" onclick="goPage('clients');loadAdvisorDashboard();setMN('more');hideMore()" style="display:none">
-        <div class="mm-tile-i">&#9635;</div>
         <div class="mm-tile-l">Clients</div>
       </div>
       <div class="ao-item mm-tile" id="mm-reviews" onclick="openReviewPanel();setMN('more');hideMore()" style="display:none;position:relative">
-        <div class="mm-tile-i">&#9998;</div>
         <div class="mm-tile-l">Reviews</div>
         <span class="rev-badge" id="rev-badge" style="position:absolute;top:6px;right:6px"></span>
       </div>
@@ -1615,7 +1566,6 @@ function applyLang(){
   s('qa-tag3',t.qa_tag3);s('qa-name3',t.qa_name3);s('qa-desc3',t.qa_desc3);
   s('cbar-lbl',t.cbar_lbl);s('cbar-new',t.cbar_new);
   s('hdr-signout',t.hdr_signout);
-  s('home-right-title',t.home_right_title);
   s('qa-heading',t.qa_heading);
   s('datasec-page-title',t.datasec_title);
   const ci=document.getElementById('chat-input');if(ci)ci.placeholder=t.chat_ph;
@@ -2270,7 +2220,7 @@ async function boot(user,role){
     loadAdvisorReviews();
     setInterval(loadAdvisorReviews,60000);
   }
-  connectWS();loadStats();renderVids();initPasteIntelligence();renderHomeModuleList();renderQuickAccess();
+  connectWS();loadStats();renderVids();initPasteIntelligence();renderQuickAccess();
   // show ⌘K label + quick panel trigger on desktop
   if(window.innerWidth>=900){
     const lbl=document.getElementById('hdr-cmd-label');if(lbl)lbl.style.display='inline';
@@ -2637,19 +2587,18 @@ function updateLnav(name){
   const el=document.getElementById(map[name]);if(el)el.classList.add('active');
 }
 function updateHomeRightSidebar(){
-  const hist=JSON.parse(localStorage.getItem('riq-hist-'+clientId)||'[]').slice(0,3);
-  const el=document.getElementById('hr-history-list');
-  if(el)el.innerHTML=hist.length?hist.map(h=>`<div class="hr-hist-item"><span class="hr-hist-name">${h.name||h.module}</span><span class="hr-hist-time">${h.date||'—'}</span></div>`).join(''):'<div style="font-size:10px;color:var(--mu)">No recent sessions</div>';
-  if(window.memory){
+  const wrap=document.getElementById('ctx-chip-wrap');
+  const chipTxt=document.getElementById('ctx-chip-text');
+  if(!wrap||!chipTxt)return;
+  if(window.memory&&clientId){
     const tags=[];
     if(memory.brand_voice_co||memory.brand_voice_ind)tags.push('Brand Voice');
     if(memory.key_facts)tags.push('Key Facts');
-    if(memory.people_count>0)tags.push((memory.people_count)+' people');
-    const tc=document.getElementById('hr-context-tags');
-    if(tc)tc.innerHTML=tags.length?tags.map(t=>`<span class="hr-tag">${t}</span>`).join(''):'<span style="font-size:10px;color:var(--mu)">No context loaded</span>';
+    if(memory.people_count>0)tags.push(memory.people_count+' people');
+    chipTxt.textContent=tags.length?tags.join(' · '):'No context';
+    wrap.style.display='';
   } else {
-    const tc=document.getElementById('hr-context-tags');
-    if(tc)tc.innerHTML='<span style="font-size:10px;color:var(--mu)">Select a client</span>';
+    wrap.style.display='none';
   }
 }
 function setMN(id){
