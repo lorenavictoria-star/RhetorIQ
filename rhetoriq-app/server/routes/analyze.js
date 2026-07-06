@@ -589,6 +589,39 @@ router.get('/health-score', requireAuth, async (req, res) => {
 });
 
 // POST /api/analyze/route — smart module router
+// GET /api/analyze/usage — advisor-only usage dashboard
+router.get('/usage', requireAuth, async (req, res) => {
+  if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Advisor only' });
+  const advisorId = req.user.id;
+  try {
+    const { rows } = await pool.query(`
+      SELECT
+        COALESCE(c.name, 'No client') AS client_name,
+        a.client_id,
+        COUNT(*)::int AS total_calls,
+        COUNT(CASE WHEN date_trunc('month', a.created_at) = date_trunc('month', NOW()) THEN 1 END)::int AS this_month,
+        COUNT(CASE WHEN date_trunc('month', a.created_at) = date_trunc('month', NOW() - INTERVAL '1 month') THEN 1 END)::int AS last_month,
+        MAX(a.created_at) AS last_activity,
+        mode() WITHIN GROUP (ORDER BY a.module) AS top_module
+      FROM analyses a
+      LEFT JOIN clients c ON c.id = a.client_id
+      WHERE a.advisor_id = $1
+      GROUP BY a.client_id, c.name
+      ORDER BY this_month DESC, total_calls DESC
+    `, [advisorId]);
+
+    const totalThisMonth = rows.reduce((s, r) => s + r.this_month, 0);
+    const totalAllTime = rows.reduce((s, r) => s + r.total_calls, 0);
+    // Cost estimate: avg ~2500 input + 1000 output tokens per call
+    // Sonnet 4.6: $3/1M input, $15/1M output
+    const costPerCall = (2500 * 3 / 1e6) + (1000 * 15 / 1e6);
+
+    res.json({ rows, totalThisMonth, totalAllTime, costPerCall });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.post('/route', requireAuth, async (req, res) => {
   try {
     const { text } = req.body;

@@ -149,6 +149,7 @@ body.adv .adv-only{display:block!important}
 .stat.ao{display:none}
 body.adv .stat.ao{display:block}
 body.adv #mn-clients{display:flex!important}
+body.adv #mm-usage{display:block!important}
 
 /* MODULE PAGE */
 .back{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--mu);cursor:pointer;margin-bottom:24px;background:none;border:none;font-family:'Instrument Sans',sans-serif;padding:0}
@@ -1044,6 +1045,14 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     </div>
 
     <!-- CONTACT -->
+    <!-- USAGE -->
+    <div class="page" id="page-usage">
+      <div class="page-title" style="margin-bottom:4px">Usage</div>
+      <div style="font-size:13px;color:var(--mu);margin-bottom:24px">API calls per client — cost estimates based on Claude Sonnet 4.6 pricing</div>
+      <div id="usage-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px"></div>
+      <div id="usage-table"></div>
+    </div>
+
     <div class="page" id="page-contact">
       <div class="page-title" id="contact-title" style="margin-bottom:6px">Contact</div>
       <div class="contact-tagline">Wort. Wirkung. Wandel.</div>
@@ -1118,6 +1127,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div id="mm-videos" onclick="goPage('videos');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Videos</div>
     <div id="mm-contact" onclick="goPage('contact');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Contact</div>
     <div id="mm-datasec" onclick="goPage('datasec');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Data Security &amp; Privacy</div>
+    <div class="ao-item" onclick="goPage('usage');loadUsage();hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none" id="mm-usage">Usage</div>
     <div id="mm-signout" onclick="logout()" style="padding:13px 18px;font-size:14px;cursor:pointer;color:var(--mu)">Sign out</div>
   </div>
 </div>
@@ -1652,6 +1662,61 @@ async function loginClient(){
   try{const r=await fetch(API+'/auth/client-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});const d=await r.json();if(!r.ok){err.textContent=d.error||'Invalid token';err.style.display='block';return;}token=d.token;localStorage.setItem('riq-token',token);boot(d.client,'client');}catch{err.textContent='Connection error';err.style.display='block';}
 }
 function logout(){token=null;localStorage.removeItem('riq-token');location.reload();}
+
+async function loadUsage(){
+  const sum=document.getElementById('usage-summary');
+  const tbl=document.getElementById('usage-table');
+  if(!sum||!tbl)return;
+  sum.innerHTML='<div style="color:var(--mu);font-size:13px">Loading…</div>';
+  tbl.innerHTML='';
+  try{
+    const r=await api('/api/analyze/usage');
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error);
+    const fmt=n=>'$'+(n).toFixed(2);
+    const costM=fmt(d.totalThisMonth*d.costPerCall);
+    const costAll=fmt(d.totalAllTime*d.costPerCall);
+    sum.innerHTML=`
+      <div style="padding:16px;border:1px solid var(--bd);border-radius:8px;background:var(--sf)">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:6px">This month</div>
+        <div style="font-size:28px;font-weight:300;font-family:'Spectral',serif;color:var(--tx)">${d.totalThisMonth}</div>
+        <div style="font-size:12px;color:var(--mu);margin-top:2px">calls · est. ${costM}</div>
+      </div>
+      <div style="padding:16px;border:1px solid var(--bd);border-radius:8px;background:var(--sf)">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:6px">All time</div>
+        <div style="font-size:28px;font-weight:300;font-family:'Spectral',serif;color:var(--tx)">${d.totalAllTime}</div>
+        <div style="font-size:12px;color:var(--mu);margin-top:2px">calls · est. ${costAll}</div>
+      </div>
+      <div style="padding:16px;border:1px solid var(--bd);border-radius:8px;background:var(--sf)">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:6px">Cost / call</div>
+        <div style="font-size:28px;font-weight:300;font-family:'Spectral',serif;color:var(--tx)">${fmt(d.costPerCall)}</div>
+        <div style="font-size:12px;color:var(--mu);margin-top:2px">avg estimate</div>
+      </div>`;
+    if(!d.rows.length){tbl.innerHTML='<div style="color:var(--mu);font-size:13px;padding:20px 0">No analyses recorded yet.</div>';return;}
+    tbl.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 80px 80px 80px 90px 100px;gap:0;border:1px solid var(--bd);border-radius:8px;overflow:hidden">
+        <div style="padding:10px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd)">Client</div>
+        <div style="padding:10px 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">This month</div>
+        <div style="padding:10px 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Last month</div>
+        <div style="padding:10px 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Total</div>
+        <div style="padding:10px 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Est. cost</div>
+        <div style="padding:10px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd)">Last active</div>
+        ${d.rows.map((row,i)=>{
+          const border=i<d.rows.length-1?'border-bottom:1px solid var(--bd)':'';
+          const last=row.last_activity?new Date(row.last_activity).toLocaleDateString('de-CH'):'—';
+          const cost=fmt(row.total_calls*d.costPerCall);
+          return `
+            <div style="padding:12px 14px;font-size:13px;font-weight:500;${border}">${row.client_name}</div>
+            <div style="padding:12px 8px;font-size:13px;text-align:right;color:var(--ac);font-weight:600;${border}">${row.this_month}</div>
+            <div style="padding:12px 8px;font-size:13px;text-align:right;color:var(--mu);${border}">${row.last_month}</div>
+            <div style="padding:12px 8px;font-size:13px;text-align:right;color:var(--mu);${border}">${row.total_calls}</div>
+            <div style="padding:12px 8px;font-size:13px;text-align:right;color:var(--mu);${border}">${cost}</div>
+            <div style="padding:12px 14px;font-size:12px;color:var(--mu);${border}">${last}</div>`;
+        }).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--dm);margin-top:10px">Cost estimate based on avg 2,500 input + 1,000 output tokens/call at Claude Sonnet 4.6 pricing ($3/$15 per 1M tokens). Actual costs may vary.</div>`;
+  }catch(e){sum.innerHTML=`<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;}
+}
 async function tryAutoLogin(){
   if(!token)return;
   try{const p=JSON.parse(atob(token.split('.')[1]));if(p.exp*1000<Date.now()){localStorage.removeItem('riq-token');return;}if(p.role==='advisor')boot({id:p.id,name:p.name,email:p.email},'advisor');else boot({id:p.clientId,name:p.clientName},'client');}catch{localStorage.removeItem('riq-token');}
