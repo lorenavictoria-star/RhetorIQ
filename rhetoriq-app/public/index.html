@@ -2277,7 +2277,7 @@ async function boot(user,role){
     if(clientId){await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);}
   }
   if(isAdv){
-    document.querySelectorAll('.ao-item').forEach(el=>{el.style.display=el.classList.contains('mni')?'flex':'block';});
+    document.querySelectorAll('.ao-item').forEach(el=>{el.style.display=el.classList.contains('mni')||el.classList.contains('mm-tile')?'flex':'block';});
     document.getElementById('mm-reviews').style.display='flex';
     loadAdvisorReviews();
     setInterval(loadAdvisorReviews,60000);
