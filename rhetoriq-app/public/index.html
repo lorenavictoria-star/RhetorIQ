@@ -416,6 +416,8 @@ body.adv .vubtn{display:block}
 .home-grid{display:flex;gap:0;align-items:start}
 .home-left{flex:1;min-width:0}
 .ctx-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--ac);background:var(--acl);border:0.5px solid var(--ac);padding:3px 9px;border-radius:20px;letter-spacing:.02em;white-space:nowrap}
+.comm-chip{font-size:12px;padding:4px 10px;border-radius:20px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);cursor:pointer;user-select:none;transition:all .15s}
+.comm-chip.active{background:var(--ac);color:#fff;border-color:var(--ac)}
 .ctx-chip i{font-size:12px}
 .hm-list{display:flex;flex-direction:column;gap:5px}
 .hm-item{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;border:1.5px solid var(--bd);border-radius:6px;cursor:pointer;background:#fff;transition:border-color .15s}
@@ -791,7 +793,24 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div class="mf"><label class="fl" id="np-lbl-notes">Notes (optional)</label><textarea id="np-notes" style="min-height:70px" placeholder="General context, what to keep in mind…"></textarea></div>
     </div>
     <div class="mtabpanel" id="np-t2">
-      <div class="mf"><label class="fl" id="np-lbl-comm">How they communicate</label><textarea id="np-commstyle" style="min-height:80px" placeholder="e.g. Very direct, dislikes small talk."></textarea></div>
+      <div class="mf">
+        <label class="fl" id="np-lbl-comm">Communication style</label>
+        <div id="np-comm-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px" onclick="npChipToggle(event.target.closest('.comm-chip'))">
+          <span class="comm-chip" data-val="Direct">Direct</span>
+          <span class="comm-chip" data-val="Diplomatic">Diplomatic</span>
+          <span class="comm-chip" data-val="Short sentences">Short sentences</span>
+          <span class="comm-chip" data-val="Detailed">Detailed</span>
+          <span class="comm-chip" data-val="Analytical">Analytical</span>
+          <span class="comm-chip" data-val="Storytelling">Storytelling</span>
+          <span class="comm-chip" data-val="Formal">Formal</span>
+          <span class="comm-chip" data-val="Casual">Casual</span>
+          <span class="comm-chip" data-val="Warm">Warm</span>
+          <span class="comm-chip" data-val="Reserved">Reserved</span>
+          <span class="comm-chip" data-val="Assertive">Assertive</span>
+          <span class="comm-chip" data-val="Empathetic">Empathetic</span>
+        </div>
+        <textarea id="np-commstyle" style="min-height:55px" placeholder="Additional notes…"></textarea>
+      </div>
       <div class="mf"><label class="fl" id="np-lbl-str">Strengths</label><textarea id="np-strengths" style="min-height:60px" placeholder="e.g. Excellent at simplifying complex topics."></textarea></div>
       <div class="mf"><label class="fl" id="np-lbl-weak">Weak points</label><textarea id="np-weaknesses" style="min-height:60px" placeholder="e.g. Tends to over-explain."></textarea></div>
     </div>
@@ -1069,9 +1088,6 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <p id="hist-sub" style="font-size:12px;color:var(--mu);margin-bottom:18px">Grouped by module. Delete entries manually.</p>
       <div id="hist-list"><div class="empty"><div class="ei">◤</div><div id="hist-empty">No analyses yet.</div></div></div>
     </div>
-<p style="font-size:12px;color:var(--mu);margin-bottom:18px">Overview of all clients and activity.</p>
-      <div id="adv-dash-content"><div class="empty"><div class="ei">&#9711;</div><div>Loading…</div></div></div>
-    </div>
 
     <!-- MODULE BUILDER -->
     <div class="page" id="page-module-builder">
@@ -1205,12 +1221,15 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <div class="mm-tile-l">Reviews</div>
         <span class="rev-badge" id="rev-badge" style="position:absolute;top:6px;right:6px"></span>
       </div>
+      <div class="ao-item mm-tile" id="mm-module-builder" onclick="goPage('module-builder');loadModuleBuilder();setMN('more');hideMore()" style="display:none">
+        <div class="mm-tile-l">Module Builder</div>
+      </div>
     </div>
 
     <!-- Advisor compact list -->
     <div class="ao-item" id="mm-advisor-section" style="display:none;border-top:1px solid var(--bd)">
       <div style="padding:10px 14px 6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)">Advisor</div>
-      <div class="ao-item mm-row" id="mm-module-builder" onclick="goPage('module-builder');loadModuleBuilder();setMN('more');hideMore()" style="display:none">
+      <div class="ao-item mm-row" id="mm-module-builder-row" onclick="goPage('module-builder');loadModuleBuilder();setMN('more');hideMore()" style="display:none">
         <i class="ti ti-puzzle" style="font-size:15px;color:var(--mu)"></i> Module Builder
       </div>
       <div class="ao-item mm-row" id="mm-usage" onclick="goPage('usage');loadUsage();setMN('more');hideMore()" style="display:none">
@@ -2410,7 +2429,10 @@ function viewPersonProfile(pid,type,label){
   if(!prof){alert('No '+label+' saved for '+person.name+' yet.\n\nRun the module and use "Save to People" to store it.');return;}
   alert(person.name+' — '+label+':\n\n'+prof.content.substring(0,800)+(prof.content.length>800?'...':''));
 }
-function clearPersonModal(){['np-name','np-role','np-dept','np-notes','np-commstyle','np-strengths','np-weaknesses','np-triggers','np-prefs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('np-id').value='';}
+function npChipToggle(chip){chip.classList.toggle('active');}
+function npGetChips(){return [...document.querySelectorAll('#np-comm-chips .comm-chip.active')].map(c=>c.dataset.val).join(', ');}
+function npSetChips(val){const vals=(val||'').split(',').map(v=>v.trim());document.querySelectorAll('#np-comm-chips .comm-chip').forEach(c=>{c.classList.toggle('active',vals.includes(c.dataset.val));});}
+function clearPersonModal(){['np-name','np-role','np-dept','np-notes','np-commstyle','np-strengths','np-weaknesses','np-triggers','np-prefs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('np-id').value='';document.querySelectorAll('#np-comm-chips .comm-chip').forEach(c=>c.classList.remove('active'));}
 function openAddPerson(){document.getElementById('np-title').textContent='Add Person';clearPersonModal();switchMTab(document.querySelector('#np-ov .mtab'),'np-t1');openModal('np-ov');}
 function openEditPerson(id){
   const p=people.find(x=>x.id===id);if(!p)return;
@@ -2423,6 +2445,7 @@ function openEditPerson(id){
   document.getElementById('np-notes').value=p.notes||'';
   const profMap={};(p.profiles||[]).forEach(pr=>profMap[pr.profile_type]=pr.content);
   ['commstyle','strengths','weaknesses','triggers','prefs'].forEach(k=>{const el=document.getElementById('np-'+k);if(el&&profMap[k])el.value=profMap[k];});
+  if(profMap['commstyle'])npSetChips(profMap['commstyle']);
   switchMTab(document.querySelector('#np-ov .mtab'),'np-t1');
   openModal('np-ov');
 }
@@ -2437,7 +2460,8 @@ async function savePerson(){
     // Save extra profile fields
     const extras={commstyle:'commstyle',strengths:'strengths',weaknesses:'weaknesses',triggers:'triggers',prefs:'prefs'};
     for(const[fieldId,profileType]of Object.entries(extras)){
-      const val=(document.getElementById('np-'+fieldId)||{}).value||'';
+      let val=(document.getElementById('np-'+fieldId)||{}).value||'';
+      if(fieldId==='commstyle'){const chips=npGetChips();val=chips?(chips+(val?', '+val:'')):val;}
       if(val.trim())await api('/api/people/'+saved.id+'/profile',{method:'POST',body:JSON.stringify({profile_type:profileType,content:val.trim()})});
     }
     await loadPeople();closeModal('np-ov');
@@ -2864,9 +2888,10 @@ function goModule(name,prefill){
   window._currentModule=name;window._currentTgTile=null;
   const def=getMdefLang(name,MDEFS[name]);if(!def)return;
   trackModuleUse(name,def.title||name);
-  const gearHtml=isAdv?` <button class="mod-prompt-btn" id="mod-prompt-gear" onclick="openModPrompt('${name}')" title="Customize prompt for this client"><i class="ti ti-adjustments-horizontal"></i></button>`:'';
+  const isTg=def.special==='textgen';
+  const gearHtml=(isAdv&&!isTg)?` <button class="mod-prompt-btn" id="mod-prompt-gear" onclick="openModPrompt('${name}')" title="Customize prompt for this client"><i class="ti ti-adjustments-horizontal"></i></button>`:'';
   document.getElementById('mod-title').innerHTML=def.title+gearHtml;
-  if(isAdv&&clientId){api('/api/module-prompts/'+clientId+'/'+name).then(r=>{const gear=document.getElementById('mod-prompt-gear');if(gear&&r.instructions){const d=document.createElement('span');d.className='mod-prompt-dot';gear.appendChild(d);}}).catch(()=>{});}
+  if(isAdv&&clientId&&!isTg){api('/api/module-prompts/'+clientId+'/'+name).then(r=>{const gear=document.getElementById('mod-prompt-gear');if(gear&&r.instructions){const d=document.createElement('span');d.className='mod-prompt-dot';gear.appendChild(d);}}).catch(()=>{});}
   document.getElementById('mod-desc').innerHTML=def.desc;
   const form=document.getElementById('mod-form');
   if(def.special==='textgen')buildTextGen(prefill,form);
@@ -2907,7 +2932,10 @@ function buildTextGen(prefill,form){
   ];
   const tilesHtml=tileData.map(t=>`
     <div class="tg-tile" id="tg-tile-${t.id}" onclick="tgOpenTile('${t.id}')">
-      <div class="tg-tile-abbr">${t.abbr}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="tg-tile-abbr">${t.abbr}</div>
+        ${isAdv?`<button class="mod-prompt-btn" id="tg-gear-${t.id}" onclick="event.stopPropagation();openModPrompt('text-gen-${t.id}')" title="Customize prompt"><i class="ti ti-adjustments-horizontal"></i></button>`:''}
+      </div>
       <div class="tg-tile-label">${t.label}</div>
       <div class="tg-tile-sub">${t.sub}</div>
     </div>`).join('');
@@ -3015,6 +3043,7 @@ function buildTextGen(prefill,form){
     ${panelsHtml}`;
   loadTgRefs();
   loadTgSubscriptions();
+  if(isAdv&&clientId){tileData.forEach(t=>{api('/api/module-prompts/'+clientId+'/text-gen-'+t.id).then(r=>{if(r.instructions){const g=document.getElementById('tg-gear-'+t.id);if(g){const d=document.createElement('span');d.className='mod-prompt-dot';g.appendChild(d);}}}).catch(()=>{});});}
   if(prefill){tgOpenTile('custom');const ta=document.getElementById('tg-task-custom');if(ta)ta.value=prefill;}
 }
 
@@ -3400,8 +3429,8 @@ async function runMod(name){
   else if(name==='stress'){module='st';rid='stress-r';bid='stress-b';const t=g('st-in');if(!t)return alert('Please enter text.');data={text:t+context,perspectives:g('st-persp'),intensity:g('st-int')};}
   else if(name==='impact'){module='si';rid='impact-r';bid='impact-b';const t=g('si-in');if(!t)return alert('Please enter text.');data={text:t+context,stakeholders:g('si-sth'),severity:g('si-sev')};}
   else if(name==='crisis'){module='crisis';rid='crisis-r';bid='crisis-b';const t=g('cr-in');if(!t)return alert('Please enter the crisis facts.');data={text:t+context,crisisType:g('cr-type'),audiences:g('cr-aud'),timing:g('cr-timing')};}
-  else if(name==='actionability'){module='as';rid='actionability-r';bid='actionability-b';const t=g('as-in');if(!t)return alert('Please enter text.');data={text:t,context:g('as-ctx'),recipient:g('as-rec')};}
-  else if(name==='thread'){module='tc';rid='thread-r';bid='thread-b';const t=g('tc-in');if(!t)return alert('Please enter text.');data={text:t,source:g('tc-src'),goal:g('tc-goal')};}
+  else if(name==='actionability'){module='as';rid='actionability-r';bid='actionability-b';const t=g('as-in');if(!t)return alert('Please enter text.');data={text:t+context,context:g('as-ctx'),recipient:g('as-rec')};}
+  else if(name==='thread'){module='tc';rid='thread-r';bid='thread-b';const t=g('tc-in');if(!t)return alert('Please enter text.');data={text:t+context,source:g('tc-src'),goal:g('tc-goal')};}
   else if(name==='rh-translate'){module='rh-translate';rid='rh-translate-r';bid='rh-translate-b';const t=g('rt-in');if(!t)return alert('Please enter text.');data={text:t,sourceLang:g('rt-src'),targetLang:g('rt-tgt'),context:g('rt-ctx'),voiceProfile:context};}
   else if(name==='sparring'){module='sparring';rid='sparring-r';bid='sparring-b';const t=g('sp-in');if(!t)return alert('Please describe the communication weaknesses.');data={text:t+context,name:g('sp-name'),role:g('sp-role'),focus:g('sp-focus')};}
   else if(name==='debrief'){module='debrief';rid='debrief-r';bid='debrief-b';const orig=g('db-orig');const fb=g('db-feedback');if(!orig||!fb)return alert('Please enter both the original communication and the real feedback.');data={original:orig,feedback:fb+context,context:g('db-ctx')};}
