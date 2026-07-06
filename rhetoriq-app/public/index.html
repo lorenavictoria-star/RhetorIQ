@@ -150,6 +150,7 @@ body.adv .adv-only{display:block!important}
 body.adv .stat.ao{display:block}
 body.adv #mn-clients{display:flex!important}
 body.adv #mm-usage{display:block!important}
+body.adv #mm-module-builder{display:block!important}
 
 /* MODULE PAGE */
 .back{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--mu);cursor:pointer;margin-bottom:24px;background:none;border:none;font-family:'Instrument Sans',sans-serif;padding:0}
@@ -975,6 +976,22 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       </div><!-- /bv-main-wrap -->
     </div>
 
+    <!-- CUSTOM MODULE RUNNER -->
+    <div class="page" id="page-custom-module">
+      <button class="back" onclick="goPage('modules')">&#8592; Modules</button>
+      <div class="mtitle" id="cm-title"></div>
+      <div class="mdesc" id="cm-desc"></div>
+      <div id="cm-fields" style="margin-top:16px"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+        <button onclick="runCustomModule()" id="cm-run-btn" style="padding:10px 22px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:14px;font-family:'Instrument Sans',sans-serif;font-weight:500;cursor:pointer">Run</button>
+        <button onclick="cmDelete()" style="padding:10px 16px;background:transparent;color:var(--mu);border:1px solid var(--bd);border-radius:8px;font-size:13px;font-family:'Instrument Sans',sans-serif;cursor:pointer" id="cm-del-btn" class="ao">Delete Module</button>
+      </div>
+      <div class="rbox" id="cm-result-box" style="margin-top:16px;display:none">
+        <div class="rhead"><span class="rlbl" id="cm-result-label"></span><div class="rbtns"><button class="cpbtn" onclick="cp('cm-result-body')">Copy</button></div></div>
+        <div class="rbody" id="cm-result-body"></div>
+      </div>
+    </div>
+
     <!-- DYNAMIC MODULE -->
     <div class="page" id="page-module">
       <button class="back" onclick="goPage('modules')">&#8592; Modules</button>
@@ -1049,6 +1066,41 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     </div>
 <p style="font-size:12px;color:var(--mu);margin-bottom:18px">Overview of all clients and activity.</p>
       <div id="adv-dash-content"><div class="empty"><div class="ei">&#9711;</div><div>Loading…</div></div></div>
+    </div>
+
+    <!-- MODULE BUILDER -->
+    <div class="page" id="page-module-builder">
+      <div class="page-title" style="margin-bottom:4px" id="mb-title">Module Builder</div>
+      <div style="font-size:14px;color:var(--mu);margin-bottom:20px" id="mb-subtitle">Describe the client's communication needs — RhetorIQ generates custom modules for them.</div>
+
+      <div id="mb-form">
+        <div style="margin-bottom:14px">
+          <label class="fl2">Client</label>
+          <select id="mb-client-sel" onchange="mbClientChanged()" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;background:var(--bg);font-size:14px;font-family:'Instrument Sans',sans-serif">
+            <option value="">— Select client —</option>
+          </select>
+        </div>
+        <div style="margin-bottom:14px">
+          <label class="fl2">Discovery Notes</label>
+          <textarea id="mb-notes" rows="6" placeholder="e.g. Hospital, 400 employees. Main needs: patient communication letters, internal guidelines for nursing staff, job postings for specialists, incident press releases, leadership memos. Tone should always be empathetic but professional. German only." style="width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:'Instrument Sans',sans-serif;resize:vertical;box-sizing:border-box"></textarea>
+        </div>
+        <button onclick="mbGenerate()" id="mb-gen-btn" style="width:100%;padding:11px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:14px;font-family:'Instrument Sans',sans-serif;font-weight:500;cursor:pointer">Generate Modules</button>
+      </div>
+
+      <div id="mb-loading" style="display:none;text-align:center;padding:40px 0;color:var(--mu);font-size:14px">Generating modules…</div>
+
+      <div id="mb-results" style="display:none;margin-top:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:15px;font-weight:600" id="mb-results-label">Suggested Modules</div>
+          <button onclick="mbSaveAll()" style="padding:8px 16px;background:var(--ac);color:#fff;border:none;border-radius:6px;font-size:13px;font-family:'Instrument Sans',sans-serif;font-weight:500;cursor:pointer">Save All to Client</button>
+        </div>
+        <div id="mb-cards" style="display:flex;flex-direction:column;gap:12px"></div>
+      </div>
+
+      <div id="mb-saved-section" style="margin-top:28px;display:none">
+        <div style="font-size:15px;font-weight:600;margin-bottom:14px">Saved Modules for <span id="mb-saved-client-name"></span></div>
+        <div id="mb-saved-list" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
     </div>
 
     <!-- CONTACT -->
@@ -1136,6 +1188,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div id="mm-videos" onclick="goPage('videos');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Videos</div>
     <div id="mm-contact" onclick="goPage('contact');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Contact</div>
     <div id="mm-datasec" onclick="goPage('datasec');setMN('');hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd)">Data Security &amp; Privacy</div>
+    <div class="ao-item" onclick="goPage('module-builder');loadModuleBuilder();hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none" id="mm-module-builder">Module Builder</div>
     <div class="ao-item" onclick="goPage('usage');loadUsage();hideMore()" style="padding:13px 18px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bd);display:none" id="mm-usage">Usage</div>
     <div id="mm-signout" onclick="logout()" style="padding:13px 18px;font-size:14px;cursor:pointer;color:var(--mu)">Sign out</div>
   </div>
@@ -1672,6 +1725,166 @@ async function loginClient(){
 }
 function logout(){token=null;localStorage.removeItem('riq-token');location.reload();}
 
+// ── CUSTOM MODULES ─────────────────────────────────────────────
+let customModules=[];
+let _mbGenerated=[];
+let _cmActive=null;
+
+async function loadCustomModules(){
+  if(!clientId){customModules=[];return;}
+  try{const r=await api('/api/custom-modules?clientId='+clientId);customModules=r.ok?await r.json():[];}catch{customModules=[];}
+}
+
+function loadModuleBuilder(){
+  // populate client dropdown
+  const sel=document.getElementById('mb-client-sel');
+  if(!sel)return;
+  sel.innerHTML='<option value="">— Select client —</option>'+clients.map(c=>`<option value="${c.id}"${c.id==clientId?' selected':''}>${c.name}</option>`).join('');
+  document.getElementById('mb-results').style.display='none';
+  _mbGenerated=[];
+  mbLoadSaved();
+}
+
+function mbClientChanged(){
+  document.getElementById('mb-results').style.display='none';
+  mbLoadSaved();
+}
+
+async function mbLoadSaved(){
+  const cid=document.getElementById('mb-client-sel')?.value;
+  const section=document.getElementById('mb-saved-section');
+  const list=document.getElementById('mb-saved-list');
+  const nameEl=document.getElementById('mb-saved-client-name');
+  if(!cid||!section||!list){if(section)section.style.display='none';return;}
+  const client=clients.find(c=>c.id==cid);
+  if(nameEl)nameEl.textContent=client?.name||'';
+  try{
+    const r=await api('/api/custom-modules?clientId='+cid);
+    const mods=r.ok?await r.json():[];
+    if(!mods.length){section.style.display='none';return;}
+    section.style.display='block';
+    list.innerHTML=mods.map(m=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--bd);border-radius:8px;background:var(--sf)">
+        <div style="font-size:22px;width:32px;text-align:center;flex-shrink:0">${m.icon||'◆'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600">${m.name}</div>
+          <div style="font-size:12px;color:var(--mu);margin-top:2px">${m.description||''}</div>
+        </div>
+        <button onclick="mbDeleteSaved(${m.id},this)" style="padding:5px 10px;border:1px solid var(--bd);border-radius:6px;background:transparent;font-size:12px;color:var(--mu);cursor:pointer;font-family:'Instrument Sans',sans-serif">Delete</button>
+      </div>`).join('');
+  }catch{section.style.display='none';}
+}
+
+async function mbDeleteSaved(id,btn){
+  if(!confirm('Delete this module?'))return;
+  await api('/api/custom-modules/'+id,{method:'DELETE'});
+  btn.closest('div[style]').remove();
+  await loadCustomModules();
+  if(typeof renderModulesList==='function')renderModulesList();
+}
+
+async function mbGenerate(){
+  const cid=document.getElementById('mb-client-sel')?.value;
+  const notes=document.getElementById('mb-notes')?.value?.trim();
+  if(!cid)return alert('Please select a client first.');
+  if(!notes)return alert('Please enter discovery notes.');
+  const client=clients.find(c=>c.id==cid);
+  document.getElementById('mb-form').style.opacity='0.5';
+  document.getElementById('mb-loading').style.display='block';
+  document.getElementById('mb-results').style.display='none';
+  try{
+    const r=await api('/api/custom-modules/generate',{method:'POST',body:JSON.stringify({notes,clientName:client?.name||'',language:LANG})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error);
+    _mbGenerated=d.modules;
+    _mbGenerated.forEach((m,i)=>m._cid=cid);
+    document.getElementById('mb-results-label').textContent=`${d.modules.length} modules for ${client?.name||'client'}`;
+    document.getElementById('mb-cards').innerHTML=d.modules.map((m,i)=>`
+      <div id="mb-card-${i}" style="border:1px solid var(--bd);border-radius:10px;background:var(--sf);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--bd)">
+          <div style="font-size:26px;width:36px;text-align:center;flex-shrink:0">${m.icon||'◆'}</div>
+          <div style="flex:1">
+            <div style="font-size:15px;font-weight:600">${m.name}</div>
+            <div style="font-size:12px;color:var(--mu);margin-top:2px">${m.description||''}</div>
+          </div>
+          <button onclick="mbSaveOne(${i})" style="padding:7px 14px;background:var(--ac);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Instrument Sans',sans-serif">Save</button>
+        </div>
+        <div style="padding:12px 16px">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin-bottom:6px">Input Fields</div>
+          ${(m.input_fields||[]).map(f=>`<div style="font-size:12px;color:var(--tx);margin-bottom:3px">· <strong>${f.label}</strong> (${f.type})</div>`).join('')||'<div style="font-size:12px;color:var(--mu)">No input fields</div>'}
+        </div>
+      </div>`).join('');
+    document.getElementById('mb-results').style.display='block';
+  }catch(e){alert('Error: '+e.message);}
+  finally{document.getElementById('mb-form').style.opacity='1';document.getElementById('mb-loading').style.display='none';}
+}
+
+async function mbSaveOne(i){
+  const m=_mbGenerated[i];if(!m)return;
+  const r=await api('/api/custom-modules',{method:'POST',body:JSON.stringify({client_id:m._cid,name:m.name,description:m.description,system_prompt:m.system_prompt,input_fields:m.input_fields,icon:m.icon})});
+  if(!r.ok)return alert('Error saving module.');
+  const card=document.getElementById('mb-card-'+i);
+  if(card){card.style.opacity='0.5';card.querySelector('button').textContent='Saved ✓';card.querySelector('button').disabled=true;}
+  await loadCustomModules();
+  if(typeof renderModulesList==='function')renderModulesList();
+  mbLoadSaved();
+}
+
+async function mbSaveAll(){
+  for(let i=0;i<_mbGenerated.length;i++)await mbSaveOne(i);
+  alert('All modules saved.');
+}
+
+// Open a custom module
+function openCustomModule(id){
+  const m=customModules.find(x=>x.id==id);if(!m)return;
+  _cmActive=m;
+  document.getElementById('cm-title').textContent=m.icon+' '+m.name;
+  document.getElementById('cm-desc').textContent=m.description||'';
+  document.getElementById('cm-result-box').style.display='none';
+  document.getElementById('cm-result-body').textContent='';
+  // render input fields
+  const fields=m.input_fields||[];
+  document.getElementById('cm-fields').innerHTML=fields.map(f=>{
+    if(f.type==='textarea')return`<div class="fg2" style="margin-bottom:14px"><label class="fl2">${f.label}</label><textarea id="cm-f-${f.id}" rows="4" placeholder="${f.placeholder||''}" style="width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:'Instrument Sans',sans-serif;resize:vertical;box-sizing:border-box"></textarea></div>`;
+    if(f.type==='select')return`<div class="fg2" style="margin-bottom:14px"><label class="fl2">${f.label}</label><select id="cm-f-${f.id}" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;background:var(--bg);font-size:14px;font-family:'Instrument Sans',sans-serif">${(f.options||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
+    return`<div class="fg2" style="margin-bottom:14px"><label class="fl2">${f.label}</label><input type="text" id="cm-f-${f.id}" placeholder="${f.placeholder||''}" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:'Instrument Sans',sans-serif;box-sizing:border-box"></div>`;
+  }).join('');
+  // show/hide delete button for advisors only
+  const delBtn=document.getElementById('cm-del-btn');
+  if(delBtn)delBtn.style.display=isAdv?'inline-block':'none';
+  goPage('custom-module');
+}
+
+async function runCustomModule(){
+  if(!_cmActive)return;
+  const inputs={};
+  (_cmActive.input_fields||[]).forEach(f=>{
+    const el=document.getElementById('cm-f-'+f.id);
+    if(el)inputs[f.id]=el.value;
+  });
+  const btn=document.getElementById('cm-run-btn');
+  btn.textContent='Running…';btn.disabled=true;
+  try{
+    const r=await api('/api/custom-modules/'+_cmActive.id+'/run',{method:'POST',body:JSON.stringify({inputs,clientId})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error);
+    document.getElementById('cm-result-label').textContent=_cmActive.name;
+    document.getElementById('cm-result-body').textContent=d.result;
+    document.getElementById('cm-result-box').style.display='block';
+    document.querySelector('.content').scrollTop=9999;
+  }catch(e){alert('Error: '+e.message);}
+  finally{btn.textContent='Run';btn.disabled=false;}
+}
+
+async function cmDelete(){
+  if(!_cmActive||!confirm('Delete this module permanently?'))return;
+  await api('/api/custom-modules/'+_cmActive.id,{method:'DELETE'});
+  customModules=customModules.filter(m=>m.id!==_cmActive.id);
+  _cmActive=null;
+  goPage('modules');renderModulesList();
+}
+
 async function loadUsage(){
   const sum=document.getElementById('usage-summary');
   const tbl=document.getElementById('usage-table');
@@ -1731,7 +1944,7 @@ async function boot(user,role){
     await loadAdvisorDashboard();
   } else {
     clientId=user.id||null;
-    if(clientId){await loadPeople();await loadMemory();setTimeout(()=>checkDueSubscriptions(),800);}
+    if(clientId){await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);}
   }
   if(isAdv){
     document.querySelectorAll('.ao-item').forEach(el=>el.style.display='block');
@@ -1786,7 +1999,7 @@ async function switchClient(id){
   const v=id||'';
   const s1=document.getElementById('client-select');if(s1&&s1.value!==v)s1.value=v;
   const s2=document.getElementById('home-client-select');if(s2&&s2.value!==v)s2.value=v;
-  if(clientId){await loadPeople();await loadMemory();setTimeout(()=>checkDueSubscriptions(),800);}
+  if(clientId){await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);}
   loadStats();
   updateMemBanner();
   const hw=document.getElementById('hs-widget');
@@ -3321,8 +3534,21 @@ function renderModulesList(){
     const matchQ=!q||m.name.toLowerCase().includes(q)||m.tag.toLowerCase().includes(q);
     return matchCat&&matchQ;
   });
-  if(!filtered.length){list.innerHTML=`<div style="color:var(--mu);font-size:14px;padding:20px 0">${T[LANG]?.mod_none||'No modules found.'}</div>`;return;}
-  list.innerHTML=filtered.map(m=>{
+  // Custom modules for current client
+  const filteredCustom=(customModules||[]).filter(m=>!q||m.name.toLowerCase().includes(q)||(m.description||'').toLowerCase().includes(q));
+  if(!filtered.length&&!filteredCustom.length){list.innerHTML=`<div style="color:var(--mu);font-size:14px;padding:20px 0">${T[LANG]?.mod_none||'No modules found.'}</div>`;return;}
+  const customHtml=filteredCustom.length?`
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:4px 0 8px">${LANG==='de'?'Individuelle Module':'Custom Modules'}</div>
+    ${filteredCustom.map(m=>`<div class="mrow mrow-feat" onclick="openCustomModule(${m.id})">
+      <div class="mrow-left">
+        <div class="mrow-name">${m.icon||'◆'} ${m.name}</div>
+        <div class="mrow-tag">${m.description||''}</div>
+      </div>
+      <div class="mrow-arr">&#8250;</div>
+    </div>`).join('')}
+    ${filtered.length?`<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:16px 0 8px">${LANG==='de'?'Standard-Module':'Standard Modules'}</div>`:''}
+  `:'';
+  list.innerHTML=customHtml+filtered.map(m=>{
     const def=getMdefLang(m.key,MDEFS[m.key]);
     const displayName=def?.title||m.name;
     return `<div class="mrow${m.feat?' mrow-feat':''}${m.crisis?' mrow-crisis':''}" onclick="${m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`}">
