@@ -90,6 +90,15 @@ async function init() {
       last_sent_at TIMESTAMPTZ,
       UNIQUE(client_id, format)
     );
+
+    CREATE TABLE IF NOT EXISTS client_module_prompts (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+      module_key TEXT NOT NULL,
+      instructions TEXT NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(client_id, module_key)
+    );
   `);
 }
 

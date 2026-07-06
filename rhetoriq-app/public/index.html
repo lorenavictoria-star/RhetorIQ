@@ -156,7 +156,7 @@ body.adv #mm-module-builder{display:flex!important}
 body.adv #mm-usage{display:flex!important}
 body.adv #mm-advisor-section{display:block!important}
 /* MORE MENU TILES & ROWS */
-.mm-tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border:1px solid var(--bd);border-radius:8px;cursor:pointer;background:var(--sf);transition:border-color .15s,background .15s;text-align:center}
+.mm-tile{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 10px;border:1px solid var(--bd);border-radius:8px;cursor:pointer;background:var(--sf);transition:border-color .15s,background .15s;text-align:left}
 .mm-tile:hover{border-color:var(--ac);background:var(--acl)}
 .mm-tile-i{font-size:20px;color:var(--mu);line-height:1}
 .mm-tile-l{font-size:12px;font-weight:600;color:var(--tx);line-height:1.2}
@@ -166,7 +166,10 @@ body.adv #mm-advisor-section{display:block!important}
 /* MODULE PAGE */
 .back{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--mu);cursor:pointer;margin-bottom:24px;background:none;border:none;font-family:'Instrument Sans',sans-serif;padding:0}
 .back:hover{color:var(--tx)}
-.mtitle{font-family:'Spectral',serif;font-size:32px;font-weight:400;margin-bottom:6px}
+.mtitle{font-family:'Spectral',serif;font-size:32px;font-weight:400;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.mod-prompt-btn{background:none;border:1px solid var(--bd);border-radius:6px;padding:4px 7px;cursor:pointer;color:var(--mu);font-size:15px;line-height:1;flex-shrink:0;margin-top:2px}
+.mod-prompt-btn:hover{background:var(--bg2);color:var(--ac)}
+.mod-prompt-dot{width:6px;height:6px;border-radius:50%;background:var(--ac);display:inline-block;margin-left:2px;vertical-align:middle}
 .mdesc{font-size:14px;color:var(--mu);max-width:620px;margin-bottom:24px;line-height:1.6}
 .fl2{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:7px}
 .fg2{margin-bottom:18px}
@@ -705,6 +708,23 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   </div>
 </div>
 
+<!-- MODULE PROMPT MODAL -->
+<div class="ov" id="mp-ov">
+  <div class="modal" style="max-width:520px">
+    <h2 style="margin-bottom:4px">Customize Prompt</h2>
+    <div id="mp-subtitle" style="font-size:13px;color:var(--mu);margin-bottom:16px"></div>
+    <div class="mf">
+      <label class="fl">Custom Instructions for this client</label>
+      <textarea id="mp-instructions" rows="7" placeholder="e.g. Always write in Swiss German. Avoid anglicisms. This client is a medical institution — formal tone required." style="width:100%;resize:vertical"></textarea>
+      <div style="font-size:12px;color:var(--mu);margin-top:6px">These instructions are appended to the module's system prompt — only for this client.</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+      <button class="lbtn" onclick="closeModal('mp-ov')">Cancel</button>
+      <button class="lbtn" id="mp-save-btn" onclick="saveModPrompt()" style="background:var(--ac);color:#fff;border:none">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODALS -->
 <div class="ov" id="nc-ov">
   <div class="modal">
@@ -1145,6 +1165,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   <nav class="mnav">
     <div class="mni active" id="mn-home" onclick="goHome();setMN('home')"><div class="mni-i">&#8962;</div><div class="mni-l" id="mn-home-l">Home</div></div>
     <div class="mni" id="mn-modules" onclick="goPage('modules');setMN('modules');renderModulesList()"><div class="mni-i">&#9783;</div><div class="mni-l" id="mn-modules-l">Modules</div></div>
+    <div class="mni ao-item" id="mn-clients" onclick="goPage('clients');loadAdvisorDashboard();setMN('clients')" style="display:none"><div class="mni-i">&#9786;</div><div class="mni-l">Clients</div></div>
     <div class="mni" id="mn-more" onclick="toggleMore()"><div class="mni-i">&#8943;</div><div class="mni-l" id="mn-more-l">More</div></div>
   </nav>
 
@@ -1164,9 +1185,6 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       </div>
       <div id="mm-history" onclick="goPage('history');loadHistory();setMN('more');hideMore()" class="mm-tile">
         <div class="mm-tile-l">History</div>
-      </div>
-      <div class="ao-item mm-tile" id="mm-clients" onclick="goPage('clients');loadAdvisorDashboard();setMN('more');hideMore()" style="display:none">
-        <div class="mm-tile-l">Clients</div>
       </div>
       <div class="ao-item mm-tile" id="mm-reviews" onclick="openReviewPanel();setMN('more');hideMore()" style="display:none;position:relative">
         <div class="mm-tile-l">Reviews</div>
@@ -2217,7 +2235,7 @@ async function boot(user,role){
     if(clientId){await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);}
   }
   if(isAdv){
-    document.querySelectorAll('.ao-item').forEach(el=>el.style.display='block');
+    document.querySelectorAll('.ao-item').forEach(el=>{el.style.display=el.classList.contains('mni')?'flex':'block';});
     document.getElementById('mm-reviews').style.display='flex';
     loadAdvisorReviews();
     setInterval(loadAdvisorReviews,60000);
@@ -2604,7 +2622,7 @@ function updateHomeRightSidebar(){
   }
 }
 function setMN(id){
-  const toMore=new Set(['brand','people','clients','reviews','memory','history','usage','module-builder']);
+  const toMore=new Set(['brand','people','reviews','memory','history','usage','module-builder']);
   const eff=toMore.has(id)?'more':id;
   document.querySelectorAll('.mni').forEach(n=>n.classList.remove('active'));
   const el=document.getElementById('mn-'+eff);if(el)el.classList.add('active');
@@ -2831,7 +2849,9 @@ function goModule(name,prefill){
   window._currentModule=name;window._currentTgTile=null;
   const def=getMdefLang(name,MDEFS[name]);if(!def)return;
   trackModuleUse(name,def.title||name);
-  document.getElementById('mod-title').innerHTML=def.title;
+  const gearHtml=isAdv?` <button class="mod-prompt-btn" id="mod-prompt-gear" onclick="openModPrompt('${name}')" title="Customize prompt for this client"><i class="ti ti-adjustments-horizontal"></i></button>`:'';
+  document.getElementById('mod-title').innerHTML=def.title+gearHtml;
+  if(isAdv&&clientId){api('/api/module-prompts/'+clientId+'/'+name).then(r=>{const gear=document.getElementById('mod-prompt-gear');if(gear&&r.instructions){const d=document.createElement('span');d.className='mod-prompt-dot';gear.appendChild(d);}}).catch(()=>{});}
   document.getElementById('mod-desc').innerHTML=def.desc;
   const form=document.getElementById('mod-form');
   if(def.special==='textgen')buildTextGen(prefill,form);
@@ -4021,6 +4041,42 @@ function showDebriefNudge(modName,resultId){
   if(!nudge){nudge=document.createElement('div');nudge.className='debrief-nudge';nudge.id='dn-'+resultId;box.after(nudge);}
   nudge.innerHTML=`<div class="debrief-nudge-text"><strong>Debrief this later?</strong><br>After the meeting or announcement, run a Debriefing to capture what actually happened.</div><button class="dn-btn" onclick="goModule('debrief')">Open Debriefing</button><button class="dn-dismiss" onclick="this.closest('.debrief-nudge').classList.remove('show')">&times;</button>`;
   nudge.classList.add('show');
+}
+
+// MODULE PROMPT CUSTOMIZATION
+let _mpModule=null;
+
+async function openModPrompt(moduleKey){
+  _mpModule=moduleKey;
+  const modDef=MDEFS[moduleKey];
+  const label=modDef?(getMdefLang(moduleKey,modDef).title||moduleKey):moduleKey;
+  document.getElementById('mp-subtitle').textContent=label+' — '+( clients.find(c=>c.id===clientId)?.name||'this client');
+  document.getElementById('mp-instructions').value='';
+  document.getElementById('mp-save-btn').textContent='Save';
+  openModal('mp-ov');
+  try{
+    const r=await api('/api/module-prompts/'+clientId+'/'+moduleKey);
+    document.getElementById('mp-instructions').value=r.instructions||'';
+  }catch(e){}
+}
+
+async function saveModPrompt(){
+  if(!_mpModule)return;
+  const instructions=document.getElementById('mp-instructions').value.trim();
+  const btn=document.getElementById('mp-save-btn');
+  btn.textContent='Saving…';btn.disabled=true;
+  try{
+    await api('/api/module-prompts/'+clientId+'/'+_mpModule,{method:'POST',body:JSON.stringify({instructions})});
+    // update gear icon dot indicator
+    const gear=document.querySelector('.mod-prompt-btn');
+    if(gear){
+      const dot=gear.querySelector('.mod-prompt-dot');
+      if(instructions&&!dot){gear.insertAdjacentHTML('beforeend','<span class="mod-prompt-dot"></span>');}
+      else if(!instructions&&dot){dot.remove();}
+    }
+    closeModal('mp-ov');
+  }catch(e){btn.textContent='Error';btn.disabled=false;return;}
+  btn.textContent='Save';btn.disabled=false;
 }
 
 // PRIVACY BADGE HTML

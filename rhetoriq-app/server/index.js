@@ -47,6 +47,7 @@ app.use('/api/fetch-website', require('./routes/fetchWebsite'));
 app.use('/api/transcribe', require('./routes/transcribe'));
 app.use('/api/onboard', require('./routes/onboard'));
 app.use('/api/custom-modules', require('./routes/customModules'));
+app.use('/api/module-prompts', require('./routes/modulePrompts'));
 
 // Health check
 app.get('/health', (_, res) => res.json({ ok: true }));

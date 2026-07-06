@@ -462,14 +462,25 @@ router.post('/', requireAuth, async (req, res) => {
     const cfg = PROMPTS[module];
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
 
-    const system = typeof cfg.system === 'function' ? cfg.system(data) : cfg.system;
+    let system = typeof cfg.system === 'function' ? cfg.system(data) : cfg.system;
     const userMsg = cfg.build(data);
+
+    // Append per-client custom instructions if present
+    const resolvedClientId = clientId || (req.user.role === 'client' ? req.user.clientId : null);
+    if (resolvedClientId) {
+      const { rows: customRows } = await pool.query(
+        'SELECT instructions FROM client_module_prompts WHERE client_id=$1 AND module_key=$2',
+        [resolvedClientId, module]
+      );
+      if (customRows[0]?.instructions) {
+        system += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + customRows[0].instructions;
+      }
+    }
 
     const result = await callClaude(system, userMsg);
 
     // Persist analysis
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
-    const resolvedClientId = clientId || (req.user.role === 'client' ? req.user.clientId : null);
 
     const { rows } = await pool.query(
       `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result)
