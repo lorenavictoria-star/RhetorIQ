@@ -94,6 +94,44 @@ router.post('/client-password-login', async (req, res) => {
   }
 });
 
+// POST /auth/client-user-login — team member of a client workspace logs in
+router.post('/client-user-login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+
+    const { rows } = await pool.query(
+      `SELECT cu.*, c.name as client_name, c.industry, u.name as advisor_name
+       FROM client_users cu
+       JOIN clients c ON cu.client_id = c.id
+       JOIN users u ON c.advisor_id = u.id
+       WHERE LOWER(cu.email) = $1`,
+      [email.toLowerCase()]
+    );
+    const cu = rows[0];
+    if (!cu || !cu.password_hash) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const ok = await bcrypt.compare(password, cu.password_hash);
+    if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const jwtToken = jwt.sign(
+      { clientId: cu.client_id, clientName: cu.client_name, role: 'client', advisorId: null,
+        clientUserId: cu.id, clientUserName: cu.name, clientUserRole: cu.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '90d' }
+    );
+
+    res.json({
+      token: jwtToken,
+      client: { id: cu.client_id, name: cu.client_name, industry: cu.industry, advisorName: cu.advisor_name },
+      clientUser: { id: cu.id, name: cu.name, email: cu.email, role: cu.role }
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // POST /auth/client-change-password — client sets new password (first login or self-service)
 router.post('/client-change-password', requireAuth, async (req, res) => {
   try {

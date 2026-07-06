@@ -99,6 +99,19 @@ async function init() {
       updated_at TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(client_id, module_key)
     );
+
+    CREATE TABLE IF NOT EXISTS client_users (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+      email TEXT NOT NULL,
+      name TEXT NOT NULL,
+      password_hash TEXT,
+      role TEXT NOT NULL DEFAULT 'editor',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(client_id, email)
+    );
+
+    ALTER TABLE analyses ADD COLUMN IF NOT EXISTS generated_by TEXT;
   `);
 }
 

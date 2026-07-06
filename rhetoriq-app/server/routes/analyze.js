@@ -481,11 +481,14 @@ router.post('/', requireAuth, async (req, res) => {
 
     // Persist analysis
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+    const generatedBy = req.user.role === 'advisor'
+      ? (req.user.name || 'Advisor')
+      : (req.user.clientUserName || req.user.clientName || 'Klient');
 
     const { rows } = await pool.query(
-      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, created_at`,
-      [resolvedClientId, advisorId, module, cfg.label, data, result]
+      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, created_at`,
+      [resolvedClientId, advisorId, module, cfg.label, data, result, generatedBy]
     );
 
     const analysis = { id: rows[0].id, module, label: cfg.label, result, createdAt: rows[0].created_at, clientId: resolvedClientId };

@@ -205,6 +205,45 @@ router.post('/:id/set-password', requireAdvisor, async (req, res) => {
   }
 });
 
+// GET /api/clients/:id/users — list team members
+router.get('/:id/users', requireAdvisor, async (req, res) => {
+  try {
+    const { rows: clientRows } = await pool.query('SELECT id FROM clients WHERE id=$1 AND advisor_id=$2', [req.params.id, req.user.id]);
+    if (!clientRows[0]) return res.status(404).json({ error: 'Not found' });
+    const { rows } = await pool.query(
+      'SELECT id, email, name, role, created_at FROM client_users WHERE client_id=$1 ORDER BY created_at',
+      [req.params.id]
+    );
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/clients/:id/users — add team member
+router.post('/:id/users', requireAdvisor, async (req, res) => {
+  try {
+    const { rows: clientRows } = await pool.query('SELECT id FROM clients WHERE id=$1 AND advisor_id=$2', [req.params.id, req.user.id]);
+    if (!clientRows[0]) return res.status(404).json({ error: 'Not found' });
+    const { email, name, password, role = 'editor' } = req.body;
+    if (!email || !name || !password) return res.status(400).json({ error: 'Email, name and password required' });
+    const hash = await bcrypt.hash(password, 12);
+    const { rows } = await pool.query(
+      'INSERT INTO client_users (client_id, email, name, password_hash, role) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (client_id, email) DO UPDATE SET name=$3, password_hash=$4, role=$5 RETURNING id, email, name, role, created_at',
+      [req.params.id, email.toLowerCase(), name, hash, role]
+    );
+    res.status(201).json(rows[0]);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// DELETE /api/clients/:clientId/users/:userId — remove team member
+router.delete('/:id/users/:userId', requireAdvisor, async (req, res) => {
+  try {
+    const { rows: clientRows } = await pool.query('SELECT id FROM clients WHERE id=$1 AND advisor_id=$2', [req.params.id, req.user.id]);
+    if (!clientRows[0]) return res.status(404).json({ error: 'Not found' });
+    await pool.query('DELETE FROM client_users WHERE id=$1 AND client_id=$2', [req.params.userId, req.params.id]);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // DELETE /api/clients/:id
 router.delete('/:id', requireAdvisor, async (req, res) => {
   try {

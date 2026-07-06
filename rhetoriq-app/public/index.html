@@ -742,6 +742,50 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   </div>
 </div>
 
+<!-- TEAM MODAL -->
+<div class="ov" id="team-ov">
+  <div class="modal" style="max-width:520px">
+    <h2 style="margin-bottom:4px">Team Members</h2>
+    <div id="team-subtitle" style="font-size:13px;color:var(--mu);margin-bottom:16px"></div>
+    <div id="team-list" style="margin-bottom:16px"></div>
+    <div style="border-top:1px solid var(--bd);padding-top:14px;margin-bottom:4px">
+      <div style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">Add Team Member</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="mf" style="margin-bottom:0"><label class="fl">Name</label><input type="text" id="tm-name" placeholder="Anna Berger"></div>
+        <div class="mf" style="margin-bottom:0"><label class="fl">Email</label><input type="email" id="tm-email" placeholder="anna@company.com"></div>
+        <div class="mf" style="margin-bottom:0"><label class="fl">Password</label><input type="text" id="tm-pw" placeholder="min. 8 characters"></div>
+        <div class="mf" style="margin-bottom:0"><label class="fl">Role</label>
+          <select id="tm-role" style="width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);font-size:13px;font-family:'Instrument Sans',sans-serif">
+            <option value="editor">Editor (can generate)</option>
+            <option value="viewer">Viewer (read only)</option>
+            <option value="admin">Admin (full access)</option>
+          </select>
+        </div>
+      </div>
+      <div id="tm-err" style="color:#c0392b;font-size:13px;margin-top:8px;display:none"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+      <button class="lbtn" onclick="closeModal('team-ov')">Close</button>
+      <button class="lbtn" onclick="addTeamMember()" style="background:var(--ac);color:#fff;border:none">Add Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUDIT LOG MODAL -->
+<div class="ov" id="audit-ov">
+  <div class="modal" style="max-width:700px;max-height:85vh;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <h2 style="margin:0">Audit Log</h2>
+      <button class="obtn" id="audit-export-btn" onclick="exportAuditCsv()">Download CSV</button>
+    </div>
+    <div id="audit-subtitle" style="font-size:13px;color:var(--mu);margin-bottom:14px"></div>
+    <div id="audit-table-wrap" style="overflow-y:auto;flex:1;border:1px solid var(--bd);border-radius:8px"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+      <button class="lbtn" onclick="closeModal('audit-ov')">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODALS -->
 <div class="ov" id="nc-ov">
   <div class="modal">
@@ -3797,6 +3841,8 @@ async function loadAdvisorDashboard(){
             ${tok?`<button class="obtn" onclick="copyTok('${tok}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail('${c.name}','${tok}','${c.id}')">Send by Email</button>`:''}
             <button class="obtn" onclick="openSetPassword(${c.id},'${c.name}')">Set Password</button>
             <button class="obtn" onclick="advToggleTimeline('${c.id}',this)">Activity</button>
+            <button class="obtn" onclick="openTeamModal(${c.id},'${c.name}')">Team</button>
+            <button class="obtn" onclick="openAuditModal(${c.id},'${c.name}')">Audit Log</button>
             <button class="dbtn" onclick="delData(${c.id},'${c.name}')">Delete Data</button>
             <button class="dbtn" onclick="deleteClient(${c.id},'${c.name}').then(()=>loadAdvisorDashboard())">Delete Client</button>
           </div>
@@ -4200,6 +4246,100 @@ async function saveSetPassword(){
     await api('/api/clients/'+_spClientId+'/set-password',{method:'POST',body:JSON.stringify({email,password})});
     closeModal('sp-ov');
   }catch(e){err.textContent='Error saving';err.style.display='block';btn.textContent='Save';btn.disabled=false;}
+}
+
+// ── TEAM MANAGEMENT ──────────────────────────────────────────────
+let _teamClientId=null;
+async function openTeamModal(cid,cname){
+  _teamClientId=cid;
+  document.getElementById('team-subtitle').textContent=cname;
+  document.getElementById('tm-name').value='';
+  document.getElementById('tm-email').value='';
+  document.getElementById('tm-pw').value='';
+  document.getElementById('tm-role').value='editor';
+  document.getElementById('tm-err').style.display='none';
+  openModal('team-ov');
+  await loadTeamList();
+}
+async function loadTeamList(){
+  const el=document.getElementById('team-list');
+  el.innerHTML='<div style="font-size:12px;color:var(--mu)">Loading…</div>';
+  try{
+    const r=await api('/api/clients/'+_teamClientId+'/users');
+    const users=await r.json();
+    if(!users.length){el.innerHTML='<div style="font-size:13px;color:var(--mu);padding:4px 0">No team members yet.</div>';return;}
+    const roleBadge=role=>{const c={admin:'var(--ac)',editor:'#1a5a9a',viewer:'#666'}[role]||'#666';return`<span style="font-size:11px;padding:2px 7px;border-radius:10px;background:${c}1a;color:${c};font-weight:600">${role}</span>`;};
+    el.innerHTML=`<div style="border:1px solid var(--bd);border-radius:8px;overflow:hidden">${users.map((u,i)=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;${i?'border-top:1px solid var(--bd)':''}">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--tx)">${u.name}</div>
+          <div style="font-size:12px;color:var(--mu)">${u.email}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${roleBadge(u.role)}
+          <button class="dbtn" style="font-size:11px;padding:4px 10px" onclick="removeTeamMember(${u.id})">Remove</button>
+        </div>
+      </div>`).join('')}</div>`;
+  }catch(e){el.innerHTML=`<div style="color:#c0392b;font-size:13px">${e.message}</div>`;}
+}
+async function addTeamMember(){
+  const name=document.getElementById('tm-name').value.trim();
+  const email=document.getElementById('tm-email').value.trim();
+  const password=document.getElementById('tm-pw').value.trim();
+  const role=document.getElementById('tm-role').value;
+  const err=document.getElementById('tm-err');
+  err.style.display='none';
+  if(!name||!email||!password){err.textContent='Name, Email und Passwort sind erforderlich.';err.style.display='block';return;}
+  if(password.length<8){err.textContent='Passwort muss mind. 8 Zeichen haben.';err.style.display='block';return;}
+  try{
+    await api('/api/clients/'+_teamClientId+'/users',{method:'POST',body:JSON.stringify({name,email,password,role})});
+    document.getElementById('tm-name').value='';document.getElementById('tm-email').value='';document.getElementById('tm-pw').value='';
+    await loadTeamList();
+  }catch(e){err.textContent='Fehler: '+e.message;err.style.display='block';}
+}
+async function removeTeamMember(userId){
+  if(!confirm('Team member entfernen?'))return;
+  try{await api('/api/clients/'+_teamClientId+'/users/'+userId,{method:'DELETE'});await loadTeamList();}
+  catch(e){alert('Fehler: '+e.message);}
+}
+
+// ── AUDIT LOG ────────────────────────────────────────────────────
+let _auditClientId=null,_auditClientName=null;
+async function openAuditModal(cid,cname){
+  _auditClientId=cid;_auditClientName=cname;
+  document.getElementById('audit-subtitle').textContent=cname;
+  document.getElementById('audit-table-wrap').innerHTML='<div style="padding:16px;font-size:13px;color:var(--mu)">Loading…</div>';
+  openModal('audit-ov');
+  try{
+    const r=await api('/api/audit/'+cid);
+    const rows=await r.json();
+    if(!rows.length){document.getElementById('audit-table-wrap').innerHTML='<div style="padding:16px;font-size:13px;color:var(--mu)">Noch keine Aktivität.</div>';return;}
+    const modColor=m=>{if(m&&m.startsWith('text-gen'))return'#1a5a9a';if(['rp','cf','la'].includes(m))return'var(--ac)';return'#8e44ad';};
+    document.getElementById('audit-table-wrap').innerHTML=`
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr style="background:var(--sf);position:sticky;top:0">
+          <th style="text-align:left;padding:8px 12px;font-weight:600;color:var(--mu);border-bottom:1px solid var(--bd)">Datum</th>
+          <th style="text-align:left;padding:8px 12px;font-weight:600;color:var(--mu);border-bottom:1px solid var(--bd)">Modul</th>
+          <th style="text-align:left;padding:8px 12px;font-weight:600;color:var(--mu);border-bottom:1px solid var(--bd)">Erstellt von</th>
+          <th style="text-align:left;padding:8px 12px;font-weight:600;color:var(--mu);border-bottom:1px solid var(--bd)">Vorschau</th>
+        </tr></thead>
+        <tbody>${rows.map((a,i)=>`<tr style="${i%2?'background:var(--sf)':''}">
+          <td style="padding:8px 12px;color:var(--mu);white-space:nowrap">${new Date(a.created_at).toLocaleString('de-CH',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</td>
+          <td style="padding:8px 12px"><span style="color:${modColor(a.module)};font-weight:600">${a.module_label||a.module}</span></td>
+          <td style="padding:8px 12px;color:var(--tx)">${a.generated_by||'Klient'}</td>
+          <td style="padding:8px 12px;color:var(--mu);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(a.result_preview||'').substring(0,120)}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+  }catch(e){document.getElementById('audit-table-wrap').innerHTML=`<div style="padding:16px;color:#c0392b;font-size:13px">${e.message}</div>`;}
+}
+async function exportAuditCsv(){
+  if(!_auditClientId)return;
+  try{
+    const r=await api('/api/audit/'+_auditClientId+'/export');
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='rhetoriq-audit-'+_auditClientName+'.csv';a.click();URL.revokeObjectURL(url);
+  }catch(e){alert('Export failed: '+e.message);}
 }
 
 // MODULE PROMPT CUSTOMIZATION
