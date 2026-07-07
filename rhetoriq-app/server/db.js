@@ -29,6 +29,7 @@ async function init() {
     ALTER TABLE analyses ADD CONSTRAINT analyses_client_id_fkey FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS password_hash TEXT;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT FALSE;
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS capital_markets_enabled BOOLEAN DEFAULT FALSE;
 
     CREATE TABLE IF NOT EXISTS analyses (
       id SERIAL PRIMARY KEY,

@@ -1466,7 +1466,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const API='https://rhetoriq-jib0.onrender.com';
-let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null;
+let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,capitalMarketsEnabled=false;
 
 // ── LANGUAGE TOGGLE ───────────────────────────────────────────
 let LANG=localStorage.getItem('riq-lang')||'en';
@@ -2322,7 +2322,10 @@ async function boot(user,role){
     await loadAdvisorDashboard();
   } else {
     clientId=user.id||null;
-    if(clientId){await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);}
+    if(clientId){
+      try{const r=await fetch(API+'/api/clients/'+clientId+'/cm-status');const d=await r.json();capitalMarketsEnabled=d.capital_markets_enabled||false;}catch{}
+      await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);
+    }
   }
   if(isAdv){
     document.querySelectorAll('.ao-item').forEach(el=>{el.style.display=el.classList.contains('mni')||el.classList.contains('mm-tile')?'flex':'block';});
@@ -2383,9 +2386,13 @@ async function switchClient(id){
   const v=id||'';
   const s1=document.getElementById('client-select');if(s1&&s1.value!==v)s1.value=v;
   const s2=document.getElementById('home-client-select');if(s2&&s2.value!==v)s2.value=v;
+  // update capital markets flag from clients array
+  const selectedClient=clients.find(c=>String(c.id)===String(id));
+  capitalMarketsEnabled=selectedClient?.capital_markets_enabled||false;
   if(clientId){await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);}
   loadStats();
   updateMemBanner();
+  if(typeof renderModulesList==='function')renderModulesList();
   const hw=document.getElementById('hs-widget');
   if(hw)hw.style.display=clientId?'block':'none';
 }
@@ -2402,6 +2409,24 @@ async function sendTokenByEmail(name,token,clientId){
     alert('Token sent to '+email);
   }catch(e){alert('Error: '+e.message);}
 }
+async function toggleCapitalMarkets(cid,btn){
+  try{
+    const r=await api('/api/clients/'+cid+'/capital-markets-toggle',{method:'PUT'});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error);
+    const on=d.capital_markets_enabled;
+    btn.textContent='Capital Markets '+(on?'ON ✓':'OFF');
+    btn.style.color=on?'#1B4D2E':'';
+    btn.style.borderColor=on?'#1B4D2E':'';
+    btn.style.background=on?'#f0f5f1':'';
+    btn.style.fontWeight=on?'600':'';
+    // update local clients array
+    const c=clients.find(c=>c.id==cid);if(c)c.capital_markets_enabled=on;
+    // if this is the currently selected client, update flag and re-render modules
+    if(String(clientId)===String(cid)){capitalMarketsEnabled=on;if(typeof renderModulesList==='function')renderModulesList();}
+  }catch(e){alert('Error: '+e.message);}
+}
+
 async function deleteClient(cid,name){
   if(!confirm('Delete client "'+name+'" and ALL their data?\n\nThis cannot be undone.'))return;
   try{
@@ -2937,7 +2962,13 @@ const MDEFS={
   'before-after':{title:'Before / After',desc:'Paste any text. Get a diagnosis of what is weak, a fully improved version, and a clear explanation of every change made.',mf:'ba-in',ph:'Paste the original text here — email, statement, announcement, speech section, LinkedIn post...',api:'before-after',fields:[{id:'ba-goal',type:'sel',lbl:'Improvement Goal',opts:['General improvement','More clarity & directness','More authority & presence','Warmer & more human','Stronger argumentation','Shorter & sharper']},{id:'ba-aud',type:'text',lbl:'Target Audience',ph:'e.g. Employees, investors, media'},{id:'ba-tone',type:'sel',lbl:'Tone Target',opts:['Keep existing tone','More formal','More conversational','Swiss / European — understated','International executive']}]},
   'competitive-check':{title:'Competitive Message Check',desc:'Paste your key messages. Get a similarity score vs. your industry, a list of what makes you sound generic, and a rewrite that actually differentiates.',mf:'cc-in',ph:'Paste your 3–5 key messages or positioning statements here.',api:'competitive-check',mh:'120px',fields:[{id:'cc-industry',type:'sel',lbl:'Industry',opts:['Financial Services','Industry / Manufacturing','Tech / SaaS','Healthcare','Education','Public Sector','Consulting','Other']},{id:'cc-company',type:'text',lbl:'Company / Brand',ph:'e.g. Acme AG'},{id:'cc-aud',type:'text',lbl:'Target Audience',ph:'e.g. B2B clients, investors, talent market'}]},
   'pre-meeting':{title:'Meeting Prep',desc:'Meeting in 1 hour? Get a complete brief: the 3 hardest moments, your opening line, key messages, what not to say, and a stakeholder map.',api:'pre-meeting',special:'premeeting'},
-  'arg-reaction':{title:'Argument / Reaction Preview',desc:'Three tools in one: get the hardest pushback, simulate how stakeholders will react, and check if the leadership message matches company reality.',api:'arg-reaction',special:'argreaction'}
+  'arg-reaction':{title:'Argument / Reaction Preview',desc:'Three tools in one: get the hardest pushback, simulate how stakeholders will react, and check if the leadership message matches company reality.',api:'arg-reaction',special:'argreaction'},
+  // ── CAPITAL MARKETS SUITE ─────────────────────────────────────
+  'cm-qa-trainer':{title:'Analyst Q&A Trainer',desc:'Generate 10–50 realistic analyst questions based on your company profile and recent events. Train responses, spot traps, build confidence before every earnings call or capital markets day.',api:'cm-qa-trainer',fields:[{id:'cm-qa-company',type:'text',lbl:'Company / Ticker',ph:'e.g. Sensirion AG / SENS'},{id:'cm-qa-sector',type:'text',lbl:'Sector',ph:'e.g. Semiconductor sensors, life science'},{id:'cm-qa-context',type:'text',lbl:'Recent event / context',ph:'e.g. Q3 earnings, profit warning, IPO roadshow'},{id:'cm-qa-difficulty',type:'sel',lbl:'Difficulty',opts:['Standard — professional','Critical — aggressive questioning','Worst-Case — maximum pressure']},{id:'cm-qa-focus',type:'sel',lbl:'Focus area',opts:['All areas','Guidance & outlook','Margin & cost structure','Capital allocation','Strategy & competition','ESG & governance']}],mf:'cm-qa-text',ph:'Paste key metrics, guidance, recent results, or prepared remarks. The more context, the sharper the questions.',mh:'140px'},
+  'cm-equity-story':{title:'Equity Story Builder',desc:'Build an institutional-grade equity story: Why Now, Market Opportunity, Competitive Moat, Financial Trajectory, Management Credibility. Consistency-checked and tone-assessed.',api:'cm-equity-story',fields:[{id:'cm-es-company',type:'text',lbl:'Company',ph:'e.g. Medmix AG'},{id:'cm-es-sector',type:'text',lbl:'Sector / Industry',ph:'e.g. Medical devices, specialty chemicals'},{id:'cm-es-investor',type:'sel',lbl:'Target investor type',opts:['Institutional generalist','Long-only growth','Long-only value','Hedge fund','ESG / Impact','Private equity']},{id:'cm-es-length',type:'sel',lbl:'Story length',opts:['2-min elevator pitch','10-min standard pitch','30-min deep dive']},{id:'cm-es-metrics',type:'text',lbl:'Key financial metrics',ph:'e.g. Revenue CHF 420M, EBITDA 18%, growth 12% YoY'}],mf:'cm-es-text',ph:'Paste annual reports, investor presentations, management commentary, or strategy documents.',mh:'140px'},
+  'cm-earnings-analyzer':{title:'Earnings Call Analyzer',desc:'Upload an earnings call transcript. Get a full communication audit: what landed, what triggered analyst concern, unintended signals, and concrete improvements for the next call.',api:'cm-earnings-analyzer',fields:[{id:'cm-ea-company',type:'text',lbl:'Company',ph:'e.g. u-blox AG'},{id:'cm-ea-calltype',type:'sel',lbl:'Call type',opts:['Quarterly earnings call','Full-year results','Capital markets day','Analyst briefing','Ad-hoc announcement']},{id:'cm-ea-period',type:'text',lbl:'Period',ph:'e.g. Q3 2025, FY 2024'},{id:'cm-ea-sector',type:'text',lbl:'Sector context',ph:'e.g. IoT semiconductors, currently facing inventory correction'}],mf:'cm-ea-text',ph:'Paste the full transcript or prepared remarks here.',mh:'180px'},
+  'cm-board-coach':{title:'Board Presentation Coach',desc:'Translate capital markets complexity into decision-quality board language. Produces an executive summary, scenario table, risk reformulation, and decision framing — ready for any board room.',api:'cm-board-coach',fields:[{id:'cm-bc-company',type:'text',lbl:'Company',ph:'e.g. Bachem AG'},{id:'cm-bc-purpose',type:'text',lbl:'Presentation purpose',ph:'e.g. Capital allocation decision, guidance update, M&A briefing'},{id:'cm-bc-decision',type:'text',lbl:'Decision required from board',ph:'e.g. Approval of CHF 200M capex programme'},{id:'cm-bc-board',type:'sel',lbl:'Board composition',opts:['Mixed — financial and non-financial backgrounds','Primarily financial / investment background','Primarily operational background','Family board — less capital markets exposure']}],mf:'cm-bc-text',ph:'Paste the source material: analyst reports, management presentation, financial projections.',mh:'140px'},
+  'cm-roadshow':{title:'Roadshow Prep Mode',desc:'Prepare for 50–200 investor meetings. Get calibrated briefs per investor type, the 10 hardest questions with model answers, story versions for 5/15/45 minutes, and a consistency checklist.',api:'cm-roadshow',fields:[{id:'cm-rs-company',type:'text',lbl:'Company',ph:'e.g. Sensirion AG'},{id:'cm-rs-type',type:'sel',lbl:'Roadshow type',opts:['NDR (Non-Deal Roadshow)','IPO roadshow','Post-results roadshow','Capital markets day','Investor day / deep dive']},{id:'cm-rs-investors',type:'text',lbl:'Investor types to cover',ph:'e.g. Long-only growth, hedge funds, ESG'},{id:'cm-rs-duration',type:'sel',lbl:'Typical meeting duration',opts:['30 minutes','45 minutes','60 minutes','Full day (multiple slots)']},{id:'cm-rs-story',type:'text',lbl:'Core investment thesis (one line)',ph:'e.g. Leading sensor platform for the energy transition'}],mf:'cm-rs-text',ph:'Paste equity story, recent results, analyst reports, or prior roadshow materials.',mh:'140px'}
 };
 
 function goModule(name,prefill){
@@ -3847,6 +3878,7 @@ async function loadAdvisorDashboard(){
             <button class="obtn" onclick="advToggleTimeline('${c.id}',this)">Activity</button>
             <button class="obtn" onclick="openTeamModal(${c.id},'${c.name}')">Team</button>
             <button class="obtn" onclick="openAuditModal(${c.id},'${c.name}')">Audit Log</button>
+            <button class="obtn" id="cm-toggle-${c.id}" onclick="toggleCapitalMarkets(${c.id},this)" style="${c.capital_markets_enabled?'color:#1B4D2E;border-color:#1B4D2E;background:#f0f5f1;font-weight:600':''}">Capital Markets ${c.capital_markets_enabled?'ON ✓':'OFF'}</button>
             <button class="dbtn" onclick="delData(${c.id},'${c.name}')">Delete Data</button>
             <button class="dbtn" onclick="deleteClient(${c.id},'${c.name}').then(()=>loadAdvisorDashboard())">Delete Client</button>
           </div>
@@ -3987,12 +4019,19 @@ const ALL_MODULES=[
   {key:'debrief',name:'Debrief',cat:'growth',tag:'Growth',isNew:true},
   {key:'crisis-toolkit',name:'Crisis Communication Toolkit',cat:'prevention',tag:'Prevention',isNew:true},
   {key:'competitive-check',name:'Competitive Message Check',cat:'prevention',tag:'Prevention',isNew:true},
+  // Capital Markets Suite — only shown when capitalMarketsEnabled
+  {key:'cm-qa-trainer',name:'Analyst Q&A Trainer',cat:'capital-markets',tag:'Capital Markets',isNew:true},
+  {key:'cm-equity-story',name:'Equity Story Builder',cat:'capital-markets',tag:'Capital Markets',isNew:true},
+  {key:'cm-earnings-analyzer',name:'Earnings Call Analyzer',cat:'capital-markets',tag:'Capital Markets',isNew:true},
+  {key:'cm-board-coach',name:'Board Presentation Coach',cat:'capital-markets',tag:'Capital Markets',isNew:true},
+  {key:'cm-roadshow',name:'Roadshow Prep Mode',cat:'capital-markets',tag:'Capital Markets',isNew:true},
 ];
 let modsCatFilter='all',modsSearch='';
 function renderModulesList(){
   const list=document.getElementById('modules-list');if(!list)return;
   const q=modsSearch.toLowerCase();
   const filtered=ALL_MODULES.filter(m=>{
+    if(m.cat==='capital-markets'&&!capitalMarketsEnabled)return false;
     const matchCat=modsCatFilter==='all'||m.cat===modsCatFilter;
     const matchQ=!q||m.name.toLowerCase().includes(q)||m.tag.toLowerCase().includes(q);
     return matchCat&&matchQ;
@@ -4012,7 +4051,9 @@ function renderModulesList(){
     ${filtered.length?`<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:16px 0 8px">${LANG==='de'?'Standard-Module':'Standard Modules'}</div>`:''}
   `:'';
   const favs=getFavs();
-  list.innerHTML=customHtml+filtered.map(m=>{
+  const stdFiltered=filtered.filter(m=>m.cat!=='capital-markets');
+  const cmFiltered=filtered.filter(m=>m.cat==='capital-markets');
+  const renderRow=m=>{
     const def=getMdefLang(m.key,MDEFS[m.key]);
     const displayName=def?.title||m.name;
     const isFav=favs.has(m.key);
@@ -4025,7 +4066,15 @@ function renderModulesList(){
         <button onclick="toggleFav('${m.key}',event)" title="Pin to Quick Access" style="background:none;border:none;cursor:pointer;font-size:15px;padding:4px;color:${isFav?'#f59e0b':'var(--dm)'};line-height:1">${isFav?'★':'☆'}</button>
         <div class="mrow-arr">&#8250;</div>
       </div>
-    </div>`;}).join('');
+    </div>`;
+  };
+  const cmHtml=cmFiltered.length?`
+    <div style="display:flex;align-items:center;gap:8px;margin:20px 0 8px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ac)">Capital Markets Suite</div>
+      <div style="flex:1;height:1px;background:var(--bd)"></div>
+    </div>
+    ${cmFiltered.map(renderRow).join('')}`:'';
+  list.innerHTML=customHtml+stdFiltered.map(renderRow).join('')+cmHtml;
 }
 function filterModsList(q){modsSearch=q;renderModulesList();}
 function filterModsCat(cat,btn){
