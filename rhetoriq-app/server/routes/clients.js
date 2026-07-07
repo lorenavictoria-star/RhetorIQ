@@ -90,7 +90,7 @@ const router = express.Router();
 router.get('/', requireAdvisor, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, name, industry, contact, slug, token, capital_markets_enabled, created_at FROM clients WHERE advisor_id = $1 ORDER BY created_at DESC',
+      'SELECT id, name, industry, contact, slug, token, capital_markets_enabled, hotel_enabled, created_at FROM clients WHERE advisor_id = $1 ORDER BY created_at DESC',
       [req.user.id]
     );
     res.json(rows);
@@ -263,11 +263,25 @@ router.put('/:id/capital-markets-toggle', requireAdvisor, async (req, res) => {
 router.get('/:id/cm-status', async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT capital_markets_enabled FROM clients WHERE id = $1',
+      'SELECT capital_markets_enabled, hotel_enabled FROM clients WHERE id = $1',
       [req.params.id]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });
-    res.json({ capital_markets_enabled: rows[0].capital_markets_enabled });
+    res.json({ capital_markets_enabled: rows[0].capital_markets_enabled, hotel_enabled: rows[0].hotel_enabled });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// PUT /api/clients/:id/hotel-toggle
+router.put('/:id/hotel-toggle', requireAdvisor, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'UPDATE clients SET hotel_enabled = NOT hotel_enabled WHERE id = $1 AND advisor_id = $2 RETURNING hotel_enabled',
+      [req.params.id, req.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
+    res.json({ hotel_enabled: rows[0].hotel_enabled });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

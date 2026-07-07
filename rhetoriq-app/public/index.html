@@ -1135,6 +1135,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <button class="mlist-pill" id="pill-efficiency" onclick="filterModsCat('efficiency',this)">Efficiency</button>
         <button class="mlist-pill" id="pill-growth" onclick="filterModsCat('growth',this)">Growth</button>
       </div>
+      <div id="mlist-suite-pills" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
       <div id="modules-list"></div>
     </div>
 
@@ -1466,7 +1467,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const API='https://rhetoriq-jib0.onrender.com';
-let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,capitalMarketsEnabled=false;
+let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,capitalMarketsEnabled=false,hotelEnabled=false;
 
 // ── LANGUAGE TOGGLE ───────────────────────────────────────────
 let LANG=localStorage.getItem('riq-lang')||'en';
@@ -2323,7 +2324,7 @@ async function boot(user,role){
   } else {
     clientId=user.id||null;
     if(clientId){
-      try{const r=await fetch(API+'/api/clients/'+clientId+'/cm-status');const d=await r.json();capitalMarketsEnabled=d.capital_markets_enabled||false;}catch{}
+      try{const r=await fetch(API+'/api/clients/'+clientId+'/cm-status');const d=await r.json();capitalMarketsEnabled=d.capital_markets_enabled||false;hotelEnabled=d.hotel_enabled||false;}catch{}
       await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);
     }
   }
@@ -2389,6 +2390,7 @@ async function switchClient(id){
   // update capital markets flag from clients array
   const selectedClient=clients.find(c=>String(c.id)===String(id));
   capitalMarketsEnabled=selectedClient?.capital_markets_enabled||false;
+  hotelEnabled=selectedClient?.hotel_enabled||false;
   if(clientId){await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);}
   loadStats();
   updateMemBanner();
@@ -2409,21 +2411,29 @@ async function sendTokenByEmail(name,token,clientId){
     alert('Token sent to '+email);
   }catch(e){alert('Error: '+e.message);}
 }
-async function toggleCapitalMarkets(cid,btn){
+function _refreshSuiteCards(cid){
+  const c=clients.find(x=>x.id==cid);
+  const el=document.getElementById('suite-cards-'+cid);
+  if(c&&el)el.innerHTML=renderSuiteCards(c);
+}
+async function toggleCapitalMarkets(cid){
   try{
     const r=await api('/api/clients/'+cid+'/capital-markets-toggle',{method:'PUT'});
     const d=await r.json();
     if(!r.ok)throw new Error(d.error);
-    const on=d.capital_markets_enabled;
-    btn.textContent='Capital Markets '+(on?'ON ✓':'OFF');
-    btn.style.color=on?'#1B4D2E':'';
-    btn.style.borderColor=on?'#1B4D2E':'';
-    btn.style.background=on?'#f0f5f1':'';
-    btn.style.fontWeight=on?'600':'';
-    // update local clients array
-    const c=clients.find(c=>c.id==cid);if(c)c.capital_markets_enabled=on;
-    // if this is the currently selected client, update flag and re-render modules
-    if(String(clientId)===String(cid)){capitalMarketsEnabled=on;if(typeof renderModulesList==='function')renderModulesList();}
+    const c=clients.find(x=>x.id==cid);if(c)c.capital_markets_enabled=d.capital_markets_enabled;
+    _refreshSuiteCards(cid);
+    if(String(clientId)===String(cid)){capitalMarketsEnabled=d.capital_markets_enabled;if(typeof renderModulesList==='function')renderModulesList();}
+  }catch(e){alert('Error: '+e.message);}
+}
+async function toggleHotel(cid){
+  try{
+    const r=await api('/api/clients/'+cid+'/hotel-toggle',{method:'PUT'});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error);
+    const c=clients.find(x=>x.id==cid);if(c)c.hotel_enabled=d.hotel_enabled;
+    _refreshSuiteCards(cid);
+    if(String(clientId)===String(cid)){hotelEnabled=d.hotel_enabled;if(typeof renderModulesList==='function')renderModulesList();}
   }catch(e){alert('Error: '+e.message);}
 }
 
@@ -2968,7 +2978,13 @@ const MDEFS={
   'cm-equity-story':{title:'Equity Story Builder',desc:'Build an institutional-grade equity story: Why Now, Market Opportunity, Competitive Moat, Financial Trajectory, Management Credibility. Consistency-checked and tone-assessed.',api:'cm-equity-story',tpl:true,fields:[{id:'cm-es-company',type:'text',lbl:'Company',ph:'e.g. Medmix AG'},{id:'cm-es-sector',type:'text',lbl:'Sector / Industry',ph:'e.g. Medical devices, specialty chemicals'},{id:'cm-es-investor',type:'sel',lbl:'Target investor type',opts:['Institutional generalist','Long-only growth','Long-only value','Hedge fund','ESG / Impact','Private equity']},{id:'cm-es-length',type:'sel',lbl:'Story length',opts:['2-min elevator pitch','10-min standard pitch','30-min deep dive']},{id:'cm-es-metrics',type:'text',lbl:'Key financial metrics',ph:'e.g. Revenue CHF 420M, EBITDA 18%, growth 12% YoY'}],mf:'cm-es-text',ph:'Paste annual reports, investor presentations, management commentary.',mh:'220px'},
   'cm-earnings-analyzer':{title:'Earnings Call Analyzer',desc:'Upload an earnings call transcript. Get a full communication audit: what landed, what triggered analyst concern, unintended signals, and concrete improvements for the next call.',api:'cm-earnings-analyzer',tpl:true,fields:[{id:'cm-ea-company',type:'text',lbl:'Company',ph:'e.g. u-blox AG'},{id:'cm-ea-calltype',type:'sel',lbl:'Call type',opts:['Quarterly earnings call','Full-year results','Capital markets day','Analyst briefing','Ad-hoc announcement']},{id:'cm-ea-period',type:'text',lbl:'Period',ph:'e.g. Q3 2025, FY 2024'},{id:'cm-ea-sector',type:'text',lbl:'Sector context',ph:'e.g. IoT semiconductors, currently facing inventory correction'}],mf:'cm-ea-text',ph:'Paste the full transcript or prepared remarks here.',mh:'220px'},
   'cm-board-coach':{title:'Board Presentation Coach',desc:'Translate capital markets complexity into decision-quality board language. Produces an executive summary, scenario table, risk reformulation, and decision framing — ready for any board room.',api:'cm-board-coach',tpl:true,fields:[{id:'cm-bc-company',type:'text',lbl:'Company',ph:'e.g. Bachem AG'},{id:'cm-bc-purpose',type:'text',lbl:'Presentation purpose',ph:'e.g. Capital allocation decision, guidance update, M&A briefing'},{id:'cm-bc-decision',type:'text',lbl:'Decision required from board',ph:'e.g. Approval of CHF 200M capex programme'},{id:'cm-bc-board',type:'sel',lbl:'Board composition',opts:['Mixed — financial and non-financial backgrounds','Primarily financial / investment background','Primarily operational background','Family board — less capital markets exposure']}],mf:'cm-bc-text',ph:'Paste the source material: analyst reports, management presentation, financial projections.',mh:'220px'},
-  'cm-roadshow':{title:'Roadshow Prep Mode',desc:'Prepare for 50–200 investor meetings. Get calibrated briefs per investor type, the 10 hardest questions with model answers, story versions for 5/15/45 minutes, and a consistency checklist.',api:'cm-roadshow',tpl:true,fields:[{id:'cm-rs-company',type:'text',lbl:'Company',ph:'e.g. Sensirion AG'},{id:'cm-rs-type',type:'sel',lbl:'Roadshow type',opts:['NDR (Non-Deal Roadshow)','IPO roadshow','Post-results roadshow','Capital markets day','Investor day / deep dive']},{id:'cm-rs-investors',type:'text',lbl:'Investor types to cover',ph:'e.g. Long-only growth, hedge funds, ESG'},{id:'cm-rs-duration',type:'sel',lbl:'Typical meeting duration',opts:['30 minutes','45 minutes','60 minutes','Full day (multiple slots)']},{id:'cm-rs-story',type:'text',lbl:'Core investment thesis (one line)',ph:'e.g. Leading sensor platform for the energy transition'}],mf:'cm-rs-text',ph:'Paste equity story, recent results, analyst reports, or prior roadshow materials.',mh:'220px'}
+  'cm-roadshow':{title:'Roadshow Prep Mode',desc:'Prepare for 50–200 investor meetings. Get calibrated briefs per investor type, the 10 hardest questions with model answers, story versions for 5/15/45 minutes, and a consistency checklist.',api:'cm-roadshow',tpl:true,fields:[{id:'cm-rs-company',type:'text',lbl:'Company',ph:'e.g. Sensirion AG'},{id:'cm-rs-type',type:'sel',lbl:'Roadshow type',opts:['NDR (Non-Deal Roadshow)','IPO roadshow','Post-results roadshow','Capital markets day','Investor day / deep dive']},{id:'cm-rs-investors',type:'text',lbl:'Investor types to cover',ph:'e.g. Long-only growth, hedge funds, ESG'},{id:'cm-rs-duration',type:'sel',lbl:'Typical meeting duration',opts:['30 minutes','45 minutes','60 minutes','Full day (multiple slots)']},{id:'cm-rs-story',type:'text',lbl:'Core investment thesis (one line)',ph:'e.g. Leading sensor platform for the energy transition'}],mf:'cm-rs-text',ph:'Paste equity story, recent results, analyst reports, or prior roadshow materials.',mh:'220px'},
+  // ── HOTEL SUITE ──
+  'ht-guest-letter':{title:'🏨 Guest Communication Craft',desc:'Draft welcome letters, pre-arrival messages, post-stay follow-ups, and VIP correspondence — in the exact voice and warmth of your property.',api:'ht-guest-letter',tpl:true,fields:[{id:'ht-gl-hotel',type:'text',lbl:'Hotel name',ph:'e.g. Hotel Schweizerhof Bern'},{id:'ht-gl-type',type:'sel',lbl:'Property type',opts:['Luxury / 5-star','Boutique / Design','Business hotel','Resort / Spa','Family hotel','Historic / Heritage']},{id:'ht-gl-commtype',type:'sel',lbl:'Communication type',opts:['Welcome letter','Pre-arrival message','Post-stay follow-up','VIP / Suite guest letter','Apology / Service recovery','Special occasion message']},{id:'ht-gl-segment',type:'sel',lbl:'Guest segment',opts:['Leisure couple','Business traveller','Family','VIP / Long-stay guest','Group / MICE']},{id:'ht-gl-lang',type:'sel',lbl:'Language',opts:['Deutsch','English','Français','Italiano']}],mf:'ht-gl-text',ph:'Paste brand voice guidelines, prior letters, or context about the guest / occasion.',mh:'200px'},
+  'ht-review-response':{title:'⭐ Review Response Manager',desc:'Craft on-brand responses to TripAdvisor, Google, and Booking.com reviews — turning criticism into trust and positive reviews into brand amplifiers.',api:'ht-review-response',tpl:true,fields:[{id:'ht-rr-hotel',type:'text',lbl:'Hotel name',ph:'e.g. Romantik Hotel Stern'},{id:'ht-rr-platform',type:'sel',lbl:'Platform',opts:['Google','TripAdvisor','Booking.com','Expedia','HolidayCheck']},{id:'ht-rr-rating',type:'sel',lbl:'Review rating',opts:['1 star — very negative','2 stars — negative','3 stars — mixed','4 stars — positive','5 stars — excellent']},{id:'ht-rr-guesttype',type:'text',lbl:'Guest type (if known)',ph:'e.g. Business traveller, couple, family'},{id:'ht-rr-voice',type:'text',lbl:'Brand voice in one word',ph:'e.g. Warm, sophisticated, gemütlich'}],mf:'ht-rr-text',ph:'Paste the full review text here.',mh:'200px'},
+  'ht-crisis-comm':{title:'🚨 Hotel Crisis Communication',desc:'From overbooking to service failures, hygiene incidents to media enquiries — get immediate messaging, guest letters, staff briefings, and a follow-up plan in minutes.',api:'ht-crisis-comm',tpl:true,fields:[{id:'ht-cc-hotel',type:'text',lbl:'Hotel name',ph:'e.g. Grandhotel Giessbach'},{id:'ht-cc-crisis',type:'sel',lbl:'Crisis type',opts:['Overbooking / relocation','Service failure (room/food/staff)','Technical failure (heating/lift/pool)','Hygiene / food safety incident','External event (weather/transport)','Media enquiry / press situation','Staff incident']},{id:'ht-cc-affected',type:'text',lbl:'Guests affected',ph:'e.g. 12 rooms, arriving tonight'},{id:'ht-cc-status',type:'sel',lbl:'Current status',opts:['Unfolding now','Contained — needs communication','Resolved — needs follow-up']}],mf:'ht-cc-text',ph:'Describe the situation in detail: what happened, what is known, what steps have been taken.',mh:'200px'},
+  'ht-positioning':{title:'🎯 Hotel Brand Positioning',desc:'Build a differentiated positioning framework, brand pillars, content voice guide, and 5 story angles — to stand out in a commoditised market.',api:'ht-positioning',tpl:true,fields:[{id:'ht-pos-hotel',type:'text',lbl:'Hotel name',ph:'e.g. Bürgenstock Resort'},{id:'ht-pos-location',type:'text',lbl:'Location',ph:'e.g. Vierwaldstättersee, Nidwalden'},{id:'ht-pos-category',type:'sel',lbl:'Category',opts:['5-star luxury','4-star superior','Boutique / Design','Budget / Economy','Resort / Wellness','Historic / Heritage','Aparthotel / Extended stay']},{id:'ht-pos-guest',type:'text',lbl:'Primary target guest',ph:'e.g. DACH business travellers + European leisure couples'},{id:'ht-pos-usps',type:'text',lbl:'Key USPs',ph:'e.g. Lake views, 100-year history, Michelin dining'},{id:'ht-pos-comp',type:'text',lbl:'Main competitors',ph:'e.g. The Chedi, Park Weggis'}],mf:'ht-pos-text',ph:'Paste existing brand guidelines, website copy, or any background material.',mh:'200px'},
+  'ht-sales-pitch':{title:'🤝 Group & MICE Sales Pitch',desc:'Win group bookings and corporate accounts with a tailored pitch — including objection prep, differentiators, and a closing strategy built for your property.',api:'ht-sales-pitch',tpl:true,fields:[{id:'ht-sp-hotel',type:'text',lbl:'Hotel name',ph:'e.g. Steigenberger Bellerive au Lac'},{id:'ht-sp-event',type:'sel',lbl:'Event type',opts:['Corporate conference','Team off-site / retreat','Incentive trip','Product launch','Gala dinner / award ceremony','Wedding','Training seminar']},{id:'ht-sp-size',type:'text',lbl:'Group size',ph:'e.g. 40–60 delegates'},{id:'ht-sp-budget',type:'text',lbl:'Budget range',ph:'e.g. CHF 15,000–25,000 total'},{id:'ht-sp-client',type:'text',lbl:'Client / company type',ph:'e.g. Swiss pharmaceutical firm, Zurich HQ'},{id:'ht-sp-criteria',type:'text',lbl:'Client decision criteria',ph:'e.g. Proximity to Zurich, outdoor space, tech infrastructure'}],mf:'ht-sp-text',ph:'Paste the RFP, client email, or any brief they have sent.',mh:'200px'}
 };
 
 // ── CAPITAL MARKETS PROMPT TEMPLATES ─────────────────────────
@@ -3117,6 +3133,94 @@ BRAND VOICE / MANAGEMENTSTIL IN INVESTOR-MEETINGS:
 [Hier Equity Story, Jahresbericht-Auszüge, Analysten-Reports, letzte Roadshow-Präsentation einfügen]`
 };
 
+const HT_TEMPLATES={
+'ht-guest-letter':`HOTEL: [Name des Hotels]
+KATEGORIE: [z.B. Boutique Luxus / 4-Sterne-Superior / Familienhotel]
+
+KOMMUNIKATIONSART: [z.B. Willkommensbrief / Pre-Arrival / Post-Stay / VIP-Brief]
+
+GAST-SEGMENT: [z.B. Ferienpaar / Geschäftsreisender / Familie / VIP-Stammgast]
+
+SPRACHE: [Deutsch / Englisch / Französisch / Italienisch]
+
+ANLASS / KONTEXT:
+[z.B. Jubiläum, Stammgast kommt zum 10. Mal, Suite-Upgrade, besonderes Ereignis]
+
+BRAND VOICE IN 3 WÖRTERN:
+[z.B. herzlich, präzise, diskret]
+
+--- HINTERGRUNDMATERIAL ---
+
+[Hier bestehende Briefvorlagen, Brand-Guidelines, Gast-Informationen einfügen]`,
+
+'ht-review-response':`HOTEL: [Name des Hotels]
+PLATFORM: [Google / TripAdvisor / Booking.com / Expedia]
+BEWERTUNG: [1–5 Sterne]
+
+GAST-TYP: [z.B. Geschäftsreisender, Paar, Familie — falls bekannt]
+BRAND VOICE: [z.B. warm und persönlich / professionell und diskret / gemütlich-schweizerisch]
+
+INTERNES FEEDBACK (nicht öffentlich):
+[Was ist intern bekannt zu diesem Fall? Welche Massnahmen wurden ergriffen?]
+
+--- REVIEW-TEXT ---
+
+[Vollständigen Review hier einfügen]`,
+
+'ht-crisis-comm':`HOTEL: [Name des Hotels]
+KRISENTYP: [z.B. Überbuchung / Serviceausfall / Technisches Problem / Hygiene / Medienanfrage]
+
+BETROFFENE GÄSTE: [Anzahl Zimmer / Ankünfte / Gruppen]
+AKTUELLER STATUS: [z.B. Situation läuft noch / eingedämmt / behoben]
+
+BEREITS ERGRIFFENE MASSNAHMEN:
+[Was wurde bisher getan? z.B. Alternativhotel organisiert, Voucher angeboten, Techniker vor Ort]
+
+WICHTIGE STAKEHOLDER:
+[z.B. Reiseveranstalter, Firmenkunden, Presse]
+
+--- SITUATIONSBESCHREIBUNG ---
+
+[Detaillierte Beschreibung des Vorfalls: Was ist passiert, wann, was ist bekannt]`,
+
+'ht-positioning':`HOTEL: [Name des Hotels]
+STANDORT: [z.B. Berner Altstadt / Zürichsee / Engadin]
+KATEGORIE: [z.B. 5-Sterne-Luxury / Boutique-Design / Historic Heritage]
+
+PRIMÄRE ZIELGÄSTE:
+[z.B. DACH-Geschäftsreisende + europäische Paare auf Städtereise]
+
+WICHTIGSTE USPs (3–5):
+[z.B. 150-jährige Geschichte, Seesicht, Michelin-Restaurant, familiengeführt]
+
+HAUPTWETTBEWERBER:
+[z.B. The Chedi Andermatt, Park Hotel Vitznau]
+
+AKTUELLE POSITIONIERUNGSAUSSAGE (falls vorhanden):
+[Bestehendes Claim / Slogan einfügen oder leer lassen]
+
+--- HINTERGRUNDMATERIAL ---
+
+[Bestehende Brand-Guidelines, Website-Texte, Pressemitteilungen einfügen]`,
+
+'ht-sales-pitch':`HOTEL: [Name des Hotels]
+EVENTTYP: [z.B. Corporate Offsite / Incentive Reise / Produktlancierung / Gala-Dinner]
+
+GRUPPENGRÖSSE: [z.B. 30–50 Personen]
+BUDGET: [z.B. CHF 20,000–35,000 gesamt / CHF 400–600 pro Person]
+
+KUNDENTYP: [z.B. Schweizer Pharmafirma, Zürcher HQ, 200 MA]
+ENTSCHEIDUNGSKRITERIEN DES KUNDEN:
+[z.B. Nähe zu Zürich, Aussenbereich, Technikinfrastruktur, Exklusivität]
+
+HAUPTKONKURRENTEN IN DIESEM PITCH:
+[z.B. Dolder Grand, The Dolder Grand, Marriott Zurich]
+
+--- KUNDEN-BRIEF / RFP ---
+
+[Kundenanfrage, E-Mail oder RFP-Text hier einfügen]`
+};
+
 function goModule(name,prefill){
   window._currentModule=name;window._currentTgTile=null;
   const def=getMdefLang(name,MDEFS[name]);if(!def)return;
@@ -3155,7 +3259,7 @@ function buildForm(name,def,prefill,form){
 }
 
 function cmFillTpl(mfId){
-  const tpl=CM_TEMPLATES[window._currentModule];
+  const tpl=CM_TEMPLATES[window._currentModule]||HT_TEMPLATES[window._currentModule];
   if(!tpl)return;
   const ta=document.getElementById(mfId);
   if(!ta)return;
@@ -3988,6 +4092,26 @@ function toggleToneCal(fid){
   if(arrow)arrow.textContent=open?'−':'+';
 }
 
+// ── SUITE CARDS ───────────────────────────────────────────────
+function renderSuiteCards(c){
+  const suites=[
+    {key:'capital_markets_enabled',label:'Capital Markets',icon:'ti-chart-line',activeStyle:'border-color:#7dd3fc;background:#f0f9ff',iconColor:'#0369a1',labelColor:'#0369a1',toggle:`toggleCapitalMarkets(${c.id})`},
+    {key:'hotel_enabled',label:'Hotel Suite',icon:'ti-building',activeStyle:'border-color:#fcd34d;background:#fffbeb',iconColor:'#b45309',labelColor:'#92400e',toggle:`toggleHotel(${c.id})`},
+    {key:'__pe__',label:'Private Equity',icon:'ti-briefcase',activeStyle:'border-color:#86efac;background:#f0fdf4',iconColor:'#15803d',labelColor:'#15803d',toggle:'',disabled:true},
+  ];
+  return suites.map(s=>{
+    const on=!s.disabled&&c[s.key];
+    const base='border:0.5px solid var(--bd);border-radius:8px;padding:8px 10px;cursor:'+(s.disabled?'default':'pointer')+';transition:opacity .15s;';
+    const style=on?base+s.activeStyle:base+(s.disabled?'opacity:.4':'');
+    const click=s.disabled?'':`onclick="${s.toggle}"`;
+    return`<div style="${style}" ${click}>
+      <div><i class="ti ${s.icon}" style="font-size:15px;color:${on?s.iconColor:'var(--mu)'}" aria-hidden="true"></i></div>
+      <div style="font-size:11px;font-weight:500;margin-top:4px;color:${on?s.labelColor:'var(--mu)'}">${s.label}</div>
+      <div style="font-size:10px;color:${on?s.iconColor:'var(--dm)'};margin-top:2px">${s.disabled?'demnächst':on?'aktiv · 5 Module':'inaktiv'}</div>
+    </div>`;
+  }).join('');
+}
+
 // ── ADVISOR DASHBOARD ─────────────────────────────────────────
 async function loadAdvisorDashboard(){
   const el=document.getElementById('adv-dash-content');
@@ -4036,7 +4160,9 @@ async function loadAdvisorDashboard(){
             <button class="obtn" onclick="advToggleTimeline('${c.id}',this)">Activity</button>
             <button class="obtn" onclick="openTeamModal(${c.id},'${c.name}')">Team</button>
             <button class="obtn" onclick="openAuditModal(${c.id},'${c.name}')">Audit Log</button>
-            <button class="obtn" id="cm-toggle-${c.id}" onclick="toggleCapitalMarkets(${c.id},this)" style="${c.capital_markets_enabled?'color:#1B4D2E;border-color:#1B4D2E;background:#f0f5f1;font-weight:600':''}">Capital Markets ${c.capital_markets_enabled?'ON ✓':'OFF'}</button>
+          </div>
+          <div id="suite-cards-${c.id}" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px">${renderSuiteCards(c)}</div>
+          <div style="display:flex;gap:6px;margin-top:8px">
             <button class="dbtn" onclick="delData(${c.id},'${c.name}')">Delete Data</button>
             <button class="dbtn" onclick="deleteClient(${c.id},'${c.name}').then(()=>loadAdvisorDashboard())">Delete Client</button>
           </div>
@@ -4183,13 +4309,40 @@ const ALL_MODULES=[
   {key:'cm-earnings-analyzer',name:'Earnings Call Analyzer',cat:'capital-markets',tag:'Capital Markets',isNew:true},
   {key:'cm-board-coach',name:'Board Presentation Coach',cat:'capital-markets',tag:'Capital Markets',isNew:true},
   {key:'cm-roadshow',name:'Roadshow Prep Mode',cat:'capital-markets',tag:'Capital Markets',isNew:true},
+  // Hotel Suite — only shown when hotelEnabled
+  {key:'ht-guest-letter',name:'🏨 Guest Communication Craft',cat:'hotel',tag:'Hotel Suite',isNew:true},
+  {key:'ht-review-response',name:'⭐ Review Response Manager',cat:'hotel',tag:'Hotel Suite',isNew:true},
+  {key:'ht-crisis-comm',name:'🚨 Hotel Crisis Communication',cat:'hotel',tag:'Hotel Suite',isNew:true},
+  {key:'ht-positioning',name:'🎯 Hotel Brand Positioning',cat:'hotel',tag:'Hotel Suite',isNew:true},
+  {key:'ht-sales-pitch',name:'🤝 Group & MICE Sales Pitch',cat:'hotel',tag:'Hotel Suite',isNew:true},
 ];
 let modsCatFilter='all',modsSearch='';
 function renderModulesList(){
   const list=document.getElementById('modules-list');if(!list)return;
+  // inject suite pills dynamically
+  const sp=document.getElementById('mlist-suite-pills');
+  if(sp){
+    sp.innerHTML='';
+    if(capitalMarketsEnabled){
+      const b=document.createElement('button');b.className='mlist-pill'+(modsCatFilter==='capital-markets'?' active':'');
+      b.id='pill-capital-markets';b.textContent='Capital Markets';
+      b.style.cssText=modsCatFilter==='capital-markets'?'background:#0c4a6e;color:#fff;border-color:#0c4a6e':'color:#0369a1;border-color:#7dd3fc;background:#f0f9ff';
+      b.onclick=function(){filterModsCat('capital-markets',b);document.querySelectorAll('.mlist-pill').forEach(x=>{if(x!==b){x.classList.remove('active');x.style.background='';x.style.color='';x.style.borderColor='';} });b.classList.add('active');b.style.cssText='background:#0c4a6e;color:#fff;border-color:#0c4a6e'};
+      sp.appendChild(b);
+    }
+    if(hotelEnabled){
+      const b=document.createElement('button');b.className='mlist-pill'+(modsCatFilter==='hotel'?' active':'');
+      b.id='pill-hotel';b.textContent='Hotel Suite';
+      b.style.cssText=modsCatFilter==='hotel'?'background:#78350f;color:#fff;border-color:#78350f':'color:#92400e;border-color:#fcd34d;background:#fffbeb';
+      b.onclick=function(){filterModsCat('hotel',b);document.querySelectorAll('.mlist-pill').forEach(x=>{if(x!==b){x.classList.remove('active');x.style.background='';x.style.color='';x.style.borderColor='';} });b.classList.add('active');b.style.cssText='background:#78350f;color:#fff;border-color:#78350f'};
+      sp.appendChild(b);
+    }
+    sp.style.display=sp.children.length?'flex':'none';
+  }
   const q=modsSearch.toLowerCase();
   const filtered=ALL_MODULES.filter(m=>{
     if(m.cat==='capital-markets'&&!capitalMarketsEnabled)return false;
+    if(m.cat==='hotel'&&!hotelEnabled)return false;
     const matchCat=modsCatFilter==='all'||m.cat===modsCatFilter;
     const matchQ=!q||m.name.toLowerCase().includes(q)||m.tag.toLowerCase().includes(q);
     return matchCat&&matchQ;
@@ -4209,8 +4362,9 @@ function renderModulesList(){
     ${filtered.length?`<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:16px 0 8px">${LANG==='de'?'Standard-Module':'Standard Modules'}</div>`:''}
   `:'';
   const favs=getFavs();
-  const stdFiltered=filtered.filter(m=>m.cat!=='capital-markets');
+  const stdFiltered=filtered.filter(m=>m.cat!=='capital-markets'&&m.cat!=='hotel');
   const cmFiltered=filtered.filter(m=>m.cat==='capital-markets');
+  const htFiltered=filtered.filter(m=>m.cat==='hotel');
   const renderRow=m=>{
     const def=getMdefLang(m.key,MDEFS[m.key]);
     const displayName=def?.title||m.name;
@@ -4232,7 +4386,13 @@ function renderModulesList(){
       <div style="flex:1;height:1px;background:var(--bd)"></div>
     </div>
     ${cmFiltered.map(renderRow).join('')}`:'';
-  list.innerHTML=customHtml+stdFiltered.map(renderRow).join('')+cmHtml;
+  const htHtml=htFiltered.length?`
+    <div style="display:flex;align-items:center;gap:8px;margin:20px 0 8px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#b45309">Hotel Suite</div>
+      <div style="flex:1;height:1px;background:var(--bd)"></div>
+    </div>
+    ${htFiltered.map(renderRow).join('')}`:'';
+  list.innerHTML=customHtml+stdFiltered.map(renderRow).join('')+cmHtml+htHtml;
 }
 function filterModsList(q){modsSearch=q;renderModulesList();}
 function filterModsCat(cat,btn){
