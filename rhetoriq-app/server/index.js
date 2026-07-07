@@ -5,6 +5,7 @@ const http = require('http');
 const WebSocket = require('ws');
 const bcrypt = require('bcrypt');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const { init, pool } = require('./db');
 
 const app = express();
@@ -32,6 +33,34 @@ app.locals.wss = wss;
 // ── Middleware ────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
+
+// ── Rate Limiting ─────────────────────────────────────────────
+// General API: 200 requests / 15 min per IP
+app.use('/api/', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Zu viele Anfragen. Bitte in einigen Minuten erneut versuchen.' }
+}));
+
+// Analyze (Claude calls): 30 / 15 min per IP — prevents runaway costs
+app.use('/api/analyze', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Generierungslimit erreicht (30 pro 15 Min.). Bitte kurz warten.' }
+}));
+
+// Auth endpoints: 20 / 15 min — brute-force protection
+app.use('/auth', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Zu viele Login-Versuche. Bitte in 15 Minuten erneut versuchen.' }
+}));
 
 // ── API Routes ────────────────────────────────────────────────
 app.use('/auth', require('./routes/auth'));

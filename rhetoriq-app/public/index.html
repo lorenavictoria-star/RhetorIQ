@@ -1545,6 +1545,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
 <script>
 if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -1904,6 +1905,11 @@ pre{font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:pre-wrap;lin
 function sf(s,h){document.getElementById(s).style.display='block';document.getElementById(h).style.display='none';}
 function api(path,o={}){return fetch(API+path,{...o,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(o.headers||{})}});}
 
+// XSS-safe innerHTML helper — sanitizes all user/AI content before DOM injection
+function safe(html){ return typeof DOMPurify!=='undefined'?DOMPurify.sanitize(html??'',{ALLOWED_TAGS:['b','i','em','strong','br','span','div','p','ul','ol','li','a','pre','code'],ALLOWED_ATTR:['style','class','href','target']}):String(html??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// For plain text slots (no HTML needed at all)
+function safeText(str){ return String(str??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
 // AUTH
 async function loginAdvisor(){
   const e=document.getElementById('adv-email').value.trim(),p=document.getElementById('adv-pw').value,err=document.getElementById('adv-err');err.style.display='none';
@@ -2252,10 +2258,12 @@ async function loadUsage(){
     const d=await r.json();
     if(!r.ok)throw new Error(d.error);
     const fmt=n=>'$'+(n).toFixed(2);
-    const costM=fmt(d.totalThisMonth*d.costPerCall);
-    const costAll=fmt(d.totalAllTime*d.costPerCall);
+    // Use real token costs if available, fall back to estimate
+    const costM=fmt(d.costThisMonth??d.totalThisMonth*(d.costPerCall||0.045));
+    const costAll=fmt(d.costAllTime??d.totalAllTime*(d.costPerCall||0.045));
+    const tokLabel=d.tokens?(` · ${(Number(d.tokens.month_input)/1000).toFixed(0)}K in / ${(Number(d.tokens.month_output)/1000).toFixed(0)}K out`):'';
     const card=(label,val,sub)=>`<div style="padding:20px 16px;border-right:1px solid var(--bd);background:var(--sf)"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:8px">${label}</div><div style="font-size:32px;font-weight:300;font-family:'Spectral',serif;color:var(--tx);line-height:1">${val}</div><div style="font-size:13px;color:var(--mu);margin-top:6px">${sub}</div></div>`;
-    sum.innerHTML=card('This month',d.totalThisMonth,`calls · est. ${costM}`)+card('All time',d.totalAllTime,`calls · est. ${costAll}`)+`<div style="padding:20px 16px;background:var(--sf)"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:8px">Cost / call</div><div style="font-size:32px;font-weight:300;font-family:'Spectral',serif;color:var(--tx);line-height:1">${fmt(d.costPerCall)}</div><div style="font-size:13px;color:var(--mu);margin-top:6px">avg estimate</div></div>`;
+    sum.innerHTML=card('This month',d.totalThisMonth,`calls · ${costM}${tokLabel}`)+card('All time',d.totalAllTime,`calls · ${costAll}`);
     if(!d.rows.length){tbl.innerHTML='<div style="color:var(--mu);font-size:13px;padding:20px 0">No analyses recorded yet.</div>';return;}
     tbl.innerHTML=`
       <div style="display:grid;grid-template-columns:1fr 90px 90px 70px 90px 100px;gap:0;border:1px solid var(--bd);border-radius:8px;overflow:hidden">
@@ -2268,7 +2276,7 @@ async function loadUsage(){
         ${d.rows.map((row,i)=>{
           const border=i<d.rows.length-1?'border-bottom:1px solid var(--bd)':'';
           const last=row.last_activity?new Date(row.last_activity).toLocaleDateString('de-CH'):'—';
-          const cost=fmt(row.total_calls*d.costPerCall);
+          const cost=fmt(row.total_calls*(d.costAllTime&&d.totalAllTime?d.costAllTime/d.totalAllTime:0.045));
           return `
             <div style="padding:14px 16px;font-size:15px;font-weight:500;${border}">${row.client_name}</div>
             <div style="padding:14px 10px;font-size:15px;text-align:right;color:var(--ac);font-weight:600;${border}">${row.this_month}</div>
@@ -2357,9 +2365,9 @@ async function trLoadModule(){
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             ${ex.auto_generated?`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f3f4f6;color:var(--mu)">auto</span>`:`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0">manuell</span>`}
-            ${!key&&ex.module_key?`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe">${ALL_MODULES.find(x=>x.key===ex.module_key)?.name||ex.module_key}</span>`:''}
-            ${ex.label?`<span style="font-size:12px;font-weight:600;color:var(--tx)">${ex.label}</span>`:''}
-            ${ex.industry_tag?`<span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd">${ex.industry_tag}</span>`:''}
+            ${!key&&ex.module_key?`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe">${safeText(ALL_MODULES.find(x=>x.key===ex.module_key)?.name||ex.module_key)}</span>`:''}
+            ${ex.label?`<span style="font-size:12px;font-weight:600;color:var(--tx)">${safeText(ex.label)}</span>`:''}
+            ${ex.industry_tag?`<span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd">${safeText(ex.industry_tag)}</span>`:''}
           </div>
           <div style="display:flex;align-items:center;gap:4px">
             ${[1,2,3,4,5].map(v=>`<button onclick="trRate(${ex.id},${v})" style="font-size:15px;background:none;border:none;cursor:pointer;color:${(ex.rating||3)>=v?'#f59e0b':'#d1d5db'};padding:0;line-height:1" id="tr-star-${ex.id}-${v}">★</button>`).join('')}
@@ -2369,11 +2377,11 @@ async function trLoadModule(){
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div>
             <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:4px">Input</div>
-            <div style="font-size:11px;color:var(--tx);white-space:pre-wrap;background:#fff;border:1px solid var(--bd);border-radius:6px;padding:8px;max-height:120px;overflow-y:auto">${ex.input_text}</div>
+            <div style="font-size:11px;color:var(--tx);white-space:pre-wrap;background:#fff;border:1px solid var(--bd);border-radius:6px;padding:8px;max-height:120px;overflow-y:auto">${safeText(ex.input_text)}</div>
           </div>
           <div>
             <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:4px">Output / Struktur</div>
-            <div style="font-size:11px;color:var(--tx);white-space:pre-wrap;background:#fff;border:1px solid var(--bd);border-radius:6px;padding:8px;max-height:120px;overflow-y:auto">${ex.output_text}</div>
+            <div style="font-size:11px;color:var(--tx);white-space:pre-wrap;background:#fff;border:1px solid var(--bd);border-radius:6px;padding:8px;max-height:120px;overflow-y:auto">${safeText(ex.output_text)}</div>
           </div>
         </div>
       </div>`).join(''):`<div style="color:var(--mu);font-size:13px;padding:12px 0">Keine manuellen Beispiele vorhanden.</div>`;
@@ -2488,7 +2496,7 @@ function renderClients(){
   if(hsel)hsel.innerHTML='<option value="">— Select client —</option>'+clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   const list=document.getElementById('clients-list');
   if(!clients.length){list.innerHTML='<div class="empty"><div class="ei">&#9711;</div><div>No clients yet.</div></div>';return;}
-  list.innerHTML=clients.map(c=>`<div class="cc"><div><div class="cn">${c.name}</div><div class="cm">${c.industry||''} &mdash; ${c.contact||''}</div><div class="tkcode">${c.token.substring(0,28)}&hellip;</div></div><div class="ca"><button class="obtn" onclick="copyTok('${c.token}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail('${c.name}','${c.token}')">Send by Email</button><button class="dbtn" onclick="delData(${c.id},'${c.name}')">Delete All Data</button><button class="dbtn" onclick="deleteClient(${c.id},'${c.name}')">Delete Client</button></div></div>`).join('');
+  list.innerHTML=clients.map(c=>`<div class="cc" data-cid="${c.id}"><div><div class="cn">${safeText(c.name)}</div><div class="cm">${safeText(c.industry||'')} &mdash; ${safeText(c.contact||'')}</div><div class="tkcode">${safeText(c.token.substring(0,28))}&hellip;</div></div><div class="ca"><button class="obtn" onclick="copyTok('${c.token}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail(${c.id})">Send by Email</button><button class="dbtn" onclick="delData(${c.id})">Delete All Data</button><button class="dbtn" onclick="deleteClient(${c.id})">Delete Client</button></div></div>`).join('');
 }
 async function switchClient(id){
   clientId=id||null;
@@ -2513,9 +2521,9 @@ async function switchClient(id){
   if(hw)hw.style.display=clientId?'block':'none';
 }
 function copyTok(t){navigator.clipboard.writeText(t).catch(()=>{});alert('Token copied!');}
-async function sendTokenByEmail(name,token,clientId){
+async function sendTokenByEmail(clientId){
   const storedClient=clients.find(c=>c.id==clientId);
-  const storedEmail=storedClient&&storedClient.email?storedClient.email:'';
+  const storedEmail=storedClient?.email||'';
   const email=prompt('Send token to email address:',storedEmail);
   if(!email)return;
   try{
@@ -2641,7 +2649,9 @@ async function saveModuleConfig(){
   finally{btn.textContent='Speichern';btn.disabled=false;}
 }
 
-async function deleteClient(cid,name){
+async function deleteClient(cid){
+  const c=clients.find(x=>x.id==cid);
+  const name=c?.name||'this client';
   if(!confirm('Delete client "'+name+'" and ALL their data?\n\nThis cannot be undone.'))return;
   try{
     await api('/api/clients/'+cid,{method:'DELETE'});
@@ -2650,7 +2660,9 @@ async function deleteClient(cid,name){
     renderClients();loadStats();
   }catch{alert('Error deleting client.');}
 }
-async function delData(cid,name){
+async function delData(cid){
+  const c=clients.find(x=>x.id==cid);
+  const name=c?.name||'this client';
   if(!confirm('Delete ALL analyses for "'+name+'"?\n\nThis cannot be undone.'))return;
   try{
     await api('/api/analyze/client/'+cid,{method:'DELETE'});
@@ -2806,8 +2818,8 @@ function renderMemory(){
           <button class="obtn" style="margin-left:4px;border-color:var(--red);color:var(--red)" onclick="deleteMemory('${m.memory_type}')">Delete</button>
         </div>
       </div>
-      <div class="mem-page-body" id="mem-body-${i}" onclick="memEdit(${i})" style="cursor:text;white-space:pre-wrap">${m.content}</div>
-      <textarea id="mem-ta-${i}" style="display:none;width:100%;min-height:200px;padding:12px;border:1.5px solid var(--ac);border-radius:4px;font-size:13px;line-height:1.7;resize:vertical;outline:none">${m.content}</textarea>
+      <div class="mem-page-body" id="mem-body-${i}" onclick="memEdit(${i})" style="cursor:text;white-space:pre-wrap">${safeText(m.content)}</div>
+      <textarea id="mem-ta-${i}" style="display:none;width:100%;min-height:200px;padding:12px;border:1.5px solid var(--ac);border-radius:4px;font-size:13px;line-height:1.7;resize:vertical;outline:none"></textarea>
       <div id="mem-btns-${i}" style="display:none;margin-top:8px;display:none;gap:8px">
         <button class="runbtn" onclick="memSave(${i},'${m.memory_type}')">Save</button>
         <button class="obtn" onclick="memCancel(${i})">Cancel</button>
@@ -2816,10 +2828,14 @@ function renderMemory(){
   }).join('');
 }
 function memEdit(i){
-  document.getElementById('mem-body-'+i).style.display='none';
-  document.getElementById('mem-ta-'+i).style.display='block';
+  const body=document.getElementById('mem-body-'+i);
+  const ta=document.getElementById('mem-ta-'+i);
+  // Populate textarea from raw memory (not from safeText-escaped HTML)
+  if(memory[i])ta.value=memory[i].content||'';
+  body.style.display='none';
+  ta.style.display='block';
   document.getElementById('mem-btns-'+i).style.display='flex';
-  document.getElementById('mem-ta-'+i).focus();
+  ta.focus();
 }
 function memCancel(i){
   document.getElementById('mem-body-'+i).style.display='block';
@@ -4157,8 +4173,8 @@ async function loadHistory(){
     rows.forEach(h=>{const k=h.module_label||h.module;if(!groups[k])groups[k]=[];groups[k].push(h);});
     el.innerHTML=Object.entries(groups).map(([label,items])=>`
       <div style="margin-bottom:24px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:8px">${label}</div>
-        ${items.map(h=>{const d=new Date(h.created_at).toLocaleString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});return `<div class="hi" style="display:flex;align-items:center;justify-content:space-between"><div><div class="hd">${d}</div></div><button class="obtn" style="font-size:11px;padding:4px 10px;color:var(--red);border-color:var(--red)" onclick="deleteAnalysis(${h.id})">Delete</button></div>`;}).join('')}
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:8px">${safeText(label)}</div>
+        ${items.map(h=>{const d=new Date(h.created_at).toLocaleString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});return `<div class="hi" style="display:flex;align-items:center;justify-content:space-between"><div><div class="hd">${safeText(d)}</div></div><button class="obtn" style="font-size:11px;padding:4px 10px;color:var(--red);border-color:var(--red)" onclick="deleteAnalysis(${h.id})">Delete</button></div>`;}).join('')}
       </div>`).join('');
   }catch{el.innerHTML='<div class="empty"><div class="ei">&#9888;</div><div>Could not load.</div></div>';}
 }

@@ -4,6 +4,20 @@ const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Sanitize user-controlled text before injecting into system prompts.
+// Strips prompt-injection patterns while preserving legitimate content.
+function sanitizeForPrompt(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    // Remove common injection openers
+    .replace(/^\s*(IGNORE|DISREGARD|FORGET|OVERRIDE|BYPASS|NEW INSTRUCTIONS?|SYSTEM:|ASSISTANT:|USER:|<\|im_start\|>|<\|im_end\|>|###\s*SYSTEM|###\s*INSTRUCTIONS?)/gim, '[REMOVED]')
+    // Strip hidden Unicode control / direction characters
+    .replace(/[​-‍‪-‮⁦-⁩﻿]/g, '')
+    // Collapse excessive repetition (e.g. 500 dashes used to visually "end" the prompt)
+    .replace(/(-{10,}|={10,}|\*{10,})/g, '---')
+    .trim();
+}
+
 // Module prompts
 const PROMPTS = {
   rp: {
@@ -670,7 +684,11 @@ async function callClaude(system, user) {
   });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
-  return data.content?.[0]?.text || '';
+  return {
+    text: data.content?.[0]?.text || '',
+    inputTokens: data.usage?.input_tokens || 0,
+    outputTokens: data.usage?.output_tokens || 0
+  };
 }
 
 // POST /api/analyze
@@ -691,7 +709,7 @@ router.post('/', requireAuth, async (req, res) => {
         [resolvedClientId, module]
       );
       if (customRows[0]?.instructions) {
-        system += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + customRows[0].instructions;
+        system += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(customRows[0].instructions);
       }
     }
 
@@ -722,7 +740,7 @@ router.post('/', requireAuth, async (req, res) => {
           + 'Jeder Satz, jeder Begriff, jede Formulierung muss sich anfühlen, als hätte das Unternehmen selbst geschrieben.\n'
           + 'Generische KI-Sprache, Füllformulierungen oder neutraler Ton sind NICHT akzeptabel.\n\n';
         memRows.forEach(m => {
-          system += `${m.memory_type.toUpperCase()}:\n${m.content}\n\n`;
+          system += `${m.memory_type.toUpperCase()}:\n${sanitizeForPrompt(m.content)}\n\n`;
         });
         system += '════════════════════════════════════════\n'
           + 'ENDE BRAND VOICE — Ab hier gilt: dieser Output ist ein Unternehmenstext, kein KI-Output.\n'
@@ -753,13 +771,22 @@ router.post('/', requireAuth, async (req, res) => {
             : 'passe Sprache und Stil an den Klienten an.')
           + '\n\n';
         examples.forEach((ex, i) => {
-          system += `BEISPIEL ${i + 1}${ex.industry_tag ? ` [${ex.industry_tag}]` : ''}:\nINPUT: ${ex.input_text}\nAUFBAU: ${ex.output_text}\n\n`;
+          system += `BEISPIEL ${i + 1}${ex.industry_tag ? ` [${ex.industry_tag}]` : ''}:\nINPUT: ${sanitizeForPrompt(ex.input_text)}\nAUFBAU: ${sanitizeForPrompt(ex.output_text)}\n\n`;
         });
         system += '--- ENDE STRUKTURVORLAGEN ---';
       }
     }
 
-    const result = await callClaude(system, userMsg);
+    const claudeResp = await callClaude(system, userMsg);
+    const result = claudeResp.text;
+
+    // Log token usage (fire-and-forget)
+    if (advisorId) {
+      pool.query(
+        'INSERT INTO usage_log (advisor_id, client_id, module, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)',
+        [advisorId, resolvedClientId || null, module, claudeResp.inputTokens, claudeResp.outputTokens]
+      ).catch(() => {});
+    }
 
     // Persist analysis
     const generatedBy = req.user.role === 'advisor'
@@ -891,8 +918,8 @@ router.get('/health-score', requireAuth, async (req, res) => {
     if (rows.length < 3) return res.json({ error: 'not_enough_data' });
     const log = rows.map(r => `${new Date(r.created_at).toLocaleDateString('de-CH')}: ${r.module_label||r.module}`).join('\n');
     const cfg = PROMPTS['health-score'];
-    const result = await callClaude(cfg.system, cfg.build({ log, period: 'Last 90 days' }));
-    res.json({ result, count: rows.length });
+    const claudeResp = await callClaude(cfg.system, cfg.build({ log, period: 'Last 90 days' }));
+    res.json({ result: claudeResp.text, count: rows.length });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -922,11 +949,20 @@ router.get('/usage', requireAuth, async (req, res) => {
 
     const totalThisMonth = rows.reduce((s, r) => s + r.this_month, 0);
     const totalAllTime = rows.reduce((s, r) => s + r.total_calls, 0);
-    // Cost estimate: avg ~2500 input + 1000 output tokens per call
-    // Sonnet 4.6: $3/1M input, $15/1M output
-    const costPerCall = (2500 * 3 / 1e6) + (1000 * 15 / 1e6);
 
-    res.json({ rows, totalThisMonth, totalAllTime, costPerCall });
+    // Real token costs from usage_log (Sonnet 4.6: $3/1M input, $15/1M output)
+    const { rows: tokenRows } = await pool.query(`
+      SELECT
+        COALESCE(SUM(input_tokens), 0)::bigint AS total_input,
+        COALESCE(SUM(output_tokens), 0)::bigint AS total_output,
+        COALESCE(SUM(CASE WHEN date_trunc('month', created_at)=date_trunc('month', NOW()) THEN input_tokens ELSE 0 END), 0)::bigint AS month_input,
+        COALESCE(SUM(CASE WHEN date_trunc('month', created_at)=date_trunc('month', NOW()) THEN output_tokens ELSE 0 END), 0)::bigint AS month_output
+      FROM usage_log WHERE advisor_id=$1`, [advisorId]);
+    const t = tokenRows[0];
+    const costAllTime = (Number(t.total_input) * 3 / 1e6) + (Number(t.total_output) * 15 / 1e6);
+    const costThisMonth = (Number(t.month_input) * 3 / 1e6) + (Number(t.month_output) * 15 / 1e6);
+
+    res.json({ rows, totalThisMonth, totalAllTime, costAllTime, costThisMonth, tokens: t });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -936,8 +972,8 @@ router.post('/route', requireAuth, async (req, res) => {
   try {
     const { text } = req.body;
     const cfg = PROMPTS['router'];
-    const result = await callClaude(cfg.system, cfg.build({ text }));
-    res.json({ module: result.trim().toLowerCase().replace(/[^a-z-]/g, '') });
+    const claudeResp = await callClaude(cfg.system, cfg.build({ text }));
+    res.json({ module: claudeResp.text.trim().toLowerCase().replace(/[^a-z-]/g, '') });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

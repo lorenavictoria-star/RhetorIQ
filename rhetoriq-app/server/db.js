@@ -130,6 +130,18 @@ async function init() {
     ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS industry_tag TEXT;
     ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS auto_generated BOOLEAN DEFAULT FALSE;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS training_imported_at TIMESTAMPTZ;
+
+    CREATE TABLE IF NOT EXISTS usage_log (
+      id SERIAL PRIMARY KEY,
+      advisor_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL,
+      module TEXT NOT NULL,
+      input_tokens INTEGER NOT NULL DEFAULT 0,
+      output_tokens INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS usage_log_advisor_idx ON usage_log(advisor_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS usage_log_client_idx ON usage_log(client_id, created_at DESC);
   `);
 }
 
