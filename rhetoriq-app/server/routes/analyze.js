@@ -695,6 +695,22 @@ router.post('/', requireAuth, async (req, res) => {
       }
     }
 
+    // Inject few-shot examples (top 3 by rating) for this module
+    const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+    if (advisorId) {
+      const { rows: examples } = await pool.query(
+        'SELECT input_text, output_text FROM module_examples WHERE advisor_id=$1 AND module_key=$2 ORDER BY rating DESC, created_at DESC LIMIT 3',
+        [advisorId, module]
+      );
+      if (examples.length) {
+        system += '\n\n--- QUALITÄTSSTANDARD (Beispiele) ---\nDie folgenden Beispiele zeigen den erwarteten Output-Standard. Orientiere dich an Stil, Tiefe und Format.\n\n';
+        examples.forEach((ex, i) => {
+          system += `BEISPIEL ${i + 1}:\nINPUT:\n${ex.input_text}\n\nOUTPUT:\n${ex.output_text}\n\n`;
+        });
+        system += '--- ENDE BEISPIELE ---';
+      }
+    }
+
     const result = await callClaude(system, userMsg);
 
     // Persist analysis

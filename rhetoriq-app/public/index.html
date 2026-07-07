@@ -153,6 +153,7 @@ body.adv .stat.ao{display:block}
 body.adv #mn-clients{display:flex!important}
 body.adv #mm-reviews{display:flex!important}
 body.adv #mm-usage{display:flex!important}
+body.adv #mm-training{display:flex!important}
 body.adv #mm-advisor-section{display:block!important}
 /* MORE MENU TILES & ROWS */
 .mm-tile{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 10px;border:1px solid var(--bd);border-radius:8px;cursor:pointer;background:var(--sf);transition:border-color .15s,background .15s;text-align:left}
@@ -1193,6 +1194,54 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div style="padding:24px 16px 0"><div id="usage-table"></div></div>
     </div>
 
+    <!-- TRAINING DATA -->
+    <div class="page" id="page-training">
+      <div class="page-title" style="margin-bottom:4px">Trainingsdaten</div>
+      <div style="font-size:14px;color:var(--mu);margin-bottom:24px">Beispiel-Inputs &amp; Outputs pro Modul — werden automatisch als Qualitätsstandard bei jeder Generierung injiziert.</div>
+
+      <!-- Module selector -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);display:block;margin-bottom:6px">Modul auswählen</label>
+        <select id="tr-module-sel" onchange="trLoadModule()" style="padding:10px 14px;border:1.5px solid var(--bd);background:var(--sf);font-family:'Instrument Sans',sans-serif;font-size:14px;color:var(--tx);border-radius:8px;outline:none;width:100%;max-width:400px"></select>
+      </div>
+
+      <!-- Example count badge -->
+      <div id="tr-count" style="font-size:12px;color:var(--mu);margin-bottom:16px"></div>
+
+      <!-- Add new example form -->
+      <div style="border:1.5px solid var(--bd);border-radius:10px;background:var(--sf);padding:18px;margin-bottom:20px">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:14px">+ Neues Beispiel</div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Label (optional)</label>
+          <input id="tr-label" placeholder="z.B. CEO, Pharmasektor, Krise…" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);background:#fff;outline:none;box-sizing:border-box">
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Input <span style="color:var(--mu);font-weight:400">(was der Klient eingibt)</span></label>
+          <textarea id="tr-input" rows="4" placeholder="Beispiel-Input des Klienten…" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);background:#fff;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Output <span style="color:var(--mu);font-weight:400">(idealer Output — dein Qualitätsstandard)</span></label>
+          <textarea id="tr-output" rows="7" placeholder="Idealer Output / Muster-Ergebnis…" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);background:#fff;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div>
+            <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Qualität</label>
+            <div id="tr-stars" style="display:flex;gap:4px">
+              <span onclick="trSetRating(1)" class="tr-star" data-v="1" style="font-size:22px;cursor:pointer;color:#d1d5db">★</span>
+              <span onclick="trSetRating(2)" class="tr-star" data-v="2" style="font-size:22px;cursor:pointer;color:#d1d5db">★</span>
+              <span onclick="trSetRating(3)" class="tr-star" data-v="3" style="font-size:22px;cursor:pointer;color:#f59e0b">★</span>
+              <span onclick="trSetRating(4)" class="tr-star" data-v="4" style="font-size:22px;cursor:pointer;color:#d1d5db">★</span>
+              <span onclick="trSetRating(5)" class="tr-star" data-v="5" style="font-size:22px;cursor:pointer;color:#d1d5db">★</span>
+            </div>
+          </div>
+          <button onclick="trSaveExample()" style="margin-left:auto;padding:10px 22px;background:var(--tx);color:#fff;border:none;border-radius:8px;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Beispiel speichern</button>
+        </div>
+      </div>
+
+      <!-- Existing examples list -->
+      <div id="tr-list"></div>
+    </div>
+
     <div class="page" id="page-contact">
       <div class="page-title" id="contact-title" style="margin-bottom:6px">Contact</div>
       <div class="contact-tagline">Wort. Wirkung. Wandel.</div>
@@ -1286,6 +1335,9 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div style="padding:10px 14px 6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)">Advisor</div>
       <div class="ao-item mm-row" id="mm-usage" onclick="goPage('usage');loadUsage();setMN('more');hideMore()" style="display:none">
         <i class="ti ti-chart-bar" style="font-size:15px;color:var(--mu)"></i> Usage
+      </div>
+      <div class="ao-item mm-row" id="mm-training" onclick="goPage('training');loadTraining();setMN('more');hideMore()" style="display:none">
+        <i class="ti ti-school" style="font-size:15px;color:var(--mu)"></i> Trainingsdaten
       </div>
     </div>
 
@@ -2194,6 +2246,99 @@ async function loadUsage(){
       <div style="font-size:12px;color:var(--mu);margin-top:12px">Cost estimate based on avg 2,500 input + 1,000 output tokens/call at Claude Sonnet 4.6 pricing ($3/$15 per 1M tokens). Actual costs may vary.</div>`;
   }catch(e){sum.innerHTML=`<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;}
 }
+// ── TRAINING DATA ──────────────────────────────────────────────
+let _trRating=3;
+let _trExamples=[];
+
+function loadTraining(){
+  const sel=document.getElementById('tr-module-sel');
+  if(!sel)return;
+  // Populate module dropdown from ALL_MODULES + any custom modules
+  const opts=ALL_MODULES.map(m=>`<option value="${m.key}">${m.name}</option>`).join('');
+  sel.innerHTML=opts;
+  _trRating=3;
+  trRenderStars(3);
+  trLoadModule();
+}
+
+function trSetRating(v){_trRating=v;trRenderStars(v);}
+function trRenderStars(v){
+  document.querySelectorAll('.tr-star').forEach(s=>{
+    s.style.color=Number(s.dataset.v)<=v?'#f59e0b':'#d1d5db';
+  });
+}
+
+async function trLoadModule(){
+  const key=document.getElementById('tr-module-sel')?.value;
+  if(!key)return;
+  const list=document.getElementById('tr-list');
+  const count=document.getElementById('tr-count');
+  list.innerHTML='<div style="color:var(--mu);font-size:13px">Laden…</div>';
+  try{
+    const r=await api('/api/module-examples?moduleKey='+encodeURIComponent(key));
+    _trExamples=r.ok?await r.json():[];
+    count.textContent=_trExamples.length
+      ?`${_trExamples.length} Beispiel${_trExamples.length===1?'':'e'} gespeichert — Top 3 werden automatisch injiziert`
+      :'Noch keine Beispiele — füge das erste hinzu.';
+    list.innerHTML=_trExamples.length?_trExamples.map(ex=>`
+      <div id="tr-ex-${ex.id}" style="border:1px solid var(--bd);border-radius:10px;background:#fff;padding:16px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;font-weight:600;color:var(--tx)">${ex.label||'Beispiel'}</span>
+            <span style="font-size:13px;color:#f59e0b">${'★'.repeat(ex.rating||3)}${'☆'.repeat(5-(ex.rating||3))}</span>
+          </div>
+          <div style="display:flex;gap:6px">
+            ${[1,2,3,4,5].map(v=>`<button onclick="trRate(${ex.id},${v})" style="font-size:16px;background:none;border:none;cursor:pointer;color:${(ex.rating||3)>=v?'#f59e0b':'#d1d5db'};padding:0;line-height:1" id="tr-star-${ex.id}-${v}">★</button>`).join('')}
+            <button onclick="trDelete(${ex.id})" style="margin-left:8px;padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:transparent;font-size:12px;color:var(--mu);cursor:pointer;font-family:'Instrument Sans',sans-serif">Löschen</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:5px">Input</div>
+            <div style="font-size:12px;color:var(--tx);white-space:pre-wrap;background:var(--sf);border-radius:6px;padding:10px;max-height:140px;overflow-y:auto">${ex.input_text}</div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:5px">Output</div>
+            <div style="font-size:12px;color:var(--tx);white-space:pre-wrap;background:var(--sf);border-radius:6px;padding:10px;max-height:140px;overflow-y:auto">${ex.output_text}</div>
+          </div>
+        </div>
+      </div>`).join(''):'';
+  }catch(e){list.innerHTML=`<div style="color:var(--red);font-size:13px">Fehler: ${e.message}</div>`;}
+}
+
+async function trSaveExample(){
+  const key=document.getElementById('tr-module-sel')?.value;
+  const label=document.getElementById('tr-label')?.value?.trim();
+  const input=document.getElementById('tr-input')?.value?.trim();
+  const output=document.getElementById('tr-output')?.value?.trim();
+  if(!input||!output)return alert('Input und Output sind erforderlich.');
+  const r=await api('/api/module-examples',{method:'POST',body:JSON.stringify({module_key:key,label,input_text:input,output_text:output,rating:_trRating})});
+  if(!r.ok)return alert('Fehler beim Speichern.');
+  document.getElementById('tr-label').value='';
+  document.getElementById('tr-input').value='';
+  document.getElementById('tr-output').value='';
+  trSetRating(3);
+  trLoadModule();
+}
+
+async function trRate(id,v){
+  await api(`/api/module-examples/${id}/rating`,{method:'PUT',body:JSON.stringify({rating:v})});
+  // update star display immediately
+  for(let i=1;i<=5;i++){
+    const s=document.getElementById(`tr-star-${id}-${i}`);
+    if(s)s.style.color=i<=v?'#f59e0b':'#d1d5db';
+  }
+}
+
+async function trDelete(id){
+  if(!confirm('Beispiel löschen?'))return;
+  await api(`/api/module-examples/${id}`,{method:'DELETE'});
+  document.getElementById('tr-ex-'+id)?.remove();
+  const rem=document.querySelectorAll('[id^="tr-ex-"]').length;
+  const count=document.getElementById('tr-count');
+  if(count)count.textContent=rem?`${rem} Beispiel${rem===1?'':'e'} gespeichert`:'Noch keine Beispiele.';
+}
+
 async function tryAutoLogin(){
   if(!token)return;
   try{const p=JSON.parse(atob(token.split('.')[1]));if(p.exp*1000<Date.now()){localStorage.removeItem('riq-token');return;}if(p.role==='advisor')boot({id:p.id,name:p.name,email:p.email},'advisor');else boot({id:p.clientId,name:p.clientName},'client');}catch{localStorage.removeItem('riq-token');}
@@ -2731,7 +2876,7 @@ function updateHomeRightSidebar(){
   }
 }
 function setMN(id){
-  const toMore=new Set(['brand','people','reviews','memory','history','usage']);
+  const toMore=new Set(['brand','people','reviews','memory','history','usage','training']);
   const eff=toMore.has(id)?'more':id;
   document.querySelectorAll('.mni').forEach(n=>n.classList.remove('active'));
   const el=document.getElementById('mn-'+eff);if(el)el.classList.add('active');

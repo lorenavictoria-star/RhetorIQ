@@ -47,6 +47,7 @@ app.use('/api/fetch-website', require('./routes/fetchWebsite'));
 app.use('/api/transcribe', require('./routes/transcribe'));
 app.use('/api/onboard', require('./routes/onboard'));
 app.use('/api/custom-modules', require('./routes/customModules'));
+app.use('/api/module-examples', require('./routes/moduleExamples'));
 app.use('/api/module-prompts', require('./routes/modulePrompts'));
 app.use('/api/audit', require('./routes/audit'));
 
