@@ -1053,7 +1053,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
             <button id="bv-active-edit-btn" onclick="bvActiveEdit()" style="padding:4px 12px;border:1.5px solid rgba(255,255,255,.6);border-radius:6px;background:transparent;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Bearbeiten</button>
             <button id="bv-active-save-btn" onclick="bvActiveSave()" style="display:none;padding:4px 12px;border:none;border-radius:6px;background:#fff;color:var(--ac);font-size:11px;font-weight:700;cursor:pointer;font-family:'Instrument Sans',sans-serif">Speichern</button>
             <button id="bv-active-cancel-btn" onclick="bvActiveCancel()" style="display:none;padding:4px 12px;border:1.5px solid rgba(255,255,255,.6);border-radius:6px;background:transparent;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Abbrechen</button>
-            <button onclick="bvShowHistory()" style="padding:4px 12px;border:1.5px solid rgba(255,255,255,.4);border-radius:6px;background:transparent;color:rgba(255,255,255,.8);font-size:11px;cursor:pointer;font-family:'Instrument Sans',sans-serif">Versionen</button>
+            <button onclick="bvShowHistory(clientId,'brand_voice')" style="padding:4px 12px;border:1.5px solid rgba(255,255,255,.4);border-radius:6px;background:transparent;color:rgba(255,255,255,.8);font-size:11px;cursor:pointer;font-family:'Instrument Sans',sans-serif">Versionen</button>
           </div>
         </div>
         <div id="bv-active-view" style="padding:14px 16px;font-size:13px;line-height:1.7;color:var(--tx);white-space:pre-wrap;max-height:200px;overflow-y:auto;background:var(--sf)"></div>
@@ -3014,9 +3014,11 @@ async function bvActiveSave(){
 }
 
 // Task 10: Brand Voice version history
-async function bvShowHistory(){
-  if(!clientId)return;
-  const r=await api('/api/memory/'+clientId+'/brand_voice/history');
+async function bvShowHistory(cId,type){
+  const resolvedClientId=cId||clientId;
+  const resolvedType=type||'brand_voice';
+  if(!resolvedClientId)return;
+  const r=await api('/api/memory/'+resolvedClientId+'/'+resolvedType+'/history');
   const hist=await r.json();
   if(!hist.length)return alert('Keine früheren Versionen vorhanden.');
   // Build a simple modal-style overlay
@@ -3034,7 +3036,7 @@ async function bvShowHistory(){
     +hist.map((v,i)=>'<div style="border:1px solid var(--bd);border-radius:8px;margin-bottom:10px;overflow:hidden">'
       +'<div style="padding:8px 12px;background:var(--sf);display:flex;justify-content:space-between;align-items:center">'
       +'<span style="font-size:12px;color:var(--mu)">'+new Date(v.saved_at).toLocaleString('de-CH')+'</span>'
-      +'<button onclick="bvRollback('+v.id+')" style="font-size:12px;padding:3px 10px;border:1px solid var(--bd);border-radius:5px;background:var(--bg);cursor:pointer">Wiederherstellen</button>'
+      +'<button onclick="bvRollback('+v.id+',\''+resolvedClientId+'\',\''+resolvedType+'\')" style="font-size:12px;padding:3px 10px;border:1px solid var(--bd);border-radius:5px;background:var(--bg);cursor:pointer">Wiederherstellen</button>'
       +'</div>'
       +'<div style="padding:10px 12px;font-size:12px;line-height:1.6;white-space:pre-wrap;max-height:100px;overflow-y:auto;color:var(--tx)">'+safeText(v.content.substring(0,400))+(v.content.length>400?'…':'')+'</div>'
       +'</div>').join('');
@@ -3042,10 +3044,12 @@ async function bvShowHistory(){
   document.body.appendChild(ov);
   ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
 }
-async function bvRollback(historyId){
+async function bvRollback(historyId,cId,type){
+  const resolvedClientId=cId||clientId;
+  const resolvedType=type||'brand_voice';
   if(!confirm('Diese Version wiederherstellen? Die aktuelle Brand Voice wird archiviert.'))return;
   try{
-    await api('/api/memory/'+clientId+'/brand_voice/rollback/'+historyId,{method:'POST'});
+    await api('/api/memory/'+resolvedClientId+'/'+resolvedType+'/rollback/'+historyId,{method:'POST'});
     await loadMemory();bvActiveRefresh();
     document.getElementById('bv-hist-modal')?.remove();
     alert('Brand Voice wiederhergestellt.');

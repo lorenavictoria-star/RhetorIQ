@@ -29,12 +29,12 @@ const clients = new Set();
 wss.on('connection', (ws, req) => {
   const url = new URL(req.url, 'http://localhost');
   const token = url.searchParams.get('token');
-  if (!token) { ws.close(4001, 'Unauthorized'); return; }
+  if (!token) { ws.close(4401, 'Unauthorized'); return; }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     ws.userId = decoded.id || decoded.clientId;
   } catch {
-    ws.close(4001, 'Invalid token');
+    ws.close(4401, 'Unauthorized');
     return;
   }
   clients.add(ws);
@@ -53,10 +53,7 @@ app.locals.wss = wss;
 
 // ── Middleware ────────────────────────────────────────────────
 // FIX 6: Restrict CORS to known frontend origin
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://rhetoriq.ch',
-  credentials: true
-}));
+app.use(cors({ origin: process.env.CORS_ORIGIN || 'https://rhetoriq.ch', credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 // FIX 11: helmet security headers (npm install helmet if not yet installed)
 try { app.use(require('helmet')()); } catch { console.warn('helmet not installed — run: npm install helmet'); }
@@ -149,16 +146,12 @@ const PORT = process.env.PORT || 3001;
   server.listen(PORT, () => console.log(`RhetorIQ server running on :${PORT}`));
 })();
 
-// FIX 7: Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received — closing server');
+function gracefulShutdown(signal) {
+  console.log(`${signal} received — shutting down gracefully`);
   server.close(() => {
-    pool.end(() => {
-      console.log('DB pool closed');
-      process.exit(0);
-    });
+    pool.end().then(() => process.exit(0)).catch(() => process.exit(1));
   });
-});
-process.on('SIGINT', () => {
-  process.emit('SIGTERM');
-});
+  setTimeout(() => process.exit(1), 10000);
+}
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

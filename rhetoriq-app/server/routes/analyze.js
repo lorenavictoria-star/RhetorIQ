@@ -177,7 +177,28 @@ In English.`,
   },
   'vs-gen': {
     label: 'Voice Signature — Generation',
-    system: (d) => `You are a precision ghostwriter for executives. Write exclusively in the style of the Voice Signature Profile. The person must immediately recognise themselves. No generic tone.${d.voiceProfile?'\n\nVoice Signature:\n'+d.voiceProfile:''}`,
+    system: `You are a senior strategic communication advisor. Your task is to generate a precise, battle-ready Verhandlungs-Statement (negotiation statement) for a leadership context.
+
+FORMATTING RULES:
+No markdown. No hashtags, asterisks, or horizontal lines. Section headings in ALL CAPS followed by a colon. Plain dashes for bullet points.
+
+CORE PRINCIPLE:
+A negotiation statement is not a position paper. It is a calculated verbal move designed to shift power dynamics, signal boundaries, and open space for the speaker's preferred outcome — without triggering unnecessary resistance.
+
+OPENING STATEMENT:
+One to three sentences. Strong, calm, unambiguous. Sets the frame for the entire conversation.
+
+CORE ARGUMENT:
+The single strongest reason the speaker's position is legitimate. Evidence-based or principle-based. Never more than four sentences.
+
+ANTICIPATED OBJECTION + REFRAME:
+Name the most likely pushback the counterpart will raise. Reframe it in one sentence that neutralises its force without dismissing it.
+
+CLOSING MOVE:
+A concrete proposal or question that moves the conversation forward on the speaker's terms. Ends the statement with momentum, not ambiguity.
+
+TONE CALIBRATION:
+Adjust register to the context: board-level conversations require gravitas and economy of words; peer negotiations require directness without aggression; external stakeholders require diplomatic firmness.`,
     build: (d) => `Format: ${d.format}\nTone: ${d.tone}\nBriefing: ${d.text}`
   },
   'text-gen': {
@@ -319,27 +340,31 @@ Base every finding on evidence from the source texts. Output in English.`,
   },
   'crisis-toolkit': {
     label: 'Crisis Communication Toolkit',
-    system: `You are a crisis communication expert. Generate a complete, ready-to-use crisis communication kit. Structure EXACTLY:
+    system: `You are a crisis communication expert. Generate a complete, ready-to-use crisis communication kit.
 
-## SITUATION ASSESSMENT
+FORMATTING RULES: No markdown. No hashtags, asterisks, or horizontal lines. Section headings in ALL CAPS followed by a colon. Plain dashes for bullet points.
+
+Structure EXACTLY:
+
+SITUATION ASSESSMENT:
 Severity (1–5) · Reputational risk · Time pressure.
 
-## 1. INTERNAL STATEMENT (employees)
+1. INTERNAL STATEMENT (employees):
 Exact text, 150–200 words. Honest, stabilising, clear next steps.
 
-## 2. PRESS STATEMENT
+2. PRESS STATEMENT:
 Exact text, 100–150 words. Factual, controlled, no speculation.
 
-## 3. EMPLOYEE FAQ
+3. EMPLOYEE FAQ:
 5 questions employees will ask immediately + direct answers (2–3 sentences each).
 
-## 4. SOCIAL MEDIA HOLDING STATEMENT
+4. SOCIAL MEDIA HOLDING STATEMENT:
 Max 280 characters. Acknowledges, doesn't over-explain.
 
-## 5. PHRASES TO USE / NEVER SAY
+5. PHRASES TO USE / NEVER SAY:
 3 phrases to use. 3 phrases to never say.
 
-## NEXT 2 HOURS: ACTION CHECKLIST
+NEXT 2 HOURS: ACTION CHECKLIST:
 6 concrete steps with time markers (T+15min, T+30min etc.).`,
     build: (d) => `SITUATION:\n${d.text}\n\nCrisis type: ${d.crisisType||'Not specified'}\nAffected stakeholders: ${d.audiences||'Not specified'}\nCompany/context: ${d.company||'Not specified'}`
   },
@@ -607,27 +632,31 @@ Structure:
   },
   'pre-meeting': {
     label: 'Pre-Meeting Brief',
-    system: `You are an elite executive communication strategist. Your job: generate a razor-sharp, 100% practical communication brief that a CEO or executive can read in 3 minutes before walking into a room. Structure EXACTLY as follows:
+    system: `You are an elite executive communication strategist. Your job: generate a razor-sharp, 100% practical communication brief that a CEO or executive can read in 3 minutes before walking into a room.
 
-## SITUATION SUMMARY
+FORMATTING RULES: No markdown. No hashtags, asterisks, or horizontal lines. Section headings in ALL CAPS followed by a colon. Plain dashes for bullet points.
+
+Structure EXACTLY as follows:
+
+SITUATION SUMMARY:
 One paragraph: what is happening, what is at stake, what the executive must achieve.
 
-## THE 3 HARDEST MOMENTS
+THE 3 HARDEST MOMENTS:
 For each: the exact situation, what goes wrong if handled badly, and how to handle it precisely.
 
-## YOUR OPENING (ready to use)
+YOUR OPENING (ready to use):
 The exact first 2–3 sentences the executive should say or write. Publication-ready.
 
-## KEY MESSAGES (3 bullets)
+KEY MESSAGES (3 bullets):
 Three core statements. Each max. 15 words. Clear, direct, memorable.
 
-## WHAT NOT TO SAY
+WHAT NOT TO SAY:
 3 specific formulations or topics to avoid — with brief reason for each.
 
-## STAKEHOLDER MAP
+STAKEHOLDER MAP:
 For each person/group in the room: one sentence on their likely agenda and emotional state.
 
-## EXIT STRATEGY
+EXIT STRATEGY:
 If the conversation goes off-track, becomes destructive, or reaches an impasse: what does the executive say to reset, redirect, or exit gracefully without losing credibility? Give one precise, ready-to-use formulation.
 
 Tone: direct, fast, no padding. This is a tool for under time pressure.`,
@@ -705,6 +734,8 @@ cm-board-coach — Board Presentation Coach
 cm-roadshow — Roadshow Preparation
 ht-guest-letter — Hotel guest communication
 ht-review-response — Hotel review response
+ht-crisis-comm — Hotel crisis communication
+ht-positioning — Hotel brand positioning
 ht-sales-pitch — Hotel sales pitch
 pr — Performance Review writer
 rw — Recognition Writer
@@ -818,11 +849,18 @@ function resolveModel(module) {
   return HAIKU_MODULES.has(module) ? MODEL_HAIKU : MODEL_SONNET;
 }
 
-async function callClaude(system, user, maxTokens, model) {
+async function callClaude(system, user, maxTokens, model, temperature) {
   // system can be a string (no caching) or an array of {type,text,cache_control?} blocks
   const systemPayload = Array.isArray(system)
     ? system
     : [{ type: 'text', text: typeof system === 'function' ? system({}) : system }];
+  const body = {
+    model: model || MODEL_SONNET,
+    max_tokens: maxTokens || DEFAULT_MAX_TOKENS,
+    system: systemPayload,
+    messages: [{ role: 'user', content: user }]
+  };
+  if (temperature !== undefined) body.temperature = temperature;
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -831,12 +869,7 @@ async function callClaude(system, user, maxTokens, model) {
       'anthropic-version': '2024-07-01',
       'anthropic-beta': 'prompt-caching-2024-07-31'
     },
-    body: JSON.stringify({
-      model: model || MODEL_SONNET,
-      max_tokens: maxTokens || DEFAULT_MAX_TOKENS,
-      system: systemPayload,
-      messages: [{ role: 'user', content: user }]
-    })
+    body: JSON.stringify(body)
   });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
@@ -1307,7 +1340,7 @@ router.post('/route', requireAuth, async (req, res) => {
   try {
     const { text } = req.body;
     const cfg = PROMPTS['router'];
-    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['router'], resolveModel('router'));
+    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['router'], resolveModel('router'), 0);
     res.json({ module: claudeResp.text.trim().toLowerCase().replace(/[^a-z-]/g, '') });
   } catch (e) {
     res.status(500).json({ error: e.message });
