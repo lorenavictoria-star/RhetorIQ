@@ -783,11 +783,26 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <button onclick="closeModal('mc-ov')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--mu);line-height:1;padding:0 0 0 12px">×</button>
     </div>
     <div id="mc-body" style="overflow-y:auto;flex:1;padding:8px 0"></div>
-    <div style="padding:12px 20px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-      <div style="font-size:12px;color:var(--mu)" id="mc-count"></div>
-      <div style="display:flex;gap:8px">
-        <button class="lbtn" onclick="closeModal('mc-ov')">Abbrechen</button>
-        <button class="lbtn" id="mc-save-btn" style="background:var(--ac);color:#fff;border:none" onclick="saveModuleConfig()">Speichern</button>
+    <div style="padding:10px 20px;border-top:1px solid var(--bd);flex-shrink:0">
+      <div id="mc-custom-form" style="display:none;margin-bottom:12px;padding:14px;background:var(--sf);border-radius:8px;border:1px solid var(--bd)">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-bottom:10px">Eigenes Modul erstellen</div>
+        <div style="margin-bottom:8px"><label style="font-size:11px;color:var(--mu);display:block;margin-bottom:3px">Name</label><input type="text" id="mc-cp-name" placeholder="z.B. Quartalsbericht-Generator" style="width:100%;padding:7px 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg)"></div>
+        <div style="margin-bottom:8px"><label style="font-size:11px;color:var(--mu);display:block;margin-bottom:3px">Beschreibung (kurz)</label><input type="text" id="mc-cp-desc" placeholder="z.B. Erstellt strukturierte Quartalsberichte für..." style="width:100%;padding:7px 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg)"></div>
+        <div style="margin-bottom:10px"><label style="font-size:11px;color:var(--mu);display:block;margin-bottom:3px">Prompt / Anweisung an die KI</label><textarea id="mc-cp-prompt" rows="4" placeholder="Du bist ein Experte für... Deine Aufgabe ist es... Struktur: 1. ... 2. ..." style="width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;font-family:inherit;resize:vertical;background:var(--bg)"></textarea></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button onclick="document.getElementById('mc-custom-form').style.display='none'" style="padding:6px 14px;border:1px solid var(--bd);border-radius:6px;background:transparent;font-size:12px;cursor:pointer;font-family:inherit">Abbrechen</button>
+          <button id="mc-cp-save-btn" onclick="saveMcCustomPrompt()" style="padding:6px 14px;background:var(--ac);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit">Modul speichern</button>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:12px;color:var(--mu)" id="mc-count"></div>
+          <button onclick="toggleMcCustomForm()" style="padding:4px 10px;border:1px dashed var(--bd);border-radius:6px;background:transparent;font-size:11px;color:var(--mu);cursor:pointer;font-family:inherit;font-weight:500">+ Custom Prompt</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="lbtn" onclick="closeModal('mc-ov')">Abbrechen</button>
+          <button class="lbtn" id="mc-save-btn" style="background:var(--ac);color:#fff;border:none" onclick="saveModuleConfig()">Speichern</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2507,6 +2522,39 @@ function openModuleConfig(cid){
   document.getElementById('mc-body').innerHTML=html;
   _mcUpdateCount();
   openModal('mc-ov');
+}
+function toggleMcCustomForm(){
+  const f=document.getElementById('mc-custom-form');
+  f.style.display=f.style.display==='none'?'block':'none';
+  if(f.style.display==='block')document.getElementById('mc-cp-name').focus();
+}
+async function saveMcCustomPrompt(){
+  const name=document.getElementById('mc-cp-name').value.trim();
+  const desc=document.getElementById('mc-cp-desc').value.trim();
+  const prompt=document.getElementById('mc-cp-prompt').value.trim();
+  if(!name||!prompt)return alert('Name und Prompt sind erforderlich.');
+  if(!_mcClientId)return;
+  const btn=document.getElementById('mc-cp-save-btn');
+  btn.textContent='Speichern…';btn.disabled=true;
+  try{
+    const r=await api('/api/custom-modules',{method:'POST',body:JSON.stringify({
+      client_id:_mcClientId,name,description:desc,system_prompt:prompt,
+      input_fields:[{id:'text',label:'Dein Text',type:'textarea',placeholder:'Inhalt hier einfügen…'}],icon:'◆'
+    })});
+    if(!r.ok)throw new Error((await r.json()).error);
+    await loadCustomModules();
+    if(typeof renderModulesList==='function')renderModulesList();
+    // reset form + show confirmation
+    ['mc-cp-name','mc-cp-desc','mc-cp-prompt'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('mc-custom-form').style.display='none';
+    // show saved badge in modal body
+    const note=document.createElement('div');
+    note.style.cssText='margin:8px 20px;padding:8px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;font-size:12px;color:#15803d;font-weight:500';
+    note.textContent='✓ Modul "'+name+'" gespeichert und für diesen Klienten aktiv.';
+    document.getElementById('mc-body').prepend(note);
+    setTimeout(()=>note.remove(),4000);
+  }catch(e){alert('Error: '+e.message);}
+  finally{btn.textContent='Modul speichern';btn.disabled=false;}
 }
 async function saveModuleConfig(){
   if(!_mcClientId)return;
