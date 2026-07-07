@@ -31,6 +31,76 @@ router.post('/', requireAdvisor, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// POST /api/module-examples/import-client — bulk import analyses from a client
+router.post('/import-client', requireAdvisor, async (req, res) => {
+  try {
+    const { clientId } = req.body;
+    if (!clientId) return res.status(400).json({ error: 'clientId required' });
+
+    // Verify client belongs to this advisor
+    const { rows: cRows } = await pool.query(
+      'SELECT id, name, industry FROM clients WHERE id=$1 AND advisor_id=$2',
+      [clientId, req.user.id]
+    );
+    if (!cRows[0]) return res.status(404).json({ error: 'Client not found' });
+    const client = cRows[0];
+    const industryTag = client.industry?.toLowerCase().trim() || null;
+
+    // Fetch all analyses for this client
+    const { rows: analyses } = await pool.query(
+      `SELECT module, module_label, input_data, result FROM analyses
+       WHERE client_id=$1 AND advisor_id=$2 AND result IS NOT NULL AND result != ''
+       ORDER BY created_at DESC`,
+      [clientId, req.user.id]
+    );
+
+    if (!analyses.length) return res.json({ imported: 0 });
+
+    // Also fetch company memory as context entries
+    const { rows: memRows } = await pool.query(
+      `SELECT memory_type, content FROM company_memory WHERE client_id=$1 AND content IS NOT NULL`,
+      [clientId]
+    );
+
+    let imported = 0;
+
+    // Import analyses as structural training examples
+    for (const a of analyses) {
+      const inputText = Object.entries(a.input_data || {})
+        .filter(([, v]) => v && typeof v === 'string' && v.trim().length > 2)
+        .map(([k, v]) => `${k}: ${v.trim()}`)
+        .join('\n');
+      if (!inputText || !a.result) continue;
+
+      await pool.query(
+        `INSERT INTO module_examples
+         (advisor_id, module_key, label, industry_tag, input_text, output_text, rating, auto_generated)
+         VALUES ($1,$2,$3,$4,$5,$6,3,true)`,
+        [req.user.id, a.module, client.name, industryTag, inputText, a.result]
+      );
+      imported++;
+    }
+
+    // Import company memory entries (brand voice, key facts, etc.) as context-module examples
+    for (const m of memRows) {
+      if (!m.content?.trim()) continue;
+      await pool.query(
+        `INSERT INTO module_examples
+         (advisor_id, module_key, label, industry_tag, input_text, output_text, rating, auto_generated)
+         VALUES ($1,'_context',$2,$3,$4,$5,4,true)`,
+        [req.user.id, client.name, industryTag,
+          `[${m.memory_type}] ${client.name}`, m.content]
+      );
+      imported++;
+    }
+
+    res.json({ imported, clientName: client.name });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // PUT /api/module-examples/:id/rating
 router.put('/:id/rating', requireAdvisor, async (req, res) => {
   try {

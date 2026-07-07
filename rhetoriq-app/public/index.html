@@ -1197,7 +1197,17 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <!-- TRAINING DATA -->
     <div class="page" id="page-training">
       <div class="page-title" style="margin-bottom:4px">Trainingsdaten</div>
-      <div style="font-size:14px;color:var(--mu);margin-bottom:24px">Beispiel-Inputs &amp; Outputs pro Modul — werden automatisch als Qualitätsstandard bei jeder Generierung injiziert.</div>
+      <div style="font-size:14px;color:var(--mu);margin-bottom:20px">Beispiel-Inputs &amp; Outputs pro Modul — werden automatisch als Qualitätsstandard bei jeder Generierung injiziert.</div>
+
+      <!-- Import from client -->
+      <div style="background:#f8fafc;border:1.5px solid var(--bd);border-radius:10px;padding:16px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:3px">Klient-Daten importieren</div>
+          <div style="font-size:12px;color:var(--mu)">Alle bisherigen Analysen + Company Memory eines Klienten als Trainingsbeispiele übernehmen.</div>
+        </div>
+        <select id="tr-import-client" style="padding:9px 12px;border:1.5px solid var(--bd);background:#fff;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);border-radius:8px;outline:none;min-width:180px"></select>
+        <button onclick="trImportClient()" id="tr-import-btn" style="padding:9px 18px;background:var(--tx);color:#fff;border:none;border-radius:8px;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Importieren</button>
+      </div>
 
       <!-- Module selector -->
       <div style="margin-bottom:16px">
@@ -2263,12 +2273,34 @@ let _trExamples=[];
 function loadTraining(){
   const sel=document.getElementById('tr-module-sel');
   if(!sel)return;
-  // Populate module dropdown from ALL_MODULES + any custom modules
   const opts=ALL_MODULES.map(m=>`<option value="${m.key}">${m.name}</option>`).join('');
   sel.innerHTML=opts;
   _trRating=3;
   trRenderStars(3);
+  // Populate client import dropdown
+  const imp=document.getElementById('tr-import-client');
+  if(imp&&clients.length){
+    imp.innerHTML='<option value="">— Klient wählen —</option>'+clients.map(c=>`<option value="${c.id}">${c.name}${c.industry?' ('+c.industry+')':''}</option>`).join('');
+  }
   trLoadModule();
+}
+
+async function trImportClient(){
+  const cid=document.getElementById('tr-import-client')?.value;
+  if(!cid)return alert('Bitte zuerst einen Klienten auswählen.');
+  const btn=document.getElementById('tr-import-btn');
+  btn.textContent='Importiere…';btn.disabled=true;
+  try{
+    const r=await api('/api/module-examples/import-client',{method:'POST',body:JSON.stringify({clientId:cid})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error);
+    btn.textContent='✓ '+d.imported+' importiert';
+    setTimeout(()=>{btn.textContent='Importieren';btn.disabled=false;},3000);
+    trLoadModule();
+  }catch(e){
+    alert('Fehler: '+e.message);
+    btn.textContent='Importieren';btn.disabled=false;
+  }
 }
 
 function trSetRating(v){_trRating=v;trRenderStars(v);}
