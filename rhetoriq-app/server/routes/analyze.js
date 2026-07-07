@@ -64,13 +64,59 @@ Output in English.`,
   },
   cf: {
     label: 'Communication Fingerprint',
-    system: `You are an expert in longitudinal linguistic analysis of leadership communication. Analyse how a person's language shifts across time or contexts. Identify: tone drift, behaviour under pressure, rhetorical patterns that strengthen or weaken, trust signals, consistency vs. inconsistency. Structure: 1. OVERALL DEVELOPMENT, 2. CRITICAL SHIFTS (with direct textual evidence), 3. PATTERNS UNDER PRESSURE, 4. STRATEGIC IMPLICATIONS. Academic rigour, actionable output. In English.`,
-    build: (d) => `Communication Fingerprint for ${d.name||'the executive'}. Focus: ${d.focus}.\n\n${d.text}`
+    system: `You are an expert in longitudinal linguistic analysis of leadership communication. Analyse how a person's language shifts across time or contexts.
+
+CRITICAL FORMATTING RULES:
+- No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
+- Section headings in ALL CAPS followed by a colon
+- Plain dashes for bullet points
+- Clear, readable prose. Output is displayed as plain text.
+
+Structure your analysis across these four sections:
+
+1. OVERALL DEVELOPMENT:
+What is the macro-trajectory of this person's communication? What has fundamentally changed — and what has stayed constant despite pressure? Be specific: quote exact phrases, note dates or contexts where available.
+
+2. CRITICAL SHIFTS (with direct textual evidence):
+Identify the 2–3 most significant inflection points. For each: what changed, when, and what triggered it? Use direct quotes as evidence. If no clear shift exists, say so explicitly and explain what that stability indicates.
+
+3. PATTERNS UNDER PRESSURE:
+How does this person communicate differently when stakes are high? Look for: shorter sentences, hedging language, passive voice, emotional leakage, increased formality or informality. What does this reveal about their stress response?
+
+4. STRATEGIC IMPLICATIONS:
+What are the 2–3 most important insights for coaching this person? Each implication must include a concrete recommendation: "Instead of X → Y, because Z."
+
+If only one text is provided: note the limitation and deliver a single-snapshot analysis instead of a longitudinal one.
+In English.`,
+    build: (d) => `Communication Fingerprint Analysis\nPerson: ${d.name||'Not specified'}\nFocus area: ${d.focus||'Full profile'}\nTexts provided: ${d.textCount||'Not specified'}\nTime period: ${d.period||'Not specified'}\n\nSOURCE MATERIAL:\n${d.text}`
   },
   la: {
     label: 'Language Analytics',
-    system: `You are an expert in organisational communication analysis (linguistics, rhetoric, organisational psychology). Analyse internal company texts. Identify: gaps between stated and lived culture, power dynamics in language, trust climate, cultural tensions. Structure: 1. CULTURE FINDING, 2. CRITICAL LANGUAGE SYMPTOMS (with textual evidence), 3. LEADERSHIP–EMPLOYEE GAP, 4. RECOMMENDATIONS. In English.`,
-    build: (d) => `Language Analytics (${d.size}, focus: ${d.focus}):\n\n${d.text}`
+    system: `You are an expert in organisational communication analysis (linguistics, rhetoric, organisational psychology). Analyse internal company texts to reveal what the language itself tells you about the organisation's actual culture — not the stated one.
+
+CRITICAL FORMATTING RULES:
+- No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
+- Section headings in ALL CAPS followed by a colon
+- Plain dashes for bullet points
+- Clear, readable prose. Output is displayed as plain text.
+
+Structure your analysis:
+
+1. CULTURE FINDING:
+One paragraph. What does the language of these texts reveal about the actual culture of this organisation? Not what they say their culture is — what the word choices, sentence structures, and communication patterns reveal it actually is.
+
+2. CRITICAL LANGUAGE SYMPTOMS (with textual evidence):
+For each symptom: direct quote, precise diagnosis, and what it signals about organisational health. Minimum 3, maximum 6 symptoms. Focus on: passive voice as accountability evasion, hedging language as risk culture, jargon as exclusion mechanism, positivity inflation as trust erosion.
+
+3. LEADERSHIP–EMPLOYEE GAP:
+How does the language of leadership texts differ from operational/employee texts (if both provided)? What does this gap reveal about alignment, trust, and psychological safety? If only one type is available, note this.
+
+4. RECOMMENDATIONS:
+3 concrete language-level interventions. Not abstract ("improve transparency") but specific ("Replace 'we will endeavour to' with 'we will' in all-employee communications to signal accountability"). Each with expected impact.
+
+If the material is insufficient for meaningful analysis (under 300 words), state this explicitly.
+In English.`,
+    build: (d) => `Language Analytics\nOrganisation size: ${d.size||'Not specified'}\nAnalysis focus: ${d.focus||'Full organisational communication'}\nText type(s): ${d.textTypes||'Not specified'}\n\nSOURCE MATERIAL:\n${d.text}`
   },
   rm: {
     label: 'Risk Management',
@@ -84,8 +130,35 @@ Output in English.`,
   },
   si: {
     label: 'Strategic Impact Simulation',
-    system: `You are an expert in strategic communication and stakeholder management (reception psychology). Simulate realistic stakeholder reactions. For each group: immediate emotional reaction, cognitive interpretation, likely action, critical misunderstandings. Conclusion: overall risk assessment + top 3 strategic adjustments. In English.`,
-    build: (d) => `Stakeholders: ${d.stakeholders}\nContext: ${d.severity}\n\nCommunication:\n${d.text}`
+    system: `You are an expert in strategic communication and stakeholder psychology. Simulate realistic, specific stakeholder reactions to a planned communication — not what they should think, but what they will actually think, feel, and do.
+
+CRITICAL FORMATTING RULES:
+- No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
+- Section headings in ALL CAPS followed by a colon
+- Group names in ALL CAPS as sub-headings
+- Plain dashes for bullet points
+- Clear, readable prose. Output is displayed as plain text.
+
+Analyse a maximum of 5 stakeholder groups. If more are listed, prioritise by strategic importance and explain why.
+
+For each group, structure exactly as follows:
+
+[GROUP NAME]:
+- IMMEDIATE EMOTIONAL REACTION: Their first gut response before rational processing — be specific, not generic ("concerned" is not enough; "defensive and suspicious that this is a cost-cutting measure in disguise" is)
+- COGNITIVE INTERPRETATION: How they frame this message within their existing beliefs, interests, and prior experiences with this organisation
+- LIKELY ACTION IN 48 HOURS: What they will concretely do — not what they might consider, but what they will most probably do
+- CRITICAL MISREADING: The single most dangerous misunderstanding this group is likely to have — and precisely why the communication as written invites it
+
+OVERALL RISK ASSESSMENT:
+Risk level: [low / medium / high / critical]
+One paragraph explaining the overall strategic risk profile across all stakeholder groups combined.
+
+TOP 3 STRATEGIC ADJUSTMENTS:
+Prioritised. For each: the specific problem, the recommended change, and a concrete reformulation example ("Instead of X → Y, because Z").
+
+If no stakeholder groups are specified, list the 3 most likely audiences based on the communication content before proceeding.
+In English.`,
+    build: (d) => `Stakeholder groups: ${d.stakeholders||'Not specified — infer from communication'}\nContext: ${d.context||d.severity||'Not specified'}\n\nCommunication to be analysed:\n${d.text}`
   },
   as: {
     label: 'Actionability Scanner',
@@ -562,34 +635,84 @@ Tone: direct, fast, no padding. This is a tool for under time pressure.`,
   },
   'health-score': {
     label: 'Communication Health Score',
-    system: `You are a senior communication strategist. Based on a log of recent communication analyses for a company, generate a Communication Health Score report. Be direct, specific, and actionable. Structure:
+    system: `You are a senior communication strategist. You are given two inputs: (1) a usage log showing which communication modules were used and when, and (2) excerpts from actual recent outputs. Use BOTH to generate a Communication Health Score.
 
-## COMMUNICATION HEALTH SCORE: [X.X / 10]
+CRITICAL FORMATTING RULES:
+- No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
+- Section headings in ALL CAPS followed by a colon
+- Plain dashes for bullet points
 
-## SCORE BREAKDOWN
-- Clarity & Directness: X/10
-- Crisis Readiness: X/10
-- Internal Consistency: X/10
-- Stakeholder Calibration: X/10
-- Narrative Strength: X/10
+IMPORTANT — BE HONEST ABOUT WHAT YOU CAN AND CANNOT ASSESS:
+- Usage patterns tell you WHAT was worked on (frequency, module diversity, risk awareness)
+- Output excerpts tell you HOW WELL (quality, clarity, tone consistency)
+- Only score dimensions where you have actual evidence. If an output excerpt is unavailable for a dimension, say "insufficient data" rather than inventing a score.
 
-## TOP 3 STRENGTHS (with evidence from the data)
+Structure:
 
-## TOP 3 WEAKNESSES (with evidence from the data)
+COMMUNICATION HEALTH SCORE: [X.X / 10]
+One sentence justification for the overall score.
 
-## ONE PRIORITY ACTION
-The single most important thing to fix in the next 30 days. Concrete, specific.
+SCORE BREAKDOWN:
+- Clarity & Directness: [X/10 or "insufficient data"] — [one-line evidence]
+- Crisis Readiness: [X/10 or "insufficient data"] — [one-line evidence]
+- Module Diversity: [X/10] — [based on usage log breadth]
+- Stakeholder Awareness: [X/10 or "insufficient data"] — [one-line evidence]
+- Narrative Consistency: [X/10 or "insufficient data"] — [one-line evidence]
 
-## TREND
-Compared to last period: improving / stable / declining — and why.
+TOP 3 STRENGTHS:
+With direct reference to evidence from the outputs or usage patterns.
 
-Be honest. A score of 7+ must be earned. Most companies score 5–6.`,
-    build: (d) => `Company: ${d.company||'Not specified'}\nPeriod: ${d.period||'Last 30 days'}\nModule usage log:\n${d.log}\n\nContext:\n${d.context||''}`
+TOP 3 AREAS FOR IMPROVEMENT:
+With direct reference to evidence. Not generic advice — specific to what the data shows.
+
+ONE PRIORITY ACTION:
+The single most important thing to change in the next 30 days. Concrete and specific.
+
+Be honest. A score of 7+ must be earned with strong output evidence. Most organisations score 4–6.`,
+    build: (d) => `Company: ${d.company||'Not specified'}\nPeriod: ${d.period||'Last 90 days'}\nTotal analyses in period: ${d.count||'Unknown'}\n\nMODULE USAGE LOG:\n${d.log}\n\nRECENT OUTPUT EXCERPTS (first 300 chars each):\n${d.excerpts||'No output excerpts available — score only dimensions where usage data alone is sufficient.'}`
   },
   'router': {
     label: 'Smart Router',
-    system: `You are a routing assistant for RhetorIQ, an executive communication tool with these modules: pre-meeting (Pre-Meeting Brief — prep for any meeting, interview, or presentation), profiling (Rhetoric Profile), fingerprint (Language Over Time), language (Language Analytics), risk (Risk Management), stress (Challenger Test), impact (Simulate Impact), crisis (Instant Crisis Response), actionability (Clarity Check), thread (Decision Digest), rh-translate (Rhetorical Translation), text-gen (Text Generator), review (Feedback Writer), recognition (Appreciation Writer), sparring (2-Min. Training), debrief (Debriefing), brand-voice (Brand Voice DNA). Analyse the user's input and return ONLY the module ID (e.g. "risk") that best matches. No explanation, just the ID.`,
-    build: (d) => `User input: ${d.text}`
+    system: `You are a routing assistant for RhetorIQ. Return ONLY the exact module key — nothing else, no explanation, no punctuation.
+
+VALID MODULE KEYS:
+rp — Executive Rhetoric Profile (rhetorical analysis, communication style)
+cf — Communication Fingerprint (language development over time)
+la — Language Analytics (organisational communication culture)
+rm — Risk Management (pre-send risk scan)
+st — Argument Stress Test (counterarguments, pushback)
+si — Strategic Impact Simulation (stakeholder reactions)
+as — Actionability Scanner (clarity check)
+tc — Thread Cleaner (email digest)
+vs-cal — Voice Signature Calibration (extract voice profile)
+vs-gen — Voice Signature Generation (write in someone's voice)
+text-gen — Text Generator (LinkedIn, newsletter, email, custom formats)
+brand-voice-co — Brand Voice DNA company
+brand-voice-ind — Brand Voice DNA individual
+sparring — Rhetoric coaching challenge
+crisis — Crisis Framing (first response, 3 strategies)
+crisis-toolkit — Full crisis communication kit
+before-after — Text improvement comparison
+competitive-check — Competitive message differentiation
+ghostwriter — Ghostwriter mode
+rh-translate — Rhetorical translation
+debrief — Post-event debriefing
+pre-meeting — Pre-meeting brief
+cm-qa-trainer — Analyst Q&A Trainer
+cm-equity-story — Equity Story Builder
+cm-earnings-analyzer — Earnings Call Analyzer
+cm-board-coach — Board Presentation Coach
+cm-roadshow — Roadshow Preparation
+ht-guest-letter — Hotel guest communication
+ht-review-response — Hotel review response
+ht-sales-pitch — Hotel sales pitch
+pr — Performance Review writer
+rw — Recognition Writer
+review — Text review and improvement
+
+If unclear, return: rp
+Return only the key, lowercase, nothing else.`,
+    build: (d) => `Route this request: ${sanitizeForPrompt(d.text||'')}`
   },
   'chat': {
     label: 'Help Chat',
@@ -696,17 +819,22 @@ function resolveModel(module) {
 }
 
 async function callClaude(system, user, maxTokens, model) {
+  // system can be a string (no caching) or an array of {type,text,cache_control?} blocks
+  const systemPayload = Array.isArray(system)
+    ? system
+    : [{ type: 'text', text: typeof system === 'function' ? system({}) : system }];
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
+      'anthropic-version': '2024-07-01',
+      'anthropic-beta': 'prompt-caching-2024-07-31'
     },
     body: JSON.stringify({
       model: model || MODEL_SONNET,
       max_tokens: maxTokens || DEFAULT_MAX_TOKENS,
-      system: typeof system === 'function' ? system({}) : system,
+      system: systemPayload,
       messages: [{ role: 'user', content: user }]
     })
   });
@@ -726,7 +854,8 @@ router.post('/', requireAuth, async (req, res) => {
     const cfg = PROMPTS[module];
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
 
-    let system = typeof cfg.system === 'function' ? cfg.system(data) : cfg.system;
+    const baseSystem = typeof cfg.system === 'function' ? cfg.system(data) : cfg.system;
+    let dynamicSystem = '';
     const userMsg = cfg.build(data);
 
     // Append per-client custom instructions if present
@@ -737,7 +866,7 @@ router.post('/', requireAuth, async (req, res) => {
         [resolvedClientId, module]
       );
       if (customRows[0]?.instructions) {
-        system += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(customRows[0].instructions);
+        dynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(customRows[0].instructions);
       }
     }
 
@@ -760,7 +889,7 @@ router.post('/', requireAuth, async (req, res) => {
       );
       if (memRows.length) {
         hasBrandVoice = true;
-        system += '\n\n════════════════════════════════════════\n'
+        dynamicSystem += '\n\n════════════════════════════════════════\n'
           + 'ABSOLUT VERBINDLICH — BRAND VOICE DIESES UNTERNEHMENS\n'
           + '════════════════════════════════════════\n'
           + 'Der Output MUSS klingen wie dieses Unternehmen — nicht wie eine KI, nicht wie generisches Consulting, nicht wie ein neutraler Assistent.\n'
@@ -768,9 +897,9 @@ router.post('/', requireAuth, async (req, res) => {
           + 'Jeder Satz, jeder Begriff, jede Formulierung muss sich anfühlen, als hätte das Unternehmen selbst geschrieben.\n'
           + 'Generische KI-Sprache, Füllformulierungen oder neutraler Ton sind NICHT akzeptabel.\n\n';
         memRows.forEach(m => {
-          system += `${m.memory_type.toUpperCase()}:\n${sanitizeForPrompt(m.content)}\n\n`;
+          dynamicSystem += `${m.memory_type.toUpperCase()}:\n${sanitizeForPrompt(m.content)}\n\n`;
         });
-        system += '════════════════════════════════════════\n'
+        dynamicSystem += '════════════════════════════════════════\n'
           + 'ENDE BRAND VOICE — Ab hier gilt: dieser Output ist ein Unternehmenstext, kein KI-Output.\n'
           + '════════════════════════════════════════';
       }
@@ -794,20 +923,23 @@ router.post('/', requireAuth, async (req, res) => {
       );
 
       if (examples.length) {
-        system += '\n\n--- STRUKTURVORLAGEN ---\n'
+        dynamicSystem += '\n\n--- STRUKTURVORLAGEN ---\n'
           + 'Die folgenden Beispiele zeigen NUR die Struktur und den inhaltlichen Aufbau — '
           + (hasBrandVoice
             ? 'die Stimme und Tonalität wird AUSSCHLIESSLICH durch die oben definierte Brand Voice bestimmt.'
             : 'passe Sprache und Stil an den Klienten an.')
           + '\n\n';
         examples.forEach((ex, i) => {
-          system += `BEISPIEL ${i + 1}${ex.industry_tag ? ` [${ex.industry_tag}]` : ''}:\nINPUT: ${sanitizeForPrompt(ex.input_text)}\nAUFBAU: ${sanitizeForPrompt(ex.output_text)}\n\n`;
+          dynamicSystem += `BEISPIEL ${i + 1}${ex.industry_tag ? ` [${ex.industry_tag}]` : ''}:\nINPUT: ${sanitizeForPrompt(ex.input_text)}\nAUFBAU: ${sanitizeForPrompt(ex.output_text)}\n\n`;
         });
-        system += '--- ENDE STRUKTURVORLAGEN ---';
+        dynamicSystem += '--- ENDE STRUKTURVORLAGEN ---';
       }
     }
 
-    const claudeResp = await callClaude(system, userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
+    // Build system array: stable module prompt (cacheable) + dynamic client context
+    const systemBlocks = [{ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } }];
+    if (dynamicSystem) systemBlocks.push({ type: 'text', text: dynamicSystem });
+    const claudeResp = await callClaude(systemBlocks, userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
     const result = claudeResp.text;
 
     // Log token usage (fire-and-forget)
@@ -868,7 +1000,8 @@ router.post('/stream', requireAuth, async (req, res) => {
     const cfg = PROMPTS[module];
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
 
-    let system = typeof cfg.system === 'function' ? cfg.system(data) : cfg.system;
+    const baseSystem = typeof cfg.system === 'function' ? cfg.system(data) : cfg.system;
+    let dynamicSystem = '';
     const userMsg = cfg.build(data);
     const resolvedClientId = clientId || (req.user.role === 'client' ? req.user.clientId : null);
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
@@ -880,7 +1013,7 @@ router.post('/stream', requireAuth, async (req, res) => {
         [resolvedClientId, module]
       );
       if (customRows[0]?.instructions)
-        system += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(customRows[0].instructions);
+        dynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(customRows[0].instructions);
     }
     let clientIndustry = null;
     let hasBrandVoice = false;
@@ -893,11 +1026,11 @@ router.post('/stream', requireAuth, async (req, res) => {
       );
       if (memRows.length) {
         hasBrandVoice = true;
-        system += '\n\n════════════════════════════════════════\n'
+        dynamicSystem += '\n\n════════════════════════════════════════\n'
           + 'ABSOLUT VERBINDLICH — BRAND VOICE DIESES UNTERNEHMENS\n════════════════════════════════════════\n'
           + 'Der Output MUSS klingen wie dieses Unternehmen — nicht wie eine KI, nicht wie generisches Consulting.\n\n';
-        memRows.forEach(m => { system += `${m.memory_type.toUpperCase()}:\n${sanitizeForPrompt(m.content)}\n\n`; });
-        system += '════════════════════════════════════════\n'
+        memRows.forEach(m => { dynamicSystem += `${m.memory_type.toUpperCase()}:\n${sanitizeForPrompt(m.content)}\n\n`; });
+        dynamicSystem += '════════════════════════════════════════\n'
           + 'ENDE BRAND VOICE — Ab hier gilt: dieser Output ist ein Unternehmenstext, kein KI-Output.\n'
           + '════════════════════════════════════════';
       }
@@ -912,11 +1045,11 @@ router.post('/stream', requireAuth, async (req, res) => {
         [advisorId, module, clientIndustry]
       );
       if (examples.length) {
-        system += '\n\n--- STRUKTURVORLAGEN ---\n'
+        dynamicSystem += '\n\n--- STRUKTURVORLAGEN ---\n'
           + (hasBrandVoice ? 'Nur Struktur übernehmen, Brand Voice bestimmt Ton.' : 'Passe Stil an den Klienten an.')
           + '\n\n';
         examples.forEach((ex, i) => {
-          system += `BEISPIEL ${i + 1}:\nINPUT: ${sanitizeForPrompt(ex.input_text)}\nAUFBAU: ${sanitizeForPrompt(ex.output_text)}\n\n`;
+          dynamicSystem += `BEISPIEL ${i + 1}:\nINPUT: ${sanitizeForPrompt(ex.input_text)}\nAUFBAU: ${sanitizeForPrompt(ex.output_text)}\n\n`;
         });
         system += '--- ENDE STRUKTURVORLAGEN ---';
       }
@@ -929,18 +1062,21 @@ router.post('/stream', requireAuth, async (req, res) => {
     res.flushHeaders();
 
     const maxTokens = MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS;
+    const streamSystemBlocks = [{ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } }];
+    if (dynamicSystem) streamSystemBlocks.push({ type: 'text', text: dynamicSystem });
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': '2024-07-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31'
       },
       body: JSON.stringify({
         model: resolveModel(module),
         max_tokens: maxTokens,
         stream: true,
-        system: typeof system === 'function' ? system({}) : system,
+        system: streamSystemBlocks,
         messages: [{ role: 'user', content: userMsg }]
       })
     });
@@ -1005,7 +1141,7 @@ router.post('/stream', requireAuth, async (req, res) => {
     }
 
     const donePayload = { id: rows[0].id, hasBrandVoice };
-    if (isDebug) donePayload.systemPrompt = system;
+    if (isDebug) donePayload.systemPrompt = baseSystem + (dynamicSystem ? '\n\n--- DYNAMIC ---\n' + dynamicSystem : '');
     res.write(`event: done\ndata: ${JSON.stringify(donePayload)}\n\n`);
     res.end();
   } catch (e) {
@@ -1052,13 +1188,28 @@ router.post('/chat', requireAuth, async (req, res) => {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': '2024-07-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31'
       },
       body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 600, system: cfg.system, messages })
     });
     const data = await r.json();
     if (data.error) throw new Error(data.error.message);
     res.json({ reply: data.content?.[0]?.text || '' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// DELETE /api/analyze/client/:clientId — delete all analyses for a client (must be before /:id)
+router.delete('/client/:clientId', requireAuth, async (req, res) => {
+  try {
+    const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+    const { rowCount } = await pool.query(
+      'DELETE FROM analyses WHERE client_id = $1 AND advisor_id = $2',
+      [req.params.clientId, advisorId]
+    );
+    res.json({ deleted: rowCount });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -1075,38 +1226,34 @@ router.delete('/:id', requireAuth, async (req, res) => {
   }
 });
 
-// DELETE /api/analyze/client/:clientId — delete all analyses for a client
-router.delete('/client/:clientId', requireAuth, async (req, res) => {
-  try {
-    const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
-    const { rowCount } = await pool.query(
-      'DELETE FROM analyses WHERE client_id = $1 AND advisor_id = $2',
-      [req.params.clientId, advisorId]
-    );
-    res.json({ deleted: rowCount });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
 // GET /api/analyze/health-score — generate communication health score from history
 router.get('/health-score', requireAuth, async (req, res) => {
   try {
     const clientId = req.query.clientId || null;
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
-    let query, params;
+    let query, params, excerptQuery, excerptParams;
     if (clientId) {
       query = `SELECT module, module_label, created_at FROM analyses WHERE client_id=$1 AND advisor_id=$2 AND created_at > NOW() - INTERVAL '90 days' ORDER BY created_at DESC LIMIT 100`;
       params = [clientId, advisorId];
+      excerptQuery = `SELECT module_label, module, LEFT(result, 300) AS snippet FROM analyses WHERE client_id=$1 AND advisor_id=$2 AND result IS NOT NULL AND created_at > NOW() - INTERVAL '90 days' ORDER BY created_at DESC LIMIT 5`;
+      excerptParams = [clientId, advisorId];
     } else {
       query = `SELECT module, module_label, created_at FROM analyses WHERE advisor_id=$1 AND created_at > NOW() - INTERVAL '90 days' ORDER BY created_at DESC LIMIT 100`;
       params = [advisorId];
+      excerptQuery = `SELECT module_label, module, LEFT(result, 300) AS snippet FROM analyses WHERE advisor_id=$1 AND result IS NOT NULL AND created_at > NOW() - INTERVAL '90 days' ORDER BY created_at DESC LIMIT 5`;
+      excerptParams = [advisorId];
     }
-    const { rows } = await pool.query(query, params);
+    const [{ rows }, { rows: excerptRows }] = await Promise.all([
+      pool.query(query, params),
+      pool.query(excerptQuery, excerptParams)
+    ]);
     if (rows.length < 3) return res.json({ error: 'not_enough_data' });
     const log = rows.map(r => `${new Date(r.created_at).toLocaleDateString('de-CH')}: ${r.module_label||r.module}`).join('\n');
+    const excerpts = excerptRows.length
+      ? excerptRows.map((r, i) => `[${i+1}] ${r.module_label||r.module}:\n${r.snippet}...`).join('\n\n')
+      : null;
     const cfg = PROMPTS['health-score'];
-    const claudeResp = await callClaude(cfg.system, cfg.build({ log, period: 'Last 90 days' }), MODULE_MAX_TOKENS['health-score'], resolveModel('health-score'));
+    const claudeResp = await callClaude(cfg.system, cfg.build({ log, period: 'Last 90 days', count: rows.length, excerpts }), MODULE_MAX_TOKENS['health-score'], resolveModel('health-score'));
     res.json({ result: claudeResp.text, count: rows.length });
   } catch (e) {
     res.status(500).json({ error: e.message });

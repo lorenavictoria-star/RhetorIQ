@@ -4,9 +4,23 @@ const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Helper: check that requesting user owns the client
+async function checkOwnership(req, res, clientId) {
+  const { rows } = await pool.query(
+    'SELECT id FROM clients WHERE id=$1 AND (advisor_id=$2 OR id=$3)',
+    [clientId, req.user.id || null, req.user.clientId || null]
+  );
+  if (!rows[0]) {
+    res.status(403).json({ error: 'Forbidden' });
+    return false;
+  }
+  return true;
+}
+
 // GET /api/memory/:clientId
 router.get('/:clientId', requireAuth, async (req, res) => {
   try {
+    if (!await checkOwnership(req, res, req.params.clientId)) return;
     const { rows } = await pool.query(
       'SELECT memory_type, content, updated_at FROM company_memory WHERE client_id=$1 ORDER BY memory_type',
       [req.params.clientId]
@@ -20,6 +34,7 @@ router.get('/:clientId', requireAuth, async (req, res) => {
 // GET /api/memory/:clientId/:type/history — Task 10
 router.get('/:clientId/:type/history', requireAuth, async (req, res) => {
   try {
+    if (!await checkOwnership(req, res, req.params.clientId)) return;
     const { rows } = await pool.query(
       'SELECT id, content, saved_at FROM company_memory_history WHERE client_id=$1 AND memory_type=$2 ORDER BY saved_at DESC LIMIT 20',
       [req.params.clientId, req.params.type]
@@ -33,6 +48,7 @@ router.get('/:clientId/:type/history', requireAuth, async (req, res) => {
 // POST /api/memory/:clientId/:type/rollback/:historyId — Task 10
 router.post('/:clientId/:type/rollback/:historyId', requireAuth, async (req, res) => {
   try {
+    if (!await checkOwnership(req, res, req.params.clientId)) return;
     const { rows: histRows } = await pool.query(
       'SELECT * FROM company_memory_history WHERE id=$1 AND client_id=$2 AND memory_type=$3',
       [req.params.historyId, req.params.clientId, req.params.type]
@@ -68,6 +84,7 @@ router.post('/:clientId/:type/rollback/:historyId', requireAuth, async (req, res
 // PUT /api/memory/:clientId/:type — archives old version before saving
 router.put('/:clientId/:type', requireAuth, async (req, res) => {
   try {
+    if (!await checkOwnership(req, res, req.params.clientId)) return;
     const { content } = req.body;
 
     // Task 10: archive existing value before overwriting
@@ -99,6 +116,7 @@ router.put('/:clientId/:type', requireAuth, async (req, res) => {
 // DELETE /api/memory/:clientId — called when client data is wiped
 router.delete('/:clientId', requireAuth, async (req, res) => {
   try {
+    if (!await checkOwnership(req, res, req.params.clientId)) return;
     const { rowCount } = await pool.query(
       'DELETE FROM company_memory WHERE client_id=$1',
       [req.params.clientId]

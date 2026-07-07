@@ -171,6 +171,42 @@ async function init() {
 
     -- Task 16: thumbs up/down per analysis
     ALTER TABLE analyses ADD COLUMN IF NOT EXISTS user_rating SMALLINT;
+
+    -- FIX 3: Performance indexes
+    CREATE INDEX IF NOT EXISTS clients_advisor_idx ON clients(advisor_id);
+    CREATE INDEX IF NOT EXISTS analyses_advisor_idx ON analyses(advisor_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS analyses_client_idx ON analyses(client_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS people_client_idx ON people(client_id);
+    CREATE INDEX IF NOT EXISTS review_req_client_idx ON review_requests(client_id);
+    CREATE INDEX IF NOT EXISTS module_examples_compound_idx ON module_examples(advisor_id, module_key, auto_generated, rating DESC);
+    CREATE INDEX IF NOT EXISTS company_memory_client_idx ON company_memory(client_id);
+
+    -- FIX 5: DSGVO — source client tracking on module_examples
+    ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS source_client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL;
+    ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS is_cross_client_shareable BOOLEAN DEFAULT TRUE;
+  `);
+
+  // FIX 4: CHECK constraints on enum fields (done separately — DO $$ cannot be inside a multi-statement query string)
+  await pool.query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='users_role_check') THEN
+        ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('advisor', 'admin', 'superadmin'));
+      END IF;
+    END $$;
+  `);
+  await pool.query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='analyses_user_rating_check') THEN
+        ALTER TABLE analyses ADD CONSTRAINT analyses_user_rating_check CHECK (user_rating IN (-1, 1));
+      END IF;
+    END $$;
+  `);
+  await pool.query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='review_requests_status_check') THEN
+        ALTER TABLE review_requests ADD CONSTRAINT review_requests_status_check CHECK (status IN ('pending', 'edited', 'approved', 'rejected'));
+      END IF;
+    END $$;
   `);
 }
 

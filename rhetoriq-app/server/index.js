@@ -1,8 +1,18 @@
 require('dotenv').config();
+
+// FIX 10: Startup validation of required env vars
+const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'ANTHROPIC_API_KEY'];
+const missing = REQUIRED_ENV.filter(k => !process.env[k]);
+if (missing.length) {
+  console.error('FATAL: Missing required environment variables:', missing.join(', '));
+  process.exit(1);
+}
+
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const WebSocket = require('ws');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
@@ -15,7 +25,18 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: '/ws' });
 const clients = new Set();
 
-wss.on('connection', (ws) => {
+// FIX 8: WebSocket auth — client must pass ?token=JWT in the URL
+wss.on('connection', (ws, req) => {
+  const url = new URL(req.url, 'http://localhost');
+  const token = url.searchParams.get('token');
+  if (!token) { ws.close(4001, 'Unauthorized'); return; }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    ws.userId = decoded.id || decoded.clientId;
+  } catch {
+    ws.close(4001, 'Invalid token');
+    return;
+  }
   clients.add(ws);
   ws.on('close', () => clients.delete(ws));
   ws.on('error', () => clients.delete(ws));
@@ -31,8 +52,14 @@ wss.broadcast = (data) => {
 app.locals.wss = wss;
 
 // ── Middleware ────────────────────────────────────────────────
-app.use(cors());
+// FIX 6: Restrict CORS to known frontend origin
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'https://rhetoriq.ch',
+  credentials: true
+}));
 app.use(express.json({ limit: '2mb' }));
+// FIX 11: helmet security headers (npm install helmet if not yet installed)
+try { app.use(require('helmet')()); } catch { console.warn('helmet not installed — run: npm install helmet'); }
 
 // ── Rate Limiting ─────────────────────────────────────────────
 // General API: 200 requests / 15 min per IP
@@ -80,8 +107,15 @@ app.use('/api/module-examples', require('./routes/moduleExamples'));
 app.use('/api/module-prompts', require('./routes/modulePrompts'));
 app.use('/api/audit', require('./routes/audit'));
 
-// Health check
-app.get('/health', (_, res) => res.json({ ok: true }));
+// FIX 9: Health check with DB probe
+app.get('/health', async (_, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ ok: true, db: 'connected' });
+  } catch (e) {
+    res.status(503).json({ ok: false, db: 'disconnected', error: e.message });
+  }
+});
 
 // ── Serve Frontend ────────────────────────────────────────────
 const FRONTEND = path.join(__dirname, '..', 'public');
@@ -114,3 +148,17 @@ const PORT = process.env.PORT || 3001;
   await seedAdvisor();
   server.listen(PORT, () => console.log(`RhetorIQ server running on :${PORT}`));
 })();
+
+// FIX 7: Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received — closing server');
+  server.close(() => {
+    pool.end(() => {
+      console.log('DB pool closed');
+      process.exit(0);
+    });
+  });
+});
+process.on('SIGINT', () => {
+  process.emit('SIGTERM');
+});

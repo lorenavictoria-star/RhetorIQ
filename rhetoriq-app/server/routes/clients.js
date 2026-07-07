@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const https = require('https');
 const { pool } = require('../db');
-const { requireAdvisor } = require('../middleware/auth');
+const { requireAdvisor, requireAuth } = require('../middleware/auth');
 
 async function brevoSend({ to, subject, text }) {
   const apiKey = process.env.BREVO_API_KEY;
@@ -261,7 +261,7 @@ router.put('/:id/capital-markets-toggle', requireAdvisor, async (req, res) => {
 });
 
 // GET /api/clients/:id/cm-status — accessible by client token too
-router.get('/:id/cm-status', async (req, res) => {
+router.get('/:id/cm-status', requireAuth, async (req, res) => {
   try {
     const { rows } = await pool.query(
       'SELECT capital_markets_enabled, hotel_enabled, enabled_modules FROM clients WHERE id = $1',
