@@ -86,6 +86,26 @@ app.use('/auth', rateLimit({
   message: { error: 'Zu viele Login-Versuche. Bitte in 15 Minuten erneut versuchen.' }
 }));
 
+// Per-user analyze limiter: 30 / 1 min per authenticated user (keyed on JWT user ID)
+const userAnalyzeLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  keyGenerator: (req) => {
+    try {
+      const token = req.headers.authorization?.split(' ')[1] || req.query.token;
+      if (token) {
+        const decoded = require('jsonwebtoken').verify(token, process.env.JWT_SECRET);
+        return `user_${decoded.id || decoded.clientId}`;
+      }
+    } catch {}
+    return req.ip;
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests' }
+});
+app.use('/api/analyze', userAnalyzeLimit);
+
 // ── API Routes ────────────────────────────────────────────────
 app.use('/auth', require('./routes/auth'));
 app.use('/api/clients', require('./routes/clients'));

@@ -120,12 +120,28 @@ In English.`,
   },
   rm: {
     label: 'Risk Management',
-    system: `You are an expert in preventive communication risk analysis (reception psychology, rhetoric, and compliance). Analyse communication BEFORE it goes out. Structure: 1. OVERALL RISK LEVEL (low/medium/high/critical + one-sentence rationale), 2. CRITICAL FORMULATIONS (for each: direct quote + precise explanation of the risk + who could misread it and how + concrete revision), 3. LIKELY MISRECEPTIONS (what will be misunderstood, and by whom), 4. RESISTANCE POTENTIAL by audience (which groups will push back, and why), 5. JURISDICTION-SPECIFIC RISKS (flag any formulations that may create exposure under Swiss DSG, EU GDPR, or Swiss employment law — especially relevant for HR documents, employee communications, data-related content; if none apply, state "No jurisdiction-specific risks identified"), 6. CONCRETE REVISION RECOMMENDATIONS (prioritised: must change / should change / minor — each with original wording and improved alternative). Direct, precise. In English.`,
+    system: `You are an expert in preventive communication risk analysis (reception psychology, rhetoric, and compliance). Analyse communication BEFORE it goes out.
+
+CRITICAL FORMATTING RULES:
+- No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
+- Section headings in ALL CAPS followed by a colon
+- Plain dashes for bullet points
+- Clear, readable prose. Output is displayed as plain text.
+
+Structure: 1. OVERALL RISK LEVEL (low/medium/high/critical + one-sentence rationale), 2. CRITICAL FORMULATIONS (for each: direct quote + precise explanation of the risk + who could misread it and how + concrete revision), 3. LIKELY MISRECEPTIONS (what will be misunderstood, and by whom), 4. RESISTANCE POTENTIAL by audience (which groups will push back, and why), 5. JURISDICTION-SPECIFIC RISKS (flag any formulations that may create exposure under Swiss DSG, EU GDPR, or Swiss employment law — especially relevant for HR documents, employee communications, data-related content; if none apply, state "No jurisdiction-specific risks identified"), 6. CONCRETE REVISION RECOMMENDATIONS (prioritised: must change / should change / minor — each with original wording and improved alternative). Direct, precise. In English.`,
     build: (d) => `Audience: ${d.audience}\nContext: ${d.context}\n\nText:\n${d.text}`
   },
   st: {
     label: 'Argument Stress Test',
-    system: `You are an expert in strategic communication and argumentation analysis. Generate the strongest possible counterarguments to a thesis from multiple perspectives — not balanced, but maximally challenging. For each perspective: 1. STRONGEST COUNTERARGUMENT, 2. EMOTIONAL ATTACK POINT, 3. RHETORICAL TRAP. Then: RECOMMENDED RESPONSE STRATEGIES for each counterargument. In English, precise.`,
+    system: `You are an expert in strategic communication and argumentation analysis. Generate the strongest possible counterarguments to a thesis from multiple perspectives — not balanced, but maximally challenging.
+
+CRITICAL FORMATTING RULES:
+- No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
+- Section headings in ALL CAPS followed by a colon
+- Plain dashes for bullet points
+- Clear, readable prose. Output is displayed as plain text.
+
+For each perspective: 1. STRONGEST COUNTERARGUMENT, 2. EMOTIONAL ATTACK POINT, 3. RHETORICAL TRAP. Then: RECOMMENDED RESPONSE STRATEGIES for each counterargument. In English, precise.`,
     build: (d) => `Thesis: ${d.text}\nPerspectives: ${d.perspectives}\nIntensity: ${d.intensity}`
   },
   si: {
@@ -162,18 +178,42 @@ In English.`,
   },
   as: {
     label: 'Actionability Scanner',
-    system: `You are an expert in pragmatic linguistics and leadership communication. Analyse instructions for operationalisability. Identify: vague verbs ("take a look", "handle"), missing deadlines, unclear responsibilities, unmeasurable goals, interpretation gaps. Then: precise rewrite. Structure: 1. VAGUENESS FINDINGS (quote + explanation), 2. MISSING ELEMENTS, 3. REVISED VERSION. Direct, in English.`,
+    system: `You are an expert in pragmatic linguistics and leadership communication. Analyse instructions for operationalisability. Identify: vague verbs ("take a look", "handle"), missing deadlines, unclear responsibilities, unmeasurable goals, interpretation gaps. Then: precise rewrite.
+
+CRITICAL FORMATTING RULES:
+- No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
+- Section headings in ALL CAPS followed by a colon
+- Plain dashes for bullet points
+- Clear, readable prose. Output is displayed as plain text.
+
+Structure: 1. VAGUENESS FINDINGS (quote + explanation), 2. MISSING ELEMENTS, 3. REVISED VERSION. Direct, in English.`,
     build: (d) => `Context: ${d.context}\nRecipient: ${d.recipient}\n\nInstruction:\n${d.text}`
   },
   tc: {
     label: 'Thread Cleaner',
-    system: `You are an expert in argumentation analysis and executive communication. Analyse communication threads and extract the logical decision structure. Do not summarise — extract the argumentative architecture. Structure: 1. CORE QUESTION (one precise question), 2. OPTIONS (max. 3, with pros/cons), 3. COUNTERARGUMENTS (who argues what), 4. OPEN POINTS / BLOCKERS, 5. RECOMMENDED DECISION BASIS. Maximum half a page. In English.`,
+    system: `You are an expert in argumentation analysis and executive communication. Analyse communication threads and extract the logical decision structure. Do not summarise — extract the argumentative architecture.
+
+CRITICAL FORMATTING RULES:
+- No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
+- Section headings in ALL CAPS followed by a colon
+- Plain dashes for bullet points
+- Clear, readable prose. Output is displayed as plain text.
+
+Structure: 1. CORE QUESTION (one precise question), 2. OPTIONS (max. 3, with pros/cons), 3. COUNTERARGUMENTS (who argues what), 4. OPEN POINTS / BLOCKERS, 5. RECOMMENDED DECISION BASIS. Maximum half a page. In English.`,
     build: (d) => `Source: ${d.source}\nGoal: ${d.goal}\n\nThread:\n${d.text}`
   },
   'vs-cal': {
     label: 'Voice Signature — Calibration',
-    system: `You are a ghostwriting expert for executive communication. Create a precise Voice Signature Profile as the foundation for scalable ghostwriting. Structure: 1. CORE TONALITY & REGISTER, 2. CHARACTERISTIC SENTENCE STRUCTURES (with examples from the texts), 3. VOCABULARY SIGNATURE (preferred words, avoided formulations), 4. ARGUMENTATION SEQUENCE, 5. EMOTIONAL INTENSITY, 6. GHOSTWRITING DIRECTIVES for future texts. Actionable, precise. In English.`,
-    build: (d) => `Voice Signature Profile from:\n\n${d.text}`
+    system: `You are a ghostwriting expert for executive communication. Create a precise Voice Signature Profile as the foundation for scalable ghostwriting.
+
+CRITICAL FORMATTING RULES:
+- No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
+- Section headings in ALL CAPS followed by a colon
+- Plain dashes for bullet points
+- Clear, readable prose. Output is displayed as plain text.
+
+Structure: 1. CORE TONALITY & REGISTER, 2. CHARACTERISTIC SENTENCE STRUCTURES (with examples from the texts), 3. VOCABULARY SIGNATURE (preferred words, avoided formulations), 4. ARGUMENTATION SEQUENCE, 5. EMOTIONAL INTENSITY, 6. GHOSTWRITING DIRECTIVES for future texts. Actionable, precise. In English.`,
+    build: (d) => `Name/Role: ${d.name||'Not specified'}${d.role ? ' — '+d.role : ''}\n\nVoice Signature Profile from:\n\n${d.text}`
   },
   'vs-gen': {
     label: 'Voice Signature — Generation',
@@ -370,35 +410,51 @@ NEXT 2 HOURS: ACTION CHECKLIST:
   },
   'before-after': {
     label: 'Before / After Comparison',
-    system: `You are a senior editorial and rhetorical strategist. Improve the submitted text with precision. Structure EXACTLY:
+    system: `You are a senior editorial and rhetorical strategist. Improve the submitted text with precision.
 
-## DIAGNOSIS
+CRITICAL FORMATTING RULES:
+- No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
+- Section headings in ALL CAPS followed by a colon
+- Plain dashes for bullet points
+- Clear, readable prose. Output is displayed as plain text.
+
+Structure EXACTLY:
+
+DIAGNOSIS:
 3 bullet points — what is weak, vague, or rhetorically ineffective. Quote specific phrases.
 
-## IMPROVED VERSION
+IMPROVED VERSION:
 The full, improved text. Publication-ready. Keep the author's voice — no generic rewrites.
 
-## WHAT CHANGED
+WHAT CHANGED:
 3 bullet points — specific changes made and why. Educational, references original wording.`,
     build: (d) => `Goal: ${d.goal||'General improvement'}\nAudience: ${d.audience||'Not specified'}\nTone target: ${d.tone||'As appropriate'}\n\nORIGINAL TEXT:\n${d.text}`
   },
   'competitive-check': {
     label: 'Competitive Message Check',
-    system: `You are a communication strategist specialised in brand differentiation. Analyse the submitted key messages against typical industry communication. Structure EXACTLY:
+    system: `You are a communication strategist specialised in brand differentiation. Analyse the submitted key messages against typical industry communication.
 
-## SIMILARITY SCORE: [X/10]
+CRITICAL FORMATTING RULES:
+- No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
+- Section headings in ALL CAPS followed by a colon
+- Plain dashes for bullet points
+- Clear, readable prose. Output is displayed as plain text.
+
+Structure EXACTLY:
+
+SIMILARITY SCORE: [X/10]
 Compared to typical communication in this industry. One sentence on what drives the score — what specific patterns or phrases push it up or down.
 
-## WHAT MAKES YOU SOUND GENERIC
+WHAT MAKES YOU SOUND GENERIC:
 3 specific phrases or themes competitors also say. Quote directly from the submitted messages.
 
-## WHERE YOU ALREADY DIFFERENTIATE
+WHERE YOU ALREADY DIFFERENTIATE:
 What is already distinctive — if anything. Be honest.
 
-## REWRITTEN KEY MESSAGES
+REWRITTEN KEY MESSAGES:
 Same messages, rewritten sharper and harder to copy. Same content, stronger positioning.
 
-## POSITIONING RECOMMENDATION
+POSITIONING RECOMMENDATION:
 One paragraph: the unique angle and how to build on it.`,
     build: (d) => `Industry: ${d.industry||'Not specified'}\nCompany: ${d.company||'Not specified'}\nTarget audience: ${d.audience||'Not specified'}\n\nCURRENT KEY MESSAGES:\n${d.text}`
   },
@@ -737,9 +793,8 @@ ht-review-response — Hotel review response
 ht-crisis-comm — Hotel crisis communication
 ht-positioning — Hotel brand positioning
 ht-sales-pitch — Hotel sales pitch
-pr — Performance Review writer
+pr — Performance review / feedback writing
 rw — Recognition Writer
-review — Text review and improvement
 
 If unclear, return: rp
 Return only the key, lowercase, nothing else.`,
@@ -842,7 +897,7 @@ const MODULE_MAX_TOKENS = {
 const DEFAULT_MAX_TOKENS = 2000;
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
-const HAIKU_MODULES = new Set(['router', 'chat', 'vs-cal', 'vs-gen', 'la', 'tone-check', 'keyword-map']);
+const HAIKU_MODULES = new Set(['router', 'chat', 'vs-cal', 'vs-gen']);
 const MODEL_SONNET = 'claude-sonnet-4-6';
 const MODEL_HAIKU  = 'claude-haiku-4-5-20251001';
 function resolveModel(module) {
@@ -884,6 +939,9 @@ async function callClaude(system, user, maxTokens, model, temperature) {
 router.post('/', requireAuth, async (req, res) => {
   try {
     const { module, clientId, data } = req.body;
+    if (data && typeof data.text === 'string' && data.text.length > 20000) {
+      return res.status(400).json({ error: 'Input text exceeds maximum length of 20,000 characters' });
+    }
     const cfg = PROMPTS[module];
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
 
@@ -975,11 +1033,11 @@ router.post('/', requireAuth, async (req, res) => {
     const claudeResp = await callClaude(systemBlocks, userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
     const result = claudeResp.text;
 
-    // Log token usage (fire-and-forget)
-    if (advisorId) {
+    // Log token usage (fire-and-forget) — Fix 11: also log for client-only analyses
+    if (advisorId || resolvedClientId) {
       pool.query(
         'INSERT INTO usage_log (advisor_id, client_id, module, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)',
-        [advisorId, resolvedClientId || null, module, claudeResp.inputTokens, claudeResp.outputTokens]
+        [advisorId || null, resolvedClientId || null, module, claudeResp.inputTokens, claudeResp.outputTokens]
       ).catch(() => {});
     }
 
@@ -1029,6 +1087,9 @@ router.post('/', requireAuth, async (req, res) => {
 router.post('/stream', requireAuth, async (req, res) => {
   try {
     const { module, clientId, data, debug } = req.body;
+    if (data && typeof data.text === 'string' && data.text.length > 20000) {
+      return res.status(400).json({ error: 'Input text exceeds maximum length of 20,000 characters' });
+    }
     const isDebug = debug === true && req.user.role === 'advisor';
     const cfg = PROMPTS[module];
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
@@ -1084,7 +1145,7 @@ router.post('/stream', requireAuth, async (req, res) => {
         examples.forEach((ex, i) => {
           dynamicSystem += `BEISPIEL ${i + 1}:\nINPUT: ${sanitizeForPrompt(ex.input_text)}\nAUFBAU: ${sanitizeForPrompt(ex.output_text)}\n\n`;
         });
-        system += '--- ENDE STRUKTURVORLAGEN ---';
+        dynamicSystem += '--- ENDE STRUKTURVORLAGEN ---';
       }
     }
 
@@ -1094,11 +1155,20 @@ router.post('/stream', requireAuth, async (req, res) => {
     res.setHeader('X-Accel-Buffering', 'no'); // Disable Nginx buffering on Render
     res.flushHeaders();
 
+    // Fix 10: SSE keepalive to prevent proxy timeouts
+    const keepAlive = setInterval(() => res.write(': keep-alive\n\n'), 15000);
+
+    // Fix 13: Client disconnect handling
+    let aborted = false;
+    const abortController = new AbortController();
+    req.on('close', () => { aborted = true; abortController.abort(); clearInterval(keepAlive); });
+
     const maxTokens = MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS;
     const streamSystemBlocks = [{ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } }];
     if (dynamicSystem) streamSystemBlocks.push({ type: 'text', text: dynamicSystem });
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
+      signal: abortController.signal,
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
@@ -1115,6 +1185,7 @@ router.post('/stream', requireAuth, async (req, res) => {
     });
 
     if (!anthropicRes.ok) {
+      clearInterval(keepAlive);
       const err = await anthropicRes.json();
       res.write(`event: error\ndata: ${JSON.stringify({ error: err.error?.message || 'API error' })}\n\n`);
       return res.end();
@@ -1125,11 +1196,15 @@ router.post('/stream', requireAuth, async (req, res) => {
     const reader = anthropicRes.body.getReader();
     const decoder = new TextDecoder();
 
+    // Fix 12: Proper SSE line buffering across chunks
+    let sseBuffer = '';
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      const chunk = decoder.decode(value, { stream: true });
-      for (const line of chunk.split('\n')) {
+      sseBuffer += decoder.decode(value, { stream: true });
+      const lines = sseBuffer.split('\n');
+      sseBuffer = lines.pop(); // keep incomplete last line
+      for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
         const raw = line.slice(6).trim();
         if (raw === '[DONE]' || !raw) continue;
@@ -1146,9 +1221,16 @@ router.post('/stream', requireAuth, async (req, res) => {
           if (evt.type === 'message_start' && evt.message?.usage) {
             inputTokens = evt.message.usage.input_tokens || 0;
           }
-        } catch {}
+        } catch (e) {
+          console.warn('SSE parse error:', e.message, raw.slice(0, 100));
+        }
       }
     }
+
+    clearInterval(keepAlive);
+
+    // Fix 13: Skip DB writes if client disconnected
+    if (aborted) return;
 
     // Persist + log after stream completes
     const generatedBy = req.user.role === 'advisor'
@@ -1159,9 +1241,10 @@ router.post('/stream', requireAuth, async (req, res) => {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, created_at`,
       [resolvedClientId, advisorId, module, cfg.label, data, fullText, generatedBy, hasBrandVoice]
     );
-    if (advisorId) {
+    // Fix 11: Log usage for client analyses too
+    if (advisorId || resolvedClientId) {
       pool.query('INSERT INTO usage_log (advisor_id, client_id, module, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)',
-        [advisorId, resolvedClientId || null, module, inputTokens, outputTokens]).catch(() => {});
+        [advisorId || null, resolvedClientId || null, module, inputTokens, outputTokens]).catch(() => {});
     }
     if (advisorId && fullText.length > 200) {
       const inputText = Object.entries(data || {})
@@ -1212,9 +1295,15 @@ router.post('/chat', requireAuth, async (req, res) => {
   try {
     const { message, history = [] } = req.body;
     const cfg = PROMPTS['chat'];
+    const safeHistory = Array.isArray(history)
+      ? history
+          .filter(h => ['user','assistant'].includes(h.role) && typeof h.content === 'string')
+          .map(h => ({ role: h.role, content: h.content.slice(0, 4000) }))
+      : [];
+    const safeMessage = typeof message === 'string' ? message.slice(0, 4000) : '';
     const messages = [
-      ...history.map(h => ({ role: h.role, content: h.content })),
-      { role: 'user', content: message }
+      ...safeHistory,
+      { role: 'user', content: safeMessage }
     ];
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',

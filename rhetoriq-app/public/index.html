@@ -1934,7 +1934,7 @@ pre{font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:pre-wrap;lin
 })();
 
 function sf(s,h){document.getElementById(s).style.display='block';document.getElementById(h).style.display='none';}
-function api(path,o={}){return fetch(API+path,{...o,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(o.headers||{})}});}
+async function api(path,o={}){const r=await fetch(API+path,{...o,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(o.headers||{})}});if(!r.ok){const ct=r.headers.get('content-type')||'';if(!ct.includes('application/json'))throw new Error(`Server error (HTTP ${r.status})`);}return r;}
 
 // XSS-safe innerHTML helper — sanitizes all user/AI content before DOM injection
 function safe(html){ return typeof DOMPurify!=='undefined'?DOMPurify.sanitize(html??'',{ALLOWED_TAGS:['b','i','em','strong','br','span','div','p','ul','ol','li','a','pre','code'],ALLOWED_ATTR:['style','class','href','target']}):String(html??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -2340,7 +2340,7 @@ async function loadUsage(){
           const last=row.last_activity?new Date(row.last_activity).toLocaleDateString('de-CH'):'—';
           const cost=fmt(row.total_calls*(d.costAllTime&&d.totalAllTime?d.costAllTime/d.totalAllTime:0.045));
           return `
-            <div style="padding:14px 16px;font-size:15px;font-weight:500;${border}">${row.client_name}</div>
+            <div style="padding:14px 16px;font-size:15px;font-weight:500;${border}">${safeText(row.client_name||'')}</div>
             <div style="padding:14px 10px;font-size:15px;text-align:right;color:var(--ac);font-weight:600;${border}">${row.this_month}</div>
             <div style="padding:14px 10px;font-size:15px;text-align:right;color:var(--mu);${border}">${row.last_month}</div>
             <div style="padding:14px 10px;font-size:15px;text-align:right;color:var(--mu);${border}">${row.total_calls}</div>
@@ -2376,7 +2376,7 @@ async function loadTraining(){
   }
   const imp=document.getElementById('tr-import-client');
   if(imp){
-    imp.innerHTML='<option value="">— Klient wählen —</option>'+clients.map(c=>`<option value="${c.id}">${c.name}${c.industry?' ('+c.industry+')':''}</option>`).join('');
+    imp.innerHTML='<option value="">— Klient wählen —</option>'+clients.map(c=>`<option value="${c.id}">${safeText(c.name)}${c.industry?' ('+safeText(c.industry)+')':''}</option>`).join('');
   }
   trLoadModule();
 }
@@ -2568,10 +2568,10 @@ async function loadClients(){try{const r=await api('/api/clients');clients=await
 function renderClients(){
   document.getElementById('stat-clients').textContent=clients.length;
   const sel=document.getElementById('client-select');
-  const opts='<option value="">Select client</option>'+clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  const opts='<option value="">Select client</option>'+clients.map(c=>`<option value="${c.id}">${safeText(c.name)}</option>`).join('');
   sel.innerHTML=opts;
   const hsel=document.getElementById('home-client-select');
-  if(hsel)hsel.innerHTML='<option value="">— Select client —</option>'+clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  if(hsel)hsel.innerHTML='<option value="">— Select client —</option>'+clients.map(c=>`<option value="${c.id}">${safeText(c.name)}</option>`).join('');
   const list=document.getElementById('clients-list');
   if(!clients.length){list.innerHTML='<div class="empty"><div class="ei">&#9711;</div><div>No clients yet.</div></div>';return;}
   list.innerHTML=clients.map(c=>`<div class="cc" data-cid="${c.id}"><div><div class="cn">${safeText(c.name)}</div><div class="cm">${safeText(c.industry||'')} &mdash; ${safeText(c.contact||'')}</div><div class="tkcode">${safeText(c.token.substring(0,28))}&hellip;</div></div><div class="ca"><button class="obtn" onclick="copyTok('${c.token}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail(${c.id})">Send by Email</button><button class="dbtn" onclick="delData(${c.id})">Delete All Data</button><button class="dbtn" onclick="deleteClient(${c.id})">Delete Client</button></div></div>`).join('');
@@ -2794,13 +2794,13 @@ function renderPeople(){
     const hasVoice=!!profMap['voice'];
     return `<div class="pcard">
       <div class="pcard-top">
-        <div class="pcard-info"><div class="pname">${p.name}</div><div class="prole">${p.role||''}${p.department?' &mdash; '+p.department:''}</div></div>
+        <div class="pcard-info"><div class="pname">${safeText(p.name||'')}</div><div class="prole">${safeText(p.role||'')}${p.department?' &mdash; '+safeText(p.department):''}</div></div>
         <div class="pcard-actions">
           <button class="obtn" onclick="openEditPerson(${p.id})">Edit</button>
           <button class="dbtn2" onclick="deletePerson(${p.id},'${p.name}')">Remove</button>
         </div>
       </div>
-      ${p.notes?`<div style="font-size:12px;color:var(--mu);margin-top:8px;font-style:italic">${p.notes}</div>`:''}
+      ${p.notes?`<div style="font-size:12px;color:var(--mu);margin-top:8px;font-style:italic">${safeText(p.notes)}</div>`:''}
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
         <button class="obtn" style="font-size:12px" onclick="openPersonVoiceGenerate(${p.id},'${p.name.replace(/'/g,"\\'")}','${p.role||''}')">&#9670; Generate Voice DNA</button>
         <button class="obtn" style="font-size:12px" onclick="openPersonVoiceImport(${p.id},'${p.name.replace(/'/g,"\\'")}')">&#8593; Import Voice DNA</button>
@@ -3318,7 +3318,7 @@ function buildPeopleSelector(){
   return `<div class="psec">
     <div class="psec-title">Include people from directory</div>
     <div class="pchks" id="pchk-wrap">
-      ${people.map(p=>`<label class="pchk" id="pchk-${p.id}" onclick="togglePchk(this,${p.id})"><input type="checkbox" value="${p.id}"><span>${p.name}</span><span class="pchk-role">${p.role||''}</span></label>`).join('')}
+      ${people.map(p=>`<label class="pchk" id="pchk-${p.id}" onclick="togglePchk(this,${p.id})"><input type="checkbox" value="${p.id}"><span>${safeText(p.name||'')}</span><span class="pchk-role">${safeText(p.role||'')}</span></label>`).join('')}
     </div>
   </div>`;
 }
@@ -3623,9 +3623,9 @@ function goModule(name,prefill){
   trackModuleUse(name,def.title||name);
   const isTg=def.special==='textgen';
   const gearHtml=(isAdv&&!isTg&&clientId)?` <button class="mod-prompt-btn" id="mod-prompt-gear" onclick="openModPrompt('${name}')" title="Prompt für diesen Kunden anpassen" style="font-size:11px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-adjustments-horizontal" style="font-size:13px"></i><span>Prompt anpassen</span></button>`:'';
-  document.getElementById('mod-title').innerHTML=def.title+gearHtml;
+  document.getElementById('mod-title').innerHTML=safeText(def.title)+gearHtml;
   if(isAdv&&clientId&&!isTg){api('/api/module-prompts/'+clientId+'/'+name).then(r=>{const gear=document.getElementById('mod-prompt-gear');if(gear&&r.instructions){const d=document.createElement('span');d.className='mod-prompt-dot';gear.appendChild(d);}}).catch(()=>{});}
-  document.getElementById('mod-desc').innerHTML=def.desc;
+  document.getElementById('mod-desc').innerHTML=safe(def.desc);
   const form=document.getElementById('mod-form');
   if(def.special==='textgen')buildTextGen(prefill,form);
   else if(def.special==='premeeting')buildPreMeeting(prefill,form);
@@ -3742,7 +3742,7 @@ function buildTextGen(prefill,form){
         <div class="fg2"><label class="fl2">${tl.tg_length}</label><input type="text" id="tg-len-${t.id}" placeholder="${tl.tg_length_ph}"></div>
       </div>
       ${t.id==='linkedin'?`<div class="fg2" style="margin-top:4px"><label class="fl2">${tl.li_profile_lbl||'LinkedIn Profile / About (optional)'}</label><textarea id="tg-li-profile" placeholder="${tl.li_profile_ph||'Paste the About section and recent posts of the LinkedIn profile here — so the output matches the person\'s authentic voice.'}" style="min-height:80px;font-size:12px"></textarea></div>`:''}
-      ${t.id==='speech'?`<div class="fg2"><label class="fl2">Speaker — Voice DNA (optional)</label><select id="tg-speech-person"><option value="">— Brand Voice (default) —</option>${people.filter(p=>(p.profiles||[]).some(pr=>pr.profile_type==='voice')).map(p=>`<option value="${p.id}">${p.name}${p.role?' — '+p.role:''}</option>`).join('')}</select></div>`:''}
+      ${t.id==='speech'?`<div class="fg2"><label class="fl2">Speaker — Voice DNA (optional)</label><select id="tg-speech-person"><option value="">— Brand Voice (default) —</option>${people.filter(p=>(p.profiles||[]).some(pr=>pr.profile_type==='voice')).map(p=>`<option value="${p.id}">${safeText(p.name)}${p.role?' — '+safeText(p.role):''}</option>`).join('')}</select></div>`:''}
       ${t.id==='newsletter'?`<div class="klaviyo-box" id="klaviyo-box-${t.id}" style="margin-bottom:14px;padding:14px;border:1.5px solid #e0d4f5;border-radius:8px;background:#f9f6ff">
         <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7c3aed;margin-bottom:10px">Klaviyo</div>
         <div id="klv-connect-row-${t.id}">
@@ -3994,7 +3994,7 @@ function renderObFileList(){
   if(!_obFiles.length){list.style.display='none';document.getElementById('ob-run-btn').style.display='none';return;}
   list.style.display='block';
   document.getElementById('ob-run-btn').style.display='inline-block';
-  items.innerHTML=_obFiles.map((f,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--panel);border-radius:6px;font-size:13px"><span>&#128196; ${f.name} <span style="color:var(--mu);font-size:11px">(${(f.size/1024).toFixed(0)} KB)</span></span><button onclick="obRemoveFile(${i})" style="background:none;border:none;cursor:pointer;color:var(--mu);font-size:15px">&times;</button></div>`).join('');
+  items.innerHTML=_obFiles.map((f,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--panel);border-radius:6px;font-size:13px"><span>&#128196; ${safeText(f.name)} <span style="color:var(--mu);font-size:11px">(${(f.size/1024).toFixed(0)} KB)</span></span><button onclick="obRemoveFile(${i})" style="background:none;border:none;cursor:pointer;color:var(--mu);font-size:15px">&times;</button></div>`).join('');
 }
 const OB_CAT_LABELS={
   brand_voice_source:'&#9670; Brand Voice source',
@@ -4140,7 +4140,7 @@ async function pvHandleFiles(files){
   const AUDIO_VIDEO=/\.(mp3|mp4|wav|m4a|ogg|webm|mov|avi|aac|flac)$/i;
   for(const file of Array.from(files)){
     const tag=document.createElement('div');
-    tag.className='ftag';tag.innerHTML='&#128196; '+file.name+' <button onclick="this.parentElement.remove()">&times;</button>';
+    tag.className='ftag';tag.innerHTML='&#128196; '+safeText(file.name)+' <button onclick="this.parentElement.remove()">&times;</button>';
     tags.appendChild(tag);
     if(AUDIO_VIDEO.test(file.name)){
       status.textContent='Uploading '+file.name+' for transcription…';
@@ -4327,7 +4327,7 @@ async function handleFiles(input,targetId,tagsId){
       const text=await extractText(file);
       const ta=document.getElementById(targetId);if(ta)ta.value=ta.value?ta.value+'\n---\n'+text:text;
       const tags=document.getElementById(tagsId);
-      if(tags){const tag=document.createElement('div');tag.className='ftag';tag.innerHTML='&#128196; '+file.name+' <button onclick="this.parentElement.remove()">&times;</button>';tags.appendChild(tag);}
+      if(tags){const tag=document.createElement('div');tag.className='ftag';tag.innerHTML='&#128196; '+safeText(file.name)+' <button onclick="this.parentElement.remove()">&times;</button>';tags.appendChild(tag);}
     }catch(e){alert('Could not read '+file.name+': '+e.message);}
   }input.value='';
   if(targetId.startsWith('tg-ref-')){const id=targetId.replace('tg-ref-','');saveTgRef(id);}
@@ -4393,7 +4393,7 @@ async function sendChat(){
     const d=await r.json();
     document.getElementById('chat-typing')?.remove();
     chatHist.push({role:'assistant',content:d.reply});
-    msgs.innerHTML+=`<div class="cm2 b">${d.reply.replace(/\n/g,'<br>')}</div>`;
+    msgs.innerHTML+=`<div class="cm2 b">${safe(d.reply).replace(/\n/g,'<br>')}</div>`;
     msgs.scrollTop=msgs.scrollHeight;
   }catch{
     document.getElementById('chat-typing')?.remove();
@@ -4558,7 +4558,7 @@ async function loadAdvisorDashboard(){
     try{const rc=await api('/api/clients');clients=await rc.json();}catch{}
     document.getElementById('stat-clients').textContent=clients.length;
     const sel=document.getElementById('client-select');
-    if(sel)sel.innerHTML='<option value="">Select client</option>'+clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    if(sel)sel.innerHTML='<option value="">Select client</option>'+clients.map(c=>`<option value="${c.id}">${safeText(c.name)}</option>`).join('');
     const fmtDate=s=>s?new Date(s).toLocaleDateString('de-CH'):'—';
     const fmtDateShort=s=>s?new Date(s).toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit'}):'—';
     const maxA=dashClients.reduce((m,c)=>Math.max(m,parseInt(c.total_analyses)||0),1);
@@ -4604,8 +4604,8 @@ async function loadAdvisorDashboard(){
       ${recent.length?`<div class="adv-section-title" style="margin-top:24px">Recent Activity</div>
       <div>${recent.map(a=>`
         <div class="adv-feed-item">
-          <div class="adv-feed-client">${a.client_name}</div>
-          <div class="adv-feed-mod">${a.module_label||a.module}</div>
+          <div class="adv-feed-client">${safeText(a.client_name||'')}</div>
+          <div class="adv-feed-mod">${safeText(a.module_label||a.module||'')}</div>
           <div class="adv-feed-date">${fmtDateShort(a.created_at)}</div>
         </div>`).join('')}</div>`:''}`;
   }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;}
@@ -4621,7 +4621,7 @@ async function advToggleTimeline(clientId,card){
     const r=await api('/api/advisor/timeline/'+clientId);
     const rows=await r.json();
     if(!rows.length){tl.innerHTML='<div style="font-size:11px;color:var(--mu);padding:4px 0">No analyses yet.</div>';return;}
-    tl.innerHTML=rows.map(a=>`<div class="adv-tl-item"><div class="adv-tl-dot"></div><div class="adv-tl-mod">${a.module_label||a.module}</div><div class="adv-tl-date">${new Date(a.created_at).toLocaleDateString('de-CH')}</div></div>`).join('');
+    tl.innerHTML=rows.map(a=>`<div class="adv-tl-item"><div class="adv-tl-dot"></div><div class="adv-tl-mod">${safeText(a.module_label||a.module||'')}</div><div class="adv-tl-date">${new Date(a.created_at).toLocaleDateString('de-CH')}</div></div>`).join('');
   }catch(e){tl.innerHTML=`<div style="font-size:11px;color:var(--red)">Error loading timeline.</div>`;}
 }
 
@@ -4654,7 +4654,7 @@ async function loadAdvisorReviews(){
     if(!pending.length){list.innerHTML=`<div style="padding:20px;color:var(--mu);font-size:13px">${T[LANG]?.review_none||'No pending reviews.'}</div>`;return;}
     list.innerHTML=pending.map(rv=>`
       <div class="rev-card" id="rvc-${rv.id}">
-        <div class="rev-card-meta">${rv.module_label||'Result'} &mdash; ${new Date(rv.created_at).toLocaleDateString('de-CH')}</div>
+        <div class="rev-card-meta">${safeText(rv.module_label||'Result')} &mdash; ${new Date(rv.created_at).toLocaleDateString('de-CH')}</div>
         <div class="rev-card-orig">${rv.original_text}</div>
         <textarea class="rev-card-edit" id="rev-edit-${rv.id}">${rv.original_text}</textarea>
         <button class="rev-savebtn" onclick="saveReview(${rv.id})">${T[LANG]?.review_save||'Save & send to client'}</button>

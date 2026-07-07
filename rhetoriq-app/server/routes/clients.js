@@ -67,7 +67,7 @@ async function sendWelcomeEmail({ clientType, salutation, lastName, companyName,
   }
 
   const body = isDE
-    ? `${salutationLine}\n\n${intro}\n\nIhre Zugangsdaten:\n\nPlattform: https://rhetoriq.ch\nE-Mail: ${email}\nPasswort: ${password}\n\nBeim ersten Login werden Sie gebeten, ein eigenes Passwort zu vergeben. Danach ist Ihr Zugang vollständig personalisiert und gesichert.\n\nIch freue mich darauf, gemeinsam mit Ihnen zu arbeiten.\n\nHerzlich,\nLorena Lienhard\nRhetoric & Executive Communication Coaching\ncontact@lorenalienhard.ch · 079 957 39 76 · lorenalienhard.ch`
+    ? `${salutationLine}\n\n${intro}\n\nIhre Zugangsdaten:\n\nPlattform: https://rhetoriq.ch\nE-Mail: ${email}\nPasswort: ${password}\n\nBeim ersten Login werden Sie gebeten, ein eigenes Passwort zu vergeben. Danach ist Ihr Zugang vollständig personalisiert und gesichert.\n\nIch freue mich darauf, gemeinsam mit Ihnen zu arbeiten.\n\nHerzlich,\nLorena Lienhard\nRhetoric & Executive Communication Coaching\ncontact@lorenalienhard.ch · +41 79 957 39 76 · lorenalienhard.ch`
     : `${salutationLine}\n\n${intro}\n\nYour login details:\n\nPlatform: https://rhetoriq.ch\nEmail: ${email}\nPassword: ${password}\n\nOn your first login, you will be prompted to set your own password. After that, your access is fully personalised and secured.\n\nI look forward to working with you.\n\nWarm regards,\nLorena Lienhard\nRhetoric & Executive Communication Coaching\ncontact@lorenalienhard.ch · +41 79 957 39 76 · lorenalienhard.ch`;
 
   await brevoSend({ to: email, subject, text: body });
@@ -104,7 +104,12 @@ router.get('/', requireAdvisor, async (req, res) => {
 router.post('/', requireAdvisor, async (req, res) => {
   try {
     const { name, industry, contact, email, initialPassword, clientType, salutation, lastName, emailLang, privacyAcknowledged } = req.body;
-    if (!name) return res.status(400).json({ error: 'Name required' });
+    if (!name || name.length > 200) return res.status(400).json({ error: 'Name required (max 200 chars)' });
+    if (email && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+      return res.status(400).json({ error: 'Invalid email address' });
+    }
+    if (industry && industry.length > 200) return res.status(400).json({ error: 'Industry max 200 chars' });
+    if (contact && contact.length > 500) return res.status(400).json({ error: 'Contact max 500 chars' });
     if (!privacyAcknowledged) return res.status(400).json({ error: 'Datenschutz-Bestätigung erforderlich' });
 
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') + '-' + Date.now().toString(36);
@@ -193,7 +198,7 @@ router.post('/:id/send-token', requireAdvisor, async (req, res) => {
 router.post('/:id/set-password', requireAdvisor, async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    if (!password || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
     const hash = await bcrypt.hash(password, 12);
     const updates = [hash, req.params.id, req.user.id];
     let q = 'UPDATE clients SET password_hash=$1, must_change_password=false';
@@ -226,6 +231,7 @@ router.post('/:id/users', requireAdvisor, async (req, res) => {
     if (!clientRows[0]) return res.status(404).json({ error: 'Not found' });
     const { email, name, password, role = 'editor' } = req.body;
     if (!email || !name || !password) return res.status(400).json({ error: 'Email, name and password required' });
+    if (!password || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
     const hash = await bcrypt.hash(password, 12);
     const { rows } = await pool.query(
       'INSERT INTO client_users (client_id, email, name, password_hash, role) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (client_id, email) DO UPDATE SET name=$3, password_hash=$4, role=$5 RETURNING id, email, name, role, created_at',
@@ -263,6 +269,16 @@ router.put('/:id/capital-markets-toggle', requireAdvisor, async (req, res) => {
 // GET /api/clients/:id/cm-status — accessible by client token too
 router.get('/:id/cm-status', requireAuth, async (req, res) => {
   try {
+    if (req.user.role === 'client' && req.user.clientId != req.params.id) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    if (req.user.role === 'advisor') {
+      const { rows: ownerCheck } = await pool.query(
+        'SELECT id FROM clients WHERE id=$1 AND advisor_id=$2',
+        [req.params.id, req.user.id]
+      );
+      if (!ownerCheck[0]) return res.status(403).json({ error: 'Forbidden' });
+    }
     const { rows } = await pool.query(
       'SELECT capital_markets_enabled, hotel_enabled, enabled_modules FROM clients WHERE id = $1',
       [req.params.id]

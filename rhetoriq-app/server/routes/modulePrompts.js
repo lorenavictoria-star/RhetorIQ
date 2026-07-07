@@ -20,6 +20,7 @@ router.post('/:clientId/:moduleKey', requireAuth, async (req, res) => {
   if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Forbidden' });
   const { clientId, moduleKey } = req.params;
   const { instructions } = req.body;
+  if (instructions && instructions.length > 4000) return res.status(400).json({ error: 'Instructions max 4000 characters' });
   await pool.query(
     `INSERT INTO client_module_prompts (client_id, module_key, instructions, updated_at)
      VALUES ($1,$2,$3,NOW())

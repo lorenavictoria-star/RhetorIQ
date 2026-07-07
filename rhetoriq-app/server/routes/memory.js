@@ -6,13 +6,18 @@ const router = express.Router();
 
 // Helper: check that requesting user owns the client
 async function checkOwnership(req, res, clientId) {
-  const { rows } = await pool.query(
-    'SELECT id FROM clients WHERE id=$1 AND (advisor_id=$2 OR id=$3)',
-    [clientId, req.user.id || null, req.user.clientId || null]
-  );
-  if (!rows[0]) {
-    res.status(403).json({ error: 'Forbidden' });
-    return false;
+  const id = parseInt(clientId, 10);
+  if (isNaN(id)) { res.status(400).json({ error: 'Invalid client ID' }); return false; }
+
+  if (req.user.role === 'advisor' || req.user.role === 'admin') {
+    const { rows } = await pool.query(
+      'SELECT id FROM clients WHERE id=$1 AND advisor_id=$2',
+      [id, req.user.id]
+    );
+    if (!rows[0]) { res.status(403).json({ error: 'Forbidden' }); return false; }
+  } else {
+    // client user — must be accessing their own workspace
+    if (req.user.clientId != id) { res.status(403).json({ error: 'Forbidden' }); return false; }
   }
   return true;
 }

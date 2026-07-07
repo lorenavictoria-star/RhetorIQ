@@ -178,6 +178,7 @@ async function init() {
     CREATE INDEX IF NOT EXISTS analyses_client_idx ON analyses(client_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS people_client_idx ON people(client_id);
     CREATE INDEX IF NOT EXISTS review_req_client_idx ON review_requests(client_id);
+    CREATE INDEX IF NOT EXISTS review_req_status_idx ON review_requests(client_id, status);
     CREATE INDEX IF NOT EXISTS module_examples_compound_idx ON module_examples(advisor_id, module_key, auto_generated, rating DESC);
     CREATE INDEX IF NOT EXISTS company_memory_client_idx ON company_memory(client_id);
 
