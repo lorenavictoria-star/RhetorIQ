@@ -695,49 +695,65 @@ router.post('/', requireAuth, async (req, res) => {
       }
     }
 
-    // Inject brand voice from company memory
+    // Resolve advisor + industry early (needed for both brand voice and examples)
+    const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+    let clientIndustry = null;
+    let hasBrandVoice = false;
+    if (resolvedClientId) {
+      const { rows: cRows } = await pool.query('SELECT industry FROM clients WHERE id=$1', [resolvedClientId]);
+      clientIndustry = cRows[0]?.industry?.toLowerCase().trim() || null;
+    }
+
+    // ── BRAND VOICE (highest priority — injected as absolute override) ──────────
+    // Placed AFTER the module prompt so it takes precedence. The model must
+    // sound like this company — not like a generic AI assistant.
     if (resolvedClientId) {
       const { rows: memRows } = await pool.query(
         `SELECT memory_type, content FROM company_memory WHERE client_id=$1 AND memory_type LIKE 'brand_voice%' ORDER BY updated_at DESC`,
         [resolvedClientId]
       );
       if (memRows.length) {
-        system += '\n\n--- BRAND VOICE DES KLIENTEN ---\nDer folgende Output MUSS in der exakten Sprache, Tonalität und Stimme des Klienten verfasst sein:\n\n';
+        hasBrandVoice = true;
+        system += '\n\n════════════════════════════════════════\n'
+          + 'ABSOLUT VERBINDLICH — BRAND VOICE DIESES UNTERNEHMENS\n'
+          + '════════════════════════════════════════\n'
+          + 'Der Output MUSS klingen wie dieses Unternehmen — nicht wie eine KI, nicht wie generisches Consulting, nicht wie ein neutraler Assistent.\n'
+          + 'Verwende ausschliesslich die Sprache, die Tonalität, die Satzkonstruktionen und die Wertvorstellungen, die unten definiert sind.\n'
+          + 'Jeder Satz, jeder Begriff, jede Formulierung muss sich anfühlen, als hätte das Unternehmen selbst geschrieben.\n'
+          + 'Generische KI-Sprache, Füllformulierungen oder neutraler Ton sind NICHT akzeptabel.\n\n';
         memRows.forEach(m => {
-          system += `[${m.memory_type.toUpperCase()}]\n${m.content}\n\n`;
+          system += `${m.memory_type.toUpperCase()}:\n${m.content}\n\n`;
         });
-        system += '--- ENDE BRAND VOICE ---';
+        system += '════════════════════════════════════════\n'
+          + 'ENDE BRAND VOICE — Ab hier gilt: dieser Output ist ein Unternehmenstext, kein KI-Output.\n'
+          + '════════════════════════════════════════';
       }
     }
 
-    // Inject few-shot examples — branchenspezifisch zuerst, dann allgemein
-    const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
-    let clientIndustry = null;
-    if (resolvedClientId) {
-      const { rows: cRows } = await pool.query('SELECT industry FROM clients WHERE id=$1', [resolvedClientId]);
-      clientIndustry = cRows[0]?.industry?.toLowerCase().trim() || null;
-    }
+    // ── STRUKTURVORLAGEN (few-shot, cross-client) ────────────────────────────
+    // Provide structural patterns only — brand voice overrides tone completely.
     if (advisorId) {
-
-      // Industry-specific examples first, then general (industry_tag IS NULL) — top 3 combined
       const { rows: examples } = await pool.query(
         `SELECT input_text, output_text, industry_tag FROM module_examples
          WHERE advisor_id=$1 AND module_key=$2
            AND (industry_tag IS NULL OR $3::text IS NULL OR lower(industry_tag)=lower($3))
+           AND auto_generated = false
          ORDER BY
-           CASE WHEN lower(industry_tag)=lower($3) THEN 0 ELSE 1 END,
+           CASE WHEN $3::text IS NOT NULL AND lower(industry_tag)=lower($3) THEN 0 ELSE 1 END,
            rating DESC, created_at DESC
          LIMIT 3`,
         [advisorId, module, clientIndustry]
       );
 
       if (examples.length) {
-        system += '\n\n--- STRUKTURVORLAGEN (Beispiele) ---\n'
-          + 'WICHTIG: Übernimm NUR die Struktur, das Format und den inhaltlichen Aufbau der folgenden Beispiele. '
-          + 'Die Tonalität, Sprache und Stimme MÜSSEN vollständig durch die Brand Voice des aktuellen Klienten ersetzt werden. '
-          + 'Kein Satz, kein Ausdruck aus den Beispielen darf wortwörtlich übernommen werden.\n\n';
+        system += '\n\n--- STRUKTURVORLAGEN ---\n'
+          + 'Die folgenden Beispiele zeigen NUR die Struktur und den inhaltlichen Aufbau — '
+          + (hasBrandVoice
+            ? 'die Stimme und Tonalität wird AUSSCHLIESSLICH durch die oben definierte Brand Voice bestimmt.'
+            : 'passe Sprache und Stil an den Klienten an.')
+          + '\n\n';
         examples.forEach((ex, i) => {
-          system += `BEISPIEL ${i + 1}${ex.industry_tag ? ` [${ex.industry_tag}]` : ''}:\nINPUT:\n${ex.input_text}\n\nSTRUKTUR/FORMAT:\n${ex.output_text}\n\n`;
+          system += `BEISPIEL ${i + 1}${ex.industry_tag ? ` [${ex.industry_tag}]` : ''}:\nINPUT: ${ex.input_text}\nAUFBAU: ${ex.output_text}\n\n`;
         });
         system += '--- ENDE STRUKTURVORLAGEN ---';
       }

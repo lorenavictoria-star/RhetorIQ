@@ -129,6 +129,7 @@ async function init() {
     );
     ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS industry_tag TEXT;
     ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS auto_generated BOOLEAN DEFAULT FALSE;
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS training_imported_at TIMESTAMPTZ;
   `);
 }
 

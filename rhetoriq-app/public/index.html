@@ -1356,9 +1356,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div class="ao-item mm-row" id="mm-usage" onclick="goPage('usage');loadUsage();setMN('more');hideMore()" style="display:none">
         <i class="ti ti-chart-bar" style="font-size:15px;color:var(--mu)"></i> Usage
       </div>
-      <div class="ao-item mm-row" id="mm-training" onclick="goPage('training');loadTraining();setMN('more');hideMore()" style="display:none">
-        <i class="ti ti-school" style="font-size:15px;color:var(--mu)"></i> Trainingsdaten
-      </div>
+      <!-- Training page hidden — auto-import runs silently per client -->
     </div>
 
     <!-- About collapsed -->
@@ -2486,7 +2484,11 @@ async function switchClient(id){
   // update capital markets flag from clients array
   const selectedClient=clients.find(c=>String(c.id)===String(id));
   enabledModules=selectedClient?.enabled_modules||null;
-  if(clientId){await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);}
+  if(clientId){
+    await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);
+    // Silent background import of past analyses as training examples (idempotent — skips if already done)
+    api('/api/module-examples/auto-import/'+clientId,{method:'POST'}).catch(()=>{});
+  }
   loadStats();
   updateMemBanner();
   if(typeof renderModulesList==='function')renderModulesList();
@@ -2937,7 +2939,7 @@ function updateHomeRightSidebar(){
   }
 }
 function setMN(id){
-  const toMore=new Set(['brand','people','reviews','memory','history','usage','training']);
+  const toMore=new Set(['brand','people','reviews','memory','history','usage']);
   const eff=toMore.has(id)?'more':id;
   document.querySelectorAll('.mni').forEach(n=>n.classList.remove('active'));
   const el=document.getElementById('mn-'+eff);if(el)el.classList.add('active');

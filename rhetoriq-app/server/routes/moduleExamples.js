@@ -4,14 +4,28 @@ const { requireAdvisor } = require('../middleware/auth');
 
 const router = express.Router();
 
-// GET /api/module-examples?moduleKey=xxx
+// GET /api/module-examples/summary — count per module_key
+router.get('/summary', requireAdvisor, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT module_key, COUNT(*)::int as total,
+              SUM(CASE WHEN auto_generated THEN 1 ELSE 0 END)::int as auto_count
+       FROM module_examples WHERE advisor_id=$1
+       GROUP BY module_key ORDER BY total DESC`,
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/module-examples?moduleKey=xxx  (omit moduleKey for all)
 router.get('/', requireAdvisor, async (req, res) => {
   try {
     const { moduleKey } = req.query;
     let q = 'SELECT * FROM module_examples WHERE advisor_id=$1';
     const params = [req.user.id];
     if (moduleKey) { q += ' AND module_key=$2'; params.push(moduleKey); }
-    q += ' ORDER BY rating DESC, created_at DESC';
+    q += ' ORDER BY module_key, rating DESC, created_at DESC';
     const { rows } = await pool.query(q, params);
     res.json(rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -29,6 +43,49 @@ router.post('/', requireAdvisor, async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/module-examples/auto-import/:clientId — silent background import (idempotent)
+router.post('/auto-import/:clientId', requireAdvisor, async (req, res) => {
+  try {
+    const clientId = parseInt(req.params.clientId);
+    const { rows: cRows } = await pool.query(
+      'SELECT id, name, industry, training_imported_at FROM clients WHERE id=$1 AND advisor_id=$2',
+      [clientId, req.user.id]
+    );
+    if (!cRows[0]) return res.status(404).json({ error: 'Client not found' });
+    // Already imported — skip silently
+    if (cRows[0].training_imported_at) return res.json({ skipped: true });
+
+    const client = cRows[0];
+    const industryTag = client.industry?.toLowerCase().trim() || null;
+
+    const { rows: analyses } = await pool.query(
+      `SELECT module, input_data, result FROM analyses
+       WHERE client_id=$1 AND advisor_id=$2 AND result IS NOT NULL AND result != ''`,
+      [clientId, req.user.id]
+    );
+
+    let imported = 0;
+    for (const a of analyses) {
+      const inputText = Object.entries(a.input_data || {})
+        .filter(([, v]) => v && typeof v === 'string' && v.trim().length > 2)
+        .map(([k, v]) => `${k}: ${v.trim()}`).join('\n');
+      if (!inputText || !a.result) continue;
+      await pool.query(
+        `INSERT INTO module_examples (advisor_id, module_key, label, industry_tag, input_text, output_text, rating, auto_generated)
+         VALUES ($1,$2,$3,$4,$5,$6,3,true)`,
+        [req.user.id, a.module, client.name, industryTag, inputText, a.result]
+      );
+      imported++;
+    }
+
+    await pool.query(
+      'UPDATE clients SET training_imported_at=NOW() WHERE id=$1',
+      [clientId]
+    );
+    res.json({ imported, clientName: client.name });
+  } catch (e) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 // POST /api/module-examples/import-client — bulk import analyses from a client
