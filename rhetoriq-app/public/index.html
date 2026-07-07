@@ -2270,16 +2270,19 @@ async function loadUsage(){
 let _trRating=3;
 let _trExamples=[];
 
-function loadTraining(){
+async function loadTraining(){
   const sel=document.getElementById('tr-module-sel');
   if(!sel)return;
   const opts=ALL_MODULES.map(m=>`<option value="${m.key}">${m.name}</option>`).join('');
   sel.innerHTML=opts;
   _trRating=3;
   trRenderStars(3);
-  // Populate client import dropdown
+  // Ensure clients are loaded
+  if(!clients.length){
+    try{const r=await api('/api/clients');clients=await r.json();}catch{}
+  }
   const imp=document.getElementById('tr-import-client');
-  if(imp&&clients.length){
+  if(imp){
     imp.innerHTML='<option value="">— Klient wählen —</option>'+clients.map(c=>`<option value="${c.id}">${c.name}${c.industry?' ('+c.industry+')':''}</option>`).join('');
   }
   trLoadModule();
