@@ -128,6 +128,7 @@ async function init() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
     ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS industry_tag TEXT;
+    ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS auto_generated BOOLEAN DEFAULT FALSE;
   `);
 }
 

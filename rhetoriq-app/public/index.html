@@ -1205,8 +1205,14 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <select id="tr-module-sel" onchange="trLoadModule()" style="padding:10px 14px;border:1.5px solid var(--bd);background:var(--sf);font-family:'Instrument Sans',sans-serif;font-size:14px;color:var(--tx);border-radius:8px;outline:none;width:100%;max-width:400px"></select>
       </div>
 
-      <!-- Example count badge -->
-      <div id="tr-count" style="font-size:12px;color:var(--mu);margin-bottom:16px"></div>
+      <!-- Example count badge + filter -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <div id="tr-count" style="font-size:12px;color:var(--mu)"></div>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mu);cursor:pointer;margin-left:auto">
+          <input type="checkbox" id="tr-hide-auto" onchange="trLoadModule()" style="cursor:pointer">
+          Nur manuelle anzeigen
+        </label>
+      </div>
 
       <!-- Add new example form -->
       <div style="border:1.5px solid var(--bd);border-radius:10px;background:var(--sf);padding:18px;margin-bottom:20px">
@@ -2277,37 +2283,41 @@ async function trLoadModule(){
   if(!key)return;
   const list=document.getElementById('tr-list');
   const count=document.getElementById('tr-count');
+  const hideAuto=document.getElementById('tr-hide-auto')?.checked;
   list.innerHTML='<div style="color:var(--mu);font-size:13px">Laden…</div>';
   try{
     const r=await api('/api/module-examples?moduleKey='+encodeURIComponent(key));
     _trExamples=r.ok?await r.json():[];
+    const visible=hideAuto?_trExamples.filter(e=>!e.auto_generated):_trExamples;
+    const autoCount=_trExamples.filter(e=>e.auto_generated).length;
+    const manualCount=_trExamples.length-autoCount;
     count.textContent=_trExamples.length
-      ?`${_trExamples.length} Beispiel${_trExamples.length===1?'':'e'} gespeichert — Top 3 werden automatisch injiziert`
-      :'Noch keine Beispiele — füge das erste hinzu.';
-    list.innerHTML=_trExamples.length?_trExamples.map(ex=>`
-      <div id="tr-ex-${ex.id}" style="border:1px solid var(--bd);border-radius:10px;background:#fff;padding:16px;margin-bottom:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:12px;font-weight:600;color:var(--tx)">${ex.label||'Beispiel'}</span>
+      ?`${manualCount} manuell · ${autoCount} auto-gespeichert — Top 3 nach Bewertung werden injiziert`
+      :'Noch keine Beispiele — werden automatisch beim Generieren gesammelt.';
+    list.innerHTML=visible.length?visible.map(ex=>`
+      <div id="tr-ex-${ex.id}" style="border:1px solid ${ex.auto_generated?'var(--bd)':'var(--ac)'};border-radius:10px;background:${ex.auto_generated?'var(--sf)':'#fff'};padding:16px;margin-bottom:10px;opacity:${ex.auto_generated?'.85':'1'}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            ${ex.auto_generated?`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f3f4f6;color:var(--mu)">auto</span>`:`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0">manuell</span>`}
+            ${ex.label?`<span style="font-size:12px;font-weight:600;color:var(--tx)">${ex.label}</span>`:''}
             ${ex.industry_tag?`<span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd">${ex.industry_tag}</span>`:''}
-            <span style="font-size:13px;color:#f59e0b">${'★'.repeat(ex.rating||3)}${'☆'.repeat(5-(ex.rating||3))}</span>
           </div>
-          <div style="display:flex;gap:6px">
-            ${[1,2,3,4,5].map(v=>`<button onclick="trRate(${ex.id},${v})" style="font-size:16px;background:none;border:none;cursor:pointer;color:${(ex.rating||3)>=v?'#f59e0b':'#d1d5db'};padding:0;line-height:1" id="tr-star-${ex.id}-${v}">★</button>`).join('')}
-            <button onclick="trDelete(${ex.id})" style="margin-left:8px;padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:transparent;font-size:12px;color:var(--mu);cursor:pointer;font-family:'Instrument Sans',sans-serif">Löschen</button>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div>
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:5px">Input</div>
-            <div style="font-size:12px;color:var(--tx);white-space:pre-wrap;background:var(--sf);border-radius:6px;padding:10px;max-height:140px;overflow-y:auto">${ex.input_text}</div>
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:5px">Output</div>
-            <div style="font-size:12px;color:var(--tx);white-space:pre-wrap;background:var(--sf);border-radius:6px;padding:10px;max-height:140px;overflow-y:auto">${ex.output_text}</div>
+          <div style="display:flex;align-items:center;gap:4px">
+            ${[1,2,3,4,5].map(v=>`<button onclick="trRate(${ex.id},${v})" style="font-size:15px;background:none;border:none;cursor:pointer;color:${(ex.rating||3)>=v?'#f59e0b':'#d1d5db'};padding:0;line-height:1" id="tr-star-${ex.id}-${v}">★</button>`).join('')}
+            <button onclick="trDelete(${ex.id})" style="margin-left:6px;padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:transparent;font-size:11px;color:var(--mu);cursor:pointer;font-family:'Instrument Sans',sans-serif">✕</button>
           </div>
         </div>
-      </div>`).join(''):'';
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:4px">Input</div>
+            <div style="font-size:11px;color:var(--tx);white-space:pre-wrap;background:#fff;border:1px solid var(--bd);border-radius:6px;padding:8px;max-height:120px;overflow-y:auto">${ex.input_text}</div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:4px">Output / Struktur</div>
+            <div style="font-size:11px;color:var(--tx);white-space:pre-wrap;background:#fff;border:1px solid var(--bd);border-radius:6px;padding:8px;max-height:120px;overflow-y:auto">${ex.output_text}</div>
+          </div>
+        </div>
+      </div>`).join(''):`<div style="color:var(--mu);font-size:13px;padding:12px 0">Keine manuellen Beispiele vorhanden.</div>`;
   }catch(e){list.innerHTML=`<div style="color:var(--red);font-size:13px">Fehler: ${e.message}</div>`;}
 }
 

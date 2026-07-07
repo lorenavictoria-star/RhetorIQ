@@ -712,13 +712,12 @@ router.post('/', requireAuth, async (req, res) => {
 
     // Inject few-shot examples — branchenspezifisch zuerst, dann allgemein
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+    let clientIndustry = null;
+    if (resolvedClientId) {
+      const { rows: cRows } = await pool.query('SELECT industry FROM clients WHERE id=$1', [resolvedClientId]);
+      clientIndustry = cRows[0]?.industry?.toLowerCase().trim() || null;
+    }
     if (advisorId) {
-      // Fetch client's industry for matching
-      let clientIndustry = null;
-      if (resolvedClientId) {
-        const { rows: cRows } = await pool.query('SELECT industry FROM clients WHERE id=$1', [resolvedClientId]);
-        clientIndustry = cRows[0]?.industry?.toLowerCase().trim() || null;
-      }
 
       // Industry-specific examples first, then general (industry_tag IS NULL) — top 3 combined
       const { rows: examples } = await pool.query(
@@ -733,18 +732,20 @@ router.post('/', requireAuth, async (req, res) => {
       );
 
       if (examples.length) {
-        system += '\n\n--- QUALITÄTSSTANDARD (Beispiele) ---\nDie folgenden Beispiele zeigen den erwarteten Output-Standard. Orientiere dich an Stil, Tiefe und Format — passe aber Tonalität und Sprache an die Brand Voice des aktuellen Klienten an.\n\n';
+        system += '\n\n--- STRUKTURVORLAGEN (Beispiele) ---\n'
+          + 'WICHTIG: Übernimm NUR die Struktur, das Format und den inhaltlichen Aufbau der folgenden Beispiele. '
+          + 'Die Tonalität, Sprache und Stimme MÜSSEN vollständig durch die Brand Voice des aktuellen Klienten ersetzt werden. '
+          + 'Kein Satz, kein Ausdruck aus den Beispielen darf wortwörtlich übernommen werden.\n\n';
         examples.forEach((ex, i) => {
-          system += `BEISPIEL ${i + 1}${ex.industry_tag ? ` [${ex.industry_tag}]` : ''}:\nINPUT:\n${ex.input_text}\n\nOUTPUT:\n${ex.output_text}\n\n`;
+          system += `BEISPIEL ${i + 1}${ex.industry_tag ? ` [${ex.industry_tag}]` : ''}:\nINPUT:\n${ex.input_text}\n\nSTRUKTUR/FORMAT:\n${ex.output_text}\n\n`;
         });
-        system += '--- ENDE BEISPIELE ---';
+        system += '--- ENDE STRUKTURVORLAGEN ---';
       }
     }
 
     const result = await callClaude(system, userMsg);
 
     // Persist analysis
-    const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
     const generatedBy = req.user.role === 'advisor'
       ? (req.user.name || 'Advisor')
       : (req.user.clientUserName || req.user.clientName || 'Klient');
@@ -756,6 +757,22 @@ router.post('/', requireAuth, async (req, res) => {
     );
 
     const analysis = { id: rows[0].id, module, label: cfg.label, result, createdAt: rows[0].created_at, clientId: resolvedClientId };
+
+    // Auto-save as training example (structural learning, no brand voice)
+    if (advisorId && result) {
+      const inputText = Object.entries(data || {})
+        .filter(([k, v]) => v && typeof v === 'string' && v.length > 2)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join('\n');
+      if (inputText) {
+        pool.query(
+          `INSERT INTO module_examples (advisor_id, module_key, industry_tag, input_text, output_text, rating, auto_generated)
+           VALUES ($1,$2,$3,$4,$5,3,true)
+           ON CONFLICT DO NOTHING`,
+          [advisorId, module, clientIndustry || null, inputText, result]
+        ).catch(() => {}); // fire-and-forget, never block the response
+      }
+    }
 
     // Push via WebSocket to connected clients/advisor
     if (req.app.locals.wss) {
