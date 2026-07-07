@@ -1213,7 +1213,11 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:14px">+ Neues Beispiel</div>
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Label (optional)</label>
-          <input id="tr-label" placeholder="z.B. CEO, Pharmasektor, Krise…" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);background:#fff;outline:none;box-sizing:border-box">
+          <input id="tr-label" placeholder="z.B. CEO, Krise…" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);background:#fff;outline:none;box-sizing:border-box">
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Branche <span style="color:var(--mu);font-weight:400">(optional — z.B. hotel, pharma, finance, immobilien)</span></label>
+          <input id="tr-industry" placeholder="hotel" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);background:#fff;outline:none;box-sizing:border-box">
         </div>
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Input <span style="color:var(--mu);font-weight:400">(was der Klient eingibt)</span></label>
@@ -2285,6 +2289,7 @@ async function trLoadModule(){
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:12px;font-weight:600;color:var(--tx)">${ex.label||'Beispiel'}</span>
+            ${ex.industry_tag?`<span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd">${ex.industry_tag}</span>`:''}
             <span style="font-size:13px;color:#f59e0b">${'★'.repeat(ex.rating||3)}${'☆'.repeat(5-(ex.rating||3))}</span>
           </div>
           <div style="display:flex;gap:6px">
@@ -2309,12 +2314,14 @@ async function trLoadModule(){
 async function trSaveExample(){
   const key=document.getElementById('tr-module-sel')?.value;
   const label=document.getElementById('tr-label')?.value?.trim();
+  const industry=document.getElementById('tr-industry')?.value?.trim().toLowerCase()||null;
   const input=document.getElementById('tr-input')?.value?.trim();
   const output=document.getElementById('tr-output')?.value?.trim();
   if(!input||!output)return alert('Input und Output sind erforderlich.');
-  const r=await api('/api/module-examples',{method:'POST',body:JSON.stringify({module_key:key,label,input_text:input,output_text:output,rating:_trRating})});
+  const r=await api('/api/module-examples',{method:'POST',body:JSON.stringify({module_key:key,label,industry_tag:industry,input_text:input,output_text:output,rating:_trRating})});
   if(!r.ok)return alert('Fehler beim Speichern.');
   document.getElementById('tr-label').value='';
+  document.getElementById('tr-industry').value='';
   document.getElementById('tr-input').value='';
   document.getElementById('tr-output').value='';
   trSetRating(3);

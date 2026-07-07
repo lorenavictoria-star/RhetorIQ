@@ -121,11 +121,13 @@ async function init() {
       advisor_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
       module_key TEXT NOT NULL,
       label TEXT,
+      industry_tag TEXT,
       input_text TEXT NOT NULL,
       output_text TEXT NOT NULL,
       rating INTEGER DEFAULT 3,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+    ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS industry_tag TEXT;
   `);
 }
 

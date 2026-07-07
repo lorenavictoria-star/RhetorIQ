@@ -695,17 +695,47 @@ router.post('/', requireAuth, async (req, res) => {
       }
     }
 
-    // Inject few-shot examples (top 3 by rating) for this module
+    // Inject brand voice from company memory
+    if (resolvedClientId) {
+      const { rows: memRows } = await pool.query(
+        `SELECT memory_type, content FROM company_memory WHERE client_id=$1 AND memory_type LIKE 'brand_voice%' ORDER BY updated_at DESC`,
+        [resolvedClientId]
+      );
+      if (memRows.length) {
+        system += '\n\n--- BRAND VOICE DES KLIENTEN ---\nDer folgende Output MUSS in der exakten Sprache, Tonalität und Stimme des Klienten verfasst sein:\n\n';
+        memRows.forEach(m => {
+          system += `[${m.memory_type.toUpperCase()}]\n${m.content}\n\n`;
+        });
+        system += '--- ENDE BRAND VOICE ---';
+      }
+    }
+
+    // Inject few-shot examples — branchenspezifisch zuerst, dann allgemein
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
     if (advisorId) {
+      // Fetch client's industry for matching
+      let clientIndustry = null;
+      if (resolvedClientId) {
+        const { rows: cRows } = await pool.query('SELECT industry FROM clients WHERE id=$1', [resolvedClientId]);
+        clientIndustry = cRows[0]?.industry?.toLowerCase().trim() || null;
+      }
+
+      // Industry-specific examples first, then general (industry_tag IS NULL) — top 3 combined
       const { rows: examples } = await pool.query(
-        'SELECT input_text, output_text FROM module_examples WHERE advisor_id=$1 AND module_key=$2 ORDER BY rating DESC, created_at DESC LIMIT 3',
-        [advisorId, module]
+        `SELECT input_text, output_text, industry_tag FROM module_examples
+         WHERE advisor_id=$1 AND module_key=$2
+           AND (industry_tag IS NULL OR $3::text IS NULL OR lower(industry_tag)=lower($3))
+         ORDER BY
+           CASE WHEN lower(industry_tag)=lower($3) THEN 0 ELSE 1 END,
+           rating DESC, created_at DESC
+         LIMIT 3`,
+        [advisorId, module, clientIndustry]
       );
+
       if (examples.length) {
-        system += '\n\n--- QUALITÄTSSTANDARD (Beispiele) ---\nDie folgenden Beispiele zeigen den erwarteten Output-Standard. Orientiere dich an Stil, Tiefe und Format.\n\n';
+        system += '\n\n--- QUALITÄTSSTANDARD (Beispiele) ---\nDie folgenden Beispiele zeigen den erwarteten Output-Standard. Orientiere dich an Stil, Tiefe und Format — passe aber Tonalität und Sprache an die Brand Voice des aktuellen Klienten an.\n\n';
         examples.forEach((ex, i) => {
-          system += `BEISPIEL ${i + 1}:\nINPUT:\n${ex.input_text}\n\nOUTPUT:\n${ex.output_text}\n\n`;
+          system += `BEISPIEL ${i + 1}${ex.industry_tag ? ` [${ex.industry_tag}]` : ''}:\nINPUT:\n${ex.input_text}\n\nOUTPUT:\n${ex.output_text}\n\n`;
         });
         system += '--- ENDE BEISPIELE ---';
       }
