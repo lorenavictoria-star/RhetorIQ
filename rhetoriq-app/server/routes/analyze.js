@@ -687,7 +687,15 @@ const MODULE_MAX_TOKENS = {
 };
 const DEFAULT_MAX_TOKENS = 2000;
 
-async function callClaude(system, user, maxTokens) {
+// Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
+const HAIKU_MODULES = new Set(['router', 'chat', 'vs-cal', 'vs-gen', 'la', 'tone-check', 'keyword-map']);
+const MODEL_SONNET = 'claude-sonnet-4-6';
+const MODEL_HAIKU  = 'claude-haiku-4-5-20251001';
+function resolveModel(module) {
+  return HAIKU_MODULES.has(module) ? MODEL_HAIKU : MODEL_SONNET;
+}
+
+async function callClaude(system, user, maxTokens, model) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -696,7 +704,7 @@ async function callClaude(system, user, maxTokens) {
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
+      model: model || MODEL_SONNET,
       max_tokens: maxTokens || DEFAULT_MAX_TOKENS,
       system: typeof system === 'function' ? system({}) : system,
       messages: [{ role: 'user', content: user }]
@@ -799,7 +807,7 @@ router.post('/', requireAuth, async (req, res) => {
       }
     }
 
-    const claudeResp = await callClaude(system, userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS);
+    const claudeResp = await callClaude(system, userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
     const result = claudeResp.text;
 
     // Log token usage (fire-and-forget)
@@ -816,9 +824,9 @@ router.post('/', requireAuth, async (req, res) => {
       : (req.user.clientUserName || req.user.clientName || 'Klient');
 
     const { rows } = await pool.query(
-      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, created_at`,
-      [resolvedClientId, advisorId, module, cfg.label, data, result, generatedBy]
+      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, created_at`,
+      [resolvedClientId, advisorId, module, cfg.label, data, result, generatedBy, hasBrandVoice]
     );
 
     const analysis = { id: rows[0].id, module, label: cfg.label, result, createdAt: rows[0].created_at, clientId: resolvedClientId };
@@ -855,7 +863,8 @@ router.post('/', requireAuth, async (req, res) => {
 // POST /api/analyze/stream — SSE streaming version of the main analyze endpoint
 router.post('/stream', requireAuth, async (req, res) => {
   try {
-    const { module, clientId, data } = req.body;
+    const { module, clientId, data, debug } = req.body;
+    const isDebug = debug === true && req.user.role === 'advisor';
     const cfg = PROMPTS[module];
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
 
@@ -928,7 +937,7 @@ router.post('/stream', requireAuth, async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: resolveModel(module),
         max_tokens: maxTokens,
         stream: true,
         system: typeof system === 'function' ? system({}) : system,
@@ -977,9 +986,9 @@ router.post('/stream', requireAuth, async (req, res) => {
       ? (req.user.name || 'Advisor')
       : (req.user.clientUserName || req.user.clientName || 'Klient');
     const { rows } = await pool.query(
-      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, created_at`,
-      [resolvedClientId, advisorId, module, cfg.label, data, fullText, generatedBy]
+      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, created_at`,
+      [resolvedClientId, advisorId, module, cfg.label, data, fullText, generatedBy, hasBrandVoice]
     );
     if (advisorId) {
       pool.query('INSERT INTO usage_log (advisor_id, client_id, module, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)',
@@ -995,7 +1004,9 @@ router.post('/stream', requireAuth, async (req, res) => {
       ).catch(() => {});
     }
 
-    res.write(`event: done\ndata: ${JSON.stringify({ id: rows[0].id })}\n\n`);
+    const donePayload = { id: rows[0].id, hasBrandVoice };
+    if (isDebug) donePayload.systemPrompt = system;
+    res.write(`event: done\ndata: ${JSON.stringify(donePayload)}\n\n`);
     res.end();
   } catch (e) {
     console.error(e);
@@ -1095,7 +1106,7 @@ router.get('/health-score', requireAuth, async (req, res) => {
     if (rows.length < 3) return res.json({ error: 'not_enough_data' });
     const log = rows.map(r => `${new Date(r.created_at).toLocaleDateString('de-CH')}: ${r.module_label||r.module}`).join('\n');
     const cfg = PROMPTS['health-score'];
-    const claudeResp = await callClaude(cfg.system, cfg.build({ log, period: 'Last 90 days' }), MODULE_MAX_TOKENS['health-score']);
+    const claudeResp = await callClaude(cfg.system, cfg.build({ log, period: 'Last 90 days' }), MODULE_MAX_TOKENS['health-score'], resolveModel('health-score'));
     res.json({ result: claudeResp.text, count: rows.length });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -1149,8 +1160,39 @@ router.post('/route', requireAuth, async (req, res) => {
   try {
     const { text } = req.body;
     const cfg = PROMPTS['router'];
-    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['router']);
+    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['router'], resolveModel('router'));
     res.json({ module: claudeResp.text.trim().toLowerCase().replace(/[^a-z-]/g, '') });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/analyze/:id/rate — Task 16: thumbs up/down; Task 18: propagate to training examples
+router.post('/:id/rate', requireAuth, async (req, res) => {
+  try {
+    if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Forbidden' });
+    const { rating } = req.body; // 1 = thumbs up, -1 = thumbs down
+    if (![1, -1].includes(Number(rating))) return res.status(400).json({ error: 'rating must be 1 or -1' });
+    const { rows } = await pool.query(
+      'UPDATE analyses SET user_rating=$1 WHERE id=$2 AND advisor_id=$3 RETURNING id, module',
+      [rating, req.params.id, req.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Not found' });
+    // Task 18: propagate rating signal to structural training examples for this module
+    if (rating === 1) {
+      pool.query(
+        `UPDATE module_examples SET rating = LEAST(5, rating + 1)
+         WHERE advisor_id=$1 AND module_key=$2 AND auto_generated=false`,
+        [req.user.id, rows[0].module]
+      ).catch(() => {});
+    } else {
+      pool.query(
+        `UPDATE module_examples SET rating = GREATEST(1, rating - 1)
+         WHERE advisor_id=$1 AND module_key=$2 AND auto_generated=false`,
+        [req.user.id, rows[0].module]
+      ).catch(() => {});
+    }
+    res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

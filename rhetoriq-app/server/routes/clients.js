@@ -103,8 +103,9 @@ router.get('/', requireAdvisor, async (req, res) => {
 // POST /api/clients
 router.post('/', requireAdvisor, async (req, res) => {
   try {
-    const { name, industry, contact, email, initialPassword, clientType, salutation, lastName, emailLang } = req.body;
+    const { name, industry, contact, email, initialPassword, clientType, salutation, lastName, emailLang, privacyAcknowledged } = req.body;
     if (!name) return res.status(400).json({ error: 'Name required' });
+    if (!privacyAcknowledged) return res.status(400).json({ error: 'Datenschutz-Bestätigung erforderlich' });
 
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') + '-' + Date.now().toString(36);
     const token = crypto.randomBytes(24).toString('hex');
@@ -117,7 +118,7 @@ router.post('/', requireAdvisor, async (req, res) => {
     }
 
     const { rows } = await pool.query(
-      'INSERT INTO clients (advisor_id, name, industry, contact, slug, token, email, password_hash, must_change_password) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',
+      'INSERT INTO clients (advisor_id, name, industry, contact, slug, token, email, password_hash, must_change_password, privacy_acknowledged_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW()) RETURNING *',
       [req.user.id, name, industry || '', contact || '', slug, token, email || null, passwordHash, mustChange]
     );
 

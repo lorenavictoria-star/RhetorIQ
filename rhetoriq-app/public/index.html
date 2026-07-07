@@ -871,6 +871,12 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <button id="nc-lang-en" class="lbtn" style="flex:1;background:var(--bg2);color:var(--tx);font-size:12px;padding:6px;border:1.5px solid var(--bd)" onclick="ncSetLang('en')">English</button>
       </div>
     </div>
+    <div style="margin-top:14px;padding:12px;background:var(--sf);border-radius:8px;border:1px solid var(--bd)">
+      <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:12px;color:var(--tx)">
+        <input type="checkbox" id="nc-privacy" style="margin-top:2px;flex-shrink:0">
+        <span>Ich bestätige, dass ich den Klienten über die Datenverarbeitung durch Anthropic informiert habe. Texteingaben werden zur Generierung an die Anthropic API übermittelt und nicht für das Training verwendet. <a href="https://www.anthropic.com/legal/privacy" target="_blank" style="color:var(--ac)">Anthropic Privacy Policy</a></span>
+      </label>
+    </div>
     <div class="mact"><button class="mcanc" onclick="closeModal('nc-ov')">Cancel</button><button class="mconf" onclick="addClient()">Create &amp; Send</button></div>
   </div>
 </div>
@@ -1047,6 +1053,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
             <button id="bv-active-edit-btn" onclick="bvActiveEdit()" style="padding:4px 12px;border:1.5px solid rgba(255,255,255,.6);border-radius:6px;background:transparent;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Bearbeiten</button>
             <button id="bv-active-save-btn" onclick="bvActiveSave()" style="display:none;padding:4px 12px;border:none;border-radius:6px;background:#fff;color:var(--ac);font-size:11px;font-weight:700;cursor:pointer;font-family:'Instrument Sans',sans-serif">Speichern</button>
             <button id="bv-active-cancel-btn" onclick="bvActiveCancel()" style="display:none;padding:4px 12px;border:1.5px solid rgba(255,255,255,.6);border-radius:6px;background:transparent;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Abbrechen</button>
+            <button onclick="bvShowHistory()" style="padding:4px 12px;border:1.5px solid rgba(255,255,255,.4);border-radius:6px;background:transparent;color:rgba(255,255,255,.8);font-size:11px;cursor:pointer;font-family:'Instrument Sans',sans-serif">Versionen</button>
           </div>
         </div>
         <div id="bv-active-view" style="padding:14px 16px;font-size:13px;line-height:1.7;color:var(--tx);white-space:pre-wrap;max-height:200px;overflow-y:auto;background:var(--sf)"></div>
@@ -1226,6 +1233,11 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <button id="invite-gen-btn" onclick="generateInviteCode()" style="padding:9px 18px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Generate Invite Code</button>
         <div id="invite-code-out" style="display:none;margin-top:10px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:14px;font-weight:600;color:#15803d;letter-spacing:.05em;font-family:monospace"></div>
         <div style="font-size:12px;color:var(--mu);margin-top:8px">Der Code ist 7 Tage gültig und kann nur einmal verwendet werden. Teile ihn direkt mit dem neuen Advisor.</div>
+      </div>
+      <div style="padding:24px 16px 0;border-top:1px solid var(--bd);margin-top:8px">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:12px">Developer — Debug-Modus</div>
+        <button id="debug-toggle-btn" onclick="toggleDebugMode()" style="padding:9px 18px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif"></button>
+        <div style="font-size:12px;color:var(--mu);margin-top:8px">Wenn aktiv: nach jeder Generierung wird der vollständige System-Prompt angezeigt (nur für dich als Advisor sichtbar).</div>
       </div>
     </div>
 
@@ -1569,6 +1581,7 @@ if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https:/
 
 const API='https://rhetoriq-jib0.onrender.com';
 let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null;
+let debugMode=localStorage.getItem('riq-debug')==='1';
 const DEFAULT_MODULES=['profiling','brand-voice','text-gen','review','recognition','pre-meeting','arg-reaction','crisis','risk','actionability','thread','rh-translate','before-after','sparring','debrief','crisis-toolkit','competitive-check'];
 function modEnabled(key){if(enabledModules===null)return DEFAULT_MODULES.includes(key);return enabledModules.includes(key);}
 function hasSuite(prefix){return enabledModules&&enabledModules.some(k=>k.startsWith(prefix));}
@@ -2295,6 +2308,8 @@ async function cmDelete(){
 }
 
 async function loadUsage(){
+  const dbgBtn=document.getElementById('debug-toggle-btn');
+  if(dbgBtn){dbgBtn.textContent=debugMode?'🔍 Debug ON':'🔍 Debug OFF';dbgBtn.style.background=debugMode?'#fff3cd':'var(--sf)';}
   const sum=document.getElementById('usage-summary');
   const tbl=document.getElementById('usage-table');
   if(!sum||!tbl)return;
@@ -2517,6 +2532,22 @@ function connectWS(){
   ws.onopen=()=>dot.classList.add('on');
   ws.onclose=()=>{dot.classList.remove('on');setTimeout(connectWS,3000);};
   ws.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.type==='analysis')loadStats();if(m.type==='review_new'&&isAdv){loadAdvisorReviews();}if(m.type==='review_done'&&!isAdv)handleReviewDoneWS(m);}catch{}};
+}
+
+// Task 16+18: rate an analysis (thumbs up/down)
+async function rateAnalysis(id,rating,bar){
+  try{
+    await api('/api/analyze/'+id+'/rate',{method:'POST',body:JSON.stringify({rating})});
+    bar.innerHTML='<span style="font-size:12px;color:var(--mu)">'+(rating===1?'👍 Danke für dein Feedback — Trainingsbeispiele wurden aufgewertet.':'👎 Danke — Trainingsbeispiele wurden abgewertet.')+'</span>';
+  }catch(e){bar.innerHTML='<span style="font-size:11px;color:var(--er)">Fehler: '+safeText(e.message)+'</span>';}
+}
+// Task 15: toggle debug mode
+function toggleDebugMode(){
+  debugMode=!debugMode;
+  localStorage.setItem('riq-debug',debugMode?'1':'0');
+  const btn=document.getElementById('debug-toggle-btn');
+  if(btn)btn.textContent=debugMode?'🔍 Debug ON':'🔍 Debug OFF';
+  if(btn)btn.style.background=debugMode?'#fff3cd':'var(--sf)';
 }
 
 // STATS
@@ -2744,8 +2775,9 @@ function ncSetLang(l){
 }
 async function addClient(){
   const name=document.getElementById('nc-name').value.trim();if(!name)return alert('Please enter a company name.');
-  const ov=document.getElementById('nc-ov');const clientType=ov.dataset.type||'company';const emailLang=ov.dataset.lang||'de';const email=document.getElementById('nc-email').value.trim();const initpw=document.getElementById('nc-initpw').value;const salutation=document.getElementById('nc-salutation').value;const lastName=document.getElementById('nc-lastname').value.trim();if(email&&initpw&&initpw.length<8)return alert('Initial password must be at least 8 characters.');const body={name,industry:document.getElementById('nc-industry').value,contact:document.getElementById('nc-contact').value.trim(),clientType,emailLang};if(clientType==='individual'){body.salutation=salutation;body.lastName=lastName;}if(email&&initpw){body.email=email;body.initialPassword=initpw;}
-  try{const r=await api('/api/clients',{method:'POST',body:JSON.stringify(body)});const c=await r.json();loadAdvisorDashboard();closeModal('nc-ov');['nc-name','nc-contact','nc-email','nc-initpw','nc-lastname'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});ncSetType('company');ncSetLang('de');goPage('clients');}catch(e){alert('Error: '+e.message);}
+  if(!document.getElementById('nc-privacy').checked)return alert('Bitte bestätige, dass der Klient über die Datenverarbeitung durch Anthropic informiert wurde.');
+  const ov=document.getElementById('nc-ov');const clientType=ov.dataset.type||'company';const emailLang=ov.dataset.lang||'de';const email=document.getElementById('nc-email').value.trim();const initpw=document.getElementById('nc-initpw').value;const salutation=document.getElementById('nc-salutation').value;const lastName=document.getElementById('nc-lastname').value.trim();if(email&&initpw&&initpw.length<8)return alert('Initial password must be at least 8 characters.');const body={name,industry:document.getElementById('nc-industry').value,contact:document.getElementById('nc-contact').value.trim(),clientType,emailLang,privacyAcknowledged:true};if(clientType==='individual'){body.salutation=salutation;body.lastName=lastName;}if(email&&initpw){body.email=email;body.initialPassword=initpw;}
+  try{const r=await api('/api/clients',{method:'POST',body:JSON.stringify(body)});const c=await r.json();if(!r.ok)throw new Error(c.error);loadAdvisorDashboard();closeModal('nc-ov');['nc-name','nc-contact','nc-email','nc-initpw','nc-lastname'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('nc-privacy').checked=false;ncSetType('company');ncSetLang('de');goPage('clients');}catch(e){alert('Error: '+e.message);}
 }
 
 // PEOPLE DIRECTORY
@@ -2979,6 +3011,45 @@ async function bvActiveSave(){
     bvActiveRefresh();
   }catch{alert('Fehler beim Speichern.');}
   saveBtn.textContent='Speichern';saveBtn.disabled=false;
+}
+
+// Task 10: Brand Voice version history
+async function bvShowHistory(){
+  if(!clientId)return;
+  const r=await api('/api/memory/'+clientId+'/brand_voice/history');
+  const hist=await r.json();
+  if(!hist.length)return alert('Keine früheren Versionen vorhanden.');
+  // Build a simple modal-style overlay
+  let existing=document.getElementById('bv-hist-modal');
+  if(existing)existing.remove();
+  const ov=document.createElement('div');
+  ov.id='bv-hist-modal';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  const box=document.createElement('div');
+  box.style.cssText='background:var(--bg);border-radius:14px;max-width:560px;width:100%;max-height:80vh;overflow-y:auto;padding:24px';
+  box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
+    +'<div style="font-size:15px;font-weight:700">Brand Voice — Versionshistorie</div>'
+    +'<button onclick="document.getElementById(\'bv-hist-modal\').remove()" style="font-size:18px;background:none;border:none;cursor:pointer;color:var(--mu)">✕</button>'
+    +'</div>'
+    +hist.map((v,i)=>'<div style="border:1px solid var(--bd);border-radius:8px;margin-bottom:10px;overflow:hidden">'
+      +'<div style="padding:8px 12px;background:var(--sf);display:flex;justify-content:space-between;align-items:center">'
+      +'<span style="font-size:12px;color:var(--mu)">'+new Date(v.saved_at).toLocaleString('de-CH')+'</span>'
+      +'<button onclick="bvRollback('+v.id+')" style="font-size:12px;padding:3px 10px;border:1px solid var(--bd);border-radius:5px;background:var(--bg);cursor:pointer">Wiederherstellen</button>'
+      +'</div>'
+      +'<div style="padding:10px 12px;font-size:12px;line-height:1.6;white-space:pre-wrap;max-height:100px;overflow-y:auto;color:var(--tx)">'+safeText(v.content.substring(0,400))+(v.content.length>400?'…':'')+'</div>'
+      +'</div>').join('');
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+}
+async function bvRollback(historyId){
+  if(!confirm('Diese Version wiederherstellen? Die aktuelle Brand Voice wird archiviert.'))return;
+  try{
+    await api('/api/memory/'+clientId+'/brand_voice/rollback/'+historyId,{method:'POST'});
+    await loadMemory();bvActiveRefresh();
+    document.getElementById('bv-hist-modal')?.remove();
+    alert('Brand Voice wiederhergestellt.');
+  }catch(e){alert('Fehler: '+e.message);}
 }
 
 function loadFromMemory(type,targetId,boxId){
@@ -4182,11 +4253,12 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
     const resp=await fetch(API+'/api/analyze/stream',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({module,clientId,data})
+      body:JSON.stringify({module,clientId,data,debug:debugMode&&isAdv})
     });
     if(!resp.ok){const d=await resp.json();throw new Error(d.error||'Server error');}
     const reader=resp.body.getReader();const dec=new TextDecoder();
-    let buf='',fullText='';
+    let buf='',fullText='',lastEventName='';
+    let analysisId=null,hasBrandVoice=false,debugPrompt=null;
     body.textContent='';
     while(true){
       const{done,value}=await reader.read();
@@ -4194,19 +4266,41 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
       buf+=dec.decode(value,{stream:true});
       const lines=buf.split('\n');buf=lines.pop();
       for(const line of lines){
+        if(line.startsWith('event: '))lastEventName=line.slice(7).trim();
         if(line.startsWith('data: ')){
           try{
             const evt=JSON.parse(line.slice(6));
-            if(evt.text){fullText+=evt.text;body.textContent=fullText;}
+            if(lastEventName==='done'||evt.id){
+              analysisId=evt.id;hasBrandVoice=!!evt.hasBrandVoice;
+              if(evt.systemPrompt)debugPrompt=evt.systemPrompt;
+            } else if(evt.text){fullText+=evt.text;body.textContent=fullText;}
           }catch{}
+          lastEventName='';
         }
-        if(line.startsWith('event: error')){/* error event coming next */}
       }
     }
     if(module==='vs-cal')voiceProf=fullText;
     if(['crisis','si','st'].includes(module))showDebriefNudge(module,rid);
     if(['brand-voice-co','brand-voice-ind'].includes(module)&&clientId){
       api('/api/memory/'+clientId+'/brand_voice',{method:'PUT',body:JSON.stringify({content:fullText})}).then(()=>loadMemory()).catch(()=>{});
+    }
+    // Task 16: thumbs up/down rating buttons
+    if(analysisId&&isAdv){
+      const ratingBar=document.createElement('div');
+      ratingBar.style.cssText='display:flex;gap:8px;margin-top:10px;align-items:center';
+      ratingBar.innerHTML='<span style="font-size:11px;color:var(--mu)">Output bewerten:</span>'
+        +'<button onclick="rateAnalysis('+analysisId+',1,this.parentNode)" style="padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:14px" title="Gut">👍</button>'
+        +'<button onclick="rateAnalysis('+analysisId+',-1,this.parentNode)" style="padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:14px" title="Schlecht">👎</button>'
+        +(hasBrandVoice?'<span style="font-size:11px;color:#2a7;margin-left:4px">✓ Brand Voice aktiv</span>':'<span style="font-size:11px;color:var(--mu);margin-left:4px">Kein Brand Voice</span>');
+      body.parentNode.insertBefore(ratingBar,body.nextSibling);
+    }
+    // Task 15: debug prompt panel
+    if(debugPrompt){
+      const dbg=document.createElement('details');
+      dbg.style.cssText='margin-top:8px;font-size:11px;border:1px solid var(--bd);border-radius:6px;overflow:hidden';
+      dbg.innerHTML='<summary style="padding:6px 10px;background:var(--sf);cursor:pointer;font-weight:600;color:var(--mu)">🔍 System Prompt (Debug)</summary>'
+        +'<pre style="padding:10px;margin:0;white-space:pre-wrap;font-size:11px;max-height:300px;overflow-y:auto;background:var(--bg)">'+safeText(debugPrompt)+'</pre>';
+      body.parentNode.insertBefore(dbg,body.nextSibling);
     }
     loadStats();
   }catch(e){

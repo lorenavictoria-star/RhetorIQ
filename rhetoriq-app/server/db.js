@@ -152,6 +152,25 @@ async function init() {
     );
     CREATE INDEX IF NOT EXISTS usage_log_advisor_idx ON usage_log(advisor_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS usage_log_client_idx ON usage_log(client_id, created_at DESC);
+
+    -- Task 10: Brand Voice version history
+    CREATE TABLE IF NOT EXISTS company_memory_history (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+      memory_type TEXT NOT NULL,
+      content TEXT NOT NULL,
+      saved_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS mem_history_client_idx ON company_memory_history(client_id, memory_type, saved_at DESC);
+
+    -- Task 11: track whether brand voice was active at generation time
+    ALTER TABLE analyses ADD COLUMN IF NOT EXISTS had_brand_voice BOOLEAN DEFAULT FALSE;
+
+    -- Task 12: DSGVO — advisor confirms client was informed about Anthropic data processing
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS privacy_acknowledged_at TIMESTAMPTZ;
+
+    -- Task 16: thumbs up/down per analysis
+    ALTER TABLE analyses ADD COLUMN IF NOT EXISTS user_rating SMALLINT;
   `);
 }
 
