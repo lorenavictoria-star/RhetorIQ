@@ -17,6 +17,9 @@ const bcrypt = require('bcrypt');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
 const { init, pool } = require('./db');
+const cron = require('node-cron');
+const { runWeeklyReport }  = require('./jobs/weekly-report');
+const { runMonthlyReport } = require('./jobs/monthly-report');
 
 const app = express();
 const server = http.createServer(app);
@@ -122,6 +125,17 @@ app.use('/api/onboard', require('./routes/onboard'));
 app.use('/api/custom-modules', require('./routes/customModules'));
 app.use('/api/module-examples', require('./routes/moduleExamples'));
 app.use('/api/module-prompts', require('./routes/modulePrompts'));
+
+// Manual report trigger (advisor only)
+const { requireAdvisor } = require('./middleware/auth');
+app.post('/api/admin/report/weekly',  requireAdvisor, async (req, res) => {
+  runWeeklyReport().catch(e => console.error(e));
+  res.json({ ok: true, message: 'Weekly report triggered — arrives by email in ~30s' });
+});
+app.post('/api/admin/report/monthly', requireAdvisor, async (req, res) => {
+  runMonthlyReport().catch(e => console.error(e));
+  res.json({ ok: true, message: 'Monthly report triggered — arrives by email in ~30s' });
+});
 app.use('/api/audit', require('./routes/audit'));
 
 // FIX 9: Health check with DB probe
@@ -164,6 +178,16 @@ const PORT = process.env.PORT || 3001;
   await init();
   await seedAdvisor();
   server.listen(PORT, () => console.log(`RhetorIQ server running on :${PORT}`));
+
+  // ── Scheduled reports ──────────────────────────────────────────
+  // Weekly: every Monday at 08:03 (off-minute to avoid fleet collisions)
+  cron.schedule('3 8 * * 1', () => runWeeklyReport(), { timezone: 'Europe/Zurich' });
+
+  // Monthly: 1st of each month at 08:07
+  cron.schedule('7 8 1 * *', () => runMonthlyReport(), { timezone: 'Europe/Zurich' });
+
+  console.log('[cron] Weekly report: every Monday 08:03 Zurich');
+  console.log('[cron] Monthly report: 1st of month 08:07 Zurich');
 })();
 
 function gracefulShutdown(signal) {
