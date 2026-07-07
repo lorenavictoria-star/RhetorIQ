@@ -4577,8 +4577,8 @@ async function loadAdvisorDashboard(){
         return`<div class="adv-client-card">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
-              <div class="adv-client-name">${c.name}</div>
-              <div class="adv-client-meta">${c.industry||'—'} · ${c.contact||'—'}</div>
+              <div class="adv-client-name">${safeText(c.name)}</div>
+              <div class="adv-client-meta">${safeText(c.industry||'—')} · ${safeText(c.contact||'—')}</div>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
               <span style="font-size:11px;color:var(--mu)">${c.total_analyses} ${parseInt(c.total_analyses)===1?'analysis':'analyses'}</span>
@@ -4587,16 +4587,16 @@ async function loadAdvisorDashboard(){
           <div class="adv-client-bar" style="margin-top:8px"><div class="adv-bar-track"><div class="adv-bar-fill" style="width:${pct}%"></div></div><span style="font-size:10px;color:var(--mu)">${c.analyses_7d||0} this week · Last active ${fmtDate(c.last_activity)}</span></div>
           ${tok?`<div class="tkcode" style="margin-top:8px;font-size:11px">${tokShort}</div>`:''}
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
-            ${tok?`<button class="obtn" onclick="copyTok('${tok}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail('${c.name}','${tok}','${c.id}')">Send by Email</button>`:''}
-            <button class="obtn" onclick="openSetPassword(${c.id},'${c.name}')">Set Password</button>
+            ${tok?`<button class="obtn" onclick="copyTok('${tok}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail(${c.id},'${tok}')">Send by Email</button>`:''}
+            <button class="obtn" onclick="openSetPassword(${c.id})">Set Password</button>
             <button class="obtn" onclick="advToggleTimeline('${c.id}',this)">Activity</button>
-            <button class="obtn" onclick="openTeamModal(${c.id},'${c.name}')">Team</button>
-            <button class="obtn" onclick="openAuditModal(${c.id},'${c.name}')">Audit Log</button>
+            <button class="obtn" onclick="openTeamModal(${c.id})">Team</button>
+            <button class="obtn" onclick="openAuditModal(${c.id})">Audit Log</button>
             <button class="obtn" style="color:#5b21b6;border-color:#c4b5fd;background:#f5f3ff;font-weight:500" onclick="openModuleConfig(${c.id})"><i class="ti ti-layout-grid" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Module</button>
           </div>
           <div style="display:flex;gap:6px;margin-top:8px">
-            <button class="dbtn" onclick="delData(${c.id},'${c.name}')">Delete Data</button>
-            <button class="dbtn" onclick="deleteClient(${c.id},'${c.name}').then(()=>loadAdvisorDashboard())">Delete Client</button>
+            <button class="dbtn" onclick="delData(${c.id})">Delete Data</button>
+            <button class="dbtn" onclick="deleteClient(${c.id}).then(()=>loadAdvisorDashboard())">Delete Client</button>
           </div>
           <div class="adv-timeline" id="adv-tl-${c.id}" style="display:none"></div>
         </div>`;
@@ -5127,7 +5127,7 @@ async function openAuditModal(cid,cname){
         </tr></thead>
         <tbody>${rows.map((a,i)=>`<tr style="${i%2?'background:var(--sf)':''}">
           <td style="padding:8px 12px;color:var(--mu);white-space:nowrap">${new Date(a.created_at).toLocaleString('de-CH',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</td>
-          <td style="padding:8px 12px"><span style="color:${modColor(a.module)};font-weight:600">${a.module_label||a.module}</span></td>
+          <td style="padding:8px 12px"><span style="color:${modColor(a.module)};font-weight:600">${safeText(a.module_label||a.module)}</span></td>
           <td style="padding:8px 12px;color:var(--tx)">${a.generated_by||'Klient'}</td>
           <td style="padding:8px 12px;color:var(--mu);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(a.result_preview||'').substring(0,120)}</td>
         </tr>`).join('')}</tbody>

@@ -1028,8 +1028,10 @@ router.post('/', requireAuth, async (req, res) => {
     }
 
     // Build system array: stable module prompt (cacheable) + dynamic client context
-    const systemBlocks = [{ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } }];
+    const systemBlocks = [];
+    if (baseSystem) systemBlocks.push({ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } });
     if (dynamicSystem) systemBlocks.push({ type: 'text', text: dynamicSystem });
+    if (!systemBlocks.length) systemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
     const claudeResp = await callClaude(systemBlocks, userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
     const result = claudeResp.text;
 
@@ -1164,8 +1166,10 @@ router.post('/stream', requireAuth, async (req, res) => {
     req.on('close', () => { aborted = true; abortController.abort(); clearInterval(keepAlive); });
 
     const maxTokens = MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS;
-    const streamSystemBlocks = [{ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } }];
+    const streamSystemBlocks = [];
+    if (baseSystem) streamSystemBlocks.push({ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } });
     if (dynamicSystem) streamSystemBlocks.push({ type: 'text', text: dynamicSystem });
+    if (!streamSystemBlocks.length) streamSystemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       signal: abortController.signal,
