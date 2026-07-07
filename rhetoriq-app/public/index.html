@@ -2273,10 +2273,18 @@ let _trExamples=[];
 async function loadTraining(){
   const sel=document.getElementById('tr-module-sel');
   if(!sel)return;
-  const opts=ALL_MODULES.map(m=>`<option value="${m.key}">${m.name}</option>`).join('');
-  sel.innerHTML=opts;
   _trRating=3;
   trRenderStars(3);
+  // Fetch summary counts per module
+  let counts={};
+  try{const r=await api('/api/module-examples/summary');const rows=r.ok?await r.json():[];rows.forEach(x=>{counts[x.module_key]=x.total;});}catch{}
+  const totalAll=Object.values(counts).reduce((a,b)=>a+b,0);
+  const allOpt=`<option value="">Alle (${totalAll})</option>`;
+  const moduleOpts=ALL_MODULES.map(m=>{
+    const n=counts[m.key]||0;
+    return`<option value="${m.key}"${n?'':''} >${m.name}${n?' ('+n+')':''}</option>`;
+  }).join('');
+  sel.innerHTML=allOpt+moduleOpts;
   // Ensure clients are loaded
   if(!clients.length){
     try{const r=await api('/api/clients');clients=await r.json();}catch{}
@@ -2315,13 +2323,13 @@ function trRenderStars(v){
 
 async function trLoadModule(){
   const key=document.getElementById('tr-module-sel')?.value;
-  if(!key)return;
   const list=document.getElementById('tr-list');
   const count=document.getElementById('tr-count');
   const hideAuto=document.getElementById('tr-hide-auto')?.checked;
   list.innerHTML='<div style="color:var(--mu);font-size:13px">Laden…</div>';
   try{
-    const r=await api('/api/module-examples?moduleKey='+encodeURIComponent(key));
+    const url=key?'/api/module-examples?moduleKey='+encodeURIComponent(key):'/api/module-examples';
+    const r=await api(url);
     _trExamples=r.ok?await r.json():[];
     const visible=hideAuto?_trExamples.filter(e=>!e.auto_generated):_trExamples;
     const autoCount=_trExamples.filter(e=>e.auto_generated).length;
@@ -2334,6 +2342,7 @@ async function trLoadModule(){
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             ${ex.auto_generated?`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f3f4f6;color:var(--mu)">auto</span>`:`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0">manuell</span>`}
+            ${!key&&ex.module_key?`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe">${ALL_MODULES.find(x=>x.key===ex.module_key)?.name||ex.module_key}</span>`:''}
             ${ex.label?`<span style="font-size:12px;font-weight:600;color:var(--tx)">${ex.label}</span>`:''}
             ${ex.industry_tag?`<span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd">${ex.industry_tag}</span>`:''}
           </div>
