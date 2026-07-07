@@ -1024,6 +1024,20 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <div>Please select a client first.</div>
         <button onclick="goPage('clients');loadAdvisorDashboard();setMN('clients')" style="margin-top:16px;padding:8px 18px;border:1px solid var(--bd);border-radius:6px;background:var(--sf);font-size:13px;cursor:pointer;font-family:'Instrument Sans',sans-serif">Go to Clients</button>
       </div>
+      <!-- ── Aktive Brand Voice — immer sichtbar, sofort editierbar ── -->
+      <div id="bv-active-panel" style="display:none;margin-bottom:28px;border:2px solid var(--ac);border-radius:12px;overflow:hidden">
+        <div style="background:var(--ac);padding:10px 16px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff">Aktive Brand Voice — wird bei jeder Generierung injiziert</div>
+          <div style="display:flex;gap:8px">
+            <button id="bv-active-edit-btn" onclick="bvActiveEdit()" style="padding:4px 12px;border:1.5px solid rgba(255,255,255,.6);border-radius:6px;background:transparent;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Bearbeiten</button>
+            <button id="bv-active-save-btn" onclick="bvActiveSave()" style="display:none;padding:4px 12px;border:none;border-radius:6px;background:#fff;color:var(--ac);font-size:11px;font-weight:700;cursor:pointer;font-family:'Instrument Sans',sans-serif">Speichern</button>
+            <button id="bv-active-cancel-btn" onclick="bvActiveCancel()" style="display:none;padding:4px 12px;border:1.5px solid rgba(255,255,255,.6);border-radius:6px;background:transparent;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Abbrechen</button>
+          </div>
+        </div>
+        <div id="bv-active-view" style="padding:14px 16px;font-size:13px;line-height:1.7;color:var(--tx);white-space:pre-wrap;max-height:200px;overflow-y:auto;background:var(--sf)"></div>
+        <textarea id="bv-active-ta" style="display:none;width:100%;min-height:200px;padding:14px 16px;border:none;border-top:1.5px solid var(--ac);font-size:13px;line-height:1.7;resize:vertical;outline:none;font-family:'Instrument Sans',sans-serif;box-sizing:border-box"></textarea>
+      </div>
+
       <div id="bv-main-wrap">
       <div class="tog">
         <button class="togbtn active" id="bv-tab-co" onclick="switchBrand('company',this)">Company</button>
@@ -2847,6 +2861,60 @@ function autoLoadBrandVoice(){
   if(coEl&&!coEl.textContent.trim()){coEl.textContent=item.content;document.getElementById('brand-voice-co-r').classList.add('show');}
   if(indEl&&!indEl.textContent.trim()){indEl.textContent=item.content;document.getElementById('brand-voice-ind-r').classList.add('show');}
 }
+// ── Aktive Brand Voice Panel ─────────────────────────────────────────────────
+function bvActiveRefresh(){
+  const panel=document.getElementById('bv-active-panel');
+  const view=document.getElementById('bv-active-view');
+  if(!panel||!view)return;
+  // Collect all brand_voice entries from memory
+  const items=memory.filter(m=>m.memory_type.startsWith('brand_voice'));
+  if(!items.length){panel.style.display='none';return;}
+  panel.style.display='block';
+  view.textContent=items.map(m=>m.content).join('\n\n');
+  // Reset edit state
+  bvActiveCancel();
+}
+function bvActiveEdit(){
+  const view=document.getElementById('bv-active-view');
+  const ta=document.getElementById('bv-active-ta');
+  const editBtn=document.getElementById('bv-active-edit-btn');
+  const saveBtn=document.getElementById('bv-active-save-btn');
+  const cancelBtn=document.getElementById('bv-active-cancel-btn');
+  ta.value=view.textContent;
+  view.style.display='none';
+  ta.style.display='block';
+  editBtn.style.display='none';
+  saveBtn.style.display='inline-block';
+  cancelBtn.style.display='inline-block';
+  ta.focus();
+}
+function bvActiveCancel(){
+  const view=document.getElementById('bv-active-view');
+  const ta=document.getElementById('bv-active-ta');
+  const editBtn=document.getElementById('bv-active-edit-btn');
+  const saveBtn=document.getElementById('bv-active-save-btn');
+  const cancelBtn=document.getElementById('bv-active-cancel-btn');
+  if(!view)return;
+  view.style.display='block';
+  ta.style.display='none';
+  editBtn.style.display='inline-block';
+  saveBtn.style.display='none';
+  cancelBtn.style.display='none';
+}
+async function bvActiveSave(){
+  const ta=document.getElementById('bv-active-ta');
+  const saveBtn=document.getElementById('bv-active-save-btn');
+  const content=ta.value.trim();
+  if(!content)return;
+  saveBtn.textContent='Speichert…';saveBtn.disabled=true;
+  try{
+    await api('/api/memory/'+clientId+'/brand_voice',{method:'PUT',body:JSON.stringify({content})});
+    await loadMemory();
+    bvActiveRefresh();
+  }catch{alert('Fehler beim Speichern.');}
+  saveBtn.textContent='Speichern';saveBtn.disabled=false;
+}
+
 function loadFromMemory(type,targetId,boxId){
   if(!clientId)return alert('Please select a client first.');
   const item=memory.find(m=>m.memory_type===type);
@@ -2911,7 +2979,7 @@ function goPage(name){
     } else {
       if(bvWrap)bvWrap.style.display='block';
       if(bvNoClient)bvNoClient.style.display='none';
-      loadBrandVoiceRefs();autoLoadBrandVoice();
+      loadBrandVoiceRefs();autoLoadBrandVoice();bvActiveRefresh();
     }
   }
   if(name==='modules')renderModulesList();
