@@ -2964,11 +2964,157 @@ const MDEFS={
   'pre-meeting':{title:'Meeting Prep',desc:'Meeting in 1 hour? Get a complete brief: the 3 hardest moments, your opening line, key messages, what not to say, and a stakeholder map.',api:'pre-meeting',special:'premeeting'},
   'arg-reaction':{title:'Argument / Reaction Preview',desc:'Three tools in one: get the hardest pushback, simulate how stakeholders will react, and check if the leadership message matches company reality.',api:'arg-reaction',special:'argreaction'},
   // ── CAPITAL MARKETS SUITE ─────────────────────────────────────
-  'cm-qa-trainer':{title:'Analyst Q&A Trainer',desc:'Generate 10–50 realistic analyst questions based on your company profile and recent events. Train responses, spot traps, build confidence before every earnings call or capital markets day.',api:'cm-qa-trainer',fields:[{id:'cm-qa-company',type:'text',lbl:'Company / Ticker',ph:'e.g. Sensirion AG / SENS'},{id:'cm-qa-sector',type:'text',lbl:'Sector',ph:'e.g. Semiconductor sensors, life science'},{id:'cm-qa-context',type:'text',lbl:'Recent event / context',ph:'e.g. Q3 earnings, profit warning, IPO roadshow'},{id:'cm-qa-difficulty',type:'sel',lbl:'Difficulty',opts:['Standard — professional','Critical — aggressive questioning','Worst-Case — maximum pressure']},{id:'cm-qa-focus',type:'sel',lbl:'Focus area',opts:['All areas','Guidance & outlook','Margin & cost structure','Capital allocation','Strategy & competition','ESG & governance']}],mf:'cm-qa-text',ph:'Paste key metrics, guidance, recent results, or prepared remarks. The more context, the sharper the questions.',mh:'140px'},
-  'cm-equity-story':{title:'Equity Story Builder',desc:'Build an institutional-grade equity story: Why Now, Market Opportunity, Competitive Moat, Financial Trajectory, Management Credibility. Consistency-checked and tone-assessed.',api:'cm-equity-story',fields:[{id:'cm-es-company',type:'text',lbl:'Company',ph:'e.g. Medmix AG'},{id:'cm-es-sector',type:'text',lbl:'Sector / Industry',ph:'e.g. Medical devices, specialty chemicals'},{id:'cm-es-investor',type:'sel',lbl:'Target investor type',opts:['Institutional generalist','Long-only growth','Long-only value','Hedge fund','ESG / Impact','Private equity']},{id:'cm-es-length',type:'sel',lbl:'Story length',opts:['2-min elevator pitch','10-min standard pitch','30-min deep dive']},{id:'cm-es-metrics',type:'text',lbl:'Key financial metrics',ph:'e.g. Revenue CHF 420M, EBITDA 18%, growth 12% YoY'}],mf:'cm-es-text',ph:'Paste annual reports, investor presentations, management commentary, or strategy documents.',mh:'140px'},
-  'cm-earnings-analyzer':{title:'Earnings Call Analyzer',desc:'Upload an earnings call transcript. Get a full communication audit: what landed, what triggered analyst concern, unintended signals, and concrete improvements for the next call.',api:'cm-earnings-analyzer',fields:[{id:'cm-ea-company',type:'text',lbl:'Company',ph:'e.g. u-blox AG'},{id:'cm-ea-calltype',type:'sel',lbl:'Call type',opts:['Quarterly earnings call','Full-year results','Capital markets day','Analyst briefing','Ad-hoc announcement']},{id:'cm-ea-period',type:'text',lbl:'Period',ph:'e.g. Q3 2025, FY 2024'},{id:'cm-ea-sector',type:'text',lbl:'Sector context',ph:'e.g. IoT semiconductors, currently facing inventory correction'}],mf:'cm-ea-text',ph:'Paste the full transcript or prepared remarks here.',mh:'180px'},
-  'cm-board-coach':{title:'Board Presentation Coach',desc:'Translate capital markets complexity into decision-quality board language. Produces an executive summary, scenario table, risk reformulation, and decision framing — ready for any board room.',api:'cm-board-coach',fields:[{id:'cm-bc-company',type:'text',lbl:'Company',ph:'e.g. Bachem AG'},{id:'cm-bc-purpose',type:'text',lbl:'Presentation purpose',ph:'e.g. Capital allocation decision, guidance update, M&A briefing'},{id:'cm-bc-decision',type:'text',lbl:'Decision required from board',ph:'e.g. Approval of CHF 200M capex programme'},{id:'cm-bc-board',type:'sel',lbl:'Board composition',opts:['Mixed — financial and non-financial backgrounds','Primarily financial / investment background','Primarily operational background','Family board — less capital markets exposure']}],mf:'cm-bc-text',ph:'Paste the source material: analyst reports, management presentation, financial projections.',mh:'140px'},
-  'cm-roadshow':{title:'Roadshow Prep Mode',desc:'Prepare for 50–200 investor meetings. Get calibrated briefs per investor type, the 10 hardest questions with model answers, story versions for 5/15/45 minutes, and a consistency checklist.',api:'cm-roadshow',fields:[{id:'cm-rs-company',type:'text',lbl:'Company',ph:'e.g. Sensirion AG'},{id:'cm-rs-type',type:'sel',lbl:'Roadshow type',opts:['NDR (Non-Deal Roadshow)','IPO roadshow','Post-results roadshow','Capital markets day','Investor day / deep dive']},{id:'cm-rs-investors',type:'text',lbl:'Investor types to cover',ph:'e.g. Long-only growth, hedge funds, ESG'},{id:'cm-rs-duration',type:'sel',lbl:'Typical meeting duration',opts:['30 minutes','45 minutes','60 minutes','Full day (multiple slots)']},{id:'cm-rs-story',type:'text',lbl:'Core investment thesis (one line)',ph:'e.g. Leading sensor platform for the energy transition'}],mf:'cm-rs-text',ph:'Paste equity story, recent results, analyst reports, or prior roadshow materials.',mh:'140px'}
+  'cm-qa-trainer':{title:'Analyst Q&A Trainer',desc:'Generate 10–50 realistic analyst questions based on your company profile and recent events. Train responses, spot traps, build confidence before every earnings call or capital markets day.',api:'cm-qa-trainer',tpl:true,fields:[{id:'cm-qa-company',type:'text',lbl:'Company / Ticker',ph:'e.g. Sensirion AG / SENS'},{id:'cm-qa-sector',type:'text',lbl:'Sector',ph:'e.g. Semiconductor sensors, life science'},{id:'cm-qa-context',type:'text',lbl:'Recent event / context',ph:'e.g. Q3 earnings, profit warning, IPO roadshow'},{id:'cm-qa-difficulty',type:'sel',lbl:'Difficulty',opts:['Standard — professional','Critical — aggressive questioning','Worst-Case — maximum pressure']},{id:'cm-qa-focus',type:'sel',lbl:'Focus area',opts:['All areas','Guidance & outlook','Margin & cost structure','Capital allocation','Strategy & competition','ESG & governance']}],mf:'cm-qa-text',ph:'Paste key metrics, guidance, recent results, or prepared remarks.',mh:'220px'},
+  'cm-equity-story':{title:'Equity Story Builder',desc:'Build an institutional-grade equity story: Why Now, Market Opportunity, Competitive Moat, Financial Trajectory, Management Credibility. Consistency-checked and tone-assessed.',api:'cm-equity-story',tpl:true,fields:[{id:'cm-es-company',type:'text',lbl:'Company',ph:'e.g. Medmix AG'},{id:'cm-es-sector',type:'text',lbl:'Sector / Industry',ph:'e.g. Medical devices, specialty chemicals'},{id:'cm-es-investor',type:'sel',lbl:'Target investor type',opts:['Institutional generalist','Long-only growth','Long-only value','Hedge fund','ESG / Impact','Private equity']},{id:'cm-es-length',type:'sel',lbl:'Story length',opts:['2-min elevator pitch','10-min standard pitch','30-min deep dive']},{id:'cm-es-metrics',type:'text',lbl:'Key financial metrics',ph:'e.g. Revenue CHF 420M, EBITDA 18%, growth 12% YoY'}],mf:'cm-es-text',ph:'Paste annual reports, investor presentations, management commentary.',mh:'220px'},
+  'cm-earnings-analyzer':{title:'Earnings Call Analyzer',desc:'Upload an earnings call transcript. Get a full communication audit: what landed, what triggered analyst concern, unintended signals, and concrete improvements for the next call.',api:'cm-earnings-analyzer',tpl:true,fields:[{id:'cm-ea-company',type:'text',lbl:'Company',ph:'e.g. u-blox AG'},{id:'cm-ea-calltype',type:'sel',lbl:'Call type',opts:['Quarterly earnings call','Full-year results','Capital markets day','Analyst briefing','Ad-hoc announcement']},{id:'cm-ea-period',type:'text',lbl:'Period',ph:'e.g. Q3 2025, FY 2024'},{id:'cm-ea-sector',type:'text',lbl:'Sector context',ph:'e.g. IoT semiconductors, currently facing inventory correction'}],mf:'cm-ea-text',ph:'Paste the full transcript or prepared remarks here.',mh:'220px'},
+  'cm-board-coach':{title:'Board Presentation Coach',desc:'Translate capital markets complexity into decision-quality board language. Produces an executive summary, scenario table, risk reformulation, and decision framing — ready for any board room.',api:'cm-board-coach',tpl:true,fields:[{id:'cm-bc-company',type:'text',lbl:'Company',ph:'e.g. Bachem AG'},{id:'cm-bc-purpose',type:'text',lbl:'Presentation purpose',ph:'e.g. Capital allocation decision, guidance update, M&A briefing'},{id:'cm-bc-decision',type:'text',lbl:'Decision required from board',ph:'e.g. Approval of CHF 200M capex programme'},{id:'cm-bc-board',type:'sel',lbl:'Board composition',opts:['Mixed — financial and non-financial backgrounds','Primarily financial / investment background','Primarily operational background','Family board — less capital markets exposure']}],mf:'cm-bc-text',ph:'Paste the source material: analyst reports, management presentation, financial projections.',mh:'220px'},
+  'cm-roadshow':{title:'Roadshow Prep Mode',desc:'Prepare for 50–200 investor meetings. Get calibrated briefs per investor type, the 10 hardest questions with model answers, story versions for 5/15/45 minutes, and a consistency checklist.',api:'cm-roadshow',tpl:true,fields:[{id:'cm-rs-company',type:'text',lbl:'Company',ph:'e.g. Sensirion AG'},{id:'cm-rs-type',type:'sel',lbl:'Roadshow type',opts:['NDR (Non-Deal Roadshow)','IPO roadshow','Post-results roadshow','Capital markets day','Investor day / deep dive']},{id:'cm-rs-investors',type:'text',lbl:'Investor types to cover',ph:'e.g. Long-only growth, hedge funds, ESG'},{id:'cm-rs-duration',type:'sel',lbl:'Typical meeting duration',opts:['30 minutes','45 minutes','60 minutes','Full day (multiple slots)']},{id:'cm-rs-story',type:'text',lbl:'Core investment thesis (one line)',ph:'e.g. Leading sensor platform for the energy transition'}],mf:'cm-rs-text',ph:'Paste equity story, recent results, analyst reports, or prior roadshow materials.',mh:'220px'}
+};
+
+// ── CAPITAL MARKETS PROMPT TEMPLATES ─────────────────────────
+const CM_TEMPLATES={
+'cm-qa-trainer':`UNTERNEHMEN: [Name / Ticker / Börse]
+SEKTOR: [z.B. Medizintechnik, Halbleiter, Specialty Chemicals]
+ANLASS: [Q3 Earnings / Capital Markets Day / IPO Roadshow / Profit Warning]
+ZEITRAUM: [z.B. Q3 2025, FY 2024]
+
+KENNZAHLEN (aus Medienmitteilung oder Präsentation):
+- Umsatz: CHF/EUR Xm, +/- X% YoY
+- EBITDA-Marge: X%
+- Guidance FY: [exakter Wortlaut der Guidance]
+- Besonderheiten: [Einmaleffekte / Akquisition / Restrukturierung / Impairment]
+
+AKTUELLE MARKTLAGE IM SEKTOR:
+[Was beschäftigt Analysten gerade — z.B. Inventar-Korrektur, Margendruck, Regulierung]
+
+LETZTE KONTROVERSE (falls vorhanden):
+[Was hat beim letzten Call Rückfragen ausgelöst?]
+
+BRAND VOICE / KOMMUNIKATIONSSTIL CFO/CEO:
+[z.B. Nüchtern-faktisch / Proaktiv-kommunikativ / Konservativ-zurückhaltend]
+[Typische Formulierungen: z.B. "Wir sind zuversichtlich, aber vorsichtig" / "Die Zahlen sprechen für sich"]`,
+
+'cm-equity-story':`UNTERNEHMEN: [Name, Gründungsjahr, Hauptsitz]
+SEKTOR: [Präzise — nicht "Tech" sondern z.B. "IoT-Halbleiter für Industrieautomation"]
+BÖRSENPLATZ / STATUS: [SIX / MDAX / Pre-IPO / Nasdaq]
+
+FINANZKENNZAHLEN (letzte 2 Geschäftsjahre + aktuelle Guidance):
+- Umsatz: CHF/EUR Xm [Jahr-2] → Xm [Jahr-1] → Xm [Guidance aktuell]
+- EBITDA-Marge: X% → X% → X%
+- Organisches Wachstum: X% p.a.
+- Kapitalstruktur: Nettoverschuldung Xm / Net Cash / Leverage Ratio X.Xx
+- Besonderheit: [FCF-Inflexion / Dividendenhistorie / Buyback-Programm]
+
+MARKTCHANCE:
+- TAM / SAM: [CHF/EUR Xm, CAGR X% — Quelle wenn vorhanden]
+- Adressierbares Segment heute: [CHF/EUR Xm]
+- Marktanteil aktuell → Ziel: [X% → X%]
+
+WETTBEWERBSPOSITION:
+- Hauptwettbewerber: [3–5 Namen]
+- Was können die anderen nicht kopieren in 18 Monaten?
+- Moat-Typ: [IP / Switching Costs / Netzwerkeffekte / Regulierung / Kostenstruktur]
+
+WHY NOW — KONKRETER KATALYSATOR:
+[Was hat sich verändert, dass das heute eine Investitionsentscheidung ist?]
+[z.B. GLP-1-Welle, Energietransition, Nearshoring, Regulierungsänderung]
+
+MANAGEMENT-TRACK RECORD:
+- CEO/CFO seit: [Jahr]
+- Haben sie geliefert was sie versprochen haben? [konkretes Beispiel]
+- Insiderbesitz / Skin in the Game: [X% / CHF Xm]
+
+BRAND VOICE / KOMMUNIKATIONSSTIL:
+[Wie spricht das Management über das Unternehmen?]
+[Visionär oder nüchtern? Bescheiden oder selbstbewusst? Technisch oder strategisch?]`,
+
+'cm-earnings-analyzer':`UNTERNEHMEN: [Name / Ticker]
+CALL-TYP: [Q-Earnings / Jahresergebnis / Capital Markets Day / Ad-hoc]
+BERICHTSPERIODE: [z.B. Q3 2025, FY 2024]
+
+SEKTOR-KONTEXT:
+[Was bewegt den Sektor gerade — z.B. Inventar-Korrekturen, Zinsdruck, Nachfrageschwäche]
+
+MARKTERWARTUNG VOR DEM CALL (falls bekannt):
+- Konsensus Umsatz: CHF/EUR Xm
+- Konsensus EBITDA-Marge: X%
+- Was hat der Markt besonders erwartet? [z.B. Guidance-Erhöhung, Margin Recovery, Entschuldung]
+
+VORGÄNGER-CALL — WAS WURDE VERSPROCHEN?
+[Key Messages und Guidance aus dem letzten Call — wurden sie eingehalten?]
+
+BRAND VOICE / KOMMUNIKATIONSSTIL CFO/CEO:
+[Wie klingt dieser CFO normalerweise? Referenz-Tonalität für die Abweichungsanalyse]
+[z.B. Immer präzise mit Zahlen / Eher narrativ / Vorsichtig bei Guidance]
+
+--- TRANSKRIPT / PREPARED REMARKS (vollständig einfügen) ---
+
+[CEO Opening Statement hier einfügen]
+
+[CFO Financial Review hier einfügen]
+
+[Q&A Volltext hier einfügen]`,
+
+'cm-board-coach':`UNTERNEHMEN: [Name]
+PRÄSENTATIONSZWECK: [z.B. Kapitalerhöhung, Guidance-Anpassung, M&A-Target, Jahresergebnis]
+SITZUNGSDATUM: [Dringlichkeit beeinflusst den Ton]
+
+ENTSCHEIDUNG DIE DER VR TREFFEN MUSS:
+[Präzise formulieren — z.B. "Genehmigung CHF 200M Capex-Programm 2025–2027"]
+
+VR-ZUSAMMENSETZUNG:
+- Anzahl Mitglieder: [X]
+- Finanzbackground (Mehrheit?): [Ja / Nein / Gemischt]
+- Bekannte Schwerpunkte / kritische Stimmen: [optional, anonym]
+- Letzter Entscheid zum gleichen Thema: [Was wurde damals beschlossen?]
+
+SCHLÜSSELZAHLEN FÜR DIE ENTSCHEIDUNG:
+- [Kennzahl 1]: [Wert / Bandbreite]
+- [Kennzahl 2]: [Wert / Bandbreite]
+- IRR / NPV (bei Investitionsentscheiden): [X%]
+- Break-even / Payback: [Datum / Bedingung]
+
+SZENARIEN:
+- Optimistisch: [Kernannahme]
+- Base Case: [Kernannahme]
+- Konservativ / Downside: [Kernannahme / Trigger]
+
+BRAND VOICE / KOMMUNIKATIONSSTIL VOR DIESEM GREMIUM:
+[Wie spricht der CFO/CEO normalerweise vor diesem VR?]
+[z.B. Sehr zahlenorientiert / Eher narrativ / Formell / Direkt]
+
+--- QUELLMATERIAL (roh einfügen) ---
+
+[Analysten-Reports, Management-Präsentation, Finanzprojektionen, Gutachten]`,
+
+'cm-roadshow':`UNTERNEHMEN: [Name / Ticker / Börse]
+ROADSHOW-TYP: [NDR / IPO-Roadshow / Post-Earnings / Capital Markets Day]
+ROADSHOW-ZEITRAUM: [Datum von / bis]
+GEPLANTE ANZAHL MEETINGS: [Schätzung]
+GEOGRAFISCHE MÄRKTE: [z.B. Zürich, London, Frankfurt, Paris, New York]
+
+KERNBOTSCHAFT IN EINEM SATZ:
+[z.B. "Leading sensor platform for the energy transition with 15% organic CAGR and inflecting FCF"]
+
+INVESTOR-TYPEN DIE ABGEDECKT WERDEN:
+[z.B. Long-only Growth, Long-only Value, Hedge Fund, ESG — mehrere möglich]
+
+MEETING-FORMAT:
+- Dauer: [30 / 45 / 60 Min.]
+- Format: [1:1 / Group / Management Presentation + Q&A]
+
+AKTUELLE KAPITALMARKT-SENSITIVITÄTEN:
+- Was beschäftigt Investoren in eurem Sektor? [z.B. Zinsumfeld, Cycle-Timing]
+- Grösste Skepsis gegenüber dem Investment Case: [ehrlich — was glauben sie noch nicht?]
+- Was hat auf der letzten Roadshow nicht überzeugt? [optional]
+
+BRAND VOICE / MANAGEMENTSTIL IN INVESTOR-MEETINGS:
+[Wie tritt der CEO/CFO auf? Präzise-nüchtern / Charismatisch-visionär / Konservativ-vertrauensbildend]
+[Typischer Einstieg in Investor-Meetings: z.B. direkt mit Zahlen / erst mit Story / Fragen stellen]
+
+--- EQUITY STORY / HINTERGRUNDMATERIAL ---
+
+[Hier Equity Story, Jahresbericht-Auszüge, Analysten-Reports, letzte Roadshow-Präsentation einfügen]`
 };
 
 function goModule(name,prefill){
@@ -2997,7 +3143,8 @@ function buildForm(name,def,prefill,form){
   const tl=T[LANG]||T.en;
   h+=`<div class="upzone" onclick="document.getElementById('mf-${name}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.form_upload}</strong> &mdash; ${tl.form_upload_sub}</div><input type="file" id="mf-${name}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'${def.mf}','mt-${name}')"></div>`;
   h+=`<div class="ftags" id="mt-${name}"></div>`;
-  h+=`<div class="fg2"><label class="fl2">${tl.form_text}</label><textarea id="${def.mf}" placeholder="${def.ph||''}" style="min-height:${def.mh||'130px'}"></textarea></div>`;
+  const tplBtn=def.tpl?`<button type="button" onclick="cmFillTpl('${def.mf}')" style="margin-left:8px;padding:2px 9px;font-size:11px;border:1px solid var(--ac);border-radius:4px;background:transparent;cursor:pointer;font-family:inherit;color:var(--ac);font-weight:600;letter-spacing:.01em">📋 Prompt laden</button>`:'';
+  h+=`<div class="fg2"><label class="fl2">${tl.form_text}${tplBtn}</label><textarea id="${def.mf}" placeholder="${def.ph||''}" style="min-height:${def.mh||'130px'}"></textarea></div>`;
   if(def.twopart){const f2=def.fields.find(f=>f.type==='ta');if(f2)h+=`<div class="fg2"><label class="fl2">${f2.lbl}</label><textarea id="${f2.id}" placeholder="${f2.ph||''}"></textarea></div>`;}
   const others=def.fields.filter(f=>f.type!=='ta');
   if(others.length){h+=`<div class="row2">`;others.forEach(f=>{if(f.type==='text')h+=`<div class="fg2"><label class="fl2">${f.lbl}</label><input type="text" id="${f.id}" placeholder="${f.ph||''}"></div>`;else h+=`<div class="fg2"><label class="fl2">${f.lbl}</label><select id="${f.id}">${f.opts.map(o=>`<option>${o}</option>`).join('')}</select></div>`;});h+=`</div>`;}
@@ -3005,6 +3152,17 @@ function buildForm(name,def,prefill,form){
   h+=`<div class="rbox" id="${name}-r"><div class="rhead"><span class="rlbl">${tl.form_result}</span><div class="rbtns"><button class="cpbtn" onclick="cp('${name}-b')">${tl.btn_copy}</button>${def.people&&people.length?`<button class="svbtn" onclick="saveResultToPerson('${name}-b','${def.api}')">${tl.btn_save_memory}</button>`:''}</div></div><div class="rbody" id="${name}-b"></div></div>`;
   form.innerHTML=h;
   if(prefill){const ta=document.getElementById(def.mf);if(ta)ta.value=prefill;}
+}
+
+function cmFillTpl(mfId){
+  const tpl=CM_TEMPLATES[window._currentModule];
+  if(!tpl)return;
+  const ta=document.getElementById(mfId);
+  if(!ta)return;
+  if(ta.value.trim()&&!confirm('Feld überschreiben mit Prompt-Template?'))return;
+  ta.value=tpl;
+  ta.focus();
+  ta.scrollTop=0;
 }
 
 function buildTextGen(prefill,form){
