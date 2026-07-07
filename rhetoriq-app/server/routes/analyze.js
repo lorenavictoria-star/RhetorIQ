@@ -767,8 +767,7 @@ router.post('/', requireAuth, async (req, res) => {
       if (inputText) {
         pool.query(
           `INSERT INTO module_examples (advisor_id, module_key, industry_tag, input_text, output_text, rating, auto_generated)
-           VALUES ($1,$2,$3,$4,$5,3,true)
-           ON CONFLICT DO NOTHING`,
+           VALUES ($1,$2,$3,$4,$5,3,true)`,
           [advisorId, module, clientIndustry || null, inputText, result]
         ).catch(() => {}); // fire-and-forget, never block the response
       }
