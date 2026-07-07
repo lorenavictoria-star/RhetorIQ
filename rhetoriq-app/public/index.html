@@ -152,7 +152,6 @@ body.adv .adv-only{display:block!important}
 body.adv .stat.ao{display:block}
 body.adv #mn-clients{display:flex!important}
 body.adv #mm-reviews{display:flex!important}
-body.adv #mm-module-builder{display:flex!important}
 body.adv #mm-usage{display:flex!important}
 body.adv #mm-advisor-section{display:block!important}
 /* MORE MENU TILES & ROWS */
@@ -1183,40 +1182,6 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     </div>
 
     <!-- MODULE BUILDER -->
-    <div class="page" id="page-module-builder">
-      <div class="page-title" style="margin-bottom:4px" id="mb-title">Module Builder</div>
-      <div style="font-size:14px;color:var(--mu);margin-bottom:20px" id="mb-subtitle">Describe the client's communication needs — RhetorIQ generates custom modules for them.</div>
-
-      <div id="mb-form">
-        <div style="margin-bottom:14px">
-          <label class="fl2">Client</label>
-          <select id="mb-client-sel" onchange="mbClientChanged()" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;background:var(--bg);font-size:14px;font-family:'Instrument Sans',sans-serif">
-            <option value="">— Select client —</option>
-          </select>
-        </div>
-        <div style="margin-bottom:14px">
-          <label class="fl2">Discovery Notes</label>
-          <textarea id="mb-notes" rows="6" placeholder="e.g. Hospital, 400 employees. Main needs: patient communication letters, internal guidelines for nursing staff, job postings for specialists, incident press releases, leadership memos. Tone should always be empathetic but professional. German only." style="width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:'Instrument Sans',sans-serif;resize:vertical;box-sizing:border-box"></textarea>
-        </div>
-        <button onclick="mbGenerate()" id="mb-gen-btn" style="width:100%;padding:11px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:14px;font-family:'Instrument Sans',sans-serif;font-weight:500;cursor:pointer">Generate Modules</button>
-      </div>
-
-      <div id="mb-loading" style="display:none;text-align:center;padding:40px 0;color:var(--mu);font-size:14px">Generating modules…</div>
-
-      <div id="mb-results" style="display:none;margin-top:24px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div style="font-size:15px;font-weight:600" id="mb-results-label">Suggested Modules</div>
-          <button onclick="mbSaveAll()" style="padding:8px 16px;background:var(--ac);color:#fff;border:none;border-radius:6px;font-size:13px;font-family:'Instrument Sans',sans-serif;font-weight:500;cursor:pointer">Save All to Client</button>
-        </div>
-        <div id="mb-cards" style="display:flex;flex-direction:column;gap:12px"></div>
-      </div>
-
-      <div id="mb-saved-section" style="margin-top:28px;display:none">
-        <div style="font-size:15px;font-weight:600;margin-bottom:14px">Saved Modules for <span id="mb-saved-client-name"></span></div>
-        <div id="mb-saved-list" style="display:flex;flex-direction:column;gap:10px"></div>
-      </div>
-    </div>
-
     <!-- CONTACT -->
     <!-- USAGE -->
     <div class="page" id="page-usage" style="padding-left:0;padding-right:0">
@@ -1314,17 +1279,11 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <div class="mm-tile-l">Reviews</div>
         <span class="rev-badge" id="rev-badge" style="position:absolute;top:6px;right:6px"></span>
       </div>
-      <div class="ao-item mm-tile" id="mm-module-builder" onclick="goPage('module-builder');loadModuleBuilder();setMN('more');hideMore()" style="display:none">
-        <div class="mm-tile-l">Module Builder</div>
-      </div>
     </div>
 
     <!-- Advisor compact list -->
     <div class="ao-item" id="mm-advisor-section" style="display:none;border-top:1px solid var(--bd)">
       <div style="padding:10px 14px 6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)">Advisor</div>
-      <div class="ao-item mm-row" id="mm-module-builder-row" onclick="goPage('module-builder');loadModuleBuilder();setMN('more');hideMore()" style="display:none">
-        <i class="ti ti-puzzle" style="font-size:15px;color:var(--mu)"></i> Module Builder
-      </div>
       <div class="ao-item mm-row" id="mm-usage" onclick="goPage('usage');loadUsage();setMN('more');hideMore()" style="display:none">
         <i class="ti ti-chart-bar" style="font-size:15px;color:var(--mu)"></i> Usage
       </div>
@@ -2145,114 +2104,6 @@ document.addEventListener('keydown',e=>{
 
 // ── CUSTOM MODULES ─────────────────────────────────────────────
 let customModules=[];
-let _mbGenerated=[];
-let _cmActive=null;
-
-async function loadCustomModules(){
-  if(!clientId){customModules=[];return;}
-  try{const r=await api('/api/custom-modules?clientId='+clientId);customModules=r.ok?await r.json():[];}catch{customModules=[];}
-}
-
-function loadModuleBuilder(){
-  // populate client dropdown
-  const sel=document.getElementById('mb-client-sel');
-  if(!sel)return;
-  sel.innerHTML='<option value="">— Select client —</option>'+clients.map(c=>`<option value="${c.id}"${c.id==clientId?' selected':''}>${c.name}</option>`).join('');
-  document.getElementById('mb-results').style.display='none';
-  _mbGenerated=[];
-  mbLoadSaved();
-}
-
-function mbClientChanged(){
-  document.getElementById('mb-results').style.display='none';
-  mbLoadSaved();
-}
-
-async function mbLoadSaved(){
-  const cid=document.getElementById('mb-client-sel')?.value;
-  const section=document.getElementById('mb-saved-section');
-  const list=document.getElementById('mb-saved-list');
-  const nameEl=document.getElementById('mb-saved-client-name');
-  if(!cid||!section||!list){if(section)section.style.display='none';return;}
-  const client=clients.find(c=>c.id==cid);
-  if(nameEl)nameEl.textContent=client?.name||'';
-  try{
-    const r=await api('/api/custom-modules?clientId='+cid);
-    const mods=r.ok?await r.json():[];
-    if(!mods.length){section.style.display='none';return;}
-    section.style.display='block';
-    list.innerHTML=mods.map(m=>`
-      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--bd);border-radius:8px;background:var(--sf)">
-        <div style="font-size:22px;width:32px;text-align:center;flex-shrink:0">${m.icon||'◆'}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:600">${m.name}</div>
-          <div style="font-size:12px;color:var(--mu);margin-top:2px">${m.description||''}</div>
-        </div>
-        <button onclick="mbDeleteSaved(${m.id},this)" style="padding:5px 10px;border:1px solid var(--bd);border-radius:6px;background:transparent;font-size:12px;color:var(--mu);cursor:pointer;font-family:'Instrument Sans',sans-serif">Delete</button>
-      </div>`).join('');
-  }catch{section.style.display='none';}
-}
-
-async function mbDeleteSaved(id,btn){
-  if(!confirm('Delete this module?'))return;
-  await api('/api/custom-modules/'+id,{method:'DELETE'});
-  btn.closest('div[style]').remove();
-  await loadCustomModules();
-  if(typeof renderModulesList==='function')renderModulesList();
-}
-
-async function mbGenerate(){
-  const cid=document.getElementById('mb-client-sel')?.value;
-  const notes=document.getElementById('mb-notes')?.value?.trim();
-  if(!cid)return alert('Please select a client first.');
-  if(!notes)return alert('Please enter discovery notes.');
-  const client=clients.find(c=>c.id==cid);
-  document.getElementById('mb-form').style.opacity='0.5';
-  document.getElementById('mb-loading').style.display='block';
-  document.getElementById('mb-results').style.display='none';
-  try{
-    const r=await api('/api/custom-modules/generate',{method:'POST',body:JSON.stringify({notes,clientName:client?.name||'',language:LANG})});
-    const d=await r.json();
-    if(!r.ok)throw new Error(d.error);
-    _mbGenerated=d.modules;
-    _mbGenerated.forEach((m,i)=>m._cid=cid);
-    document.getElementById('mb-results-label').textContent=`${d.modules.length} modules for ${client?.name||'client'}`;
-    document.getElementById('mb-cards').innerHTML=d.modules.map((m,i)=>`
-      <div id="mb-card-${i}" style="border:1px solid var(--bd);border-radius:10px;background:var(--sf);overflow:hidden">
-        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--bd)">
-          <div style="font-size:26px;width:36px;text-align:center;flex-shrink:0">${m.icon||'◆'}</div>
-          <div style="flex:1">
-            <div style="font-size:15px;font-weight:600">${m.name}</div>
-            <div style="font-size:12px;color:var(--mu);margin-top:2px">${m.description||''}</div>
-          </div>
-          <button onclick="mbSaveOne(${i})" style="padding:7px 14px;background:var(--ac);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Instrument Sans',sans-serif">Save</button>
-        </div>
-        <div style="padding:12px 16px">
-          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin-bottom:6px">Input Fields</div>
-          ${(m.input_fields||[]).map(f=>`<div style="font-size:12px;color:var(--tx);margin-bottom:3px">· <strong>${f.label}</strong> (${f.type})</div>`).join('')||'<div style="font-size:12px;color:var(--mu)">No input fields</div>'}
-        </div>
-      </div>`).join('');
-    document.getElementById('mb-results').style.display='block';
-  }catch(e){alert('Error: '+e.message);}
-  finally{document.getElementById('mb-form').style.opacity='1';document.getElementById('mb-loading').style.display='none';}
-}
-
-async function mbSaveOne(i){
-  const m=_mbGenerated[i];if(!m)return;
-  const r=await api('/api/custom-modules',{method:'POST',body:JSON.stringify({client_id:m._cid,name:m.name,description:m.description,system_prompt:m.system_prompt,input_fields:m.input_fields,icon:m.icon})});
-  if(!r.ok)return alert('Error saving module.');
-  const card=document.getElementById('mb-card-'+i);
-  if(card){card.style.opacity='0.5';card.querySelector('button').textContent='Saved ✓';card.querySelector('button').disabled=true;}
-  await loadCustomModules();
-  if(typeof renderModulesList==='function')renderModulesList();
-  mbLoadSaved();
-}
-
-async function mbSaveAll(){
-  for(let i=0;i<_mbGenerated.length;i++)await mbSaveOne(i);
-  alert('All modules saved.');
-}
-
 // Open a custom module
 function openCustomModule(id){
   const m=customModules.find(x=>x.id==id);if(!m)return;
@@ -2449,12 +2300,6 @@ async function sendTokenByEmail(name,token,clientId){
     alert('Token sent to '+email);
   }catch(e){alert('Error: '+e.message);}
 }
-function _refreshSuiteCards(cid){
-  const c=clients.find(x=>x.id==cid);
-  const el=document.getElementById('suite-cards-'+cid);
-  if(c&&el)el.innerHTML=renderSuiteCards(c);
-}
-
 // ── MODULE CONFIGURATOR ────────────────────────────────────────
 let _mcClientId=null;
 const MC_SECTIONS=[
@@ -2565,7 +2410,6 @@ async function saveModuleConfig(){
     const r=await api('/api/clients/'+_mcClientId+'/modules-config',{method:'PUT',body:JSON.stringify({modules:checked})});
     const d=await r.json();if(!r.ok)throw new Error(d.error);
     const c=clients.find(x=>x.id==_mcClientId);if(c)c.enabled_modules=d.enabled_modules;
-    _refreshSuiteCards(_mcClientId);
     if(String(clientId)===String(_mcClientId)){enabledModules=d.enabled_modules;if(typeof renderModulesList==='function')renderModulesList();}
     closeModal('mc-ov');
   }catch(e){alert('Error: '+e.message);}
@@ -2887,7 +2731,7 @@ function updateHomeRightSidebar(){
   }
 }
 function setMN(id){
-  const toMore=new Set(['brand','people','reviews','memory','history','usage','module-builder']);
+  const toMore=new Set(['brand','people','reviews','memory','history','usage']);
   const eff=toMore.has(id)?'more':id;
   document.querySelectorAll('.mni').forEach(n=>n.classList.remove('active'));
   const el=document.getElementById('mn-'+eff);if(el)el.classList.add('active');
@@ -4227,29 +4071,6 @@ function toggleToneCal(fid){
   if(arrow)arrow.textContent=open?'−':'+';
 }
 
-// ── SUITE CARDS ───────────────────────────────────────────────
-function renderSuiteCards(c){
-  const em=c.enabled_modules||null;
-  const hasCM=em&&em.some(k=>k.startsWith('cm-'));
-  const hasHT=em&&em.some(k=>k.startsWith('ht-'));
-  const cmCount=em?em.filter(k=>k.startsWith('cm-')).length:0;
-  const htCount=em?em.filter(k=>k.startsWith('ht-')).length:0;
-  const suites=[
-    {label:'Capital Markets',icon:'ti-chart-line',on:hasCM,count:cmCount,activeStyle:'border-color:#7dd3fc;background:#f0f9ff',iconColor:'#0369a1',labelColor:'#0369a1'},
-    {label:'Hotel Suite',icon:'ti-building',on:hasHT,count:htCount,activeStyle:'border-color:#fcd34d;background:#fffbeb',iconColor:'#b45309',labelColor:'#92400e'},
-    {label:'Private Equity',icon:'ti-briefcase',on:false,count:0,activeStyle:'',iconColor:'#15803d',labelColor:'#15803d',disabled:true},
-  ];
-  return suites.map(s=>{
-    const base='border:0.5px solid var(--bd);border-radius:8px;padding:8px 10px;cursor:default;';
-    const style=s.on?base+s.activeStyle:base+(s.disabled?'opacity:.35':'');
-    return`<div style="${style}">
-      <div><i class="ti ${s.icon}" style="font-size:15px;color:${s.on?s.iconColor:'var(--mu)'}" aria-hidden="true"></i></div>
-      <div style="font-size:11px;font-weight:500;margin-top:4px;color:${s.on?s.labelColor:'var(--mu)'}">${s.label}</div>
-      <div style="font-size:10px;color:${s.on?s.iconColor:'var(--dm)'};margin-top:2px">${s.disabled?'demnächst':s.on?s.count+' Module aktiv':'inaktiv'}</div>
-    </div>`;
-  }).join('');
-}
-
 // ── ADVISOR DASHBOARD ─────────────────────────────────────────
 async function loadAdvisorDashboard(){
   const el=document.getElementById('adv-dash-content');
@@ -4300,7 +4121,6 @@ async function loadAdvisorDashboard(){
             <button class="obtn" onclick="openAuditModal(${c.id},'${c.name}')">Audit Log</button>
             <button class="obtn" style="color:#5b21b6;border-color:#c4b5fd;background:#f5f3ff;font-weight:500" onclick="openModuleConfig(${c.id})"><i class="ti ti-layout-grid" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Module</button>
           </div>
-          <div id="suite-cards-${c.id}" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px">${renderSuiteCards(c)}</div>
           <div style="display:flex;gap:6px;margin-top:8px">
             <button class="dbtn" onclick="delData(${c.id},'${c.name}')">Delete Data</button>
             <button class="dbtn" onclick="deleteClient(${c.id},'${c.name}').then(()=>loadAdvisorDashboard())">Delete Client</button>
