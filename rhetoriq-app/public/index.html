@@ -262,6 +262,8 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .rbody:hover{background:var(--sl)}
 .rbody:focus{background:var(--sl);box-shadow:inset 0 0 0 1.5px var(--bd)}
 .spin{display:flex;gap:5px;padding:20px;align-items:center}
+.stream-cursor{animation:blink-cur .7s step-end infinite;font-weight:400}
+@keyframes blink-cur{0%,100%{opacity:1}50%{opacity:0}}
 .dot{width:5px;height:5px;border-radius:50%;background:var(--tx);animation:blink 1.2s infinite}
 .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,80%,100%{opacity:.15}40%{opacity:1}}
@@ -678,6 +680,16 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <button class="lbtn" onclick="loginAdvisor()">Sign in</button>
       <div class="lerr" id="adv-err"></div>
       <div class="lsw">Client? <a onclick="sf('client-form','advisor-form')">Enter your access token</a></div>
+      <div class="lsw" style="margin-top:4px">New advisor? <a onclick="sf('register-form','advisor-form')">Register with invite code</a></div>
+    </div>
+    <div id="register-form" style="display:none">
+      <div class="fg"><label class="fl">Name</label><input class="fi" type="text" id="reg-name" placeholder="Your name"></div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="reg-email" placeholder="your@email.com"></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="reg-pw" placeholder="Min. 8 characters"></div>
+      <div class="fg"><label class="fl">Invite Code</label><input class="fi" type="text" id="reg-code" placeholder="XXXXXXXX" style="text-transform:uppercase;letter-spacing:.1em"></div>
+      <button class="lbtn" onclick="registerAdvisor()">Create Account</button>
+      <div class="lerr" id="reg-err"></div>
+      <div class="lsw"><a onclick="sf('advisor-form','register-form')">&#8592; Back to Sign in</a></div>
     </div>
     <div id="client-form">
       <div style="display:flex;gap:8px;margin-bottom:16px">
@@ -1209,6 +1221,12 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       </div>
       <div id="usage-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)"></div>
       <div style="padding:24px 16px 0"><div id="usage-table"></div></div>
+      <div style="padding:32px 16px 0;border-top:1px solid var(--bd);margin-top:24px">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:12px">Invite Code — Neuen Advisor einladen</div>
+        <button id="invite-gen-btn" onclick="generateInviteCode()" style="padding:9px 18px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Generate Invite Code</button>
+        <div id="invite-code-out" style="display:none;margin-top:10px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:14px;font-weight:600;color:#15803d;letter-spacing:.05em;font-family:monospace"></div>
+        <div style="font-size:12px;color:var(--mu);margin-top:8px">Der Code ist 7 Tage gültig und kann nur einmal verwendet werden. Teile ihn direkt mit dem neuen Advisor.</div>
+      </div>
     </div>
 
     <!-- TRAINING DATA -->
@@ -1911,6 +1929,35 @@ function safe(html){ return typeof DOMPurify!=='undefined'?DOMPurify.sanitize(ht
 function safeText(str){ return String(str??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // AUTH
+async function registerAdvisor(){
+  const name=document.getElementById('reg-name').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const pw=document.getElementById('reg-pw').value;
+  const code=document.getElementById('reg-code').value.trim().toUpperCase();
+  const err=document.getElementById('reg-err');
+  err.style.display='none';
+  if(!name||!email||!pw||!code){err.textContent='All fields required.';err.style.display='block';return;}
+  try{
+    const r=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password:pw,inviteCode:code})});
+    const d=await r.json();
+    if(!r.ok){err.textContent=d.error||'Registration failed';err.style.display='block';return;}
+    token=d.token;localStorage.setItem('riq-token',token);boot(d.user,'advisor');
+  }catch{err.textContent='Connection error';err.style.display='block';}
+}
+async function generateInviteCode(){
+  const btn=document.getElementById('invite-gen-btn');
+  const out=document.getElementById('invite-code-out');
+  btn.disabled=true;btn.textContent='Generating…';
+  try{
+    const r=await api('/auth/invite',{method:'POST'});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error);
+    out.textContent='Code: '+d.code+' (valid 7 days)';
+    out.style.display='block';
+  }catch(e){out.textContent='Error: '+e.message;out.style.display='block';}
+  btn.disabled=false;btn.textContent='Generate Invite Code';
+}
+
 async function loginAdvisor(){
   const e=document.getElementById('adv-email').value.trim(),p=document.getElementById('adv-pw').value,err=document.getElementById('adv-err');err.style.display='none';
   try{const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,password:p})});const d=await r.json();if(!r.ok){err.textContent=d.error||'Login failed';err.style.display='block';return;}token=d.token;localStorage.setItem('riq-token',token);boot(d.user,'advisor');}catch{err.textContent='Connection error';err.style.display='block';}
@@ -4128,19 +4175,51 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
 
   const box=document.getElementById(rid),body=document.getElementById(bid);
   box.classList.add('show');
-  body.innerHTML='<div class="spin"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:10px;color:var(--mu);font-size:13px">Analysing&hellip;</span></div>';
+  body.textContent='';
+  body.innerHTML='<span class="stream-cursor">▍</span>';
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
   try{
-    const r=await api('/api/analyze',{method:'POST',body:JSON.stringify({module,clientId,data})});
-    const d=await r.json();if(!r.ok)throw new Error(d.error);
-    body.textContent=d.result;
-    if(module==='vs-cal')voiceProf=d.result;
+    const resp=await fetch(API+'/api/analyze/stream',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({module,clientId,data})
+    });
+    if(!resp.ok){const d=await resp.json();throw new Error(d.error||'Server error');}
+    const reader=resp.body.getReader();const dec=new TextDecoder();
+    let buf='',fullText='';
+    body.textContent='';
+    while(true){
+      const{done,value}=await reader.read();
+      if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n');buf=lines.pop();
+      for(const line of lines){
+        if(line.startsWith('data: ')){
+          try{
+            const evt=JSON.parse(line.slice(6));
+            if(evt.text){fullText+=evt.text;body.textContent=fullText;}
+          }catch{}
+        }
+        if(line.startsWith('event: error')){/* error event coming next */}
+      }
+    }
+    if(module==='vs-cal')voiceProf=fullText;
     if(['crisis','si','st'].includes(module))showDebriefNudge(module,rid);
     if(['brand-voice-co','brand-voice-ind'].includes(module)&&clientId){
-      api('/api/memory/'+clientId+'/brand_voice',{method:'PUT',body:JSON.stringify({content:d.result})}).then(()=>loadMemory()).catch(()=>{});
+      api('/api/memory/'+clientId+'/brand_voice',{method:'PUT',body:JSON.stringify({content:fullText})}).then(()=>loadMemory()).catch(()=>{});
     }
     loadStats();
-  }catch(e){body.textContent='Error: '+e.message;}
+  }catch(e){
+    const msg=e.message||'';
+    let friendly='Ein Fehler ist aufgetreten. Bitte versuche es erneut.';
+    if(/rate.?limit|429|too many/i.test(msg))friendly='Zu viele Anfragen. Bitte warte kurz und versuche es erneut.';
+    else if(/timeout|timed out/i.test(msg))friendly='Die Anfrage hat zu lange gedauert. Bitte versuche es erneut.';
+    else if(/network|fetch|failed to fetch/i.test(msg))friendly='Keine Verbindung zum Server. Bitte prüfe deine Internetverbindung.';
+    else if(/overloaded|529/i.test(msg))friendly='Der KI-Dienst ist momentan überlastet. Bitte versuche es in wenigen Sekunden erneut.';
+    else if(/invalid_api_key|401/i.test(msg))friendly='Konfigurationsfehler. Bitte wende dich an den Support.';
+    body.innerHTML='<div style="color:var(--er,#c0392b);padding:4px 0">⚠ '+safeText(friendly)+'</div>'
+      +'<button onclick="runMod(\''+name+'\')" style="margin-top:8px;padding:6px 14px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:13px">↺ Erneut versuchen</button>';
+  }
 }
 
 // FILES

@@ -667,7 +667,27 @@ RULES:
   }
 };
 
-async function callClaude(system, user) {
+// Per-module token limits — higher for long-form outputs, lower for quick calls
+const MODULE_MAX_TOKENS = {
+  // Heavy analysis modules
+  rp: 4000, cf: 3000, la: 3000, rm: 3000, si: 3000, st: 2500,
+  'crisis-toolkit': 4000, 'cm-earnings-analyzer': 4000, 'cm-board-coach': 4000,
+  'cm-roadshow': 4000, 'cm-equity-story': 3500, 'brand-voice-co': 4000, 'brand-voice-ind': 4000,
+  debrief: 3000, 'rh-translate': 3000, 'before-after': 3000,
+  // Medium modules
+  'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 2000,
+  crisis: 2500, 'ht-crisis-comm': 2500, 'ht-positioning': 2500,
+  'cm-qa-trainer': 2500, 'competitive-check': 2500,
+  // Quick modules
+  as: 1500, tc: 1500, 'sparring': 1500, 'health-score': 1500,
+  'vs-cal': 1000, 'vs-gen': 1000, 'ht-guest-letter': 2000,
+  'ht-review-response': 1500, 'ht-sales-pitch': 2000,
+  // Internal (fast + cheap)
+  router: 50, chat: 600,
+};
+const DEFAULT_MAX_TOKENS = 2000;
+
+async function callClaude(system, user, maxTokens) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -677,7 +697,7 @@ async function callClaude(system, user) {
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1500,
+      max_tokens: maxTokens || DEFAULT_MAX_TOKENS,
       system: typeof system === 'function' ? system({}) : system,
       messages: [{ role: 'user', content: user }]
     })
@@ -751,11 +771,13 @@ router.post('/', requireAuth, async (req, res) => {
     // ── STRUKTURVORLAGEN (few-shot, cross-client) ────────────────────────────
     // Provide structural patterns only — brand voice overrides tone completely.
     if (advisorId) {
+      // Only inject manually-curated examples (auto_generated=false, rating >= 3)
+      // This prevents the contamination loop where auto-saved AI outputs train future outputs.
       const { rows: examples } = await pool.query(
         `SELECT input_text, output_text, industry_tag FROM module_examples
          WHERE advisor_id=$1 AND module_key=$2
+           AND auto_generated = false AND rating >= 3
            AND (industry_tag IS NULL OR $3::text IS NULL OR lower(industry_tag)=lower($3))
-           AND auto_generated = false
          ORDER BY
            CASE WHEN $3::text IS NOT NULL AND lower(industry_tag)=lower($3) THEN 0 ELSE 1 END,
            rating DESC, created_at DESC
@@ -777,7 +799,7 @@ router.post('/', requireAuth, async (req, res) => {
       }
     }
 
-    const claudeResp = await callClaude(system, userMsg);
+    const claudeResp = await callClaude(system, userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS);
     const result = claudeResp.text;
 
     // Log token usage (fire-and-forget)
@@ -801,8 +823,10 @@ router.post('/', requireAuth, async (req, res) => {
 
     const analysis = { id: rows[0].id, module, label: cfg.label, result, createdAt: rows[0].created_at, clientId: resolvedClientId };
 
-    // Auto-save as training example (structural learning, no brand voice)
-    if (advisorId && result) {
+    // Auto-save as structural training example (fire-and-forget)
+    // Only saves when output is substantive (>200 chars) to avoid polluting with short/error outputs.
+    // auto_generated=true + rating=2 keeps these below the injection threshold (manual examples ≥3).
+    if (advisorId && result && result.length > 200) {
       const inputText = Object.entries(data || {})
         .filter(([k, v]) => v && typeof v === 'string' && v.length > 2)
         .map(([k, v]) => `${k}: ${v}`)
@@ -810,9 +834,9 @@ router.post('/', requireAuth, async (req, res) => {
       if (inputText) {
         pool.query(
           `INSERT INTO module_examples (advisor_id, module_key, industry_tag, input_text, output_text, rating, auto_generated)
-           VALUES ($1,$2,$3,$4,$5,3,true)`,
+           VALUES ($1,$2,$3,$4,$5,2,true)`,
           [advisorId, module, clientIndustry || null, inputText, result]
-        ).catch(() => {}); // fire-and-forget, never block the response
+        ).catch(() => {});
       }
     }
 
@@ -825,6 +849,159 @@ router.post('/', requireAuth, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: e.message || 'Server error' });
+  }
+});
+
+// POST /api/analyze/stream — SSE streaming version of the main analyze endpoint
+router.post('/stream', requireAuth, async (req, res) => {
+  try {
+    const { module, clientId, data } = req.body;
+    const cfg = PROMPTS[module];
+    if (!cfg) return res.status(400).json({ error: 'Unknown module' });
+
+    let system = typeof cfg.system === 'function' ? cfg.system(data) : cfg.system;
+    const userMsg = cfg.build(data);
+    const resolvedClientId = clientId || (req.user.role === 'client' ? req.user.clientId : null);
+    const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+
+    // Same injections as main endpoint
+    if (resolvedClientId) {
+      const { rows: customRows } = await pool.query(
+        'SELECT instructions FROM client_module_prompts WHERE client_id=$1 AND module_key=$2',
+        [resolvedClientId, module]
+      );
+      if (customRows[0]?.instructions)
+        system += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(customRows[0].instructions);
+    }
+    let clientIndustry = null;
+    let hasBrandVoice = false;
+    if (resolvedClientId) {
+      const { rows: cRows } = await pool.query('SELECT industry FROM clients WHERE id=$1', [resolvedClientId]);
+      clientIndustry = cRows[0]?.industry?.toLowerCase().trim() || null;
+      const { rows: memRows } = await pool.query(
+        `SELECT memory_type, content FROM company_memory WHERE client_id=$1 AND memory_type LIKE 'brand_voice%' ORDER BY updated_at DESC`,
+        [resolvedClientId]
+      );
+      if (memRows.length) {
+        hasBrandVoice = true;
+        system += '\n\n════════════════════════════════════════\n'
+          + 'ABSOLUT VERBINDLICH — BRAND VOICE DIESES UNTERNEHMENS\n════════════════════════════════════════\n'
+          + 'Der Output MUSS klingen wie dieses Unternehmen — nicht wie eine KI, nicht wie generisches Consulting.\n\n';
+        memRows.forEach(m => { system += `${m.memory_type.toUpperCase()}:\n${sanitizeForPrompt(m.content)}\n\n`; });
+        system += '════════════════════════════════════════\n'
+          + 'ENDE BRAND VOICE — Ab hier gilt: dieser Output ist ein Unternehmenstext, kein KI-Output.\n'
+          + '════════════════════════════════════════';
+      }
+    }
+    if (advisorId) {
+      const { rows: examples } = await pool.query(
+        `SELECT input_text, output_text, industry_tag FROM module_examples
+         WHERE advisor_id=$1 AND module_key=$2 AND auto_generated=false AND rating>=3
+           AND (industry_tag IS NULL OR $3::text IS NULL OR lower(industry_tag)=lower($3))
+         ORDER BY CASE WHEN $3::text IS NOT NULL AND lower(industry_tag)=lower($3) THEN 0 ELSE 1 END,
+           rating DESC, created_at DESC LIMIT 3`,
+        [advisorId, module, clientIndustry]
+      );
+      if (examples.length) {
+        system += '\n\n--- STRUKTURVORLAGEN ---\n'
+          + (hasBrandVoice ? 'Nur Struktur übernehmen, Brand Voice bestimmt Ton.' : 'Passe Stil an den Klienten an.')
+          + '\n\n';
+        examples.forEach((ex, i) => {
+          system += `BEISPIEL ${i + 1}:\nINPUT: ${sanitizeForPrompt(ex.input_text)}\nAUFBAU: ${sanitizeForPrompt(ex.output_text)}\n\n`;
+        });
+        system += '--- ENDE STRUKTURVORLAGEN ---';
+      }
+    }
+
+    // Set up SSE
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable Nginx buffering on Render
+    res.flushHeaders();
+
+    const maxTokens = MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS;
+    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: maxTokens,
+        stream: true,
+        system: typeof system === 'function' ? system({}) : system,
+        messages: [{ role: 'user', content: userMsg }]
+      })
+    });
+
+    if (!anthropicRes.ok) {
+      const err = await anthropicRes.json();
+      res.write(`event: error\ndata: ${JSON.stringify({ error: err.error?.message || 'API error' })}\n\n`);
+      return res.end();
+    }
+
+    let fullText = '';
+    let inputTokens = 0, outputTokens = 0;
+    const reader = anthropicRes.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      for (const line of chunk.split('\n')) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]' || !raw) continue;
+        try {
+          const evt = JSON.parse(raw);
+          if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+            const text = evt.delta.text || '';
+            fullText += text;
+            res.write(`data: ${JSON.stringify({ text })}\n\n`);
+          }
+          if (evt.type === 'message_delta' && evt.usage) {
+            outputTokens = evt.usage.output_tokens || 0;
+          }
+          if (evt.type === 'message_start' && evt.message?.usage) {
+            inputTokens = evt.message.usage.input_tokens || 0;
+          }
+        } catch {}
+      }
+    }
+
+    // Persist + log after stream completes
+    const generatedBy = req.user.role === 'advisor'
+      ? (req.user.name || 'Advisor')
+      : (req.user.clientUserName || req.user.clientName || 'Klient');
+    const { rows } = await pool.query(
+      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, created_at`,
+      [resolvedClientId, advisorId, module, cfg.label, data, fullText, generatedBy]
+    );
+    if (advisorId) {
+      pool.query('INSERT INTO usage_log (advisor_id, client_id, module, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)',
+        [advisorId, resolvedClientId || null, module, inputTokens, outputTokens]).catch(() => {});
+    }
+    if (advisorId && fullText.length > 200) {
+      const inputText = Object.entries(data || {})
+        .filter(([k, v]) => v && typeof v === 'string' && v.length > 2)
+        .map(([k, v]) => `${k}: ${v}`).join('\n');
+      if (inputText) pool.query(
+        `INSERT INTO module_examples (advisor_id, module_key, industry_tag, input_text, output_text, rating, auto_generated) VALUES ($1,$2,$3,$4,$5,2,true)`,
+        [advisorId, module, clientIndustry || null, inputText, fullText]
+      ).catch(() => {});
+    }
+
+    res.write(`event: done\ndata: ${JSON.stringify({ id: rows[0].id })}\n\n`);
+    res.end();
+  } catch (e) {
+    console.error(e);
+    if (!res.headersSent) return res.status(500).json({ error: e.message });
+    res.write(`event: error\ndata: ${JSON.stringify({ error: e.message })}\n\n`);
+    res.end();
   }
 });
 
@@ -918,7 +1095,7 @@ router.get('/health-score', requireAuth, async (req, res) => {
     if (rows.length < 3) return res.json({ error: 'not_enough_data' });
     const log = rows.map(r => `${new Date(r.created_at).toLocaleDateString('de-CH')}: ${r.module_label||r.module}`).join('\n');
     const cfg = PROMPTS['health-score'];
-    const claudeResp = await callClaude(cfg.system, cfg.build({ log, period: 'Last 90 days' }));
+    const claudeResp = await callClaude(cfg.system, cfg.build({ log, period: 'Last 90 days' }), MODULE_MAX_TOKENS['health-score']);
     res.json({ result: claudeResp.text, count: rows.length });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -972,7 +1149,7 @@ router.post('/route', requireAuth, async (req, res) => {
   try {
     const { text } = req.body;
     const cfg = PROMPTS['router'];
-    const claudeResp = await callClaude(cfg.system, cfg.build({ text }));
+    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['router']);
     res.json({ module: claudeResp.text.trim().toLowerCase().replace(/[^a-z-]/g, '') });
   } catch (e) {
     res.status(500).json({ error: e.message });

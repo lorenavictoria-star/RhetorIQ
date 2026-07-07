@@ -163,4 +163,58 @@ router.post('/client-change-password', requireAuth, async (req, res) => {
   }
 });
 
+// POST /auth/register — new advisor registers with invite code
+router.post('/register', async (req, res) => {
+  try {
+    const { email, password, name, inviteCode } = req.body;
+    if (!email || !password || !name || !inviteCode)
+      return res.status(400).json({ error: 'email, password, name and inviteCode required' });
+    if (password.length < 8)
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+
+    // Validate invite code
+    const { rows: codeRows } = await pool.query(
+      `SELECT * FROM invite_codes WHERE code=$1 AND used_by IS NULL AND expires_at > NOW()`,
+      [inviteCode.trim().toUpperCase()]
+    );
+    if (!codeRows[0]) return res.status(400).json({ error: 'Invalid or expired invite code' });
+
+    // Check email not already taken
+    const { rows: existing } = await pool.query('SELECT id FROM users WHERE LOWER(email)=$1', [email.toLowerCase()]);
+    if (existing.length) return res.status(400).json({ error: 'Email already registered' });
+
+    const hash = await bcrypt.hash(password, 12);
+    const { rows } = await pool.query(
+      'INSERT INTO users (email, password_hash, name, role) VALUES ($1,$2,$3,\'advisor\') RETURNING id, name, email',
+      [email.toLowerCase(), hash, name]
+    );
+    const user = rows[0];
+
+    // Mark invite code as used
+    await pool.query('UPDATE invite_codes SET used_by=$1, used_at=NOW() WHERE id=$2', [user.id, codeRows[0].id]);
+
+    const token = jwt.sign({ id: user.id, role: 'advisor', name: user.name }, process.env.JWT_SECRET, { expiresIn: '90d' });
+    res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email } });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /auth/invite — generate invite code (advisor only)
+router.post('/invite', requireAuth, async (req, res) => {
+  try {
+    if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Forbidden' });
+    const crypto = require('crypto');
+    const code = crypto.randomBytes(4).toString('hex').toUpperCase(); // e.g. A3F2B1C4
+    await pool.query(
+      'INSERT INTO invite_codes (code, created_by) VALUES ($1, $2)',
+      [code, req.user.id]
+    );
+    res.json({ code, expiresIn: '7 days' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = router;

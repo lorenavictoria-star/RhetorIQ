@@ -131,6 +131,16 @@ async function init() {
     ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS auto_generated BOOLEAN DEFAULT FALSE;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS training_imported_at TIMESTAMPTZ;
 
+    CREATE TABLE IF NOT EXISTS invite_codes (
+      id SERIAL PRIMARY KEY,
+      code TEXT UNIQUE NOT NULL,
+      created_by INTEGER REFERENCES users(id),
+      used_by INTEGER REFERENCES users(id),
+      used_at TIMESTAMPTZ,
+      expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '7 days'),
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
     CREATE TABLE IF NOT EXISTS usage_log (
       id SERIAL PRIMARY KEY,
       advisor_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
