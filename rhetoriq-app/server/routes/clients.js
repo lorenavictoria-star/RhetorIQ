@@ -43,35 +43,42 @@ async function brevoSend({ to, subject, text }) {
   });
 }
 
-async function sendWelcomeEmail({ clientType, salutation, lastName, companyName, email, password, lang }) {
+// Generate a secure 48-hour setup link and send it instead of a plaintext password.
+// The client clicks the link, sets their own password — no credentials ever in email.
+async function sendWelcomeEmail({ clientType, salutation, lastName, companyName, email, clientId, lang }) {
   if (!email) return;
-  console.log(`Sending welcome email to ${email} (lang: ${lang}, type: ${clientType})`);
+
+  // Create onboarding token (48 h TTL)
+  const setupToken = crypto.randomBytes(32).toString('hex');
+  await pool.query(
+    'INSERT INTO onboarding_tokens (client_id, token) VALUES ($1, $2)',
+    [clientId, setupToken]
+  );
+
+  const BASE = process.env.APP_URL || 'https://rhetoriq.ch';
+  const setupLink = `${BASE}/setup?t=${setupToken}`;
 
   const isDE = lang === 'de';
   const isCompany = clientType === 'company';
 
-  let salutationLine, subject, intro;
+  const salutationLine = isDE
+    ? (isCompany
+        ? `Sehr geehrte Damen und Herren von ${companyName},`
+        : `Sehr geehrte${salutation === 'Herr' ? 'r Herr' : ' Frau'} ${lastName},`)
+    : (isCompany
+        ? `Dear team of ${companyName},`
+        : `Dear ${salutation} ${lastName},`);
 
-  if (isDE) {
-    subject = 'Willkommen bei RhetorIQ – Ihre persönlichen Zugangsdaten';
-    salutationLine = isCompany
-      ? `Sehr geehrte Damen und Herren von ${companyName},`
-      : `Sehr geehrte${salutation === 'Herr' ? 'r Herr' : ' Frau'} ${lastName},`;
-    intro = 'es freut mich, Sie bei RhetorIQ willkommen zu heissen.\n\nRhetorIQ gibt Ihnen präzise Werkzeuge für Ihre Führungskommunikation – zugeschnitten auf Ihre Stimme und Ihre Ziele.';
-  } else {
-    subject = 'Welcome to RhetorIQ – Your Personal Login Details';
-    salutationLine = isCompany
-      ? `Dear team of ${companyName},`
-      : `Dear ${salutation} ${lastName},`;
-    intro = 'It is a pleasure to welcome you to RhetorIQ.\n\nRhetorIQ gives you precise tools for your leadership communication – tailored to your voice and your goals.';
-  }
+  const subject = isDE
+    ? 'Willkommen bei RhetorIQ – Ihren Zugang einrichten'
+    : 'Welcome to RhetorIQ – Set up your access';
 
   const body = isDE
-    ? `${salutationLine}\n\n${intro}\n\nIhre Zugangsdaten:\n\nPlattform: https://rhetoriq.ch\nE-Mail: ${email}\nPasswort: ${password}\n\nBeim ersten Login werden Sie gebeten, ein eigenes Passwort zu vergeben. Danach ist Ihr Zugang vollständig personalisiert und gesichert.\n\nIch freue mich darauf, gemeinsam mit Ihnen zu arbeiten.\n\nHerzlich,\nLorena Lienhard\nRhetoric & Executive Communication Coaching\ncontact@lorenalienhard.ch · +41 79 957 39 76 · lorenalienhard.ch`
-    : `${salutationLine}\n\n${intro}\n\nYour login details:\n\nPlatform: https://rhetoriq.ch\nEmail: ${email}\nPassword: ${password}\n\nOn your first login, you will be prompted to set your own password. After that, your access is fully personalised and secured.\n\nI look forward to working with you.\n\nWarm regards,\nLorena Lienhard\nRhetoric & Executive Communication Coaching\ncontact@lorenalienhard.ch · +41 79 957 39 76 · lorenalienhard.ch`;
+    ? `${salutationLine}\n\nes freut mich, Sie bei RhetorIQ willkommen zu heissen.\n\nRhetorIQ gibt Ihnen präzise Werkzeuge für Ihre Führungskommunikation – zugeschnitten auf Ihre Stimme und Ihre Ziele.\n\nBitte richten Sie Ihren persönlichen Zugang über den folgenden Link ein:\n\n${setupLink}\n\nDieser Link ist 48 Stunden gültig. Sie werden dort aufgefordert, ein eigenes Passwort zu wählen. Danach ist Ihr Zugang vollständig personalisiert und gesichert.\n\nE-Mail: ${email}\nPlattform: https://rhetoriq.ch\n\nIch freue mich darauf, gemeinsam mit Ihnen zu arbeiten.\n\nHerzlich,\nLorena Lienhard\nRhetoric & Executive Communication Coaching\ncontact@lorenalienhard.ch · +41 79 957 39 76 · lorenalienhard.ch`
+    : `${salutationLine}\n\nIt is a pleasure to welcome you to RhetorIQ.\n\nRhetorIQ gives you precise tools for your leadership communication – tailored to your voice and your goals.\n\nPlease set up your personal access using the link below:\n\n${setupLink}\n\nThis link is valid for 48 hours. You will be prompted to choose your own password. After that, your access is fully personalised and secured.\n\nEmail: ${email}\nPlatform: https://rhetoriq.ch\n\nI look forward to working with you.\n\nWarm regards,\nLorena Lienhard\nRhetoric & Executive Communication Coaching\ncontact@lorenalienhard.ch · +41 79 957 39 76 · lorenalienhard.ch`;
 
   await brevoSend({ to: email, subject, text: body });
-  console.log(`Welcome email sent to ${email}`);
+  console.log(`Welcome email (setup link) sent to ${email}`);
 }
 
 async function sendTokenEmail(clientName, token) {
@@ -115,26 +122,20 @@ router.post('/', requireAdvisor, async (req, res) => {
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') + '-' + Date.now().toString(36);
     const token = crypto.randomBytes(24).toString('hex');
 
-    let passwordHash = null;
-    let mustChange = false;
-    if (email && initialPassword) {
-      passwordHash = await bcrypt.hash(initialPassword, 12);
-      mustChange = true;
-    }
-
     const { rows } = await pool.query(
-      'INSERT INTO clients (advisor_id, name, industry, contact, slug, token, email, password_hash, must_change_password, privacy_acknowledged_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW()) RETURNING *',
-      [req.user.id, name, industry || '', contact || '', slug, token, email || null, passwordHash, mustChange]
+      'INSERT INTO clients (advisor_id, name, industry, contact, slug, token, email, must_change_password, privacy_acknowledged_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW()) RETURNING *',
+      [req.user.id, name, industry || '', contact || '', slug, token, email || null, !!email]
     );
 
-    if (email && initialPassword) {
+    if (email) {
+      // Send secure setup link — no password in email
       sendWelcomeEmail({
         clientType: clientType || 'company',
         salutation: salutation || 'Frau',
         lastName: lastName || '',
         companyName: name,
         email,
-        password: initialPassword,
+        clientId: rows[0].id,
         lang: emailLang || 'de'
       }).catch(e => console.error('Welcome email error:', e.message));
     } else {

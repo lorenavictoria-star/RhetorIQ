@@ -1224,10 +1224,16 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div class="page" id="page-usage" style="padding-left:0;padding-right:0">
       <div style="padding:0 16px">
         <div class="page-title" style="margin-bottom:4px">Usage</div>
-        <div style="font-size:14px;color:var(--mu);margin-bottom:24px">API calls per client — cost estimates based on Claude Sonnet 4.6 pricing</div>
+        <div style="font-size:14px;color:var(--mu);margin-bottom:16px">API calls per client — real token costs based on Claude Sonnet 4.6 pricing</div>
+        <div style="display:flex;gap:8px;margin-bottom:20px">
+          <button onclick="loadUsage()" style="padding:7px 16px;border:1.5px solid var(--ac);border-radius:8px;background:var(--ac);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Call Statistics</button>
+          <button onclick="loadCosts(30)" style="padding:7px 16px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Token Costs (30d)</button>
+          <button onclick="loadCosts(90)" style="padding:7px 16px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Token Costs (90d)</button>
+        </div>
       </div>
       <div id="usage-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)"></div>
       <div style="padding:24px 16px 0"><div id="usage-table"></div></div>
+      <div style="padding:0 16px"><div id="costs-table"></div></div>
       <div style="padding:32px 16px 0;border-top:1px solid var(--bd);margin-top:24px">
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:12px">Invite Code — Neuen Advisor einladen</div>
         <button id="invite-gen-btn" onclick="generateInviteCode()" style="padding:9px 18px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Generate Invite Code</button>
@@ -2351,6 +2357,41 @@ async function loadUsage(){
       <div style="font-size:12px;color:var(--mu);margin-top:12px">Cost estimate based on avg 2,500 input + 1,000 output tokens/call at Claude Sonnet 4.6 pricing ($3/$15 per 1M tokens). Actual costs may vary.</div>`;
   }catch(e){sum.innerHTML=`<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;}
 }
+// ── TOKEN COSTS PER CLIENT ────────────────────────────────────
+async function loadCosts(days=30){
+  const tbl=document.getElementById('costs-table');
+  const sum=document.getElementById('usage-summary');
+  if(!tbl)return;
+  sum.innerHTML='';
+  tbl.innerHTML='<div style="color:var(--mu);font-size:13px;padding:20px 0">Loading…</div>';
+  try{
+    const r=await api(`/api/advisor/costs?days=${days}`);
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error);
+    if(!d.rows.length){tbl.innerHTML='<div style="color:var(--mu);font-size:13px;padding:20px 0">No data for this period.</div>';return;}
+    const fmt=n=>`$${parseFloat(n).toFixed(4)}`;
+    const fmtTok=n=>n>999?`${(n/1000).toFixed(1)}K`:String(n);
+    tbl.innerHTML=`
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:10px">Token Costs — last ${days} days · Total: <span style="color:var(--tx)">$${parseFloat(d.total_usd).toFixed(4)}</span></div>
+      <div style="display:grid;grid-template-columns:1fr 80px 100px 100px 100px;gap:0;border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin-bottom:12px">
+        <div style="padding:10px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd)">Client</div>
+        <div style="padding:10px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Calls</div>
+        <div style="padding:10px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Input tokens</div>
+        <div style="padding:10px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Output tokens</div>
+        <div style="padding:10px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Cost (USD)</div>
+        ${d.rows.map((row,i)=>{
+          const border=i<d.rows.length-1?'border-bottom:1px solid var(--bd)':'';
+          return`<div style="padding:12px 14px;font-size:14px;font-weight:500;${border}">${safeText(row.client_name||'—')}</div>
+            <div style="padding:12px 10px;font-size:14px;text-align:right;color:var(--mu);${border}">${row.calls}</div>
+            <div style="padding:12px 10px;font-size:14px;text-align:right;color:var(--mu);${border}">${fmtTok(row.input_tokens||0)}</div>
+            <div style="padding:12px 10px;font-size:14px;text-align:right;color:var(--mu);${border}">${fmtTok(row.output_tokens||0)}</div>
+            <div style="padding:12px 14px;font-size:14px;font-weight:600;text-align:right;color:var(--ac);${border}">${fmt(row.cost_usd||0)}</div>`;
+        }).join('')}
+      </div>
+      <div style="font-size:12px;color:var(--mu)">Pricing: $3/1M input tokens · $15/1M output tokens (Claude Sonnet 4.6). Actual Anthropic invoice may differ slightly.</div>`;
+  }catch(e){tbl.innerHTML=`<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;}
+}
+
 // ── TRAINING DATA ──────────────────────────────────────────────
 let _trRating=3;
 let _trExamples=[];
@@ -5217,6 +5258,91 @@ async function saveModPrompt(){
 
 // PRIVACY BADGE HTML
 function privBadge(){return '<div class="priv-badge">&#128274; Data not stored for AI training</div>';}
+
+// ── SECURE ONBOARDING SETUP PAGE ─────────────────────────────
+// Shown when URL contains ?t=<token> — client sets their own password
+(async function checkSetupToken(){
+  const params = new URLSearchParams(window.location.search);
+  const t = params.get('t');
+  if (!t) return;
+
+  // Hide the normal login UI, show setup overlay
+  document.querySelector('.login-wrap')?.style && (document.querySelector('.login-wrap').style.display = 'none');
+  const ov = document.createElement('div');
+  ov.id = 'setup-ov';
+  ov.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:99999;padding:24px';
+  ov.innerHTML = `<div style="max-width:400px;width:100%;background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:32px 28px">
+    <div style="font-size:22px;font-weight:700;margin-bottom:6px">Zugang einrichten</div>
+    <div id="setup-sub" style="font-size:14px;color:var(--mu);margin-bottom:24px">Link wird geprüft…</div>
+    <div id="setup-form" style="display:none">
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)">E-Mail</label>
+        <div id="setup-email" style="padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;margin-top:6px;font-size:14px;color:var(--mu)"></div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)">Neues Passwort</label>
+        <input id="setup-pw1" type="password" placeholder="Mindestens 8 Zeichen" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;margin-top:6px;font-size:14px;background:var(--bg);color:var(--tx);box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:24px">
+        <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)">Passwort bestätigen</label>
+        <input id="setup-pw2" type="password" placeholder="Wiederholen" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;margin-top:6px;font-size:14px;background:var(--bg);color:var(--tx);box-sizing:border-box">
+      </div>
+      <div id="setup-err" style="display:none;color:var(--red);font-size:13px;margin-bottom:12px"></div>
+      <button onclick="completeSetup('${t}')" style="width:100%;padding:12px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Passwort setzen & einloggen</button>
+    </div>
+    <div id="setup-done" style="display:none;text-align:center;padding:12px 0">
+      <div style="font-size:32px;margin-bottom:12px">✓</div>
+      <div style="font-size:16px;font-weight:600;margin-bottom:8px">Zugang aktiviert</div>
+      <div style="font-size:14px;color:var(--mu)">Sie werden weitergeleitet…</div>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+
+  // Verify token
+  try {
+    const r = await fetch(`/api/setup/verify?t=${encodeURIComponent(t)}`);
+    const d = await r.json();
+    if (!r.ok) {
+      document.getElementById('setup-sub').textContent = d.error || 'Link ungültig oder abgelaufen.';
+      return;
+    }
+    document.getElementById('setup-sub').textContent = `Willkommen, ${safeText(d.clientName)}`;
+    document.getElementById('setup-email').textContent = d.email || '';
+    document.getElementById('setup-form').style.display = 'block';
+    document.getElementById('setup-pw1').focus();
+    document.getElementById('setup-pw1').addEventListener('keydown', e => { if(e.key==='Enter') completeSetup(t); });
+    document.getElementById('setup-pw2').addEventListener('keydown', e => { if(e.key==='Enter') completeSetup(t); });
+  } catch(e) {
+    document.getElementById('setup-sub').textContent = 'Verbindungsfehler. Bitte Seite neu laden.';
+  }
+})();
+
+async function completeSetup(t) {
+  const pw1 = document.getElementById('setup-pw1').value;
+  const pw2 = document.getElementById('setup-pw2').value;
+  const err = document.getElementById('setup-err');
+  err.style.display = 'none';
+  if (pw1.length < 8) { err.textContent = 'Passwort muss mindestens 8 Zeichen haben.'; err.style.display='block'; return; }
+  if (pw1 !== pw2)    { err.textContent = 'Passwörter stimmen nicht überein.';          err.style.display='block'; return; }
+  const btn = document.querySelector('#setup-ov button');
+  btn.textContent = 'Wird gespeichert…'; btn.disabled = true;
+  try {
+    const r = await fetch('/api/setup/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: t, password: pw1 })
+    });
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.error || 'Fehler.'; err.style.display='block'; btn.textContent='Passwort setzen & einloggen'; btn.disabled=false; return; }
+    document.getElementById('setup-form').style.display = 'none';
+    document.getElementById('setup-done').style.display = 'block';
+    // Remove token from URL, redirect to clean login after 2s
+    setTimeout(() => { window.location.href = '/'; }, 2000);
+  } catch(e) {
+    err.textContent = 'Verbindungsfehler. Bitte erneut versuchen.'; err.style.display='block';
+    btn.textContent='Passwort setzen & einloggen'; btn.disabled=false;
+  }
+}
 
 // KEYBOARD
 document.getElementById('adv-pw').addEventListener('keydown',e=>{if(e.key==='Enter')loginAdvisor();});

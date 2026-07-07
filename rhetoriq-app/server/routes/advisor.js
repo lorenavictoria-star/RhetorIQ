@@ -67,4 +67,40 @@ router.get('/timeline/:clientId', requireAdvisor, async (req, res) => {
   }
 });
 
+// GET /api/advisor/costs — token costs per client (last 30 days)
+// Pricing: claude-sonnet-4-6 = $3/MTok input, $15/MTok output
+const PRICE_INPUT  = 3  / 1_000_000; // USD per token
+const PRICE_OUTPUT = 15 / 1_000_000;
+
+router.get('/costs', requireAdvisor, async (req, res) => {
+  try {
+    const days = parseInt(req.query.days) || 30;
+    if (days < 1 || days > 365) return res.status(400).json({ error: 'days must be 1–365' });
+
+    const { rows } = await pool.query(`
+      SELECT
+        COALESCE(c.name, 'Ohne Klient') AS client_name,
+        ul.client_id,
+        COUNT(*)::int                          AS calls,
+        SUM(ul.input_tokens)::bigint           AS input_tokens,
+        SUM(ul.output_tokens)::bigint          AS output_tokens,
+        ROUND(
+          (SUM(ul.input_tokens) * $2 + SUM(ul.output_tokens) * $3)::numeric, 4
+        )                                      AS cost_usd
+      FROM usage_log ul
+      LEFT JOIN clients c ON c.id = ul.client_id
+      WHERE ul.advisor_id = $1
+        AND ul.created_at > NOW() - ($4 || ' days')::interval
+      GROUP BY ul.client_id, c.name
+      ORDER BY cost_usd DESC
+    `, [req.user.id, PRICE_INPUT, PRICE_OUTPUT, days]);
+
+    const total = rows.reduce((sum, r) => sum + parseFloat(r.cost_usd || 0), 0);
+
+    res.json({ days, rows, total_usd: total.toFixed(4) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = router;

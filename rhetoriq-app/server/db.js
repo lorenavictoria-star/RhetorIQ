@@ -185,6 +185,18 @@ async function init() {
     -- FIX 5: DSGVO — source client tracking on module_examples
     ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS source_client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL;
     ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS is_cross_client_shareable BOOLEAN DEFAULT TRUE;
+
+    -- Secure onboarding: time-limited setup tokens (48h) instead of plaintext passwords in email
+    CREATE TABLE IF NOT EXISTS onboarding_tokens (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+      token TEXT UNIQUE NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '48 hours'),
+      used_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS onboarding_tokens_token_idx ON onboarding_tokens(token);
+    CREATE INDEX IF NOT EXISTS onboarding_tokens_client_idx ON onboarding_tokens(client_id);
   `);
 
   // FIX 4: CHECK constraints on enum fields (done separately — DO $$ cannot be inside a multi-statement query string)

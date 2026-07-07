@@ -8,6 +8,7 @@ if (missing.length) {
   process.exit(1);
 }
 
+const Sentry = require('@sentry/node');
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
@@ -15,6 +16,7 @@ const WebSocket = require('ws');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const path = require('path');
+const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const { init, pool } = require('./db');
 const cron = require('node-cron');
@@ -22,6 +24,17 @@ const { runWeeklyReport }  = require('./jobs/weekly-report');
 const { runMonthlyReport } = require('./jobs/monthly-report');
 
 const app = express();
+
+// ── Sentry (error tracking) ───────────────────────────────────
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'production',
+    tracesSampleRate: 0.1,
+  });
+  app.use(Sentry.Handlers.requestHandler());
+  console.log('[sentry] Error tracking active');
+}
 const server = http.createServer(app);
 
 // ── WebSocket ─────────────────────────────────────────────────
@@ -55,9 +68,11 @@ wss.broadcast = (data) => {
 app.locals.wss = wss;
 
 // ── Middleware ────────────────────────────────────────────────
-// FIX 6: Restrict CORS to known frontend origin
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'https://rhetoriq.ch', credentials: true }));
 app.use(express.json({ limit: '2mb' }));
+
+// Structured request logging: timestamp · method · path · status · duration
+app.use(morgan(':date[iso] :method :url :status :res[content-length]b :response-time ms'));
 // FIX 11: helmet security headers (npm install helmet if not yet installed)
 try { app.use(require('helmet')()); } catch { console.warn('helmet not installed — run: npm install helmet'); }
 
@@ -125,6 +140,7 @@ app.use('/api/onboard', require('./routes/onboard'));
 app.use('/api/custom-modules', require('./routes/customModules'));
 app.use('/api/module-examples', require('./routes/moduleExamples'));
 app.use('/api/module-prompts', require('./routes/modulePrompts'));
+app.use('/api/setup', require('./routes/setup'));
 
 // Manual report trigger (advisor only)
 const { requireAdvisor } = require('./middleware/auth');
@@ -146,6 +162,17 @@ app.get('/health', async (_, res) => {
   } catch (e) {
     res.status(503).json({ ok: false, db: 'disconnected', error: e.message });
   }
+});
+
+// ── Sentry error handler (must be before generic error handler) ──
+if (process.env.SENTRY_DSN) {
+  app.use(Sentry.Handlers.errorHandler());
+}
+
+// ── Generic error handler ─────────────────────────────────────
+app.use((err, req, res, _next) => {
+  console.error(`[error] ${req.method} ${req.url} —`, err.message);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 // ── Serve Frontend ────────────────────────────────────────────
