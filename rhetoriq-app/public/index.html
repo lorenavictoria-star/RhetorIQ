@@ -772,6 +772,26 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 </div>
 
 <!-- AUDIT LOG MODAL -->
+<div class="ov" id="mc-ov">
+  <div class="modal" style="max-width:560px;max-height:88vh;display:flex;flex-direction:column;padding:0">
+    <div style="padding:16px 20px 14px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0">
+      <div>
+        <h2 style="margin:0 0 2px" id="mc-title">Module konfigurieren</h2>
+        <div style="font-size:12px;color:var(--mu)" id="mc-sub">Wähle welche Module dieser Klient sehen soll</div>
+      </div>
+      <button onclick="closeModal('mc-ov')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--mu);line-height:1;padding:0 0 0 12px">×</button>
+    </div>
+    <div id="mc-body" style="overflow-y:auto;flex:1;padding:8px 0"></div>
+    <div style="padding:12px 20px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+      <div style="font-size:12px;color:var(--mu)" id="mc-count"></div>
+      <div style="display:flex;gap:8px">
+        <button class="lbtn" onclick="closeModal('mc-ov')">Abbrechen</button>
+        <button class="lbtn" id="mc-save-btn" style="background:var(--ac);color:#fff;border:none" onclick="saveModuleConfig()">Speichern</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="ov" id="audit-ov">
   <div class="modal" style="max-width:700px;max-height:85vh;display:flex;flex-direction:column">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
@@ -1467,7 +1487,10 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const API='https://rhetoriq-jib0.onrender.com';
-let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,capitalMarketsEnabled=false,hotelEnabled=false;
+let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null;
+const DEFAULT_MODULES=['profiling','brand-voice','text-gen','review','recognition','pre-meeting','arg-reaction','crisis','risk','actionability','thread','rh-translate','before-after','sparring','debrief','crisis-toolkit','competitive-check'];
+function modEnabled(key){if(enabledModules===null)return DEFAULT_MODULES.includes(key);return enabledModules.includes(key);}
+function hasSuite(prefix){return enabledModules&&enabledModules.some(k=>k.startsWith(prefix));}
 
 // ── LANGUAGE TOGGLE ───────────────────────────────────────────
 let LANG=localStorage.getItem('riq-lang')||'en';
@@ -2324,7 +2347,7 @@ async function boot(user,role){
   } else {
     clientId=user.id||null;
     if(clientId){
-      try{const r=await fetch(API+'/api/clients/'+clientId+'/cm-status');const d=await r.json();capitalMarketsEnabled=d.capital_markets_enabled||false;hotelEnabled=d.hotel_enabled||false;}catch{}
+      try{const r=await fetch(API+'/api/clients/'+clientId+'/cm-status');const d=await r.json();enabledModules=d.enabled_modules||null;}catch{}
       await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);
     }
   }
@@ -2389,8 +2412,7 @@ async function switchClient(id){
   const s2=document.getElementById('home-client-select');if(s2&&s2.value!==v)s2.value=v;
   // update capital markets flag from clients array
   const selectedClient=clients.find(c=>String(c.id)===String(id));
-  capitalMarketsEnabled=selectedClient?.capital_markets_enabled||false;
-  hotelEnabled=selectedClient?.hotel_enabled||false;
+  enabledModules=selectedClient?.enabled_modules||null;
   if(clientId){await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);}
   loadStats();
   updateMemBanner();
@@ -2416,25 +2438,89 @@ function _refreshSuiteCards(cid){
   const el=document.getElementById('suite-cards-'+cid);
   if(c&&el)el.innerHTML=renderSuiteCards(c);
 }
-async function toggleCapitalMarkets(cid){
-  try{
-    const r=await api('/api/clients/'+cid+'/capital-markets-toggle',{method:'PUT'});
-    const d=await r.json();
-    if(!r.ok)throw new Error(d.error);
-    const c=clients.find(x=>x.id==cid);if(c)c.capital_markets_enabled=d.capital_markets_enabled;
-    _refreshSuiteCards(cid);
-    if(String(clientId)===String(cid)){capitalMarketsEnabled=d.capital_markets_enabled;if(typeof renderModulesList==='function')renderModulesList();}
-  }catch(e){alert('Error: '+e.message);}
+
+// ── MODULE CONFIGURATOR ────────────────────────────────────────
+let _mcClientId=null;
+const MC_SECTIONS=[
+  {label:'Fundament',keys:['profiling','brand-voice','text-gen']},
+  {label:'Schreiben',keys:['review','recognition','before-after','text-gen']},
+  {label:'Prävention',keys:['risk','crisis','crisis-toolkit','arg-reaction','competitive-check','pre-meeting']},
+  {label:'Effizienz',keys:['actionability','thread','rh-translate']},
+  {label:'Wachstum',keys:['sparring','debrief','before-after']},
+];
+const MC_SUITES=[
+  {label:'Capital Markets Suite',color:'#0369a1',bg:'#f0f9ff',border:'#bae6fd',prefix:'cm-',keys:['cm-qa-trainer','cm-equity-story','cm-earnings-analyzer','cm-board-coach','cm-roadshow']},
+  {label:'Hotel Suite',color:'#92400e',bg:'#fffbeb',border:'#fde68a',prefix:'ht-',keys:['ht-guest-letter','ht-review-response','ht-crisis-comm','ht-positioning','ht-sales-pitch']},
+];
+function _mcModuleName(key){
+  const m=ALL_MODULES.find(x=>x.key===key);
+  if(m)return m.name.replace(/^[^\w\s]+\s*/,'');
+  const def=MDEFS[key];return def?.title||key;
 }
-async function toggleHotel(cid){
+function _mcUpdateCount(){
+  const checked=document.querySelectorAll('#mc-body input[type=checkbox]:checked').length;
+  const el=document.getElementById('mc-count');
+  if(el)el.textContent=checked+' Module ausgewählt';
+}
+function openModuleConfig(cid){
+  _mcClientId=cid;
+  const c=clients.find(x=>x.id==cid);if(!c)return;
+  document.getElementById('mc-title').textContent='Module — '+c.name;
+  const em=c.enabled_modules;
+  // build body HTML
+  let html='';
+  // deduplicate keys across standard sections
+  const usedKeys=new Set();
+  MC_SECTIONS.forEach(sec=>{
+    const secKeys=sec.keys.filter(k=>!usedKeys.has(k));
+    if(!secKeys.length)return;
+    secKeys.forEach(k=>usedKeys.add(k));
+    html+=`<div style="padding:10px 20px 4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);display:flex;align-items:center;gap:8px">
+      <span>${sec.label}</span><div style="flex:1;height:0.5px;background:var(--bd)"></div></div>`;
+    secKeys.forEach(k=>{
+      const checked=em===null?true:em.includes(k);
+      html+=`<label style="display:flex;align-items:center;gap:12px;padding:7px 20px;cursor:pointer" onmouseenter="this.style.background='var(--sf)'" onmouseleave="this.style.background=''">
+        <input type="checkbox" data-key="${k}" ${checked?'checked':''} onchange="_mcUpdateCount()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--ac);flex-shrink:0">
+        <div>
+          <div style="font-size:13px">${_mcModuleName(k)}</div>
+          <div style="font-size:11px;color:var(--mu)">${ALL_MODULES.find(x=>x.key===k)?.tag||''}</div>
+        </div>
+      </label>`;
+    });
+  });
+  // suite sections
+  MC_SUITES.forEach(suite=>{
+    html+=`<div style="margin-top:8px;padding:10px 20px 4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:${suite.color};display:flex;align-items:center;gap:8px">
+      <span>${suite.label}</span><div style="flex:1;height:0.5px;background:${suite.border}"></div></div>`;
+    suite.keys.forEach(k=>{
+      const checked=em&&em.includes(k);
+      html+=`<label style="display:flex;align-items:center;gap:12px;padding:7px 20px;cursor:pointer;background:${checked?suite.bg:''}" onmouseenter="this.style.background='${suite.bg}'" onmouseleave="this.style.background='${checked?suite.bg:''}'">
+        <input type="checkbox" data-key="${k}" ${checked?'checked':''} onchange="_mcUpdateCount();this.closest('label').style.background=this.checked?'${suite.bg}':''" style="width:15px;height:15px;cursor:pointer;accent-color:${suite.color};flex-shrink:0">
+        <div>
+          <div style="font-size:13px">${_mcModuleName(k)}</div>
+          <div style="font-size:11px;color:${suite.color}">${suite.label}</div>
+        </div>
+      </label>`;
+    });
+  });
+  document.getElementById('mc-body').innerHTML=html;
+  _mcUpdateCount();
+  openModal('mc-ov');
+}
+async function saveModuleConfig(){
+  if(!_mcClientId)return;
+  const checked=[...document.querySelectorAll('#mc-body input[type=checkbox]:checked')].map(el=>el.dataset.key);
+  const btn=document.getElementById('mc-save-btn');
+  btn.textContent='Speichern…';btn.disabled=true;
   try{
-    const r=await api('/api/clients/'+cid+'/hotel-toggle',{method:'PUT'});
-    const d=await r.json();
-    if(!r.ok)throw new Error(d.error);
-    const c=clients.find(x=>x.id==cid);if(c)c.hotel_enabled=d.hotel_enabled;
-    _refreshSuiteCards(cid);
-    if(String(clientId)===String(cid)){hotelEnabled=d.hotel_enabled;if(typeof renderModulesList==='function')renderModulesList();}
+    const r=await api('/api/clients/'+_mcClientId+'/modules-config',{method:'PUT',body:JSON.stringify({modules:checked})});
+    const d=await r.json();if(!r.ok)throw new Error(d.error);
+    const c=clients.find(x=>x.id==_mcClientId);if(c)c.enabled_modules=d.enabled_modules;
+    _refreshSuiteCards(_mcClientId);
+    if(String(clientId)===String(_mcClientId)){enabledModules=d.enabled_modules;if(typeof renderModulesList==='function')renderModulesList();}
+    closeModal('mc-ov');
   }catch(e){alert('Error: '+e.message);}
+  finally{btn.textContent='Speichern';btn.disabled=false;}
 }
 
 async function deleteClient(cid,name){
@@ -4094,20 +4180,23 @@ function toggleToneCal(fid){
 
 // ── SUITE CARDS ───────────────────────────────────────────────
 function renderSuiteCards(c){
+  const em=c.enabled_modules||null;
+  const hasCM=em&&em.some(k=>k.startsWith('cm-'));
+  const hasHT=em&&em.some(k=>k.startsWith('ht-'));
+  const cmCount=em?em.filter(k=>k.startsWith('cm-')).length:0;
+  const htCount=em?em.filter(k=>k.startsWith('ht-')).length:0;
   const suites=[
-    {key:'capital_markets_enabled',label:'Capital Markets',icon:'ti-chart-line',activeStyle:'border-color:#7dd3fc;background:#f0f9ff',iconColor:'#0369a1',labelColor:'#0369a1',toggle:`toggleCapitalMarkets(${c.id})`},
-    {key:'hotel_enabled',label:'Hotel Suite',icon:'ti-building',activeStyle:'border-color:#fcd34d;background:#fffbeb',iconColor:'#b45309',labelColor:'#92400e',toggle:`toggleHotel(${c.id})`},
-    {key:'__pe__',label:'Private Equity',icon:'ti-briefcase',activeStyle:'border-color:#86efac;background:#f0fdf4',iconColor:'#15803d',labelColor:'#15803d',toggle:'',disabled:true},
+    {label:'Capital Markets',icon:'ti-chart-line',on:hasCM,count:cmCount,activeStyle:'border-color:#7dd3fc;background:#f0f9ff',iconColor:'#0369a1',labelColor:'#0369a1'},
+    {label:'Hotel Suite',icon:'ti-building',on:hasHT,count:htCount,activeStyle:'border-color:#fcd34d;background:#fffbeb',iconColor:'#b45309',labelColor:'#92400e'},
+    {label:'Private Equity',icon:'ti-briefcase',on:false,count:0,activeStyle:'',iconColor:'#15803d',labelColor:'#15803d',disabled:true},
   ];
   return suites.map(s=>{
-    const on=!s.disabled&&c[s.key];
-    const base='border:0.5px solid var(--bd);border-radius:8px;padding:8px 10px;cursor:'+(s.disabled?'default':'pointer')+';transition:opacity .15s;';
-    const style=on?base+s.activeStyle:base+(s.disabled?'opacity:.4':'');
-    const click=s.disabled?'':`onclick="${s.toggle}"`;
-    return`<div style="${style}" ${click}>
-      <div><i class="ti ${s.icon}" style="font-size:15px;color:${on?s.iconColor:'var(--mu)'}" aria-hidden="true"></i></div>
-      <div style="font-size:11px;font-weight:500;margin-top:4px;color:${on?s.labelColor:'var(--mu)'}">${s.label}</div>
-      <div style="font-size:10px;color:${on?s.iconColor:'var(--dm)'};margin-top:2px">${s.disabled?'demnächst':on?'aktiv · 5 Module':'inaktiv'}</div>
+    const base='border:0.5px solid var(--bd);border-radius:8px;padding:8px 10px;cursor:default;';
+    const style=s.on?base+s.activeStyle:base+(s.disabled?'opacity:.35':'');
+    return`<div style="${style}">
+      <div><i class="ti ${s.icon}" style="font-size:15px;color:${s.on?s.iconColor:'var(--mu)'}" aria-hidden="true"></i></div>
+      <div style="font-size:11px;font-weight:500;margin-top:4px;color:${s.on?s.labelColor:'var(--mu)'}">${s.label}</div>
+      <div style="font-size:10px;color:${s.on?s.iconColor:'var(--dm)'};margin-top:2px">${s.disabled?'demnächst':s.on?s.count+' Module aktiv':'inaktiv'}</div>
     </div>`;
   }).join('');
 }
@@ -4160,6 +4249,7 @@ async function loadAdvisorDashboard(){
             <button class="obtn" onclick="advToggleTimeline('${c.id}',this)">Activity</button>
             <button class="obtn" onclick="openTeamModal(${c.id},'${c.name}')">Team</button>
             <button class="obtn" onclick="openAuditModal(${c.id},'${c.name}')">Audit Log</button>
+            <button class="obtn" style="color:#5b21b6;border-color:#c4b5fd;background:#f5f3ff;font-weight:500" onclick="openModuleConfig(${c.id})"><i class="ti ti-layout-grid" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Module</button>
           </div>
           <div id="suite-cards-${c.id}" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px">${renderSuiteCards(c)}</div>
           <div style="display:flex;gap:6px;margin-top:8px">
@@ -4323,14 +4413,14 @@ function renderModulesList(){
   const sp=document.getElementById('mlist-suite-pills');
   if(sp){
     sp.innerHTML='';
-    if(capitalMarketsEnabled){
+    if(hasSuite('cm-')){
       const b=document.createElement('button');b.className='mlist-pill'+(modsCatFilter==='capital-markets'?' active':'');
       b.id='pill-capital-markets';b.textContent='Capital Markets';
       b.style.cssText=modsCatFilter==='capital-markets'?'background:#0c4a6e;color:#fff;border-color:#0c4a6e':'color:#0369a1;border-color:#7dd3fc;background:#f0f9ff';
       b.onclick=function(){filterModsCat('capital-markets',b);document.querySelectorAll('.mlist-pill').forEach(x=>{if(x!==b){x.classList.remove('active');x.style.background='';x.style.color='';x.style.borderColor='';} });b.classList.add('active');b.style.cssText='background:#0c4a6e;color:#fff;border-color:#0c4a6e'};
       sp.appendChild(b);
     }
-    if(hotelEnabled){
+    if(hasSuite('ht-')){
       const b=document.createElement('button');b.className='mlist-pill'+(modsCatFilter==='hotel'?' active':'');
       b.id='pill-hotel';b.textContent='Hotel Suite';
       b.style.cssText=modsCatFilter==='hotel'?'background:#78350f;color:#fff;border-color:#78350f':'color:#92400e;border-color:#fcd34d;background:#fffbeb';
@@ -4341,8 +4431,7 @@ function renderModulesList(){
   }
   const q=modsSearch.toLowerCase();
   const filtered=ALL_MODULES.filter(m=>{
-    if(m.cat==='capital-markets'&&!capitalMarketsEnabled)return false;
-    if(m.cat==='hotel'&&!hotelEnabled)return false;
+    if(!modEnabled(m.key))return false;
     const matchCat=modsCatFilter==='all'||m.cat===modsCatFilter;
     const matchQ=!q||m.name.toLowerCase().includes(q)||m.tag.toLowerCase().includes(q);
     return matchCat&&matchQ;

@@ -31,6 +31,7 @@ async function init() {
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT FALSE;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS capital_markets_enabled BOOLEAN DEFAULT FALSE;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS hotel_enabled BOOLEAN DEFAULT FALSE;
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS enabled_modules TEXT[];
 
     CREATE TABLE IF NOT EXISTS analyses (
       id SERIAL PRIMARY KEY,
