@@ -3541,7 +3541,7 @@ function buildTextGen(prefill,form){
     <div class="tg-tile" id="tg-tile-${t.id}" onclick="tgOpenTile('${t.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div class="tg-tile-abbr">${t.abbr}</div>
-        ${isAdv?`<button class="mod-prompt-btn" id="tg-gear-${t.id}" onclick="event.stopPropagation();openModPrompt('text-gen-${t.id}')" title="Customize prompt"><i class="ti ti-adjustments-horizontal"></i></button>`:''}
+        ${(isAdv&&clientId)?`<button class="mod-prompt-btn" id="tg-gear-${t.id}" onclick="event.stopPropagation();openModPrompt('text-gen-${t.id}','${t.label}')" title="Prompt für diesen Kunden anpassen" style="font-size:11px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-adjustments-horizontal" style="font-size:13px"></i><span>Prompt anpassen</span></button>`:''}
       </div>
       <div class="tg-tile-label">${t.label}</div>
       <div class="tg-tile-sub">${t.sub}</div>
@@ -4954,10 +4954,10 @@ async function exportAuditCsv(){
 // MODULE PROMPT CUSTOMIZATION
 let _mpModule=null;
 
-async function openModPrompt(moduleKey){
+async function openModPrompt(moduleKey,tileLabel){
   _mpModule=moduleKey;
   const modDef=MDEFS[moduleKey];
-  const label=modDef?(getMdefLang(moduleKey,modDef).title||moduleKey):moduleKey;
+  const label=tileLabel||(modDef?(getMdefLang(moduleKey,modDef).title||moduleKey):moduleKey);
   const clientName=clients.find(c=>c.id===clientId)?.name||'';
   document.getElementById('mp-subtitle').textContent=label+(clientName?' — '+clientName:'');
   const ta=document.getElementById('mp-instructions');
