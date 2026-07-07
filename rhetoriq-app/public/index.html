@@ -729,16 +729,16 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 <!-- MODULE PROMPT MODAL -->
 <div class="ov" id="mp-ov">
   <div class="modal" style="max-width:520px">
-    <h2 style="margin-bottom:4px">Customize Prompt</h2>
+    <h2 style="margin-bottom:4px">Prompt anpassen</h2>
     <div id="mp-subtitle" style="font-size:13px;color:var(--mu);margin-bottom:16px"></div>
     <div class="mf">
-      <label class="fl">Custom Instructions for this client</label>
-      <textarea id="mp-instructions" rows="7" placeholder="e.g. Always write in Swiss German. Avoid anglicisms. This client is a medical institution — formal tone required." style="width:100%;resize:vertical"></textarea>
-      <div style="font-size:12px;color:var(--mu);margin-top:6px">These instructions are appended to the module's system prompt — only for this client.</div>
+      <label class="fl">Spezifische Anweisung für dieses Modul</label>
+      <textarea id="mp-instructions" rows="7" placeholder="z.B. Immer auf Schweizerdeutsch. Max. 3 Abschnitte. Kein Fachjargon. Abschluss immer mit konkretem nächsten Schritt." style="width:100%;resize:vertical"></textarea>
+      <div style="font-size:12px;color:var(--mu);margin-top:6px">Ergänzt die Brand Voice — gilt nur für diesen Kunden und dieses Modul. Wird bei jeder Generierung automatisch angewendet.</div>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-      <button class="lbtn" onclick="closeModal('mp-ov')">Cancel</button>
-      <button class="lbtn" id="mp-save-btn" onclick="saveModPrompt()" style="background:var(--ac);color:#fff;border:none">Save</button>
+      <button class="lbtn" onclick="closeModal('mp-ov')">Abbrechen</button>
+      <button class="lbtn" id="mp-save-btn" onclick="saveModPrompt()" style="background:var(--ac);color:#fff;border:none">Speichern</button>
     </div>
   </div>
 </div>
@@ -3481,7 +3481,7 @@ function goModule(name,prefill){
   const def=getMdefLang(name,MDEFS[name]);if(!def)return;
   trackModuleUse(name,def.title||name);
   const isTg=def.special==='textgen';
-  const gearHtml=(isAdv&&!isTg)?` <button class="mod-prompt-btn" id="mod-prompt-gear" onclick="openModPrompt('${name}')" title="Customize prompt for this client"><i class="ti ti-adjustments-horizontal"></i></button>`:'';
+  const gearHtml=(isAdv&&!isTg&&clientId)?` <button class="mod-prompt-btn" id="mod-prompt-gear" onclick="openModPrompt('${name}')" title="Prompt für diesen Kunden anpassen" style="font-size:11px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-adjustments-horizontal" style="font-size:13px"></i><span>Prompt anpassen</span></button>`:'';
   document.getElementById('mod-title').innerHTML=def.title+gearHtml;
   if(isAdv&&clientId&&!isTg){api('/api/module-prompts/'+clientId+'/'+name).then(r=>{const gear=document.getElementById('mod-prompt-gear');if(gear&&r.instructions){const d=document.createElement('span');d.className='mod-prompt-dot';gear.appendChild(d);}}).catch(()=>{});}
   document.getElementById('mod-desc').innerHTML=def.desc;
