@@ -297,6 +297,9 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .adv-tl-mod{font-size:12px;color:var(--tx);font-weight:500}
 .adv-tl-date{font-size:10px;color:var(--mu);margin-left:auto}
 .adv-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:18px 0 8px}
+.hs-adv-score{font-family:'Spectral',serif;font-size:72px;font-weight:300;line-height:1;color:var(--tx);text-align:center;margin:16px 0 4px}
+.hs-adv-label{font-size:13px;color:var(--mu);text-align:center;margin-bottom:20px}
+.hs-adv-body{font-size:13px;line-height:1.75;color:var(--tx);white-space:pre-wrap;background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:16px;max-height:55vh;overflow-y:auto}
 .adv-feed-item{display:flex;align-items:baseline;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:12px}
 .adv-feed-item:last-child{border-bottom:none}
 .adv-feed-client{font-weight:600;color:var(--tx)}
@@ -834,6 +837,28 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div style="display:flex;justify-content:flex-end;margin-top:12px">
       <button class="lbtn" onclick="closeModal('audit-ov')">Close</button>
     </div>
+  </div>
+</div>
+
+<!-- HEALTH SCORE ADVISOR MODAL -->
+<div class="ov" id="hs-adv-ov" onclick="if(event.target===this)closeModal('hs-adv-ov')" style="display:none;align-items:center;justify-content:center">
+  <div class="modal" style="max-width:560px;width:100%">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+      <div>
+        <h2 style="margin:0 0 2px">Communication Health Score</h2>
+        <div id="hs-adv-client-label" style="font-size:13px;color:var(--mu)"></div>
+      </div>
+      <button onclick="closeModal('hs-adv-ov')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mu);line-height:1;padding:2px 6px">&times;</button>
+    </div>
+    <div id="hs-adv-score" class="hs-adv-score" style="display:none">—</div>
+    <div id="hs-adv-label" class="hs-adv-label"></div>
+    <div id="hs-adv-loading" style="text-align:center;padding:40px 0;color:var(--mu);font-size:13px">Score wird generiert…</div>
+    <div id="hs-adv-body" class="hs-adv-body" style="display:none"></div>
+    <div id="hs-adv-actions" style="display:none;margin-top:14px;display:none;gap:8px;flex-wrap:wrap">
+      <button onclick="hsAdvPrint()" style="padding:8px 16px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">&#128438; Als PDF drucken</button>
+      <button onclick="hsAdvCopy()" style="padding:8px 16px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif" id="hs-adv-copy-btn">&#128203; Text kopieren</button>
+    </div>
+    <div style="font-size:11px;color:var(--mu);margin-top:10px">Basiert auf den letzten 90 Tagen · Nur für Advisor sichtbar</div>
   </div>
 </div>
 
@@ -4634,6 +4659,7 @@ async function loadAdvisorDashboard(){
             <button class="obtn" onclick="openTeamModal(${c.id})">Team</button>
             <button class="obtn" onclick="openAuditModal(${c.id})">Audit Log</button>
             <button class="obtn" style="color:#5b21b6;border-color:#c4b5fd;background:#f5f3ff;font-weight:500" onclick="openModuleConfig(${c.id})"><i class="ti ti-layout-grid" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Module</button>
+            <button class="obtn" style="color:#047857;border-color:#a7f3d0;background:#ecfdf5;font-weight:500" onclick="openHealthScoreAdv(${c.id},'${safeText(c.name)}')">&#9670; Health Score</button>
           </div>
           <div style="display:flex;gap:6px;margin-top:8px">
             <button class="dbtn" onclick="delData(${c.id})">Delete Data</button>
@@ -5026,6 +5052,98 @@ async function generateHealthScore(){
     result.textContent=d.result;result.classList.add('show');
   }catch(e){score.textContent='!';result.textContent='Error: '+e.message;result.classList.add('show');}
   btn.textContent='Refresh';btn.disabled=false;
+}
+
+// ── HEALTH SCORE — ADVISOR MODAL ─────────────────────────────
+let _hsAdvText = '';
+
+async function openHealthScoreAdv(cId, cName) {
+  // Reset modal state
+  _hsAdvText = '';
+  document.getElementById('hs-adv-client-label').textContent = cName || '';
+  document.getElementById('hs-adv-score').style.display = 'none';
+  document.getElementById('hs-adv-score').textContent = '—';
+  document.getElementById('hs-adv-label').textContent = '';
+  document.getElementById('hs-adv-body').style.display = 'none';
+  document.getElementById('hs-adv-body').textContent = '';
+  document.getElementById('hs-adv-actions').style.display = 'none';
+  document.getElementById('hs-adv-loading').style.display = 'block';
+  document.getElementById('hs-adv-loading').textContent = 'Score wird generiert…';
+  document.getElementById('hs-adv-ov').style.display = 'flex';
+
+  try {
+    const r = await api('/api/analyze/health-score?clientId=' + cId);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Fehler');
+    if (d.error === 'not_enough_data') {
+      document.getElementById('hs-adv-loading').textContent = 'Zu wenig Daten — mindestens 3 Analysen in den letzten 90 Tagen nötig.';
+      return;
+    }
+
+    _hsAdvText = d.result || '';
+
+    // Extract score X/10 from result text
+    const match = _hsAdvText.match(/(\d+\.?\d*)\s*\/\s*10/);
+    const scoreNum = match ? parseFloat(match[1]) : null;
+    const scoreColor = scoreNum === null ? 'var(--tx)' : scoreNum >= 7 ? '#047857' : scoreNum >= 5 ? '#b45309' : '#b91c1c';
+
+    document.getElementById('hs-adv-loading').style.display = 'none';
+
+    const scoreEl = document.getElementById('hs-adv-score');
+    scoreEl.textContent = scoreNum !== null ? scoreNum.toFixed(1) : '?';
+    scoreEl.style.color = scoreColor;
+    scoreEl.style.display = 'block';
+
+    document.getElementById('hs-adv-label').textContent = '/ 10 · ' + (d.count || '?') + ' Analysen ausgewertet';
+
+    const bodyEl = document.getElementById('hs-adv-body');
+    bodyEl.textContent = _hsAdvText;
+    bodyEl.style.display = 'block';
+
+    document.getElementById('hs-adv-actions').style.display = 'flex';
+  } catch (e) {
+    document.getElementById('hs-adv-loading').textContent = 'Fehler: ' + e.message;
+  }
+}
+
+function hsAdvPrint() {
+  const clientName = document.getElementById('hs-adv-client-label').textContent;
+  const score      = document.getElementById('hs-adv-score').textContent;
+  const text       = _hsAdvText;
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>Health Score — ${clientName}</title>
+    <style>
+      body{font-family:'Helvetica Neue',Arial,sans-serif;max-width:680px;margin:40px auto;color:#111;line-height:1.7}
+      h1{font-size:22px;font-weight:700;margin-bottom:2px}
+      .meta{font-size:13px;color:#666;margin-bottom:24px}
+      .score{font-size:64px;font-weight:300;color:#111;line-height:1;margin:0 0 4px}
+      .score-label{font-size:13px;color:#666;margin-bottom:24px}
+      pre{white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.75;border:1px solid #e5e7eb;border-radius:8px;padding:16px;background:#f9fafb}
+      .footer{font-size:11px;color:#9ca3af;margin-top:24px;border-top:1px solid #e5e7eb;padding-top:12px}
+      @media print{body{margin:20px}}
+    </style></head><body>
+    <h1>Communication Health Score</h1>
+    <div class="meta">${clientName} · ${new Date().toLocaleDateString('de-CH', {day:'2-digit',month:'long',year:'numeric'})}</div>
+    <div class="score">${score}</div>
+    <div class="score-label">/ 10</div>
+    <pre>${text.replace(/</g,'&lt;')}</pre>
+    <div class="footer">Generiert mit RhetorIQ · Vertraulich · Nur für internen Gebrauch</div>
+    </body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 400);
+}
+
+async function hsAdvCopy() {
+  const btn = document.getElementById('hs-adv-copy-btn');
+  try {
+    await navigator.clipboard.writeText(_hsAdvText);
+    btn.textContent = '✓ Kopiert';
+    setTimeout(() => { btn.textContent = '⧉ Text kopieren'; }, 2000);
+  } catch {
+    btn.textContent = 'Fehler beim Kopieren';
+  }
 }
 
 // SHOW HEALTH SCORE WIDGET WHEN CLIENT SELECTED
