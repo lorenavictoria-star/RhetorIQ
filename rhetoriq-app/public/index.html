@@ -736,9 +736,12 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <textarea id="mp-instructions" rows="7" placeholder="z.B. Immer auf Schweizerdeutsch. Max. 3 Abschnitte. Kein Fachjargon. Abschluss immer mit konkretem nächsten Schritt." style="width:100%;resize:vertical"></textarea>
       <div style="font-size:12px;color:var(--mu);margin-top:6px">Ergänzt die Brand Voice — gilt nur für diesen Kunden und dieses Modul. Wird bei jeder Generierung automatisch angewendet.</div>
     </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-      <button class="lbtn" onclick="closeModal('mp-ov')">Abbrechen</button>
-      <button class="lbtn" id="mp-save-btn" onclick="saveModPrompt()" style="background:var(--ac);color:#fff;border:none">Speichern</button>
+    <div style="display:flex;gap:8px;justify-content:space-between;margin-top:8px;align-items:center;flex-wrap:wrap">
+      <button class="lbtn" id="mp-regen-btn" onclick="mpRegen()" style="font-size:12px;color:var(--mu)">&#8635; Neu generieren</button>
+      <div style="display:flex;gap:8px">
+        <button class="lbtn" onclick="closeModal('mp-ov')">Abbrechen</button>
+        <button class="lbtn" id="mp-save-btn" onclick="saveModPrompt()" style="background:var(--ac);color:#fff;border:none">Speichern</button>
+      </div>
     </div>
   </div>
 </div>
@@ -4955,14 +4958,49 @@ async function openModPrompt(moduleKey){
   _mpModule=moduleKey;
   const modDef=MDEFS[moduleKey];
   const label=modDef?(getMdefLang(moduleKey,modDef).title||moduleKey):moduleKey;
-  document.getElementById('mp-subtitle').textContent=label+' — '+( clients.find(c=>c.id===clientId)?.name||'this client');
-  document.getElementById('mp-instructions').value='';
-  document.getElementById('mp-save-btn').textContent='Save';
+  const clientName=clients.find(c=>c.id===clientId)?.name||'';
+  document.getElementById('mp-subtitle').textContent=label+(clientName?' — '+clientName:'');
+  const ta=document.getElementById('mp-instructions');
+  ta.value='';
+  ta.placeholder='Wird generiert…';
+  ta.disabled=true;
+  document.getElementById('mp-save-btn').textContent='Speichern';
   openModal('mp-ov');
   try{
-    const r=await api('/api/module-prompts/'+clientId+'/'+moduleKey);
-    document.getElementById('mp-instructions').value=r.instructions||'';
+    // First check for saved instructions
+    const saved=await api('/api/module-prompts/'+clientId+'/'+moduleKey);
+    if(saved.instructions){
+      ta.value=saved.instructions;
+      ta.placeholder='';
+      ta.disabled=false;
+      return;
+    }
+    // No saved instructions — generate suggestion from brand voice + examples
+    if(clientId){
+      const r=await api('/api/module-prompts/suggest',{method:'POST',body:JSON.stringify({clientId,moduleKey,moduleLabel:label})});
+      ta.value=r.suggestion||'';
+      ta.placeholder=r.suggestion?'':'z.B. Immer auf Schweizerdeutsch. Max. 3 Abschnitte…';
+    }
   }catch(e){}
+  ta.disabled=false;
+  ta.focus();
+  // Position cursor at end
+  ta.selectionStart=ta.selectionEnd=ta.value.length;
+}
+
+async function mpRegen(){
+  if(!_mpModule||!clientId)return;
+  const ta=document.getElementById('mp-instructions');
+  const btn=document.getElementById('mp-regen-btn');
+  const modDef=MDEFS[_mpModule];
+  const label=modDef?(getMdefLang(_mpModule,modDef).title||_mpModule):_mpModule;
+  ta.disabled=true;btn.disabled=true;btn.textContent='Generiert…';
+  try{
+    const r=await api('/api/module-prompts/suggest',{method:'POST',body:JSON.stringify({clientId,moduleKey:_mpModule,moduleLabel:label})});
+    ta.value=r.suggestion||'';
+  }catch(e){}
+  ta.disabled=false;btn.disabled=false;btn.textContent='↻ Neu generieren';
+  ta.focus();ta.selectionStart=ta.selectionEnd=ta.value.length;
 }
 
 async function saveModPrompt(){
