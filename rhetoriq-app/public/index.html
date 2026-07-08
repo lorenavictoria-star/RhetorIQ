@@ -752,7 +752,8 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 <!-- MODULE PROMPT MODAL -->
 <div class="ov" id="mp-ov">
   <div class="modal" style="max-width:520px">
-    <h2 style="margin-bottom:4px">Prompt anpassen</h2>
+    <h2 style="margin-bottom:4px">Modul einrichten</h2>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:8px">Spezifische Anweisung für dieses Modul — gilt nur für diesen Klienten. Kein neues Modul, sondern individuelle Konfiguration.</div>
     <div id="mp-subtitle" style="font-size:13px;color:var(--mu);margin-bottom:16px"></div>
     <div class="mf">
       <label class="fl">Spezifische Anweisung für dieses Modul</label>
@@ -1318,6 +1319,12 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <!-- Add new example form -->
       <div style="border:1.5px solid var(--bd);border-radius:10px;background:var(--sf);padding:18px;margin-bottom:20px">
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:14px">+ Neues Beispiel</div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Modul <span style="color:#e53e3e">*</span></label>
+          <select id="tr-form-module" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);background:#fff;outline:none;box-sizing:border-box">
+            <option value="">— Modul auswählen —</option>
+          </select>
+        </div>
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Label (optional)</label>
           <input id="tr-label" placeholder="z.B. CEO, Krise…" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);background:#fff;outline:none;box-sizing:border-box">
@@ -2546,6 +2553,8 @@ async function runCustomModule(){
     document.getElementById('cm-result-body').textContent=d.result;
     document.getElementById('cm-result-box').style.display='block';
     document.querySelector('.content').scrollTop=9999;
+    // Auto-save as training example (idempotent — silently fails if already exists)
+    api('/api/module-examples',{method:'POST',body:JSON.stringify({module_key:'custom-'+_cmActive.id,label:_cmActive.name,input_text:JSON.stringify(inputs),output_text:d.result,rating:3,auto_generated:true,source_client_id:clientId||null})}).catch(()=>{});
   }catch(e){alert('Error: '+e.message);}
   finally{btn.textContent='Run';btn.disabled=false;}
 }
@@ -2672,6 +2681,15 @@ async function loadTraining(){
     imp.innerHTML='<option value="">— Klient wählen —</option>'+clients.map(c=>`<option value="${c.id}">${safeText(c.name)}${c.industry?' ('+safeText(c.industry)+')':''}</option>`).join('');
   }
   trLoadModule();
+  // Also populate the inline form module selector
+  const fsel=document.getElementById('tr-form-module');
+  if(fsel){
+    const cur=document.getElementById('tr-module-sel')?.value||'';
+    const stdOpts=ALL_MODULES.map(m=>`<option value="${m.key}"${m.key===cur?' selected':''}>${m.name}</option>`).join('');
+    let custOpts='';
+    try{const cr2=await api('/api/custom-modules');const cms2=await cr2.json();if(cms2.length){custOpts='<optgroup label="Individuelle Module">'+cms2.map(m=>`<option value="custom-${m.id}"${'custom-'+m.id===cur?' selected':'']}>${safeText(m.name)}</option>`).join('')+'</optgroup>';}}catch{}
+    fsel.innerHTML='<option value="">— Modul auswählen —</option>'+stdOpts+custOpts;
+  }
 }
 
 async function trImportClient(){
@@ -2744,7 +2762,7 @@ async function trLoadModule(){
 }
 
 async function trSaveExample(){
-  const key=document.getElementById('tr-module-sel')?.value;
+  const key=document.getElementById('tr-form-module')?.value||document.getElementById('tr-module-sel')?.value;
   const label=document.getElementById('tr-label')?.value?.trim();
   const industry=document.getElementById('tr-industry')?.value?.trim().toLowerCase()||null;
   const input=document.getElementById('tr-input')?.value?.trim();
@@ -3954,7 +3972,7 @@ function goModule(name,prefill){
   const def=getMdefLang(name,MDEFS[name]);if(!def)return;
   trackModuleUse(name,def.title||name);
   const isTg=def.special==='textgen';
-  const gearHtml=(isAdv&&!isTg&&clientId)?` <button class="mod-prompt-btn" id="mod-prompt-gear" onclick="openModPrompt('${name}')" title="Prompt für diesen Kunden anpassen" style="font-size:11px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-adjustments-horizontal" style="font-size:13px"></i><span>Prompt anpassen</span></button>`:'';
+  const gearHtml=(isAdv&&!isTg&&clientId)?` <button class="mod-prompt-btn" id="mod-prompt-gear" onclick="openModPrompt('${name}')" title="Prompt für diesen Kunden anpassen" style="font-size:11px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-adjustments-horizontal" style="font-size:13px"></i><span>Einrichten</span></button>`:'';
   document.getElementById('mod-title').innerHTML=safeText(def.title)+gearHtml;
   if(isAdv&&clientId&&!isTg){api('/api/module-prompts/'+clientId+'/'+name).then(r=>{const gear=document.getElementById('mod-prompt-gear');if(gear&&r.instructions){const d=document.createElement('span');d.className='mod-prompt-dot';gear.appendChild(d);}}).catch(()=>{});}
   document.getElementById('mod-desc').innerHTML=safe(def.desc);
@@ -4011,7 +4029,7 @@ function buildTextGen(prefill,form){
     <div class="tg-tile" id="tg-tile-${t.id}" onclick="tgOpenTile('${t.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div class="tg-tile-abbr">${t.abbr}</div>
-        ${(isAdv&&clientId)?`<button class="mod-prompt-btn" id="tg-gear-${t.id}" onclick="event.stopPropagation();openModPrompt('text-gen-${t.id}','${t.label}')" title="Prompt für diesen Kunden anpassen" style="font-size:11px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-adjustments-horizontal" style="font-size:13px"></i><span>Prompt anpassen</span></button>`:''}
+        ${(isAdv&&clientId)?`<button class="mod-prompt-btn" id="tg-gear-${t.id}" onclick="event.stopPropagation();openModPrompt('text-gen-${t.id}','${t.label}')" title="Prompt für diesen Kunden anpassen" style="font-size:11px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-adjustments-horizontal" style="font-size:13px"></i><span>Einrichten</span></button>`:''}
       </div>
       <div class="tg-tile-label">${t.label}</div>
       <div class="tg-tile-sub">${t.sub}</div>
