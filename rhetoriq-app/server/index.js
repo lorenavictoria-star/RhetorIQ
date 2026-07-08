@@ -233,13 +233,24 @@ app.post('/api/setup-advisor', async (req, res) => {
     if (password.length < 8) {
       return res.status(400).json({ error: 'Password must be 8+ characters' });
     }
-    await pool.query('DELETE FROM users WHERE email=$1 AND role=$2', [email, 'advisor']);
     const hash = await bcrypt.hash(password, 12);
-    const { rows } = await pool.query(
-      'INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) RETURNING id',
-      [email, hash, name, 'advisor']
+    // Try UPDATE first, if not found INSERT
+    const { rowCount } = await pool.query(
+      'UPDATE users SET password_hash=$1, name=$2 WHERE email=$3 AND role=$4',
+      [hash, name, email, 'advisor']
     );
-    res.json({ ok: true, message: `Advisor ${email} created`, id: rows[0].id });
+    let id;
+    if (rowCount === 0) {
+      const { rows } = await pool.query(
+        'INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) RETURNING id',
+        [email, hash, name, 'advisor']
+      );
+      id = rows[0].id;
+    } else {
+      const { rows } = await pool.query('SELECT id FROM users WHERE email=$1', [email]);
+      id = rows[0].id;
+    }
+    res.json({ ok: true, message: `Advisor ${email} setup complete`, id });
   } catch (err) {
     console.error('Setup error:', err);
     res.status(500).json({ error: err.message });
