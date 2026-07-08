@@ -215,6 +215,37 @@ app.post('/api/admin/report/monthly', requireAdvisor, async (req, res) => {
 });
 app.use('/api/audit', require('./routes/audit'));
 
+
+// ── Quick Setup Endpoint (no One-Off Jobs needed) ──
+app.post('/api/setup-advisor', async (req, res) => {
+  try {
+    const secret = req.query.secret;
+    const requiredSecret = 'setup-advisor-2025-temp';
+    if (!secret || secret !== requiredSecret) {
+      return res.status(401).json({ error: 'Invalid secret' });
+    }
+    const email = process.env.ADVISOR_EMAIL;
+    const password = process.env.ADVISOR_PASSWORD;
+    const name = process.env.ADVISOR_NAME || 'Advisor';
+    if (!email || !password) {
+      return res.status(400).json({ error: 'ADVISOR_EMAIL and ADVISOR_PASSWORD required' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be 8+ characters' });
+    }
+    await pool.query('DELETE FROM users WHERE email=$1 AND role=$2', [email, 'advisor']);
+    const hash = await require('bcrypt').hashSync(password, 12);
+    const { rows } = await pool.query(
+      'INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) RETURNING id',
+      [email, hash, name, 'advisor']
+    );
+    res.json({ ok: true, message: `Advisor ${email} created`, id: rows[0].id });
+  } catch (err) {
+    console.error('Setup error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // FIX 9: Health check with DB probe
 app.get('/health', async (_, res) => {
   try {
