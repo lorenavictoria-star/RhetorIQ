@@ -882,6 +882,11 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       </div>
     </div>
     <div class="mf"><label class="fl">Industry</label><select id="nc-industry"><option>Financial Services</option><option>Industry / Manufacturing</option><option>Tech / SaaS</option><option>Healthcare</option><option>Education</option><option>Public Sector</option><option>Other</option></select></div>
+    <div class="mf"><label class="fl">Sektor</label><select id="nc-sector" onchange="ncUpdateModules()" class="fi"><option value="">— Sektor wählen —</option><option value="kmu">KMU / Allgemein</option><option value="hotellerie">Hotellerie</option><option value="capital">Capital Markets</option><option value="bildung">Bildung</option><option value="nonprofit">Non-Profit</option><option value="tech">Tech</option><option value="beratung">Beratung</option></select></div>
+    <div class="mf" id="nc-modules-wrap" style="display:none">
+      <label class="fl">Module</label>
+      <div id="nc-modules-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-top:6px;font-size:13px"></div>
+    </div>
     <div class="mf"><label class="fl">Primary Contact</label><input type="text" id="nc-contact" placeholder="e.g. CEO Martin Meier"></div>
     <div class="mf" style="border-top:1px solid var(--bd);margin-top:12px;padding-top:12px">
       <label class="fl">Login-Zugangsdaten für Klient</label>
@@ -1074,11 +1079,10 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div id="bv-active-panel" style="display:none;margin-bottom:28px;border:2px solid var(--ac);border-radius:12px;overflow:hidden">
         <div style="background:var(--ac);padding:10px 16px;display:flex;align-items:center;justify-content:space-between">
           <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff">Aktive Brand Voice — wird bei jeder Generierung injiziert</div>
-          <div style="display:flex;gap:8px">
+          <div id="bv-adv-btns" style="display:flex;gap:8px">
             <button id="bv-active-edit-btn" onclick="bvActiveEdit()" style="padding:4px 12px;border:1.5px solid rgba(255,255,255,.6);border-radius:6px;background:transparent;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Bearbeiten</button>
             <button id="bv-active-save-btn" onclick="bvActiveSave()" style="display:none;padding:4px 12px;border:none;border-radius:6px;background:#fff;color:var(--ac);font-size:11px;font-weight:700;cursor:pointer;font-family:'Instrument Sans',sans-serif">Speichern</button>
             <button id="bv-active-cancel-btn" onclick="bvActiveCancel()" style="display:none;padding:4px 12px;border:1.5px solid rgba(255,255,255,.6);border-radius:6px;background:transparent;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Abbrechen</button>
-            <button onclick="bvShowHistory(clientId,'brand_voice')" style="padding:4px 12px;border:1.5px solid rgba(255,255,255,.4);border-radius:6px;background:transparent;color:rgba(255,255,255,.8);font-size:11px;cursor:pointer;font-family:'Instrument Sans',sans-serif">Versionen</button>
           </div>
         </div>
         <div id="bv-active-view" style="padding:14px 16px;font-size:13px;line-height:1.7;color:var(--tx);white-space:pre-wrap;max-height:200px;overflow-y:auto;background:var(--sf)"></div>
@@ -1410,7 +1414,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <!-- Workspace grid -->
     <div style="padding:12px 12px 8px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)">Workspace</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 12px">
-      <div onclick="goPage('brand-voice');setMN('more');hideMore()" class="mm-tile">
+      <div id="mn-brand-voice" onclick="goPage('brand-voice');setMN('more');hideMore()" class="mm-tile">
         <div class="mm-tile-l">Brand Voice</div>
       </div>
       <div onclick="goPage('people');loadPeople();setMN('more');hideMore()" class="mm-tile">
@@ -1434,7 +1438,9 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div class="ao-item mm-row" id="mm-usage" onclick="goPage('usage');loadUsage();setMN('more');hideMore()" style="display:none">
         <i class="ti ti-chart-bar" style="font-size:15px;color:var(--mu)"></i> Usage
       </div>
-      <!-- Training page hidden — auto-import runs silently per client -->
+      <div class="ao-item mm-row" id="mm-training" onclick="goPage('training');loadTraining();setMN('more');hideMore()" style="display:none">
+        <i class="ti ti-database" style="font-size:15px;color:var(--mu)"></i> Trainings-Bibliothek
+      </div>
     </div>
 
     <!-- About collapsed -->
@@ -2580,6 +2586,9 @@ async function boot(user,role){
     document.getElementById('mm-reviews').style.display='flex';
     loadAdvisorReviews();
     setInterval(loadAdvisorReviews,60000);
+  } else {
+    const bvNav=document.getElementById('mn-brand-voice');if(bvNav)bvNav.style.display='none';
+    const bvBtns=document.getElementById('bv-adv-btns');if(bvBtns)bvBtns.style.display='none';
   }
   connectWS();loadStats();renderVids();initPasteIntelligence();renderQuickAccess();
   // show ⌘K label + quick panel trigger on desktop
@@ -2593,11 +2602,22 @@ async function boot(user,role){
 // WS
 function connectWS(){
   const proto=location.protocol==='https:'?'wss':'ws';
+  // Token sent as first message after open — never in URL (avoids server-log exposure)
   const ws=new WebSocket(API.replace(/^https?/,proto)+'/ws');
   const dot=document.getElementById('ws-dot');
-  ws.onopen=()=>dot.classList.add('on');
-  ws.onclose=()=>{dot.classList.remove('on');setTimeout(connectWS,3000);};
-  ws.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.type==='analysis')loadStats();if(m.type==='review_new'&&isAdv){loadAdvisorReviews();}if(m.type==='review_done'&&!isAdv)handleReviewDoneWS(m);}catch{}};
+  ws.onopen=()=>{
+    ws.send(JSON.stringify({type:'auth',token}));
+  };
+  ws.onclose=()=>{dot.classList.remove('on');setTimeout(connectWS,5000);};
+  ws.onmessage=e=>{
+    try{
+      const m=JSON.parse(e.data);
+      if(m.type==='auth_ok'){dot.classList.add('on');return;}
+      if(m.type==='analysis')loadStats();
+      if(m.type==='review_new'&&isAdv){loadAdvisorReviews();}
+      if(m.type==='review_done'&&!isAdv)handleReviewDoneWS(m);
+    }catch{}
+  };
 }
 
 // Task 16+18: rate an analysis (thumbs up/down)
@@ -2839,11 +2859,36 @@ function ncSetLang(l){
   document.getElementById('nc-lang-en').style.border=isDE?'1.5px solid var(--bd)':'none';
   document.getElementById('nc-ov').dataset.lang=l;
 }
+const NC_MODULE_LABELS={'brand-voice':'Brand Voice','text-gen':'Text Generator','before-after':'Vorher/Nachher','profiling':'Profiling','review':'Review','recognition':'Erkennung','pre-meeting':'Pre-Meeting','risk':'Risiko-Check','actionability':'Umsetzbarkeit','thread':'Thread','sparring':'Sparring','debrief':'Debrief','vs-gen':'Varianten-Generator','vs-cal':'Varianten-Kalender'};
+const NC_SECTOR_MODULES={kmu:['profiling','review','recognition','pre-meeting','risk','actionability','thread'],hotellerie:['profiling','review','recognition','pre-meeting','risk','actionability','thread','sparring','debrief','vs-gen','vs-cal'],capital:['profiling','review','vs-gen','vs-cal','sparring','pre-meeting','risk'],bildung:['profiling','text-gen','before-after','review','recognition','pre-meeting','actionability'],nonprofit:['profiling','text-gen','before-after','review','recognition','vs-gen','pre-meeting'],tech:['profiling','review','recognition','pre-meeting','risk','actionability','thread','vs-gen','vs-cal','sparring'],beratung:['profiling','review','recognition','pre-meeting','risk','actionability','thread','vs-gen','sparring','debrief']};
+const NC_ALWAYS=['brand-voice','text-gen','before-after'];
+function ncUpdateModules(){
+  const sector=document.getElementById('nc-sector').value;
+  const wrap=document.getElementById('nc-modules-wrap');
+  const grid=document.getElementById('nc-modules-grid');
+  if(!sector){wrap.style.display='none';grid.innerHTML='';return;}
+  wrap.style.display='';
+  const sectorMods=NC_SECTOR_MODULES[sector]||[];
+  const all=[...new Set([...NC_ALWAYS,...sectorMods])];
+  grid.innerHTML=all.map(m=>{
+    const fixed=NC_ALWAYS.includes(m);
+    return `<label style="display:flex;gap:6px;align-items:center;cursor:${fixed?'default':'pointer'}"><input type="checkbox" class="nc-mod-cb" data-mod="${m}"${fixed?' checked disabled':' checked'}><span>${NC_MODULE_LABELS[m]||m}</span></label>`;
+  }).join('');
+}
 async function addClient(){
   const name=document.getElementById('nc-name').value.trim();if(!name)return alert('Please enter a company name.');
   if(!document.getElementById('nc-privacy').checked)return alert('Bitte bestätige, dass der Klient über die Datenverarbeitung durch Anthropic informiert wurde.');
-  const ov=document.getElementById('nc-ov');const clientType=ov.dataset.type||'company';const emailLang=ov.dataset.lang||'de';const email=document.getElementById('nc-email').value.trim();const initpw=document.getElementById('nc-initpw').value;const salutation=document.getElementById('nc-salutation').value;const lastName=document.getElementById('nc-lastname').value.trim();if(email&&initpw&&initpw.length<8)return alert('Initial password must be at least 8 characters.');const body={name,industry:document.getElementById('nc-industry').value,contact:document.getElementById('nc-contact').value.trim(),clientType,emailLang,privacyAcknowledged:true};if(clientType==='individual'){body.salutation=salutation;body.lastName=lastName;}if(email&&initpw){body.email=email;body.initialPassword=initpw;}
-  try{const r=await api('/api/clients',{method:'POST',body:JSON.stringify(body)});const c=await r.json();if(!r.ok)throw new Error(c.error);loadAdvisorDashboard();closeModal('nc-ov');['nc-name','nc-contact','nc-email','nc-initpw','nc-lastname'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('nc-privacy').checked=false;ncSetType('company');ncSetLang('de');goPage('clients');}catch(e){alert('Error: '+e.message);}
+  const ov=document.getElementById('nc-ov');const clientType=ov.dataset.type||'company';const emailLang=ov.dataset.lang||'de';const email=document.getElementById('nc-email').value.trim();const initpw=document.getElementById('nc-initpw').value;const salutation=document.getElementById('nc-salutation').value;const lastName=document.getElementById('nc-lastname').value.trim();if(email&&initpw&&initpw.length<8)return alert('Initial password must be at least 8 characters.');
+  const sector=document.getElementById('nc-sector').value;
+  const checkedMods=[...document.querySelectorAll('.nc-mod-cb:checked')].map(cb=>cb.dataset.mod);
+  const enabledModules=checkedMods.length?[...new Set([...NC_ALWAYS,...checkedMods])]:null;
+  const body={name,industry:document.getElementById('nc-industry').value,contact:document.getElementById('nc-contact').value.trim(),clientType,emailLang,privacyAcknowledged:true};
+  if(sector)body.sector=sector;
+  if(enabledModules)body.enabled_modules=enabledModules;
+  if(clientType==='individual'){body.salutation=salutation;body.lastName=lastName;}if(email&&initpw){body.email=email;body.initialPassword=initpw;}
+  try{const r=await api('/api/clients',{method:'POST',body:JSON.stringify(body)});const c=await r.json();if(!r.ok)throw new Error(c.error);
+  if(c.id&&enabledModules){await api('/api/clients/'+c.id+'/modules',{method:'POST',body:JSON.stringify({enabled_modules:enabledModules})}).catch(()=>{});}
+  loadAdvisorDashboard();closeModal('nc-ov');['nc-name','nc-contact','nc-email','nc-initpw','nc-lastname'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('nc-privacy').checked=false;document.getElementById('nc-sector').value='';ncUpdateModules();ncSetType('company');ncSetLang('de');goPage('clients');}catch(e){alert('Error: '+e.message);}
 }
 
 // PEOPLE DIRECTORY

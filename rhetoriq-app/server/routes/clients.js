@@ -110,7 +110,7 @@ router.get('/', requireAdvisor, async (req, res) => {
 // POST /api/clients
 router.post('/', requireAdvisor, async (req, res) => {
   try {
-    const { name, industry, contact, email, initialPassword, clientType, salutation, lastName, emailLang, privacyAcknowledged } = req.body;
+    const { name, industry, contact, email, initialPassword, clientType, salutation, lastName, emailLang, privacyAcknowledged, sector, enabled_modules } = req.body;
     if (!name || name.length > 200) return res.status(400).json({ error: 'Name required (max 200 chars)' });
     if (email && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
       return res.status(400).json({ error: 'Invalid email address' });
@@ -122,9 +122,10 @@ router.post('/', requireAdvisor, async (req, res) => {
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') + '-' + Date.now().toString(36);
     const token = crypto.randomBytes(24).toString('hex');
 
+    const mods = Array.isArray(enabled_modules) && enabled_modules.length ? enabled_modules : null;
     const { rows } = await pool.query(
-      'INSERT INTO clients (advisor_id, name, industry, contact, slug, token, email, must_change_password, privacy_acknowledged_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW()) RETURNING *',
-      [req.user.id, name, industry || '', contact || '', slug, token, email || null, !!email]
+      'INSERT INTO clients (advisor_id, name, industry, contact, slug, token, email, must_change_password, privacy_acknowledged_at, enabled_modules) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),$9) RETURNING *',
+      [req.user.id, name, industry || '', contact || '', slug, token, email || null, !!email, mods]
     );
 
     if (email) {

@@ -38,30 +38,89 @@ if (process.env.SENTRY_DSN) {
 const server = http.createServer(app);
 
 // ── WebSocket ─────────────────────────────────────────────────
-const wss = new WebSocket.Server({ server, path: '/ws' });
-const clients = new Set();
+const ALLOWED_ORIGINS = new Set([
+  process.env.CORS_ORIGIN || 'https://rhetoriq.ch',
+  'http://localhost:3000',
+  'http://localhost:3001',
+]);
 
-// FIX 8: WebSocket auth — client must pass ?token=JWT in the URL
+const wss = new WebSocket.Server({ server, path: '/ws', noServer: false });
+
+// Map of userId → Set of ws connections (for targeted sends)
+const userSockets = new Map();
+
+function wsAddClient(ws) {
+  if (!userSockets.has(ws.userId)) userSockets.set(ws.userId, new Set());
+  userSockets.get(ws.userId).add(ws);
+}
+function wsRemoveClient(ws) {
+  const set = userSockets.get(ws.userId);
+  if (set) { set.delete(ws); if (!set.size) userSockets.delete(ws.userId); }
+}
+
 wss.on('connection', (ws, req) => {
-  const url = new URL(req.url, 'http://localhost');
-  const token = url.searchParams.get('token');
-  if (!token) { ws.close(4401, 'Unauthorized'); return; }
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    ws.userId = decoded.id || decoded.clientId;
-  } catch {
-    ws.close(4401, 'Unauthorized');
+  // 1. Origin check — reject cross-origin connections
+  const origin = req.headers.origin || '';
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+    ws.close(4403, 'Forbidden');
     return;
   }
-  clients.add(ws);
-  ws.on('close', () => clients.delete(ws));
-  ws.on('error', () => clients.delete(ws));
+
+  // 2. Auth via first message (avoids token in URL / server logs)
+  //    Client must send {type:'auth',token:'<JWT>'} within 5 s
+  ws.isAuthenticated = false;
+  const authTimeout = setTimeout(() => {
+    if (!ws.isAuthenticated) ws.close(4401, 'Auth timeout');
+  }, 5000);
+
+  ws.on('message', (raw) => {
+    if (!ws.isAuthenticated) {
+      // Expect auth handshake as first message
+      try {
+        const msg = JSON.parse(raw);
+        if (msg.type !== 'auth' || !msg.token) { ws.close(4401, 'Unauthorized'); return; }
+        const decoded = jwt.verify(msg.token, process.env.JWT_SECRET);
+        ws.userId = String(decoded.id || decoded.clientId);
+        ws.isAuthenticated = true;
+        clearTimeout(authTimeout);
+        wsAddClient(ws);
+        ws.send(JSON.stringify({ type: 'auth_ok' }));
+      } catch {
+        ws.close(4401, 'Unauthorized');
+      }
+      return;
+    }
+    // Authenticated — ignore further client messages (read-only push channel)
+  });
+
+  // 3. Heartbeat — ping every 30 s, close if no pong
+  ws.isAlive = true;
+  ws.on('pong', () => { ws.isAlive = true; });
+
+  ws.on('close', () => { if (ws.isAuthenticated) wsRemoveClient(ws); clearTimeout(authTimeout); });
+  ws.on('error', () => { if (ws.isAuthenticated) wsRemoveClient(ws); clearTimeout(authTimeout); });
 });
 
-wss.broadcast = (data) => {
+// Ping all connections every 30 s — remove dead ones
+const wsPingInterval = setInterval(() => {
+  wss.clients.forEach(ws => {
+    if (!ws.isAlive) { ws.terminate(); return; }
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 30000);
+wss.on('close', () => clearInterval(wsPingInterval));
+
+// Broadcast to all authenticated clients (or targeted by userId)
+wss.broadcast = (data, targetUserId = null) => {
   const msg = JSON.stringify(data);
-  for (const ws of clients) {
-    if (ws.readyState === WebSocket.OPEN) ws.send(msg);
+  if (targetUserId) {
+    const sockets = userSockets.get(String(targetUserId));
+    if (sockets) sockets.forEach(ws => { if (ws.readyState === WebSocket.OPEN) ws.send(msg); });
+  } else {
+    userSockets.forEach(sockets =>
+      sockets.forEach(ws => { if (ws.readyState === WebSocket.OPEN) ws.send(msg); })
+    );
   }
 };
 
