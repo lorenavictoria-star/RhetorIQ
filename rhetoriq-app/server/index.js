@@ -186,7 +186,7 @@ const userAnalyzeLimit = rateLimit({
 app.use('/api/analyze', userAnalyzeLimit);
 
 // ── API Routes ────────────────────────────────────────────────
-app.use('/api/auth', require('./routes/auth'));
+app.use('/auth', require('./routes/auth'));
 app.use('/api/clients', require('./routes/clients'));
 app.use('/api/analyze', require('./routes/analyze'));
 app.use('/api/people', require('./routes/people'));
