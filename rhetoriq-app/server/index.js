@@ -234,7 +234,7 @@ app.post('/api/setup-advisor', async (req, res) => {
       return res.status(400).json({ error: 'Password must be 8+ characters' });
     }
     await pool.query('DELETE FROM users WHERE email=$1 AND role=$2', [email, 'advisor']);
-    const hash = await require('bcrypt').hashSync(password, 12);
+    const hash = await bcrypt.hash(password, 12);
     const { rows } = await pool.query(
       'INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) RETURNING id',
       [email, hash, name, 'advisor']
