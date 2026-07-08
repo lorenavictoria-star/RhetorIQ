@@ -5119,6 +5119,7 @@ const ALL_MODULES=[
 let modsCatFilter='all',modsSearch='';
 function renderModulesList(){
   const list=document.getElementById('modules-list');if(!list)return;
+  if(isAdv&&!clientId){list.innerHTML='<div style="color:var(--mu);font-size:14px;padding:24px 0;text-align:center">Bitte zuerst einen Klienten auswählen.</div>';return;}
   // inject suite pills dynamically
   const sp=document.getElementById('mlist-suite-pills');
   if(sp){
