@@ -1839,6 +1839,8 @@ if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https:/
 
 const API='https://rhetoriq.ch';
 let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null;
+// Auto-cleanup invalid tokens on page load
+if(token){try{const p=JSON.parse(atob(token.split('.')[1]));if(p.exp*1000<Date.now()||!p.id){localStorage.removeItem('riq-token');token=null;}}catch{localStorage.removeItem('riq-token');token=null;}}
 let debugMode=localStorage.getItem('riq-debug')==='1';
 const DEFAULT_MODULES=['profiling','brand-voice','text-gen','review','recognition','pre-meeting','arg-reaction','crisis','risk','actionability','thread','rh-translate','before-after','sparring','debrief','crisis-toolkit','competitive-check'];
 function modEnabled(key){if(enabledModules===null)return DEFAULT_MODULES.includes(key);return enabledModules.includes(key);}
