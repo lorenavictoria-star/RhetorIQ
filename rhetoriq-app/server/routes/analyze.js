@@ -897,7 +897,7 @@ const MODULE_MAX_TOKENS = {
 const DEFAULT_MAX_TOKENS = 2000;
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
-const HAIKU_MODULES = new Set(['router', 'chat', 'vs-cal', 'vs-gen']);
+const HAIKU_MODULES = new Set(['router', 'chat', 'vs-cal', 'vs-gen', 'recognition', 'actionability', 'thread', 'before-after', 'rh-translate']);
 const MODEL_SONNET = 'claude-sonnet-4-6';
 const MODEL_HAIKU  = 'claude-haiku-4-5-20251001';
 function resolveModel(module) {
@@ -946,7 +946,8 @@ router.post('/', requireAuth, async (req, res) => {
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
 
     const baseSystem = typeof cfg.system === 'function' ? cfg.system(data) : cfg.system;
-    let dynamicSystem = '';
+    let brandVoiceBlock = '';
+    let restDynamicSystem = '';
     const userMsg = cfg.build(data);
 
     // Append per-client custom instructions if present
@@ -957,7 +958,7 @@ router.post('/', requireAuth, async (req, res) => {
         [resolvedClientId, module]
       );
       if (customRows[0]?.instructions) {
-        dynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(customRows[0].instructions);
+        restDynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(customRows[0].instructions);
       }
     }
 
@@ -980,7 +981,7 @@ router.post('/', requireAuth, async (req, res) => {
       );
       if (memRows.length) {
         hasBrandVoice = true;
-        dynamicSystem += '\n\n════════════════════════════════════════\n'
+        brandVoiceBlock += '\n\n════════════════════════════════════════\n'
           + 'ABSOLUT VERBINDLICH — BRAND VOICE DIESES UNTERNEHMENS\n'
           + '════════════════════════════════════════\n'
           + 'Der Output MUSS klingen wie dieses Unternehmen — nicht wie eine KI, nicht wie generisches Consulting, nicht wie ein neutraler Assistent.\n'
@@ -988,9 +989,9 @@ router.post('/', requireAuth, async (req, res) => {
           + 'Jeder Satz, jeder Begriff, jede Formulierung muss sich anfühlen, als hätte das Unternehmen selbst geschrieben.\n'
           + 'Generische KI-Sprache, Füllformulierungen oder neutraler Ton sind NICHT akzeptabel.\n\n';
         memRows.forEach(m => {
-          dynamicSystem += `${m.memory_type.toUpperCase()}:\n${sanitizeForPrompt(m.content)}\n\n`;
+          brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${sanitizeForPrompt(m.content)}\n\n`;
         });
-        dynamicSystem += '════════════════════════════════════════\n'
+        brandVoiceBlock += '════════════════════════════════════════\n'
           + 'ENDE BRAND VOICE — Ab hier gilt: dieser Output ist ein Unternehmenstext, kein KI-Output.\n'
           + '════════════════════════════════════════';
       }
@@ -1014,23 +1015,27 @@ router.post('/', requireAuth, async (req, res) => {
       );
 
       if (examples.length) {
-        dynamicSystem += '\n\n--- STRUKTURVORLAGEN ---\n'
+        restDynamicSystem += '\n\n--- STRUKTURVORLAGEN ---\n'
           + 'Die folgenden Beispiele zeigen NUR die Struktur und den inhaltlichen Aufbau — '
           + (hasBrandVoice
             ? 'die Stimme und Tonalität wird AUSSCHLIESSLICH durch die oben definierte Brand Voice bestimmt.'
             : 'passe Sprache und Stil an den Klienten an.')
           + '\n\n';
         examples.forEach((ex, i) => {
-          dynamicSystem += `BEISPIEL ${i + 1}${ex.industry_tag ? ` [${ex.industry_tag}]` : ''}:\nINPUT: ${sanitizeForPrompt(ex.input_text)}\nAUFBAU: ${sanitizeForPrompt(ex.output_text)}\n\n`;
+          restDynamicSystem += `BEISPIEL ${i + 1}${ex.industry_tag ? ` [${ex.industry_tag}]` : ''}:\nINPUT: ${sanitizeForPrompt(ex.input_text)}\nAUFBAU: ${sanitizeForPrompt(ex.output_text)}\n\n`;
         });
-        dynamicSystem += '--- ENDE STRUKTURVORLAGEN ---';
+        restDynamicSystem += '--- ENDE STRUKTURVORLAGEN ---';
       }
     }
 
-    // Build system array: stable module prompt (cacheable) + dynamic client context
+    // Build system array: 3 tiers of caching
+    // Block 1: static module prompt → cached (same across all clients for this module)
+    // Block 2: brand voice → cached (same for this client across many calls, rarely changes)
+    // Block 3: custom instructions + training examples → not cached (dynamic per call)
     const systemBlocks = [];
     if (baseSystem) systemBlocks.push({ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } });
-    if (dynamicSystem) systemBlocks.push({ type: 'text', text: dynamicSystem });
+    if (brandVoiceBlock) systemBlocks.push({ type: 'text', text: brandVoiceBlock, cache_control: { type: 'ephemeral' } });
+    if (restDynamicSystem) systemBlocks.push({ type: 'text', text: restDynamicSystem });
     if (!systemBlocks.length) systemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
     const claudeResp = await callClaude(systemBlocks, userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
     const result = claudeResp.text;
@@ -1097,7 +1102,8 @@ router.post('/stream', requireAuth, async (req, res) => {
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
 
     const baseSystem = typeof cfg.system === 'function' ? cfg.system(data) : cfg.system;
-    let dynamicSystem = '';
+    let brandVoiceBlock = '';
+    let restDynamicSystem = '';
     const userMsg = cfg.build(data);
     const resolvedClientId = clientId || (req.user.role === 'client' ? req.user.clientId : null);
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
@@ -1109,7 +1115,7 @@ router.post('/stream', requireAuth, async (req, res) => {
         [resolvedClientId, module]
       );
       if (customRows[0]?.instructions)
-        dynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(customRows[0].instructions);
+        restDynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(customRows[0].instructions);
     }
     let clientIndustry = null;
     let hasBrandVoice = false;
@@ -1122,11 +1128,11 @@ router.post('/stream', requireAuth, async (req, res) => {
       );
       if (memRows.length) {
         hasBrandVoice = true;
-        dynamicSystem += '\n\n════════════════════════════════════════\n'
+        brandVoiceBlock += '\n\n════════════════════════════════════════\n'
           + 'ABSOLUT VERBINDLICH — BRAND VOICE DIESES UNTERNEHMENS\n════════════════════════════════════════\n'
           + 'Der Output MUSS klingen wie dieses Unternehmen — nicht wie eine KI, nicht wie generisches Consulting.\n\n';
-        memRows.forEach(m => { dynamicSystem += `${m.memory_type.toUpperCase()}:\n${sanitizeForPrompt(m.content)}\n\n`; });
-        dynamicSystem += '════════════════════════════════════════\n'
+        memRows.forEach(m => { brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${sanitizeForPrompt(m.content)}\n\n`; });
+        brandVoiceBlock += '════════════════════════════════════════\n'
           + 'ENDE BRAND VOICE — Ab hier gilt: dieser Output ist ein Unternehmenstext, kein KI-Output.\n'
           + '════════════════════════════════════════';
       }
@@ -1141,13 +1147,13 @@ router.post('/stream', requireAuth, async (req, res) => {
         [advisorId, module, clientIndustry]
       );
       if (examples.length) {
-        dynamicSystem += '\n\n--- STRUKTURVORLAGEN ---\n'
+        restDynamicSystem += '\n\n--- STRUKTURVORLAGEN ---\n'
           + (hasBrandVoice ? 'Nur Struktur übernehmen, Brand Voice bestimmt Ton.' : 'Passe Stil an den Klienten an.')
           + '\n\n';
         examples.forEach((ex, i) => {
-          dynamicSystem += `BEISPIEL ${i + 1}:\nINPUT: ${sanitizeForPrompt(ex.input_text)}\nAUFBAU: ${sanitizeForPrompt(ex.output_text)}\n\n`;
+          restDynamicSystem += `BEISPIEL ${i + 1}:\nINPUT: ${sanitizeForPrompt(ex.input_text)}\nAUFBAU: ${sanitizeForPrompt(ex.output_text)}\n\n`;
         });
-        dynamicSystem += '--- ENDE STRUKTURVORLAGEN ---';
+        restDynamicSystem += '--- ENDE STRUKTURVORLAGEN ---';
       }
     }
 
@@ -1168,7 +1174,8 @@ router.post('/stream', requireAuth, async (req, res) => {
     const maxTokens = MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS;
     const streamSystemBlocks = [];
     if (baseSystem) streamSystemBlocks.push({ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } });
-    if (dynamicSystem) streamSystemBlocks.push({ type: 'text', text: dynamicSystem });
+    if (brandVoiceBlock) streamSystemBlocks.push({ type: 'text', text: brandVoiceBlock, cache_control: { type: 'ephemeral' } });
+    if (restDynamicSystem) streamSystemBlocks.push({ type: 'text', text: restDynamicSystem });
     if (!streamSystemBlocks.length) streamSystemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -1261,7 +1268,7 @@ router.post('/stream', requireAuth, async (req, res) => {
     }
 
     const donePayload = { id: rows[0].id, hasBrandVoice };
-    if (isDebug) donePayload.systemPrompt = baseSystem + (dynamicSystem ? '\n\n--- DYNAMIC ---\n' + dynamicSystem : '');
+    if (isDebug) donePayload.systemPrompt = baseSystem + (brandVoiceBlock ? '\n\n[BRAND VOICE CACHED]\n' + brandVoiceBlock : '') + (restDynamicSystem ? '\n\n--- DYNAMIC ---\n' + restDynamicSystem : '');
     res.write(`event: done\ndata: ${JSON.stringify(donePayload)}\n\n`);
     res.end();
   } catch (e) {
