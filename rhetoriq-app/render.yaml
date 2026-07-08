@@ -23,10 +23,34 @@ services:
         value: Lorena Lienhard
       - key: NODE_ENV
         value: production
+      - key: SENTRY_DSN
+        sync: false   # set in Render dashboard — get DSN from sentry.io
+      - key: STRIPE_SECRET_KEY
+        sync: false   # set in Render dashboard — from Stripe dashboard
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false   # set in Render dashboard — from Stripe webhook settings
+      - key: CORS_ORIGIN
+        value: https://rhetoriq.ch
+      - key: APP_URL
+        value: https://rhetoriq.ch
+
+  - type: cron
+    name: rhetoriq-backup
+    runtime: node
+    region: frankfurt
+    rootDir: server
+    buildCommand: npm install
+    schedule: "0 3 * * *"   # täglich 03:00 UTC
+    startCommand: node jobs/backup.js
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rhetoriq-db
+          property: connectionString
 
 databases:
   - name: rhetoriq-db
     databaseName: rhetoriq
     user: rhetoriq
-    plan: free
+    plan: starter   # upgraded from free — enables backups + cron
     region: frankfurt
