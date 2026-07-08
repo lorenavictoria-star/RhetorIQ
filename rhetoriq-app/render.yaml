@@ -3,6 +3,7 @@ services:
     name: rhetoriq
     runtime: node
     region: frankfurt
+    nodeVersion: 20
     rootDir: server
     buildCommand: npm install
     startCommand: npm start
