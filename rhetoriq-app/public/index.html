@@ -2687,7 +2687,7 @@ async function loadTraining(){
     const cur=document.getElementById('tr-module-sel')?.value||'';
     const stdOpts=ALL_MODULES.map(m=>`<option value="${m.key}"${m.key===cur?' selected':''}>${m.name}</option>`).join('');
     let custOpts='';
-    try{const cr2=await api('/api/custom-modules');const cms2=await cr2.json();if(cms2.length){custOpts='<optgroup label="Individuelle Module">'+cms2.map(m=>`<option value="custom-${m.id}"${'custom-'+m.id===cur?' selected':'']}>${safeText(m.name)}</option>`).join('')+'</optgroup>';}}catch{}
+    try{const cr2=await api('/api/custom-modules');const cms2=await cr2.json();if(cms2.length){custOpts='<optgroup label="Individuelle Module">'+cms2.map(m=>`<option value="custom-${m.id}"${('custom-'+m.id===cur)?' selected':''}>${safeText(m.name)}</option>`).join('')+'</optgroup>';}}catch{}
     fsel.innerHTML='<option value="">— Modul auswählen —</option>'+stdOpts+custOpts;
   }
 }
