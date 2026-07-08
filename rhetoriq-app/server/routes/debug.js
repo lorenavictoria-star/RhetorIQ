@@ -33,4 +33,37 @@ router.get('/env', (req, res) => {
   });
 });
 
+router.post('/test-login', express.json(), async (req, res) => {
+  // Test login with provided credentials
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Missing email or password' });
+  }
+
+  const { pool } = require('../db');
+  const bcrypt = require('bcryptjs');
+
+  try {
+    const { rows } = await pool.query('SELECT id, email, name, password_hash, role FROM users WHERE email = $1', [email]);
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'User not found', tested_email: email });
+    }
+
+    const user = rows[0];
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+
+    res.json({
+      user_exists: true,
+      email: user.email,
+      password_correct: isMatch,
+      role: user.role,
+      tested_email: email,
+      tested_password_length: password.length,
+      message: isMatch ? 'Password matches!' : 'Password does NOT match'
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
