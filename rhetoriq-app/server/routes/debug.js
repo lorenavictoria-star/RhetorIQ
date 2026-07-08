@@ -33,8 +33,7 @@ router.get('/env', (req, res) => {
   });
 });
 
-router.post('/test-login', express.json(), async (req, res) => {
-  // Test login with provided credentials
+router.post('/test-login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Missing email or password' });
