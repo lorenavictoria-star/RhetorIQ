@@ -4,72 +4,49 @@ const { pool } = require('../db');
 
 const router = express.Router();
 
-// GET /api/setup/verify?t=<token> — check if token is valid (called when page loads)
-router.get('/verify', async (req, res) => {
+// POST /api/setup/advisor — create or update advisor account
+// Query param: ?secret=SETUP_SECRET (from env var or hardcoded for emergency)
+router.post('/advisor', async (req, res) => {
   try {
-    const { t } = req.query;
-    if (!t) return res.status(400).json({ error: 'Token required' });
-
-    const { rows } = await pool.query(
-      `SELECT ot.id, ot.client_id, c.name, c.email
-       FROM onboarding_tokens ot
-       JOIN clients c ON c.id = ot.client_id
-       WHERE ot.token = $1
-         AND ot.used_at IS NULL
-         AND ot.expires_at > NOW()`,
-      [t]
-    );
-
-    if (!rows[0]) return res.status(404).json({ error: 'Link ungültig oder abgelaufen.' });
-
-    res.json({ valid: true, clientName: rows[0].name, email: rows[0].email });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// POST /api/setup/complete — set password and mark token used
-router.post('/complete', async (req, res) => {
-  try {
-    const { token, password } = req.body;
-    if (!token) return res.status(400).json({ error: 'Token required' });
-    if (!password || password.length < 8) {
-      return res.status(400).json({ error: 'Passwort muss mindestens 8 Zeichen haben.' });
+    const { secret } = req.query;
+    const requiredSecret = process.env.SETUP_SECRET || 'setup-advisor-2025-temp';
+    
+    if (!secret || secret !== requiredSecret) {
+      return res.status(401).json({ error: 'Invalid setup secret' });
     }
 
-    const { rows } = await pool.query(
-      `SELECT ot.id, ot.client_id
-       FROM onboarding_tokens ot
-       WHERE ot.token = $1
-         AND ot.used_at IS NULL
-         AND ot.expires_at > NOW()`,
-      [token]
-    );
+    const email = process.env.ADVISOR_EMAIL;
+    const password = process.env.ADVISOR_PASSWORD;
+    const name = process.env.ADVISOR_NAME || 'Advisor';
 
-    if (!rows[0]) return res.status(404).json({ error: 'Link ungültig oder abgelaufen.' });
+    if (!email || !password) {
+      return res.status(400).json({ error: 'ADVISOR_EMAIL and ADVISOR_PASSWORD env vars required' });
+    }
 
-    const { id: tokenId, client_id } = rows[0];
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    // Delete existing account
+    await pool.query('DELETE FROM users WHERE email = $1 AND role = $2', [email, 'advisor']);
+
+    // Create new account
     const hash = await bcrypt.hash(password, 12);
+    const { rows } = await pool.query(
+      'INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) RETURNING id',
+      [email, hash, name, 'advisor']
+    );
 
-    await pool.query('BEGIN');
-    try {
-      await pool.query(
-        'UPDATE clients SET password_hash=$1, must_change_password=false WHERE id=$2',
-        [hash, client_id]
-      );
-      await pool.query(
-        'UPDATE onboarding_tokens SET used_at=NOW() WHERE id=$1',
-        [tokenId]
-      );
-      await pool.query('COMMIT');
-    } catch (e) {
-      await pool.query('ROLLBACK');
-      throw e;
-    }
-
-    res.json({ ok: true });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.json({
+      ok: true,
+      message: `Advisor account created: ${email}`,
+      id: rows[0].id,
+      email,
+      name
+    });
+  } catch (err) {
+    console.error('Setup error:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
