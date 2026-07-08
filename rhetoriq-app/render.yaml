@@ -30,6 +30,8 @@ services:
         sync: false   # set in Render dashboard — from Stripe dashboard
       - key: STRIPE_WEBHOOK_SECRET
         sync: false   # set in Render dashboard — from Stripe webhook settings
+      - key: RESET_SECRET
+        sync: false   # set in Render dashboard — secret for admin account reset
       - key: CORS_ORIGIN
         value: https://rhetoriq.ch
       - key: APP_URL

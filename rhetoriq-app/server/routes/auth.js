@@ -217,4 +217,30 @@ router.post('/invite', requireAuth, async (req, res) => {
   }
 });
 
+
+// Admin reset endpoint — requires RESET_SECRET for security
+// Usage: POST /auth/reset-advisor with {email, password, secret}
+router.post('/reset-advisor', async (req, res) => {
+  const { email, password, secret } = req.body;
+  if (!email || !password || password.length < 8) {
+    return res.status(400).json({ error: 'Email and password (min 8 chars) required' });
+  }
+  if (!secret || secret !== process.env.RESET_SECRET) {
+    return res.status(401).json({ error: 'Invalid reset secret' });
+  }
+  try {
+    const hash = await bcrypt.hash(password, 12);
+    // Delete existing advisor if present
+    await pool.query('DELETE FROM users WHERE email = $1 AND role = $2', [email, 'advisor']);
+    // Create new advisor
+    await pool.query(
+      'INSERT INTO users (email, password_hash, name, role) VALUES ($1,$2,$3,$4)',
+      [email, hash, email.split('@')[0], 'advisor']
+    );
+    res.json({ ok: true, message: `Advisor ${email} reset successfully` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
