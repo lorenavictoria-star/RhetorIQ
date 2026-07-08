@@ -202,7 +202,6 @@ app.use('/api/custom-modules', require('./routes/customModules'));
 app.use('/api/module-examples', require('./routes/moduleExamples'));
 app.use('/api/module-prompts', require('./routes/modulePrompts'));
 app.use('/api/setup', require('./routes/setup'));
-app.use('/api/debug', require('./routes/debug'));
 
 // Manual report trigger (advisor only)
 const { requireAdvisor } = require('./middleware/auth');
