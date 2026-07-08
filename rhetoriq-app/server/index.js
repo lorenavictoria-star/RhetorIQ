@@ -216,38 +216,6 @@ app.post('/api/admin/report/monthly', requireAdvisor, async (req, res) => {
 app.use('/api/audit', require('./routes/audit'));
 
 
-// ── Quick Setup Endpoint (no One-Off Jobs needed) ──
-app.post('/api/setup-advisor', async (req, res) => {
-  try {
-    const secret = req.query.secret;
-    const requiredSecret = 'setup-advisor-2025-temp';
-    if (!secret || secret !== requiredSecret) {
-      return res.status(401).json({ error: 'Invalid secret' });
-    }
-    const email = process.env.ADVISOR_EMAIL;
-    const password = process.env.ADVISOR_PASSWORD;
-    const name = process.env.ADVISOR_NAME || 'Advisor';
-    if (!email || !password) {
-      return res.status(400).json({ error: 'ADVISOR_EMAIL and ADVISOR_PASSWORD required' });
-    }
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be 8+ characters' });
-    }
-    const hash = await bcrypt.hash(password, 12);
-    // Try UPSERT: INSERT ... ON CONFLICT DO UPDATE
-    const { rows } = await pool.query(
-      'INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) ' +
-      'ON CONFLICT (email) DO UPDATE SET password_hash=$2, name=$3 RETURNING id',
-      [email, hash, name, 'advisor']
-    );
-    const id = rows[0].id;
-    res.json({ ok: true, message: `Advisor ${email} setup complete`, id });
-  } catch (err) {
-    console.error('Setup error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // FIX 9: Health check with DB probe
 app.get('/health', async (_, res) => {
   try {
@@ -281,15 +249,14 @@ async function seedAdvisor() {
   const name = process.env.ADVISOR_NAME || 'Advisor';
   if (!email || !password) return;
 
-  const { rows } = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-  if (rows.length) return;
-
   const hash = await bcrypt.hash(password, 12);
+  // UPSERT: insert if not exists, update password if exists
   await pool.query(
-    'INSERT INTO users (email, password_hash, name, role) VALUES ($1,$2,$3,$4)',
+    'INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) ' +
+    'ON CONFLICT (email) DO UPDATE SET password_hash = $2, name = $3',
     [email, hash, name, 'advisor']
   );
-  console.log(`✓ Advisor account created: ${email}`);
+  console.log(`✓ Advisor account ready: ${email}`);
 }
 
 // ── Boot ──────────────────────────────────────────────────────
