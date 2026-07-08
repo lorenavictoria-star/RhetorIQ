@@ -1287,7 +1287,8 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <!-- TRAINING DATA -->
     <div class="page" id="page-training">
       <div class="page-title" style="margin-bottom:4px">Trainingsdaten</div>
-      <div style="font-size:14px;color:var(--mu);margin-bottom:20px">Beispiel-Inputs &amp; Outputs pro Modul — werden automatisch als Qualitätsstandard bei jeder Generierung injiziert.</div>
+      <div style="font-size:14px;color:var(--mu);margin-bottom:12px">Beispiel-Inputs &amp; Outputs pro Modul — werden automatisch als Qualitätsstandard bei jeder Generierung injiziert.</div>
+      <div style="font-size:13px;color:var(--mu);background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:10px 14px;margin-bottom:20px;line-height:1.6">Alle Standard-Module aus dem Einführungsdokument sind hier verfügbar. <strong style="color:var(--tx)">Individuelle Module</strong>, die du für einen Klienten erstellst, erscheinen ebenfalls automatisch in dieser Liste — du kannst sie hier sofort trainieren.</div>
 
       <!-- Import from client -->
       <div style="background:#f8fafc;border:1.5px solid var(--bd);border-radius:10px;padding:16px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -2654,7 +2655,14 @@ async function loadTraining(){
     const n=counts[m.key]||0;
     return`<option value="${m.key}"${n?'':''} >${m.name}${n?' ('+n+')':''}</option>`;
   }).join('');
-  sel.innerHTML=allOpt+moduleOpts;
+  // Also load custom modules from all clients
+  let customOpts='';
+  try{
+    const cr=await api('/api/custom-modules');
+    const cms=await cr.json();
+    if(cms.length){customOpts='<option disabled>── Individuelle Module ──</option>'+cms.map(m=>{const n=counts['custom-'+m.id]||0;return`<option value="custom-${m.id}">${safeText(m.name)}${n?' ('+n+')':''}</option>`;}).join('');}
+  }catch{}
+  sel.innerHTML=allOpt+moduleOpts+customOpts;
   // Ensure clients are loaded
   if(!clients.length){
     try{const r=await api('/api/clients');clients=await r.json();}catch{}
@@ -5101,6 +5109,8 @@ const ALL_MODULES=[
   {key:'before-after',name:'Before / After',cat:'growth',tag:'Growth',isNew:true},
   {key:'sparring',name:'2-Min. Training',cat:'growth',tag:'Growth',isNew:true},
   {key:'debrief',name:'Debrief',cat:'growth',tag:'Growth',isNew:true},
+  {key:'vs-gen',name:'Varianten-Generator',cat:'creation',tag:'Varianten'},
+  {key:'vs-cal',name:'Situations-Variante',cat:'creation',tag:'Varianten'},
   {key:'crisis-toolkit',name:'Crisis Communication Toolkit',cat:'prevention',tag:'Prevention',isNew:true},
   {key:'competitive-check',name:'Competitive Message Check',cat:'prevention',tag:'Prevention',isNew:true},
   // Capital Markets Suite — only shown when capitalMarketsEnabled
