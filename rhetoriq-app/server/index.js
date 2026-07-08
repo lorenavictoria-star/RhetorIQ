@@ -128,6 +128,8 @@ app.locals.wss = wss;
 
 // ── Middleware ────────────────────────────────────────────────
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'https://rhetoriq.ch', credentials: true }));
+// Webhook needs raw body — must be registered before express.json()
+app.use('/api/subscriptions/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '2mb' }));
 
 // Structured request logging: timestamp · method · path · status · duration

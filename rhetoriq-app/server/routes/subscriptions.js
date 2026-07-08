@@ -1,8 +1,141 @@
 const express = require('express');
 const { pool } = require('../db');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireAdvisor } = require('../middleware/auth');
 
 const router = express.Router();
+
+// ── Stripe helpers ────────────────────────────────────────────
+function getStripe() {
+  if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY not set');
+  return require('stripe')(process.env.STRIPE_SECRET_KEY);
+}
+
+// ── DB migration: ensure subscription_status column exists ────
+// Called once on first use; safe to call multiple times.
+let migrationDone = false;
+async function ensureColumn() {
+  if (migrationDone) return;
+  await pool.query(
+    `ALTER TABLE clients ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trial'`
+  );
+  migrationDone = true;
+}
+
+// ── POST /api/subscriptions/create-payment-link/:clientId ─────
+// Advisor creates a Stripe Payment Link for a client.
+router.post('/create-payment-link/:clientId', requireAdvisor, async (req, res) => {
+  try {
+    await ensureColumn();
+    const { clientId } = req.params;
+    const { rows } = await pool.query('SELECT id, name FROM clients WHERE id=$1', [clientId]);
+    if (!rows.length) return res.status(404).json({ error: 'Client not found' });
+
+    const stripe = getStripe();
+
+    // Build a payment link. Advisor can pass priceId in body, or we use a default.
+    // For a recurring subscription: pass a Price ID with type=recurring.
+    // For a one-time payment: pass a Price ID with type=one_time.
+    const { priceId } = req.body;
+    if (!priceId) return res.status(400).json({ error: 'priceId required in request body' });
+
+    const link = await stripe.paymentLinks.create({
+      line_items: [{ price: priceId, quantity: 1 }],
+      metadata: { clientId: String(clientId), clientName: rows[0].name },
+    });
+
+    res.json({ url: link.url });
+  } catch (e) {
+    console.error('[stripe] create-payment-link error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── GET /api/subscriptions/status/:clientId ───────────────────
+router.get('/status/:clientId', requireAdvisor, async (req, res) => {
+  try {
+    await ensureColumn();
+    const { clientId } = req.params;
+    const { rows } = await pool.query(
+      'SELECT subscription_status FROM clients WHERE id=$1',
+      [clientId]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Client not found' });
+    res.json({ subscription_status: rows[0].subscription_status || 'trial' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── POST /api/subscriptions/mark-active/:clientId ────────────
+// Advisor manually marks a client as active (paid).
+router.post('/mark-active/:clientId', requireAdvisor, async (req, res) => {
+  try {
+    await ensureColumn();
+    const { clientId } = req.params;
+    await pool.query(
+      `UPDATE clients SET subscription_status='active' WHERE id=$1`,
+      [clientId]
+    );
+    res.json({ ok: true, subscription_status: 'active' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── POST /api/subscriptions/webhook ──────────────────────────
+// Stripe webhook. Must receive raw body — mount BEFORE express.json() in index.js.
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+  try {
+    const stripe = getStripe();
+    if (webhookSecret) {
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } else {
+      // Dev mode: parse body directly (no signature verification)
+      event = JSON.parse(req.body.toString());
+    }
+  } catch (e) {
+    console.error('[stripe] webhook signature error:', e.message);
+    return res.status(400).json({ error: `Webhook error: ${e.message}` });
+  }
+
+  try {
+    await ensureColumn();
+
+    if (event.type === 'checkout.session.completed' || event.type === 'invoice.paid') {
+      const obj = event.data.object;
+      // clientId stored in metadata at payment-link creation time
+      const clientId = obj.metadata?.clientId;
+      if (clientId) {
+        await pool.query(
+          `UPDATE clients SET subscription_status='active' WHERE id=$1`,
+          [clientId]
+        );
+        console.log(`[stripe] client ${clientId} → active (${event.type})`);
+      }
+    } else if (event.type === 'customer.subscription.deleted') {
+      const obj = event.data.object;
+      const clientId = obj.metadata?.clientId;
+      if (clientId) {
+        await pool.query(
+          `UPDATE clients SET subscription_status='cancelled' WHERE id=$1`,
+          [clientId]
+        );
+        console.log(`[stripe] client ${clientId} → cancelled`);
+      }
+    }
+
+    res.json({ received: true });
+  } catch (e) {
+    console.error('[stripe] webhook handler error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Existing content-subscriptions routes (unchanged) ─────────
 
 // GET /api/subscriptions?clientId=X  — load all for a client
 router.get('/', requireAuth, async (req, res) => {

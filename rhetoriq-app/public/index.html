@@ -667,6 +667,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   .router-row{flex-direction:column}
   .cbar{padding:6px 16px}
   #cpanel{width:calc(100vw - 24px);right:12px}
+  .pricing-grid{grid-template-columns:1fr!important}
 }
 </style>
 </head>
@@ -710,6 +711,13 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       </div>
       <div class="lerr" id="cl-err"></div>
       <div class="lsw"><a onclick="sf('advisor-form','client-form')">Back</a></div>
+    </div>
+    <div style="margin-top:20px;text-align:center;font-size:11px;color:#9ca3af;line-height:2">
+      <a onclick="goPage('agb');document.getElementById('login-screen').classList.add('hidden')" style="color:#9ca3af;cursor:pointer;text-decoration:none">AGB</a>
+      &nbsp;·&nbsp;
+      <a onclick="goPage('datenschutz');document.getElementById('login-screen').classList.add('hidden')" style="color:#9ca3af;cursor:pointer;text-decoration:none">Datenschutz</a>
+      &nbsp;·&nbsp;
+      <a onclick="goPage('impressum');document.getElementById('login-screen').classList.add('hidden')" style="color:#9ca3af;cursor:pointer;text-decoration:none">Impressum</a>
     </div>
   </div>
 </div>
@@ -1372,6 +1380,56 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       </div>
     </div>
 
+    <!-- PRICING PAGE -->
+    <div class="page" id="page-pricing">
+      <button class="back" onclick="goHome()">&#8592; Home</button>
+      <div class="page-title" style="margin-bottom:4px">Preise</div>
+      <div style="font-size:12px;color:var(--mu);margin-bottom:32px;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Transparente Konditionen · Keine Einrichtungsgebühr</div>
+
+      <!-- Pricing cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:680px;margin-bottom:24px" class="pricing-grid">
+
+        <!-- Essential -->
+        <div style="border:1px solid var(--bd);border-radius:14px;padding:28px 24px;display:flex;flex-direction:column;gap:0">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);margin-bottom:10px">Essential</div>
+          <div style="font-family:'Spectral',serif;font-size:38px;font-weight:400;color:var(--tx);line-height:1">CHF 220</div>
+          <div style="font-size:12px;color:var(--mu);margin-bottom:18px;margin-top:4px">pro Monat</div>
+          <div style="font-size:14px;color:var(--tx);line-height:1.5;margin-bottom:20px">Für Einzelpersonen und KMU, die ihre Kommunikation gezielt stärken möchten.</div>
+          <ul style="list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:10px">
+            <li style="font-size:13px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Brand Voice Profil</li>
+            <li style="font-size:13px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> 5 Kernmodule (Text, Reframe, Sprache, Auftritt, Vorbereitung)</li>
+            <li style="font-size:13px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Persönliches Onboarding durch Lorena Lienhard</li>
+            <li style="font-size:13px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> 30-tägige Testphase inklusive</li>
+            <li style="font-size:13px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Kündigung monatlich</li>
+          </ul>
+          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Essential%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:13px 0;border:1.5px solid var(--ac);border-radius:9px;color:var(--ac);font-size:14px;font-weight:600;text-decoration:none;font-family:'Instrument Sans',sans-serif;letter-spacing:.02em">Jetzt starten &rarr;</a>
+        </div>
+
+        <!-- Professional (highlighted) -->
+        <div style="border-radius:14px;padding:28px 24px;display:flex;flex-direction:column;gap:0;background:var(--ac);color:#fff;position:relative">
+          <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:#fff;color:var(--ac);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;border-radius:20px;border:1.5px solid var(--ac);white-space:nowrap">Empfohlen</div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:10px">Professional</div>
+          <div style="font-family:'Spectral',serif;font-size:38px;font-weight:400;color:#fff;line-height:1">CHF 440</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:18px;margin-top:4px">pro Monat</div>
+          <div style="font-size:14px;color:rgba(255,255,255,.9);line-height:1.5;margin-bottom:20px">Für Teams und Power-User mit maximaler Tiefe und Prioritätssupport.</div>
+          <ul style="list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:10px">
+            <li style="font-size:13px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Alle Module ohne Einschränkung</li>
+            <li style="font-size:13px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Team-Zugang (mehrere Nutzer)</li>
+            <li style="font-size:13px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Erweiterte Trainingsdaten & Memory</li>
+            <li style="font-size:13px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Prioritätssupport & direkter Advisor-Zugang</li>
+            <li style="font-size:13px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> 30-tägige Testphase inklusive</li>
+            <li style="font-size:13px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Kündigung monatlich</li>
+          </ul>
+          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Professional%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:13px 0;border:1.5px solid rgba(255,255,255,.8);border-radius:9px;color:#fff;font-size:14px;font-weight:600;text-decoration:none;font-family:'Instrument Sans',sans-serif;letter-spacing:.02em">Jetzt starten &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Trust line -->
+      <div style="font-size:13px;color:var(--mu);text-align:center;max-width:680px;padding-top:4px">
+        Persönliches Onboarding &nbsp;·&nbsp; Keine Einrichtungsgebühr &nbsp;·&nbsp; Kündigung monatlich
+      </div>
+    </div>
+
     <!-- DATA SECURITY PAGE -->
     <div class="page" id="page-datasec">
       <button class="back" onclick="goPage('modules')">&#8592; Modules</button>
@@ -1396,6 +1454,157 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         </div>
         <div style="border-top:1px solid var(--bd);padding-top:20px;font-size:12px;color:var(--mu);line-height:1.7">
           Questions about data handling? <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- IMPRESSUM -->
+    <div class="page" id="page-impressum">
+      <button class="back" onclick="goPage('home')">&#8592; Zurück</button>
+      <div class="page-title">Impressum</div>
+      <div style="max-width:620px;padding-bottom:40px">
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Anbieterin</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          Lorena Alienhard<br>
+          Einzelunternehmen<br>
+          Schweiz<br>
+          Adresse auf Anfrage
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Kontakt</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          E-Mail: <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a><br>
+          Website: <a href="https://rhetoriq.ch" style="color:var(--tx);font-weight:600">rhetoriq.ch</a>
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Verantwortlich für den Inhalt</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          Lorena Alienhard
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Haftungsausschluss</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          Die Inhalte dieser Website wurden mit grösster Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte übernehme ich jedoch keine Gewähr. Als Anbieterin bin ich für eigene Inhalte auf diesen Seiten verantwortlich. Eine Haftung für Inhalte externer Verlinkungen ist ausgeschlossen — für den Inhalt verlinkter Seiten sind ausschliesslich deren Betreiber verantwortlich. KI-generierte Inhalte dieser Plattform dienen als Kommunikationshilfe; sie ersetzen keine Rechts-, Steuer- oder sonstige Fachberatung.
+        </p>
+      </div>
+    </div>
+
+    <!-- DATENSCHUTZERKLARUNG -->
+    <div class="page" id="page-datenschutz">
+      <button class="back" onclick="goPage('home')">&#8592; Zurück</button>
+      <div class="page-title">Datenschutzerklärung</div>
+      <div style="max-width:620px;padding-bottom:40px">
+
+        <p style="font-size:14px;line-height:1.7;color:var(--mu);margin:4px 0 20px">Gültig ab 1. September 2023 · Konform mit Schweizer DSG 2023 und EU-DSGVO</p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Verantwortliche Stelle</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          Lorena Alienhard, Einzelunternehmen, Schweiz<br>
+          E-Mail: <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a>
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Welche Daten wir verarbeiten</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">Wir verarbeiten nur die Daten, die zur Bereitstellung des Dienstes notwendig sind:</p>
+        <ul style="font-size:14px;line-height:1.9;color:var(--tx);margin:8px 0 0;padding-left:20px">
+          <li>Name und E-Mail-Adresse (für Konto und Kommunikation)</li>
+          <li>Kommunikationstexte, die Sie im Rahmen des Coachings eingeben</li>
+          <li>Nutzungsdaten zur Abrechnung (Plan, Abo-Status)</li>
+        </ul>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:8px 0 0">
+          Ihre eingegebenen Inhalte werden <strong>nicht</strong> zum Training von KI-Modellen verwendet. Dies ist ein bewusstes Merkmal der Plattform.
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Dienstleister und Datenübermittlung</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">Wir setzen folgende Dienstleister ein:</p>
+        <ul style="font-size:14px;line-height:1.9;color:var(--tx);margin:8px 0 0;padding-left:20px">
+          <li><strong>Render.com</strong> – Hosting der Plattform (USA/EU, SOC 2 zertifiziert)</li>
+          <li><strong>Anthropic API</strong> – KI-Verarbeitung Ihrer Eingaben (USA; keine Nutzung für KI-Training)</li>
+          <li><strong>Klaviyo</strong> – Versand transaktionaler E-Mails (USA; EU-Standardvertragsklauseln)</li>
+        </ul>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:8px 0 0">
+          Bei Übermittlungen in Drittländer stellen wir durch Standardvertragsklauseln oder gleichwertige Massnahmen ein angemessenes Schutzniveau sicher.
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Ihre Rechte</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">Sie haben jederzeit das Recht auf:</p>
+        <ul style="font-size:14px;line-height:1.9;color:var(--tx);margin:8px 0 0;padding-left:20px">
+          <li><strong>Auskunft</strong> – welche Daten wir über Sie gespeichert haben</li>
+          <li><strong>Berichtigung</strong> – Korrektur unrichtiger Daten</li>
+          <li><strong>Löschung</strong> – Entfernung Ihrer Daten auf Anfrage</li>
+          <li><strong>Datenübertragbarkeit</strong> – Herausgabe Ihrer Daten in einem gängigen Format</li>
+          <li><strong>Widerspruch</strong> – gegen bestimmte Verarbeitungen</li>
+        </ul>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:8px 0 0">
+          Anfragen richten Sie bitte an: <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a>
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Cookies und Tracking</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          RhetorIQ verwendet ausschliesslich technisch notwendige Cookies (Authentifizierungs-Token im lokalen Speicher des Browsers). Es werden keine Werbe- oder Analyse-Cookies eingesetzt.
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Aufbewahrung</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          Kontodaten werden für die Dauer des Vertragsverhältnisses plus 10 Jahre (gesetzliche Aufbewahrungspflicht) gespeichert. Kommunikationsinhalte werden auf Anfrage nach Kündigung unverzüglich gelöscht.
+        </p>
+
+        <div style="border-top:1px solid var(--bd);padding-top:20px;margin-top:24px;font-size:12px;color:var(--mu);line-height:1.7">
+          Fragen zum Datenschutz? <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- AGB -->
+    <div class="page" id="page-agb">
+      <button class="back" onclick="goPage('home')">&#8592; Zurück</button>
+      <div class="page-title">Allgemeine Geschäftsbedingungen</div>
+      <div style="max-width:620px;padding-bottom:40px">
+
+        <p style="font-size:14px;line-height:1.7;color:var(--mu);margin:4px 0 20px">Lorena Alienhard · RhetorIQ · Stand: Juli 2025</p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">1. Leistungsbeschreibung</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          RhetorIQ ist eine KI-gestützte SaaS-Plattform für Kommunikations-Coaching, betrieben von Lorena Alienhard (Einzelunternehmen, Schweiz). Die Plattform unterstützt Nutzerinnen und Nutzer bei der Vorbereitung und Optimierung beruflicher Kommunikation mittels künstlicher Intelligenz. Die KI-generierten Inhalte dienen als Arbeitshilfe und ersetzen kein professionelles Beratungsmandat.
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">2. Nutzungsberechtigung</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          Der Zugang ist auf autorisierte Nutzer beschränkt. Zugangsdaten (Passwörter, Token) sind vertraulich zu behandeln und dürfen nicht an Dritte weitergegeben werden. Jede Nutzerin und jeder Nutzer ist für alle Aktivitäten verantwortlich, die unter ihrem/seinem Konto stattfinden.
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">3. Zahlung und Abrechnung</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          Die Nutzungsgebühren werden monatlich im Voraus in Rechnung gestellt. Alle Preise in Schweizer Franken (CHF) zuzüglich gesetzlicher Mehrwertsteuer, sofern anwendbar. Eine Rückerstattung für bereits begonnene Abrechnungszeiträume ist ausgeschlossen.
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">4. Kündigung</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          Das Abonnement kann monatlich zum Ende des laufenden Abrechnungszeitraums gekündigt werden. Die Kündigung erfolgt per E-Mail an <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a>. Nach Ablauf des Vertrags wird der Zugang deaktiviert.
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">5. Haftungsbeschränkung</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          Es wird keine Garantie für bestimmte Kommunikationsergebnisse oder die inhaltliche Korrektheit der KI-Ausgaben übernommen. Die Haftung von Lorena Alienhard ist, soweit gesetzlich zulässig, auf direkte Schäden bis zur Höhe der im betreffenden Monat geleisteten Zahlung beschränkt. Für indirekte Schäden, entgangenen Gewinn oder Folgeschäden wird nicht gehaftet.
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">6. Datenschutz</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          Die Verarbeitung personenbezogener Daten richtet sich nach unserer <span onclick="goPage('datenschutz')" style="color:var(--tx);font-weight:600;cursor:pointer;text-decoration:underline">Datenschutzerklärung</span>, die integraler Bestandteil dieser AGB ist.
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">7. Änderungen der AGB</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          Wir behalten uns vor, diese AGB mit einer Ankündigungsfrist von 30 Tagen per E-Mail anzupassen. Bei wesentlichen Änderungen haben Nutzerinnen und Nutzer das Recht, das Abonnement ohne Mehrkosten zu kündigen.
+        </p>
+
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">8. Anwendbares Recht und Gerichtsstand</div>
+        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
+          Diese AGB unterliegen dem Schweizer Recht. Ausschliesslicher Gerichtsstand ist die Schweiz.
+        </p>
+
+        <div style="border-top:1px solid var(--bd);padding-top:20px;margin-top:24px;font-size:12px;color:var(--mu);line-height:1.7">
+          Fragen zu diesen AGB? <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a>
         </div>
       </div>
     </div>
@@ -1450,8 +1659,12 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       </div>
       <div id="mm-about-body" style="display:none">
         <div id="mm-videos" onclick="goPage('videos');hideMore()" class="mm-row"><i class="ti ti-player-play" style="font-size:14px;color:var(--mu)"></i> Videos</div>
+        <div onclick="goPage('pricing');setMN('');hideMore()" class="mm-row"><i class="ti ti-tag" style="font-size:14px;color:var(--mu)"></i> Preise</div>
         <div id="mm-contact" onclick="goPage('contact');setMN('');hideMore()" class="mm-row"><i class="ti ti-mail" style="font-size:14px;color:var(--mu)"></i> Contact</div>
         <div id="mm-datasec" onclick="goPage('datasec');setMN('');hideMore()" class="mm-row"><i class="ti ti-shield" style="font-size:14px;color:var(--mu)"></i> Data Security</div>
+        <div onclick="goPage('datenschutz');setMN('');hideMore()" class="mm-row"><i class="ti ti-file-description" style="font-size:14px;color:var(--mu)"></i> Datenschutz</div>
+        <div onclick="goPage('agb');setMN('');hideMore()" class="mm-row"><i class="ti ti-license" style="font-size:14px;color:var(--mu)"></i> AGB</div>
+        <div onclick="goPage('impressum');setMN('');hideMore()" class="mm-row"><i class="ti ti-info-circle" style="font-size:14px;color:var(--mu)"></i> Impressum</div>
       </div>
     </div>
 
@@ -4675,6 +4888,11 @@ async function loadAdvisorDashboard(){
     const maxA=dashClients.reduce((m,c)=>Math.max(m,parseInt(c.total_analyses)||0),1);
     // build a token lookup from global clients array
     const tokMap=Object.fromEntries(clients.map(c=>[String(c.id),c.token]));
+    // fetch subscription statuses for all clients
+    const subStatuses={};
+    await Promise.all(dashClients.map(async c=>{
+      try{const sr=await api('/api/subscriptions/status/'+c.id);if(sr.ok){const sd=await sr.json();subStatuses[c.id]=sd.subscription_status||'trial';}else subStatuses[c.id]='trial';}catch{subStatuses[c.id]='trial';}
+    }));
     el.innerHTML=`
       <div class="adv-stats">
         <div class="adv-stat"><div class="adv-stat-n">${stats.total_clients||0}</div><div class="adv-stat-l">Clients</div></div>
@@ -4685,10 +4903,16 @@ async function loadAdvisorDashboard(){
         const pct=Math.round((parseInt(c.total_analyses)||0)/maxA*100);
         const tok=tokMap[String(c.id)]||'';
         const tokShort=tok?tok.substring(0,24)+'…':'—';
+        const subSt=subStatuses[c.id]||'trial';
+        const subBadge=subSt==='active'
+          ?'<span style="font-size:11px;font-weight:600;color:#047857">&#9679; Aktiv</span>'
+          :subSt==='cancelled'
+          ?'<span style="font-size:11px;font-weight:600;color:#b91c1c">&#9679; Abgelaufen</span>'
+          :'<span style="font-size:11px;font-weight:600;color:#92400e">&#9679; Trial</span>';
         return`<div class="adv-client-card">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
-              <div class="adv-client-name">${safeText(c.name)}</div>
+              <div class="adv-client-name" style="display:flex;align-items:center;gap:8px">${safeText(c.name)} ${subBadge}</div>
               <div class="adv-client-meta">${safeText(c.industry||'—')} · ${safeText(c.contact||'—')}</div>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
@@ -4705,6 +4929,11 @@ async function loadAdvisorDashboard(){
             <button class="obtn" onclick="openAuditModal(${c.id})">Audit Log</button>
             <button class="obtn" style="color:#5b21b6;border-color:#c4b5fd;background:#f5f3ff;font-weight:500" onclick="openModuleConfig(${c.id})"><i class="ti ti-layout-grid" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Module</button>
             <button class="obtn" style="color:#047857;border-color:#a7f3d0;background:#ecfdf5;font-weight:500" onclick="openHealthScoreAdv(${c.id},'${safeText(c.name)}')">&#9670; Health Score</button>
+            <button class="obtn" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-weight:500" onclick="sendPaymentLink(${c.id},this)">Zahlungslink senden</button>
+          </div>
+          <div id="pay-link-row-${c.id}" style="display:none;margin-top:8px;gap:6px;align-items:center">
+            <input id="pay-link-url-${c.id}" type="text" readonly style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--br);border-radius:4px;background:var(--bg2);color:var(--tx);min-width:0">
+            <button class="obtn" onclick="navigator.clipboard.writeText(document.getElementById('pay-link-url-${c.id}').value)">Kopieren</button>
           </div>
           <div style="display:flex;gap:6px;margin-top:8px">
             <button class="dbtn" onclick="delData(${c.id})">Delete Data</button>
@@ -4721,6 +4950,33 @@ async function loadAdvisorDashboard(){
           <div class="adv-feed-date">${fmtDateShort(a.created_at)}</div>
         </div>`).join('')}</div>`:''}`;
   }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;}
+}
+
+async function sendPaymentLink(clientId, btn) {
+  const priceId = prompt('Stripe Price ID (z.B. price_xxx):');
+  if (!priceId) return;
+  btn.disabled = true;
+  btn.textContent = '…';
+  try {
+    const r = await api('/api/subscriptions/create-payment-link/' + clientId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ priceId })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Fehler');
+    const row = document.getElementById('pay-link-row-' + clientId);
+    const inp = document.getElementById('pay-link-url-' + clientId);
+    if (row && inp) {
+      inp.value = d.url;
+      row.style.display = 'flex';
+    }
+  } catch (e) {
+    alert('Fehler: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Zahlungslink senden';
+  }
 }
 
 async function advToggleTimeline(clientId,card){
