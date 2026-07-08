@@ -23,4 +23,14 @@ router.get('/status', async (req, res) => {
   }
 });
 
+router.get('/env', (req, res) => {
+  // Show what env vars seedAdvisor() sees (password censored for security)
+  res.json({
+    ADVISOR_EMAIL: process.env.ADVISOR_EMAIL || 'NOT_SET',
+    ADVISOR_PASSWORD: process.env.ADVISOR_PASSWORD ? '(set, length=' + process.env.ADVISOR_PASSWORD.length + ')' : 'NOT_SET',
+    ADVISOR_NAME: process.env.ADVISOR_NAME || 'Advisor (default)',
+    NODE_ENV: process.env.NODE_ENV || 'development'
+  });
+});
+
 module.exports = router;
