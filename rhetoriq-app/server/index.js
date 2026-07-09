@@ -26,13 +26,13 @@ const { runMonthlyReport } = require('./jobs/monthly-report');
 const app = express();
 
 // ── Sentry (error tracking) ───────────────────────────────────
+// @sentry/node v8+ auto-instruments express; no requestHandler/tracingHandler needed.
 if (process.env.SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     environment: process.env.NODE_ENV || 'production',
     tracesSampleRate: 0.1,
   });
-  app.use(Sentry.Handlers.requestHandler());
   console.log('[sentry] Error tracking active');
 }
 const server = http.createServer(app);
@@ -228,7 +228,7 @@ app.get('/health', async (_, res) => {
 
 // ── Sentry error handler (must be before generic error handler) ──
 if (process.env.SENTRY_DSN) {
-  app.use(Sentry.Handlers.errorHandler());
+  Sentry.setupExpressErrorHandler(app);
 }
 
 // ── Generic error handler ─────────────────────────────────────
