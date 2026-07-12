@@ -4,6 +4,7 @@ services:
     runtime: node
     region: frankfurt
     nodeVersion: 20
+    plan: starter   # must not be free — free tier spins down after 15min idle, causing 50s+ cold-start failures for real customers
     rootDir: server
     buildCommand: npm install
     startCommand: npm start

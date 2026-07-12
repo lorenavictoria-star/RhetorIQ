@@ -4670,8 +4670,9 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
     else if(/network|fetch|failed to fetch/i.test(msg))friendly='Keine Verbindung zum Server. Bitte prüfe deine Internetverbindung.';
     else if(/overloaded|529/i.test(msg))friendly='Der KI-Dienst ist momentan überlastet. Bitte versuche es in wenigen Sekunden erneut.';
     else if(/invalid_api_key|401/i.test(msg))friendly='Konfigurationsfehler. Bitte wende dich an den Support.';
+    const retryArgs=arguments[1]!==undefined?'\''+name+'\',\''+arguments[1]+'\'':'\''+name+'\'';
     body.innerHTML='<div style="color:var(--er,#c0392b);padding:4px 0">⚠ '+safeText(friendly)+'</div>'
-      +'<button onclick="runMod(\''+name+'\')" style="margin-top:8px;padding:6px 14px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:13px">↺ Erneut versuchen</button>';
+      +'<button onclick="runMod('+retryArgs+')" style="margin-top:8px;padding:6px 14px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:13px">↺ Erneut versuchen</button>';
   }
 }
 
