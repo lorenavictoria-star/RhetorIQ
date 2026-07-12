@@ -243,8 +243,8 @@ Adjust register to the context: board-level conversations require gravitas and e
   },
   'text-gen': {
     label: 'Text Generator',
-    system: (d) => `You are a precision ghostwriter and communication strategist specialised in executive and corporate communication. Write exclusively in the defined voice/style. Output must be publication-ready — no placeholders, no generic filler. Adapt register, length, and argumentation to the specific format and audience.${d.voiceProfile?'\n\nVoice/Brand Profile:\n'+d.voiceProfile:''}`,
-    build: (d) => `Format: ${d.format}\nAudience: ${d.audience}\nTone: ${d.tone}\nLanguage: ${d.language||'English'}\nLength guidance: ${d.length||'As appropriate'}\n\nBriefing / Content to work with:\n${d.text}`
+    system: (d) => `You are a precision ghostwriter and communication strategist specialised in executive and corporate communication. Write exclusively in the defined voice/style. Output must be publication-ready — no placeholders, no generic filler. Adapt register, length, and argumentation to the specific format and audience.${d.replyTo?'\n\nThis is a REPLY to an existing email. Write a direct, on-point response: address every question or request raised in the original email, reference it naturally where appropriate, and match a register consistent with the original sender\'s tone unless the briefing says otherwise. Do not repeat the original email back verbatim — respond to it.':''}${d.voiceProfile?'\n\nVoice/Brand Profile:\n'+d.voiceProfile:''}`,
+    build: (d) => `Format: ${d.format}\nAudience: ${d.audience}\nTone: ${d.tone}\nLanguage: ${d.language||'English'}\nLength guidance: ${d.length||'As appropriate'}${d.replyTo?`\n\n---ORIGINAL EMAIL TO REPLY TO---\n${d.replyTo}\n---END ORIGINAL EMAIL---`:''}\n\nBriefing / Content to work with:\n${d.text}`
   },
   'brand-voice-co': {
     label: 'Brand Voice DNA — Company',
@@ -801,6 +801,67 @@ If unclear, return: rp
 Return only the key, lowercase, nothing else.`,
     build: (d) => `Route this request: ${sanitizeForPrompt(d.text||'')}`
   },
+  'route-fill': {
+    label: 'Smart Router — Parameter Extraction',
+    system: `You are an intent-and-parameter extractor for RhetorIQ, a communication-coaching platform. The user is speaking or typing a natural-language request — often via voice dictation, so it may be informal, run-on, or contain filler words. Your job is to determine which module handles this request AND extract every parameter that is knowable from the request, so the user does not have to fill in a form manually — they should only need to click Generate, or at most tweak one detail.
+
+Return ONLY valid JSON — no markdown code fences, no explanation, no text before or after. Use exactly this shape:
+{
+  "module": "<one module key from the list below>",
+  "tile": "<only when module is 'text-gen': one of linkedin, newsletter, email, speech, press, website, custom, brief. Otherwise null.>",
+  "briefing": "<the core content instruction — what to write about, or what task to perform. Strip out meta-parameters already captured separately below (audience, tone, sender, recipient, subject, language) — do not repeat them inside briefing. Always non-empty.>",
+  "audience": "<only when module is 'text-gen': exactly one of these strings (verbatim, including the em dash): 'B2B — C-Suite', 'B2B — HR Leaders', 'B2B — Finance / Investors', 'B2B — General Business', 'B2C — General Consumer', 'Internal — All Employees', 'Internal — Leadership Team', 'Media / Journalists'. Infer the closest match if the user names an audience (e.g. 'for our customers' in a consumer context -> 'B2C — General Consumer'; 'for the board' -> 'B2B — C-Suite'; 'for the whole team' -> 'Internal — All Employees'). If nothing is stated or implied, null.>",
+  "tone": "<a short tone description if the user specified one (e.g. 'very formal', 'warm and direct', 'urgent'), otherwise null>",
+  "language": "<one of 'Deutsch', 'English', 'Français', 'Italiano' — match the language the request itself is written/spoken in, unless the user explicitly asks for a different output language>",
+  "sender": "<only relevant when tile is 'brief': sender name/company/address if mentioned, otherwise null>",
+  "recipient": "<only relevant when tile is 'brief': recipient name/company/address if mentioned, otherwise null>",
+  "subject": "<only relevant when tile is 'brief': a concise subject line (Betreff), derived from the request if a clear topic exists, otherwise null>"
+}
+
+MODULE KEYS (pick exactly one):
+rp — Executive Rhetoric Profile (rhetorical analysis, communication style)
+cf — Communication Fingerprint (language development over time)
+la — Language Analytics (organisational communication culture)
+rm — Risk Management (pre-send risk scan)
+st — Argument Stress Test (counterarguments, pushback)
+si — Strategic Impact Simulation (stakeholder reactions)
+as — Actionability Scanner (clarity check)
+tc — Thread Cleaner (email digest)
+vs-cal — Voice Signature Calibration (extract voice profile)
+vs-gen — Voice Signature Generation (write in someone's voice)
+text-gen — Text Generator (LinkedIn, newsletter, email, speech, press release, website copy, formal letter, or any custom written text)
+brand-voice-co — Brand Voice DNA company
+brand-voice-ind — Brand Voice DNA individual
+sparring — Rhetoric coaching challenge
+crisis — Crisis Framing (first response, 3 strategies)
+crisis-toolkit — Full crisis communication kit
+before-after — Text improvement comparison
+competitive-check — Competitive message differentiation
+ghostwriter — Ghostwriter mode
+rh-translate — Rhetorical translation
+debrief — Post-event debriefing
+pre-meeting — Pre-meeting brief
+cm-qa-trainer — Analyst Q&A Trainer
+cm-equity-story — Equity Story Builder
+cm-earnings-analyzer — Earnings Call Analyzer
+cm-board-coach — Board Presentation Coach
+cm-roadshow — Roadshow Preparation
+ht-guest-letter — Hotel guest communication
+ht-review-response — Hotel review response
+ht-crisis-comm — Hotel crisis communication
+ht-positioning — Hotel brand positioning
+ht-sales-pitch — Hotel sales pitch
+pr — Performance review / feedback writing
+rw — Recognition Writer
+
+RULES:
+- If the request clearly asks for a written text/document/message in a specific format (LinkedIn post, newsletter, email, speech, press release, website copy, or any other custom text), set module to "text-gen" and choose the matching tile.
+- A formal/official letter — cancellation, complaint, legal notice, anything needing sender/recipient/Betreff structure — set module "text-gen", tile "brief".
+- If the request is ambiguous about format but clearly wants written content produced, default to module "text-gen", tile "custom".
+- Never invent facts. If sender/recipient/subject/audience/tone are not stated or clearly implied, use null — do not guess wildly.
+- If unclear which module fits at all, default to module "rp".`,
+    build: (d) => `Request: ${sanitizeForPrompt(d.text||'')}`
+  },
   'chat': {
     label: 'Help Chat',
     system: `You are the RhetorIQ assistant — a direct, knowledgeable guide for an AI-powered executive communication coaching platform built by Lorena Lienhard.
@@ -916,12 +977,12 @@ const MODULE_MAX_TOKENS = {
   'vs-cal': 1000, 'vs-gen': 1000, 'ht-guest-letter': 2000,
   'ht-review-response': 1500, 'ht-sales-pitch': 2000,
   // Internal (fast + cheap)
-  router: 50, chat: 600,
+  router: 50, chat: 600, 'route-fill': 400,
 };
 const DEFAULT_MAX_TOKENS = 2000;
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
-const HAIKU_MODULES = new Set(['router', 'chat', 'vs-cal', 'vs-gen', 'recognition', 'actionability', 'thread', 'before-after', 'rh-translate']);
+const HAIKU_MODULES = new Set(['router', 'route-fill', 'chat', 'vs-cal', 'vs-gen', 'recognition', 'actionability', 'thread', 'before-after', 'rh-translate']);
 const MODEL_SONNET = 'claude-sonnet-4-6';
 const MODEL_HAIKU  = 'claude-haiku-4-5-20251001';
 function resolveModel(module) {
@@ -1466,6 +1527,29 @@ router.post('/route', requireAuth, async (req, res) => {
     const cfg = PROMPTS['router'];
     const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['router'], resolveModel('router'), 0);
     res.json({ module: claudeResp.text.trim().toLowerCase().replace(/[^a-z-]/g, '') });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/analyze/route-fill — like /route but also extracts structured parameters
+// (audience, tone, sender/recipient/subject for letters, etc.) so voice/typed commands
+// can auto-fill the target module's form instead of just navigating to it.
+router.post('/route-fill', requireAuth, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || typeof text !== 'string') return res.status(400).json({ error: 'text required' });
+    const cfg = PROMPTS['route-fill'];
+    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['route-fill'], resolveModel('route-fill'), 0);
+    let parsed;
+    try {
+      const jsonMatch = claudeResp.text.match(/\{[\s\S]*\}/);
+      parsed = JSON.parse(jsonMatch ? jsonMatch[0] : claudeResp.text);
+    } catch {
+      parsed = { module: 'rp', tile: null, briefing: text, audience: null, tone: null, language: null, sender: null, recipient: null, subject: null };
+    }
+    if (!parsed.briefing) parsed.briefing = text;
+    res.json(parsed);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

@@ -3635,30 +3635,63 @@ async function routePrompt(){
   if(!text){document.getElementById('rstat').textContent='Please describe what you would like to do.';return;}
   const s=document.getElementById('rstat');s.textContent='Analysing...';
   try{
-    const r=await api('/api/analyze/route',{method:'POST',body:JSON.stringify({text})});
+    const r=await api('/api/analyze/route-fill',{method:'POST',body:JSON.stringify({text})});
     const d=await r.json();
     let mod=(d.module||'').trim().toLowerCase().replace(/[^a-z-]/g,'');
     if(mod==='brand-voice-co'||mod==='brand-voice-ind')mod='brand-voice';
     if(mod==='vs-cal'||mod==='vs-gen')mod='text-gen';
     const name=MNAMES[mod]||'the right module';
-    s.textContent='Opening: '+name+'...';
+    const briefing=(d.briefing||text).trim();
+    s.textContent='Opening: '+name+'... generating.';
     setTimeout(()=>{
       s.textContent='';document.getElementById('router-input').value='';
       if(mod==='brand-voice'){goPage('brand-voice');}
       else if(mod==='text-gen'){
-        const low=text.toLowerCase();
-        let fmt='custom';
-        if(/linkedin/i.test(low))fmt='linkedin';
-        else if(/newsletter/i.test(low))fmt='newsletter';
-        else if(/\bemail\b|\bmail\b/i.test(low))fmt='email';
-        else if(/\bspeech\b|\brede\b|\bkeynote\b|\bvortrag\b/i.test(low))fmt='speech';
-        else if(/\bpress(e|emitteilung)?\b|\bpressrelease\b|\bmedia\b/i.test(low))fmt='press';
-        else if(/\bwebsite\b|\bwebseite\b|\bhomepage\b/i.test(low))fmt='website';
+        const validTiles=['linkedin','newsletter','email','speech','press','website','custom','brief'];
+        let fmt=(d.tile||'').trim().toLowerCase();
+        if(!validTiles.includes(fmt)){
+          const low=text.toLowerCase();
+          fmt='custom';
+          if(/linkedin/i.test(low))fmt='linkedin';
+          else if(/newsletter/i.test(low))fmt='newsletter';
+          else if(/\bemail\b|\bmail\b/i.test(low))fmt='email';
+          else if(/\bspeech\b|\brede\b|\bkeynote\b|\bvortrag\b/i.test(low))fmt='speech';
+          else if(/\bpress(e|emitteilung)?\b|\bpressrelease\b|\bmedia\b/i.test(low))fmt='press';
+          else if(/\bwebsite\b|\bwebseite\b|\bhomepage\b/i.test(low))fmt='website';
+          else if(/\bbrief\b|\bletter\b|\bkündigung\b|\bschreiben an\b/i.test(low))fmt='brief';
+        }
         goModule('text-gen');
-        setTimeout(()=>{tgOpenTile(fmt);const ta=document.getElementById('tg-task-'+fmt);if(ta)ta.value=text;},80);
+        setTimeout(()=>{
+          tgOpenTile(fmt);
+          const ta=document.getElementById('tg-task-'+fmt);if(ta)ta.value=briefing;
+          const AUD_OPTS=['B2B — C-Suite','B2B — HR Leaders','B2B — Finance / Investors','B2B — General Business','B2C — General Consumer','Internal — All Employees','Internal — Leadership Team','Media / Journalists'];
+          if(d.audience&&AUD_OPTS.includes(d.audience)){const el=document.getElementById('tg-aud-'+fmt);if(el)el.value=d.audience;}
+          const LANG_OPTS=['Deutsch','English','Français','Italiano'];
+          if(d.language&&LANG_OPTS.includes(d.language)){const el=document.getElementById('tg-lang-'+fmt);if(el)el.value=d.language;}
+          if(fmt==='brief'){
+            if(d.sender){const el=document.getElementById('tg-br-sender');if(el)el.value=d.sender;}
+            if(d.recipient){const el=document.getElementById('tg-br-recipient');if(el)el.value=d.recipient;}
+            if(d.subject){const el=document.getElementById('tg-br-subject');if(el)el.value=d.subject;}
+            if(d.tone){
+              const TONE_OPTS=['Formal — standard business letter','Very formal — legal / official matter','Formal but warm — existing client relationship'];
+              const low=(d.tone||'').toLowerCase();
+              let match=null;
+              if(/legal|official|streng|rechtlich/i.test(low))match=TONE_OPTS[1];
+              else if(/warm|freundlich|bestehend|client/i.test(low))match=TONE_OPTS[2];
+              if(match){const el=document.getElementById('tg-fmt-'+fmt);if(el)el.value=match;}
+            }
+          }
+          setTimeout(()=>{try{runMod('text-gen',fmt);}catch{}},150);
+        },80);
       }
-      else{goModule(mod,text);}
-    },600);
+      else if(mod==='pre-meeting'||mod==='arg-reaction'){
+        goModule(mod,briefing);
+      }
+      else{
+        goModule(mod,briefing);
+        setTimeout(()=>{try{runMod(mod);}catch{}},150);
+      }
+    },400);
   }catch{s.textContent='Could not route &mdash; please choose a module below.';}
 }
 
@@ -4084,7 +4117,7 @@ function buildTextGen(prefill,form){
       ${people.length?buildPeopleSelector():''}
       <div class="upzone" onclick="document.getElementById('tg-tf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.tg_source_upload}</strong></div><input type="file" id="tg-tf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task-${t.id}','tg-tt-${t.id}')"></div>
       <div class="ftags" id="tg-tt-${t.id}"></div>
-      <div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px"></textarea></div>
+      ${t.id==='email'?`<div class="row2"><div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:140px"></textarea></div><div class="fg2"><label class="fl2">Original Email &mdash; Reply To (optional)</label><textarea id="tg-reply-email" placeholder="Paste the email you are replying to here. The AI will draft a direct, on-point reply — answering every question raised, matching an appropriate register, and referencing the original naturally." style="min-height:140px"></textarea></div></div>`:`<div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px"></textarea></div>`}
       <div class="row2">
         <div class="fg2"><label class="fl2">${tl.tg_audience}</label><select id="tg-aud-${t.id}"><option>B2B — C-Suite</option><option>B2B — HR Leaders</option><option>B2B — Finance / Investors</option><option>B2B — General Business</option><option>B2C — General Consumer</option><option>Internal — All Employees</option><option>Internal — Leadership Team</option><option>Media / Journalists</option></select></div>
         <div class="fg2"><label class="fl2">${tl.tg_tone}</label><select id="tg-tone-${t.id}"><option>Aus Voice Profile</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European — understated</option></select></div>
@@ -4578,7 +4611,8 @@ async function runMod(name){
     let speechVoiceCtx='';
     if(fid==='speech'){const spPid=document.getElementById('tg-speech-person')?.value;if(spPid){const spPerson=people.find(p=>p.id==spPid);const spVoice=spPerson&&(spPerson.profiles||[]).find(pr=>pr.profile_type==='voice');if(spVoice)speechVoiceCtx='\n\n---SPEAKER VOICE DNA ('+spPerson.name+(spPerson.role?' — '+spPerson.role:'')+')---\n'+spVoice.content;}}
     const vorbildCtx=getVorbildContext(fid);
-    data={text:t,format:g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:baseTone,language:g('tg-lang-'+fid),length:g('tg-len-'+fid),voiceProfile:(voiceProf||'')+context+liCtx+speechVoiceCtx+vorbildCtx+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
+    const replyTo=fid==='email'?(g('tg-reply-email')||''):'';
+    data={text:t,format:g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:baseTone,language:g('tg-lang-'+fid),length:g('tg-len-'+fid),replyTo,voiceProfile:(voiceProf||'')+context+liCtx+speechVoiceCtx+vorbildCtx+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
   else if(name==='profiling'){module='rp';rid='profiling-r';bid='profiling-b';const t=g('rp-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('rp-name'),industry:g('rp-industry')};}
   else if(name==='fingerprint'){module='cf';rid='fingerprint-r';bid='fingerprint-b';const t=g('cf-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('cf-name'),focus:g('cf-focus')};}
   else if(name==='language'){module='la';rid='language-r';bid='language-b';const t=g('la-in');if(!t)return alert('Please enter text.');data={text:t+context,size:g('la-size'),focus:g('la-focus')};}
