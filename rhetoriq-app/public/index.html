@@ -770,6 +770,23 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   </div>
 </div>
 
+<!-- CLIENT ADDRESS MODAL -->
+<div class="ov" id="addr-ov">
+  <div class="modal" style="max-width:440px">
+    <h2 style="margin-bottom:4px">Firmenadresse (Absender)</h2>
+    <div id="addr-subtitle" style="font-size:13px;color:var(--mu);margin-bottom:16px"></div>
+    <div class="mf">
+      <label class="fl">Name, Firma, Adresse</label>
+      <textarea id="addr-input" rows="4" placeholder="z.B. Lorena Lienhard, RhetorIQ AG, Bahnhofstrasse 1, 8001 Zürich" style="width:100%;resize:vertical"></textarea>
+      <div style="font-size:12px;color:var(--mu);margin-top:6px">Wird künftig automatisch als Absender in Briefe eingefügt.</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+      <button class="lbtn" onclick="closeModal('addr-ov')">Abbrechen</button>
+      <button class="lbtn" id="addr-save-btn" onclick="saveClientAddress()" style="background:var(--ac);color:#fff;border:none">Speichern</button>
+    </div>
+  </div>
+</div>
+
 <!-- TEAM MODAL -->
 <div class="ov" id="team-ov">
   <div class="modal" style="max-width:520px">
@@ -4012,18 +4029,28 @@ function fillBriefSender(senderFieldId){
     if(el&&!el.value){const addr=getClientSenderAddress();if(addr)el.value=addr;}
   },30);
 }
-async function editClientAddress(senderFieldId){
+let _addrTargetField=null;
+function editClientAddress(senderFieldId){
   if(!clientId)return alert('Bitte zuerst einen Klienten auswählen.');
   const c=(clients||[]).find(c=>c.id==clientId);
-  const val=prompt('Firmenadresse für '+(c?.name||'diesen Klienten')+' (wird künftig automatisch als Absender eingefügt):',c?.address||'');
-  if(val===null)return;
+  _addrTargetField=senderFieldId;
+  document.getElementById('addr-subtitle').textContent='Für: '+(c?.name||'diesen Klienten');
+  document.getElementById('addr-input').value=c?.address||'';
+  openModal('addr-ov');
+}
+async function saveClientAddress(){
+  const val=document.getElementById('addr-input').value.trim();
+  const btn=document.getElementById('addr-save-btn');
+  btn.disabled=true;btn.textContent='Speichert…';
   try{
     const r=await api('/api/clients/'+clientId+'/address',{method:'PUT',body:JSON.stringify({address:val})});
     const d=await r.json();
+    const c=(clients||[]).find(c=>c.id==clientId);
     if(c)c.address=d.address;
-    const el=document.getElementById(senderFieldId);
-    if(el)el.value=getClientSenderAddress();
+    if(_addrTargetField){const el=document.getElementById(_addrTargetField);if(el)el.value=getClientSenderAddress();}
+    closeModal('addr-ov');
   }catch{alert('Fehler beim Speichern der Adresse.');}
+  btn.disabled=false;btn.textContent='Speichern';
 }
 let _briefSubjectTimer=null;
 async function suggestBriefSubject(briefingFieldId,subjectFieldId){
