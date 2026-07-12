@@ -96,8 +96,9 @@ const router = express.Router();
 // GET /api/clients
 router.get('/', requireAdvisor, async (req, res) => {
   try {
+    await ensureClientAddressColumn();
     const { rows } = await pool.query(
-      'SELECT id, name, industry, contact, slug, token, capital_markets_enabled, hotel_enabled, enabled_modules, created_at FROM clients WHERE advisor_id = $1 ORDER BY created_at DESC',
+      'SELECT id, name, industry, contact, slug, token, capital_markets_enabled, hotel_enabled, enabled_modules, address, created_at FROM clients WHERE advisor_id = $1 ORDER BY created_at DESC',
       [req.user.id]
     );
     res.json(rows);
@@ -255,6 +256,29 @@ router.delete('/:id/users/:userId', requireAdvisor, async (req, res) => {
 
 // DELETE /api/clients/:id
 // PUT /api/clients/:id/capital-markets-toggle
+// PUT /api/clients/:id/address — the client's own sender address, used to
+// auto-fill "Sender (Absender)" when generating a formal Brief for this client.
+let clientAddressColumnEnsured = false;
+async function ensureClientAddressColumn() {
+  if (clientAddressColumnEnsured) return;
+  await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS address TEXT`);
+  clientAddressColumnEnsured = true;
+}
+router.put('/:id/address', requireAdvisor, async (req, res) => {
+  try {
+    await ensureClientAddressColumn();
+    const { address } = req.body;
+    const { rows } = await pool.query(
+      'UPDATE clients SET address=$1 WHERE id=$2 AND advisor_id=$3 RETURNING address',
+      [address || '', req.params.id, req.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
+    res.json({ address: rows[0].address });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.put('/:id/capital-markets-toggle', requireAdvisor, async (req, res) => {
   try {
     const { rows } = await pool.query(

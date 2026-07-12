@@ -4,6 +4,36 @@ const { requireAdvisor } = require('../middleware/auth');
 
 const router = express.Router();
 
+// GET/PUT /api/advisor/sender-address — advisor's own company address, used to
+// auto-fill the "Sender (Absender)" field on the Brief / formal-letter module.
+let senderAddressColumnEnsured = false;
+async function ensureSenderAddressColumn() {
+  if (senderAddressColumnEnsured) return;
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS sender_address TEXT`);
+  senderAddressColumnEnsured = true;
+}
+
+router.get('/sender-address', requireAdvisor, async (req, res) => {
+  try {
+    await ensureSenderAddressColumn();
+    const { rows } = await pool.query('SELECT sender_address FROM users WHERE id=$1', [req.user.id]);
+    res.json({ senderAddress: rows[0]?.sender_address || '' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.put('/sender-address', requireAdvisor, async (req, res) => {
+  try {
+    await ensureSenderAddressColumn();
+    const { senderAddress } = req.body;
+    await pool.query('UPDATE users SET sender_address=$1 WHERE id=$2', [senderAddress || '', req.user.id]);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // GET /api/advisor/dashboard
 router.get('/dashboard', requireAdvisor, async (req, res) => {
   try {

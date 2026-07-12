@@ -2809,9 +2809,9 @@ async function boot(user,role){
   document.getElementById('uname').textContent=user.name||user.email||'';
   if(isAdv){
     document.body.classList.add('adv');
-    document.getElementById('mn-cl').style.display='flex';
+    const mnCl=document.getElementById('mn-clients');if(mnCl)mnCl.style.display='flex';
     // mn-people moved to More menu
-    document.getElementById('onboarding-home-btn').style.display='block';
+    const obBtn=document.getElementById('onboarding-home-btn');if(obBtn)obBtn.style.display='block';
     await loadAdvisorDashboard();
   } else {
     clientId=user.id||null;
@@ -2822,7 +2822,7 @@ async function boot(user,role){
   }
   if(isAdv){
     document.querySelectorAll('.ao-item').forEach(el=>{el.style.display=el.classList.contains('mni')||el.classList.contains('mm-tile')?'flex':'block';});
-    document.getElementById('mm-reviews').style.display='flex';
+    const mmRev=document.getElementById('mm-reviews');if(mmRev)mmRev.style.display='flex';
     loadAdvisorReviews();
     setInterval(loadAdvisorReviews,60000);
   } else {
@@ -3746,7 +3746,7 @@ const MDEFS={
   review:{title:'Feedback Writer',desc:'Rough notes about an employee in, precise written performance feedback out.',mf:'pr-in',ph:'"Often late, delivers strong quality, saved the client project last month, struggles with prioritisation..."',api:'pr',people:true,fields:[{id:'pr-role',type:'text',lbl:"Employee's Role",ph:'e.g. Senior Analyst, Project Manager'},{id:'pr-fmt',type:'sel',lbl:'Format',opts:['Written appraisal (HR document)','Verbal feedback (conversation guide)','360 feedback','Probationary review']}]},
   recognition:{title:'Appreciation Writer',desc:'Write a recognition for any employee that feels personal and genuine &mdash; not generic copy-paste.',mf:'rw-in',ph:'"Meier worked over the weekend to rescue the database migration. The client noticed. Said it was the best handover they ever received."',api:'rw',people:true,fields:[{id:'rw-type',type:'sel',lbl:'Recipient Type',opts:['The Analyst &mdash; values precision and evidence','The Executor &mdash; values impact and results','The Team Player &mdash; values group contribution','The Visionary &mdash; values ideas and vision','The Pragmatist &mdash; wants direct acknowledgement']},{id:'rw-fmt',type:'sel',lbl:'Format',opts:['Verbal recognition (conversation)','Written acknowledgement (email)','Public praise (team meeting)','Formal recognition (HR document)']}]},
   'text-gen':{title:'Text Generator',desc:'Briefing in, finished text out. LinkedIn, speech, press release, email &mdash; any format, in the authentic brand voice.',api:'text-gen',special:'textgen'},
-  brief:{title:'Formal Letter',desc:'Complete, properly formatted formal business letter &mdash; sender, recipient, subject line, salutation, and closing all done correctly.',mf:'br-in',ph:'What is this letter about? Key points, purpose, and any specific decisions or requests to communicate...',api:'brief',fields:[{id:'br-sender',type:'text',lbl:'Sender (name, company, address)',ph:'e.g. Lorena Lienhard, RhetorIQ AG, Bahnhofstrasse 1, 8001 Zürich'},{id:'br-recipient',type:'text',lbl:'Recipient (name, company, address)',ph:'e.g. Herr Peter Muster, Muster AG, Musterstrasse 5, 8000 Zürich'},{id:'br-subject',type:'text',lbl:'Subject Line (Betreff)',ph:'e.g. Kündigung des Mietvertrags per 30.09.2026'},{id:'br-tone',type:'sel',lbl:'Tone',opts:['Formal — standard business letter','Very formal — legal / official matter','Formal but warm — existing client relationship']}]},
+  brief:{title:'Formal Letter',desc:'Complete, properly formatted formal business letter &mdash; sender, recipient, subject line, salutation, and closing all done correctly.',mf:'br-in',ph:'What is this letter about? Key points, purpose, and any specific decisions or requests to communicate...',api:'brief',fields:[{id:'br-sender',type:'text',lbl:'Sender (name, company, address) <a onclick="editClientAddress(\'br-sender\')" style="cursor:pointer;text-decoration:underline;font-weight:400;text-transform:none;letter-spacing:0;font-size:11px">&#9998; hinterlegen</a>',ph:'e.g. Lorena Lienhard, RhetorIQ AG, Bahnhofstrasse 1, 8001 Zürich'},{id:'br-recipient',type:'text',lbl:'Recipient (name, company, address)',ph:'e.g. Herr Peter Muster, Muster AG, Musterstrasse 5, 8000 Zürich'},{id:'br-subject',type:'text',lbl:'Subject Line (Betreff)',ph:'e.g. Kündigung des Mietvertrags per 30.09.2026'},{id:'br-tone',type:'sel',lbl:'Tone',opts:['Formal — standard business letter','Very formal — legal / official matter','Formal but warm — existing client relationship']}]},
   'ghostwriter':{title:'Ghostwriter Mode',desc:'Paste past texts — emails, posts, speeches. The AI extracts your exact voice and writes new content that sounds authentically like you. No prompting required.',mf:'gw-in',ph:'Paste past texts here — emails, LinkedIn posts, speeches, memos. The more diverse, the better the style match.',api:'ghostwriter',mh:'160px',twopart:true,fields:[{id:'gw-format',type:'sel',lbl:'Format',opts:['LinkedIn Post','Email','Internal Announcement','Speech / Opening','Newsletter Section','Press Release','Custom']},{id:'gw-audience',type:'text',lbl:'Target Audience',ph:'e.g. Board, employees, media, LinkedIn followers'},{id:'gw-briefing',type:'ta',lbl:'What to write (briefing)',ph:'e.g. Announce our Q1 results with optimism but realism. Mention the new HR strategy without details yet.'},{id:'gw-length',type:'text',lbl:'Length guidance',ph:'e.g. 200 words, 3 paragraphs'}]},
   'crisis-toolkit':{title:'Crisis Communication Toolkit',desc:'Something happened. Get a complete communication kit in 2 minutes: internal statement, press release, employee FAQ, social media holding, action checklist.',mf:'ctk-in',ph:'Describe the situation with hard facts: what happened, when, who is affected, what is publicly known.',api:'crisis-toolkit',fields:[{id:'ctk-type',type:'sel',lbl:'Crisis Type',opts:['Reputational damage / Shitstorm','Workplace accident / Safety incident','Media leak / Unwanted disclosure','Leadership scandal','Product failure / Recall','Financial irregularity','Cybersecurity incident','Other']},{id:'ctk-company',type:'text',lbl:'Company / Context',ph:'e.g. Acme AG, Swiss SME, 200 employees'},{id:'ctk-aud',type:'text',lbl:'Affected Stakeholders',ph:'e.g. Employees, media, investors, customers'}]},
   'before-after':{title:'Before / After',desc:'Paste any text. Get a diagnosis of what is weak, a fully improved version, and a clear explanation of every change made.',mf:'ba-in',ph:'Paste the original text here — email, statement, announcement, speech section, LinkedIn post...',api:'before-after',fields:[{id:'ba-goal',type:'sel',lbl:'Improvement Goal',opts:['General improvement','More clarity & directness','More authority & presence','Warmer & more human','Stronger argumentation','Shorter & sharper']},{id:'ba-aud',type:'text',lbl:'Target Audience',ph:'e.g. Employees, investors, media'},{id:'ba-tone',type:'sel',lbl:'Tone Target',opts:['Keep existing tone','More formal','More conversational','Swiss / European — understated','International executive']}]},
@@ -4001,6 +4001,46 @@ HAUPTKONKURRENTEN IN DIESEM PITCH:
 [Kundenanfrage, E-Mail oder RFP-Text hier einfügen]`
 };
 
+function getClientSenderAddress(){
+  const c=(clients||[]).find(c=>c.id==clientId);
+  if(!c||!c.address)return '';
+  return c.name?(c.name+'\n'+c.address):c.address;
+}
+function fillBriefSender(senderFieldId){
+  setTimeout(()=>{
+    const el=document.getElementById(senderFieldId);
+    if(el&&!el.value){const addr=getClientSenderAddress();if(addr)el.value=addr;}
+  },30);
+}
+async function editClientAddress(senderFieldId){
+  if(!clientId)return alert('Bitte zuerst einen Klienten auswählen.');
+  const c=(clients||[]).find(c=>c.id==clientId);
+  const val=prompt('Firmenadresse für '+(c?.name||'diesen Klienten')+' (wird künftig automatisch als Absender eingefügt):',c?.address||'');
+  if(val===null)return;
+  try{
+    const r=await api('/api/clients/'+clientId+'/address',{method:'PUT',body:JSON.stringify({address:val})});
+    const d=await r.json();
+    if(c)c.address=d.address;
+    const el=document.getElementById(senderFieldId);
+    if(el)el.value=getClientSenderAddress();
+  }catch{alert('Fehler beim Speichern der Adresse.');}
+}
+let _briefSubjectTimer=null;
+async function suggestBriefSubject(briefingFieldId,subjectFieldId){
+  const subjEl=document.getElementById(subjectFieldId);
+  const briefEl=document.getElementById(briefingFieldId);
+  if(!subjEl||!briefEl||subjEl.value.trim())return;
+  const text=briefEl.value.trim();
+  if(text.length<10)return;
+  clearTimeout(_briefSubjectTimer);
+  _briefSubjectTimer=setTimeout(async()=>{
+    try{
+      const r=await api('/api/analyze/suggest-subject',{method:'POST',body:JSON.stringify({text})});
+      const d=await r.json();
+      if(d.subject&&!subjEl.value.trim())subjEl.value=d.subject;
+    }catch{}
+  },200);
+}
 function goModule(name,prefill){
   window._currentModule=name;window._currentTgTile=null;
   const def=getMdefLang(name,MDEFS[name]);if(!def)return;
@@ -4015,6 +4055,7 @@ function goModule(name,prefill){
   else if(def.special==='premeeting')buildPreMeeting(prefill,form);
   else if(def.special==='argreaction')buildArgReaction(prefill,form);
   else buildForm(name,def,prefill,form);
+  if(name==='brief')fillBriefSender('br-sender');
   goPage('module');
   setTimeout(injectTemplateBtn,50);
 }
@@ -4028,7 +4069,8 @@ function buildForm(name,def,prefill,form){
   h+=`<div class="upzone" onclick="document.getElementById('mf-${name}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.form_upload}</strong> &mdash; ${tl.form_upload_sub}</div><input type="file" id="mf-${name}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'${def.mf}','mt-${name}')"></div>`;
   h+=`<div class="ftags" id="mt-${name}"></div>`;
   const tplBtn=def.tpl?`<button type="button" onclick="cmFillTpl('${def.mf}')" style="margin-left:8px;padding:2px 9px;font-size:11px;border:1px solid var(--ac);border-radius:4px;background:transparent;cursor:pointer;font-family:inherit;color:var(--ac);font-weight:600;letter-spacing:.01em">📋 Prompt laden</button>`:'';
-  h+=`<div class="fg2"><label class="fl2">${tl.form_text}${tplBtn}</label><textarea id="${def.mf}" placeholder="${def.ph||''}" style="min-height:${def.mh||'130px'}"></textarea></div>`;
+  const mfBlur=name==='brief'?` onblur="suggestBriefSubject('${def.mf}','br-subject')"`:'';
+  h+=`<div class="fg2"><label class="fl2">${tl.form_text}${tplBtn}</label><textarea id="${def.mf}" placeholder="${def.ph||''}" style="min-height:${def.mh||'130px'}"${mfBlur}></textarea></div>`;
   if(def.twopart){const f2=def.fields.find(f=>f.type==='ta');if(f2)h+=`<div class="fg2"><label class="fl2">${f2.lbl}</label><textarea id="${f2.id}" placeholder="${f2.ph||''}"></textarea></div>`;}
   const others=def.fields.filter(f=>f.type!=='ta');
   if(others.length){h+=`<div class="row2">`;others.forEach(f=>{if(f.type==='text')h+=`<div class="fg2"><label class="fl2">${f.lbl}</label><input type="text" id="${f.id}" placeholder="${f.ph||''}"></div>`;else h+=`<div class="fg2"><label class="fl2">${f.lbl}</label><select id="${f.id}">${f.opts.map(o=>`<option>${o}</option>`).join('')}</select></div>`;});h+=`</div>`;}
@@ -4117,7 +4159,7 @@ function buildTextGen(prefill,form){
       ${people.length?buildPeopleSelector():''}
       <div class="upzone" onclick="document.getElementById('tg-tf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.tg_source_upload}</strong></div><input type="file" id="tg-tf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task-${t.id}','tg-tt-${t.id}')"></div>
       <div class="ftags" id="tg-tt-${t.id}"></div>
-      ${t.id==='email'?`<div class="row2"><div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:140px"></textarea></div><div class="fg2"><label class="fl2">Original Email &mdash; Reply To (optional)</label><textarea id="tg-reply-email" placeholder="Paste the email you are replying to here. The AI will draft a direct, on-point reply — answering every question raised, matching an appropriate register, and referencing the original naturally." style="min-height:140px"></textarea></div></div>`:`<div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px"></textarea></div>`}
+      ${t.id==='email'?`<div class="row2"><div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:140px"></textarea></div><div class="fg2"><label class="fl2">Original Email &mdash; Reply To (optional)</label><textarea id="tg-reply-email" placeholder="Paste the email you are replying to here. The AI will draft a direct, on-point reply — answering every question raised, matching an appropriate register, and referencing the original naturally." style="min-height:140px"></textarea></div></div>`:t.id==='brief'?`<div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px" onblur="suggestBriefSubject('tg-task-brief','tg-br-subject')"></textarea></div>`:`<div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px"></textarea></div>`}
       <div class="row2">
         <div class="fg2"><label class="fl2">${tl.tg_audience}</label><select id="tg-aud-${t.id}"><option>B2B — C-Suite</option><option>B2B — HR Leaders</option><option>B2B — Finance / Investors</option><option>B2B — General Business</option><option>B2C — General Consumer</option><option>Internal — All Employees</option><option>Internal — Leadership Team</option><option>Media / Journalists</option></select></div>
         <div class="fg2"><label class="fl2">${tl.tg_tone}</label><select id="tg-tone-${t.id}"><option>Aus Voice Profile</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European — understated</option></select></div>
@@ -4127,7 +4169,7 @@ function buildTextGen(prefill,form){
         <div class="fg2"><label class="fl2">${tl.tg_length}</label><input type="text" id="tg-len-${t.id}" placeholder="${tl.tg_length_ph}"></div>
       </div>
       ${t.id==='linkedin'?`<div class="fg2" style="margin-top:4px"><label class="fl2">${tl.li_profile_lbl||'LinkedIn Profile / About (optional)'}</label><textarea id="tg-li-profile" placeholder="${tl.li_profile_ph||'Paste the About section and recent posts of the LinkedIn profile here — so the output matches the person\'s authentic voice.'}" style="min-height:80px;font-size:12px"></textarea></div>`:''}
-      ${t.id==='brief'?`<div class="row2"><div class="fg2"><label class="fl2">Sender (Absender)</label><input type="text" id="tg-br-sender" placeholder="e.g. Lorena Lienhard, RhetorIQ AG, Bahnhofstrasse 1, 8001 Zürich"></div><div class="fg2"><label class="fl2">Recipient (Adressat)</label><input type="text" id="tg-br-recipient" placeholder="e.g. Herr Peter Muster, Muster AG, Musterstrasse 5, 8000 Zürich"></div></div><div class="fg2"><label class="fl2">Subject Line (Betreff)</label><input type="text" id="tg-br-subject" placeholder="e.g. Kündigung des Mietvertrags per 30.09.2026"></div>`:''}
+      ${t.id==='brief'?`<div class="row2"><div class="fg2"><label class="fl2">Sender (Absender) <a onclick="editClientAddress('tg-br-sender')" style="cursor:pointer;text-decoration:underline;font-weight:400;text-transform:none;letter-spacing:0;font-size:11px">&#9998; hinterlegen</a></label><input type="text" id="tg-br-sender" placeholder="e.g. Lorena Lienhard, RhetorIQ AG, Bahnhofstrasse 1, 8001 Zürich"></div><div class="fg2"><label class="fl2">Recipient (Adressat)</label><input type="text" id="tg-br-recipient" placeholder="e.g. Herr Peter Muster, Muster AG, Musterstrasse 5, 8000 Zürich"></div></div><div class="fg2"><label class="fl2">Subject Line (Betreff)</label><input type="text" id="tg-br-subject" placeholder="e.g. Kündigung des Mietvertrags per 30.09.2026"></div>`:''}
       ${t.id==='speech'?`<div class="fg2"><label class="fl2">Speaker — Voice DNA (optional)</label><select id="tg-speech-person"><option value="">— Brand Voice (default) —</option>${people.filter(p=>(p.profiles||[]).some(pr=>pr.profile_type==='voice')).map(p=>`<option value="${p.id}">${safeText(p.name)}${p.role?' — '+safeText(p.role):''}</option>`).join('')}</select></div>`:''}
       ${t.id==='newsletter'?`<div class="klaviyo-box" id="klaviyo-box-${t.id}" style="margin-bottom:14px;padding:14px;border:1.5px solid #e0d4f5;border-radius:8px;background:#f9f6ff">
         <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7c3aed;margin-bottom:10px">Klaviyo</div>
@@ -4198,6 +4240,7 @@ function tgOpenTile(id){
   loadTgRef(id);
   loadVorbild(id);
   if(id==='newsletter')klvAutoLoad('newsletter');
+  if(id==='brief')fillBriefSender('tg-br-sender');
 }
 function tgCloseTile(id){
   document.getElementById('tg-panel-'+id).style.display='none';

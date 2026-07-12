@@ -862,6 +862,11 @@ RULES:
 - If unclear which module fits at all, default to module "rp".`,
     build: (d) => `Request: ${sanitizeForPrompt(d.text||'')}`
   },
+  'suggest-subject': {
+    label: 'Subject Line Suggestion',
+    system: `You write concise German or English business-letter subject lines (Betreff). Given a briefing describing what a formal letter is about, return ONLY the subject line text — nothing else, no quotes, no "Betreff:" prefix, no explanation. Match the language of the briefing. Keep it under 12 words, specific and professional (e.g. "Kündigung des Mietvertrags per 30.09.2026", "Terminbestätigung für unser Gespräch am 14. März").`,
+    build: (d) => `Briefing:\n${sanitizeForPrompt(d.text||'')}`
+  },
   'chat': {
     label: 'Help Chat',
     system: `You are the RhetorIQ assistant — a direct, knowledgeable guide for an AI-powered executive communication coaching platform built by Lorena Lienhard.
@@ -977,12 +982,12 @@ const MODULE_MAX_TOKENS = {
   'vs-cal': 1000, 'vs-gen': 1000, 'ht-guest-letter': 2000,
   'ht-review-response': 1500, 'ht-sales-pitch': 2000,
   // Internal (fast + cheap)
-  router: 50, chat: 600, 'route-fill': 400,
+  router: 50, chat: 600, 'route-fill': 400, 'suggest-subject': 60,
 };
 const DEFAULT_MAX_TOKENS = 2000;
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
-const HAIKU_MODULES = new Set(['router', 'route-fill', 'chat', 'vs-cal', 'vs-gen', 'recognition', 'actionability', 'thread', 'before-after', 'rh-translate']);
+const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'chat', 'vs-cal', 'vs-gen', 'recognition', 'actionability', 'thread', 'before-after', 'rh-translate']);
 const MODEL_SONNET = 'claude-sonnet-4-6';
 const MODEL_HAIKU  = 'claude-haiku-4-5-20251001';
 function resolveModel(module) {
@@ -1550,6 +1555,20 @@ router.post('/route-fill', requireAuth, async (req, res) => {
     }
     if (!parsed.briefing) parsed.briefing = text;
     res.json(parsed);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/analyze/suggest-subject — cheap Haiku call to propose a subject
+// line (Betreff) for a formal letter, based on the briefing text so far.
+router.post('/suggest-subject', requireAuth, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || typeof text !== 'string' || text.trim().length < 10) return res.status(400).json({ error: 'text too short' });
+    const cfg = PROMPTS['suggest-subject'];
+    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['suggest-subject'], resolveModel('suggest-subject'), 0);
+    res.json({ subject: claudeResp.text.trim().replace(/^["']|["']$/g, '') });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
