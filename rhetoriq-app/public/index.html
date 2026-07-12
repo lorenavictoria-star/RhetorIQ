@@ -2532,6 +2532,10 @@ document.addEventListener('keydown',e=>{
 
 // ── CUSTOM MODULES ─────────────────────────────────────────────
 let customModules=[];
+async function loadCustomModules(){
+  if(!clientId){customModules=[];return;}
+  try{const r=await api('/api/custom-modules?clientId='+clientId);customModules=await r.json();}catch{customModules=[];}
+}
 // Open a custom module
 function openCustomModule(id){
   const m=customModules.find(x=>x.id==id);if(!m)return;

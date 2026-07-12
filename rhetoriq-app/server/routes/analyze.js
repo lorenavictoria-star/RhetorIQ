@@ -986,6 +986,11 @@ const MODULE_MAX_TOKENS = {
 };
 const DEFAULT_MAX_TOKENS = 2000;
 
+// Global formatting rule applied to every generated output, regardless of
+// module, client, or brand voice. Appended last (highest instruction priority)
+// after the module system prompt and brand voice block.
+const GLOBAL_STYLE_RULES = `FORMATTING RULE — applies to all output regardless of module or brand voice: never use the em dash (—) or en dash (–) character anywhere in your output. Use a comma, a period, a colon, or a plain hyphen with spaces instead, whichever reads most naturally in context.`;
+
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
 const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'chat', 'vs-cal', 'vs-gen', 'recognition', 'actionability', 'thread', 'before-after', 'rh-translate']);
 const MODEL_SONNET = 'claude-sonnet-4-6';
@@ -1127,6 +1132,7 @@ router.post('/', requireAuth, async (req, res) => {
     if (brandVoiceBlock) systemBlocks.push({ type: 'text', text: brandVoiceBlock, cache_control: { type: 'ephemeral' } });
     if (restDynamicSystem) systemBlocks.push({ type: 'text', text: restDynamicSystem });
     if (!systemBlocks.length) systemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
+    systemBlocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
     const claudeResp = await callClaude(systemBlocks, userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
     const result = claudeResp.text;
 
@@ -1267,6 +1273,7 @@ router.post('/stream', requireAuth, async (req, res) => {
     if (brandVoiceBlock) streamSystemBlocks.push({ type: 'text', text: brandVoiceBlock, cache_control: { type: 'ephemeral' } });
     if (restDynamicSystem) streamSystemBlocks.push({ type: 'text', text: restDynamicSystem });
     if (!streamSystemBlocks.length) streamSystemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
+    streamSystemBlocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       signal: abortController.signal,
