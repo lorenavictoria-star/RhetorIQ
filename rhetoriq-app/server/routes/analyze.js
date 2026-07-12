@@ -945,7 +945,7 @@ async function callClaude(system, user, maxTokens, model, temperature) {
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2024-07-01',
+      'anthropic-version': '2023-06-01',
       'anthropic-beta': 'prompt-caching-2024-07-31'
     },
     body: JSON.stringify(body)
@@ -1207,7 +1207,7 @@ router.post('/stream', requireAuth, async (req, res) => {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2024-07-01',
+        'anthropic-version': '2023-06-01',
         'anthropic-beta': 'prompt-caching-2024-07-31'
       },
       body: JSON.stringify({
@@ -1345,7 +1345,7 @@ router.post('/chat', requireAuth, async (req, res) => {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2024-07-01',
+        'anthropic-version': '2023-06-01',
         'anthropic-beta': 'prompt-caching-2024-07-31'
       },
       body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 600, system: cfg.system, messages })
