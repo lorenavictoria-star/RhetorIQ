@@ -795,6 +795,7 @@ ht-positioning — Hotel brand positioning
 ht-sales-pitch — Hotel sales pitch
 pr — Performance review / feedback writing
 rw — Recognition Writer
+brief — Formal business letter
 
 If unclear, return: rp
 Return only the key, lowercase, nothing else.`,
@@ -873,6 +874,29 @@ RULES:
     label: 'Recognition Writer',
     system: `You are an expert in leadership communication and recognition culture calibrated to Swiss and European corporate norms. Formulate recognition that: refers to the concrete achievement, is psychologically calibrated to the recipient type, respects European directness (no American motivational kitsch), links the action to the impact on the team or organisation. No "thanks for your great effort". Precise, authentic, effective. In English.`,
     build: (d) => `Recipient type: ${d.type}\nFormat: ${d.format}\n\nConcrete achievement:\n${d.text}`
+  },
+  brief: {
+    label: 'Formal Letter',
+    system: `You are an expert in formal business correspondence calibrated to Swiss and European conventions (DIN 5008 / Swiss business letter norms). Your task is to produce a complete, properly formatted formal letter — not just body text.
+
+CRITICAL: The output MUST always include every one of these elements, in this exact order, even if the user's briefing does not explicitly mention them. If information is missing, construct a plausible, professional placeholder in square brackets (e.g. [Absender-Adresse], [Datum]) rather than omitting the block:
+
+1. ABSENDER (sender block) — name, company/title if given, full address, on separate lines, top left.
+2. ADRESSAT (recipient block) — name, company if given, full address, on separate lines, below the sender block, left-aligned.
+3. ORT UND DATUM (place and date) — right-aligned, e.g. "Zürich, [current or specified date]".
+4. BETREFF (subject line) — one bolded/clear line, no "Betreff:" prefix redundancy if already clear, concise and specific to the matter.
+5. ANREDE (salutation) — correct formal form calibrated to language and recipient (e.g. "Sehr geehrte Frau X" / "Sehr geehrter Herr Y" / "Sehr geehrte Damen und Herren" in German; "Dear Mr./Ms. X" in English). Never use a casual greeting.
+6. BRIEFTEXT (body) — clear paragraph structure: opening/context in the first paragraph, core content and any decisions/requests in the middle, and a closing paragraph with next steps or a courteous close. Formal register throughout — no colloquialisms, no contractions in English, no casual connectors.
+7. GRUSSFORMEL (closing formula) — correct formal closing matched to the salutation (e.g. "Freundliche Grüsse" / "Mit freundlichen Grüssen" in German-Swiss usage — never the German "Mit freundlichen Grüßen" ß spelling, always Swiss ss; "Kind regards" / "Yours sincerely" in English).
+8. UNTERSCHRIFT (signature block) — sender's full name, and title/role if provided, on the final lines.
+
+FORMATTING RULES:
+- No markdown, no asterisks, no hashtags. Plain text only, with clear line breaks between each block exactly as listed above.
+- Detect the language from the briefing and sender/recipient names; write the entire letter in that language (German, French, Italian, or English). Default to German (Swiss orthography: "ss" not "ß") if the language is ambiguous.
+- Match formality to the "Tone" setting provided: standard formal business, very formal (legal/official), or formal-but-warm (existing client relationship) — but never drop below standard formal register regardless of tone setting.
+- Do not invent facts, figures, or commitments beyond what the briefing states. Where a specific decision or number is missing but structurally required, use a bracketed placeholder instead of fabricating it.
+- The letter must be immediately usable and print-ready in structure — a reader should be able to paste it directly into a Word document.`,
+    build: (d) => `Sender (Absender):\n${d.sender||'[not provided — use placeholder]'}\n\nRecipient (Adressat):\n${d.recipient||'[not provided — use placeholder]'}\n\nSubject (Betreff):\n${d.subject||'[derive a concise subject line from the briefing below]'}\n\nTone: ${d.tone||'Formal — standard business letter'}\n\nBriefing / key points to communicate:\n${d.text}`
   }
 };
 
@@ -884,7 +908,7 @@ const MODULE_MAX_TOKENS = {
   'cm-roadshow': 4000, 'cm-equity-story': 3500, 'brand-voice-co': 4000, 'brand-voice-ind': 4000,
   debrief: 3000, 'rh-translate': 3000, 'before-after': 3000,
   // Medium modules
-  'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 2000,
+  'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 2000, brief: 2000,
   crisis: 2500, 'ht-crisis-comm': 2500, 'ht-positioning': 2500,
   'cm-qa-trainer': 2500, 'competitive-check': 2500,
   // Quick modules
