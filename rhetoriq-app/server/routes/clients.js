@@ -216,6 +216,24 @@ router.post('/:id/set-password', requireAdvisor, async (req, res) => {
   }
 });
 
+// POST /api/clients/:id/revoke-access — instantly invalidate every JWT
+// currently held by this client and all of its team members (client_users),
+// without waiting for natural expiry. Use for off-boarding or a suspected leak.
+router.post('/:id/revoke-access', requireAdvisor, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'UPDATE clients SET token_version = token_version + 1 WHERE id=$1 AND advisor_id=$2 RETURNING id',
+      [req.params.id, req.user.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Client not found' });
+    await pool.query('UPDATE client_users SET token_version = token_version + 1 WHERE client_id=$1', [req.params.id]);
+    res.json({ ok: true, message: 'All active sessions for this client have been revoked.' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /api/clients/:id/users — list team members
 router.get('/:id/users', requireAdvisor, async (req, res) => {
   try {

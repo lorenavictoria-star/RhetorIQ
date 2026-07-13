@@ -20,7 +20,7 @@ router.post('/login', async (req, res) => {
     if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name, role: user.role },
+      { id: user.id, email: user.email, name: user.name, role: user.role, tokenVersion: user.token_version },
       process.env.JWT_SECRET,
       { expiresIn: '30d' }
     );
@@ -46,7 +46,7 @@ router.post('/client-login', async (req, res) => {
     if (!client) return res.status(401).json({ error: 'Invalid client token' });
 
     const jwtToken = jwt.sign(
-      { clientId: client.id, clientName: client.name, role: 'client', advisorId: client.advisor_id },
+      { clientId: client.id, clientName: client.name, role: 'client', advisorId: client.advisor_id, tokenVersion: client.token_version },
       process.env.JWT_SECRET,
       { expiresIn: '90d' }
     );
@@ -78,7 +78,7 @@ router.post('/client-password-login', async (req, res) => {
     if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
 
     const jwtToken = jwt.sign(
-      { clientId: client.id, clientName: client.name, role: 'client', advisorId: client.advisor_id, mustChangePassword: !!client.must_change_password },
+      { clientId: client.id, clientName: client.name, role: 'client', advisorId: client.advisor_id, mustChangePassword: !!client.must_change_password, tokenVersion: client.token_version },
       process.env.JWT_SECRET,
       { expiresIn: '90d' }
     );
@@ -116,7 +116,7 @@ router.post('/client-user-login', async (req, res) => {
 
     const jwtToken = jwt.sign(
       { clientId: cu.client_id, clientName: cu.client_name, role: 'client', advisorId: null,
-        clientUserId: cu.id, clientUserName: cu.name, clientUserRole: cu.role },
+        clientUserId: cu.id, clientUserName: cu.name, clientUserRole: cu.role, tokenVersion: cu.token_version },
       process.env.JWT_SECRET,
       { expiresIn: '90d' }
     );
@@ -140,8 +140,10 @@ router.post('/client-change-password', requireAuth, async (req, res) => {
     if (!newPassword || newPassword.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
 
     const hash = await bcrypt.hash(newPassword, 12);
+    // Bump token_version so any other outstanding session for this client is
+    // invalidated the moment the password changes (e.g. after a suspected leak).
     await pool.query(
-      'UPDATE clients SET password_hash = $1, must_change_password = FALSE WHERE id = $2',
+      'UPDATE clients SET password_hash = $1, must_change_password = FALSE, token_version = token_version + 1 WHERE id = $2',
       [hash, req.user.clientId]
     );
 
@@ -151,7 +153,7 @@ router.post('/client-change-password', requireAuth, async (req, res) => {
     );
     const client = rows[0];
     const newToken = jwt.sign(
-      { clientId: client.id, clientName: client.name, role: 'client', advisorId: client.advisor_id, mustChangePassword: false },
+      { clientId: client.id, clientName: client.name, role: 'client', advisorId: client.advisor_id, mustChangePassword: false, tokenVersion: client.token_version },
       process.env.JWT_SECRET,
       { expiresIn: '90d' }
     );
@@ -193,7 +195,7 @@ router.post('/register', async (req, res) => {
     // Mark invite code as used
     await pool.query('UPDATE invite_codes SET used_by=$1, used_at=NOW() WHERE id=$2', [user.id, codeRows[0].id]);
 
-    const token = jwt.sign({ id: user.id, role: 'advisor', name: user.name }, process.env.JWT_SECRET, { expiresIn: '90d' });
+    const token = jwt.sign({ id: user.id, role: 'advisor', name: user.name, tokenVersion: 1 }, process.env.JWT_SECRET, { expiresIn: '90d' });
     res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (e) {
     console.error(e);
@@ -218,5 +220,22 @@ router.post('/invite', requireAuth, async (req, res) => {
   }
 });
 
+// POST /auth/logout-all — invalidate every token issued to the caller
+// (advisor, client, or client team member), not just the current one.
+router.post('/logout-all', requireAuth, async (req, res) => {
+  try {
+    if (req.user.role === 'advisor') {
+      await pool.query('UPDATE users SET token_version = token_version + 1 WHERE id = $1', [req.user.id]);
+    } else if (req.user.clientUserId) {
+      await pool.query('UPDATE client_users SET token_version = token_version + 1 WHERE id = $1', [req.user.clientUserId]);
+    } else {
+      await pool.query('UPDATE clients SET token_version = token_version + 1 WHERE id = $1', [req.user.clientId]);
+    }
+    res.json({ ok: true, message: 'All sessions revoked — you will need to log in again.' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 module.exports = router;

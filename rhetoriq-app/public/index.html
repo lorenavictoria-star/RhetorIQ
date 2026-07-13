@@ -3076,6 +3076,13 @@ async function saveModuleConfig(){
   finally{btn.textContent='Speichern';btn.disabled=false;}
 }
 
+async function revokeClientAccess(cid){
+  if(!confirm('Alle aktiven Sitzungen dieses Klienten (inkl. Team-Mitglieder) sofort beenden? Sie müssten sich neu einloggen.'))return;
+  try{
+    await api('/api/clients/'+cid+'/revoke-access',{method:'POST'});
+    alert('Zugriff für alle aktiven Sitzungen wurde gesperrt.');
+  }catch{alert('Fehler beim Sperren.');}
+}
 async function deleteClient(cid){
   const c=clients.find(x=>x.id==cid);
   const name=c?.name||'this client';
@@ -5084,6 +5091,7 @@ async function loadAdvisorDashboard(){
             <button class="obtn" onclick="navigator.clipboard.writeText(document.getElementById('pay-link-url-${c.id}').value)">Kopieren</button>
           </div>
           <div style="display:flex;gap:6px;margin-top:8px">
+            <button class="obtn" onclick="revokeClientAccess(${c.id})">Zugriff sperren</button>
             <button class="dbtn" onclick="delData(${c.id})">Delete Data</button>
             <button class="dbtn" onclick="deleteClient(${c.id}).then(()=>loadAdvisorDashboard())">Delete Client</button>
           </div>

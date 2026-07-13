@@ -29,6 +29,8 @@ async function init() {
     ALTER TABLE analyses ADD CONSTRAINT analyses_client_id_fkey FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS password_hash TEXT;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT FALSE;
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 1;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 1;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS capital_markets_enabled BOOLEAN DEFAULT FALSE;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS hotel_enabled BOOLEAN DEFAULT FALSE;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS enabled_modules TEXT[];
@@ -113,6 +115,7 @@ async function init() {
       created_at TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(client_id, email)
     );
+    ALTER TABLE client_users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 1;
 
     ALTER TABLE analyses ADD COLUMN IF NOT EXISTS generated_by TEXT;
 

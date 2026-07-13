@@ -81,13 +81,21 @@ wss.on('connection', (ws, req) => {
     if (!ws.isAuthenticated) ws.close(4401, 'Auth timeout');
   }, 5000);
 
-  ws.on('message', (raw) => {
+  ws.on('message', async (raw) => {
     if (!ws.isAuthenticated) {
       // Expect auth handshake as first message
       try {
         const msg = JSON.parse(raw);
         if (msg.type !== 'auth' || !msg.token) { ws.close(4401, 'Unauthorized'); return; }
         const decoded = jwt.verify(msg.token, process.env.JWT_SECRET);
+        // Honor server-side revocation (token_version) here too, so a
+        // revoked client/advisor can't keep receiving live pushes.
+        const table = decoded.role === 'advisor' ? 'users' : (decoded.clientUserId ? 'client_users' : 'clients');
+        const id = decoded.role === 'advisor' ? decoded.id : (decoded.clientUserId || decoded.clientId);
+        const { rows } = await pool.query(`SELECT token_version FROM ${table} WHERE id=$1`, [id]);
+        if (!rows.length || (decoded.tokenVersion || 1) !== rows[0].token_version) {
+          ws.close(4401, 'Unauthorized'); return;
+        }
         ws.userId = String(decoded.id || decoded.clientId);
         ws.isAuthenticated = true;
         clearTimeout(authTimeout);

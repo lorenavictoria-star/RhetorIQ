@@ -55,14 +55,16 @@ router.post('/complete', async (req, res) => {
     if (new Date(row.expires_at) < new Date()) return res.status(410).json({ error: 'Dieser Link ist abgelaufen.' });
 
     const hash = await bcrypt.hash(password, 12);
-    await pool.query(
-      'UPDATE clients SET password_hash = $1, must_change_password = FALSE WHERE id = $2',
+    // Bump token_version too — invalidates any stray earlier session for this
+    // client the moment they take ownership of the account via this link.
+    const { rows: updated } = await pool.query(
+      'UPDATE clients SET password_hash = $1, must_change_password = FALSE, token_version = token_version + 1 WHERE id = $2 RETURNING token_version',
       [hash, row.client_id]
     );
     await pool.query('UPDATE onboarding_tokens SET used_at = NOW() WHERE id = $1', [row.token_id]);
 
     const jwtToken = jwt.sign(
-      { clientId: row.client_id, clientName: row.client_name, role: 'client', advisorId: null },
+      { clientId: row.client_id, clientName: row.client_name, role: 'client', advisorId: null, tokenVersion: updated[0].token_version },
       process.env.JWT_SECRET,
       { expiresIn: '90d' }
     );
