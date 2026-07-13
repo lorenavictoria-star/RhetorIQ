@@ -1491,7 +1491,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Anbieterin</div>
         <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
-          Lorena Alienhard<br>
+          Lorena Lienhard<br>
           Einzelunternehmen<br>
           Schweiz<br>
           Adresse auf Anfrage
@@ -1505,7 +1505,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Verantwortlich für den Inhalt</div>
         <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
-          Lorena Alienhard
+          Lorena Lienhard
         </p>
 
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Haftungsausschluss</div>
@@ -1525,7 +1525,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Verantwortliche Stelle</div>
         <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
-          Lorena Alienhard, Einzelunternehmen, Schweiz<br>
+          Lorena Lienhard, Einzelunternehmen, Schweiz<br>
           E-Mail: <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a>
         </p>
 
@@ -1586,11 +1586,11 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div class="page-title">Allgemeine Geschäftsbedingungen</div>
       <div style="max-width:620px;padding-bottom:40px">
 
-        <p style="font-size:14px;line-height:1.7;color:var(--mu);margin:4px 0 20px">Lorena Alienhard · RhetorIQ · Stand: Juli 2025</p>
+        <p style="font-size:14px;line-height:1.7;color:var(--mu);margin:4px 0 20px">Lorena Lienhard · RhetorIQ · Stand: Juli 2025</p>
 
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">1. Leistungsbeschreibung</div>
         <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
-          RhetorIQ ist eine KI-gestützte SaaS-Plattform für Kommunikations-Coaching, betrieben von Lorena Alienhard (Einzelunternehmen, Schweiz). Die Plattform unterstützt Nutzerinnen und Nutzer bei der Vorbereitung und Optimierung beruflicher Kommunikation mittels künstlicher Intelligenz. Die KI-generierten Inhalte dienen als Arbeitshilfe und ersetzen kein professionelles Beratungsmandat.
+          RhetorIQ ist eine KI-gestützte SaaS-Plattform für Kommunikations-Coaching, betrieben von Lorena Lienhard (Einzelunternehmen, Schweiz). Die Plattform unterstützt Nutzerinnen und Nutzer bei der Vorbereitung und Optimierung beruflicher Kommunikation mittels künstlicher Intelligenz. Die KI-generierten Inhalte dienen als Arbeitshilfe und ersetzen kein professionelles Beratungsmandat.
         </p>
 
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">2. Nutzungsberechtigung</div>
@@ -1610,7 +1610,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">5. Haftungsbeschränkung</div>
         <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
-          Es wird keine Garantie für bestimmte Kommunikationsergebnisse oder die inhaltliche Korrektheit der KI-Ausgaben übernommen. Die Haftung von Lorena Alienhard ist, soweit gesetzlich zulässig, auf direkte Schäden bis zur Höhe der im betreffenden Monat geleisteten Zahlung beschränkt. Für indirekte Schäden, entgangenen Gewinn oder Folgeschäden wird nicht gehaftet.
+          Es wird keine Garantie für bestimmte Kommunikationsergebnisse oder die inhaltliche Korrektheit der KI-Ausgaben übernommen. Die Haftung von Lorena Lienhard ist, soweit gesetzlich zulässig, auf direkte Schäden bis zur Höhe der im betreffenden Monat geleisteten Zahlung beschränkt. Für indirekte Schäden, entgangenen Gewinn oder Folgeschäden wird nicht gehaftet.
         </p>
 
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">6. Datenschutz</div>
@@ -4073,6 +4073,11 @@ async function suggestBriefSubject(briefingFieldId,subjectFieldId){
   },200);
 }
 function goModule(name,prefill){
+  // vs-gen/vs-cal have no standalone MDEFS entry — they're surfaced through
+  // the Text Generator instead. Without this remap, clicking these module
+  // tiles anywhere in the app (module list, quick-access, recent-modules
+  // panel, command palette) silently does nothing.
+  if(name==='vs-gen'||name==='vs-cal')name='text-gen';
   window._currentModule=name;window._currentTgTile=null;
   const def=getMdefLang(name,MDEFS[name]);if(!def)return;
   trackModuleUse(name,def.title||name);
