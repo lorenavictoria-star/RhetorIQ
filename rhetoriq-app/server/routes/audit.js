@@ -31,7 +31,7 @@ router.get('/:clientId', requireAuth, requireAdvisor, async (req, res) => {
     res.json(rows);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -72,7 +72,8 @@ router.get('/:clientId/export', requireAuth, requireAdvisor, async (req, res) =>
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send('﻿' + csv);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

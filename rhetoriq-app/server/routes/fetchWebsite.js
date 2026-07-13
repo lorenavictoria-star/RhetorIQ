@@ -37,7 +37,8 @@ router.post('/', requireAuth, async (req, res) => {
 
     res.json({ text, chars: text.length });
   } catch (e) {
-    res.status(500).json({ error: e.message || 'Could not fetch website' });
+    console.error(e);
+    res.status(500).json({ error: 'Could not fetch website' });
   }
 });
 

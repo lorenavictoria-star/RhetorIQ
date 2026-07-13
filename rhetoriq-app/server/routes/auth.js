@@ -12,16 +12,6 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
-    // EMERGENCY: hardcoded fallback
-    if (email === 'contact@lorenalienhard.ch' && password === 'EmergencyReset2025!') {
-      const token = jwt.sign(
-        { id: 1, email, role: 'advisor', name: 'Lorena' },
-        process.env.JWT_SECRET,
-        { expiresIn: '30d' }
-      );
-      return res.json({ token, user: { id: 1, name: 'Lorena', email, role: 'advisor' } });
-    }
-
     const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
     const user = rows[0];
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
@@ -223,27 +213,10 @@ router.post('/invite', requireAuth, async (req, res) => {
     );
     res.json({ code, expiresIn: '7 days' });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-
-// Emergency login — temporary for account recovery
-// Change password immediately after login
-router.post('/emergency-login', async (req, res) => {
-  const { email, password } = req.body;
-  if (email === 'contact@lorenalienhard.ch' && password === 'EmergencyReset2025!') {
-    try {
-      const token = require('jsonwebtoken').sign(
-        { id: 1, email, role: 'advisor', name: 'Lorena' },
-        process.env.JWT_SECRET
-      );
-      return res.json({ token, user: { id: 1, email, role: 'advisor', name: 'Lorena' } });
-    } catch (err) {
-      return res.status(500).json({ error: err.message });
-    }
-  }
-  res.status(401).json({ error: 'Invalid credentials' });
-});
 
 module.exports = router;

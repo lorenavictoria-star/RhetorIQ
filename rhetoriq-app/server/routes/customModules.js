@@ -83,7 +83,8 @@ Rules:
     const modules = JSON.parse(json);
     res.json({ modules });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -98,7 +99,8 @@ router.get('/', requireAuth, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -115,7 +117,8 @@ router.post('/', requireAuth, async (req, res) => {
     );
     res.json(rows[0]);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -132,7 +135,8 @@ router.put('/:id', requireAuth, async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -143,7 +147,8 @@ router.delete('/:id', requireAuth, async (req, res) => {
     await pool.query('DELETE FROM custom_modules WHERE id=$1 AND advisor_id=$2', [req.params.id, req.user.id]);
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -182,7 +187,8 @@ router.post('/:id/run', requireAuth, async (req, res) => {
     const result = await callClaude(systemPrompt, userMsg || 'Please proceed.');
     res.json({ result });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

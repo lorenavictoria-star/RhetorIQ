@@ -19,7 +19,8 @@ router.get('/sender-address', requireAdvisor, async (req, res) => {
     const { rows } = await pool.query('SELECT sender_address FROM users WHERE id=$1', [req.user.id]);
     res.json({ senderAddress: rows[0]?.sender_address || '' });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -30,7 +31,8 @@ router.put('/sender-address', requireAdvisor, async (req, res) => {
     await pool.query('UPDATE users SET sender_address=$1 WHERE id=$2', [senderAddress || '', req.user.id]);
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -77,7 +79,8 @@ router.get('/dashboard', requireAdvisor, async (req, res) => {
       recent: recentRes.rows
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -93,7 +96,8 @@ router.get('/timeline/:clientId', requireAdvisor, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -129,7 +133,8 @@ router.get('/costs', requireAdvisor, async (req, res) => {
 
     res.json({ days, rows, total_usd: total.toFixed(4) });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

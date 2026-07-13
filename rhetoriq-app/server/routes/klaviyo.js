@@ -28,7 +28,8 @@ router.get('/templates', requireAdvisor, async (req, res) => {
     }));
     res.json({ templates });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -63,7 +64,8 @@ router.post('/draft', requireAdvisor, async (req, res) => {
     }
     res.json({ ok: true, templateId: d.data?.id, templateName: name });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

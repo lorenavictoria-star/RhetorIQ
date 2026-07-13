@@ -1,11 +1,19 @@
 require('dotenv').config();
 
-// FIX 10: Startup validation of required env vars
-const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'ANTHROPIC_API_KEY'];
+// Startup validation of required env vars
+const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'ANTHROPIC_API_KEY', 'ADVISOR_EMAIL', 'ADVISOR_PASSWORD'];
 const missing = REQUIRED_ENV.filter(k => !process.env[k]);
 if (missing.length) {
   console.error('FATAL: Missing required environment variables:', missing.join(', '));
   process.exit(1);
+}
+
+// Optional but strongly recommended — warn (don't crash) if unset, since
+// payments/monitoring degrade gracefully but silently without them.
+const RECOMMENDED_ENV = ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'SENTRY_DSN'];
+const missingRecommended = RECOMMENDED_ENV.filter(k => !process.env[k]);
+if (missingRecommended.length) {
+  console.warn('WARNING: Missing recommended environment variables (feature will be disabled):', missingRecommended.join(', '));
 }
 
 const Sentry = require('@sentry/node');
@@ -134,8 +142,8 @@ app.use(express.json({ limit: '2mb' }));
 
 // Structured request logging: timestamp · method · path · status · duration
 app.use(morgan(':date[iso] :method :url :status :res[content-length]b :response-time ms'));
-// FIX 11: helmet security headers (npm install helmet if not yet installed)
-try { app.use(require('helmet')()); } catch { console.warn('helmet not installed — run: npm install helmet'); }
+// Security headers
+app.use(require('helmet')());
 
 // ── Rate Limiting ─────────────────────────────────────────────
 // General API: 200 requests / 15 min per IP

@@ -167,7 +167,8 @@ router.get('/export', requireAdvisor, async (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename="rhetoriq-clients.csv"');
     res.send('﻿' + csv);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -193,7 +194,7 @@ router.post('/:id/send-token', requireAdvisor, async (req, res) => {
     res.json({ ok: true, sentTo: to });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -210,7 +211,8 @@ router.post('/:id/set-password', requireAdvisor, async (req, res) => {
     await pool.query(q, updates);
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -224,7 +226,7 @@ router.get('/:id/users', requireAdvisor, async (req, res) => {
       [req.params.id]
     );
     res.json(rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // POST /api/clients/:id/users — add team member
@@ -241,7 +243,7 @@ router.post('/:id/users', requireAdvisor, async (req, res) => {
       [req.params.id, email.toLowerCase(), name, hash, role]
     );
     res.status(201).json(rows[0]);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // DELETE /api/clients/:clientId/users/:userId — remove team member
@@ -251,7 +253,7 @@ router.delete('/:id/users/:userId', requireAdvisor, async (req, res) => {
     if (!clientRows[0]) return res.status(404).json({ error: 'Not found' });
     await pool.query('DELETE FROM client_users WHERE id=$1 AND client_id=$2', [req.params.userId, req.params.id]);
     res.json({ ok: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // DELETE /api/clients/:id
@@ -275,7 +277,8 @@ router.put('/:id/address', requireAdvisor, async (req, res) => {
     if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
     res.json({ address: rows[0].address });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -288,7 +291,8 @@ router.put('/:id/capital-markets-toggle', requireAdvisor, async (req, res) => {
     if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
     res.json({ capital_markets_enabled: rows[0].capital_markets_enabled });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -316,7 +320,8 @@ router.get('/:id/cm-status', requireAuth, async (req, res) => {
       enabled_modules: rows[0].enabled_modules || null
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -332,7 +337,8 @@ router.put('/:id/modules-config', requireAdvisor, async (req, res) => {
     if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
     res.json({ enabled_modules: rows[0].enabled_modules });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -346,7 +352,8 @@ router.put('/:id/hotel-toggle', requireAdvisor, async (req, res) => {
     if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
     res.json({ hotel_enabled: rows[0].hotel_enabled });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

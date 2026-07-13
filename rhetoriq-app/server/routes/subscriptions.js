@@ -21,6 +21,29 @@ async function ensureColumn() {
   migrationDone = true;
 }
 
+// ── GET /api/subscriptions/prices ──────────────────────────────
+// Lists active Stripe Prices so the advisor can pick one from a dropdown
+// instead of typing a raw Price ID.
+router.get('/prices', requireAdvisor, async (req, res) => {
+  try {
+    const stripe = getStripe();
+    const prices = await stripe.prices.list({ active: true, limit: 50, expand: ['data.product'] });
+    const list = prices.data
+      .filter(p => p.product && p.product.active !== false)
+      .map(p => ({
+        id: p.id,
+        productName: p.product.name,
+        amount: p.unit_amount,
+        currency: p.currency,
+        recurring: p.recurring ? p.recurring.interval : null,
+      }));
+    res.json(list);
+  } catch (e) {
+    console.error('[stripe] list prices error:', e.message);
+    res.status(500).json({ error: 'Could not load Stripe prices' });
+  }
+});
+
 // ── POST /api/subscriptions/create-payment-link/:clientId ─────
 // Advisor creates a Stripe Payment Link for a client.
 router.post('/create-payment-link/:clientId', requireAdvisor, async (req, res) => {
@@ -46,7 +69,7 @@ router.post('/create-payment-link/:clientId', requireAdvisor, async (req, res) =
     res.json({ url: link.url });
   } catch (e) {
     console.error('[stripe] create-payment-link error:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -62,7 +85,8 @@ router.get('/status/:clientId', requireAdvisor, async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Client not found' });
     res.json({ subscription_status: rows[0].subscription_status || 'trial' });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -78,7 +102,8 @@ router.post('/mark-active/:clientId', requireAdvisor, async (req, res) => {
     );
     res.json({ ok: true, subscription_status: 'active' });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -131,7 +156,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     res.json({ received: true });
   } catch (e) {
     console.error('[stripe] webhook handler error:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -148,7 +173,8 @@ router.get('/', requireAuth, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -167,7 +193,8 @@ router.post('/', requireAuth, async (req, res) => {
     );
     res.json(rows[0]);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -188,7 +215,8 @@ router.get('/due', requireAuth, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -202,7 +230,8 @@ router.post('/mark-sent', requireAuth, async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

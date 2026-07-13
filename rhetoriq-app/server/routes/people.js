@@ -21,7 +21,8 @@ router.get('/', requireAuth, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -37,7 +38,8 @@ router.post('/', requireAuth, async (req, res) => {
     );
     res.json({ ...rows[0], profiles: [] });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -52,7 +54,8 @@ router.put('/:id', requireAuth, async (req, res) => {
     );
     res.json(rows[0]);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -62,7 +65,8 @@ router.delete('/:id', requireAuth, async (req, res) => {
     await pool.query('DELETE FROM people WHERE id=$1', [req.params.id]);
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -80,7 +84,8 @@ router.post('/:id/profile', requireAuth, async (req, res) => {
     );
     res.json(rows[0]);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -93,7 +98,8 @@ router.delete('/:id/profile/:type', requireAuth, async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

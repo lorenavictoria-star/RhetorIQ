@@ -32,7 +32,8 @@ router.get('/:clientId', requireAuth, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -46,7 +47,8 @@ router.get('/:clientId/:type/history', requireAuth, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -82,7 +84,8 @@ router.post('/:clientId/:type/rollback/:historyId', requireAuth, async (req, res
     );
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -114,7 +117,8 @@ router.put('/:clientId/:type', requireAuth, async (req, res) => {
     );
     res.json(rows[0]);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -128,7 +132,8 @@ router.delete('/:clientId', requireAuth, async (req, res) => {
     );
     res.json({ deleted: rowCount });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

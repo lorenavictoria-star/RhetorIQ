@@ -99,7 +99,7 @@ Nur die Anweisung selbst, kein Intro, kein Outro. Auf Deutsch.`;
     res.json({ suggestion: data.content?.[0]?.text?.trim() || '' });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -173,7 +173,7 @@ Return ONLY valid JSON array, no other text.`;
     res.json({ ok: true, count: results.length });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

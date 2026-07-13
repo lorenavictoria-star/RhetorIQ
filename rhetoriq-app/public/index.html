@@ -1493,14 +1493,17 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
           Lorena Lienhard<br>
           Einzelunternehmen<br>
-          Schweiz<br>
-          Adresse auf Anfrage
+          Dorfstrasse 87<br>
+          8706 Meilen<br>
+          Schweiz
         </p>
 
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Kontakt</div>
         <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
           E-Mail: <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a><br>
-          Website: <a href="https://rhetoriq.ch" style="color:var(--tx);font-weight:600">rhetoriq.ch</a>
+          Telefon: <a href="tel:+41799573976" style="color:var(--tx);font-weight:600">079 957 39 76</a><br>
+          Website: <a href="https://rhetoriq.ch" style="color:var(--tx);font-weight:600">rhetoriq.ch</a><br>
+          LinkedIn: Lorena Victoria Lienhard
         </p>
 
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Verantwortlich für den Inhalt</div>
@@ -5098,7 +5101,41 @@ async function loadAdvisorDashboard(){
 }
 
 async function sendPaymentLink(clientId, btn) {
-  const priceId = prompt('Stripe Price ID (z.B. price_xxx):');
+  let prices = [];
+  try {
+    const r = await api('/api/subscriptions/prices');
+    prices = await r.json();
+  } catch { prices = []; }
+
+  let priceId;
+  if (prices.length) {
+    const ov = document.createElement('div');
+    ov.className = 'ov';
+    ov.id = 'price-pick-ov';
+    const options = prices.map(p => {
+      const amount = p.amount != null ? (p.amount / 100).toFixed(2) + ' ' + p.currency.toUpperCase() : '';
+      const label = `${safeText(p.productName)} — ${amount}${p.recurring ? ' / ' + p.recurring : ''}`;
+      return `<option value="${p.id}">${label}</option>`;
+    }).join('');
+    ov.innerHTML = `<div class="modal" style="max-width:420px">
+      <div style="font-size:16px;font-weight:600;margin-bottom:12px">Stripe-Preis wählen</div>
+      <select id="price-pick-select" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;margin-bottom:16px;font-size:14px;background:var(--bg);color:var(--tx);box-sizing:border-box">${options}</select>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="document.getElementById('price-pick-ov').remove()" style="padding:10px 16px;border:1px solid var(--bd);border-radius:8px;background:transparent;color:var(--tx);cursor:pointer;font-family:'Instrument Sans',sans-serif">Abbrechen</button>
+        <button id="price-pick-confirm" style="padding:10px 16px;border:none;border-radius:8px;background:var(--ac);color:#fff;cursor:pointer;font-weight:600;font-family:'Instrument Sans',sans-serif">Link erstellen</button>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    priceId = await new Promise(resolve => {
+      document.getElementById('price-pick-confirm').onclick = () => {
+        const val = document.getElementById('price-pick-select').value;
+        ov.remove();
+        resolve(val);
+      };
+    });
+  } else {
+    priceId = prompt('Keine Stripe-Preise gefunden. Stripe Price ID manuell eingeben (z.B. price_xxx):');
+  }
   if (!priceId) return;
   btn.disabled = true;
   btn.textContent = '…';
@@ -5904,8 +5941,16 @@ async function completeSetup(t) {
     if (!r.ok) { err.textContent = d.error || 'Fehler.'; err.style.display='block'; btn.textContent='Passwort setzen & einloggen'; btn.disabled=false; return; }
     document.getElementById('setup-form').style.display = 'none';
     document.getElementById('setup-done').style.display = 'block';
-    // Remove token from URL, redirect to clean login after 2s
-    setTimeout(() => { window.location.href = '/'; }, 2000);
+    // Log the client straight in with the token just issued, then clean the URL
+    token = d.token;
+    localStorage.setItem('riq-token', token);
+    setTimeout(() => {
+      window.history.replaceState({}, '', '/');
+      document.getElementById('setup-ov')?.remove();
+      const loginWrap = document.querySelector('.login-wrap');
+      if (loginWrap) loginWrap.style.display = '';
+      boot(d.client, 'client');
+    }, 1200);
   } catch(e) {
     err.textContent = 'Verbindungsfehler. Bitte erneut versuchen.'; err.style.display='block';
     btn.textContent='Passwort setzen & einloggen'; btn.disabled=false;

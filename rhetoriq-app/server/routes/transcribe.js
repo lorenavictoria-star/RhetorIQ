@@ -38,7 +38,7 @@ router.post('/', requireAuth, upload.single('file'), async (req, res) => {
     res.json({ jobId: job.id });
   } catch (e) {
     console.error('Transcribe submit error:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -51,7 +51,8 @@ router.get('/:jobId', requireAuth, async (req, res) => {
     if (result.status === 'error') return res.json({ status: 'error', error: result.error });
     res.json({ status: result.status });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

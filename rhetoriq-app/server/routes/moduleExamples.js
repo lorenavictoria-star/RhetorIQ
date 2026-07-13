@@ -15,7 +15,7 @@ router.get('/summary', requireAdvisor, async (req, res) => {
       [req.user.id]
     );
     res.json(rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // GET /api/module-examples?moduleKey=xxx  (omit moduleKey for all)
@@ -28,7 +28,7 @@ router.get('/', requireAdvisor, async (req, res) => {
     q += ' ORDER BY module_key, rating DESC, created_at DESC';
     const { rows } = await pool.query(q, params);
     res.json(rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // POST /api/module-examples
@@ -42,7 +42,7 @@ router.post('/', requireAdvisor, async (req, res) => {
       [req.user.id, module_key, label || null, industry_tag || null, input_text, output_text, rating]
     );
     res.status(201).json(rows[0]);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // POST /api/module-examples/auto-import/:clientId — silent background import (idempotent)
@@ -85,7 +85,7 @@ router.post('/auto-import/:clientId', requireAdvisor, async (req, res) => {
       [clientId]
     );
     res.json({ imported, clientName: client.name });
-  } catch (e) { console.error(e); res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // POST /api/module-examples/import-client — bulk import analyses from a client
@@ -154,7 +154,7 @@ router.post('/import-client', requireAdvisor, async (req, res) => {
     res.json({ imported, clientName: client.name });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -167,7 +167,7 @@ router.put('/:id/rating', requireAdvisor, async (req, res) => {
       [rating, req.params.id, req.user.id]
     );
     res.json({ ok: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // DELETE /api/module-examples/:id
@@ -175,7 +175,7 @@ router.delete('/:id', requireAdvisor, async (req, res) => {
   try {
     await pool.query('DELETE FROM module_examples WHERE id=$1 AND advisor_id=$2', [req.params.id, req.user.id]);
     res.json({ ok: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 module.exports = router;

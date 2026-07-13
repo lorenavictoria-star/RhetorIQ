@@ -25,7 +25,8 @@ router.post('/', auth, async (req, res) => {
     req.app.locals.wss.broadcast({ type: 'review_new', id: rows[0].id });
     res.json(rows[0]);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -37,7 +38,8 @@ router.get('/', auth, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -62,7 +64,8 @@ router.put('/:id', auth, async (req, res) => {
     });
     res.json(rows[0]);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
