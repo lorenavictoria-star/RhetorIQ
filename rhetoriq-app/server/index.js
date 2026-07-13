@@ -150,8 +150,13 @@ app.use(express.json({ limit: '2mb' }));
 
 // Structured request logging: timestamp · method · path · status · duration
 app.use(morgan(':date[iso] :method :url :status :res[content-length]b :response-time ms'));
-// Security headers
-app.use(require('helmet')());
+// Security headers. CSP is disabled: the frontend is a single-file app that
+// relies on one large inline <script> block and inline onclick="" handlers
+// throughout — helmet's default Content-Security-Policy (script-src 'self',
+// script-src-attr 'none') silently blocks all of that, breaking the entire
+// app including login. The other helmet protections (X-Frame-Options,
+// X-Content-Type-Options, HSTS, etc.) still apply.
+app.use(require('helmet')({ contentSecurityPolicy: false }));
 
 // ── Rate Limiting ─────────────────────────────────────────────
 // General API: 200 requests / 15 min per IP
