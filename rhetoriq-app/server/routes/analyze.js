@@ -1059,7 +1059,9 @@ const DEFAULT_MAX_TOKENS = 2000;
 // Global formatting rule applied to every generated output, regardless of
 // module, client, or brand voice. Appended last (highest instruction priority)
 // after the module system prompt and brand voice block.
-const GLOBAL_STYLE_RULES = `FORMATTING RULE — applies to all output regardless of module or brand voice: never use the em dash (—) or en dash (–) character anywhere in your output. Use a comma, a period, a colon, or a plain hyphen with spaces instead, whichever reads most naturally in context.`;
+const GLOBAL_STYLE_RULES = `FORMATTING RULES — apply to all output regardless of module or brand voice, and override any conflicting or absent instruction earlier in this prompt:
+1. Never use the em dash (—) or en dash (–) character anywhere in your output, including in headings and titles. Use a comma, a period, a colon, or a plain hyphen with spaces instead — whichever reads most naturally in context. Check your output before finishing and remove any em dash or en dash you find.
+2. No markdown syntax of any kind: no hashtags (#, ##) for headings, no asterisks (** or *) for bold/italic, no markdown tables, no horizontal rule lines (---), no backticks. Section headings are plain text in ALL CAPS followed by a colon. Bullet points use a plain hyphen (-) followed by a space, never an asterisk. The output is rendered as plain text — any markdown syntax will display literally as stray symbols to the reader.`;
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
 const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'chat', 'vs-cal', 'vs-gen', 'recognition', 'actionability', 'thread', 'before-after', 'rh-translate']);
