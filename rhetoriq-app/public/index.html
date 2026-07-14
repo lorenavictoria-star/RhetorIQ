@@ -1889,6 +1889,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <script>
 if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -2179,6 +2180,47 @@ pre{font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:pre-wrap;lin
   a.href=url;a.download=(title||'RhetorIQ').replace(/[^a-z0-9äöüÄÖÜ\s]/gi,'_').trim()+'.doc';
   document.body.appendChild(a);a.click();
   setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},100);
+}
+
+// ── PRESENTATION → PowerPoint export ────────────────────────────
+function parsePresentationText(text){
+  const blocks=text.split(/\n(?=FOLIE\s*\d+\s*[—-])/i);
+  const slides=[];
+  blocks.forEach(block=>{
+    const m=block.match(/^FOLIE\s*\d+\s*[—-]\s*(.+)/i);
+    if(!m)return;
+    const title=m[1].trim();
+    const inhaltM=block.match(/INHALT:\s*([\s\S]*?)(?=SPRECHERTEXT:|$)/i);
+    const sprechM=block.match(/SPRECHERTEXT:\s*([\s\S]*)/i);
+    const bullets=inhaltM?inhaltM[1].split('\n').map(l=>l.replace(/^[-•]\s*/,'').trim()).filter(Boolean):[];
+    const notes=sprechM?sprechM[1].trim():'';
+    slides.push({title,bullets,notes});
+  });
+  return slides;
+}
+async function exportPptx(bodyId){
+  const text=document.getElementById(bodyId)?.textContent?.trim();
+  if(!text)return alert('Kein Ergebnis zum Exportieren vorhanden.');
+  if(typeof PptxGenJS==='undefined')return alert('PowerPoint-Bibliothek konnte nicht geladen werden. Bitte Seite neu laden und erneut versuchen.');
+  const slides=parsePresentationText(text);
+  if(!slides.length)return alert('Konnte keine Folien im generierten Text erkennen. Bitte zuerst eine Präsentation generieren.');
+  const pptx=new PptxGenJS();
+  pptx.defineLayout({name:'RIQ',width:10,height:5.63});
+  pptx.layout='RIQ';
+  slides.forEach((s,i)=>{
+    const slide=pptx.addSlide();
+    if(i===0){
+      slide.background={color:'1A3D2E'};
+      slide.addText(s.title,{x:0.5,y:2,w:9,h:1.5,fontSize:36,bold:true,color:'FFFFFF',align:'center',fontFace:'Arial'});
+      if(s.bullets.length)slide.addText(s.bullets.join('\n'),{x:0.5,y:3.5,w:9,h:1,fontSize:16,color:'CBD5C0',align:'center',fontFace:'Arial'});
+    }else{
+      slide.addText(s.title,{x:0.5,y:0.3,w:9,h:0.8,fontSize:26,bold:true,color:'1A3D2E',fontFace:'Arial'});
+      if(s.bullets.length)slide.addText(s.bullets.map(b=>({text:b,options:{bullet:true,breakLine:true}})),{x:0.6,y:1.3,w:8.8,h:3.8,fontSize:18,color:'222222',fontFace:'Arial',valign:'top'});
+    }
+    if(s.notes)slide.addNotes(s.notes);
+  });
+  const fname=(slides[0].title||'Praesentation').replace(/[^a-zA-Z0-9äöüÄÖÜ \-]/g,'').trim().slice(0,60)||'Praesentation';
+  await pptx.writeFile({fileName:fname+'.pptx'});
 }
 
 // Auto-inject Word + Send-to-Advisor buttons into every result box when visible
@@ -3929,6 +3971,7 @@ const MDEFS={
   'before-after':{title:'Before / After',desc:'Paste any text. Get a diagnosis of what is weak, a fully improved version, and a clear explanation of every change made.',mf:'ba-in',ph:'Paste the original text here — email, statement, announcement, speech section, LinkedIn post...',api:'before-after',fields:[{id:'ba-goal',type:'sel',lbl:'Improvement Goal',opts:['General improvement','More clarity & directness','More authority & presence','Warmer & more human','Stronger argumentation','Shorter & sharper']},{id:'ba-aud',type:'text',lbl:'Target Audience',ph:'e.g. Employees, investors, media'},{id:'ba-tone',type:'sel',lbl:'Tone Target',opts:['Keep existing tone','More formal','More conversational','Swiss / European — understated','International executive']}]},
   'competitive-check':{title:'Competitive Message Check',desc:'Paste your key messages. Get a similarity score vs. your industry, a list of what makes you sound generic, and a rewrite that actually differentiates.',mf:'cc-in',ph:'Paste your 3–5 key messages or positioning statements here.',api:'competitive-check',mh:'120px',fields:[{id:'cc-industry',type:'sel',lbl:'Industry',opts:['Financial Services','Industry / Manufacturing','Tech / SaaS','Healthcare','Education','Public Sector','Consulting','Other']},{id:'cc-company',type:'text',lbl:'Company / Brand',ph:'e.g. Acme AG'},{id:'cc-aud',type:'text',lbl:'Target Audience',ph:'e.g. B2B clients, investors, talent market'}]},
   'pre-meeting':{title:'Meeting Prep',desc:'Meeting in 1 hour? Get a complete brief: the 3 hardest moments, your opening line, key messages, what not to say, and a stakeholder map.',api:'pre-meeting',special:'premeeting'},
+  'presentation':{title:'Präsentation & Vortrag',desc:'Kompletter Vortrag: der genaue Sprechertext für jede Folie UND eine fertige PowerPoint zum direkten Download.',mf:'pres-in',ph:'Kernpunkte, Zahlen, Fakten, bestehende Notizen, die eingebaut werden sollen...',api:'presentation',mh:'160px',pptx:true,fields:[{id:'pres-topic',type:'text',lbl:'Thema / Titel',ph:'z.B. Digitalisierung im Schweizer Mittelstand'},{id:'pres-occasion',type:'text',lbl:'Anlass',ph:'z.B. Branchenkonferenz, interner Kickoff, Investor Pitch'},{id:'pres-audience',type:'text',lbl:'Zielpublikum',ph:'z.B. 50 KMU-Geschäftsführer, Fachpublikum, Investoren'},{id:'pres-duration',type:'sel',lbl:'Redezeit',opts:['5 Minuten','10 Minuten','15 Minuten','20 Minuten','30 Minuten','45 Minuten','60 Minuten']},{id:'pres-goal',type:'text',lbl:'Kernbotschaft / Ziel des Vortrags',ph:'z.B. Überzeugen, in unsere Lösung zu investieren'}]},
   'arg-reaction':{title:'Argument / Reaction Preview',desc:'Three tools in one: get the hardest pushback, simulate how stakeholders will react, and check if the leadership message matches company reality.',api:'arg-reaction',special:'argreaction'},
   // ── CAPITAL MARKETS SUITE ─────────────────────────────────────
   'cm-qa-trainer':{title:'Analyst Q&A Trainer',desc:'Generate 10–50 realistic analyst questions based on your company profile and recent events. Train responses, spot traps, build confidence before every earnings call or capital markets day.',api:'cm-qa-trainer',tpl:true,fields:[{id:'cm-qa-company',type:'text',lbl:'Company / Ticker',ph:'e.g. Sensirion AG / SENS'},{id:'cm-qa-sector',type:'text',lbl:'Sector',ph:'e.g. Semiconductor sensors, life science'},{id:'cm-qa-context',type:'text',lbl:'Recent event / context',ph:'e.g. Q3 earnings, profit warning, IPO roadshow'},{id:'cm-qa-difficulty',type:'sel',lbl:'Difficulty',opts:['Standard — professional','Critical — aggressive questioning','Worst-Case — maximum pressure']},{id:'cm-qa-focus',type:'sel',lbl:'Focus area',opts:['All areas','Guidance & outlook','Margin & cost structure','Capital allocation','Strategy & competition','ESG & governance']}],mf:'cm-qa-text',ph:'Paste key metrics, guidance, recent results, or prepared remarks.',mh:'220px'},
@@ -4267,7 +4310,7 @@ function buildForm(name,def,prefill,form){
   const others=def.fields.filter(f=>f.type!=='ta');
   if(others.length){h+=`<div class="row2">`;others.forEach(f=>{if(f.type==='text')h+=`<div class="fg2"><label class="fl2">${f.lbl}</label><input type="text" id="${f.id}" placeholder="${f.ph||''}"></div>`;else h+=`<div class="fg2"><label class="fl2">${f.lbl}</label><select id="${f.id}">${f.opts.map(o=>`<option>${o}</option>`).join('')}</select></div>`;});h+=`</div>`;}
   h+=`<button class="runbtn${def.alert?' crisis-btn':''}" onclick="runMod('${name}')">${def.alert?`&#128308; ${tl.form_run}`:tl.form_run}</button>`;
-  h+=`<div class="rbox" id="${name}-r"><div class="rhead"><span class="rlbl">${tl.form_result}</span><div class="rbtns"><button class="cpbtn" onclick="cp('${name}-b')">${tl.btn_copy}</button>${def.people&&people.length?`<button class="svbtn" onclick="saveResultToPerson('${name}-b','${def.api}')">${tl.btn_save_memory}</button>`:''}</div></div><div class="rbody" id="${name}-b"></div></div>`;
+  h+=`<div class="rbox" id="${name}-r"><div class="rhead"><span class="rlbl">${tl.form_result}</span><div class="rbtns"><button class="cpbtn" onclick="cp('${name}-b')">${tl.btn_copy}</button>${def.people&&people.length?`<button class="svbtn" onclick="saveResultToPerson('${name}-b','${def.api}')">${tl.btn_save_memory}</button>`:''}${def.pptx?`<button class="pptxbtn" style="background:#fff4e6;border-color:#ffd8a8;color:#e8590c;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer" onclick="exportPptx('${name}-b')">→ PowerPoint</button>`:''}</div></div><div class="rbody" id="${name}-b"></div></div>`;
   form.innerHTML=h;
   if(prefill){const ta=document.getElementById(def.mf);if(ta)ta.value=prefill;}
 }
@@ -4899,6 +4942,7 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
   else if(name==='arg-reactions'){module='si';rid='arg-reactions-r';bid='arg-reactions-b';const t=g('ar-react-in');if(!t)return alert('Please enter text.');data={text:t+context,stakeholders:g('ar-react-sth'),severity:g('ar-react-sev')};}
   else if(name==='arg-culture'){module='la';rid='arg-culture-r';bid='arg-culture-b';const t=g('ar-cult-in');if(!t)return alert('Please enter text.');data={text:t+context,size:g('ar-cult-size'),focus:g('ar-cult-focus')};}
   else if(name==='pre-meeting'){module='pre-meeting';rid='pre-meeting-r';bid='pre-meeting-b';const sit=g('pm-sit');if(!sit)return alert('Please describe the meeting or situation.');const pCtx=getPeopleContext(getSelectedPeople());data={situation:sit,datetime:g('pm-dt'),format:g('pm-fmt'),participants:g('pm-part'),goal:g('pm-goal'),text:g('pm-bg'),peopleContext:pCtx+memCtx};}
+  else if(name==='presentation'){module='presentation';rid='presentation-r';bid='presentation-b';const topic=g('pres-topic');if(!topic)return alert('Bitte Thema/Titel angeben.');data={topic,occasion:g('pres-occasion'),audience:g('pres-audience'),duration:g('pres-duration'),goal:g('pres-goal'),text:(g('pres-in')||'')+context,voiceProfile:context};}
   else return;
 
   const box=document.getElementById(rid),body=document.getElementById(bid);

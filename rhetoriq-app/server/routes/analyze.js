@@ -786,6 +786,27 @@ Frame reasoning around what event planners actually weigh most: reliability/exec
 Wherever possible, quote feedback verbatim as evidence — do not paraphrase reactions into vague summary ("the audience was unconvinced"); show the actual words that reveal the reaction. Distinguish signal from noise: if feedback includes one outlier or unusually vivid comment, note explicitly whether it represents a broader pattern or an isolated reaction — don't let the loudest voice dominate the diagnosis unless it's representative. For at least one identified breakdown, go beyond the immediate fix and question the underlying assumption or default strategy that produced it (e.g. an assumed shared urgency, an assumed audience expertise level, a habitual structure) — state explicitly whether this is a one-off miscalibration or a recurring pattern worth revising in the communicator's default approach. POLARISATION HANDLING: if the feedback shows heavily polarised reactions (some strongly positive, some strongly negative), do not average them out into a "mixed feelings" summary — call out the polarisation explicitly as a specific rhetorical effect and identify which demographic or expectation mismatch caused the split.`,
     build: (d) => `ORIGINAL COMMUNICATION:\n${sanitizeForPrompt(d.original)}\n\n---\n\nREAL FEEDBACK & REACTIONS (press, internal comments, Q&A, social media):\n${sanitizeForPrompt(d.feedback)}\n\nContext: ${d.context || 'Not specified'}`
   },
+  'presentation': {
+    label: 'Präsentation & Vortrag',
+    system: `Du bist ein erfahrener Redenschreiber und Präsentationsdesigner für Führungskräfte. Deine Aufgabe: aus einem Briefing eine vollständige, sofort nutzbare Präsentation erstellen — inklusive dem exakten Text, den die Person sagen soll, UND dem Folieninhalt für PowerPoint.
+
+FORMATIERUNGSREGELN — zwingend exakt einhalten, da die Ausgabe maschinell in echte PowerPoint-Folien umgewandelt wird:
+- Kein Markdown: keine Rauten, keine Sternchen, keine Blockzitate
+- Halte dich EXAKT an das folgende Format, Zeile für Zeile — jede Folie beginnt mit einer Zeile "FOLIE n — [Folientitel]" (n = fortlaufende Nummer)
+- Nach jeder Folienüberschrift folgen genau zwei Blöcke: "INHALT:" (Stichpunkte für die Folie, mit einfachem Bindestrich, max. 5 Punkte, kurz und visuell — keine ganzen Sätze) und "SPRECHERTEXT:" (was die Person tatsächlich laut sagt — vollständige, natürlich gesprochene Sätze, keine Stichpunkte)
+- Die allererste Folie ist immer eine Titelfolie: "FOLIE 1 — [Präsentationstitel]" mit INHALT nur Untertitel/Anlass/Datum-Platzhalter, SPRECHERTEXT die Eröffnung
+- Die letzte Folie ist immer eine Abschlussfolie (Zusammenfassung, Call-to-Action, oder "Fragen") mit passendem Sprechertext
+- Ganz am Anfang, vor FOLIE 1, gib zwei Metazeilen aus: "GESCHÄTZTE DAUER: [X Minuten]" und "ANZAHL FOLIEN: [n]"
+
+INHALTLICHE REGELN:
+- Anzahl Folien richtet sich nach der angegebenen Redezeit: als Faustregel 1 Folie pro 1,5-2 Minuten Sprechzeit (z.B. 15 Minuten Vortrag = ca. 8-10 Folien).
+- INHALT (Folie) und SPRECHERTEXT (gesprochen) sind bewusst unterschiedlich: die Folie zeigt Stichworte/Zahlen/Kernaussagen, der Sprechertext ist das ausformulierte gesprochene Wort — beides muss zusammenpassen, aber der Sprechertext liest die Folie nicht einfach vor.
+- Baue einen klaren roten Faden: Eröffnung mit Hook (Frage, Zahl, Behauptung — nicht "Vielen Dank, dass Sie gekommen sind"), dann Kernargumentation in 3-5 klaren Schritten, dann starker Schluss mit konkreter Handlungsaufforderung oder Kernbotschaft zum Mitnehmen.
+- Der Sprechertext muss in der authentischen Stimme des Sprechers/Unternehmens klingen (siehe Brand Voice, falls vorhanden) — kein generischer Konferenz-Ton.
+- Baue an mindestens 2 Stellen eine bewusste Pause oder rhetorische Frage für das Publikum ein (im Sprechertext markiert mit "[Pause]" oder als direkte Publikumsfrage).
+- Vermeide Textwüsten auf Folien: wenn ein Stichpunkt länger als eine Zeile wäre, kürze ihn oder splitte ihn auf zwei Folien.`,
+    build: (d) => `Thema/Titel: ${d.topic||'Nicht angegeben'}\nAnlass: ${d.occasion||'Nicht angegeben'}\nZielpublikum: ${d.audience||'Nicht angegeben'}\nGewünschte Redezeit: ${d.duration||'15 Minuten'}\nKernbotschaft / Ziel des Vortrags: ${d.goal||'Nicht angegeben'}\n\nHintergrundmaterial / Stichpunkte / bestehende Inhalte:\n${sanitizeForPrompt(d.text)}`
+  },
   'pre-meeting': {
     label: 'Pre-Meeting Brief',
     system: `You are an elite executive communication strategist. Your job: generate a razor-sharp, 100% practical communication brief that a CEO or executive can read in 3 minutes before walking into a room.
@@ -1088,7 +1109,7 @@ const MODULE_MAX_TOKENS = {
   'cm-roadshow': 4000, 'cm-equity-story': 3500, 'brand-voice-co': 4000, 'brand-voice-ind': 4000, 'brand-voice-update': 4000,
   debrief: 3000, 'rh-translate': 3000, 'before-after': 3000,
   // Medium modules
-  'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 2000, brief: 3500,
+  'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 2000, brief: 3500, presentation: 4500,
   crisis: 2500, 'ht-crisis-comm': 2500, 'ht-positioning': 2500,
   'cm-qa-trainer': 2500, 'competitive-check': 2500,
   // Quick modules
