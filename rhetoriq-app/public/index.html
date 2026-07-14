@@ -3268,8 +3268,8 @@ async function delData(cid){
     alert('Done. All data deleted.');loadStats();
   }catch{alert('Error.');}
 }
-function openModal(id){document.getElementById(id).classList.add('show');}
-function closeModal(id){document.getElementById(id).classList.remove('show');}
+function openModal(id){const el=document.getElementById(id);if(!el)return;el.classList.add('show');el.style.display='';}
+function closeModal(id){const el=document.getElementById(id);if(!el)return;el.classList.remove('show');el.style.display='none';}
 function ncSetType(t){
   const isCo=t==='company';
   document.getElementById('nc-type-company').style.background=isCo?'var(--acc)':'var(--bg2)';
