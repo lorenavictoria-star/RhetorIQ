@@ -175,6 +175,9 @@ async function init() {
     -- Task 16: thumbs up/down per analysis
     ALTER TABLE analyses ADD COLUMN IF NOT EXISTS user_rating SMALLINT;
 
+    -- Feedback keywords on rating, fed back into the client's per-module custom instructions
+    ALTER TABLE analyses ADD COLUMN IF NOT EXISTS feedback_note TEXT;
+
     -- FIX 3: Performance indexes
     CREATE INDEX IF NOT EXISTS clients_advisor_idx ON clients(advisor_id);
     CREATE INDEX IF NOT EXISTS analyses_advisor_idx ON analyses(advisor_id, created_at DESC);

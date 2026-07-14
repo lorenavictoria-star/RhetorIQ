@@ -1698,28 +1698,59 @@ router.post('/suggest-subject', requireAuth, async (req, res) => {
 // POST /api/analyze/:id/rate — Task 16: thumbs up/down; Task 18: propagate to training examples
 router.post('/:id/rate', requireAuth, async (req, res) => {
   try {
-    if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Forbidden' });
-    const { rating } = req.body; // 1 = thumbs up, -1 = thumbs down
+    const { rating, note } = req.body; // rating: 1 = thumbs up, -1 = thumbs down; note: optional free-text keywords
     if (![1, -1].includes(Number(rating))) return res.status(400).json({ error: 'rating must be 1 or -1' });
+    if (note && note.length > 500) return res.status(400).json({ error: 'note max 500 characters' });
+
+    // Advisors can rate anything they own; clients (and client team members)
+    // can only rate analyses that belong to their own client workspace.
+    const ownershipClause = req.user.role === 'advisor' ? 'advisor_id=$3' : 'client_id=$3';
+    const ownershipValue = req.user.role === 'advisor' ? req.user.id : req.user.clientId;
+
     const { rows } = await pool.query(
-      'UPDATE analyses SET user_rating=$1 WHERE id=$2 AND advisor_id=$3 RETURNING id, module',
-      [rating, req.params.id, req.user.id]
+      `UPDATE analyses SET user_rating=$1, feedback_note=$4 WHERE id=$2 AND ${ownershipClause} RETURNING id, module, client_id, advisor_id`,
+      [rating, req.params.id, ownershipValue, note || null]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });
+    const analysis = rows[0];
+
     // Task 18: propagate rating signal to structural training examples for this module
-    if (rating === 1) {
+    if (analysis.advisor_id) {
       pool.query(
-        `UPDATE module_examples SET rating = LEAST(5, rating + 1)
+        `UPDATE module_examples SET rating = ${rating === 1 ? 'LEAST(5, rating + 1)' : 'GREATEST(1, rating - 1)'}
          WHERE advisor_id=$1 AND module_key=$2 AND auto_generated=false`,
-        [req.user.id, rows[0].module]
-      ).catch(() => {});
-    } else {
-      pool.query(
-        `UPDATE module_examples SET rating = GREATEST(1, rating - 1)
-         WHERE advisor_id=$1 AND module_key=$2 AND auto_generated=false`,
-        [req.user.id, rows[0].module]
+        [analysis.advisor_id, analysis.module]
       ).catch(() => {});
     }
+
+    // Feed keyword feedback directly into this client's custom instructions for
+    // this module, so future generations for this client actually learn from it.
+    if (note && note.trim() && analysis.client_id) {
+      (async () => {
+        const label = rating === 1 ? 'BEIBEHALTEN' : 'VERMEIDEN';
+        const date = new Date().toISOString().slice(0, 10);
+        const line = `[FEEDBACK ${date}] ${label}: ${note.trim()}`;
+        const { rows: existing } = await pool.query(
+          'SELECT instructions FROM client_module_prompts WHERE client_id=$1 AND module_key=$2',
+          [analysis.client_id, analysis.module]
+        );
+        let merged = existing[0]?.instructions ? existing[0].instructions + '\n' + line : line;
+        // Cap length like the manual-edit endpoint does — trim oldest lines first,
+        // so feedback keeps accumulating without growing the prompt unbounded.
+        if (merged.length > 4000) {
+          const lines = merged.split('\n');
+          while (lines.join('\n').length > 4000 && lines.length > 1) lines.shift();
+          merged = lines.join('\n');
+        }
+        await pool.query(
+          `INSERT INTO client_module_prompts (client_id, module_key, instructions, updated_at)
+           VALUES ($1,$2,$3,NOW())
+           ON CONFLICT (client_id, module_key) DO UPDATE SET instructions=$3, updated_at=NOW()`,
+          [analysis.client_id, analysis.module, merged]
+        );
+      })().catch(e => console.error('[rate] feedback propagation failed:', e.message));
+    }
+
     res.json({ ok: true });
   } catch (e) {
     console.error(e);

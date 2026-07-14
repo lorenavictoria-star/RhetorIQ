@@ -2969,10 +2969,22 @@ function connectWS(){
 }
 
 // Task 16+18: rate an analysis (thumbs up/down)
-async function rateAnalysis(id,rating,bar){
+function showRatingNote(id,rating,bar){
+  const isGood=rating===1;
+  bar.innerHTML='<div style="display:flex;flex-direction:column;gap:6px;width:100%">'
+    +'<span style="font-size:11px;color:var(--mu)">'+(isGood?'👍 Was war gut? (optional, Stichworte reichen)':'👎 Was war schlecht? (Stichworte reichen — hilft der KI, es bei diesem Klienten künftig besser zu machen)')+'</span>'
+    +'<div style="display:flex;gap:6px">'
+    +'<input type="text" id="rating-note-'+id+'" placeholder="'+(isGood?'z.B. Tonalität genau richtig':'z.B. zu förmlich, Fakten erfunden, zu lang')+'" style="flex:1;padding:6px 10px;border:1px solid var(--bd);border-radius:6px;font-size:12px;background:var(--bg);color:var(--tx)" onkeydown="if(event.key===\'Enter\')submitRating('+id+','+rating+',this.parentNode.parentNode)">'
+    +'<button onclick="submitRating('+id+','+rating+',this.parentNode.parentNode)" style="padding:6px 12px;border:none;border-radius:6px;background:var(--ac,#1a3d2e);color:#fff;cursor:pointer;font-size:12px;white-space:nowrap">Senden</button>'
+    +'</div></div>';
+  const inp=document.getElementById('rating-note-'+id);if(inp)inp.focus();
+}
+async function submitRating(id,rating,bar){
+  const inp=document.getElementById('rating-note-'+id);
+  const note=inp?inp.value.trim():'';
   try{
-    await api('/api/analyze/'+id+'/rate',{method:'POST',body:JSON.stringify({rating})});
-    bar.innerHTML='<span style="font-size:12px;color:var(--mu)">'+(rating===1?'👍 Danke für dein Feedback — Trainingsbeispiele wurden aufgewertet.':'👎 Danke — Trainingsbeispiele wurden abgewertet.')+'</span>';
+    await api('/api/analyze/'+id+'/rate',{method:'POST',body:JSON.stringify({rating,note})});
+    bar.innerHTML='<span style="font-size:12px;color:var(--mu)">'+(rating===1?'👍 Danke für dein Feedback!':'👎 Danke — das fliesst ab sofort in die Anweisungen für diesen Klienten ein.')+(note?' <span style="opacity:.7">("'+safeText(note)+'")</span>':'')+'</span>';
   }catch(e){bar.innerHTML='<span style="font-size:11px;color:var(--er)">Fehler: '+safeText(e.message)+'</span>';}
 }
 // Task 15: toggle debug mode
@@ -4880,14 +4892,14 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
     if(['brand-voice-co','brand-voice-ind'].includes(module)&&clientId){
       api('/api/memory/'+clientId+'/brand_voice',{method:'PUT',body:JSON.stringify({content:fullText})}).then(()=>loadMemory()).catch(()=>{});
     }
-    // Task 16: thumbs up/down rating buttons
-    if(analysisId&&isAdv){
+    // Task 16: thumbs up/down rating buttons — visible to advisors and clients alike
+    if(analysisId){
       const ratingBar=document.createElement('div');
-      ratingBar.style.cssText='display:flex;gap:8px;margin-top:10px;align-items:center';
+      ratingBar.style.cssText='display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap';
       ratingBar.innerHTML='<span style="font-size:11px;color:var(--mu)">Output bewerten:</span>'
-        +'<button onclick="rateAnalysis('+analysisId+',1,this.parentNode)" style="padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:14px" title="Gut">👍</button>'
-        +'<button onclick="rateAnalysis('+analysisId+',-1,this.parentNode)" style="padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:14px" title="Schlecht">👎</button>'
-        +(hasBrandVoice?'<span style="font-size:11px;color:#2a7;margin-left:4px">✓ Brand Voice aktiv</span>':'<span style="font-size:11px;color:var(--mu);margin-left:4px">Kein Brand Voice</span>');
+        +'<button onclick="showRatingNote('+analysisId+',1,this.parentNode)" style="padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:14px" title="Gut">👍</button>'
+        +'<button onclick="showRatingNote('+analysisId+',-1,this.parentNode)" style="padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:14px" title="Schlecht">👎</button>'
+        +(isAdv?(hasBrandVoice?'<span style="font-size:11px;color:#2a7;margin-left:4px">✓ Brand Voice aktiv</span>':'<span style="font-size:11px;color:var(--mu);margin-left:4px">Kein Brand Voice</span>'):'');
       body.parentNode.insertBefore(ratingBar,body.nextSibling);
     }
     // Task 15: debug prompt panel
