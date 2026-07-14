@@ -1,47 +1,11 @@
 const express = require('express');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
-const https = require('https');
 const { pool } = require('../db');
 const { requireAdvisor, requireAuth } = require('../middleware/auth');
+const { brevoSend: brevoSendShared } = require('../lib/brevo');
 
-async function brevoSend({ to, subject, text }) {
-  const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) { console.error('BREVO_API_KEY missing'); return; }
-
-  const payload = JSON.stringify({
-    sender: { name: 'Lorena Lienhard', email: process.env.SMTP_FROM || 'contact@lorenalienhard.ch' },
-    to: [{ email: to }],
-    subject,
-    textContent: text
-  });
-
-  return new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname: 'api.brevo.com',
-      path: '/v3/smtp/email',
-      method: 'POST',
-      headers: {
-        'api-key': apiKey,
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload)
-      }
-    }, res => {
-      let body = '';
-      res.on('data', d => body += d);
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve(body);
-        } else {
-          reject(new Error(`Brevo API ${res.statusCode}: ${body}`));
-        }
-      });
-    });
-    req.on('error', reject);
-    req.write(payload);
-    req.end();
-  });
-}
+const brevoSend = (opts) => brevoSendShared({ senderName: 'Lorena Lienhard', ...opts });
 
 // Generate a secure 48-hour setup link and send it instead of a plaintext password.
 // The client clicks the link, sets their own password — no credentials ever in email.

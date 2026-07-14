@@ -1,40 +1,11 @@
 const { pool } = require('../db');
-const https = require('https');
+const { brevoSend: brevoSendShared } = require('../lib/brevo');
 
 const ADVISOR_EMAIL = process.env.ADVISOR_EMAIL || 'contact@lorenalienhard.ch';
-const REPORT_FROM   = process.env.SMTP_FROM      || 'contact@lorenalienhard.ch';
 
-function brevoSend({ to, subject, text }) {
-  const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) { console.error('[monthly-report] BREVO_API_KEY missing'); return Promise.resolve(); }
-
-  const payload = JSON.stringify({
-    sender: { name: 'RhetorIQ Reports', email: REPORT_FROM },
-    to: [{ email: to }],
-    subject,
-    textContent: text
-  });
-
-  return new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname: 'api.brevo.com',
-      path: '/v3/smtp/email',
-      method: 'POST',
-      headers: {
-        'api-key': apiKey,
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload)
-      }
-    }, res => {
-      let body = '';
-      res.on('data', d => body += d);
-      res.on('end', () => resolve(body));
-    });
-    req.on('error', reject);
-    req.write(payload);
-    req.end();
-  });
-}
+const brevoSend = (opts) => brevoSendShared({ senderName: 'RhetorIQ Reports', ...opts }).catch(e => {
+  console.error('[monthly-report] Brevo send failed:', e.message);
+});
 
 async function runMonthlyReport() {
   console.log('[monthly-report] Starting…');

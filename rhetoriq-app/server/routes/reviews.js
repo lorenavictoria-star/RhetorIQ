@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../db');
 const jwt = require('jsonwebtoken');
+const { brevoSend } = require('../lib/brevo');
+
+const ADVISOR_NOTIFY_EMAIL = process.env.ADVISOR_EMAIL || 'contact@lorenalienhard.ch';
 
 function auth(req, res, next) {
   const h = req.headers.authorization;
@@ -24,6 +27,23 @@ router.post('/', auth, async (req, res) => {
     );
     req.app.locals.wss.broadcast({ type: 'review_new', id: rows[0].id });
     res.json(rows[0]);
+
+    // Notify the advisor by email so she can act even without the app open.
+    // Fire-and-forget: never let email delivery affect the client-facing response.
+    (async () => {
+      let clientName = 'Unbekannter Klient';
+      if (clientId) {
+        const { rows: cRows } = await pool.query('SELECT name FROM clients WHERE id=$1', [clientId]);
+        if (cRows[0]) clientName = cRows[0].name;
+      }
+      const preview = originalText.length > 500 ? originalText.slice(0, 500) + '…' : originalText;
+      await brevoSend({
+        to: ADVISOR_NOTIFY_EMAIL,
+        subject: `RhetorIQ — Neue Freigabe-Anfrage: ${clientName}${moduleLabel ? ' (' + moduleLabel + ')' : ''}`,
+        text: `Ein Klient hat einen Text zur Prüfung eingereicht.\n\nKlient: ${clientName}\nModul: ${moduleLabel || 'Nicht angegeben'}\n\n--- Textauszug ---\n${preview}\n\nJetzt bearbeiten: https://rhetoriq.ch\n`,
+        senderName: 'RhetorIQ'
+      });
+    })().catch(e => console.error('[reviews] advisor notification email failed:', e.message));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
