@@ -2249,24 +2249,6 @@ async function exportPptx(bodyId){
     btn.className='exbtn';btn.textContent=T[LANG]?.btn_word||'Word';
     btn.onclick=()=>exportDoc(id,title);
     btns.insertBefore(btn,btns.firstChild);
-    // Save to Memory button
-    const membtn=document.createElement('button');
-    membtn.className='exbtn';membtn.title='Save to Memory';membtn.textContent='💾 Memory';
-    membtn.style.cssText='background:#f0faf4;border-color:#b6e4c8;color:var(--ac)';
-    membtn.onclick=async()=>{
-      if(!clientId)return alert('Select a client first.');
-      const content=body.innerText||body.textContent;
-      if(!content.trim())return;
-      const type=prompt('Save as memory type:\nbrand_voice / key_facts / rhetoric_summary / culture_notes','key_facts');
-      if(!type)return;
-      try{
-        await api('/api/memory/'+clientId+'/'+type,{method:'PUT',body:JSON.stringify({content})});
-        await loadMemory();
-        membtn.textContent='✓ Saved';membtn.style.background='var(--ac)';membtn.style.color='#fff';
-        setTimeout(()=>{membtn.textContent='💾 Memory';membtn.style.background='#f0faf4';membtn.style.color='var(--ac)';},2000);
-      }catch(e){alert('Error: '+e.message);}
-    };
-    btns.insertBefore(membtn,btns.firstChild);
     // Send to Advisor button
     const abtn=document.createElement('button');
     abtn.className='advbtn';abtn.textContent=T[LANG]?.btn_send_advisor||'Send to Advisor';
