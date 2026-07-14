@@ -1110,8 +1110,8 @@ async function callClaude(system, user, maxTokens, model, temperature) {
 router.post('/', requireAuth, async (req, res) => {
   try {
     const { module, clientId, data } = req.body;
-    if (data && typeof data.text === 'string' && data.text.length > 20000) {
-      return res.status(400).json({ error: 'Input text exceeds maximum length of 20,000 characters' });
+    if (data && typeof data.text === 'string' && data.text.length > 150000) {
+      return res.status(400).json({ error: 'Input text exceeds maximum length of 150,000 characters (~30,000 words)' });
     }
     const cfg = PROMPTS[module];
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
@@ -1266,8 +1266,8 @@ router.post('/', requireAuth, async (req, res) => {
 router.post('/stream', requireAuth, async (req, res) => {
   try {
     const { module, clientId, data, debug } = req.body;
-    if (data && typeof data.text === 'string' && data.text.length > 20000) {
-      return res.status(400).json({ error: 'Input text exceeds maximum length of 20,000 characters' });
+    if (data && typeof data.text === 'string' && data.text.length > 150000) {
+      return res.status(400).json({ error: 'Input text exceeds maximum length of 150,000 characters (~30,000 words)' });
     }
     const isDebug = debug === true && req.user.role === 'advisor';
     const cfg = PROMPTS[module];
