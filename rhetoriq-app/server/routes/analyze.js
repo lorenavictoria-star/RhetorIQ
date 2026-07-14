@@ -1110,8 +1110,11 @@ async function callClaude(system, user, maxTokens, model, temperature) {
 router.post('/', requireAuth, async (req, res) => {
   try {
     const { module, clientId, data } = req.body;
-    if (data && typeof data.text === 'string' && data.text.length > 150000) {
-      return res.status(400).json({ error: 'Input text exceeds maximum length of 150,000 characters (~30,000 words)' });
+    // Cap comfortably under Claude's context window. This field can include
+    // auto-injected company memory / uploaded onboarding documents on top of
+    // the user's own briefing, not just what they typed, so keep this high.
+    if (data && typeof data.text === 'string' && data.text.length > 500000) {
+      return res.status(400).json({ error: 'Input text exceeds maximum length of 500,000 characters' });
     }
     const cfg = PROMPTS[module];
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
@@ -1266,8 +1269,11 @@ router.post('/', requireAuth, async (req, res) => {
 router.post('/stream', requireAuth, async (req, res) => {
   try {
     const { module, clientId, data, debug } = req.body;
-    if (data && typeof data.text === 'string' && data.text.length > 150000) {
-      return res.status(400).json({ error: 'Input text exceeds maximum length of 150,000 characters (~30,000 words)' });
+    // Cap comfortably under Claude's context window. This field can include
+    // auto-injected company memory / uploaded onboarding documents on top of
+    // the user's own briefing, not just what they typed, so keep this high.
+    if (data && typeof data.text === 'string' && data.text.length > 500000) {
+      return res.status(400).json({ error: 'Input text exceeds maximum length of 500,000 characters' });
     }
     const isDebug = debug === true && req.user.role === 'advisor';
     const cfg = PROMPTS[module];
