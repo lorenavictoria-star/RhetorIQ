@@ -4296,7 +4296,7 @@ function buildTextGen(prefill,form){
         <div class="fg2"><label class="fl2">${tl.tg_language}</label><select id="tg-lang-${t.id}"><option>Deutsch</option><option>English</option><option>Français</option><option>Italiano</option></select></div>
         <div class="fg2"><label class="fl2">${tl.tg_length}</label><input type="text" id="tg-len-${t.id}" placeholder="${tl.tg_length_ph}"></div>
       </div>
-      ${t.id==='linkedin'?`<div class="fg2" style="margin-top:4px"><label class="fl2">${tl.li_profile_lbl||'LinkedIn Profile / About (optional)'}</label><textarea id="tg-li-profile" placeholder="${tl.li_profile_ph||'Paste the About section and recent posts of the LinkedIn profile here — so the output matches the person\'s authentic voice.'}" style="min-height:80px;font-size:12px"></textarea></div>`:''}
+      ${t.id==='linkedin'?`<div class="fg2" style="margin-top:4px"><label class="fl2">${tl.li_profile_lbl||'LinkedIn Profile / About (optional)'}</label><textarea id="tg-li-profile" placeholder="${tl.li_profile_ph||'Paste the About section and the last 3–5 posts of the LinkedIn profile here — so the output matches the person\'s authentic voice.'}" style="min-height:80px;font-size:12px"></textarea><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><button type="button" class="tg-save-ref" onclick="saveLiProfile()" style="font-size:11px;padding:5px 12px;border:1px solid var(--bd);border-radius:6px;background:var(--sf);cursor:pointer">Für diesen Klienten speichern</button><div id="tg-li-profile-status" style="font-size:11px;color:var(--mu)"></div></div></div>`:''}
       ${t.id==='brief'?`<div class="row2"><div class="fg2"><label class="fl2">Sender (Absender) <a onclick="editClientAddress('tg-br-sender')" style="cursor:pointer;text-decoration:underline;font-weight:400;text-transform:none;letter-spacing:0;font-size:11px">&#9998; hinterlegen</a></label><input type="text" id="tg-br-sender" placeholder="e.g. Lorena Lienhard, RhetorIQ AG, Bahnhofstrasse 1, 8001 Zürich"></div><div class="fg2"><label class="fl2">Recipient (Adressat)</label><input type="text" id="tg-br-recipient" placeholder="e.g. Herr Peter Muster, Muster AG, Musterstrasse 5, 8000 Zürich"></div></div><div class="fg2"><label class="fl2">Subject Line (Betreff)</label><input type="text" id="tg-br-subject" placeholder="e.g. Kündigung des Mietvertrags per 30.09.2026"></div>`:''}
       ${t.id==='speech'?`<div class="fg2"><label class="fl2">Speaker — Voice DNA (optional)</label><select id="tg-speech-person"><option value="">— Brand Voice (default) —</option>${people.filter(p=>(p.profiles||[]).some(pr=>pr.profile_type==='voice')).map(p=>`<option value="${p.id}">${safeText(p.name)}${p.role?' — '+safeText(p.role):''}</option>`).join('')}</select></div>`:''}
       ${t.id==='newsletter'?`<div class="klaviyo-box" id="klaviyo-box-${t.id}" style="margin-bottom:14px;padding:14px;border:1.5px solid #e0d4f5;border-radius:8px;background:#f9f6ff">
@@ -4356,6 +4356,7 @@ function buildTextGen(prefill,form){
     <div id="tg-tiles" class="tg-tiles">${tilesHtml}</div>
     ${panelsHtml}`;
   loadTgRefs();
+  loadLiProfile();
   loadTgSubscriptions();
   if(isAdv&&clientId){tileData.forEach(t=>{api('/api/module-prompts/'+clientId+'/text-gen-'+t.id).then(r=>{if(r.instructions){const g=document.getElementById('tg-gear-'+t.id);if(g){const d=document.createElement('span');d.className='mod-prompt-dot';g.appendChild(d);}}}).catch(()=>{});});}
   if(prefill){tgOpenTile('custom');const ta=document.getElementById('tg-task-custom');if(ta)ta.value=prefill;}
@@ -4381,27 +4382,48 @@ function tgSubToggle(id){
   if(!enabled)saveTgSubscription(id,false);
 }
 async function saveTgRef(id){
+  if(!clientId)return;
   const val=document.getElementById('tg-ref-'+id)?.value?.trim();
   if(!val)return;
   const status=document.getElementById('tg-ref-status-'+id);
   status.textContent='Speichern…';
   try{
-    await api('/api/memory',{method:'POST',body:JSON.stringify({clientId,type:'ref_tg_'+id,content:val})});
+    await api('/api/memory/'+clientId+'/ref_tg_'+id,{method:'PUT',body:JSON.stringify({content:val})});
     status.textContent='Gespeichert';
+    await loadMemory();
   }catch(e){status.textContent='Fehler beim Speichern';}
 }
-async function loadTgRef(id){
-  try{
-    const r=await api('/api/memory?clientId='+encodeURIComponent(clientId)+'&type=ref_tg_'+id);
-    if(r&&r.content){
-      const ta=document.getElementById('tg-ref-'+id);
-      if(ta&&!ta.value)ta.value=r.content;
-      const st=document.getElementById('tg-ref-status-'+id);
-      if(st)st.textContent='Referenz aus Speicher geladen';
-    }
-  }catch(e){}
+function loadTgRef(id){
+  const m=memory.find(m=>m.memory_type==='ref_tg_'+id);
+  if(m&&m.content){
+    const ta=document.getElementById('tg-ref-'+id);
+    if(ta&&!ta.value)ta.value=m.content;
+    const st=document.getElementById('tg-ref-status-'+id);
+    if(st)st.textContent='Referenz aus Speicher geladen';
+  }
 }
 function loadTgRefs(){['linkedin','newsletter','email','speech','press','website','custom'].forEach(id=>loadTgRef(id));}
+async function saveLiProfile(){
+  if(!clientId)return;
+  const val=document.getElementById('tg-li-profile')?.value?.trim();
+  if(!val)return;
+  const status=document.getElementById('tg-li-profile-status');
+  if(status)status.textContent='Speichern…';
+  try{
+    await api('/api/memory/'+clientId+'/ref_li_profile',{method:'PUT',body:JSON.stringify({content:val})});
+    if(status)status.textContent='✓ Gespeichert — wird bei jedem LinkedIn-Post für diesen Klienten automatisch verwendet.';
+    await loadMemory();
+  }catch(e){if(status)status.textContent='Fehler beim Speichern';}
+}
+function loadLiProfile(){
+  const m=memory.find(m=>m.memory_type==='ref_li_profile');
+  const ta=document.getElementById('tg-li-profile');
+  if(m&&m.content&&ta&&!ta.value){
+    ta.value=m.content;
+    const st=document.getElementById('tg-li-profile-status');
+    if(st)st.textContent='Profil aus Speicher geladen. Bei neuen Posts hier aktualisieren und erneut speichern.';
+  }
+}
 
 function toggleVorbild(id){const b=document.getElementById('vorbild-body-'+id),a=document.getElementById('vorbild-arrow-'+id);const open=b.style.display==='none';b.style.display=open?'block':'none';if(a)a.textContent=open?'−':'+';}
 
