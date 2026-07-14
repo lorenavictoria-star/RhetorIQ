@@ -4787,14 +4787,20 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
     loadStats();
   }catch(e){
     const msg=e.message||'';
+    if(/session revoked|invalid token|missing token/i.test(msg)){
+      localStorage.removeItem('riq-token');
+      body.innerHTML='<div style="color:var(--er,#c0392b);padding:4px 0">⚠ Deine Sitzung ist abgelaufen. Bitte melde dich neu an.</div>'
+        +'<button onclick="location.reload()" style="margin-top:8px;padding:6px 14px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:13px">↺ Neu anmelden</button>';
+      return;
+    }
     let friendly='Ein Fehler ist aufgetreten. Bitte versuche es erneut.';
     if(/rate.?limit|429|too many/i.test(msg))friendly='Zu viele Anfragen. Bitte warte kurz und versuche es erneut.';
     else if(/timeout|timed out/i.test(msg))friendly='Die Anfrage hat zu lange gedauert. Bitte versuche es erneut.';
     else if(/network|fetch|failed to fetch/i.test(msg))friendly='Keine Verbindung zum Server. Bitte prüfe deine Internetverbindung.';
     else if(/overloaded|529/i.test(msg))friendly='Der KI-Dienst ist momentan überlastet. Bitte versuche es in wenigen Sekunden erneut.';
-    else if(/invalid_api_key|401/i.test(msg))friendly='Konfigurationsfehler. Bitte wende dich an den Support.';
+    else if(/invalid_api_key/i.test(msg))friendly='Konfigurationsfehler. Bitte wende dich an den Support.';
     const retryArgs=arguments[1]!==undefined?'\''+name+'\',\''+arguments[1]+'\'':'\''+name+'\'';
-    body.innerHTML='<div style="color:var(--er,#c0392b);padding:4px 0">⚠ '+safeText(friendly)+'</div>'
+    body.innerHTML='<div style="color:var(--er,#c0392b);padding:4px 0">⚠ '+safeText(friendly)+(msg&&msg!=='Server error'&&msg!=='Internal server error'?' <span style="opacity:.6;font-size:11px">('+safeText(msg)+')</span>':'')+'</div>'
       +'<button onclick="runMod('+retryArgs+')" style="margin-top:8px;padding:6px 14px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:13px">↺ Erneut versuchen</button>';
   }
 }
