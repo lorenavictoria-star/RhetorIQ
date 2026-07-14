@@ -18,6 +18,18 @@ function sanitizeForPrompt(text) {
     .trim();
 }
 
+// Safety net so generation never hard-fails on length: cap the combined
+// text field (user briefing + auto-injected company memory/context) to a
+// size that comfortably fits Claude's context window alongside the system
+// prompt, brand voice block, and few-shot examples. The user's own briefing
+// is always prepended before auto-injected context in the frontend, so
+// truncating from the end preserves what the user actually typed.
+const MAX_TEXT_CHARS = 600000;
+function capText(text) {
+  if (typeof text !== 'string' || text.length <= MAX_TEXT_CHARS) return text;
+  return text.slice(0, MAX_TEXT_CHARS) + '\n\n[... additional background context truncated due to length ...]';
+}
+
 // Format-specific structural guidance for the Text Generator module, based on
 // what actually drives engagement/conversion in each channel — not just tone.
 function getFormatBlock(format) {
@@ -1110,12 +1122,7 @@ async function callClaude(system, user, maxTokens, model, temperature) {
 router.post('/', requireAuth, async (req, res) => {
   try {
     const { module, clientId, data } = req.body;
-    // Cap comfortably under Claude's context window. This field can include
-    // auto-injected company memory / uploaded onboarding documents on top of
-    // the user's own briefing, not just what they typed, so keep this high.
-    if (data && typeof data.text === 'string' && data.text.length > 500000) {
-      return res.status(400).json({ error: 'Input text exceeds maximum length of 500,000 characters' });
-    }
+    if (data && typeof data.text === 'string') data.text = capText(data.text);
     const cfg = PROMPTS[module];
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
 
@@ -1269,12 +1276,7 @@ router.post('/', requireAuth, async (req, res) => {
 router.post('/stream', requireAuth, async (req, res) => {
   try {
     const { module, clientId, data, debug } = req.body;
-    // Cap comfortably under Claude's context window. This field can include
-    // auto-injected company memory / uploaded onboarding documents on top of
-    // the user's own briefing, not just what they typed, so keep this high.
-    if (data && typeof data.text === 'string' && data.text.length > 500000) {
-      return res.status(400).json({ error: 'Input text exceeds maximum length of 500,000 characters' });
-    }
+    if (data && typeof data.text === 'string') data.text = capText(data.text);
     const isDebug = debug === true && req.user.role === 'advisor';
     const cfg = PROMPTS[module];
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
