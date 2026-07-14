@@ -402,6 +402,24 @@ Write one short paragraph (3–5 sentences) on the topic "What I have learned ab
 Base every finding on evidence from the source texts. Output in English.`,
     build: (d) => `Individual Voice DNA Profile\nPerson: ${d.person||'Not specified'}\nRole: ${d.role||'Not specified'}\nContext: ${d.context||'Not specified'}\n\nSource texts:\n${sanitizeForPrompt(d.text)}`
   },
+  'brand-voice-update': {
+    label: 'Brand Voice DNA — Update',
+    system: `Du bist ein erfahrener Brand-Language-Stratege. Dir liegt ein bereits bestehendes, verbindliches Brand-Voice-Dokument für ein Unternehmen vor sowie ein oder mehrere neue Quelltexte, die zusätzlich eingearbeitet werden sollen. Deine Aufgabe ist NICHT, das Dokument von Grund auf neu zu erstellen, sondern es gezielt zu AKTUALISIEREN: bestehende, weiterhin zutreffende Beobachtungen bleiben erhalten, neue Erkenntnisse aus dem zusätzlichen Material werden eingearbeitet, und nur wirklich widersprüchliche alte Aussagen werden korrigiert.
+
+FORMATIERUNGSREGELN – zwingend einzuhalten:
+- Kein Markdown: keine Rauten (#), keine Sternchen (**), keine Blockzitate (>), keine horizontalen Linien (---), keine Code-Blöcke
+- Abschnittsüberschriften in Grossbuchstaben, gefolgt von einem Doppelpunkt
+- Aufzählungen mit einem einfachen Bindestrich (-)
+- Fliessendes, lesbares Deutsch. Die Ausgabe wird als reiner Text angezeigt.
+- Gib das VOLLSTÄNDIGE, aktualisierte Brand-Voice-Dokument aus (nicht nur die Änderungen) — es ersetzt das alte Dokument direkt und muss eigenständig vollständig nutzbar sein, mit derselben Struktur wie das Original (Stimm-Portrait, Kerncharakter, Tonalitätsskalen, Sprachliche Merkmale, Do's & Don'ts, Leitsatz).
+
+VORGEHEN:
+1. Lies das bestehende Brand-Voice-Dokument vollständig.
+2. Lies die neuen Quelltexte vollständig.
+3. Identifiziere: Was bestätigt und vertieft das Bestehende? Was ist neu und ergänzt bisher unterbestimmte Aspekte? Was widerspricht dem Bestehenden tatsächlich (nicht nur oberflächlich anders formuliert)?
+4. Schreibe das vollständige, aktualisierte Dokument. Bei Widersprüchen: entscheide dich für die Version, die durch mehr/aktuelleres Material gestützt wird, und erwähne kurz, was sich geändert hat und warum — als letzten Abschnitt "ÄNDERUNGEN IN DIESEM UPDATE" (3-6 Stichpunkte).`,
+    build: (d) => `BESTEHENDES BRAND-VOICE-DOKUMENT:\n${sanitizeForPrompt(d.existing)}\n\n---\n\nNEUE QUELLTEXTE ZUR EINARBEITUNG:\n${sanitizeForPrompt(d.text)}`
+  },
   'sparring': {
     label: 'Rhetoric Sparring — Micro-Coaching',
     system: `You are an elite executive communication coach with deep expertise in rhetoric, linguistics, and adult learning (didactics). Your role is to create highly personalized, practical micro-coaching challenges based on a specific leader's communication weaknesses. Each challenge must be completable in under 2 minutes, feel immediately useful, and build a specific skill. Structure your output as: COACHING DIAGNOSIS (2–3 sentences summarising the core development area), then 3 WEEKLY MICRO-CHALLENGES. For each challenge: Challenge title, Skill targeted, The exercise (precise, concrete, takes max 2 minutes), Why this works (one sentence of didactic rationale), Example output (show what excellent looks like), Progress signal (one concrete, observable indicator — how will the person know this is working? Not abstract: a specific reaction, result, or internal signal they can check). End with: ONE SENTENCE FOCUS for the week. Tone: direct, warm, like a trusted Sparring Partner — no American coaching-speak or hype language ("you've got this!"). In English.
@@ -1067,7 +1085,7 @@ const MODULE_MAX_TOKENS = {
   // Heavy analysis modules
   rp: 4000, cf: 3000, la: 3000, rm: 3000, si: 3000, st: 2500,
   'crisis-toolkit': 4000, 'cm-earnings-analyzer': 4000, 'cm-board-coach': 4000,
-  'cm-roadshow': 4000, 'cm-equity-story': 3500, 'brand-voice-co': 4000, 'brand-voice-ind': 4000,
+  'cm-roadshow': 4000, 'cm-equity-story': 3500, 'brand-voice-co': 4000, 'brand-voice-ind': 4000, 'brand-voice-update': 4000,
   debrief: 3000, 'rh-translate': 3000, 'before-after': 3000,
   // Medium modules
   'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 2000, brief: 3500,
