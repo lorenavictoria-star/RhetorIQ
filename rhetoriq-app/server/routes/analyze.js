@@ -1033,12 +1033,18 @@ Structure the recognition in three implicit movements (not necessarily labeled h
 
 CRITICAL: The output MUST always include every one of these elements, in this exact order, even if the user's briefing does not explicitly mention them. If information is missing, construct a plausible, professional placeholder in square brackets (e.g. [Absender-Adresse], [Datum]) rather than omitting the block:
 
-1. ABSENDER (sender block) — name, company/title if given, full address, on separate lines, top left.
+1. ABSENDER (sender block) — company name, then a compact second line combining street/city, then a third line combining phone · email · website separated by " · " if these are available (do not spread phone/email/website across separate lines). Do not repeat phone/email/website again anywhere later in the letter — the sender block is the single place contact details appear; the closing paragraph may invite the reader to reach out but must not restate the phone number or email address a second time.
 2. ADRESSAT (recipient block) — name, company if given, full address, on separate lines, below the sender block, left-aligned.
 3. ORT UND DATUM (place and date) — right-aligned, e.g. "Zürich, [current or specified date]".
 4. BETREFF (subject line) — one bolded/clear line, no "Betreff:" prefix redundancy if already clear, concise and specific to the matter.
 5. ANREDE (salutation) — correct formal form calibrated to language and recipient (e.g. "Sehr geehrte Frau X" / "Sehr geehrter Herr Y" / "Sehr geehrte Damen und Herren" in German; "Dear Mr./Ms. X" in English). Never use a casual greeting.
 6. BRIEFTEXT (body) — clear paragraph structure: state the core matter or request within the first two sentences of the opening paragraph — context can follow, but do not delay the actual purpose of the letter with throat-clearing. Core content and any decisions/requests in the middle, and a closing paragraph with next steps or a courteous close. Formal register throughout — no colloquialisms, no contractions in English, no casual connectors. Avoid bureaucratic hedge phrasing (e.g. "we would like to kindly inform you that it might be the case that...") — formal register should still be direct. For "formal but warm" tone specifically: signal warmth through a specific personal reference (naming the relationship or shared history) in the opening, not through softer syntax that weakens the request.
+
+UNWELCOME NEWS (price increases, policy changes, service reductions): when the briefing describes a change the recipient will not welcome, open the letter with one short paragraph of genuine relationship context (how long the partnership has run, what has been reliable) before stating the change — do not state the unwelcome fact in the very first sentence. This is the one case where "core matter in the first two sentences" is superseded: earn the reader's goodwill for two or three sentences first, then deliver the news directly and without hedging.
+
+NO INTERNAL SUB-HEADINGS IN THE BODY: the body text is continuous formal prose, written as a letter a person would read, not a structured memo. Never insert bolded or capitalised mini-headers inside BRIEFTEXT (e.g. "What changes:", "Why this matters:", "What stays the same:") — that reads as an internal FAQ document, not a letter. Where the briefing gives you multiple distinct points (e.g. two different price tiers, several reasons), weave them into flowing paragraphs using natural transitions, not a labelled list of sub-sections. Short bullet points are acceptable only for the closing "service promise" summary, never for the substantive explanation.
+
+USE THE BRIEFING'S EXACT REASONING, DO NOT GENERALISE IT AWAY: if the briefing names a specific cost driver, differentiator, or reason for one letter/segment that differs from another (e.g. "traffic and congestion costs" for one audience vs. "site access and waiting times" for another), that specific driver must appear explicitly in the corresponding letter. Do not collapse distinct, briefing-specified reasons into one generic list of cost factors shared across all variants — each variant's justification must reflect what was actually said about that specific segment.
 7. GRUSSFORMEL (closing formula) — correct formal closing matched to the salutation (e.g. "Freundliche Grüsse" / "Mit freundlichen Grüssen" in German-Swiss usage — never the German "Mit freundlichen Grüßen" ß spelling, always Swiss ss; "Kind regards" / "Yours sincerely" in English).
 8. UNTERSCHRIFT (signature block) — sender's full name, and title/role if provided, on the final lines.
 
@@ -1060,7 +1066,7 @@ const MODULE_MAX_TOKENS = {
   'cm-roadshow': 4000, 'cm-equity-story': 3500, 'brand-voice-co': 4000, 'brand-voice-ind': 4000,
   debrief: 3000, 'rh-translate': 3000, 'before-after': 3000,
   // Medium modules
-  'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 2000, brief: 2000,
+  'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 2000, brief: 3500,
   crisis: 2500, 'ht-crisis-comm': 2500, 'ht-positioning': 2500,
   'cm-qa-trainer': 2500, 'competitive-check': 2500,
   // Quick modules
