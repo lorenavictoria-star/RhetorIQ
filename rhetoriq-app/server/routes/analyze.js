@@ -1161,7 +1161,7 @@ async function callClaude(system, user, maxTokens, model, temperature) {
 // POST /api/analyze
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const { module, clientId, data } = req.body;
+    const { module, clientId, data, instructionsKey } = req.body;
     if (data && typeof data.text === 'string') data.text = capText(data.text);
     const cfg = PROMPTS[module];
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
@@ -1171,15 +1171,20 @@ router.post('/', requireAuth, async (req, res) => {
     let restDynamicSystem = '';
     const userMsg = cfg.build(data);
 
-    // Append per-client custom instructions if present
+    // Append per-client custom instructions if present. Text Generator tiles
+    // (LinkedIn, Newsletter, etc.) save instructions under a tile-specific key
+    // ("text-gen-linkedin") via the gear icon, distinct from the generic
+    // module key ("text-gen") used for module-wide feedback — fetch both.
     const resolvedClientId = clientId || (req.user.role === 'client' ? req.user.clientId : null);
     if (resolvedClientId) {
+      const keys = instructionsKey && instructionsKey !== module ? [module, instructionsKey] : [module];
       const { rows: customRows } = await pool.query(
-        'SELECT instructions FROM client_module_prompts WHERE client_id=$1 AND module_key=$2',
-        [resolvedClientId, module]
+        'SELECT instructions FROM client_module_prompts WHERE client_id=$1 AND module_key=ANY($2)',
+        [resolvedClientId, keys]
       );
-      if (customRows[0]?.instructions) {
-        restDynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(customRows[0].instructions);
+      const combined = customRows.map(r => r.instructions).filter(Boolean).join('\n');
+      if (combined) {
+        restDynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(combined);
       }
     }
 
@@ -1315,7 +1320,7 @@ router.post('/', requireAuth, async (req, res) => {
 // POST /api/analyze/stream — SSE streaming version of the main analyze endpoint
 router.post('/stream', requireAuth, async (req, res) => {
   try {
-    const { module, clientId, data, debug } = req.body;
+    const { module, clientId, data, debug, instructionsKey } = req.body;
     if (data && typeof data.text === 'string') data.text = capText(data.text);
     const isDebug = debug === true && req.user.role === 'advisor';
     const cfg = PROMPTS[module];
@@ -1328,14 +1333,17 @@ router.post('/stream', requireAuth, async (req, res) => {
     const resolvedClientId = clientId || (req.user.role === 'client' ? req.user.clientId : null);
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
 
-    // Same injections as main endpoint
+    // Same injections as main endpoint — fetch both the generic module key and,
+    // for Text Generator, the tile-specific gear-icon key (e.g. "text-gen-linkedin")
     if (resolvedClientId) {
+      const keys = instructionsKey && instructionsKey !== module ? [module, instructionsKey] : [module];
       const { rows: customRows } = await pool.query(
-        'SELECT instructions FROM client_module_prompts WHERE client_id=$1 AND module_key=$2',
-        [resolvedClientId, module]
+        'SELECT instructions FROM client_module_prompts WHERE client_id=$1 AND module_key=ANY($2)',
+        [resolvedClientId, keys]
       );
-      if (customRows[0]?.instructions)
-        restDynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(customRows[0].instructions);
+      const combined = customRows.map(r => r.instructions).filter(Boolean).join('\n');
+      if (combined)
+        restDynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(combined);
     }
     let clientIndustry = null;
     let hasBrandVoice = false;

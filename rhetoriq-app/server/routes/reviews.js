@@ -63,26 +63,44 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// PUT /api/reviews/:id — advisor saves edited text, client is notified via WS
+// PUT /api/reviews/:id — advisor saves edited text.
+// send:true (default) marks it done and notifies the client via WS.
+// send:false just persists the draft edit — stays pending, no notification,
+// so the advisor can save progress and come back later without sending early.
 router.put('/:id', auth, async (req, res) => {
-  const { editedText } = req.body;
+  const { editedText, send } = req.body;
   if (!editedText) return res.status(400).json({ error: 'No text provided' });
+  const shouldSend = send !== false;
   try {
     const { rows } = await pool.query(
       `UPDATE review_requests
-       SET edited_text = $1, status = 'done', updated_at = NOW()
+       SET edited_text = $1, status = $3, updated_at = NOW()
        WHERE id = $2 RETURNING *`,
-      [editedText, req.params.id]
+      [editedText, req.params.id, shouldSend ? 'done' : 'pending']
     );
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
-    req.app.locals.wss.broadcast({
-      type: 'review_done',
-      id: rows[0].id,
-      clientId: rows[0].client_id,
-      editedText,
-      moduleLabel: rows[0].module_label
-    });
+    if (shouldSend) {
+      req.app.locals.wss.broadcast({
+        type: 'review_done',
+        id: rows[0].id,
+        clientId: rows[0].client_id,
+        editedText,
+        moduleLabel: rows[0].module_label
+      });
+    }
     res.json(rows[0]);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/reviews/:id — advisor discards a review request entirely
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const { rowCount } = await pool.query('DELETE FROM review_requests WHERE id=$1', [req.params.id]);
+    if (!rowCount) return res.status(404).json({ error: 'Not found' });
+    res.json({ ok: true });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });

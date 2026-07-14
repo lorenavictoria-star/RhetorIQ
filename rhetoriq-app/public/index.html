@@ -1928,7 +1928,7 @@ const T={
     review_sent:'Sent to advisor — you will be notified when the revision is ready.',
     review_done:'Your advisor has revised this text.',
     review_queue:'Review Queue',review_none:'No pending reviews.',
-    review_save:'Save & send to client',review_editing:'Editing…',
+    review_save:'Save & send to client',review_editing:'Editing…',review_save_only:'Save only',review_delete:'Delete',
     chat_greeting:'Hello — I am the RhetorIQ assistant. What can I help you with?',
     chat_ph:'Ask anything…',chat_send:'Send',
     datasec_title:'Data Security & Privacy',
@@ -2002,7 +2002,7 @@ const T={
     review_sent:'An die Beraterin gesendet — Sie werden benachrichtigt, sobald die Überarbeitung bereit ist.',
     review_done:'Ihre Beraterin hat diesen Text überarbeitet.',
     review_queue:'Überarbeitungsanfragen',review_none:'Keine offenen Anfragen.',
-    review_save:'Speichern & an Klient senden',review_editing:'Wird bearbeitet…',
+    review_save:'Speichern & an Klient senden',review_editing:'Wird bearbeitet…',review_save_only:'Nur speichern',review_delete:'Löschen',
     chat_greeting:'Hallo — ich bin der RhetorIQ-Assistent. Wie kann ich Ihnen helfen?',
     chat_ph:'Stellen Sie eine Frage…',chat_send:'Senden',
     datasec_title:'Datenschutz & Datensicherheit',
@@ -4907,10 +4907,11 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
   body.innerHTML='<span class="stream-cursor">▍</span>';
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
   try{
+    const instructionsKey=module==='text-gen'?('text-gen-'+(arguments[1]||'custom')):undefined;
     const resp=await fetch(API+'/api/analyze/stream',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({module,clientId,data,debug:debugMode&&isAdv})
+      body:JSON.stringify({module,clientId,data,debug:debugMode&&isAdv,instructionsKey})
     });
     if(!resp.ok){const d=await resp.json();throw new Error(d.error||'Server error');}
     const reader=resp.body.getReader();const dec=new TextDecoder();
@@ -5433,23 +5434,39 @@ async function loadAdvisorReviews(){
       <div class="rev-card" id="rvc-${rv.id}">
         <div class="rev-card-meta">${safeText(rv.module_label||'Result')} &mdash; ${new Date(rv.created_at).toLocaleDateString('de-CH')}</div>
         <div class="rev-card-orig">${rv.original_text}</div>
-        <textarea class="rev-card-edit" id="rev-edit-${rv.id}">${rv.original_text}</textarea>
-        <button class="rev-savebtn" onclick="saveReview(${rv.id})">${T[LANG]?.review_save||'Save & send to client'}</button>
+        <textarea class="rev-card-edit" id="rev-edit-${rv.id}">${rv.edited_text||rv.original_text}</textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <button class="obtn" style="color:var(--red);border-color:var(--red)" onclick="deleteReview(${rv.id})">${T[LANG]?.review_delete||'Löschen'}</button>
+          <button class="obtn" onclick="saveReview(${rv.id},false)">${T[LANG]?.review_save_only||'Nur speichern'}</button>
+          <button class="rev-savebtn" onclick="saveReview(${rv.id},true)">${T[LANG]?.review_save||'Speichern & an Klient senden'}</button>
+        </div>
       </div>`).join('');
   }catch(e){}
 }
 
-async function saveReview(id){
+async function saveReview(id,send){
   const ta=document.getElementById('rev-edit-'+id);
   const text=ta?.value?.trim();
   if(!text)return;
-  const btn=ta.nextElementSibling;
-  btn.disabled=true;btn.textContent=T[LANG]?.review_editing||'Saving…';
+  const btns=ta.parentNode.querySelectorAll('button');
+  btns.forEach(b=>b.disabled=true);
+  const activeBtn=send?btns[btns.length-1]:btns[1];
+  const origLabel=activeBtn.textContent;
+  activeBtn.textContent=T[LANG]?.review_editing||'Speichert…';
   try{
-    await api('/api/reviews/'+id,{method:'PUT',body:JSON.stringify({editedText:text})});
+    await api('/api/reviews/'+id,{method:'PUT',body:JSON.stringify({editedText:text,send})});
+    if(send){document.getElementById('rvc-'+id)?.remove();loadAdvisorReviews();}
+    else{btns.forEach(b=>b.disabled=false);activeBtn.textContent='✓ Gespeichert';setTimeout(()=>{activeBtn.textContent=origLabel;},1500);}
+  }catch(e){btns.forEach(b=>b.disabled=false);activeBtn.textContent=origLabel;}
+}
+
+async function deleteReview(id){
+  if(!confirm('Diese Freigabe-Anfrage löschen? Der Klient wird nicht benachrichtigt.'))return;
+  try{
+    await api('/api/reviews/'+id,{method:'DELETE'});
     document.getElementById('rvc-'+id)?.remove();
     loadAdvisorReviews();
-  }catch(e){btn.disabled=false;btn.textContent=T[LANG]?.review_save||'Save & send to client';}
+  }catch(e){alert('Fehler beim Löschen.');}
 }
 
 function openReviewPanel(){
