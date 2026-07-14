@@ -652,7 +652,8 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   #page-module #mod-form > .tg-tiles,
   #page-module #mod-form > .tg-back,
   #page-module #mod-form > .tg-panel{grid-column:1}
-  #page-module #mod-form > .rbox{grid-column:2;grid-row:1/20;position:sticky;top:20px;margin-top:0;max-height:calc(100vh - 160px);overflow-y:auto}
+  #page-module #mod-form > .rbox,
+  #page-module #mod-form > .tg-rbox-wrap{grid-column:2;grid-row:1/20;position:sticky;top:20px;margin-top:0;max-height:calc(100vh - 160px);overflow-y:auto}
   /* QUICK PANEL */
   #quick-panel{width:280px}
 }
@@ -4344,6 +4345,11 @@ function buildTextGen(prefill,form){
         </div>
       </div>
       <button class="runbtn" onclick="runMod('text-gen','${t.id}')">${tl.tg_generate}</button>
+      ${subSection(t)}
+    </div>`).join('');
+
+  const rboxWrapHtml=tileData.map(t=>`
+    <div class="tg-rbox-wrap" id="tg-rbox-wrap-${t.id}" style="display:none">
       <div class="rbox" id="text-gen-r-${t.id}"><div class="rhead"><span class="rlbl">${tl.tg_result}</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b-${t.id}')">${tl.btn_copy}</button>${t.id==='newsletter'?`<button class="exbtn" style="background:#f9f6ff;border-color:#e0d4f5;color:#7c3aed" onclick="klvSavePrompt('${t.id}')">→ Klaviyo</button>`:''}</div></div><div class="rbody" id="text-gen-b-${t.id}"></div>
         ${t.id==='newsletter'?`<div id="klv-save-area-${t.id}" style="display:none;padding:10px;border-top:1px solid #e0d4f5">
           <div class="fg2"><label class="fl2">${tl.klv_subject||'Email Subject'}</label><input type="text" id="klv-subject-${t.id}" placeholder="${tl.klv_subject_ph||'e.g. Our March Newsletter'}"></div>
@@ -4351,12 +4357,12 @@ function buildTextGen(prefill,form){
           <div id="klv-save-status-${t.id}" style="font-size:11px;color:var(--mu);margin-top:6px"></div>
         </div>`:''}
       </div>
-      ${subSection(t)}
     </div>`).join('');
 
   form.innerHTML=`
     <div id="tg-tiles" class="tg-tiles">${tilesHtml}</div>
-    ${panelsHtml}`;
+    ${panelsHtml}
+    ${rboxWrapHtml}`;
   loadTgRefs();
   loadLiProfile();
   loadTgSubscriptions();
@@ -4368,6 +4374,7 @@ function tgOpenTile(id){
   window._currentTgTile=id;
   document.getElementById('tg-tiles').style.display='none';
   document.getElementById('tg-panel-'+id).style.display='block';
+  const rw=document.getElementById('tg-rbox-wrap-'+id);if(rw)rw.style.display='block';
   loadTgRef(id);
   loadVorbild(id);
   if(id==='newsletter')klvAutoLoad('newsletter');
@@ -4375,6 +4382,7 @@ function tgOpenTile(id){
 }
 function tgCloseTile(id){
   document.getElementById('tg-panel-'+id).style.display='none';
+  const rw=document.getElementById('tg-rbox-wrap-'+id);if(rw)rw.style.display='none';
   document.getElementById('tg-tiles').style.display='grid';
 }
 function tgSubToggle(id){
