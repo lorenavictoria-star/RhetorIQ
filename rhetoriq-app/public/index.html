@@ -1894,7 +1894,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const API='https://rhetoriq.ch';
-let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null;
+let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null,_pendingRevisionNote=null;
 let debugMode=localStorage.getItem('riq-debug')==='1';
 const DEFAULT_MODULES=['profiling','brand-voice','text-gen','review','recognition','pre-meeting','arg-reaction','crisis','risk','actionability','thread','rh-translate','before-after','sparring','debrief','crisis-toolkit','competitive-check','presentation','customer-review'];
 function modEnabled(key){if(enabledModules===null)return DEFAULT_MODULES.includes(key);return enabledModules.includes(key);}
@@ -3035,6 +3035,15 @@ async function submitRating(id,rating,bar,regenName,regenTile){
         await runMod('text-gen',regenTile);
         return;
       }
+    }
+    // Kundenrezension: the "text" field is the customer's review itself, not a
+    // briefing — feedback goes through a separate revisionNote instead of being
+    // appended to the review text.
+    if(rating===-1&&note&&regenName==='customer-review'){
+      bar.innerHTML='<span style="font-size:12px;color:var(--mu)">↻ Wird überarbeitet…</span>';
+      _pendingRevisionNote=note;
+      await runMod('customer-review');
+      return;
     }
     bar.innerHTML='<span style="font-size:12px;color:var(--mu)">'+(rating===1?'👍 Danke für dein Feedback!':'👎 Danke — das fliesst ab sofort in die Anweisungen für diesen Klienten ein.')+(note?' <span style="opacity:.7">("'+safeText(note)+'")</span>':'')+'</span>';
   }catch(e){bar.innerHTML='<span style="font-size:11px;color:var(--er)">Fehler: '+safeText(e.message)+'</span>';}
@@ -4920,7 +4929,7 @@ async function runMod(name){
   else if(name==='brief'){module='brief';rid='brief-r';bid='brief-b';const t=g('br-in');if(!t)return alert('Please enter the briefing for this letter.');data={text:t+context,sender:g('br-sender'),recipient:g('br-recipient'),subject:g('br-subject'),tone:g('br-tone')};}
 else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';bid='crisis-toolkit-b';const t=g('ctk-in');if(!t)return alert('Please describe the crisis situation.');data={text:t+context,crisisType:g('ctk-type'),company:g('ctk-company'),audiences:g('ctk-aud')};}
   else if(name==='before-after'){module='before-after';rid='before-after-r';bid='before-after-b';const t=g('ba-in');if(!t)return alert('Please enter the original text.');data={text:t,goal:g('ba-goal'),audience:g('ba-aud'),tone:g('ba-tone')};}
-  else if(name==='customer-review'){module='customer-review';rid='customer-review-r';bid='customer-review-b';const t=g('crv-in');if(!t)return alert('Bitte zuerst den Rezensionstext einfügen.');data={text:t,company:g('crv-company'),industry:g('crv-industry'),platform:g('crv-platform'),rating:g('crv-rating'),customerType:g('crv-customer-type')};}
+  else if(name==='customer-review'){module='customer-review';rid='customer-review-r';bid='customer-review-b';const t=g('crv-in');if(!t)return alert('Bitte zuerst den Rezensionstext einfügen.');data={text:t,company:g('crv-company'),industry:g('crv-industry'),platform:g('crv-platform'),rating:g('crv-rating'),customerType:g('crv-customer-type'),revisionNote:_pendingRevisionNote||undefined};_pendingRevisionNote=null;}
   else if(name==='competitive-check'){module='competitive-check';rid='competitive-check-r';bid='competitive-check-b';const t=g('cc-in');if(!t)return alert('Please enter your key messages.');data={text:t,industry:g('cc-industry'),company:g('cc-company'),audience:g('cc-aud')};}
   else if(name==='arg-pushback'){module='st';rid='arg-pushback-r';bid='arg-pushback-b';const t=g('ar-push-in');if(!t)return alert('Please enter text.');data={text:t+context,perspectives:g('ar-push-persp'),intensity:g('ar-push-int')};}
   else if(name==='arg-reactions'){module='si';rid='arg-reactions-r';bid='arg-reactions-b';const t=g('ar-react-in');if(!t)return alert('Please enter text.');data={text:t+context,stakeholders:g('ar-react-sth'),severity:g('ar-react-sev')};}
@@ -4972,7 +4981,7 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
     }
     // Task 16: thumbs up/down rating buttons — visible to advisors and clients alike
     if(analysisId){
-      const regenName=module==='text-gen'?name:'';
+      const regenName=module==='text-gen'?name:(module==='customer-review'?'customer-review':'');
       const regenTile=module==='text-gen'?(arguments[1]||'custom'):'';
       const ratingBar=document.createElement('div');
       ratingBar.style.cssText='display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap';
