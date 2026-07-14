@@ -992,6 +992,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <span class="huname" id="uname"></span>
       <button onclick="openPalette()" title="Search modules (⌘K)" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu);background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:'Instrument Sans',sans-serif"><i class="ti ti-search" style="font-size:13px"></i><span style="display:none" id="hdr-cmd-label">⌘K</span></button>
       <button id="lang-toggle" onclick="toggleLang()" style="font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--mu);background:none;border:1px solid var(--bd);border-radius:4px;padding:4px 8px;cursor:pointer;font-family:'Instrument Sans',sans-serif">DE</button>
+      <button onclick="openTour(0)" title="Einführung / Tour" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--mu);background:none;border:1px solid var(--bd);border-radius:50%;cursor:pointer;font-family:'Instrument Sans',sans-serif">?</button>
       <button class="sout" id="hdr-signout" onclick="logout()">Sign out</button>
     </div>
   </header>
@@ -1794,6 +1795,21 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   </div>
 </div>
 
+<!-- Product Tour Modal -->
+<div id="tour-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--bg);border-radius:12px;max-width:520px;width:100%;padding:32px 28px;box-shadow:0 8px 40px rgba(0,0,0,.2)">
+    <div style="display:flex;gap:6px;margin-bottom:20px" id="tour-dots"></div>
+    <div id="tour-body"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:26px">
+      <button onclick="closeTour()" style="background:none;border:none;color:var(--mu);font-size:12px;cursor:pointer;font-family:'Instrument Sans',sans-serif" id="tour-skip">Überspringen</button>
+      <div style="display:flex;gap:8px">
+        <button onclick="tourStep(-1)" id="tour-back" style="padding:9px 16px;border:1px solid var(--bd);border-radius:8px;background:transparent;color:var(--tx);cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:13px">Zurück</button>
+        <button onclick="tourStep(1)" id="tour-next" style="padding:9px 18px;border:none;border-radius:8px;background:var(--ac,#1a3d2e);color:#fff;cursor:pointer;font-weight:600;font-family:'Instrument Sans',sans-serif;font-size:13px">Weiter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Contact request overlay (triggered by pricing/demo chat intent) -->
 <div id="person-voice-generate-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--bg);border-radius:10px;max-width:600px;width:100%;padding:28px 24px;box-shadow:0 8px 40px rgba(0,0,0,.18)">
@@ -1865,7 +1881,7 @@ function modEnabled(key){if(enabledModules===null)return DEFAULT_MODULES.include
 function hasSuite(prefix){return enabledModules&&enabledModules.some(k=>k.startsWith(prefix));}
 
 // ── LANGUAGE TOGGLE ───────────────────────────────────────────
-let LANG=localStorage.getItem('riq-lang')||'en';
+let LANG=localStorage.getItem('riq-lang')||'de';
 const T={
   en:{
     nav_home:'Home',nav_modules:'Modules',nav_brand:'Brand',nav_people:'People',nav_hist:'History',nav_more:'More',
@@ -2120,6 +2136,8 @@ function toggleLang(){
   LANG=LANG==='en'?'de':'en';
   localStorage.setItem('riq-lang',LANG);
   applyLang();
+  const unameEl=document.getElementById('uname');
+  if(unameEl&&unameEl.textContent)renderHomeGreeting(unameEl.textContent);
 }
 applyLang();
 
@@ -2826,11 +2844,74 @@ async function tryAutoLogin(){
 }
 
 // BOOT
+function renderHomeGreeting(fullName){
+  const eyebrowEl=document.getElementById('home-eyebrow');
+  const h1El=document.getElementById('home-h1');
+  const subEl=document.getElementById('home-sub');
+  if(!eyebrowEl||!h1El||!subEl)return;
+  const firstName=(fullName||'').trim().split(/\s+/)[0]||'';
+  const hour=new Date().getHours();
+  const isDE=LANG==='de';
+  let greetWord,wish;
+  if(hour<11){greetWord=isDE?'Guten Morgen':'Good morning';wish=isDE?'Ich wünsche dir einen erfolgreichen Tag.':'Wishing you a great day ahead.';}
+  else if(hour<18){greetWord=isDE?'Guten Tag':'Good afternoon';wish=isDE?'Ich wünsche dir einen produktiven Nachmittag.':'Wishing you a productive afternoon.';}
+  else{greetWord=isDE?'Guten Abend':'Good evening';wish=isDE?'Ich wünsche dir einen schönen Abend.':'Wishing you a pleasant evening.';}
+  eyebrowEl.textContent=isDE?'Communication Intelligence':'Communication Intelligence';
+  h1El.innerHTML=firstName?`${safeText(greetWord)}, <strong>${safeText(firstName)}.</strong>`:`${safeText(greetWord)}.`;
+  subEl.textContent=wish;
+}
+
+// ── PRODUCT TOUR ──────────────────────────────────────────────
+const TOUR_CONTENT={
+  de:[
+    {title:'Willkommen bei RhetorIQ',body:'<p style="font-size:14px;line-height:1.6;color:var(--tx)">RhetorIQ ist deine Kommunikationsintelligenz-Plattform für Führungskommunikation. Von Krisenkommunikation über Investor Relations bis zu LinkedIn-Posts: jedes Modul liefert präzise Texte in der authentischen Stimme deines Unternehmens, nicht in generischem KI-Klang.</p>'},
+    {title:'So navigierst du',body:'<div style="font-size:14px;line-height:1.7;color:var(--tx)"><p><strong>Home</strong>: Schnellzugriff auf deine wichtigsten Module, plus das Prompt-Feld oben. Schreib oder sag einfach, was du brauchst, RhetorIQ leitet dich direkt ins richtige Modul.</p><p><strong>Modules</strong>: Die komplette Werkzeugliste, nach Kategorie sortiert.</p><p><strong>Clients</strong>: Klienten, Brand Voice und Firmengedächtnis an einem Ort verwalten.</p></div>'},
+    {title:'Best Practices für den Start',body:'<div style="font-size:14px;line-height:1.7;color:var(--tx)"><p>1. Richte für jeden Klienten zuerst die Brand Voice ein, das ist die Basis für jede Ausgabe.</p><p>2. Nutze das Onboarding-Tool, um bestehende Dokumente automatisch einzuordnen.</p><p>3. Hinterlege pro Modul individuelle Anweisungen (Zahnrad-Symbol), wenn ein Klient spezielle Vorgaben hat.</p></div>'},
+    {title:'Los geht\'s',body:'<p style="font-size:14px;line-height:1.6;color:var(--tx)">Du bist startklar. Diese Tour findest du jederzeit über das ?-Symbol oben rechts.</p>'}
+  ],
+  en:[
+    {title:'Welcome to RhetorIQ',body:'<p style="font-size:14px;line-height:1.6;color:var(--tx)">RhetorIQ is your communication intelligence platform for executive communication. From crisis response to investor relations to LinkedIn posts: every module delivers precise text in your company\'s authentic voice, not generic AI tone.</p>'},
+    {title:'How to navigate',body:'<div style="font-size:14px;line-height:1.7;color:var(--tx)"><p><strong>Home</strong>: Quick access to your key modules, plus the prompt field at the top. Type or say what you need, RhetorIQ routes you straight into the right module.</p><p><strong>Modules</strong>: The complete toolset, sorted by category.</p><p><strong>Clients</strong>: Manage clients, Brand Voice, and company memory in one place.</p></div>'},
+    {title:'Best practices to get value fast',body:'<div style="font-size:14px;line-height:1.7;color:var(--tx)"><p>1. Set up Brand Voice for each client first, it\'s the foundation for every output.</p><p>2. Use the onboarding tool to auto-sort existing documents.</p><p>3. Add per-module custom instructions (gear icon) when a client has specific requirements.</p></div>'},
+    {title:'You\'re ready',body:'<p style="font-size:14px;line-height:1.6;color:var(--tx)">You\'re all set. Find this tour again anytime via the ? icon in the top right.</p>'}
+  ]
+};
+let _tourIdx=0;
+function openTour(startIdx){
+  _tourIdx=startIdx||0;
+  document.getElementById('tour-ov').style.display='flex';
+  tourRender();
+}
+function closeTour(){
+  document.getElementById('tour-ov').style.display='none';
+  localStorage.setItem('riq-tour-seen','1');
+}
+function tourStep(delta){
+  const steps=TOUR_CONTENT[LANG==='de'?'de':'en'];
+  _tourIdx+=delta;
+  if(_tourIdx>=steps.length){closeTour();return;}
+  if(_tourIdx<0)_tourIdx=0;
+  tourRender();
+}
+function tourRender(){
+  const isDE=LANG==='de';
+  const steps=TOUR_CONTENT[isDE?'de':'en'];
+  const step=steps[_tourIdx];
+  document.getElementById('tour-body').innerHTML=`<div style="font-size:19px;font-weight:700;margin-bottom:14px;color:var(--tx)">${safeText(step.title)}</div>${step.body}`;
+  document.getElementById('tour-dots').innerHTML=steps.map((_,i)=>`<div style="height:4px;flex:1;border-radius:2px;background:${i<=_tourIdx?'var(--ac,#1a3d2e)':'var(--bd)'}"></div>`).join('');
+  document.getElementById('tour-back').style.visibility=_tourIdx===0?'hidden':'visible';
+  document.getElementById('tour-back').textContent=isDE?'Zurück':'Back';
+  document.getElementById('tour-next').textContent=_tourIdx===steps.length-1?(isDE?'Los geht\'s':'Get started'):(isDE?'Weiter':'Next');
+  document.getElementById('tour-skip').textContent=isDE?'Überspringen':'Skip';
+  document.getElementById('tour-skip').style.display=_tourIdx===steps.length-1?'none':'block';
+}
+
 async function boot(user,role){
   isAdv=role==='advisor';
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('app').style.display='flex';
   document.getElementById('uname').textContent=user.name||user.email||'';
+  renderHomeGreeting(user.name);
   if(isAdv){
     document.body.classList.add('adv');
     const mnCl=document.getElementById('mn-clients');if(mnCl)mnCl.style.display='flex';
@@ -2860,6 +2941,7 @@ async function boot(user,role){
     const qpt=document.getElementById('qp-trigger');if(qpt)qpt.style.display='flex';
   }
   const _vlb=document.getElementById('voice-lang-btn');if(_vlb)_vlb.textContent=voiceLang.toUpperCase();
+  if(isAdv&&!localStorage.getItem('riq-tour-seen'))setTimeout(()=>openTour(0),600);
 }
 
 // WS
