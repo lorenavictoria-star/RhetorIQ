@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { requireAdvisor } = require('../middleware/auth');
 
-// GET /api/klaviyo/templates — fetch existing templates from Klaviyo
-router.get('/templates', requireAdvisor, async (req, res) => {
-  const { apiKey } = req.query;
+// POST /api/klaviyo/templates — fetch existing templates from Klaviyo
+// (POST + body, not GET + query string, so the API key never lands in a URL
+// or server access log)
+router.post('/templates', requireAdvisor, async (req, res) => {
+  const { apiKey } = req.body;
   if (!apiKey) return res.status(400).json({ error: 'apiKey required' });
 
   try {

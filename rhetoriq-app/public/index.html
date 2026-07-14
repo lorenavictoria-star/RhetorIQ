@@ -5029,7 +5029,7 @@ async function klvConnect(fid){
   if(!apiKey){status.textContent='Please enter your Klaviyo Private API Key.';return;}
   btn.disabled=true;btn.textContent='Connecting…';status.textContent='';
   try{
-    const r=await api('/api/klaviyo/templates?apiKey='+encodeURIComponent(apiKey));
+    const r=await api('/api/klaviyo/templates',{method:'POST',body:JSON.stringify({apiKey})});
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||'Klaviyo error');
     localStorage.setItem('klv_key_'+fid,apiKey);
