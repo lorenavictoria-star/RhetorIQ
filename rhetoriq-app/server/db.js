@@ -203,6 +203,16 @@ async function init() {
     );
     CREATE INDEX IF NOT EXISTS onboarding_tokens_token_idx ON onboarding_tokens(token);
     CREATE INDEX IF NOT EXISTS onboarding_tokens_client_idx ON onboarding_tokens(client_id);
+
+    -- One-time backfill: clients with an explicit (non-default) enabled_modules
+    -- list predate the 'presentation' and 'customer-review' modules, so those
+    -- never got included. Their absence wasn't a deliberate advisor choice —
+    -- the modules didn't exist yet — so add them to any list missing them.
+    -- Idempotent: only touches rows where the module is actually absent.
+    UPDATE clients SET enabled_modules = enabled_modules || ARRAY['presentation']::text[]
+      WHERE enabled_modules IS NOT NULL AND NOT (enabled_modules @> ARRAY['presentation']::text[]);
+    UPDATE clients SET enabled_modules = enabled_modules || ARRAY['customer-review']::text[]
+      WHERE enabled_modules IS NOT NULL AND NOT (enabled_modules @> ARRAY['customer-review']::text[]);
   `);
 
   // FIX 4: CHECK constraints on enum fields (done separately — DO $$ cannot be inside a multi-statement query string)

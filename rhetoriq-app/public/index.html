@@ -1896,7 +1896,7 @@ if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https:/
 const API='https://rhetoriq.ch';
 let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null;
 let debugMode=localStorage.getItem('riq-debug')==='1';
-const DEFAULT_MODULES=['profiling','brand-voice','text-gen','review','recognition','pre-meeting','arg-reaction','crisis','risk','actionability','thread','rh-translate','before-after','sparring','debrief','crisis-toolkit','competitive-check'];
+const DEFAULT_MODULES=['profiling','brand-voice','text-gen','review','recognition','pre-meeting','arg-reaction','crisis','risk','actionability','thread','rh-translate','before-after','sparring','debrief','crisis-toolkit','competitive-check','presentation','customer-review'];
 function modEnabled(key){if(enabledModules===null)return DEFAULT_MODULES.includes(key);return enabledModules.includes(key);}
 function hasSuite(prefix){return enabledModules&&enabledModules.some(k=>k.startsWith(prefix));}
 
@@ -3113,7 +3113,7 @@ async function sendTokenByEmail(clientId){
 let _mcClientId=null;
 const MC_SECTIONS=[
   {label:'Fundament',keys:['profiling','brand-voice','text-gen']},
-  {label:'Schreiben',keys:['review','recognition','before-after','text-gen','brief']},
+  {label:'Schreiben',keys:['review','recognition','before-after','text-gen','brief','presentation','customer-review']},
   {label:'Prävention',keys:['risk','crisis','crisis-toolkit','arg-reaction','competitive-check','pre-meeting']},
   {label:'Effizienz',keys:['actionability','thread','rh-translate']},
   {label:'Wachstum',keys:['sparring','debrief','before-after']},
