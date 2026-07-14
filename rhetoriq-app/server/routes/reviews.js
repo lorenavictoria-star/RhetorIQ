@@ -50,11 +50,12 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// GET /api/reviews — advisor fetches all pending reviews
+// GET /api/reviews — advisor fetches all reviews still awaiting action
+// (both untouched 'pending' ones and drafts saved but not yet sent — 'edited')
 router.get('/', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT * FROM review_requests WHERE status = 'pending' ORDER BY created_at DESC`
+      `SELECT * FROM review_requests WHERE status IN ('pending', 'edited') ORDER BY created_at DESC`
     );
     res.json(rows);
   } catch (e) {
@@ -64,9 +65,12 @@ router.get('/', auth, async (req, res) => {
 });
 
 // PUT /api/reviews/:id — advisor saves edited text.
-// send:true (default) marks it done and notifies the client via WS.
-// send:false just persists the draft edit — stays pending, no notification,
-// so the advisor can save progress and come back later without sending early.
+// send:true (default) marks it approved and notifies the client via WS.
+// send:false just persists the draft edit as 'edited' — stays in the queue,
+// no notification, so the advisor can save progress and come back later.
+// Status values are constrained by review_requests_status_check to exactly
+// 'pending' | 'edited' | 'approved' | 'rejected' — using anything else
+// (e.g. the previous 'done') violates that constraint and 500s.
 router.put('/:id', auth, async (req, res) => {
   const { editedText, send } = req.body;
   if (!editedText) return res.status(400).json({ error: 'No text provided' });
@@ -76,7 +80,7 @@ router.put('/:id', auth, async (req, res) => {
       `UPDATE review_requests
        SET edited_text = $1, status = $3, updated_at = NOW()
        WHERE id = $2 RETURNING *`,
-      [editedText, req.params.id, shouldSend ? 'done' : 'pending']
+      [editedText, req.params.id, shouldSend ? 'approved' : 'edited']
     );
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     if (shouldSend) {
