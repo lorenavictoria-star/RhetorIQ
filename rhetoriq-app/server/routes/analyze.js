@@ -815,19 +815,21 @@ Wherever possible, quote feedback verbatim as evidence — do not paraphrase rea
 FORMATIERUNGSREGELN — zwingend exakt einhalten, da die Ausgabe maschinell in echte PowerPoint-Folien umgewandelt wird:
 - Kein Markdown: keine Rauten, keine Sternchen, keine Blockzitate
 - Halte dich EXAKT an das folgende Format, Zeile für Zeile — jede Folie beginnt mit einer Zeile "FOLIE n — [Folientitel]" (n = fortlaufende Nummer)
-- Nach jeder Folienüberschrift folgen genau zwei Blöcke: "INHALT:" (Stichpunkte für die Folie, mit einfachem Bindestrich, max. 5 Punkte, kurz und visuell — keine ganzen Sätze) und "SPRECHERTEXT:" (was die Person tatsächlich laut sagt — vollständige, natürlich gesprochene Sätze, keine Stichpunkte)
+- Nach jeder Folienüberschrift folgen die Blöcke "INHALT:" (Stichpunkte für die Folie, mit einfachem Bindestrich, max. 5 Punkte) und "SPRECHERTEXT:" (was die Person tatsächlich laut sagt — vollständige, natürlich gesprochene Sätze, keine Stichpunkte). Optional, nur wenn es die Botschaft massiv verstärkt, füge dazwischen einen Block "VISUELL:" ein — maximal ein Satz, der ein Diagramm, Bild oder Layout vorschlägt (z.B. "VISUELL: Balkendiagramm, das den Einbruch in Q3 zeigt").
 - Die allererste Folie ist immer eine Titelfolie: "FOLIE 1 — [Präsentationstitel]" mit INHALT nur Untertitel/Anlass/Datum-Platzhalter, SPRECHERTEXT die Eröffnung
 - Die letzte Folie ist immer eine Abschlussfolie (Zusammenfassung, Call-to-Action, oder "Fragen") mit passendem Sprechertext
 - Ganz am Anfang, vor FOLIE 1, gib zwei Metazeilen aus: "GESCHÄTZTE DAUER: [X Minuten]" und "ANZAHL FOLIEN: [n]"
 
 INHALTLICHE REGELN:
-- Anzahl Folien richtet sich nach der angegebenen Redezeit: als Faustregel 1 Folie pro 1,5-2 Minuten Sprechzeit (z.B. 15 Minuten Vortrag = ca. 8-10 Folien).
+- TIMING & WORTANZAHL: Ein Sprecher liest ca. 120-130 Wörter pro Minute. Kalkuliere den SPRECHERTEXT exakt nach dieser Metrik. Wenn eine Präsentation 10 Minuten dauern soll, muss der gesamte Sprechertext kumuliert etwa 1'200 bis 1'300 Wörter umfassen. Zwinge dich nicht durch Füllwörter in die Länge, sondern durch inhaltliche Tiefe, Beispiele und Argumentationsschritte. Zähle beim Schreiben mit — die Gesamtwortzahl über alle Sprechertexte muss zur geforderten Redezeit passen, nicht nur die Foliengliederung.
+- FOLIEN-REDUKTION: INHALT-Stichpunkte dürfen absolut maximal 6-8 Wörter umfassen. Es sind visuelle Anker, keine Manuskripte. Lösche alle Füllwörter, Artikel (der, die, das) und Modalverben aus den Folien-Stichpunkten.
 - INHALT (Folie) und SPRECHERTEXT (gesprochen) sind bewusst unterschiedlich: die Folie zeigt Stichworte/Zahlen/Kernaussagen, der Sprechertext ist das ausformulierte gesprochene Wort — beides muss zusammenpassen, aber der Sprechertext liest die Folie nicht einfach vor.
 - Baue einen klaren roten Faden: Eröffnung mit Hook (Frage, Zahl, Behauptung — nicht "Vielen Dank, dass Sie gekommen sind"), dann Kernargumentation in 3-5 klaren Schritten, dann starker Schluss mit konkreter Handlungsaufforderung oder Kernbotschaft zum Mitnehmen.
+- ÜBERGÄNGE (TRANSITIONS): Jeder SPRECHERTEXT (ausser der allerletzte) muss zwingend mit einer Überleitung enden, die die nächste Folie logisch und fliessend einleitet (z.B. "Wie genau dieser Effekt aussieht, zeigt die nächste Betrachtung..."). Die Folien dürfen sich niemals wie isolierte, unabhängige Blöcke lesen.
 - Der Sprechertext muss in der authentischen Stimme des Sprechers/Unternehmens klingen (siehe Brand Voice, falls vorhanden) — kein generischer Konferenz-Ton.
 - Baue an mindestens 2 Stellen eine bewusste Pause oder rhetorische Frage für das Publikum ein (im Sprechertext markiert mit "[Pause]" oder als direkte Publikumsfrage).
-- Vermeide Textwüsten auf Folien: wenn ein Stichpunkt länger als eine Zeile wäre, kürze ihn oder splitte ihn auf zwei Folien.`,
-    build: (d) => `Thema/Titel: ${d.topic||'Nicht angegeben'}\nAnlass: ${d.occasion||'Nicht angegeben'}\nZielpublikum: ${d.audience||'Nicht angegeben'}\nGewünschte Redezeit: ${d.duration||'15 Minuten'}\nKernbotschaft / Ziel des Vortrags: ${d.goal||'Nicht angegeben'}\n\nHintergrundmaterial / Stichpunkte / bestehende Inhalte:\n${sanitizeForPrompt(d.text)}`
+- FAKTEN-TREUE (ANTI-HALLUCINATION): Wenn das Briefing zu dünn ist, um die geforderte Sprechzeit inhaltlich zu füllen, erfinde NIEMALS konkrete Zahlen, Unternehmensnamen, Kundenbeispiele oder Metriken. Nutze in diesem Fall zwingend eckige Klammern für Platzhalter (z.B. "[Hier konkretes Kundenbeispiel für effiziente Skalierung einfügen]"), damit der Redner weiss, wo er eigene Fakten ergänzen muss — auch wenn das bedeutet, dass Sprechertexte an manchen Stellen Platzhalter statt Fliesstext enthalten.`,
+    build: (d) => `Thema/Titel: ${d.topic||'Nicht angegeben'}\nAnlass: ${d.occasion||'Nicht angegeben'}\nZielpublikum: ${d.audience||'Nicht angegeben'}\nGewünschte Redezeit: ${d.duration||'15 Minuten'}\nKernbotschaft / Ziel des Vortrags: ${d.goal||'Nicht angegeben'}${d.designNotes?`\nDesign-Referenz (Corporate Design, Farben, Stil der Präsentation): ${d.designNotes}`:''}\n\nHintergrundmaterial / Stichpunkte / bestehende Inhalte:\n${sanitizeForPrompt(d.text)}`
   },
   'pre-meeting': {
     label: 'Pre-Meeting Brief',
@@ -1131,7 +1133,7 @@ const MODULE_MAX_TOKENS = {
   'cm-roadshow': 4000, 'cm-equity-story': 3500, 'brand-voice-co': 4000, 'brand-voice-ind': 4000, 'brand-voice-update': 4000,
   debrief: 3000, 'rh-translate': 3000, 'before-after': 3000,
   // Medium modules
-  'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 2000, brief: 3500, presentation: 4500,
+  'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 2000, brief: 3500, presentation: 8000,
   crisis: 2500, 'ht-crisis-comm': 2500, 'ht-positioning': 2500,
   'cm-qa-trainer': 2500, 'competitive-check': 2500,
   // Quick modules
