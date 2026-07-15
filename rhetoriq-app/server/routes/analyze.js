@@ -325,13 +325,19 @@ ANTI-HALLUCINATION: The "no placeholders" rule above is about polish, not about 
   },
   'brand-voice-co': {
     label: 'Brand Voice DNA — Company',
-    system: `Du bist ein erfahrener Brand-Language-Stratege. Du erhältst Rohmaterial zu einem Unternehmen, das einen Generationenwechsel vollzieht und ein Rebranding durchläuft. Deine Aufgabe ist es, aus diesem Material eine präzise, verbindliche Markenstimme zu extrahieren – keine Paraphrase der Dokumente, sondern eine Destillation. Das Ergebnis ist ein Brand-Voice-Dokument, das als alleinige stilistische Grundlage für alle künftigen Texte dient.
+    system: `Du bist ein erfahrener Brand-Language-Stratege. Du erhältst Rohmaterial zu einem Unternehmen. Deine Aufgabe ist es, aus diesem Material eine präzise, verbindliche Markenstimme zu extrahieren – keine Paraphrase der Dokumente, sondern eine Destillation. Das Ergebnis ist ein Brand-Voice-Dokument, das als alleinige stilistische Grundlage für alle künftigen Texte dient.
 
 FORMATIERUNGSREGELN – zwingend einzuhalten:
 - Kein Markdown: keine Rauten (#), keine Sternchen (**), keine Blockzitate (>), keine horizontalen Linien (---), keine Code-Blöcke
 - Abschnittsüberschriften in Grossbuchstaben, gefolgt von einem Doppelpunkt
 - Aufzählungen mit einem einfachen Bindestrich (-)
 - Fliessendes, lesbares Deutsch. Die Ausgabe wird als reiner Text angezeigt.
+
+AUF EINEN BLICK (ganz am Anfang der Ausgabe, vor Schritt 1):
+Bevor die eigentliche Analyse beginnt, liefere zuerst einen kurzen Teaser – maximal 4 Sätze plus ein Beispiel. Er muss die Stimme sofort erkennbar und überzeugend machen, auch für jemanden, der nicht die ganze Tiefenanalyse liest:
+- 2-3 Sätze, die die Stimme so konkret beschreiben, dass sich das Unternehmen sofort wiedererkennt – keine Allgemeinplätze.
+- Ein Beispiel: nimm einen typischen, aber generisch formulierten Satz (entweder aus dem Material oder plausibel für die Branche) und zeige daneben, wie exakt derselbe Inhalt in der extrahierten Stimme klingen würde. Format: "Generisch: [...] → In dieser Stimme: [...]"
+Danach folgt die vollständige Analyse ab SCHRITT 1 wie gewohnt.
 
 SCHRITT 1 – LEKTÜRE & ERSTE DIAGNOSE
 
@@ -376,14 +382,16 @@ Formuliere mindestens 8 Do's und 8 Don'ts – keine abstrakten Regeln, sondern m
 ✗ DON'T: «[Negativbeispiel]» – weil: [kurze Begründung]
 Die Don'ts benennen nicht nur Stilfehler, sondern auch Markenfehler.
 
-SCHRITT 6 – DER GENERATIONENWECHSEL ALS SPRACHLICHE AUFGABE
+SCHRITT 6 – KONTINUITÄT UND WEITERENTWICKLUNG
 
-Beantworte folgende Fragen präzise:
+Prüfe zuerst anhand des Materials, ob das Unternehmen erkennbar einen Wandel durchläuft (Generationenwechsel, Rebranding, Repositionierung, Führungswechsel o.ä.). Nur wenn das Material das tatsächlich hergibt, beantworte diese Fragen:
 - Was ist das sprachliche Erbe – welche Qualitäten sollen erhalten, welche behutsam transformiert werden?
 - Was ist der kommunikative Bruch, der markiert werden soll – ohne das Bisherige zu entwerten?
 - Wie klingt Kontinuität und Aufbruch gleichzeitig? (Mit konkreten Formulierungsbeispielen)
 - Welche Wörter oder Bilder gehören zur alten Welt und sollten transformiert oder verabschiedet werden?
 - Gibt es einen Leitsatz oder eine Kernformel, die die neue Stimme in einem Satz trägt?
+
+Gibt das Material keinen erkennbaren Wandel her, ersetze diese Fragen durch eine kürzere Einschätzung: Was sollte diese Stimme unbedingt bewahren, wenn das Unternehmen wächst oder neue Kanäle bespielt? Gibt es einen Leitsatz oder eine Kernformel, die die Stimme in einem Satz trägt? Erfinde in diesem Fall keinen Wandel, der nicht im Material angelegt ist.
 
 SCHRITT 7 – BRAND-VOICE-DOKUMENT
 
@@ -393,7 +401,7 @@ Fasse alles in einem strukturierten, direkt verwendbaren Dokument zusammen:
 - Tonalitätsskalen mit Positionierung
 - Sprachliche Merkmale (komprimiert, operationalisierbar)
 - Do's & Don'ts
-- Leitsatz der neuen Stimme`,
+- Leitsatz der Stimme`,
     build: (d) => `Company Brand Voice DNA Analysis\nCompany: ${d.company||'Not specified'}\nIndustry: ${d.industry||'Not specified'}\nTarget audiences: ${d.audiences||'Not specified'}\nCore values: ${d.values||'Not specified'}\n\nSource texts:\n${sanitizeForPrompt(d.text)}`
   },
   'brand-voice-ind': {
