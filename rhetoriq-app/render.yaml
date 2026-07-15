@@ -35,24 +35,20 @@ services:
         value: https://rhetoriq.ch
       - key: APP_URL
         value: https://rhetoriq.ch
-
-  - type: cron
-    name: rhetoriq-backup
-    runtime: node
-    region: frankfurt
-    rootDir: server
-    buildCommand: npm install
-    schedule: "0 3 * * *"   # täglich 03:00 UTC
-    startCommand: node jobs/backup.js
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: rhetoriq-db
-          property: connectionString
+      - key: COST_ALERT_THRESHOLD_USD
+        value: "5"   # advisor gets an email if a single client crosses this in API costs on one day
 
 databases:
   - name: rhetoriq-db
     databaseName: rhetoriq
     user: rhetoriq
-    plan: starter   # upgraded from free — enables backups + cron
+    plan: starter   # Starter Postgres includes Render's own automatic daily
+                    # backups (Dashboard -> rhetoriq-db -> Backups, with
+                    # restore). The custom rhetoriq-backup cron job that used
+                    # to run here was removed: it wrote pg_dump output to the
+                    # cron container's own local disk, which is ephemeral and
+                    # gets wiped after every run — every backup it ever made
+                    # was destroyed immediately after logging "success". It
+                    # never protected anything; this real, platform-level
+                    # backup is the actual safety net.
     region: frankfurt

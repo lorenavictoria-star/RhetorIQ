@@ -1,8 +1,46 @@
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { brevoSend } = require('../lib/brevo');
 
 const router = express.Router();
+
+// ── Cost alerting ────────────────────────────────────────────────
+// Claude Sonnet 4.6 pricing — keep in sync with routes/advisor.js PRICE_INPUT/OUTPUT
+const COST_PRICE_INPUT = 3 / 1_000_000;
+const COST_PRICE_OUTPUT = 15 / 1_000_000;
+const COST_ALERT_THRESHOLD_USD = parseFloat(process.env.COST_ALERT_THRESHOLD_USD) || 5;
+const ADVISOR_NOTIFY_EMAIL = process.env.ADVISOR_EMAIL || 'contact@lorenalienhard.ch';
+// In-memory "already alerted today" guard, keyed by `${clientId}:${YYYY-MM-DD}`.
+// Resets on server restart — acceptable for a first version: worst case is one
+// duplicate alert email after a redeploy, never silence.
+const _costAlerted = new Set();
+async function checkCostAlert(clientId, advisorId) {
+  if (!clientId) return;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const alertKey = `${clientId}:${today}`;
+    if (_costAlerted.has(alertKey)) return;
+    const { rows } = await pool.query(
+      `SELECT COALESCE(SUM(input_tokens),0) AS in_tok, COALESCE(SUM(output_tokens),0) AS out_tok
+       FROM usage_log WHERE client_id=$1 AND created_at::date = CURRENT_DATE`,
+      [clientId]
+    );
+    const costToday = rows[0].in_tok * COST_PRICE_INPUT + rows[0].out_tok * COST_PRICE_OUTPUT;
+    if (costToday < COST_ALERT_THRESHOLD_USD) return;
+    _costAlerted.add(alertKey);
+    const { rows: cRows } = await pool.query('SELECT name FROM clients WHERE id=$1', [clientId]);
+    const clientName = cRows[0]?.name || `Klient #${clientId}`;
+    await brevoSend({
+      to: ADVISOR_NOTIFY_EMAIL,
+      subject: `RhetorIQ — Kostenwarnung: ${clientName} über $${COST_ALERT_THRESHOLD_USD} heute`,
+      text: `${clientName} hat heute bereits $${costToday.toFixed(2)} an API-Kosten verursacht (Schwelle: $${COST_ALERT_THRESHOLD_USD}).\n\nDetails: https://rhetoriq.ch (Advisor Dashboard -> Kosten)\n`,
+      senderName: 'RhetorIQ'
+    });
+  } catch (e) {
+    console.error('[cost-alert] failed:', e.message);
+  }
+}
 
 // Sanitize user-controlled text before injecting into system prompts.
 // Strips prompt-injection patterns while preserving legitimate content.
@@ -1167,7 +1205,7 @@ const GLOBAL_STYLE_RULES = `FORMATTING RULES — apply to all output regardless 
 16. ANTI-HALLUCINATION (applies to every module, not just long-form content): if the input is too thin to support a specific number, statistic, date, company name, client example, quote, or named source that the output would otherwise need, never invent one — even a plausible-sounding placeholder value is a fabrication. Use an explicit bracketed placeholder instead (e.g. "[konkrete Umsatzzahl hier einfügen]", "[Kundenbeispiel ergänzen]", "[Quelle nennen]") so the user immediately sees exactly what still needs to be supplied, rather than unknowingly shipping an invented fact. This overrides any per-module instruction to "fill out" or "complete" a structure — a structurally complete but factually fabricated output is worse than one with visible gaps.`;
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
-const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'chat', 'vs-cal', 'vs-gen', 'recognition', 'actionability', 'thread', 'before-after', 'rh-translate']);
+const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'chat', 'vs-cal', 'vs-gen', 'rw', 'as', 'tc', 'before-after', 'rh-translate']);
 const MODEL_SONNET = 'claude-sonnet-4-6';
 const MODEL_HAIKU  = 'claude-haiku-4-5-20251001';
 function resolveModel(module) {
@@ -1319,7 +1357,7 @@ router.post('/', requireAuth, async (req, res) => {
       pool.query(
         'INSERT INTO usage_log (advisor_id, client_id, module, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)',
         [advisorId || null, resolvedClientId || null, module, claudeResp.inputTokens, claudeResp.outputTokens]
-      ).catch(() => {});
+      ).then(() => checkCostAlert(resolvedClientId, advisorId)).catch(() => {});
     }
 
     // Persist analysis
@@ -1531,7 +1569,7 @@ router.post('/stream', requireAuth, async (req, res) => {
     // Fix 11: Log usage for client analyses too
     if (advisorId || resolvedClientId) {
       pool.query('INSERT INTO usage_log (advisor_id, client_id, module, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)',
-        [advisorId || null, resolvedClientId || null, module, inputTokens, outputTokens]).catch(() => {});
+        [advisorId || null, resolvedClientId || null, module, inputTokens, outputTokens]).then(() => checkCostAlert(resolvedClientId, advisorId)).catch(() => {});
     }
     if (advisorId && fullText.length > 200) {
       const inputText = Object.entries(data || {})
@@ -1830,5 +1868,9 @@ router.post('/:id/rate', requireAuth, async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Exposed for tests only — doesn't change Express behavior, since routers are
+// callable objects and consumers only ever use `require(...)` as the router.
+router._internal = { sanitizeForPrompt, capText, PROMPTS, MODULE_MAX_TOKENS, HAIKU_MODULES, GLOBAL_STYLE_RULES };
 
 module.exports = router;
