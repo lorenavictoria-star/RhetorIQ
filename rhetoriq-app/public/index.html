@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#111">
 <title>RhetorIQ</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%231a3d2e'/%3E%3Ccircle cx='50' cy='50' r='16' fill='%23ffffff'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;1,200;1,300;1,400&family=Instrument+Sans:wght@300;400;500;600&display=swap');
@@ -2655,7 +2656,7 @@ async function runCustomModule(){
     document.querySelector('.content').scrollTop=9999;
     // Auto-save as training example (idempotent — silently fails if already exists)
     api('/api/module-examples',{method:'POST',body:JSON.stringify({module_key:'custom-'+_cmActive.id,label:_cmActive.name,input_text:JSON.stringify(inputs),output_text:d.result,rating:3,auto_generated:true,source_client_id:clientId||null})}).catch(()=>{});
-  }catch(e){alert('Error: '+e.message);}
+  }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
   finally{btn.textContent='Run';btn.disabled=false;}
 }
 
@@ -3131,7 +3132,7 @@ async function sendTokenByEmail(clientId){
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||'Error');
     alert('Token sent to '+email);
-  }catch(e){alert('Error: '+e.message);}
+  }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
 }
 // ── MODULE CONFIGURATOR ────────────────────────────────────────
 let _mcClientId=null;
@@ -3231,7 +3232,7 @@ async function saveMcCustomPrompt(){
     note.textContent='✓ Modul "'+name+'" gespeichert und für diesen Klienten aktiv.';
     document.getElementById('mc-body').prepend(note);
     setTimeout(()=>note.remove(),4000);
-  }catch(e){alert('Error: '+e.message);}
+  }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
   finally{btn.textContent='Modul speichern';btn.disabled=false;}
 }
 async function saveModuleConfig(){
@@ -3245,7 +3246,7 @@ async function saveModuleConfig(){
     const c=clients.find(x=>x.id==_mcClientId);if(c)c.enabled_modules=d.enabled_modules;
     if(String(clientId)===String(_mcClientId)){enabledModules=d.enabled_modules;if(typeof renderModulesList==='function')renderModulesList();}
     closeModal('mc-ov');
-  }catch(e){alert('Error: '+e.message);}
+  }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
   finally{btn.textContent='Speichern';btn.disabled=false;}
 }
 
@@ -3331,7 +3332,7 @@ async function addClient(){
   if(clientType==='individual'){body.salutation=salutation;body.lastName=lastName;}if(email&&initpw){body.email=email;body.initialPassword=initpw;}
   try{const r=await api('/api/clients',{method:'POST',body:JSON.stringify(body)});const c=await r.json();if(!r.ok)throw new Error(c.error);
   if(c.id&&enabledModules){await api('/api/clients/'+c.id+'/modules',{method:'POST',body:JSON.stringify({enabled_modules:enabledModules})}).catch(()=>{});}
-  loadAdvisorDashboard();closeModal('nc-ov');['nc-name','nc-contact','nc-email','nc-initpw','nc-lastname'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('nc-privacy').checked=false;document.getElementById('nc-sector').value='';ncUpdateModules();ncSetType('company');ncSetLang('de');goPage('clients');}catch(e){alert('Error: '+e.message);}
+  loadAdvisorDashboard();closeModal('nc-ov');['nc-name','nc-contact','nc-email','nc-initpw','nc-lastname'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('nc-privacy').checked=false;document.getElementById('nc-sector').value='';ncUpdateModules();ncSetType('company');ncSetLang('de');goPage('clients');}catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
 }
 
 // PEOPLE DIRECTORY
@@ -3405,7 +3406,7 @@ async function savePerson(){
       if(val.trim())await api('/api/people/'+saved.id+'/profile',{method:'POST',body:JSON.stringify({profile_type:profileType,content:val.trim()})});
     }
     await loadPeople();closeModal('np-ov');
-  }catch(e){alert('Error: '+e.message);}
+  }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
 }
 async function deletePerson(id,name){
   if(!confirm('Remove '+name+' from the directory?\n\nThis also deletes their saved profiles.'))return;
@@ -4918,7 +4919,7 @@ async function submitPersonVoiceImport(){
     await savePersonProfile(_pvState.pid,'voice',content);
     document.getElementById('person-voice-import-ov').style.display='none';
     loadPeople();
-  }catch(e){alert('Error: '+e.message);}
+  }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
 }
 async function saveResultToPerson(srcId,profileType){
   const content=document.getElementById(srcId)?.textContent?.trim();

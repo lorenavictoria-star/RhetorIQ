@@ -25,7 +25,7 @@ A new script `/tmp/RhetorIQ-repo/reset-advisor.js` has been created to:
 cd /tmp/RhetorIQ-repo/rhetoriq-app/server
 
 # Set environment variables for local testing
-export DATABASE_URL="postgres://user:pass@dpg-d91rg19kh4rs73arevpg-a.oregon-postgres.render.com/rhetoriq"
+export DATABASE_URL="postgres://user:pass@your-db-host.render.com/rhetoriq"
 export ADVISOR_EMAIL="your-email@example.com"
 export ADVISOR_PASSWORD="your-secure-password"
 
@@ -100,7 +100,7 @@ node ../../reset-advisor.js
 - If using local testing, set it explicitly: `export ADVISOR_EMAIL="..."`
 
 ### Error: "connect ENOTFOUND" or database connection fails
-- Verify the DATABASE_URL is correct: `dpg-d91rg19kh4rs73arevpg-a.oregon-postgres.render.com`
+- Verify the DATABASE_URL is correct: `your-db-host.render.com`
 - Check that Render PostgreSQL is running and accessible
 - Verify firewall/network rules allow connections
 
@@ -113,7 +113,7 @@ node ../../reset-advisor.js
 After running the script, verify the account was created:
 
 ```bash
-psql postgresql://user:pass@dpg-d91rg19kh4rs73arevpg-a.oregon-postgres.render.com/rhetoriq
+psql postgresql://user:pass@your-db-host.render.com/rhetoriq
 SELECT id, email, name, role, created_at FROM users WHERE email = 'advisor@example.com';
 ```
 
