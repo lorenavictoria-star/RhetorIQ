@@ -5674,10 +5674,12 @@ function renderModulesList(){
     const def=getMdefLang(m.key,MDEFS[m.key]);
     const displayName=def?.title||m.name;
     const isFav=favs.has(m.key);
+    const shortDesc=def?.desc?safeText(def.desc).replace(/&mdash;/g,'—').slice(0,90)+(def.desc.length>90?'…':''):'';
     return `<div class="mrow${m.feat?' mrow-feat':''}${m.crisis?' mrow-crisis':''}" onclick="${m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`}">
       <div class="mrow-left">
         <div class="mrow-name">${displayName}</div>
         <div class="mrow-tag">${m.tag}</div>
+        ${shortDesc?`<div style="font-size:12px;color:var(--mu);margin-top:3px;line-height:1.4">${shortDesc}</div>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:6px">
         <button onclick="toggleFav('${m.key}',event)" title="Pin to Quick Access" style="background:none;border:none;cursor:pointer;font-size:15px;padding:4px;color:${isFav?'#f59e0b':'var(--dm)'};line-height:1">${isFav?'★':'☆'}</button>
