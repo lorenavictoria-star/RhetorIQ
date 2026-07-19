@@ -561,6 +561,10 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
 
 /* ── HOME HERO ───────────────────────────────────────────────── */
 .home-hero{position:relative;overflow:hidden;padding-bottom:24px;margin-bottom:24px;border-bottom:0.5px solid var(--bd)}
+.home-more-toggle{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--ac);cursor:pointer;margin:4px 0 16px;user-select:none}
+.home-more-toggle:hover{text-decoration:underline}
+.home-more-toggle i{font-size:14px;transition:transform .15s}
+.home-more-toggle.open i{transform:rotate(180deg)}
 .home-ghost{position:absolute;top:-14px;left:-10px;font-family:'Spectral',serif;font-style:italic;font-size:110px;font-weight:200;color:transparent;-webkit-text-stroke:0.5px #EAECE9;line-height:1;pointer-events:none;white-space:nowrap;letter-spacing:-.03em;user-select:none;z-index:0}
 .home-eyebrow{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--ac);margin-bottom:12px;display:flex;align-items:center;gap:9px;position:relative;z-index:1}
 .home-eyebrow::after{content:'';flex:0 0 28px;height:0.5px;background:var(--ac)}
@@ -1065,6 +1069,12 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
             <div class="mu-pills" id="mu-pills"></div>
           </div>
 
+          <!-- Collapsible secondary content -->
+          <div class="home-more-toggle" id="home-more-toggle" onclick="toggleHomeMore()">
+            <span id="home-more-toggle-label">Statistiken &amp; Übersicht anzeigen</span> <i class="ti ti-chevron-down" id="home-more-toggle-icon" aria-hidden="true"></i>
+          </div>
+          <div id="home-more" style="display:none">
+
           <!-- Memory Banner -->
           <div class="mem-banner" id="mem-banner" style="display:none">
             <div class="mem-header" onclick="toggleMemBanner()">
@@ -1101,6 +1111,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
             <div class="stat ao" id="stat-people-box"><div class="sn" id="stat-people">0</div><div class="sl" id="stat-people-lbl">People</div></div>
             <div class="stat" id="stat-analyses-box"><div class="sn" id="stat-analyses">0</div><div class="sl" id="stat-analyses-lbl">Analyses</div></div>
           </div>
+          </div><!-- /home-more -->
         </div><!-- /home-left -->
 
       </div><!-- /home-grid -->
@@ -1929,6 +1940,7 @@ const T={
     router_sub:'Describe your task — RhetorIQ opens the right module automatically.',
     router_go:'→ Go',
     router_ph:'e.g. “Check if this press release could backfire” or “Write a speech for our CEO” or “Crisis: supplier just announced bankruptcy”',
+    home_more_show:'Show statistics & overview',home_more_hide:'Show less',
     qa_tag1:'Preparation',qa_name1:'Meeting Prep',qa_desc1:'Brief, agenda & people context — before any meeting',
     qa_tag2:'Emergency',qa_name2:'Crisis Response',qa_desc2:'Immediate framing for unexpected situations',
     qa_tag3:'Writing',qa_name3:'Text Generator',qa_desc3:'LinkedIn, newsletter, email, speech — in your exact voice',
@@ -2005,6 +2017,7 @@ const T={
     router_sub:'Beschreiben Sie Ihre Aufgabe — RhetorIQ öffnet automatisch das richtige Modul.',
     router_go:'→ Los',
     router_ph:'z.B. „Könnte diese Pressemitteilung nach hinten losgehen?” oder „Rede für unsere CEO schreiben” oder „Krise: Lieferant hat soeben Insolvenz angemeldet”',
+    home_more_show:'Statistiken & Übersicht anzeigen',home_more_hide:'Weniger anzeigen',
     qa_tag1:'Vorbereitung',qa_name1:'Meeting-Vorbereitung',qa_desc1:'Brief, Agenda & Personenkontext — vor jedem Meeting',
     qa_tag2:'Notfall',qa_name2:'Krisenreaktion',qa_desc2:'Sofortige Einordnung unerwarteter Situationen',
     qa_tag3:'Writing',qa_name3:'Text Generator',qa_desc3:'LinkedIn, Newsletter, E-Mail, Rede — in Ihrer eigenen Stimme',
@@ -2127,6 +2140,8 @@ function applyLang(){
   s('mm-contact',t.mm_contact);s('mm-datasec',t.mm_datasec);s('mm-signout',t.mm_signout);
   s('router-title',t.router_title);s('router-sub',t.router_sub);s('rbtn-txt',t.router_go);
   const ri=document.getElementById('router-input');if(ri)ri.placeholder=t.router_ph;
+  const hmt=document.getElementById('home-more-toggle-label');
+  if(hmt){const isOpen=document.getElementById('home-more')?.style.display!=='none';hmt.textContent=isOpen?t.home_more_hide:t.home_more_show;}
   s('qa-tag1',t.qa_tag1);s('qa-name1',t.qa_name1);s('qa-desc1',t.qa_desc1);
   s('qa-tag2',t.qa_tag2);s('qa-name2',t.qa_name2);s('qa-desc2',t.qa_desc2);
   s('qa-tag3',t.qa_tag3);s('qa-name3',t.qa_name3);s('qa-desc3',t.qa_desc3);
@@ -3473,6 +3488,14 @@ function updateMemBanner(){
 function toggleMemBanner(){
   const body=document.getElementById('mem-body');const btn=document.getElementById('mem-toggle-btn');
   body.classList.toggle('open');btn.textContent=body.classList.contains('open')?'Hide &#9650;':'Show &#9660;';
+}
+function toggleHomeMore(){
+  const box=document.getElementById('home-more');const toggle=document.getElementById('home-more-toggle');
+  const label=document.getElementById('home-more-toggle-label');
+  const open=box.style.display==='none';
+  box.style.display=open?'block':'none';
+  toggle.classList.toggle('open',open);
+  label.textContent=open?(T[LANG]?.home_more_hide||'Weniger anzeigen'):(T[LANG]?.home_more_show||'Statistiken & Übersicht anzeigen');
 }
 function renderMemory(){
   const list=document.getElementById('memory-list');
