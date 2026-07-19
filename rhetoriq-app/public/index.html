@@ -1707,8 +1707,8 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div onclick="goPage('people');loadPeople();setMN('more');hideMore()" class="mm-tile">
         <div class="mm-tile-l">People</div>
       </div>
-      <div id="mm-context" onclick="goPage('memory');setMN('more');hideMore()" class="mm-tile">
-        <div class="mm-tile-l">Memory</div>
+      <div onclick="goPage('memory');setMN('more');hideMore()" class="mm-tile">
+        <div class="mm-tile-l" id="mm-context">Memory</div>
       </div>
       <div id="mm-history" onclick="goPage('history');loadHistory();setMN('more');hideMore()" class="mm-tile">
         <div class="mm-tile-l">History</div>
@@ -1736,18 +1736,18 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <span>About & Info</span><span style="font-size:13px;color:var(--mu)">&#9660;</span>
       </div>
       <div id="mm-about-body" style="display:none">
-        <div id="mm-videos" onclick="goPage('videos');hideMore()" class="mm-row"><i class="ti ti-player-play"></i> Videos</div>
+        <div onclick="goPage('videos');hideMore()" class="mm-row"><i class="ti ti-player-play"></i> <span id="mm-videos">Videos</span></div>
         <div onclick="goPage('pricing');setMN('');hideMore()" class="mm-row"><i class="ti ti-tag"></i> Preise</div>
-        <div id="mm-contact" onclick="goPage('contact');setMN('');hideMore()" class="mm-row"><i class="ti ti-mail"></i> Contact</div>
-        <div id="mm-datasec" onclick="goPage('datasec');setMN('');hideMore()" class="mm-row"><i class="ti ti-shield"></i> Data Security</div>
+        <div onclick="goPage('contact');setMN('');hideMore()" class="mm-row"><i class="ti ti-mail"></i> <span id="mm-contact">Contact</span></div>
+        <div onclick="goPage('datasec');setMN('');hideMore()" class="mm-row"><i class="ti ti-shield"></i> <span id="mm-datasec">Data Security</span></div>
         <div onclick="goPage('datenschutz');setMN('');hideMore()" class="mm-row"><i class="ti ti-file-description"></i> Datenschutz</div>
         <div onclick="goPage('agb');setMN('');hideMore()" class="mm-row"><i class="ti ti-license"></i> AGB</div>
         <div onclick="goPage('impressum');setMN('');hideMore()" class="mm-row"><i class="ti ti-info-circle"></i> Impressum</div>
       </div>
     </div>
 
-    <div id="mm-signout" onclick="logout()" class="mm-row" style="border-top:1px solid var(--bd)">
-      <i class="ti ti-logout"></i> Sign out
+    <div onclick="logout()" class="mm-row" style="border-top:1px solid var(--bd)">
+      <i class="ti ti-logout"></i> <span id="mm-signout">Sign out</span>
     </div>
   </div>
 </div>
