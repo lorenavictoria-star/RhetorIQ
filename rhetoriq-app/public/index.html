@@ -172,9 +172,10 @@ body.adv #mm-advisor-section{display:block!important}
 .mm-tile{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 10px;border:1px solid var(--bd);border-radius:8px;cursor:pointer;background:var(--sf);transition:border-color .15s,background .15s;text-align:left}
 .mm-tile:hover{border-color:var(--ac);background:var(--acl)}
 .mm-tile-i{font-size:20px;color:var(--mu);line-height:1}
-.mm-tile-l{font-size:12px;font-weight:600;color:var(--tx);line-height:1.2;font-family:'Instrument Sans',sans-serif}
-.mm-row{padding:9px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--tx);transition:background .15s;font-family:'Instrument Sans',sans-serif}
+.mm-tile-l{font-size:13px;font-weight:500;color:var(--tx);line-height:1.2;font-family:'Instrument Sans',sans-serif}
+.mm-row{padding:9px 14px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--tx);transition:background .15s;font-family:'Instrument Sans',sans-serif}
 .mm-row:hover{background:var(--sf)}
+.mm-row i{font-size:14px;color:var(--mu)}
 
 /* MODULE PAGE */
 .back{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--mu);cursor:pointer;margin-bottom:24px;background:none;border:none;font-family:'Instrument Sans',sans-serif;padding:0}
@@ -1721,31 +1722,31 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div class="ao-item" id="mm-advisor-section" style="display:none;border-top:1px solid var(--bd)">
       <div style="padding:10px 14px 6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)">Advisor</div>
       <div class="ao-item mm-row" id="mm-usage" onclick="goPage('usage');loadUsage();setMN('more');hideMore()" style="display:none">
-        <i class="ti ti-chart-bar" style="font-size:15px;color:var(--mu)"></i> Usage
+        <i class="ti ti-chart-bar"></i> Usage
       </div>
       <div class="ao-item mm-row" id="mm-training" onclick="goPage('training');loadTraining();setMN('more');hideMore()" style="display:none">
-        <i class="ti ti-database" style="font-size:15px;color:var(--mu)"></i> Trainings-Bibliothek
+        <i class="ti ti-database"></i> Trainings-Bibliothek
       </div>
     </div>
 
     <!-- About collapsed -->
     <div style="border-top:1px solid var(--bd);padding:4px 0">
-      <div onclick="document.getElementById('mm-about-body').style.display=document.getElementById('mm-about-body').style.display==='none'?'block':'none'" style="padding:10px 14px;font-size:13px;cursor:pointer;color:var(--mu);display:flex;align-items:center;justify-content:space-between">
-        <span>About & Info</span><span style="font-size:11px">&#9660;</span>
+      <div onclick="document.getElementById('mm-about-body').style.display=document.getElementById('mm-about-body').style.display==='none'?'block':'none'" style="padding:10px 14px;font-size:13px;font-weight:500;cursor:pointer;color:var(--tx);display:flex;align-items:center;justify-content:space-between;font-family:'Instrument Sans',sans-serif">
+        <span>About & Info</span><span style="font-size:13px;color:var(--mu)">&#9660;</span>
       </div>
       <div id="mm-about-body" style="display:none">
-        <div id="mm-videos" onclick="goPage('videos');hideMore()" class="mm-row"><i class="ti ti-player-play" style="font-size:14px;color:var(--mu)"></i> Videos</div>
-        <div onclick="goPage('pricing');setMN('');hideMore()" class="mm-row"><i class="ti ti-tag" style="font-size:14px;color:var(--mu)"></i> Preise</div>
-        <div id="mm-contact" onclick="goPage('contact');setMN('');hideMore()" class="mm-row"><i class="ti ti-mail" style="font-size:14px;color:var(--mu)"></i> Contact</div>
-        <div id="mm-datasec" onclick="goPage('datasec');setMN('');hideMore()" class="mm-row"><i class="ti ti-shield" style="font-size:14px;color:var(--mu)"></i> Data Security</div>
-        <div onclick="goPage('datenschutz');setMN('');hideMore()" class="mm-row"><i class="ti ti-file-description" style="font-size:14px;color:var(--mu)"></i> Datenschutz</div>
-        <div onclick="goPage('agb');setMN('');hideMore()" class="mm-row"><i class="ti ti-license" style="font-size:14px;color:var(--mu)"></i> AGB</div>
-        <div onclick="goPage('impressum');setMN('');hideMore()" class="mm-row"><i class="ti ti-info-circle" style="font-size:14px;color:var(--mu)"></i> Impressum</div>
+        <div id="mm-videos" onclick="goPage('videos');hideMore()" class="mm-row"><i class="ti ti-player-play"></i> Videos</div>
+        <div onclick="goPage('pricing');setMN('');hideMore()" class="mm-row"><i class="ti ti-tag"></i> Preise</div>
+        <div id="mm-contact" onclick="goPage('contact');setMN('');hideMore()" class="mm-row"><i class="ti ti-mail"></i> Contact</div>
+        <div id="mm-datasec" onclick="goPage('datasec');setMN('');hideMore()" class="mm-row"><i class="ti ti-shield"></i> Data Security</div>
+        <div onclick="goPage('datenschutz');setMN('');hideMore()" class="mm-row"><i class="ti ti-file-description"></i> Datenschutz</div>
+        <div onclick="goPage('agb');setMN('');hideMore()" class="mm-row"><i class="ti ti-license"></i> AGB</div>
+        <div onclick="goPage('impressum');setMN('');hideMore()" class="mm-row"><i class="ti ti-info-circle"></i> Impressum</div>
       </div>
     </div>
 
-    <div id="mm-signout" onclick="logout()" style="border-top:1px solid var(--bd);padding:11px 14px;font-size:13px;cursor:pointer;color:var(--mu);display:flex;align-items:center;gap:8px">
-      <i class="ti ti-logout" style="font-size:14px"></i> Sign out
+    <div id="mm-signout" onclick="logout()" class="mm-row" style="border-top:1px solid var(--bd)">
+      <i class="ti ti-logout"></i> Sign out
     </div>
   </div>
 </div>
