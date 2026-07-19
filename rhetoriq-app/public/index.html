@@ -2948,9 +2948,15 @@ function renderHomeGreeting(fullName){
   if(hour<11){greetWord=isDE?'Guten Morgen':'Good morning';wish=isDE?'Ich wünsche dir einen erfolgreichen Tag.':'Wishing you a great day ahead.';}
   else if(hour<18){greetWord=isDE?'Guten Tag':'Good afternoon';wish=isDE?'Ich wünsche dir einen produktiven Nachmittag.':'Wishing you a productive afternoon.';}
   else{greetWord=isDE?'Guten Abend':'Good evening';wish=isDE?'Ich wünsche dir einen schönen Abend.':'Wishing you a pleasant evening.';}
-  eyebrowEl.textContent=isDE?'Communication Intelligence':'Communication Intelligence';
   h1El.innerHTML=firstName?`${safeText(greetWord)}, <strong>${safeText(firstName)}.</strong>`:`${safeText(greetWord)}.`;
-  subEl.textContent=wish;
+  if(isAdv){
+    eyebrowEl.style.display='';
+    eyebrowEl.textContent='Communication Intelligence';
+    subEl.textContent=wish;
+  } else {
+    eyebrowEl.style.display='none';
+    subEl.textContent=isDE?'Womit kann ich dir heute helfen?':'How can I help you today?';
+  }
 }
 
 // ── PRODUCT TOUR ──────────────────────────────────────────────
@@ -3025,6 +3031,9 @@ async function boot(user,role){
   } else {
     const bvNav=document.getElementById('mn-brand-voice');if(bvNav)bvNav.style.display='none';
     const bvBtns=document.getElementById('bv-adv-btns');if(bvBtns)bvBtns.style.display='none';
+    // advisor-facing stats/health-score/memory widgets are meaningless for a client — remove entirely
+    const hmToggle=document.getElementById('home-more-toggle');if(hmToggle)hmToggle.style.display='none';
+    const hmBox=document.getElementById('home-more');if(hmBox)hmBox.style.display='none';
   }
   connectWS();loadStats();renderVids();initPasteIntelligence();renderQuickAccess();
   // show ⌘K label + quick panel trigger on desktop
