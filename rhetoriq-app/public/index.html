@@ -79,6 +79,18 @@ body.adv .adv-only{display:block!important}
 .mlist-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--bd);background:#fff;color:var(--mu);font-family:'Instrument Sans',sans-serif}
 .mlist-pill:hover{border-color:var(--tx);color:var(--tx)}
 .mlist-pill.active{background:var(--tx);color:#fff;border-color:var(--tx)}
+.mcat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.mcat-card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:14px;cursor:pointer;text-align:left}
+.mcat-card:hover{border-color:var(--tx)}
+.mcat-card-icon{font-size:20px;line-height:1}
+.mcat-card-name{font-size:14px;font-weight:600;margin-top:8px}
+.mcat-card-count{font-size:12px;color:var(--mu);margin-top:2px}
+.mfav-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:4px}
+.mfav-tile{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px;cursor:pointer;text-align:center;font-size:12px;font-weight:600;color:#1d4ed8}
+.mfav-tile:hover{border-color:#1d4ed8}
+.mcat-eyebrow{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:4px 0 8px}
+.mcat-back{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--mu);cursor:pointer;margin-bottom:12px;background:none;border:none;padding:0;font-family:inherit}
+.mcat-back:hover{color:var(--tx)}
 .mrow{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--bd);cursor:pointer;transition:opacity .1s}
 .mrow:hover{opacity:.7}
 .mrow:last-child{border-bottom:none}
@@ -1273,7 +1285,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div class="mod-search-wrap">
         <input class="mod-search-inp" id="mod-search" placeholder="Search modules…" oninput="filterModsList(this.value)">
       </div>
-      <div class="mlist-filters">
+      <div class="mlist-filters" id="mlist-filters" style="display:none">
         <button class="mlist-pill active" id="pill-all" onclick="filterModsCat('all',this)">All</button>
         <button class="mlist-pill" id="pill-foundation" onclick="filterModsCat('foundation',this)">Basis</button>
         <button class="mlist-pill" id="pill-creation" onclick="filterModsCat('creation',this)">Writing</button>
@@ -1282,6 +1294,8 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <button class="mlist-pill" id="pill-growth" onclick="filterModsCat('growth',this)">Growth</button>
       </div>
       <div id="mlist-suite-pills" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+      <div id="modules-favs"></div>
+      <div id="modules-cats"></div>
       <div id="modules-list"></div>
     </div>
 
@@ -5622,9 +5636,19 @@ const ALL_MODULES=[
   {key:'ht-sales-pitch',name:'🤝 Group & MICE Sales Pitch',cat:'hotel',tag:'Hotel Suite',isNew:true},
 ];
 let modsCatFilter='all',modsSearch='';
+function getCatMeta(){
+  return {
+    foundation:{icon:'◆',label:LANG==='de'?'Basis':'Foundation'},
+    creation:{icon:'✎',label:LANG==='de'?'Schreiben & Antworten':'Writing & Replies'},
+    prevention:{icon:'⛨',label:LANG==='de'?'Krisen & Prävention':'Crisis & Prevention'},
+    efficiency:{icon:'⚡',label:LANG==='de'?'Effizienz':'Efficiency'},
+    growth:{icon:'↗',label:LANG==='de'?'Wachstum':'Growth'},
+  };
+}
 function renderModulesList(){
   const list=document.getElementById('modules-list');if(!list)return;
-  if(isAdv&&!clientId){list.innerHTML='<div style="color:var(--mu);font-size:14px;padding:24px 0;text-align:center">Bitte zuerst einen Klienten auswählen.</div>';return;}
+  const favBox=document.getElementById('modules-favs'),catBox=document.getElementById('modules-cats'),filtersBar=document.getElementById('mlist-filters');
+  if(isAdv&&!clientId){list.innerHTML='<div style="color:var(--mu);font-size:14px;padding:24px 0;text-align:center">Bitte zuerst einen Klienten auswählen.</div>';if(favBox)favBox.innerHTML='';if(catBox)catBox.innerHTML='';return;}
   // inject suite pills dynamically
   const sp=document.getElementById('mlist-suite-pills');
   if(sp){
@@ -5654,7 +5678,7 @@ function renderModulesList(){
   });
   // Custom modules for current client
   const filteredCustom=(customModules||[]).filter(m=>!q||m.name.toLowerCase().includes(q)||(m.description||'').toLowerCase().includes(q));
-  if(!filtered.length&&!filteredCustom.length){list.innerHTML=`<div style="color:var(--mu);font-size:14px;padding:20px 0">${T[LANG]?.mod_none||'No modules found.'}</div>`;return;}
+  if(!filtered.length&&!filteredCustom.length){if(filtersBar)filtersBar.style.display='flex';if(favBox)favBox.innerHTML='';if(catBox)catBox.innerHTML='';list.innerHTML=`<div style="color:var(--mu);font-size:14px;padding:20px 0">${T[LANG]?.mod_none||'No modules found.'}</div>`;return;}
   const customHtml=filteredCustom.length?`
     <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:4px 0 8px">${LANG==='de'?'Individuelle Module':'Custom Modules'}</div>
     ${filteredCustom.map(m=>`<div class="mrow mrow-feat" onclick="openCustomModule(${m.id})">
@@ -5667,9 +5691,39 @@ function renderModulesList(){
     ${filtered.length?`<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:16px 0 8px">${LANG==='de'?'Standard-Module':'Standard Modules'}</div>`:''}
   `:'';
   const favs=getFavs();
-  const stdFiltered=filtered.filter(m=>m.cat!=='capital-markets'&&m.cat!=='hotel');
   const cmFiltered=filtered.filter(m=>m.cat==='capital-markets');
   const htFiltered=filtered.filter(m=>m.cat==='hotel');
+  const showCards=modsCatFilter==='all'&&!q;
+  if(filtersBar)filtersBar.style.display=showCards?'none':'flex';
+  if(showCards){
+    list.innerHTML='';
+    const favMods=ALL_MODULES.filter(m=>favs.has(m.key)&&modEnabled(m.key));
+    if(favBox)favBox.innerHTML=favMods.length?`
+      <div class="mcat-eyebrow">${LANG==='de'?'Meine häufigsten':'My favorites'}</div>
+      <div class="mfav-grid">
+        ${favMods.map(m=>{const def=getMdefLang(m.key,MDEFS[m.key]);return `<div class="mfav-tile" onclick="${m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`}">${def?.title||m.name}</div>`;}).join('')}
+      </div>`:'';
+    const catMeta=getCatMeta();
+    const catCounts={};
+    filtered.forEach(m=>{if(catMeta[m.cat])catCounts[m.cat]=(catCounts[m.cat]||0)+1;});
+    const catCards=Object.keys(catMeta).filter(c=>catCounts[c]).map(c=>`
+      <div class="mcat-card" onclick="filterModsCat('${c}',document.getElementById('pill-${c}'))">
+        <div class="mcat-card-icon">${catMeta[c].icon}</div>
+        <div class="mcat-card-name">${catMeta[c].label}</div>
+        <div class="mcat-card-count">${catCounts[c]} ${LANG==='de'?'Module':'modules'}</div>
+      </div>`).join('');
+    const suiteCards=[];
+    if(hasSuite('cm-')&&cmFiltered.length)suiteCards.push(`<div class="mcat-card" onclick="filterModsCat('capital-markets',document.getElementById('pill-capital-markets'))"><div class="mcat-card-icon">▲</div><div class="mcat-card-name">Capital Markets</div><div class="mcat-card-count">${cmFiltered.length} ${LANG==='de'?'Module':'modules'}</div></div>`);
+    if(hasSuite('ht-')&&htFiltered.length)suiteCards.push(`<div class="mcat-card" onclick="filterModsCat('hotel',document.getElementById('pill-hotel'))"><div class="mcat-card-icon">🏨</div><div class="mcat-card-name">Hotel Suite</div><div class="mcat-card-count">${htFiltered.length} ${LANG==='de'?'Module':'modules'}</div></div>`);
+    if(catBox)catBox.innerHTML=`
+      ${customHtml}
+      <div class="mcat-eyebrow">${LANG==='de'?'Kategorien':'Categories'}</div>
+      <div class="mcat-grid">${catCards}${suiteCards.join('')}</div>`;
+    return;
+  }
+  if(favBox)favBox.innerHTML='';
+  if(catBox)catBox.innerHTML=`<button class="mcat-back" onclick="filterModsCat('all',document.getElementById('pill-all'))">&#8249; ${LANG==='de'?'Alle Kategorien':'All categories'}</button>`;
+  const stdFiltered=filtered.filter(m=>m.cat!=='capital-markets'&&m.cat!=='hotel');
   const renderRow=m=>{
     const def=getMdefLang(m.key,MDEFS[m.key]);
     const displayName=def?.title||m.name;
