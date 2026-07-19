@@ -2941,7 +2941,9 @@ function renderHomeGreeting(fullName){
   const h1El=document.getElementById('home-h1');
   const subEl=document.getElementById('home-sub');
   if(!eyebrowEl||!h1El||!subEl)return;
-  const firstName=(fullName||'').trim().split(/\s+/)[0]||'';
+  // Advisors log in with a personal name (use first name only); clients are companies —
+  // their "name" is the full client/company name (e.g. "3rd May"), never truncate it.
+  const firstName=isAdv?((fullName||'').trim().split(/\s+/)[0]||''):(fullName||'').trim();
   const hour=new Date().getHours();
   const isDE=LANG==='de';
   let greetWord,wish;
