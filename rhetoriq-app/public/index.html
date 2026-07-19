@@ -1286,12 +1286,12 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <input class="mod-search-inp" id="mod-search" placeholder="Search modules…" oninput="filterModsList(this.value)">
       </div>
       <div class="mlist-filters" id="mlist-filters" style="display:none">
-        <button class="mlist-pill active" id="pill-all" onclick="filterModsCat('all',this)">All</button>
-        <button class="mlist-pill" id="pill-foundation" onclick="filterModsCat('foundation',this)">Basis</button>
-        <button class="mlist-pill" id="pill-creation" onclick="filterModsCat('creation',this)">Writing</button>
-        <button class="mlist-pill" id="pill-prevention" onclick="filterModsCat('prevention',this)">Prevention</button>
-        <button class="mlist-pill" id="pill-efficiency" onclick="filterModsCat('efficiency',this)">Efficiency</button>
-        <button class="mlist-pill" id="pill-growth" onclick="filterModsCat('growth',this)">Growth</button>
+        <button class="mlist-pill active" id="pill-all" data-label="All" onclick="filterModsCat('all',this)">All</button>
+        <button class="mlist-pill" id="pill-foundation" data-label="Basis" onclick="filterModsCat('foundation',this)">Basis</button>
+        <button class="mlist-pill" id="pill-creation" data-label="Writing" onclick="filterModsCat('creation',this)">Writing</button>
+        <button class="mlist-pill" id="pill-prevention" data-label="Prevention" onclick="filterModsCat('prevention',this)">Prevention</button>
+        <button class="mlist-pill" id="pill-efficiency" data-label="Efficiency" onclick="filterModsCat('efficiency',this)">Efficiency</button>
+        <button class="mlist-pill" id="pill-growth" data-label="Growth" onclick="filterModsCat('growth',this)">Growth</button>
       </div>
       <div id="mlist-suite-pills" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
       <div id="modules-favs"></div>
@@ -2524,15 +2524,19 @@ function renderQuickAccess(){
   const el=document.getElementById('qa-section');if(!el)return;
   const storKey='riq-recent-'+(clientId||'global');
   const recent=JSON.parse(localStorage.getItem(storKey)||'[]');
-  const items=recent.length>=3?recent.slice(0,4):QA_DEFAULTS;
+  const isNewUser=recent.length<3;
+  const items=isNewUser?QA_DEFAULTS:recent.slice(0,4);
   const favs=getFavs();
   const pinnedCustom=(customModules||[]).filter(m=>favs.has('cm-'+m.id)).slice(0,2);
   const allItems=[
     ...pinnedCustom.map(m=>({key:'cm-'+m.id,name:m.icon+' '+m.name,action:()=>openCustomModule(m.id),pinned:true})),
     ...items.slice(0,4-pinnedCustom.length)
   ];
+  const heading=document.getElementById('qa-heading');
+  if(heading)heading.textContent=isNewUser?(LANG==='de'?'Empfohlen für dich':'Recommended for you'):'Quick Access';
+  const highlight=isNewUser?'border:2px solid var(--ac);':'';
   el.innerHTML=allItems.map(item=>`
-    <div class="qa-card" onclick="${item.action?'':''}" id="qa-${item.key.replace(/[^a-z0-9]/g,'-')}">
+    <div class="qa-card" style="${highlight}" onclick="${item.action?'':''}" id="qa-${item.key.replace(/[^a-z0-9]/g,'-')}">
       <div class="qa-name">${item.name}</div>
       <span class="qa-arr">↗</span>
     </div>`).join('')+`
@@ -5676,6 +5680,13 @@ function renderModulesList(){
     const matchQ=!q||m.name.toLowerCase().includes(q)||m.tag.toLowerCase().includes(q);
     return matchCat&&matchQ;
   });
+  // Pill counts (always based on enabled modules for this client, independent of search)
+  const enabledAll=ALL_MODULES.filter(m=>modEnabled(m.key)&&m.cat!=='capital-markets'&&m.cat!=='hotel');
+  document.querySelectorAll('.mlist-pill[data-label]').forEach(b=>{
+    const cat=b.id.replace('pill-','');
+    const n=cat==='all'?enabledAll.length:enabledAll.filter(m=>m.cat===cat).length;
+    b.textContent=`${b.dataset.label} (${n})`;
+  });
   // Custom modules for current client
   const filteredCustom=(customModules||[]).filter(m=>!q||m.name.toLowerCase().includes(q)||(m.description||'').toLowerCase().includes(q));
   if(!filtered.length&&!filteredCustom.length){if(filtersBar)filtersBar.style.display='flex';if(favBox)favBox.innerHTML='';if(catBox)catBox.innerHTML='';list.innerHTML=`<div style="color:var(--mu);font-size:14px;padding:20px 0">${T[LANG]?.mod_none||'No modules found.'}</div>`;return;}
@@ -5754,6 +5765,22 @@ function renderModulesList(){
     </div>
     ${htFiltered.map(renderRow).join('')}`:'';
   list.innerHTML=customHtml+stdFiltered.map(renderRow).join('')+cmHtml+htHtml;
+  showFavHintOnce(list);
+}
+function showFavHintOnce(list){
+  if(localStorage.getItem('riq-fav-hint-seen'))return;
+  const firstStar=list.querySelector('.mrow button[onclick^="toggleFav"]');
+  if(!firstStar)return;
+  const wrap=firstStar.parentElement;
+  wrap.style.position='relative';
+  const tip=document.createElement('div');
+  tip.textContent=LANG==='de'?'Stern anklicken = Schnellzugriff auf Home':'Click the star to pin this to your home screen';
+  tip.style.cssText='position:absolute;top:-38px;right:-6px;background:var(--tx);color:#fff;font-size:11px;padding:6px 10px;border-radius:6px;white-space:nowrap;z-index:5;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15)';
+  const dismiss=()=>{tip.remove();localStorage.setItem('riq-fav-hint-seen','1');};
+  tip.onclick=dismiss;
+  firstStar.addEventListener('click',dismiss,{once:true});
+  wrap.appendChild(tip);
+  setTimeout(dismiss,6000);
 }
 function filterModsList(q){modsSearch=q;renderModulesList();}
 function filterModsCat(cat,btn){
