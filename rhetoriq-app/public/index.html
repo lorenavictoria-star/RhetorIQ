@@ -2945,9 +2945,9 @@ function renderHomeGreeting(fullName){
   const hour=new Date().getHours();
   const isDE=LANG==='de';
   let greetWord,wish;
-  if(hour<11){greetWord=isDE?'Guten Morgen':'Good morning';wish=isDE?'Ich wünsche dir einen erfolgreichen Tag.':'Wishing you a great day ahead.';}
+  if(hour<11){greetWord=isDE?'Guten Morgen':'Good morning';wish=isDE?'Ich wünsche dir einen produktiven Morgen.':'Wishing you a productive morning.';}
   else if(hour<18){greetWord=isDE?'Guten Tag':'Good afternoon';wish=isDE?'Ich wünsche dir einen produktiven Nachmittag.':'Wishing you a productive afternoon.';}
-  else{greetWord=isDE?'Guten Abend':'Good evening';wish=isDE?'Ich wünsche dir einen schönen Abend.':'Wishing you a pleasant evening.';}
+  else{greetWord=isDE?'Guten Abend':'Good evening';wish=isDE?'Ich wünsche dir einen produktiven Abend.':'Wishing you a productive evening.';}
   h1El.innerHTML=firstName?`${safeText(greetWord)}, <strong>${safeText(firstName)}.</strong>`:`${safeText(greetWord)}.`;
   if(isAdv){
     eyebrowEl.style.display='';
@@ -2955,7 +2955,7 @@ function renderHomeGreeting(fullName){
     subEl.textContent=wish;
   } else {
     eyebrowEl.style.display='none';
-    subEl.textContent=isDE?'Womit kann ich dir heute helfen?':'How can I help you today?';
+    subEl.textContent=wish+' '+(isDE?'Womit kann ich dir heute helfen?':'How can I help you today?');
   }
 }
 
