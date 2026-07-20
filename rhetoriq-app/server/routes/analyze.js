@@ -1307,7 +1307,8 @@ router.post('/', requireAuth, async (req, res) => {
           + 'Der Output MUSS klingen wie dieses Unternehmen — nicht wie eine KI, nicht wie generisches Consulting, nicht wie ein neutraler Assistent.\n'
           + 'Verwende ausschliesslich die Sprache, die Tonalität, die Satzkonstruktionen und die Wertvorstellungen, die unten definiert sind.\n'
           + 'Jeder Satz, jeder Begriff, jede Formulierung muss sich anfühlen, als hätte das Unternehmen selbst geschrieben.\n'
-          + 'Generische KI-Sprache, Füllformulierungen oder neutraler Ton sind NICHT akzeptabel.\n\n';
+          + 'Generische KI-Sprache, Füllformulierungen oder neutraler Ton sind NICHT akzeptabel.\n'
+          + 'Wenn das Briefing unten dünn ist (nur Stichworte oder ein kurzer Auftrag ohne Ausformulierung), reicht es NICHT, nur den Ton zu treffen: durchsuche das Brand-Voice-Dokument aktiv nach den konkreten Beispielsätzen (z. B. unter DO\'S & DON\'TS oder Stimm-Portrait) und nutze deren tatsächliche Satzmuster, Bildsprache und Wortwahl als Bauplan für den neuen Text, statt nur ihren allgemeinen Stil zu imitieren. Je dünner das Briefing, desto stärker soll sich der Output an diesen konkreten Vorbildern orientieren.\n\n';
         memRows.forEach(m => {
           brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${sanitizeForPrompt(m.content)}\n\n`;
         });
@@ -1452,7 +1453,8 @@ router.post('/stream', requireAuth, async (req, res) => {
         hasBrandVoice = true;
         brandVoiceBlock += '\n\n════════════════════════════════════════\n'
           + 'ABSOLUT VERBINDLICH — BRAND VOICE DIESES UNTERNEHMENS\n════════════════════════════════════════\n'
-          + 'Der Output MUSS klingen wie dieses Unternehmen — nicht wie eine KI, nicht wie generisches Consulting.\n\n';
+          + 'Der Output MUSS klingen wie dieses Unternehmen — nicht wie eine KI, nicht wie generisches Consulting.\n'
+          + 'Wenn das Briefing unten dünn ist (nur Stichworte oder ein kurzer Auftrag ohne Ausformulierung), reicht es NICHT, nur den Ton zu treffen: durchsuche das Brand-Voice-Dokument aktiv nach den konkreten Beispielsätzen (z. B. unter DO\'S & DON\'TS oder Stimm-Portrait) und nutze deren tatsächliche Satzmuster, Bildsprache und Wortwahl als Bauplan für den neuen Text, statt nur ihren allgemeinen Stil zu imitieren. Je dünner das Briefing, desto stärker soll sich der Output an diesen konkreten Vorbildern orientieren.\n\n';
         memRows.forEach(m => { brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${sanitizeForPrompt(m.content)}\n\n`; });
         brandVoiceBlock += '════════════════════════════════════════\n'
           + 'ENDE BRAND VOICE — Ab hier gilt: dieser Output ist ein Unternehmenstext, kein KI-Output.\n'
