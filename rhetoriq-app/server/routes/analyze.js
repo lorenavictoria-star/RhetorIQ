@@ -1179,7 +1179,7 @@ const MODULE_MAX_TOKENS = {
   'cm-roadshow': 4000, 'cm-equity-story': 3500, 'brand-voice-co': 4000, 'brand-voice-ind': 4000, 'brand-voice-update': 4000,
   debrief: 3000, 'rh-translate': 3000, 'before-after': 3000,
   // Medium modules
-  'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 2000, brief: 3500, presentation: 8000,
+  'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 2000, brief: 3500, presentation: 16000,
   crisis: 2500, 'ht-crisis-comm': 2500, 'ht-positioning': 2500,
   'cm-qa-trainer': 2500, 'competitive-check': 2500,
   // Quick modules
