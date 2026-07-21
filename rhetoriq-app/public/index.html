@@ -2210,11 +2210,11 @@ function exportDoc(bodyId, title){
   const date=new Date().toLocaleDateString('de-CH');
   const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head><meta charset="utf-8"><title>${title}</title>
-<style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#111;margin:2cm}
-h1{font-size:16pt;font-weight:600;margin-bottom:6pt;color:#111}
-p.meta{font-size:9pt;color:#888;margin-bottom:24pt}
-pre{font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:pre-wrap;line-height:1.7}</style></head>
-<body><h1>${title}</h1><p class="meta">RhetorIQ &mdash; ${date}</p><pre>${content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></body></html>`;
+<style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#111;margin:2cm;text-align:left}
+h1{font-size:16pt;font-weight:600;margin-bottom:6pt;color:#111;text-align:left}
+p.meta{font-size:9pt;color:#888;margin-bottom:24pt;text-align:left}
+pre{font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:pre-wrap;line-height:1.7;text-align:left}</style></head>
+<body><h1 align="left">${title}</h1><p class="meta" align="left">RhetorIQ &mdash; ${date}</p><pre align="left">${content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></body></html>`;
   const blob=new Blob(['﻿'+html],{type:'application/msword'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -4458,6 +4458,7 @@ function buildTextGen(prefill,form){
       <div class="upzone" onclick="document.getElementById('tg-tf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.tg_source_upload}</strong></div><input type="file" id="tg-tf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task-${t.id}','tg-tt-${t.id}')"></div>
       <div class="ftags" id="tg-tt-${t.id}"></div>
       ${t.id==='email'?`<div class="row2"><div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:140px"></textarea></div><div class="fg2"><label class="fl2">Original Email &mdash; Reply To (optional)</label><textarea id="tg-reply-email" placeholder="Paste the email you are replying to here. The AI will draft a direct, on-point reply — answering every question raised, matching an appropriate register, and referencing the original naturally." style="min-height:140px"></textarea></div></div>`:t.id==='brief'?`<div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px" onblur="suggestBriefSubject('tg-task-brief','tg-br-subject')"></textarea></div>`:`<div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px"></textarea></div>`}
+      <div class="fg2" style="margin-top:4px"><label class="fl2">${tl.tg_draft_lbl||'Vorhandener Entwurf (optional)'}</label><textarea id="tg-draft-${t.id}" placeholder="${tl.tg_draft_ph||'Fügen Sie hier einen bereits vorhandenen Entwurf ein. Ist dieses Feld ausgefüllt, wird der Entwurf nur überarbeitet, an die Brand Voice angepasst und verbessert — statt komplett neu geschrieben. Das Briefing oben dient dann als Anweisung, was konkret verändert werden soll.'}" style="min-height:100px;font-size:12px"></textarea></div>
       <div class="row2">
         <div class="fg2"><label class="fl2">${tl.tg_audience}</label><select id="tg-aud-${t.id}"><option>B2B — C-Suite</option><option>B2B — HR Leaders</option><option>B2B — Finance / Investors</option><option>B2B — General Business</option><option>B2C — General Consumer</option><option>Internal — All Employees</option><option>Internal — Leadership Team</option><option>Media / Journalists</option></select></div>
         <div class="fg2"><label class="fl2">${tl.tg_tone}</label><select id="tg-tone-${t.id}"><option>Aus Voice Profile</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European — understated</option></select></div>
@@ -4994,7 +4995,7 @@ async function runMod(name){
   else if(name==='brand-voice-ind'){module='brand-voice-ind';rid='brand-voice-ind-r';bid='brand-voice-ind-b';const t=g('bv-ind-in')||getRefContext('ref_brand_ind');if(!t)return alert('Please enter text or save reference documents first.');data={text:t+context,person:g('bv-person'),role:g('bv-prole')};}
   else if(name==='vs-cal'){module='vs-cal';rid='vs-cal-r';bid='vs-cal-b';const t=g('tg-ref');if(!t)return alert('Please enter reference texts.');data={text:t};}
   else if(name==='text-gen'&&arguments[1]==='brief'){const fid='brief';module='brief';rid='text-gen-r-'+fid;bid='text-gen-b-'+fid;const t=g('tg-task-'+fid);if(!t)return alert('Please enter a briefing.');data={text:t+context,sender:g('tg-br-sender'),recipient:g('tg-br-recipient'),subject:g('tg-br-subject'),tone:g('tg-fmt-'+fid)};}
-  else if(name==='text-gen'){const fid=arguments[1]||'custom';module='text-gen';rid='text-gen-r-'+fid;bid='text-gen-b-'+fid;const t=g('tg-task-'+fid);if(!t)return alert('Please enter a briefing.');const ref=g('tg-ref-'+fid);const liProf=fid==='linkedin'?(g('tg-li-profile')||''):'';const liCtx=liProf?'\n\n---LINKEDIN PROFILE---\n'+liProf:'';
+  else if(name==='text-gen'){const fid=arguments[1]||'custom';module='text-gen';rid='text-gen-r-'+fid;bid='text-gen-b-'+fid;const t=g('tg-task-'+fid);if(!t&&!g('tg-draft-'+fid))return alert('Please enter a briefing or an existing draft to revise.');const ref=g('tg-ref-'+fid);const liProf=fid==='linkedin'?(g('tg-li-profile')||''):'';const liCtx=liProf?'\n\n---LINKEDIN PROFILE---\n'+liProf:'';
     let baseTone=g('tg-tone-'+fid)||'';
     const tCalBody=document.getElementById('tone-cal-body-'+fid);
     if(tCalBody&&tCalBody.style.display!=='none'){const fv=parseInt(document.getElementById('tone-formal-'+fid)?.value||50);const ev=parseInt(document.getElementById('tone-edge-'+fid)?.value||50);const fd=fv<33?'conversational':fv>66?'formal':'semi-formal';const ed=ev<33?'diplomatic':ev>66?'very direct':'balanced';baseTone=baseTone+` Tone calibration: ${fd}, ${ed}.`;}
@@ -5002,7 +5003,8 @@ async function runMod(name){
     if(fid==='speech'){const spPid=document.getElementById('tg-speech-person')?.value;if(spPid){const spPerson=people.find(p=>p.id==spPid);const spVoice=spPerson&&(spPerson.profiles||[]).find(pr=>pr.profile_type==='voice');if(spVoice)speechVoiceCtx='\n\n---SPEAKER VOICE DNA ('+spPerson.name+(spPerson.role?' — '+spPerson.role:'')+')---\n'+spVoice.content;}}
     const vorbildCtx=getVorbildContext(fid);
     const replyTo=fid==='email'?(g('tg-reply-email')||''):'';
-    data={text:t,format:g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:baseTone,language:g('tg-lang-'+fid),length:g('tg-len-'+fid),replyTo,voiceProfile:(voiceProf||'')+context+liCtx+speechVoiceCtx+vorbildCtx+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
+    const existingDraft=g('tg-draft-'+fid);
+    data={text:t,format:g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:baseTone,language:g('tg-lang-'+fid),length:g('tg-len-'+fid),replyTo,existingDraft,voiceProfile:(voiceProf||'')+context+liCtx+speechVoiceCtx+vorbildCtx+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
   else if(name==='profiling'){module='rp';rid='profiling-r';bid='profiling-b';const t=g('rp-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('rp-name'),industry:g('rp-industry')};}
   else if(name==='fingerprint'){module='cf';rid='fingerprint-r';bid='fingerprint-b';const t=g('cf-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('cf-name'),focus:g('cf-focus')};}
   else if(name==='language'){module='la';rid='language-r';bid='language-b';const t=g('la-in');if(!t)return alert('Please enter text.');data={text:t+context,size:g('la-size'),focus:g('la-focus')};}
