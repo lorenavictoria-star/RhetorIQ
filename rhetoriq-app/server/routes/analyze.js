@@ -1191,6 +1191,14 @@ const MODULE_MAX_TOKENS = {
 };
 const DEFAULT_MAX_TOKENS = 2000;
 
+// Modules where output quality matters most and a second, self-critique pass
+// is worth the extra latency/cost: draft, then have the model critique its own
+// draft against the brand voice and style rules, then output a revised final.
+const TWO_PASS_MODULES = new Set(['text-gen', 'presentation', 'brand-voice-co', 'brand-voice-ind']);
+function buildRevisionPrompt(originalUserMsg, draft) {
+  return `URSPRÜNGLICHER AUFTRAG:\n${originalUserMsg}\n\nENTWURF (erster Versuch):\n${draft}\n\nPrüfe diesen Entwurf kritisch gegen die Brand Voice und alle Regeln oben: wirkt er an irgendeiner Stelle generisch statt wie dieses Unternehmen, redundant, floskelhaft, oder strukturell schwach gemessen am Auftrag? Liefere eine überarbeitete, finale Fassung. Gib NUR den finalen Text aus, ohne Erklärung deiner Änderungen oder Meta-Kommentar.`;
+}
+
 // Global formatting rule applied to every generated output, regardless of
 // module, client, or brand voice. Appended last (highest instruction priority)
 // after the module system prompt and brand voice block.
@@ -1360,13 +1368,23 @@ router.post('/', requireAuth, async (req, res) => {
     if (!systemBlocks.length) systemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
     systemBlocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
     const claudeResp = await callClaude(systemBlocks, userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
-    const result = claudeResp.text;
+    let result = claudeResp.text;
+    let totalInputTokens = claudeResp.inputTokens, totalOutputTokens = claudeResp.outputTokens;
+
+    // Second pass: have the model critique and revise its own draft against
+    // the brand voice and style rules before returning the final text.
+    if (TWO_PASS_MODULES.has(module)) {
+      const revisionResp = await callClaude(systemBlocks, buildRevisionPrompt(userMsg, claudeResp.text), MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
+      if (revisionResp.text) result = revisionResp.text;
+      totalInputTokens += revisionResp.inputTokens;
+      totalOutputTokens += revisionResp.outputTokens;
+    }
 
     // Log token usage (fire-and-forget) — Fix 11: also log for client-only analyses
     if (advisorId || resolvedClientId) {
       pool.query(
         'INSERT INTO usage_log (advisor_id, client_id, module, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)',
-        [advisorId || null, resolvedClientId || null, module, claudeResp.inputTokens, claudeResp.outputTokens]
+        [advisorId || null, resolvedClientId || null, module, totalInputTokens, totalOutputTokens]
       ).then(() => checkCostAlert(resolvedClientId, advisorId)).catch(() => {});
     }
 
@@ -1502,6 +1520,19 @@ router.post('/stream', requireAuth, async (req, res) => {
     if (restDynamicSystem) streamSystemBlocks.push({ type: 'text', text: restDynamicSystem });
     if (!streamSystemBlocks.length) streamSystemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
     streamSystemBlocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
+
+    // Two-pass modules: draft silently first (keepalive pings keep the SSE
+    // connection alive during this), then stream only the revised final pass.
+    let streamUserMsg = userMsg;
+    let draftInputTokens = 0, draftOutputTokens = 0;
+    if (TWO_PASS_MODULES.has(module) && !aborted) {
+      const draftResp = await callClaude(streamSystemBlocks, userMsg, maxTokens, resolveModel(module));
+      if (draftResp.text) streamUserMsg = buildRevisionPrompt(userMsg, draftResp.text);
+      draftInputTokens = draftResp.inputTokens;
+      draftOutputTokens = draftResp.outputTokens;
+    }
+    if (aborted) { clearInterval(keepAlive); return; }
+
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       signal: abortController.signal,
@@ -1516,7 +1547,7 @@ router.post('/stream', requireAuth, async (req, res) => {
         max_tokens: maxTokens,
         stream: true,
         system: streamSystemBlocks,
-        messages: [{ role: 'user', content: userMsg }]
+        messages: [{ role: 'user', content: streamUserMsg }]
       })
     });
 
@@ -1580,7 +1611,7 @@ router.post('/stream', requireAuth, async (req, res) => {
     // Fix 11: Log usage for client analyses too
     if (advisorId || resolvedClientId) {
       pool.query('INSERT INTO usage_log (advisor_id, client_id, module, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)',
-        [advisorId || null, resolvedClientId || null, module, inputTokens, outputTokens]).then(() => checkCostAlert(resolvedClientId, advisorId)).catch(() => {});
+        [advisorId || null, resolvedClientId || null, module, inputTokens + draftInputTokens, outputTokens + draftOutputTokens]).then(() => checkCostAlert(resolvedClientId, advisorId)).catch(() => {});
     }
     if (advisorId && fullText.length > 200) {
       const inputText = Object.entries(data || {})
