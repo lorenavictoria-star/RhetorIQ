@@ -540,12 +540,22 @@ body.adv .vubtn{display:block}
 .mtabpanel{display:none}
 .mtabpanel.active{display:block}
 
-/* BOTTOM NAV — always visible, Version C */
+/* BOTTOM NAV — always visible, Version C (mobile/narrow screens) */
 .mnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--bd);padding:6px 0;padding-bottom:calc(6px + var(--safe-bottom));z-index:100;justify-content:space-around}
 .mni{display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 6px;cursor:pointer;min-width:44px}
 .mni-i{font-size:18px;color:var(--dm)}
 .mni-l{font-size:9px;color:var(--mu);font-weight:500;letter-spacing:.01em}
 .mni.active .mni-i,.mni.active .mni-l{color:var(--tx)}
+
+/* SIDEBAR NAV — desktop: slim left icon rail instead of bottom bar */
+@media (min-width:900px){
+  .app{padding-left:64px}
+  .mnav{flex-direction:column;position:fixed;top:0;left:0;right:auto;bottom:0;width:64px;height:100vh;border-top:none;border-right:1px solid var(--bd);padding:20px 0;justify-content:flex-start;gap:26px;z-index:150}
+  .mni{min-width:auto;padding:4px}
+  .mni-i{font-size:21px}
+  .mni-l{display:none}
+  #more-menu{left:70px;right:auto;bottom:16px}
+}
 
 /* ── FOCUS-VISIBLE (Accessibility — WCAG 2.4.7) ─────────────── */
 :focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:2px}
@@ -1690,10 +1700,10 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   </div><!-- /content -->
 
   <nav class="mnav">
-    <div class="mni active" id="mn-home" onclick="goHome();setMN('home')"><div class="mni-i">&#8962;</div><div class="mni-l" id="mn-home-l">Home</div></div>
-    <div class="mni" id="mn-modules" onclick="goPage('modules');setMN('modules');renderModulesList()"><div class="mni-i">&#9783;</div><div class="mni-l" id="mn-modules-l">Modules</div></div>
-    <div class="mni ao-item" id="mn-clients" onclick="goPage('clients');loadAdvisorDashboard();setMN('clients')" style="display:none"><div class="mni-i">&#9786;</div><div class="mni-l" id="mn-clients-lbl">Clients</div></div>
-    <div class="mni" id="mn-more" onclick="toggleMore()"><div class="mni-i">&#8943;</div><div class="mni-l" id="mn-more-l">More</div></div>
+    <div class="mni active" id="mn-home" title="Home" onclick="goHome();setMN('home')"><div class="mni-i">&#8962;</div><div class="mni-l" id="mn-home-l">Home</div></div>
+    <div class="mni" id="mn-modules" title="Modules" onclick="goPage('modules');setMN('modules');renderModulesList()"><div class="mni-i">&#9783;</div><div class="mni-l" id="mn-modules-l">Modules</div></div>
+    <div class="mni ao-item" id="mn-clients" title="Clients" onclick="goPage('clients');loadAdvisorDashboard();setMN('clients')" style="display:none"><div class="mni-i">&#9786;</div><div class="mni-l" id="mn-clients-lbl">Clients</div></div>
+    <div class="mni" id="mn-more" title="More" onclick="toggleMore()"><div class="mni-i">&#8943;</div><div class="mni-l" id="mn-more-l">More</div></div>
   </nav>
 
   <div id="more-menu" style="display:none;position:fixed;bottom:70px;right:12px;background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.13);z-index:200;width:248px;overflow:hidden;font-family:'Instrument Sans',sans-serif">
