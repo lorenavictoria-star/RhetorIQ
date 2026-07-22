@@ -25,7 +25,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const path = require('path');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { init, pool } = require('./db');
 const cron = require('node-cron');
 const { runWeeklyReport }  = require('./jobs/weekly-report');
@@ -198,7 +198,10 @@ const userAnalyzeLimit = rateLimit({
         return `user_${decoded.id || decoded.clientId}`;
       }
     } catch {}
-    return req.ip;
+    // IPv6 addresses must go through ipKeyGenerator (subnet-masked), not the
+    // raw address — a single IPv6 client can trivially rotate through its
+    // /64 subnet, otherwise letting them bypass this limiter entirely.
+    return ipKeyGenerator(req.ip);
   },
   standardHeaders: true,
   legacyHeaders: false,
