@@ -1221,6 +1221,14 @@ function buildGeoBlock(data) {
     + '════════════════════════════════════════';
 }
 
+// Universal follow-up mechanism (applies to every module): the user reacted to
+// a generated result with a free-text note ("tone is wrong", "just fix the
+// second paragraph") — fold that into a targeted revision request instead of
+// generating from scratch again.
+function buildFollowUpPrompt(originalUserMsg, previousResult, note) {
+  return `URSPRÜNGLICHER AUFTRAG:\n${originalUserMsg}\n\nBISHERIGER OUTPUT:\n${previousResult}\n\nFEEDBACK DES NUTZERS ZU DIESEM OUTPUT:\n${note}\n\nÜberarbeite den bisherigen Output gezielt basierend auf diesem Feedback. Wenn sich das Feedback auf einzelne Passagen oder Details bezieht, ändere NUR diese Stellen und lasse den Rest unverändert. Wenn sich das Feedback auf Tonalität, Ansatz oder Struktur insgesamt bezieht, schreibe den Text entsprechend um. Gib NUR den finalen, überarbeiteten Text aus, ohne Erklärung deiner Änderungen oder Meta-Kommentar.`;
+}
+
 // Global formatting rule applied to every generated output, regardless of
 // module, client, or brand voice. Appended last (highest instruction priority)
 // after the module system prompt and brand voice block.
@@ -1287,7 +1295,7 @@ async function callClaude(system, user, maxTokens, model, temperature) {
 // POST /api/analyze
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const { module, clientId, data, instructionsKey } = req.body;
+    const { module, clientId, data, instructionsKey, followUp } = req.body;
     if (data && typeof data.text === 'string') data.text = capText(data.text);
     const cfg = PROMPTS[module];
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
@@ -1295,7 +1303,9 @@ router.post('/', requireAuth, async (req, res) => {
     const baseSystem = typeof cfg.system === 'function' ? cfg.system(data) : cfg.system;
     let brandVoiceBlock = '';
     let restDynamicSystem = '';
-    const userMsg = cfg.build(data);
+    const userMsg = (followUp && followUp.note)
+      ? buildFollowUpPrompt(cfg.build(data), sanitizeForPrompt(followUp.previousResult || ''), sanitizeForPrompt(followUp.note))
+      : cfg.build(data);
 
     // Append per-client custom instructions if present. Text Generator tiles
     // (LinkedIn, Newsletter, etc.) save instructions under a tile-specific key
@@ -1420,7 +1430,8 @@ router.post('/', requireAuth, async (req, res) => {
 
     // Second pass: have the model critique and revise its own draft against
     // the brand voice and style rules before returning the final text.
-    if (TWO_PASS_MODULES.has(module)) {
+    // Skipped for follow-ups — that request is already a targeted revision.
+    if (TWO_PASS_MODULES.has(module) && !(followUp && followUp.note)) {
       const revisionResp = await callClaude(systemBlocks, buildRevisionPrompt(userMsg, claudeResp.text), MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
       if (revisionResp.text) result = revisionResp.text;
       totalInputTokens += revisionResp.inputTokens;
@@ -1480,7 +1491,7 @@ router.post('/', requireAuth, async (req, res) => {
 // POST /api/analyze/stream — SSE streaming version of the main analyze endpoint
 router.post('/stream', requireAuth, async (req, res) => {
   try {
-    const { module, clientId, data, debug, instructionsKey } = req.body;
+    const { module, clientId, data, debug, instructionsKey, followUp } = req.body;
     if (data && typeof data.text === 'string') data.text = capText(data.text);
     const isDebug = debug === true && req.user.role === 'advisor';
     const cfg = PROMPTS[module];
@@ -1489,7 +1500,9 @@ router.post('/stream', requireAuth, async (req, res) => {
     const baseSystem = typeof cfg.system === 'function' ? cfg.system(data) : cfg.system;
     let brandVoiceBlock = '';
     let restDynamicSystem = '';
-    const userMsg = cfg.build(data);
+    const userMsg = (followUp && followUp.note)
+      ? buildFollowUpPrompt(cfg.build(data), sanitizeForPrompt(followUp.previousResult || ''), sanitizeForPrompt(followUp.note))
+      : cfg.build(data);
     const resolvedClientId = clientId || (req.user.role === 'client' ? req.user.clientId : null);
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
 
@@ -1588,7 +1601,7 @@ router.post('/stream', requireAuth, async (req, res) => {
     // connection alive during this), then stream only the revised final pass.
     let streamUserMsg = userMsg;
     let draftInputTokens = 0, draftOutputTokens = 0;
-    if (TWO_PASS_MODULES.has(module) && !aborted) {
+    if (TWO_PASS_MODULES.has(module) && !aborted && !(followUp && followUp.note)) {
       const draftResp = await callClaude(streamSystemBlocks, userMsg, maxTokens, resolveModel(module));
       if (draftResp.text) streamUserMsg = buildRevisionPrompt(userMsg, draftResp.text);
       draftInputTokens = draftResp.inputTokens;
