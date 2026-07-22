@@ -116,7 +116,7 @@ router.post('/client-user-login', async (req, res) => {
 
     const jwtToken = jwt.sign(
       { clientId: cu.client_id, clientName: cu.client_name, role: 'client', advisorId: null,
-        clientUserId: cu.id, clientUserName: cu.name, clientUserRole: cu.role, tokenVersion: cu.token_version },
+        clientUserId: cu.id, clientUserName: cu.name, clientUserEmail: cu.email, clientUserRole: cu.role, tokenVersion: cu.token_version },
       process.env.JWT_SECRET,
       { expiresIn: '90d' }
     );
@@ -160,6 +160,64 @@ router.post('/client-change-password', requireAuth, async (req, res) => {
 
     res.json({ token: newToken, client: { id: client.id, name: client.name, industry: client.industry, advisorName: client.advisor_name } });
   } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /auth/client-user/profile — an individually-logged-in team member
+// (client_users) changes their own name, email, and/or password. Requires
+// the current password to confirm identity before any change is applied.
+router.put('/client-user/profile', requireAuth, async (req, res) => {
+  try {
+    if (req.user.role !== 'client' || !req.user.clientUserId) {
+      return res.status(403).json({ error: 'Nur für individuell eingeloggte Team-Mitglieder verfügbar.' });
+    }
+    const { name, email, currentPassword, newPassword } = req.body;
+    if (!currentPassword) return res.status(400).json({ error: 'Aktuelles Passwort erforderlich.' });
+    if (newPassword && newPassword.length < 8) return res.status(400).json({ error: 'Neues Passwort muss mind. 8 Zeichen haben.' });
+    if (email && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+      return res.status(400).json({ error: 'Ungültige E-Mail-Adresse.' });
+    }
+
+    const { rows } = await pool.query('SELECT * FROM client_users WHERE id=$1', [req.user.clientUserId]);
+    const cu = rows[0];
+    if (!cu) return res.status(404).json({ error: 'Nicht gefunden.' });
+    const ok = await bcrypt.compare(currentPassword, cu.password_hash);
+    if (!ok) return res.status(401).json({ error: 'Aktuelles Passwort ist falsch.' });
+
+    const newName = name && name.trim() ? name.trim() : cu.name;
+    const newEmail = email && email.trim() ? email.trim().toLowerCase() : cu.email;
+    const passwordHash = newPassword ? await bcrypt.hash(newPassword, 12) : cu.password_hash;
+
+    const { rows: updated } = await pool.query(
+      `UPDATE client_users SET name=$1, email=$2, password_hash=$3, token_version=token_version+1
+       WHERE id=$4 RETURNING id, name, email, role, client_id, token_version`,
+      [newName, newEmail, passwordHash, cu.id]
+    );
+    const u = updated[0];
+
+    const { rows: clientRows } = await pool.query(
+      `SELECT c.name as client_name, c.industry, adv.name as advisor_name
+       FROM clients c JOIN users adv ON c.advisor_id = adv.id WHERE c.id=$1`,
+      [u.client_id]
+    );
+    const c = clientRows[0];
+
+    const newToken = jwt.sign(
+      { clientId: u.client_id, clientName: c?.client_name, role: 'client', advisorId: null,
+        clientUserId: u.id, clientUserName: u.name, clientUserEmail: u.email, clientUserRole: u.role, tokenVersion: u.token_version },
+      process.env.JWT_SECRET,
+      { expiresIn: '90d' }
+    );
+
+    res.json({
+      token: newToken,
+      client: { id: u.client_id, name: c?.client_name, industry: c?.industry, advisorName: c?.advisor_name },
+      clientUser: { id: u.id, name: u.name, email: u.email, role: u.role }
+    });
+  } catch (e) {
+    if (e.code === '23505') return res.status(409).json({ error: 'Diese E-Mail wird bereits verwendet.' });
     console.error(e);
     res.status(500).json({ error: 'Server error' });
   }

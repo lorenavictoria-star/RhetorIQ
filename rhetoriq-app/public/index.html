@@ -1776,9 +1776,28 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       </div>
     </div>
 
+    <div id="mm-myprofile" onclick="openMyProfile()" class="mm-row" style="display:none;border-top:1px solid var(--bd)">
+      <i class="ti ti-user-circle"></i> <span>Mein Profil</span>
+    </div>
     <div onclick="logout()" class="mm-row" style="border-top:1px solid var(--bd)">
       <i class="ti ti-logout"></i> <span id="mm-signout">Sign out</span>
     </div>
+  </div>
+</div>
+
+<!-- MY PROFILE (individual team-member self-service) -->
+<div class="ov" id="myprofile-ov">
+  <div class="modal" style="max-width:420px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+      <h2 style="margin:0">Mein Profil</h2>
+      <button onclick="closeModal('myprofile-ov')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mu);line-height:1;padding:2px 6px">&times;</button>
+    </div>
+    <div class="mf"><label class="fl">Name</label><input type="text" id="mp-name"></div>
+    <div class="mf"><label class="fl">E-Mail</label><input type="email" id="mp-email"></div>
+    <div class="mf"><label class="fl">Neues Passwort (optional)</label><input type="password" id="mp-newpw" placeholder="Leer lassen, um nicht zu ändern" autocomplete="new-password"></div>
+    <div class="mf"><label class="fl">Aktuelles Passwort (zur Bestätigung erforderlich)</label><input type="password" id="mp-curpw" autocomplete="current-password"></div>
+    <div id="mp-status" style="font-size:12px;color:var(--mu);margin:4px 0"></div>
+    <div class="mact"><button class="mcanc" onclick="closeModal('myprofile-ov')">Abbrechen</button><button class="mconf" onclick="saveMyProfile()">Speichern</button></div>
   </div>
 </div>
 
@@ -1954,7 +1973,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const API='https://rhetoriq.ch';
-let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null,clientUserId=null,clientUserName=null;
+let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null,clientUserId=null,clientUserName=null,clientUserEmail=null;
 let debugMode=localStorage.getItem('riq-debug')==='1';
 const DEFAULT_MODULES=['profiling','brand-voice','text-gen','review','recognition','pre-meeting','arg-reaction','crisis','risk','actionability','thread','rh-translate','before-after','sparring','debrief','crisis-toolkit','competitive-check','presentation','customer-review'];
 function modEnabled(key){if(enabledModules===null)return DEFAULT_MODULES.includes(key);return enabledModules.includes(key);}
@@ -2448,7 +2467,7 @@ async function loginClientPassword(){
     if(tuRes.ok){
       const td=await tuRes.json();
       token=td.token;localStorage.setItem('riq-token',token);
-      clientUserId=td.clientUser?.id||null;clientUserName=td.clientUser?.name||null;
+      clientUserId=td.clientUser?.id||null;clientUserName=td.clientUser?.name||null;clientUserEmail=td.clientUser?.email||null;
       boot(td.client,'client');
       return;
     }
@@ -2491,6 +2510,42 @@ async function loginClient(){
   try{const r=await fetch(API+'/auth/client-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});const d=await r.json();if(!r.ok){err.textContent=d.error||'Invalid token';err.style.display='block';return;}token=d.token;localStorage.setItem('riq-token',token);boot(d.client,'client');}catch{err.textContent='Connection error';err.style.display='block';}
 }
 function logout(){token=null;localStorage.removeItem('riq-token');location.reload();}
+
+// ── MY PROFILE (individual team-member self-service) ───────────
+function openMyProfile(){
+  if(!clientUserId)return;
+  document.getElementById('mp-name').value=clientUserName||'';
+  document.getElementById('mp-email').value=clientUserEmail||'';
+  document.getElementById('mp-newpw').value='';
+  document.getElementById('mp-curpw').value='';
+  document.getElementById('mp-status').textContent='';
+  openModal('myprofile-ov');
+}
+async function saveMyProfile(){
+  const status=document.getElementById('mp-status');
+  const name=document.getElementById('mp-name').value.trim();
+  const email=document.getElementById('mp-email').value.trim();
+  const newPassword=document.getElementById('mp-newpw').value;
+  const currentPassword=document.getElementById('mp-curpw').value;
+  if(!currentPassword){status.textContent='Bitte aktuelles Passwort eingeben.';status.style.color='#c0392b';return;}
+  if(newPassword&&newPassword.length<8){status.textContent='Neues Passwort muss mind. 8 Zeichen haben.';status.style.color='#c0392b';return;}
+  status.textContent='Wird gespeichert…';status.style.color='var(--mu)';
+  try{
+    const r=await fetch(API+'/auth/client-user/profile',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({name,email,currentPassword,newPassword:newPassword||undefined})
+    });
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Fehler');
+    token=d.token;localStorage.setItem('riq-token',token);
+    clientUserId=d.clientUser?.id||clientUserId;clientUserName=d.clientUser?.name||clientUserName;clientUserEmail=d.clientUser?.email||clientUserEmail;
+    document.getElementById('uname').textContent=clientUserName;
+    renderHomeGreeting(clientUserName,true);
+    status.textContent='✓ Gespeichert.';status.style.color='#2a7';
+    setTimeout(()=>closeModal('myprofile-ov'),900);
+  }catch(e){status.textContent='Fehler: '+e.message;status.style.color='#c0392b';}
+}
 
 // ── SAVED TEMPLATES ───────────────────────────────────────────
 function getTpls(modKey){return JSON.parse(localStorage.getItem('riq-tpl-'+modKey)||'[]');}
@@ -3019,7 +3074,7 @@ async function trDelete(id){
 
 async function tryAutoLogin(){
   if(!token)return;
-  try{const p=JSON.parse(atob(token.split('.')[1]));if(p.exp*1000<Date.now()){localStorage.removeItem('riq-token');return;}if(p.role==='advisor')boot({id:p.id,name:p.name,email:p.email},'advisor');else{clientUserId=p.clientUserId||null;clientUserName=p.clientUserName||null;boot({id:p.clientId,name:p.clientName},'client');}}catch{localStorage.removeItem('riq-token');}
+  try{const p=JSON.parse(atob(token.split('.')[1]));if(p.exp*1000<Date.now()){localStorage.removeItem('riq-token');return;}if(p.role==='advisor')boot({id:p.id,name:p.name,email:p.email},'advisor');else{clientUserId=p.clientUserId||null;clientUserName=p.clientUserName||null;clientUserEmail=p.clientUserEmail||null;boot({id:p.clientId,name:p.clientName},'client');}}catch{localStorage.removeItem('riq-token');}
 }
 
 // BOOT
@@ -3103,6 +3158,7 @@ async function boot(user,role){
   const displayName=(!isAdv&&clientUserName)?clientUserName:(user.name||user.email||'');
   document.getElementById('uname').textContent=displayName;
   renderHomeGreeting(displayName,!isAdv&&!!clientUserName);
+  const mpRow=document.getElementById('mm-myprofile');if(mpRow)mpRow.style.display=(!isAdv&&clientUserId)?'flex':'none';
   if(isAdv){
     document.body.classList.add('adv');
     const mnCl=document.getElementById('mn-clients');if(mnCl)mnCl.style.display='flex';
