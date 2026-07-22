@@ -1954,7 +1954,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const API='https://rhetoriq.ch';
-let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null;
+let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null,clientUserId=null,clientUserName=null;
 let debugMode=localStorage.getItem('riq-debug')==='1';
 const DEFAULT_MODULES=['profiling','brand-voice','text-gen','review','recognition','pre-meeting','arg-reaction','crisis','risk','actionability','thread','rh-translate','before-after','sparring','debrief','crisis-toolkit','competitive-check','presentation','customer-review'];
 function modEnabled(key){if(enabledModules===null)return DEFAULT_MODULES.includes(key);return enabledModules.includes(key);}
@@ -2422,11 +2422,24 @@ async function loginClientPassword(){
   if(!email||!pw){err.textContent='Please enter email and password';err.style.display='block';return;}
   err.style.display='none';
   try{
+    // Try personal team-member login first (each teammate has their own
+    // email/password, set up via "Team" — lets several people work on the
+    // same client in parallel without sharing one login). Falls back to the
+    // shared company-wide client login if no matching team member exists.
+    const tuRes=await fetch(API+'/auth/client-user-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
+    if(tuRes.ok){
+      const td=await tuRes.json();
+      token=td.token;localStorage.setItem('riq-token',token);
+      clientUserId=td.clientUser?.id||null;clientUserName=td.clientUser?.name||null;
+      boot(td.client,'client');
+      return;
+    }
     const r=await fetch(API+'/auth/client-password-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
     const d=await r.json();
     if(!r.ok){err.textContent=d.error||'Invalid credentials';err.style.display='block';return;}
     token=d.token;
     localStorage.setItem('riq-token',token);
+    clientUserId=null;clientUserName=null;
     if(d.mustChangePassword){
       document.getElementById('login-screen').classList.add('hidden');
       const s=document.getElementById('pw-change-screen');
@@ -2988,18 +3001,21 @@ async function trDelete(id){
 
 async function tryAutoLogin(){
   if(!token)return;
-  try{const p=JSON.parse(atob(token.split('.')[1]));if(p.exp*1000<Date.now()){localStorage.removeItem('riq-token');return;}if(p.role==='advisor')boot({id:p.id,name:p.name,email:p.email},'advisor');else boot({id:p.clientId,name:p.clientName},'client');}catch{localStorage.removeItem('riq-token');}
+  try{const p=JSON.parse(atob(token.split('.')[1]));if(p.exp*1000<Date.now()){localStorage.removeItem('riq-token');return;}if(p.role==='advisor')boot({id:p.id,name:p.name,email:p.email},'advisor');else{clientUserId=p.clientUserId||null;clientUserName=p.clientUserName||null;boot({id:p.clientId,name:p.clientName},'client');}}catch{localStorage.removeItem('riq-token');}
 }
 
 // BOOT
-function renderHomeGreeting(fullName){
+let _isPersonalGreeting=false;
+function renderHomeGreeting(fullName,isPersonalName){
+  if(isPersonalName!==undefined)_isPersonalGreeting=isPersonalName;
   const eyebrowEl=document.getElementById('home-eyebrow');
   const h1El=document.getElementById('home-h1');
   const subEl=document.getElementById('home-sub');
   if(!eyebrowEl||!h1El||!subEl)return;
-  // Advisors log in with a personal name (use first name only); clients are companies —
-  // their "name" is the full client/company name (e.g. "3rd May"), never truncate it.
-  const firstName=isAdv?((fullName||'').trim().split(/\s+/)[0]||''):(fullName||'').trim();
+  // Advisors and individually-logged-in team members use a personal name (first
+  // name only); the shared client/company login uses the full company name
+  // (e.g. "3rd May") and must never be truncated.
+  const firstName=(isAdv||_isPersonalGreeting)?((fullName||'').trim().split(/\s+/)[0]||''):(fullName||'').trim();
   const hour=new Date().getHours();
   const isDE=LANG==='de';
   let greetWord,wish;
@@ -3066,8 +3082,9 @@ async function boot(user,role){
   isAdv=role==='advisor';
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('app').style.display='flex';
-  document.getElementById('uname').textContent=user.name||user.email||'';
-  renderHomeGreeting(user.name);
+  const displayName=(!isAdv&&clientUserName)?clientUserName:(user.name||user.email||'');
+  document.getElementById('uname').textContent=displayName;
+  renderHomeGreeting(displayName,!isAdv&&!!clientUserName);
   if(isAdv){
     document.body.classList.add('adv');
     const mnCl=document.getElementById('mn-clients');if(mnCl)mnCl.style.display='flex';
@@ -4392,7 +4409,10 @@ async function suggestBriefSubject(briefingFieldId,subjectFieldId){
 // accident. Any field (or already-generated result) with an id gets
 // saved to localStorage, scoped per client + module, and restored the next
 // time that module is opened — even after a reload.
-function moduleDraftKey(moduleName){return 'riq-moddraft-'+(clientId||'global')+'-'+moduleName;}
+// Scoped per client AND per individual team member (if logged in as one), so
+// two people from the same client company working in parallel — even from
+// the same browser — never overwrite each other's draft.
+function moduleDraftKey(moduleName){return 'riq-moddraft-'+(clientId||'global')+(clientUserId?'-u'+clientUserId:'')+'-'+moduleName;}
 function saveModuleDraft(moduleName){
   if(!moduleName)return;
   const form=document.getElementById('mod-form');
