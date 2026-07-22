@@ -3233,7 +3233,7 @@ async function sendWelcomeByEmail(clientId){
     const r=await api('/api/clients/'+clientId+'/send-welcome',{method:'POST',body:JSON.stringify({email})});
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||'Error');
-    await loadClients();
+    if(typeof loadAdvisorDashboard==='function')await loadAdvisorDashboard();else await loadClients();
     alert('Willkommens-E-Mail gesendet an '+email);
   }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
 }
@@ -5530,6 +5530,7 @@ async function loadAdvisorDashboard(){
           ${tok?`<div class="tkcode" style="margin-top:8px;font-size:11px">${tokShort}</div>`:''}
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
             ${tok?`<button class="obtn" onclick="copyTok('${tok}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail(${c.id},'${tok}')">Send by Email</button>`:''}
+            <button class="obtn" style="color:#166534;border-color:#bbf7d0;background:#f0fdf4" onclick="sendWelcomeByEmail(${c.id})">Willkommens-E-Mail senden</button>
             <button class="obtn" onclick="openSetPassword(${c.id})">Set Password</button>
             <button class="obtn" onclick="advToggleTimeline('${c.id}',this)">Activity</button>
             <button class="obtn" onclick="openTeamModal(${c.id})">Team</button>
