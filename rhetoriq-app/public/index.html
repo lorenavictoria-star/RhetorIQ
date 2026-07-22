@@ -5402,7 +5402,12 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
   let sib=body.nextSibling;
   while(sib){const rm=sib;sib=sib.nextSibling;if(rm.classList&&(rm.classList.contains('gen-rating-bar')||rm.classList.contains('gen-followup-box'))||rm.tagName==='DETAILS')rm.remove();else break;}
   body.textContent='';
-  box._req={module,data,rid,bid,instructionsKey};
+  // Preserve the self-revision trail across follow-ups on this same result box
+  // (clients often do 2-3 rounds themselves before sending to the advisor) —
+  // box._req is otherwise fully replaced on every call.
+  const priorHistory=(box._req&&box._req.history)||[];
+  if(followUp&&followUp.note)priorHistory.push({note:followUp.note,textBefore:followUp.previousResult});
+  box._req={module,data,rid,bid,instructionsKey,history:priorHistory};
   let thinkingInterval=startThinkingIndicator(body,!followUp&&TWO_PASS_MODULES_FE.has(module));
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
   try{
@@ -5650,8 +5655,12 @@ async function submitToAdvisor(bodyId,moduleLabel,btn,box){
   // moduleKey is the MDEFS key (e.g. 'profiling') used by goModule() to open the
   // right screen — distinct from reviewContext.module, the analyze-API module id
   // (e.g. 'rp') needed to actually regenerate/follow-up.
+  // Self-revision rounds the client already did on this exact text (via the
+  // follow-up box) before deciding to send it on — the advisor should see
+  // those, not just older, unrelated past submissions.
+  const revisionHistory=(req&&req.history||[]).map(h=>({note:h.note,textBefore:(h.textBefore||'').length>300?h.textBefore.slice(0,300)+'…':h.textBefore}));
   try{
-    const r=await api('/api/reviews',{method:'POST',body:JSON.stringify({clientId,moduleLabel,originalText:text,note,moduleKey:window._currentModule||null,moduleTile:window._currentTgTile||null,reviewContext})});
+    const r=await api('/api/reviews',{method:'POST',body:JSON.stringify({clientId,moduleLabel,originalText:text,note,moduleKey:window._currentModule||null,moduleTile:window._currentTgTile||null,reviewContext,revisionHistory})});
     await r.json();
     box.remove();
     btn.classList.add('sent');

@@ -17,13 +17,19 @@ function auth(req, res, next) {
 
 // POST /api/reviews — client submits text for advisor review
 router.post('/', auth, async (req, res) => {
-  const { clientId, moduleLabel, originalText, note, moduleKey, moduleTile, reviewContext } = req.body;
+  const { clientId, moduleLabel, originalText, note, moduleKey, moduleTile, reviewContext, revisionHistory } = req.body;
   if (!originalText) return res.status(400).json({ error: 'No text provided' });
+  // Self-revision rounds (via the follow-up box) the client already did on
+  // this exact text before sending it on — stored inside review_context so
+  // openReviewInModule() and the notification email both have it.
+  const contextWithHistory = reviewContext
+    ? { ...reviewContext, revisionHistory: Array.isArray(revisionHistory) ? revisionHistory : [] }
+    : (Array.isArray(revisionHistory) && revisionHistory.length ? { revisionHistory } : null);
   try {
     const { rows } = await pool.query(
       `INSERT INTO review_requests (client_id, module_label, original_text, client_note, module_key, module_tile, review_context)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [clientId || null, moduleLabel || null, originalText, note || null, moduleKey || null, moduleTile || null, reviewContext ? JSON.stringify(reviewContext) : null]
+      [clientId || null, moduleLabel || null, originalText, note || null, moduleKey || null, moduleTile || null, contextWithHistory ? JSON.stringify(contextWithHistory) : null]
     );
     req.app.locals.wss.broadcast({ type: 'review_new', id: rows[0].id });
     res.json(rows[0]);
@@ -60,10 +66,19 @@ router.post('/', auth, async (req, res) => {
         }
       }
 
+      // Self-revision rounds the client already ran on THIS text (via the
+      // follow-up box) before deciding to send it on — different from
+      // historyBlock above, which covers older, separate submissions.
+      let revisionBlock = '';
+      if (Array.isArray(revisionHistory) && revisionHistory.length) {
+        revisionBlock = '\n\n--- Eigene Anpassungsrunden des Klienten an diesem Text (vor dem Senden) ---\n'
+          + revisionHistory.map((h, i) => `${i + 1}. Auftrag: ${h.note || '—'}\n   Stand davor: ${(h.textBefore || '').trim() || '—'}`).join('\n\n');
+      }
+
       await brevoSend({
         to: ADVISOR_NOTIFY_EMAIL,
         subject: `RhetorIQ — Neue Freigabe-Anfrage: ${clientName}${moduleLabel ? ' (' + moduleLabel + ')' : ''}`,
-        text: `Ein Klient hat einen Text zur Prüfung eingereicht.\n\nKlient: ${clientName}\nModul: ${moduleLabel || 'Nicht angegeben'}\n${note ? '\nFeedback / Auftrag des Klienten:\n' + note + '\n' : ''}\n--- Textauszug ---\n${preview}${historyBlock}\n\nJetzt bearbeiten: https://rhetoriq.ch/?review=${rows[0].id}\n`,
+        text: `Ein Klient hat einen Text zur Prüfung eingereicht.\n\nKlient: ${clientName}\nModul: ${moduleLabel || 'Nicht angegeben'}\n${note ? '\nFeedback / Auftrag des Klienten:\n' + note + '\n' : ''}\n--- Textauszug ---\n${preview}${revisionBlock}${historyBlock}\n\nJetzt bearbeiten: https://rhetoriq.ch/?review=${rows[0].id}\n`,
         senderName: 'RhetorIQ'
       });
     })().catch(e => console.error('[reviews] advisor notification email failed:', e.message));
