@@ -5596,18 +5596,41 @@ async function sendChat(){
 }
 
 // ── SEND TO ADVISOR / REVIEW SYSTEM ──────────────────────────
-async function sendToAdvisor(bodyId,moduleLabel,btn){
+// Clicking "Send to Advisor" opens a note box first — the client's own
+// keywords about what's wrong (or right) matter more to the advisor than
+// the text alone, so we ask before actually sending.
+function sendToAdvisor(bodyId,moduleLabel,btn){
+  const rbox=btn.closest('.rbox');
+  if(!rbox||rbox.querySelector('.adv-note-box'))return;
+  const rhead=btn.closest('.rhead')||btn.parentNode;
+  const box=document.createElement('div');
+  box.className='adv-note-box';
+  box.style.cssText='padding:10px 16px;border-top:1px solid var(--bd);background:var(--sf)';
+  box.innerHTML='<div style="font-size:11px;color:var(--mu);margin-bottom:6px">Was stimmt nicht, oder was soll deine Beraterin wissen? (optional, hilft ihr aber sehr)</div>'
+    +'<textarea id="adv-note-'+bodyId+'" placeholder="z.B. Ton zu förmlich, wichtige Info fehlt, Auftrag war eigentlich..." style="width:100%;min-height:70px;font-size:12px;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;resize:vertical;font-family:inherit;box-sizing:border-box"></textarea>'
+    +'<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">'
+    +'<button class="adv-note-cancel" style="padding:6px 12px;border:1px solid var(--bd);border-radius:6px;background:none;cursor:pointer;font-size:12px;font-family:inherit">Abbrechen</button>'
+    +'<button class="adv-note-send" style="padding:6px 14px;border:none;border-radius:6px;background:var(--ac,#1a3d2e);color:#fff;cursor:pointer;font-size:12px;font-weight:500;font-family:inherit">Senden</button>'
+    +'</div>';
+  box.querySelector('.adv-note-cancel').onclick=()=>box.remove();
+  box.querySelector('.adv-note-send').onclick=()=>submitToAdvisor(bodyId,moduleLabel,btn,box);
+  rhead.insertAdjacentElement('afterend',box);
+  box.querySelector('textarea').focus();
+}
+async function submitToAdvisor(bodyId,moduleLabel,btn,box){
   const body=document.getElementById(bodyId);
   const text=body?.textContent?.trim();
   if(!text)return;
-  btn.disabled=true;btn.textContent='Sending…';
+  const note=document.getElementById('adv-note-'+bodyId)?.value?.trim()||'';
+  const sendBtn=box.querySelector('.adv-note-send');
+  sendBtn.disabled=true;sendBtn.textContent='Sende…';
   try{
-    const r=await api('/api/reviews',{method:'POST',body:JSON.stringify({clientId,moduleLabel,originalText:text})});
-    const d=await r.json();
+    const r=await api('/api/reviews',{method:'POST',body:JSON.stringify({clientId,moduleLabel,originalText:text,note})});
+    await r.json();
+    box.remove();
     btn.classList.add('sent');
     btn.textContent=T[LANG]?.review_sent_short||'Sent';
     btn.title=T[LANG]?.review_sent||'Sent to advisor';
-    // Show confirmation below the result box
     const rbox=btn.closest('.rbox');
     if(rbox&&!rbox.querySelector('.adv-confirm')){
       const c=document.createElement('div');
@@ -5616,7 +5639,7 @@ async function sendToAdvisor(bodyId,moduleLabel,btn){
       c.textContent=T[LANG]?.review_sent||'Sent to advisor — you will be notified when the revision is ready.';
       rbox.appendChild(c);
     }
-  }catch(e){btn.disabled=false;btn.textContent=T[LANG]?.btn_send_advisor||'Send to Advisor';alert('Error sending.');}
+  }catch(e){sendBtn.disabled=false;sendBtn.textContent='Senden';alert('Error sending.');}
 }
 
 // ── KLAVIYO ───────────────────────────────────────────────────

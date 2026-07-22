@@ -80,10 +80,12 @@ async function init() {
       module_label TEXT,
       original_text TEXT NOT NULL,
       edited_text TEXT,
+      client_note TEXT,
       status TEXT NOT NULL DEFAULT 'pending',
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
+    ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS client_note TEXT;
 
     CREATE TABLE IF NOT EXISTS content_subscriptions (
       id SERIAL PRIMARY KEY,

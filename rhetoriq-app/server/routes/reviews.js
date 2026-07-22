@@ -17,13 +17,13 @@ function auth(req, res, next) {
 
 // POST /api/reviews — client submits text for advisor review
 router.post('/', auth, async (req, res) => {
-  const { clientId, moduleLabel, originalText } = req.body;
+  const { clientId, moduleLabel, originalText, note } = req.body;
   if (!originalText) return res.status(400).json({ error: 'No text provided' });
   try {
     const { rows } = await pool.query(
-      `INSERT INTO review_requests (client_id, module_label, original_text)
-       VALUES ($1, $2, $3) RETURNING *`,
-      [clientId || null, moduleLabel || null, originalText]
+      `INSERT INTO review_requests (client_id, module_label, original_text, client_note)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [clientId || null, moduleLabel || null, originalText, note || null]
     );
     req.app.locals.wss.broadcast({ type: 'review_new', id: rows[0].id });
     res.json(rows[0]);
@@ -37,10 +37,33 @@ router.post('/', auth, async (req, res) => {
         if (cRows[0]) clientName = cRows[0].name;
       }
       const preview = originalText.length > 500 ? originalText.slice(0, 500) + '…' : originalText;
+
+      // Include the client's own thumbs-up/down history for this module, so
+      // the advisor sees at a glance what this client has liked/disliked in
+      // previous attempts, not just the text submitted just now.
+      let historyBlock = '';
+      if (clientId && moduleLabel) {
+        const { rows: pastRows } = await pool.query(
+          `SELECT result, user_rating, feedback_note, created_at FROM analyses
+           WHERE client_id=$1 AND module_label=$2 AND user_rating IS NOT NULL
+           ORDER BY created_at DESC LIMIT 5`,
+          [clientId, moduleLabel]
+        );
+        if (pastRows.length) {
+          historyBlock = '\n\n--- Bisherige bewertete Versuche dieses Klienten für dieses Modul ---\n'
+            + pastRows.map((r, i) => {
+                const stamp = new Date(r.created_at).toLocaleString('de-CH', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+                const rating = r.user_rating === 1 ? '👍' : '👎';
+                const snippet = (r.result || '').length > 200 ? r.result.slice(0, 200) + '…' : (r.result || '');
+                return `${i + 1}. [${stamp}] ${rating}${r.feedback_note ? ' — Notiz: ' + r.feedback_note : ''}\n   ${snippet}`;
+              }).join('\n\n');
+        }
+      }
+
       await brevoSend({
         to: ADVISOR_NOTIFY_EMAIL,
         subject: `RhetorIQ — Neue Freigabe-Anfrage: ${clientName}${moduleLabel ? ' (' + moduleLabel + ')' : ''}`,
-        text: `Ein Klient hat einen Text zur Prüfung eingereicht.\n\nKlient: ${clientName}\nModul: ${moduleLabel || 'Nicht angegeben'}\n\n--- Textauszug ---\n${preview}\n\nJetzt bearbeiten: https://rhetoriq.ch\n`,
+        text: `Ein Klient hat einen Text zur Prüfung eingereicht.\n\nKlient: ${clientName}\nModul: ${moduleLabel || 'Nicht angegeben'}\n${note ? '\nFeedback / Auftrag des Klienten:\n' + note + '\n' : ''}\n--- Textauszug ---\n${preview}${historyBlock}\n\nJetzt bearbeiten: https://rhetoriq.ch\n`,
         senderName: 'RhetorIQ'
       });
     })().catch(e => console.error('[reviews] advisor notification email failed:', e.message));
