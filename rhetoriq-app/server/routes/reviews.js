@@ -17,13 +17,13 @@ function auth(req, res, next) {
 
 // POST /api/reviews — client submits text for advisor review
 router.post('/', auth, async (req, res) => {
-  const { clientId, moduleLabel, originalText, note } = req.body;
+  const { clientId, moduleLabel, originalText, note, moduleKey, moduleTile, reviewContext } = req.body;
   if (!originalText) return res.status(400).json({ error: 'No text provided' });
   try {
     const { rows } = await pool.query(
-      `INSERT INTO review_requests (client_id, module_label, original_text, client_note)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [clientId || null, moduleLabel || null, originalText, note || null]
+      `INSERT INTO review_requests (client_id, module_label, original_text, client_note, module_key, module_tile, review_context)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [clientId || null, moduleLabel || null, originalText, note || null, moduleKey || null, moduleTile || null, reviewContext ? JSON.stringify(reviewContext) : null]
     );
     req.app.locals.wss.broadcast({ type: 'review_new', id: rows[0].id });
     res.json(rows[0]);

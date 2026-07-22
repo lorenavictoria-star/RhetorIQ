@@ -261,7 +261,7 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .advbtn.sent{color:var(--mu);border-color:var(--bd);background:#fff;cursor:default}
 .rev-badge{display:none;position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#c00;border-radius:50%;font-size:9px;font-weight:700;color:#fff;align-items:center;justify-content:center}
 .rev-badge.show{display:flex}
-.rev-panel{position:fixed;top:0;right:0;width:380px;max-width:100vw;height:100vh;background:#fff;border-left:1.5px solid var(--bd);z-index:500;display:none;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,.1)}
+.rev-panel{position:fixed;top:0;right:0;width:460px;max-width:100vw;height:100vh;background:#fff;border-left:1.5px solid var(--bd);z-index:500;display:none;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,.1);overflow-y:auto}
 .rev-panel.open{display:flex}
 .rev-panel-hd{padding:16px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .rev-panel-title{font-size:14px;font-weight:700}
@@ -5360,6 +5360,34 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
 // Shared by the initial generation (runMod) and by follow-up revisions
 // (sendFollowUp) so every module gets identical streaming, rating, and
 // follow-up UI — no per-module special-casing.
+// Rating bar + follow-up box — shared by generateAndStream (fresh generation)
+// and openReviewInModule (replaying a client's submitted text for revision).
+function attachResultActions(body,bid,analysisId,hasBrandVoice){
+  let anchor=body;
+  // analysisId is null when replaying a stored review (no fresh analyses row
+  // to attach a rating to) — skip the rating buttons, keep the follow-up box.
+  if(analysisId){
+    const ratingBar=document.createElement('div');
+    ratingBar.className='gen-rating-bar';
+    ratingBar.style.cssText='display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap';
+    ratingBar.innerHTML='<span style="font-size:11px;color:var(--mu)">Output bewerten:</span>'
+      +'<button onclick="rateResult('+analysisId+',1,this)" style="padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:14px" title="Gut">👍</button>'
+      +'<button onclick="rateResult('+analysisId+',-1,this)" style="padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:14px" title="Schlecht">👎</button>'
+      +'<span class="gen-rating-status" style="font-size:11px;color:var(--mu)"></span>'
+      +(isAdv?(hasBrandVoice?'<span style="font-size:11px;color:#2a7;margin-left:4px">✓ Brand Voice aktiv</span>':'<span style="font-size:11px;color:var(--mu);margin-left:4px">Kein Brand Voice</span>'):'');
+    body.parentNode.insertBefore(ratingBar,body.nextSibling);
+    anchor=ratingBar;
+  }
+
+  const fuBox=document.createElement('div');
+  fuBox.className='gen-followup-box';
+  fuBox.style.cssText='margin-top:10px';
+  fuBox.innerHTML='<textarea id="fu-'+bid+'" placeholder="Follow-up: was soll geändert werden? (z.B. &quot;Tonalität zu förmlich, bitte lockerer&quot; oder &quot;nur den zweiten Absatz anpassen, Rest so lassen&quot;)" style="width:100%;min-height:80px;font-size:13px;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;resize:vertical;font-family:inherit;box-sizing:border-box" onkeydown="if(event.key===\'Enter\'&&(event.metaKey||event.ctrlKey)){event.preventDefault();sendFollowUp(\''+bid+'\')}"></textarea>'
+    +'<div style="display:flex;justify-content:flex-end;margin-top:6px"><button onclick="sendFollowUp(\''+bid+'\')" style="padding:7px 16px;border:none;border-radius:6px;background:var(--ac,#1a3d2e);color:#fff;cursor:pointer;font-size:12px;font-weight:500">Senden ↵</button></div>';
+  if(analysisId)anchor.insertAdjacentElement('afterend',fuBox);
+  else body.parentNode.insertBefore(fuBox,body.nextSibling);
+  return fuBox;
+}
 async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
   const box=document.getElementById(rid),body=document.getElementById(bid);
   box.classList.add('show');
@@ -5406,24 +5434,7 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
       api('/api/memory/'+clientId+'/brand_voice',{method:'PUT',body:JSON.stringify({content:fullText})}).then(()=>loadMemory()).catch(()=>{});
     }
     // Rating buttons + universal follow-up box — same for every module
-    if(analysisId){
-      const ratingBar=document.createElement('div');
-      ratingBar.className='gen-rating-bar';
-      ratingBar.style.cssText='display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap';
-      ratingBar.innerHTML='<span style="font-size:11px;color:var(--mu)">Output bewerten:</span>'
-        +'<button onclick="rateResult('+analysisId+',1,this)" style="padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:14px" title="Gut">👍</button>'
-        +'<button onclick="rateResult('+analysisId+',-1,this)" style="padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:14px" title="Schlecht">👎</button>'
-        +'<span class="gen-rating-status" style="font-size:11px;color:var(--mu)"></span>'
-        +(isAdv?(hasBrandVoice?'<span style="font-size:11px;color:#2a7;margin-left:4px">✓ Brand Voice aktiv</span>':'<span style="font-size:11px;color:var(--mu);margin-left:4px">Kein Brand Voice</span>'):'');
-      body.parentNode.insertBefore(ratingBar,body.nextSibling);
-
-      const fuBox=document.createElement('div');
-      fuBox.className='gen-followup-box';
-      fuBox.style.cssText='margin-top:10px';
-      fuBox.innerHTML='<textarea id="fu-'+bid+'" placeholder="Follow-up: was soll geändert werden? (z.B. &quot;Tonalität zu förmlich, bitte lockerer&quot; oder &quot;nur den zweiten Absatz anpassen, Rest so lassen&quot;)" style="width:100%;min-height:80px;font-size:13px;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;resize:vertical;font-family:inherit;box-sizing:border-box" onkeydown="if(event.key===\'Enter\'&&(event.metaKey||event.ctrlKey)){event.preventDefault();sendFollowUp(\''+bid+'\')}"></textarea>'
-        +'<div style="display:flex;justify-content:flex-end;margin-top:6px"><button onclick="sendFollowUp(\''+bid+'\')" style="padding:7px 16px;border:none;border-radius:6px;background:var(--ac,#1a3d2e);color:#fff;cursor:pointer;font-size:12px;font-weight:500">Senden ↵</button></div>';
-      ratingBar.insertAdjacentElement('afterend',fuBox);
-    }
+    if(analysisId)attachResultActions(body,bid,analysisId,hasBrandVoice);
     if(debugPrompt){
       const dbg=document.createElement('details');
       dbg.style.cssText='margin-top:8px;font-size:11px;border:1px solid var(--bd);border-radius:6px;overflow:hidden';
@@ -5624,8 +5635,16 @@ async function submitToAdvisor(bodyId,moduleLabel,btn,box){
   const note=document.getElementById('adv-note-'+bodyId)?.value?.trim()||'';
   const sendBtn=box.querySelector('.adv-note-send');
   sendBtn.disabled=true;sendBtn.textContent='Sende…';
+  // Capture exactly what generated this text — module, briefing data, custom-
+  // instructions key — so the advisor can later jump straight into the real
+  // module (not a disconnected editor) to revise it with full brand voice.
+  const req=btn.closest('.rbox')?._req||null;
+  const reviewContext=req?{module:req.module,data:req.data,instructionsKey:req.instructionsKey}:null;
+  // moduleKey is the MDEFS key (e.g. 'profiling') used by goModule() to open the
+  // right screen — distinct from reviewContext.module, the analyze-API module id
+  // (e.g. 'rp') needed to actually regenerate/follow-up.
   try{
-    const r=await api('/api/reviews',{method:'POST',body:JSON.stringify({clientId,moduleLabel,originalText:text,note})});
+    const r=await api('/api/reviews',{method:'POST',body:JSON.stringify({clientId,moduleLabel,originalText:text,note,moduleKey:window._currentModule||null,moduleTile:window._currentTgTile||null,reviewContext})});
     await r.json();
     box.remove();
     btn.classList.add('sent');
@@ -5933,19 +5952,80 @@ async function loadAdvisorReviews(){
     // Update badge
     const badge=document.getElementById('rev-badge');
     if(badge){badge.textContent=pending.length;badge.classList.toggle('show',pending.length>0);}
+    window._advisorReviews=reviews;
     if(!pending.length){list.innerHTML=`<div style="padding:20px;color:var(--mu);font-size:13px">${T[LANG]?.review_none||'No pending reviews.'}</div>`;return;}
-    list.innerHTML=pending.map(rv=>`
+    list.innerHTML=pending.map(rv=>{
+      const clientName=(clients.find(c=>c.id===rv.client_id)||{}).name||'—';
+      const canOpenInModule=!!(rv.module_key&&rv.review_context);
+      return `
       <div class="rev-card" id="rvc-${rv.id}">
-        <div class="rev-card-meta">${safeText(rv.module_label||'Result')} &mdash; ${new Date(rv.created_at).toLocaleDateString('de-CH')}</div>
+        <div class="rev-card-meta">${safeText(clientName)} — ${safeText(rv.module_label||'Result')} &mdash; ${new Date(rv.created_at).toLocaleDateString('de-CH')}</div>
+        ${rv.client_note?`<div style="font-size:12px;color:var(--tx);background:var(--sf);border-left:3px solid var(--ac,#1a3d2e);padding:6px 10px;margin-bottom:8px;border-radius:0 6px 6px 0">💬 ${safeText(rv.client_note)}</div>`:''}
         <div class="rev-card-orig">${rv.original_text}</div>
+        ${canOpenInModule?`<button class="rev-savebtn" style="width:100%;margin-bottom:8px" onclick="openReviewInModule(${rv.id})">Im Modul bearbeiten →</button>`:''}
+        <details${canOpenInModule?'':' open'}><summary style="font-size:11px;color:var(--mu);cursor:pointer;margin-bottom:6px">${canOpenInModule?'Alternativ: direkt hier bearbeiten':'Bearbeiten'}</summary>
         <textarea class="rev-card-edit" id="rev-edit-${rv.id}">${rv.edited_text||rv.original_text}</textarea>
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
           <button class="obtn" style="color:var(--red);border-color:var(--red)" onclick="deleteReview(${rv.id})">${T[LANG]?.review_delete||'Löschen'}</button>
           <button class="obtn" onclick="saveReview(${rv.id},false)">${T[LANG]?.review_save_only||'Nur speichern'}</button>
           <button class="rev-savebtn" onclick="saveReview(${rv.id},true)">${T[LANG]?.review_save||'Speichern & an Klient senden'}</button>
         </div>
-      </div>`).join('');
+        </details>
+      </div>`;}).join('');
   }catch(e){}
+}
+
+// "Im Modul bearbeiten" — deep-links the advisor's OWN account into the exact
+// module/tile the client used, with the submitted text pre-loaded as if just
+// generated, so she can revise it with real brand voice + follow-up chat.
+// Switches clientId locally on the advisor's session — never logs in as the
+// client — so the client's own concurrent session is completely undisturbed.
+async function openReviewInModule(id){
+  const rv=(window._advisorReviews||[]).find(r=>r.id===id);
+  if(!rv||!rv.module_key)return;
+  document.getElementById('rev-panel')?.classList.remove('open');
+  await switchClient(rv.client_id);
+  const ctx=rv.review_context||{};
+  const tile=rv.module_tile;
+  if(rv.module_key==='text-gen'){
+    goModule('text-gen');
+    tgOpenTile(tile||'custom');
+  }else{
+    goModule(rv.module_key);
+  }
+  setTimeout(()=>{
+    const bid=rv.module_key==='text-gen'?('text-gen-b-'+(tile||'custom')):(rv.module_key+'-b');
+    const rid=rv.module_key==='text-gen'?('text-gen-r-'+(tile||'custom')):(rv.module_key+'-r');
+    const box=document.getElementById(rid),body=document.getElementById(bid);
+    if(!box||!body)return;
+    box.classList.add('show');
+    body.textContent=rv.edited_text||rv.original_text;
+    box._req={module:ctx.module||rv.module_key,data:ctx.data||{},rid,bid,instructionsKey:ctx.instructionsKey};
+    attachResultActions(body,bid,null,false);
+    window._activeReviewId=id;
+    const finBar=document.createElement('div');
+    finBar.className='rev-finish-bar';
+    finBar.style.cssText='margin-top:14px;padding:12px;border:1.5px solid var(--ac,#1a3d2e);border-radius:8px;background:var(--sf)';
+    finBar.innerHTML='<div style="font-size:12px;color:var(--mu);margin-bottom:8px">Sobald der Text fertig überarbeitet ist:</div><button onclick="finishReview('+id+')" style="padding:8px 18px;border:none;border-radius:6px;background:var(--ac,#1a3d2e);color:#fff;cursor:pointer;font-size:13px;font-weight:600">✓ An Klient senden</button>';
+    body.parentNode.insertBefore(finBar,body.nextSibling);
+    box.scrollIntoView({behavior:'smooth',block:'start'});
+  },300);
+}
+
+async function finishReview(id){
+  const rv=(window._advisorReviews||[]).find(r=>r.id===id);
+  if(!rv)return;
+  const bid=rv.module_key==='text-gen'?('text-gen-b-'+(rv.module_tile||'custom')):(rv.module_key+'-b');
+  const body=document.getElementById(bid);
+  const text=body?.textContent?.trim();
+  if(!text)return;
+  try{
+    await api('/api/reviews/'+id,{method:'PUT',body:JSON.stringify({editedText:text,send:true})});
+    document.querySelector('.rev-finish-bar')?.remove();
+    window._activeReviewId=null;
+    alert('Überarbeiteter Text wurde an den Klienten gesendet.');
+    loadAdvisorReviews();
+  }catch(e){alert('Fehler beim Senden.');}
 }
 
 async function saveReview(id,send){

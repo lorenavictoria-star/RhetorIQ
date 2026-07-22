@@ -86,6 +86,14 @@ async function init() {
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
     ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS client_note TEXT;
+    -- Exact module/tile + the original generation request (module key, the
+    -- data payload used, custom-instructions key, and the original
+    -- analysis id) so an advisor can jump straight into the real module —
+    -- with real brand voice, real follow-up chat — instead of a disconnected
+    -- plain-text editor.
+    ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS module_key TEXT;
+    ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS module_tile TEXT;
+    ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS review_context JSONB;
 
     CREATE TABLE IF NOT EXISTS content_subscriptions (
       id SERIAL PRIMARY KEY,
