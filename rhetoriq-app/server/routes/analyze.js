@@ -1209,6 +1209,18 @@ function buildRevisionPrompt(originalUserMsg, draft) {
   return `URSPRÜNGLICHER AUFTRAG:\n${originalUserMsg}\n\nENTWURF (erster Versuch):\n${draft}\n\nPrüfe diesen Entwurf kritisch gegen die Brand Voice und alle Regeln oben: wirkt er an irgendeiner Stelle generisch statt wie dieses Unternehmen, redundant, floskelhaft, oder strukturell schwach gemessen am Auftrag? Liefere eine überarbeitete, finale Fassung. Gib NUR den finalen Text aus, ohne Erklärung deiner Änderungen oder Meta-Kommentar.`;
 }
 
+// Optional, per-generation opt-in (data.geo === true, checked via a checkbox in
+// the frontend on public-facing content modules). Applies to any module.
+function buildGeoBlock(data) {
+  if (!data || data.geo !== true) return '';
+  return '\n\n════════════════════════════════════════\n'
+    + 'GEO-OPTIMIERUNG (Generative Engine Optimization) — optional zugeschaltet\n'
+    + '════════════════════════════════════════\n'
+    + 'Der Nutzer hat GEO-Optimierung für diesen Text aktiviert: der Text soll zusätzlich so geschrieben sein, dass er von KI-Antwortsystemen (ChatGPT, Perplexity, Google AI Overviews) leicht erfasst, zitiert und als verlässliche Quelle ausgewählt wird. Wende dafür, wo es zum Format passt, folgende Prinzipien an: klare, direkt zitierbare Kernaussagen; eindeutige Nennung von Unternehmen, Person oder Fakten (Entity-Klarheit) statt vager Umschreibungen; eine Struktur, die eine konkrete Frage klar beantwortet; falls passend, eine kurze zusammenfassende Passage.\n'
+    + 'WICHTIG: Diese Prinzipien sind der Brand Voice und der natürlichen Stimme des Unternehmens IMMER untergeordnet (siehe Regel 18 unten). Wende GEO nur so weit an, wie es die Authentizität, den Ton und die Lesbarkeit des Textes NICHT beeinträchtigt. Erzwinge niemals eine Struktur oder Formulierung, die unnatürlich wirkt oder nicht zur Stimme des Unternehmens passt — im Zweifel gewinnt immer die Brand Voice.\n'
+    + '════════════════════════════════════════';
+}
+
 // Global formatting rule applied to every generated output, regardless of
 // module, client, or brand voice. Appended last (highest instruction priority)
 // after the module system prompt and brand voice block.
@@ -1397,6 +1409,8 @@ router.post('/', requireAuth, async (req, res) => {
     if (baseSystem) systemBlocks.push({ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } });
     if (brandVoiceBlock) systemBlocks.push({ type: 'text', text: brandVoiceBlock, cache_control: { type: 'ephemeral' } });
     if (structuralRefBlock) systemBlocks.push({ type: 'text', text: structuralRefBlock, cache_control: { type: 'ephemeral' } });
+    const geoBlock = buildGeoBlock(data);
+    if (geoBlock) systemBlocks.push({ type: 'text', text: geoBlock });
     if (restDynamicSystem) systemBlocks.push({ type: 'text', text: restDynamicSystem });
     if (!systemBlocks.length) systemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
     systemBlocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
@@ -1564,6 +1578,8 @@ router.post('/stream', requireAuth, async (req, res) => {
     if (baseSystem) streamSystemBlocks.push({ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } });
     if (brandVoiceBlock) streamSystemBlocks.push({ type: 'text', text: brandVoiceBlock, cache_control: { type: 'ephemeral' } });
     if (structuralRefBlock) streamSystemBlocks.push({ type: 'text', text: structuralRefBlock, cache_control: { type: 'ephemeral' } });
+    const geoBlock = buildGeoBlock(data);
+    if (geoBlock) streamSystemBlocks.push({ type: 'text', text: geoBlock });
     if (restDynamicSystem) streamSystemBlocks.push({ type: 'text', text: restDynamicSystem });
     if (!streamSystemBlocks.length) streamSystemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
     streamSystemBlocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
