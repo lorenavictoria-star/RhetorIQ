@@ -2628,11 +2628,21 @@ function clearModuleDraft(){
   const modKey=window._currentModule;if(!modKey)return;
   if(!confirm('Aktuellen Entwurf in diesem Modul löschen und leer neu beginnen?'))return;
   const form=document.getElementById('mod-form');
-  if(form)form.querySelectorAll('input,textarea').forEach(el=>{
-    if(el.type==='checkbox'||el.type==='radio'||el.type==='file'||el.id==='')return;
-    if(el.closest('#tpl-bar'))return;
-    el.value='';
-  });
+  if(form){
+    form.querySelectorAll('input,textarea').forEach(el=>{
+      if(el.type==='checkbox'||el.type==='radio'||el.type==='file'||el.id==='')return;
+      if(el.closest('#tpl-bar'))return;
+      el.value='';
+    });
+    // Also clear any already-generated result text — that's stored in a
+    // .rbody div, not an input/textarea, so the loop above never touches it.
+    form.querySelectorAll('.rbody').forEach(el=>{el.textContent='';});
+    // Remove the rating bar / follow-up box / debug panel left over from a
+    // previous generation, and collapse the result box back to hidden.
+    form.querySelectorAll('.gen-rating-bar,.gen-followup-box').forEach(el=>el.remove());
+    form.querySelectorAll('details').forEach(el=>el.remove());
+    form.querySelectorAll('.rbox').forEach(el=>el.classList.remove('show'));
+  }
   localStorage.removeItem(moduleDraftKey(modKey));
 }
 
