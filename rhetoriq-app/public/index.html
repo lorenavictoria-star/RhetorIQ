@@ -312,12 +312,6 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .adv-client-bar{display:flex;align-items:center;gap:8px;margin-top:8px}
 .adv-bar-track{flex:1;height:4px;background:var(--bd);border-radius:2px;overflow:hidden}
 .adv-bar-fill{height:100%;background:var(--tx);border-radius:2px;transition:width .3s}
-.adv-timeline{margin-top:10px;padding:10px 0 4px;border-top:1px solid var(--bd);display:none}
-.adv-tl-item{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--bd)}
-.adv-tl-item:last-child{border-bottom:none}
-.adv-tl-dot{width:7px;height:7px;border-radius:50%;background:var(--tx);flex-shrink:0}
-.adv-tl-mod{font-size:12px;color:var(--tx);font-weight:500}
-.adv-tl-date{font-size:10px;color:var(--mu);margin-left:auto}
 .adv-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:18px 0 8px}
 .hs-adv-score{font-family:'Spectral',serif;font-size:72px;font-weight:300;line-height:1;color:var(--tx);text-align:center;margin:16px 0 4px}
 .hs-adv-label{font-size:13px;color:var(--mu);text-align:center;margin-bottom:20px}
@@ -514,6 +508,9 @@ body.adv .vubtn{display:block}
 .vbtn{padding:12px 14px;background:#fff;border:1.5px solid var(--bd);border-radius:4px;cursor:pointer;font-size:16px;align-self:flex-end;flex-shrink:0;transition:all .15s}
 .vbtn:hover{border-color:var(--tx)}
 .vbtn.recording{background:#fff0f0;border-color:var(--red);animation:pulse .8s infinite}
+.vbtn-sm{padding:2px 7px;background:none;border:1px solid var(--bd);border-radius:4px;cursor:pointer;font-size:12px;color:var(--mu);transition:all .15s;line-height:1.4}
+.vbtn-sm:hover{border-color:var(--tx);color:var(--tx)}
+.vbtn-sm.recording{background:#fff0f0;border-color:var(--red);color:var(--red);animation:pulse .8s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 
 /* HEALTH SCORE */
@@ -4539,7 +4536,11 @@ function buildTextGen(prefill,form){
       ${people.length?buildPeopleSelector():''}
       <div class="upzone" onclick="document.getElementById('tg-tf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.tg_source_upload}</strong></div><input type="file" id="tg-tf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task-${t.id}','tg-tt-${t.id}')"></div>
       <div class="ftags" id="tg-tt-${t.id}"></div>
-      ${t.id==='email'?`<div class="row2"><div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:140px"></textarea></div><div class="fg2"><label class="fl2">Original Email &mdash; Reply To (optional)</label><textarea id="tg-reply-email" placeholder="Paste the email you are replying to here. The AI will draft a direct, on-point reply — answering every question raised, matching an appropriate register, and referencing the original naturally." style="min-height:140px"></textarea></div></div>`:t.id==='brief'?`<div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px" onblur="suggestBriefSubject('tg-task-brief','tg-br-subject')"></textarea></div>`:`<div class="fg2"><label class="fl2">${tl.tg_briefing}</label><textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px"></textarea></div>`}
+      ${(()=>{const micRow=`<label class="fl2" style="display:flex;align-items:center;justify-content:space-between">${tl.tg_briefing}<button type="button" class="vbtn-sm" id="tg-voice-${t.id}" onclick="toggleVoiceFor('tg-task-${t.id}','tg-voice-${t.id}')" title="Spracheingabe"><i class="ti ti-microphone"></i></button></label>`;
+        if(t.id==='email')return `<div class="row2"><div class="fg2">${micRow}<textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:140px"></textarea></div><div class="fg2"><label class="fl2">Original Email &mdash; Reply To (optional)</label><textarea id="tg-reply-email" placeholder="Paste the email you are replying to here. The AI will draft a direct, on-point reply — answering every question raised, matching an appropriate register, and referencing the original naturally." style="min-height:140px"></textarea></div></div>`;
+        if(t.id==='brief')return `<div class="fg2">${micRow}<textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px" onblur="suggestBriefSubject('tg-task-brief','tg-br-subject')"></textarea></div>`;
+        return `<div class="fg2">${micRow}<textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px"></textarea></div>`;
+      })()}
       <div class="fg2" style="margin-top:4px"><label class="fl2">${tl.tg_draft_lbl||'Vorhandener Entwurf (optional)'}</label><textarea id="tg-draft-${t.id}" placeholder="${tl.tg_draft_ph||'Fügen Sie hier einen bereits vorhandenen Entwurf ein. Ist dieses Feld ausgefüllt, wird der Entwurf nur überarbeitet, an die Brand Voice angepasst und verbessert — statt komplett neu geschrieben. Das Briefing oben dient dann als Anweisung, was konkret verändert werden soll.'}" style="min-height:100px;font-size:12px"></textarea></div>
       <div class="row2">
         <div class="fg2"><label class="fl2">${tl.tg_audience}</label><select id="tg-aud-${t.id}"><option>B2B — C-Suite</option><option>B2B — HR Leaders</option><option>B2B — Finance / Investors</option><option>B2B — General Business</option><option>B2C — General Consumer</option><option>Internal — All Employees</option><option>Internal — Leadership Team</option><option>Media / Journalists</option></select></div>
@@ -5532,7 +5533,6 @@ async function loadAdvisorDashboard(){
             ${tok?`<button class="obtn" onclick="copyTok('${tok}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail(${c.id},'${tok}')">Send by Email</button>`:''}
             <button class="obtn" style="color:#166534;border-color:#bbf7d0;background:#f0fdf4" onclick="sendWelcomeByEmail(${c.id})">Willkommens-E-Mail senden</button>
             <button class="obtn" onclick="openSetPassword(${c.id})">Set Password</button>
-            <button class="obtn" onclick="advToggleTimeline('${c.id}',this)">Activity</button>
             <button class="obtn" onclick="openTeamModal(${c.id})">Team</button>
             <button class="obtn" onclick="openAuditModal(${c.id})">Audit Log</button>
             <button class="obtn" style="color:#5b21b6;border-color:#c4b5fd;background:#f5f3ff;font-weight:500" onclick="openModuleConfig(${c.id})"><i class="ti ti-layout-grid" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Module</button>
@@ -5548,7 +5548,6 @@ async function loadAdvisorDashboard(){
             <button class="dbtn" onclick="delData(${c.id})">Delete Data</button>
             <button class="dbtn" onclick="deleteClient(${c.id}).then(()=>loadAdvisorDashboard())">Delete Client</button>
           </div>
-          <div class="adv-timeline" id="adv-tl-${c.id}" style="display:none"></div>
         </div>`;
       }).join(''):'<div style="color:var(--mu);font-size:13px;padding:16px 0">No clients yet.</div>'}
       ${recent.length?`<div class="adv-section-title" style="margin-top:24px">Recent Activity</div>
@@ -5620,20 +5619,6 @@ async function sendPaymentLink(clientId, btn) {
     btn.disabled = false;
     btn.textContent = 'Zahlungslink senden';
   }
-}
-
-async function advToggleTimeline(clientId,card){
-  const tl=document.getElementById('adv-tl-'+clientId);
-  if(!tl)return;
-  const open=tl.style.display==='block';
-  if(open){tl.style.display='none';return;}
-  tl.style.display='block';
-  try{
-    const r=await api('/api/advisor/timeline/'+clientId);
-    const rows=await r.json();
-    if(!rows.length){tl.innerHTML='<div style="font-size:11px;color:var(--mu);padding:4px 0">No analyses yet.</div>';return;}
-    tl.innerHTML=rows.map(a=>`<div class="adv-tl-item"><div class="adv-tl-dot"></div><div class="adv-tl-mod">${safeText(a.module_label||a.module||'')}</div><div class="adv-tl-date">${new Date(a.created_at).toLocaleDateString('de-CH')}</div></div>`).join('');
-  }catch(e){tl.innerHTML=`<div style="font-size:11px;color:var(--red)">Error loading timeline.</div>`;}
 }
 
 // ── EXPORT CLIENTS CSV ────────────────────────────────────────
@@ -6059,17 +6044,18 @@ function toggleVoiceLang(){
   const btn=document.getElementById('voice-lang-btn');
   if(btn)btn.textContent=voiceLang.toUpperCase();
 }
-function toggleVoice(){
-  const btn=document.getElementById('voice-btn');
+function toggleVoiceFor(targetId,btnId,onDone){
+  const btn=document.getElementById(btnId);
   if(!('SpeechRecognition' in window||'webkitSpeechRecognition' in window)){alert('Voice input is not supported in this browser. Please use Chrome.');return;}
-  if(voiceRec){voiceRec.stop();voiceRec=null;btn.classList.remove('recording');return;}
+  if(voiceRec){voiceRec.stop();voiceRec=null;if(btn)btn.classList.remove('recording');return;}
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   voiceRec=new SR();voiceRec.lang=voiceLang==='de'?'de-CH':'en-US';voiceRec.continuous=false;voiceRec.interimResults=false;
-  voiceRec.onresult=e=>{const t=e.results[0][0].transcript;const inp=document.getElementById('router-input');inp.value=(inp.value?inp.value+' ':'')+t;routePrompt();};
-  voiceRec.onend=()=>{voiceRec=null;btn.classList.remove('recording');};
-  voiceRec.onerror=()=>{voiceRec=null;btn.classList.remove('recording');};
-  voiceRec.start();btn.classList.add('recording');
+  voiceRec.onresult=e=>{const t=e.results[0][0].transcript;const inp=document.getElementById(targetId);if(inp)inp.value=(inp.value?inp.value+' ':'')+t;if(onDone)onDone();};
+  voiceRec.onend=()=>{voiceRec=null;if(btn)btn.classList.remove('recording');};
+  voiceRec.onerror=()=>{voiceRec=null;if(btn)btn.classList.remove('recording');};
+  voiceRec.start();if(btn)btn.classList.add('recording');
 }
+function toggleVoice(){toggleVoiceFor('router-input','voice-btn',routePrompt);}
 
 // HEALTH SCORE
 async function generateHealthScore(){
