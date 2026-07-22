@@ -4171,7 +4171,7 @@ async function routePrompt(){
     if(mod==='vs-cal'||mod==='vs-gen')mod='text-gen';
     const name=MNAMES[mod]||'the right module';
     const briefing=(d.briefing||text).trim();
-    s.textContent='Opening: '+name+'... generating.';
+    s.textContent='Opening: '+name+'...';
     setTimeout(()=>{
       s.textContent='';document.getElementById('router-input').value='';
       if(mod==='brand-voice'){goPage('brand-voice');}
@@ -4210,7 +4210,6 @@ async function routePrompt(){
               if(match){const el=document.getElementById('tg-fmt-'+fmt);if(el)el.value=match;}
             }
           }
-          setTimeout(()=>{try{runMod('text-gen',fmt);}catch{}},150);
         },80);
       }
       else if(mod==='pre-meeting'||mod==='arg-reaction'){
@@ -4218,7 +4217,6 @@ async function routePrompt(){
       }
       else{
         goModule(mod,briefing);
-        setTimeout(()=>{try{runMod(mod);}catch{}},150);
       }
     },400);
   }catch{s.textContent='Could not route &mdash; please choose a module below.';}
