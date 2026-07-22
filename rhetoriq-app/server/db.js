@@ -105,6 +105,32 @@ async function init() {
       UNIQUE(client_id, module_key)
     );
 
+    -- Categorized, continuously-consolidated feedback learning: one compact,
+    -- refined summary per (client, module, category) instead of a raw
+    -- ever-growing feedback log. Kept separate from client_module_prompts,
+    -- which holds the advisor's own manually-authored instructions.
+    CREATE TABLE IF NOT EXISTS client_feedback_learnings (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+      module_key TEXT NOT NULL,
+      category TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(client_id, module_key, category)
+    );
+
+    -- Full raw feedback history — never injected into generation prompts,
+    -- kept purely so nothing is ever truly lost and an advisor can review it.
+    CREATE TABLE IF NOT EXISTS client_feedback_history (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+      module_key TEXT NOT NULL,
+      category TEXT,
+      rating INTEGER,
+      note TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
     CREATE TABLE IF NOT EXISTS client_users (
       id SERIAL PRIMARY KEY,
       client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,

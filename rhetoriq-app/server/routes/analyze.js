@@ -1068,6 +1068,24 @@ RULES:
     system: `You write short, fitting document titles for finished pieces of business writing (email, speech, LinkedIn post, brand voice document, review response, letter, etc.). Given the finished text, return ONLY a short descriptive title suitable as a document heading — nothing else, no quotes, no explanation, no prefix like "Title:". Match the language of the text. Keep it under 8 words and specific to the actual content, never generic like "Text" or "Document" or the module name alone. Examples: "Rede zum 25-jährigen Firmenjubiläum", "Antwort auf Beschwerde von Familie Meier", "LinkedIn-Post zur Produkteinführung Q3".`,
     build: (d) => `Text:\n${sanitizeForPrompt((d.text || '').slice(0, 3000))}`
   },
+  'consolidate-feedback': {
+    label: 'Feedback Consolidation',
+    system: `Du kategorisierst und konsolidierst Kunden-Feedback zu generierten Texten, damit es strukturiert und kompakt bleibt statt unstrukturiert anzuwachsen.
+
+Kategorien (wähle GENAU eine):
+- TON: Tonalität, Förmlichkeit, Wärme, Direktheit, Wortwahl-Stil
+- STRUKTUR: Aufbau, Reihenfolge, Länge, Absätze, Argumentationslogik
+- FAKTEN: inhaltliche Richtigkeit, fehlende/falsche Informationen, Spezifität
+- FORMAT: äusseres Format, Anrede, Signatur, technische Formatvorgaben
+- SONSTIGES: passt in keine der obigen Kategorien
+
+Du erhältst den bisherigen Stand aller 5 Kategorien (können leer sein) plus eine neue Feedback-Notiz mit Bewertung (BEIBEHALTEN = hat dem Nutzer gefallen, VERMEIDEN = hat dem Nutzer nicht gefallen). Bestimme, in welche der 5 Kategorien die neue Notiz am ehesten passt, und liefere eine aktualisierte, verfeinerte Zusammenfassung für GENAU DIESE eine Kategorie: bestätigt die neue Notiz das bisherige Verständnis, schärfe die Formulierung; widerspricht oder korrigiert sie es, aktualisiere es durchdacht — die alte, jetzt überholte Aussage wird ersetzt, nicht beide nebeneinander stehengelassen. Maximal 2-3 prägnante Sätze, konkret und direkt umsetzbar, keine Meta-Kommentare.
+
+Antworte NUR in exakt diesem Format, nichts davor oder danach:
+KATEGORIE: <TON|STRUKTUR|FAKTEN|FORMAT|SONSTIGES>
+ZUSAMMENFASSUNG: <aktualisierte Zusammenfassung>`,
+    build: (d) => `Bisheriger Stand pro Kategorie:\n${d.existingSummaries || '(noch keine Kategorie hat einen gespeicherten Stand)'}\n\nNeue Feedback-Notiz (${d.label}): ${sanitizeForPrompt(d.note)}`
+  },
   'chat': {
     label: 'Help Chat',
     system: `You are the RhetorIQ assistant — a direct, knowledgeable guide for an AI-powered executive communication coaching platform built by Lorena Lienhard.
@@ -1197,7 +1215,7 @@ const MODULE_MAX_TOKENS = {
   'vs-cal': 1000, 'vs-gen': 1000, 'ht-guest-letter': 2000,
   'ht-review-response': 1500, 'ht-sales-pitch': 2000, 'customer-review': 1500,
   // Internal (fast + cheap)
-  router: 50, chat: 600, 'route-fill': 400, 'suggest-subject': 60, 'suggest-title': 30,
+  router: 50, chat: 600, 'route-fill': 400, 'suggest-subject': 60, 'suggest-title': 30, 'consolidate-feedback': 250,
 };
 const DEFAULT_MAX_TOKENS = 2000;
 
@@ -1219,6 +1237,60 @@ function buildGeoBlock(data) {
     + 'Der Nutzer hat GEO-Optimierung für diesen Text aktiviert: der Text soll zusätzlich so geschrieben sein, dass er von KI-Antwortsystemen (ChatGPT, Perplexity, Google AI Overviews) leicht erfasst, zitiert und als verlässliche Quelle ausgewählt wird. Wende dafür, wo es zum Format passt, folgende Prinzipien an: klare, direkt zitierbare Kernaussagen; eindeutige Nennung von Unternehmen, Person oder Fakten (Entity-Klarheit) statt vager Umschreibungen; eine Struktur, die eine konkrete Frage klar beantwortet; falls passend, eine kurze zusammenfassende Passage.\n'
     + 'WICHTIG: Diese Prinzipien sind der Brand Voice und der natürlichen Stimme des Unternehmens IMMER untergeordnet (siehe Regel 18 unten). Wende GEO nur so weit an, wie es die Authentizität, den Ton und die Lesbarkeit des Textes NICHT beeinträchtigt. Erzwinge niemals eine Struktur oder Formulierung, die unnatürlich wirkt oder nicht zur Stimme des Unternehmens passt — im Zweifel gewinnt immer die Brand Voice.\n'
     + '════════════════════════════════════════';
+}
+
+// Categorized, continuously-consolidated feedback learning (see
+// client_feedback_learnings / client_feedback_history in db.js). Instead of
+// appending raw feedback lines to a single growing text block, each new
+// note gets classified into one of these categories and merged into that
+// category's existing summary via a cheap Haiku consolidation pass — the
+// summary sharpens over time instead of accumulating unstructured, possibly
+// contradictory text. Nothing is lost: the raw note is still logged to
+// client_feedback_history, just never injected into generation prompts.
+const FEEDBACK_CATEGORIES = ['TON', 'STRUKTUR', 'FAKTEN', 'FORMAT', 'SONSTIGES'];
+async function consolidateFeedback(clientId, moduleKey, rating, note) {
+  const { rows: existing } = await pool.query(
+    'SELECT category, summary FROM client_feedback_learnings WHERE client_id=$1 AND module_key=$2',
+    [clientId, moduleKey]
+  );
+  const byCategory = Object.fromEntries(existing.map(r => [r.category, r.summary]));
+  const existingSummaries = FEEDBACK_CATEGORIES
+    .map(cat => `${cat}: ${byCategory[cat] || '(noch kein Stand)'}`)
+    .join('\n');
+  const label = rating === 1 ? 'BEIBEHALTEN' : 'VERMEIDEN';
+  const cfg = PROMPTS['consolidate-feedback'];
+  const resp = await callClaude(
+    cfg.system,
+    cfg.build({ existingSummaries, note, label }),
+    MODULE_MAX_TOKENS['consolidate-feedback'],
+    resolveModel('consolidate-feedback'),
+    0
+  );
+  const catMatch = resp.text.match(/KATEGORIE:\s*(\w+)/i);
+  const sumMatch = resp.text.match(/ZUSAMMENFASSUNG:\s*([\s\S]+)/i);
+  let category = (catMatch?.[1] || 'SONSTIGES').toUpperCase();
+  if (!FEEDBACK_CATEGORIES.includes(category)) category = 'SONSTIGES';
+  const summary = (sumMatch?.[1] || note).trim();
+
+  await pool.query(
+    `INSERT INTO client_feedback_learnings (client_id, module_key, category, summary, updated_at)
+     VALUES ($1,$2,$3,$4,NOW())
+     ON CONFLICT (client_id, module_key, category) DO UPDATE SET summary=$4, updated_at=NOW()`,
+    [clientId, moduleKey, category, summary]
+  );
+  await pool.query(
+    'INSERT INTO client_feedback_history (client_id, module_key, category, rating, note) VALUES ($1,$2,$3,$4,$5)',
+    [clientId, moduleKey, category, rating, note]
+  );
+}
+async function getFeedbackLearningsBlock(clientId, moduleKey) {
+  const { rows } = await pool.query(
+    'SELECT category, summary FROM client_feedback_learnings WHERE client_id=$1 AND module_key=$2 ORDER BY category',
+    [clientId, moduleKey]
+  );
+  if (!rows.length) return '';
+  return '\n\nGELERNTE PRÄFERENZEN DIESES KLIENTEN FÜR DIESES MODUL (aus früherem Feedback, kategorisiert und laufend verfeinert):\n'
+    + rows.map(r => `- ${r.category}: ${r.summary}`).join('\n');
 }
 
 // Universal follow-up mechanism (applies to every module): the user reacted to
@@ -1252,10 +1324,10 @@ const GLOBAL_STYLE_RULES = `FORMATTING RULES — apply to all output regardless 
 17. THINK LIKE A SENIOR STRATEGIST, NOT A TEMPLATE-FILLER: when the briefing is sparse (a topic, a few bullet points, a one-line instruction), do not produce a thin or generic piece just because the input was thin. Instead, do the work a senior communication strategist would do before writing: decide the single strongest angle for this audience and goal, choose a deliberate structure and line of argument, and build genuine persuasive reasoning, not filler sentences that only exist to reach a length target. Use your own expertise in communication strategy, rhetoric, and the given format to make these judgment calls confidently, the same way you would if asked to write this directly with no house style constraints. A sparse brief should still produce a sharp, well-argued, complete piece of writing, with only the concrete unverifiable facts bracketed per rule 16, never the thinking itself. Weak input is not an excuse for a weak result.
 18. BRAND VOICE TAKES PRECEDENCE OVER EVERYTHING (applies to every module that produces client-facing prose, letters, posts, speeches, or reviews — not just Text Generator): if a BRAND VOICE block appears earlier in this system prompt, it is not optional background reading, it is the binding standard for every single sentence you write in this response, regardless of what tone, register, or style any module-specific instruction above suggests. Before finishing, check your own output against that brand voice block specifically: does every sentence sound like this company or person, not like a generic AI assistant or generic business consulting? If any sentence would read the same for a different company, rewrite it. If no brand voice block is present in this prompt, this rule does not apply and you should write in a professional, appropriate default voice as instructed by the module.
 19. DRAW ON EVERYTHING YOU KNOW ABOUT THIS COMPANY AND PERSON, NOT JUST THE IMMEDIATE BRIEFING (applies to every module): before writing, actively connect every piece of context available to you in this conversation — the brand voice block, company memory, people profiles, custom instructions, industry, and any named individuals or organizations — into your reasoning, instead of treating the user's briefing as the only source of truth. If a named company, person, or organization mentioned in the briefing or context is one you have genuine background knowledge about (its industry position, public reputation, known history, sector conventions), let that knowledge inform tone, framing, and specificity, the way a well-prepared human writer who had done their homework on this company and person would. Never fabricate a specific fact you are not confident about (rule 16 still applies) — this rule is about using real available context and knowledge more fully, not about inventing new facts.
-20. THE CURRENT, EXPLICIT REQUEST ALWAYS OUTRANKS STORED PAST FEEDBACK: a "CUSTOM INSTRUCTIONS FOR THIS CLIENT" block, if present above, accumulates feedback and preferences from past generations over time. That history is a helpful default, not a constraint on this specific request. If anything in the user's current briefing, follow-up note, or explicit instruction for THIS generation conflicts with something recorded in that history (e.g. a past note said "more formal" but this request explicitly asks for a casual tone, or a past note said "avoid X" but the user is now explicitly asking for X), the current explicit instruction always wins outright — follow it exactly, without hedging, without blending the two, and without treating the old note as still partially binding. Never respond as if the historical note is a rule the current request must be reconciled with. Stored history only fills gaps the current request leaves open; it never overrides what the user is explicitly asking for right now.`;
+20. THE CURRENT, EXPLICIT REQUEST ALWAYS OUTRANKS STORED PAST FEEDBACK: a "CUSTOM INSTRUCTIONS FOR THIS CLIENT" block and/or a "GELERNTE PRÄFERENZEN DIESES KLIENTEN" block, if present above, reflect preferences accumulated or refined from past generations over time. That history is a helpful default, not a constraint on this specific request. If anything in the user's current briefing, follow-up note, or explicit instruction for THIS generation conflicts with something recorded in that history (e.g. a learned preference says "more formal" but this request explicitly asks for a casual tone, or a learned preference says "avoid X" but the user is now explicitly asking for X), the current explicit instruction always wins outright — follow it exactly, without hedging, without blending the two, and without treating the old preference as still partially binding. Never respond as if the historical note is a rule the current request must be reconciled with. Stored history only fills gaps the current request leaves open; it never overrides what the user is explicitly asking for right now.`;
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
-const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'suggest-title', 'chat', 'vs-cal', 'vs-gen', 'rw', 'as', 'tc', 'before-after', 'rh-translate']);
+const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'suggest-title', 'consolidate-feedback', 'chat', 'vs-cal', 'vs-gen', 'rw', 'as', 'tc', 'before-after', 'rh-translate']);
 const MODEL_SONNET = 'claude-sonnet-4-6';
 const MODEL_HAIKU  = 'claude-haiku-4-5-20251001';
 function resolveModel(module) {
@@ -1323,6 +1395,7 @@ router.post('/', requireAuth, async (req, res) => {
       if (combined) {
         restDynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(combined);
       }
+      restDynamicSystem += await getFeedbackLearningsBlock(resolvedClientId, module);
     }
 
     // Resolve advisor + industry early (needed for both brand voice and examples)
@@ -1518,6 +1591,7 @@ router.post('/stream', requireAuth, async (req, res) => {
       const combined = customRows.map(r => r.instructions).filter(Boolean).join('\n');
       if (combined)
         restDynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(combined);
+      restDynamicSystem += await getFeedbackLearningsBlock(resolvedClientId, module);
     }
     let clientIndustry = null;
     let hasBrandVoice = false;
@@ -1968,32 +2042,12 @@ router.post('/:id/rate', requireAuth, async (req, res) => {
       ).catch(() => {});
     }
 
-    // Feed keyword feedback directly into this client's custom instructions for
-    // this module, so future generations for this client actually learn from it.
+    // Categorize and consolidate this feedback into a compact, continuously
+    // refined per-category summary for this client+module (see
+    // consolidateFeedback above) instead of appending to a raw growing log.
     if (note && note.trim() && analysis.client_id) {
-      (async () => {
-        const label = rating === 1 ? 'BEIBEHALTEN' : 'VERMEIDEN';
-        const date = new Date().toISOString().slice(0, 10);
-        const line = `[FEEDBACK ${date}] ${label}: ${note.trim()}`;
-        const { rows: existing } = await pool.query(
-          'SELECT instructions FROM client_module_prompts WHERE client_id=$1 AND module_key=$2',
-          [analysis.client_id, analysis.module]
-        );
-        let merged = existing[0]?.instructions ? existing[0].instructions + '\n' + line : line;
-        // Cap length like the manual-edit endpoint does — trim oldest lines first,
-        // so feedback keeps accumulating without growing the prompt unbounded.
-        if (merged.length > 4000) {
-          const lines = merged.split('\n');
-          while (lines.join('\n').length > 4000 && lines.length > 1) lines.shift();
-          merged = lines.join('\n');
-        }
-        await pool.query(
-          `INSERT INTO client_module_prompts (client_id, module_key, instructions, updated_at)
-           VALUES ($1,$2,$3,NOW())
-           ON CONFLICT (client_id, module_key) DO UPDATE SET instructions=$3, updated_at=NOW()`,
-          [analysis.client_id, analysis.module, merged]
-        );
-      })().catch(e => console.error('[rate] feedback propagation failed:', e.message));
+      consolidateFeedback(analysis.client_id, analysis.module, rating, note.trim())
+        .catch(e => console.error('[rate] feedback consolidation failed:', e.message));
     }
 
     res.json({ ok: true });
