@@ -162,6 +162,41 @@ router.post('/:id/send-token', requireAdvisor, async (req, res) => {
   }
 });
 
+// POST /api/clients/:id/send-welcome — (re)send the password-setup welcome
+// email for a client that was created earlier without triggering it yet.
+router.post('/:id/send-welcome', requireAdvisor, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM clients WHERE id = $1 AND advisor_id = $2',
+      [req.params.id, req.user.id]
+    );
+    const client = rows[0];
+    if (!client) return res.status(404).json({ error: 'Client not found' });
+
+    const email = req.body.email || client.email;
+    if (!email) return res.status(400).json({ error: 'No email address available' });
+
+    if (email !== client.email) {
+      await pool.query('UPDATE clients SET email=$1, must_change_password=true WHERE id=$2', [email, client.id]);
+    }
+
+    await sendWelcomeEmail({
+      clientType: req.body.clientType || 'company',
+      salutation: req.body.salutation || 'Frau',
+      lastName: req.body.lastName || '',
+      companyName: client.name,
+      email,
+      clientId: client.id,
+      lang: req.body.lang || 'de'
+    });
+
+    res.json({ ok: true, sentTo: email });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /api/clients/:id/set-password
 router.post('/:id/set-password', requireAdvisor, async (req, res) => {
   try {
