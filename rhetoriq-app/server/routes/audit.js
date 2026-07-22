@@ -77,4 +77,56 @@ router.get('/:clientId/export', requireAuth, requireAdvisor, async (req, res) =>
   }
 });
 
+// GET /api/audit/:clientId/feedback-learnings — current consolidated
+// per-category summaries (what actually gets injected into generation),
+// grouped by module.
+router.get('/:clientId/feedback-learnings', requireAuth, requireAdvisor, async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { rows: clientRows } = await pool.query(
+      'SELECT id FROM clients WHERE id=$1 AND advisor_id=$2',
+      [clientId, req.user.id]
+    );
+    if (!clientRows[0]) return res.status(404).json({ error: 'Client not found' });
+
+    const { rows } = await pool.query(
+      `SELECT module_key, category, summary, updated_at
+       FROM client_feedback_learnings
+       WHERE client_id=$1
+       ORDER BY module_key, category`,
+      [clientId]
+    );
+    res.json(rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/audit/:clientId/feedback-history — full raw feedback log, never
+// injected into prompts, kept purely for advisor review.
+router.get('/:clientId/feedback-history', requireAuth, requireAdvisor, async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { rows: clientRows } = await pool.query(
+      'SELECT id FROM clients WHERE id=$1 AND advisor_id=$2',
+      [clientId, req.user.id]
+    );
+    if (!clientRows[0]) return res.status(404).json({ error: 'Client not found' });
+
+    const { rows } = await pool.query(
+      `SELECT id, module_key, category, rating, note, created_at
+       FROM client_feedback_history
+       WHERE client_id=$1
+       ORDER BY created_at DESC
+       LIMIT 300`,
+      [clientId]
+    );
+    res.json(rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;

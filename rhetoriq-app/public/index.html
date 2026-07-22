@@ -900,6 +900,25 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   </div>
 </div>
 
+<!-- FEEDBACK LEARNINGS MODAL (advisor only) -->
+<div class="ov" id="fbl-ov">
+  <div class="modal" style="max-width:700px;max-height:85vh;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <h2 style="margin:0">Feedback-Lernstand</h2>
+      <button onclick="closeModal('fbl-ov')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mu);line-height:1;padding:2px 6px">&times;</button>
+    </div>
+    <div id="fbl-subtitle" style="font-size:13px;color:var(--mu);margin-bottom:14px"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="mlist-pill active" id="fbl-tab-current" onclick="fblSwitchTab('current')">Aktueller Stand</button>
+      <button class="mlist-pill" id="fbl-tab-history" onclick="fblSwitchTab('history')">Roh-Verlauf</button>
+    </div>
+    <div id="fbl-body-wrap" style="overflow-y:auto;flex:1;border:1px solid var(--bd);border-radius:8px;padding:4px"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+      <button class="lbtn" onclick="closeModal('fbl-ov')">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- HEALTH SCORE ADVISOR MODAL -->
 <div class="ov" id="hs-adv-ov" onclick="if(event.target===this)closeModal('hs-adv-ov')" style="display:none;align-items:center;justify-content:center">
   <div class="modal" style="max-width:560px;width:100%">
@@ -5694,6 +5713,7 @@ async function loadAdvisorDashboard(){
             <button class="obtn" onclick="openSetPassword(${c.id})">Set Password</button>
             <button class="obtn" onclick="openTeamModal(${c.id})">Team</button>
             <button class="obtn" onclick="openAuditModal(${c.id})">Audit Log</button>
+            <button class="obtn" style="color:#92400e;border-color:#fcd34d;background:#fffbeb" onclick="openFeedbackLearnings(${c.id},'${safeText(c.name)}')">Feedback-Lernstand</button>
             <button class="obtn" style="color:#5b21b6;border-color:#c4b5fd;background:#f5f3ff;font-weight:500" onclick="openModuleConfig(${c.id})"><i class="ti ti-layout-grid" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Module</button>
             <button class="obtn" style="color:#047857;border-color:#a7f3d0;background:#ecfdf5;font-weight:500" onclick="openHealthScoreAdv(${c.id},'${safeText(c.name)}')">&#9670; Health Score</button>
             <button class="obtn" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-weight:500" onclick="sendPaymentLink(${c.id},this)">Zahlungslink senden</button>
@@ -6477,6 +6497,69 @@ async function exportAuditCsv(){
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');a.href=url;a.download='rhetoriq-audit-'+_auditClientName+'.csv';a.click();URL.revokeObjectURL(url);
   }catch(e){alert('Export failed: '+e.message);}
+}
+
+// ── FEEDBACK LEARNINGS (advisor only) ─────────────────────────────
+let _fblClientId=null,_fblTab='current';
+const FBL_CAT_LABEL={TON:'Ton',STRUKTUR:'Struktur',FAKTEN:'Fakten',FORMAT:'Format',SONSTIGES:'Sonstiges'};
+async function openFeedbackLearnings(cid,cname){
+  _fblClientId=cid;_fblTab='current';
+  document.getElementById('fbl-subtitle').textContent=cname;
+  document.getElementById('fbl-tab-current').classList.add('active');
+  document.getElementById('fbl-tab-history').classList.remove('active');
+  openModal('fbl-ov');
+  await fblLoadCurrent();
+}
+function fblSwitchTab(tab){
+  _fblTab=tab;
+  document.getElementById('fbl-tab-current').classList.toggle('active',tab==='current');
+  document.getElementById('fbl-tab-history').classList.toggle('active',tab==='history');
+  tab==='current'?fblLoadCurrent():fblLoadHistory();
+}
+async function fblLoadCurrent(){
+  const wrap=document.getElementById('fbl-body-wrap');
+  wrap.innerHTML='<div style="padding:16px;font-size:13px;color:var(--mu)">Loading…</div>';
+  try{
+    const r=await api('/api/audit/'+_fblClientId+'/feedback-learnings');
+    const rows=await r.json();
+    if(!rows.length){wrap.innerHTML='<div style="padding:16px;font-size:13px;color:var(--mu)">Noch kein gelernter Stand — entsteht automatisch, sobald 👍/👎-Feedback mit Notiz abgegeben wird.</div>';return;}
+    const byModule={};
+    rows.forEach(r=>{(byModule[r.module_key]=byModule[r.module_key]||[]).push(r);});
+    wrap.innerHTML=Object.entries(byModule).map(([mod,items])=>`
+      <div style="padding:10px 14px;border-bottom:1px solid var(--bd)">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin-bottom:8px">${safeText(mod)}</div>
+        ${items.map(it=>`<div style="margin-bottom:8px">
+          <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:#fffbeb;color:#92400e;margin-right:6px">${FBL_CAT_LABEL[it.category]||it.category}</span>
+          <span style="font-size:13px;color:var(--tx)">${safeText(it.summary)}</span>
+          <div style="font-size:10px;color:var(--dm);margin-top:2px">Zuletzt aktualisiert: ${new Date(it.updated_at).toLocaleString('de-CH',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
+        </div>`).join('')}
+      </div>`).join('');
+  }catch(e){wrap.innerHTML=`<div style="padding:16px;color:#c0392b;font-size:13px">${e.message}</div>`;}
+}
+async function fblLoadHistory(){
+  const wrap=document.getElementById('fbl-body-wrap');
+  wrap.innerHTML='<div style="padding:16px;font-size:13px;color:var(--mu)">Loading…</div>';
+  try{
+    const r=await api('/api/audit/'+_fblClientId+'/feedback-history');
+    const rows=await r.json();
+    if(!rows.length){wrap.innerHTML='<div style="padding:16px;font-size:13px;color:var(--mu)">Noch kein Feedback vorhanden.</div>';return;}
+    wrap.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:var(--sf);position:sticky;top:0">
+        <th style="text-align:left;padding:8px 12px;font-weight:600;color:var(--mu);border-bottom:1px solid var(--bd)">Datum</th>
+        <th style="text-align:left;padding:8px 12px;font-weight:600;color:var(--mu);border-bottom:1px solid var(--bd)">Modul</th>
+        <th style="text-align:left;padding:8px 12px;font-weight:600;color:var(--mu);border-bottom:1px solid var(--bd)">Kategorie</th>
+        <th style="text-align:left;padding:8px 12px;font-weight:600;color:var(--mu);border-bottom:1px solid var(--bd)">Bewertung</th>
+        <th style="text-align:left;padding:8px 12px;font-weight:600;color:var(--mu);border-bottom:1px solid var(--bd)">Notiz</th>
+      </tr></thead>
+      <tbody>${rows.map((h,i)=>`<tr style="${i%2?'background:var(--sf)':''}">
+        <td style="padding:8px 12px;color:var(--mu);white-space:nowrap">${new Date(h.created_at).toLocaleString('de-CH',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</td>
+        <td style="padding:8px 12px">${safeText(h.module_key)}</td>
+        <td style="padding:8px 12px">${FBL_CAT_LABEL[h.category]||safeText(h.category||'—')}</td>
+        <td style="padding:8px 12px">${h.rating===1?'👍':'👎'}</td>
+        <td style="padding:8px 12px;color:var(--tx);max-width:320px">${safeText(h.note||'')}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }catch(e){wrap.innerHTML=`<div style="padding:16px;color:#c0392b;font-size:13px">${e.message}</div>`;}
 }
 
 // MODULE PROMPT CUSTOMIZATION
