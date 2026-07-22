@@ -2514,8 +2514,21 @@ function injectTemplateBtn(){
   bar.style.cssText='display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center';
   bar.innerHTML=`<span style="font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Templates</span>
     <button onclick="loadTemplate()" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:'Instrument Sans',sans-serif">Load ▾</button>
-    <button onclick="saveTemplate()" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:'Instrument Sans',sans-serif">Save</button>`;
+    <button onclick="saveTemplate()" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:'Instrument Sans',sans-serif">Save</button>
+    <span style="width:1px;height:16px;background:var(--bd);margin:0 2px"></span>
+    <button onclick="clearModuleDraft()" title="Entwurf löschen und leer neu beginnen" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:'Instrument Sans',sans-serif">＋ Neu</button>`;
   form.insertBefore(bar,form.firstChild);
+}
+function clearModuleDraft(){
+  const modKey=window._currentModule;if(!modKey)return;
+  if(!confirm('Aktuellen Entwurf in diesem Modul löschen und leer neu beginnen?'))return;
+  const form=document.getElementById('mod-form');
+  if(form)form.querySelectorAll('input,textarea').forEach(el=>{
+    if(el.type==='checkbox'||el.type==='radio'||el.type==='file'||el.id==='')return;
+    if(el.closest('#tpl-bar'))return;
+    el.value='';
+  });
+  localStorage.removeItem(moduleDraftKey(modKey));
 }
 
 // ── QUICK PANEL ────────────────────────────────────────────────
