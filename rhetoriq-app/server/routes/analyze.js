@@ -2,6 +2,7 @@ const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { brevoSend } = require('../lib/brevo');
+const { generateText, streamText, resolveModelId } = require('../lib/aiProvider');
 
 const router = express.Router();
 
@@ -1328,40 +1329,26 @@ const GLOBAL_STYLE_RULES = `FORMATTING RULES — apply to all output regardless 
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
 const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'suggest-title', 'consolidate-feedback', 'chat', 'vs-cal', 'vs-gen', 'rw', 'as', 'tc', 'before-after', 'rh-translate']);
-const MODEL_SONNET = 'claude-sonnet-4-6';
-const MODEL_HAIKU  = 'claude-haiku-4-5-20251001';
+// Model choice stays abstract everywhere in this file — a "sonnet" (capable)
+// or "haiku" (fast/cheap) preset, never a literal vendor model ID. The
+// vendor + literal model IDs live entirely behind lib/aiProvider — swapping
+// AI providers means editing that one file, not this one.
 function resolveModel(module) {
-  return HAIKU_MODULES.has(module) ? MODEL_HAIKU : MODEL_SONNET;
+  return resolveModelId(HAIKU_MODULES.has(module) ? 'haiku' : 'sonnet');
 }
 
 async function callClaude(system, user, maxTokens, model, temperature) {
-  // system can be a string (no caching) or an array of {type,text,cache_control?} blocks
-  const systemPayload = Array.isArray(system)
-    ? system
-    : [{ type: 'text', text: typeof system === 'function' ? system({}) : system }];
-  const body = {
-    model: model || MODEL_SONNET,
-    max_tokens: maxTokens || DEFAULT_MAX_TOKENS,
-    system: systemPayload,
-    messages: [{ role: 'user', content: user }]
-  };
-  if (temperature !== undefined) body.temperature = temperature;
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-beta': 'prompt-caching-2024-07-31'
-    },
-    body: JSON.stringify(body)
+  const resp = await generateText({
+    system,
+    messages: [{ role: 'user', content: user }],
+    maxTokens: maxTokens || DEFAULT_MAX_TOKENS,
+    model: model || resolveModelId('sonnet'),
+    temperature
   });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
   return {
-    text: data.content?.[0]?.text || '',
-    inputTokens: data.usage?.input_tokens || 0,
-    outputTokens: data.usage?.output_tokens || 0
+    text: resp.text,
+    inputTokens: resp.inputTokens,
+    outputTokens: resp.outputTokens
   };
 }
 
@@ -1684,68 +1671,27 @@ router.post('/stream', requireAuth, async (req, res) => {
     }
     if (aborted) { clearInterval(keepAlive); return; }
 
-    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      signal: abortController.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'prompt-caching-2024-07-31'
-      },
-      body: JSON.stringify({
-        model: resolveModel(module),
-        max_tokens: maxTokens,
-        stream: true,
-        system: streamSystemBlocks,
-        messages: [{ role: 'user', content: streamUserMsg }]
-      })
-    });
-
-    if (!anthropicRes.ok) {
-      clearInterval(keepAlive);
-      const err = await anthropicRes.json();
-      res.write(`event: error\ndata: ${JSON.stringify({ error: err.error?.message || 'API error' })}\n\n`);
-      return res.end();
-    }
-
     let fullText = '';
     let inputTokens = 0, outputTokens = 0;
-    const reader = anthropicRes.body.getReader();
-    const decoder = new TextDecoder();
-
-    // Fix 12: Proper SSE line buffering across chunks
-    let sseBuffer = '';
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      sseBuffer += decoder.decode(value, { stream: true });
-      const lines = sseBuffer.split('\n');
-      sseBuffer = lines.pop(); // keep incomplete last line
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const raw = line.slice(6).trim();
-        if (raw === '[DONE]' || !raw) continue;
-        try {
-          const evt = JSON.parse(raw);
-          if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
-            const text = evt.delta.text || '';
-            fullText += text;
-            res.write(`data: ${JSON.stringify({ text })}\n\n`);
-          }
-          if (evt.type === 'message_delta' && evt.usage) {
-            outputTokens = evt.usage.output_tokens || 0;
-          }
-          if (evt.type === 'message_start' && evt.message?.usage) {
-            inputTokens = evt.message.usage.input_tokens || 0;
-          }
-        } catch (e) {
-          console.warn('SSE parse error:', e.message, raw.slice(0, 100));
+    try {
+      for await (const evt of streamText({
+        system: streamSystemBlocks,
+        messages: [{ role: 'user', content: streamUserMsg }],
+        maxTokens,
+        model: resolveModel(module),
+        signal: abortController.signal
+      })) {
+        if (evt.type === 'text') {
+          fullText += evt.text;
+          res.write(`data: ${JSON.stringify({ text: evt.text })}\n\n`);
+        } else if (evt.type === 'usage') {
+          if (evt.inputTokens !== undefined) inputTokens = evt.inputTokens;
+          if (evt.outputTokens !== undefined) outputTokens = evt.outputTokens;
         }
       }
+    } finally {
+      clearInterval(keepAlive);
     }
-
-    clearInterval(keepAlive);
 
     // Fix 13: Skip DB writes if client disconnected
     if (aborted) return;
@@ -1823,19 +1769,16 @@ router.post('/chat', requireAuth, async (req, res) => {
       ...safeHistory,
       { role: 'user', content: safeMessage }
     ];
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'prompt-caching-2024-07-31'
-      },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 600, system: cfg.system, messages })
+    // Deliberately pinned to the "sonnet" preset regardless of 'chat' being
+    // in HAIKU_MODULES (that set governs the /:id/rate and module-generation
+    // paths only) — this help-chatbot has always run on the capable model.
+    const resp = await generateText({
+      system: cfg.system,
+      messages,
+      maxTokens: 600,
+      model: resolveModelId('sonnet')
     });
-    const data = await r.json();
-    if (data.error) throw new Error(data.error.message);
-    res.json({ reply: data.content?.[0]?.text || '' });
+    res.json({ reply: resp.text });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
