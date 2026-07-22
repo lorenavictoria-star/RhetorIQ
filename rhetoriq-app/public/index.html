@@ -2240,6 +2240,24 @@ async function suggestDocTitle(content,fallback){
     return (d.title||'').trim()||fallback;
   }catch{return fallback;}
 }
+// Converts plain generated text into uniform Word paragraphs instead of a
+// single <pre> blob — a <pre> preserves whatever blank-line pattern happened
+// to be in the raw text verbatim, so spacing between sections looked random
+// depending on how many blank lines the model left. Every paragraph now gets
+// the exact same margin, and ALL-CAPS section headings (the format every
+// module is instructed to use) get consistent heading spacing instead.
+function textToWordParagraphs(content){
+  const blocks=content.replace(/\r\n/g,'\n').split(/\n{2,}/).map(b=>b.trim()).filter(Boolean);
+  return blocks.map(block=>{
+    const escaped=block.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const lines=escaped.split('\n');
+    const isHeading=lines.length===1&&/^[A-ZÄÖÜ0-9][A-ZÄÖÜ0-9\s\-.,:/&']{3,}:?$/.test(block.trim())&&block===block.toUpperCase();
+    const html=lines.join('<br>');
+    return isHeading
+      ? `<p align="left" style="margin:20pt 0 8pt;font-weight:700;font-size:11pt">${html}</p>`
+      : `<p align="left" style="margin:0 0 12pt;font-size:11pt;line-height:1.6">${html}</p>`;
+  }).join('\n');
+}
 async function exportDoc(bodyId, fallbackTitle, btn){
   const el=document.getElementById(bodyId);
   if(!el||!el.textContent.trim())return;
@@ -2254,8 +2272,8 @@ async function exportDoc(bodyId, fallbackTitle, btn){
 <style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#111;margin:2cm;text-align:left}
 h1{font-size:16pt;font-weight:600;margin-bottom:6pt;color:#111;text-align:left}
 p.meta{font-size:9pt;color:#888;margin-bottom:24pt;text-align:left}
-pre{font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:pre-wrap;line-height:1.7;text-align:left}</style></head>
-<body><h1 align="left">${safeText(title)}</h1><p class="meta" align="left">RhetorIQ &mdash; ${date}</p><pre align="left">${content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></body></html>`;
+p{text-align:left}</style></head>
+<body><h1 align="left">${safeText(title)}</h1><p class="meta" align="left">RhetorIQ &mdash; ${date}</p>${textToWordParagraphs(content)}</body></html>`;
   const blob=new Blob(['﻿'+html],{type:'application/msword'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
