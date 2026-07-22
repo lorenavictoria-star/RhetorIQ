@@ -3126,17 +3126,93 @@ function renderHomeGreeting(fullName,isPersonalName){
 }
 
 // ── PRODUCT TOUR ──────────────────────────────────────────────
+// Visual mockups reuse the app's own CSS variables/icon font so each step
+// looks like the real interface, not just a text description of it.
+const TOUR_MOCK={
+  home:{de:`<div style="border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px;background:var(--sf)">
+      <div style="font-size:11px;color:var(--mu);margin-bottom:8px">Guten Tag, Anna &mdash; womit kann ich dir helfen?</div>
+      <div style="background:var(--bg);border:2px solid var(--ac,#1a3d2e);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--mu);display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span>z.B. &bdquo;Antwort auf eine Kundenbeschwerde&ldquo;&hellip;</span>
+        <i class="ti ti-microphone" style="font-size:15px;color:var(--ac,#1a3d2e);flex-shrink:0"></i>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <div style="flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px 4px;font-size:10px;text-align:center">E-Mail-Antwort</div>
+        <div style="flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px 4px;font-size:10px;text-align:center">Kundenrezension</div>
+        <div style="flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px 4px;font-size:10px;text-align:center">Alle Module</div>
+      </div>
+    </div>`,
+    en:`<div style="border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px;background:var(--sf)">
+      <div style="font-size:11px;color:var(--mu);margin-bottom:8px">Good afternoon, Anna &mdash; how can I help you today?</div>
+      <div style="background:var(--bg);border:2px solid var(--ac,#1a3d2e);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--mu);display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span>e.g. &ldquo;Reply to a customer complaint&rdquo;&hellip;</span>
+        <i class="ti ti-microphone" style="font-size:15px;color:var(--ac,#1a3d2e);flex-shrink:0"></i>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <div style="flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px 4px;font-size:10px;text-align:center">Email Reply</div>
+        <div style="flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px 4px;font-size:10px;text-align:center">Customer Review</div>
+        <div style="flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px 4px;font-size:10px;text-align:center">All Modules</div>
+      </div>
+    </div>`},
+  modules:{de:`<div style="border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px;background:var(--sf)">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="background:var(--bg);border:2px solid var(--ac,#1a3d2e);border-radius:8px;padding:10px 4px;text-align:center"><i class="ti ti-pencil" style="font-size:16px;color:var(--ac,#1a3d2e)"></i><div style="font-size:9px;font-weight:600;margin-top:4px">Schreiben</div></div>
+        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 4px;text-align:center"><i class="ti ti-shield-check" style="font-size:16px;color:var(--mu)"></i><div style="font-size:9px;margin-top:4px">Krisen</div></div>
+        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 4px;text-align:center"><i class="ti ti-trending-up" style="font-size:16px;color:var(--mu)"></i><div style="font-size:9px;margin-top:4px">Wachstum</div></div>
+      </div>
+    </div>`,
+    en:`<div style="border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px;background:var(--sf)">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="background:var(--bg);border:2px solid var(--ac,#1a3d2e);border-radius:8px;padding:10px 4px;text-align:center"><i class="ti ti-pencil" style="font-size:16px;color:var(--ac,#1a3d2e)"></i><div style="font-size:9px;font-weight:600;margin-top:4px">Writing</div></div>
+        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 4px;text-align:center"><i class="ti ti-shield-check" style="font-size:16px;color:var(--mu)"></i><div style="font-size:9px;margin-top:4px">Crisis</div></div>
+        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 4px;text-align:center"><i class="ti ti-trending-up" style="font-size:16px;color:var(--mu)"></i><div style="font-size:9px;margin-top:4px">Growth</div></div>
+      </div>
+    </div>`},
+  more:{de:`<div style="border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:14px">
+      <div style="padding:8px 12px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf)">Workspace</div>
+      <div style="padding:9px 12px;font-size:12px;border-top:1px solid var(--bd);display:flex;align-items:center;gap:8px"><i class="ti ti-user-circle" style="font-size:14px;color:var(--mu)"></i>Verzeichnis</div>
+      <div style="padding:9px 12px;font-size:12px;border-top:1px solid var(--bd);display:flex;align-items:center;gap:8px"><i class="ti ti-history" style="font-size:14px;color:var(--mu)"></i>Verlauf</div>
+      <div style="padding:9px 12px;font-size:12px;border-top:1px solid var(--bd);display:flex;align-items:center;gap:8px"><i class="ti ti-mail" style="font-size:14px;color:var(--mu)"></i>Kontakt</div>
+    </div>`,
+    en:`<div style="border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:14px">
+      <div style="padding:8px 12px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf)">Workspace</div>
+      <div style="padding:9px 12px;font-size:12px;border-top:1px solid var(--bd);display:flex;align-items:center;gap:8px"><i class="ti ti-user-circle" style="font-size:14px;color:var(--mu)"></i>Directory</div>
+      <div style="padding:9px 12px;font-size:12px;border-top:1px solid var(--bd);display:flex;align-items:center;gap:8px"><i class="ti ti-history" style="font-size:14px;color:var(--mu)"></i>History</div>
+      <div style="padding:9px 12px;font-size:12px;border-top:1px solid var(--bd);display:flex;align-items:center;gap:8px"><i class="ti ti-mail" style="font-size:14px;color:var(--mu)"></i>Contact</div>
+    </div>`},
+  feedback:{de:`<div style="border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px;background:var(--sf)">
+      <div style="font-size:11px;color:var(--mu);margin-bottom:8px">Output bewerten:
+        <span style="margin-left:6px;padding:3px 9px;border:1px solid var(--bd);border-radius:6px;background:var(--bg)">👍</span>
+        <span style="margin-left:4px;padding:3px 9px;border:1px solid var(--bd);border-radius:6px;background:var(--bg)">👎</span>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:9px 10px;font-size:11px;color:var(--mu)">z.B. &bdquo;Ton zu förmlich, bitte lockerer&ldquo;&hellip;</div>
+      <div style="text-align:right;margin-top:6px"><span style="font-size:10px;padding:5px 12px;border-radius:6px;background:var(--ac,#1a3d2e);color:#fff;font-weight:500">Senden &crarr;</span></div>
+    </div>`,
+    en:`<div style="border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px;background:var(--sf)">
+      <div style="font-size:11px;color:var(--mu);margin-bottom:8px">Rate this output:
+        <span style="margin-left:6px;padding:3px 9px;border:1px solid var(--bd);border-radius:6px;background:var(--bg)">👍</span>
+        <span style="margin-left:4px;padding:3px 9px;border:1px solid var(--bd);border-radius:6px;background:var(--bg)">👎</span>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:9px 10px;font-size:11px;color:var(--mu)">e.g. &ldquo;Tone is too formal, make it more casual&rdquo;&hellip;</div>
+      <div style="text-align:right;margin-top:6px"><span style="font-size:10px;padding:5px 12px;border-radius:6px;background:var(--ac,#1a3d2e);color:#fff;font-weight:500">Send &crarr;</span></div>
+    </div>`}
+};
 const TOUR_CONTENT={
   de:[
     {title:'Willkommen bei RhetorIQ',body:'<p style="font-size:14px;line-height:1.6;color:var(--tx)">RhetorIQ ist deine Kommunikationsintelligenz-Plattform. Von LinkedIn-Posts über Präsentationen bis zu Kundenrezensionen: jedes Modul liefert präzise Texte in der authentischen Stimme deines Unternehmens, nicht in generischem KI-Klang. Deine Beraterin hat die Plattform bereits für dich eingerichtet.</p>'},
-    {title:'So navigierst du',body:'<div style="font-size:14px;line-height:1.7;color:var(--tx)"><p><strong>Home</strong>: Schnellzugriff auf deine wichtigsten Module, plus das Prompt-Feld oben. Schreib oder sag einfach, was du brauchst, RhetorIQ leitet dich direkt ins richtige Modul.</p><p><strong>Module</strong>: Die komplette Werkzeugliste, nach Kategorie sortiert — nur die für dich freigeschalteten Module sind sichtbar.</p><p><strong>Mehr</strong>: Dort findest du dein Verzeichnis, den Verlauf aller bisherigen Texte und deine Kontaktmöglichkeiten.</p></div>'},
-    {title:'Best Practices für den Start',body:'<div style="font-size:14px;line-height:1.7;color:var(--tx)"><p>1. Je konkreter dein Briefing (Zahlen, Namen, Kontext), desto besser der Text — die KI erfindet nichts dazu, sondern markiert fehlende Fakten mit Platzhaltern.</p><p>2. Bewerte jeden generierten Text mit 👍 oder 👎. Bei 👎 kannst du in Stichworten sagen, was fehlt — die KI überarbeitet direkt neu und lernt für künftige Texte dazu.</p><p>3. Nicht zufrieden mit dem Grundton? Sprich mit deiner Beraterin — sie kann die Markenstimme und Vorgaben jederzeit anpassen.</p></div>'},
+    {title:'Home — dein Startpunkt',body:TOUR_MOCK.home.de+'<p style="font-size:13px;line-height:1.6;color:var(--tx)">👆 Schreib oder sprich (Mikrofon-Symbol) einfach, was du brauchst — RhetorIQ leitet dich automatisch ins richtige Modul. Darunter: deine häufigsten Module als Schnellzugriff.</p>'},
+    {title:'Module — die komplette Werkzeugliste',body:TOUR_MOCK.modules.de+'<p style="font-size:13px;line-height:1.6;color:var(--tx)">👆 Alle Werkzeuge sind hier nach Kategorie geordnet — nur die für dich freigeschalteten Module sind sichtbar. Tippe auf eine Kategorie, um die passenden Module zu sehen.</p>'},
+    {title:'Mehr — Verzeichnis, Verlauf, Kontakt',body:TOUR_MOCK.more.de+'<p style="font-size:13px;line-height:1.6;color:var(--tx)">👆 Hier findest du dein Personen-Verzeichnis, den Verlauf aller bisherigen Texte und die Kontaktmöglichkeit zu deiner Beraterin.</p>'},
+    {title:'Feedback & Follow-up',body:TOUR_MOCK.feedback.de+'<p style="font-size:13px;line-height:1.6;color:var(--tx)">👆 Nach jeder Generierung: bewerte mit 👍/👎 und schreib im Feld darunter ganz konkret, was angepasst werden soll — genau wie im Chat. Die KI überarbeitet gezielt, statt alles neu zu schreiben.</p>'},
+    {title:'Best Practices für den Start',body:'<div style="font-size:13px;line-height:1.7;color:var(--tx)"><p>1. Je konkreter dein Briefing (Zahlen, Namen, Kontext), desto besser der Text — die KI erfindet nichts dazu, sondern markiert fehlende Fakten mit Platzhaltern.</p><p>2. Nicht zufrieden mit dem Grundton? Sprich mit deiner Beraterin — sie kann die Markenstimme und Vorgaben jederzeit anpassen.</p></div>'},
     {title:'Los geht\'s',body:'<p style="font-size:14px;line-height:1.6;color:var(--tx)">Du bist startklar. Diese Tour findest du jederzeit über das ?-Symbol oben rechts.</p>'}
   ],
   en:[
     {title:'Welcome to RhetorIQ',body:'<p style="font-size:14px;line-height:1.6;color:var(--tx)">RhetorIQ is your communication intelligence platform. From LinkedIn posts to presentations to customer review responses: every module delivers precise text in your company\'s authentic voice, not generic AI tone. Your advisor has already set up the platform for you.</p>'},
-    {title:'How to navigate',body:'<div style="font-size:14px;line-height:1.7;color:var(--tx)"><p><strong>Home</strong>: Quick access to your key modules, plus the prompt field at the top. Type or say what you need, RhetorIQ routes you straight into the right module.</p><p><strong>Modules</strong>: The complete toolset, sorted by category — only the modules enabled for you are visible.</p><p><strong>More</strong>: Your directory, the history of everything you\'ve generated, and how to reach your advisor.</p></div>'},
-    {title:'Best practices to get value fast',body:'<div style="font-size:14px;line-height:1.7;color:var(--tx)"><p>1. The more concrete your briefing (numbers, names, context), the better the text — the AI won\'t invent details, it flags missing facts with placeholders instead.</p><p>2. Rate every generated text with 👍 or 👎. On 👎, add a few keywords about what\'s missing — the AI revises immediately and learns for future texts.</p><p>3. Not happy with the base tone? Talk to your advisor — she can adjust the brand voice and guidelines anytime.</p></div>'},
+    {title:'Home — your starting point',body:TOUR_MOCK.home.en+'<p style="font-size:13px;line-height:1.6;color:var(--tx)">👆 Type or say (microphone icon) what you need — RhetorIQ routes you straight into the right module. Below: your most-used modules as quick access.</p>'},
+    {title:'Modules — the full toolset',body:TOUR_MOCK.modules.en+'<p style="font-size:13px;line-height:1.6;color:var(--tx)">👆 Every tool is sorted by category here — only the modules enabled for you are visible. Tap a category to see its modules.</p>'},
+    {title:'More — directory, history, contact',body:TOUR_MOCK.more.en+'<p style="font-size:13px;line-height:1.6;color:var(--tx)">👆 Here you\'ll find your people directory, the history of everything you\'ve generated, and how to reach your advisor.</p>'},
+    {title:'Feedback & follow-up',body:TOUR_MOCK.feedback.en+'<p style="font-size:13px;line-height:1.6;color:var(--tx)">👆 After every generation: rate it with 👍/👎 and use the field below to say exactly what should change — just like chatting with me. The AI revises precisely instead of rewriting everything.</p>'},
+    {title:'Best practices to get value fast',body:'<div style="font-size:13px;line-height:1.7;color:var(--tx)"><p>1. The more concrete your briefing (numbers, names, context), the better the text — the AI won\'t invent details, it flags missing facts with placeholders instead.</p><p>2. Not happy with the base tone? Talk to your advisor — she can adjust the brand voice and guidelines anytime.</p></div>'},
     {title:'You\'re ready',body:'<p style="font-size:14px;line-height:1.6;color:var(--tx)">You\'re all set. Find this tour again anytime via the ? icon in the top right.</p>'}
   ]
 };
