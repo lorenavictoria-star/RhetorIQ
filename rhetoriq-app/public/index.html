@@ -279,6 +279,12 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .rbody:focus{background:var(--sl);box-shadow:inset 0 0 0 1.5px var(--bd)}
 .spin{display:flex;gap:5px;padding:20px;align-items:center}
 .stream-cursor{animation:blink-cur .7s step-end infinite;font-weight:400}
+.gen-thinking{display:flex;align-items:center;gap:8px;color:var(--mu);font-size:13px}
+.gen-dots{display:inline-flex;gap:3px;align-items:center}
+.gen-dots span{width:6px;height:6px;border-radius:50%;background:var(--mu);animation:gen-bounce 1.2s infinite ease-in-out}
+.gen-dots span:nth-child(2){animation-delay:.15s}
+.gen-dots span:nth-child(3){animation-delay:.3s}
+@keyframes gen-bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
 @keyframes blink-cur{0%,100%{opacity:1}50%{opacity:0}}
 .dot{width:5px;height:5px;border-radius:50%;background:var(--tx);animation:blink 1.2s infinite}
 .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
@@ -4994,6 +5000,21 @@ async function saveResultToPerson(srcId,profileType){
   for(const pid of selectedIds)await savePersonProfile(pid,profileType,content);
 }
 
+const TWO_PASS_MODULES_FE=new Set(['text-gen','presentation','brand-voice-co','brand-voice-ind']);
+const GEN_THINKING_PHASES_DE=['Entwurf wird erstellt …','Wird mit der Brand Voice abgeglichen …','Wird verfeinert …'];
+const GEN_THINKING_PHASES_EN=['Drafting …','Checking against the brand voice …','Refining …'];
+function startThinkingIndicator(body,twoPass){
+  const phases=(LANG==='de'?GEN_THINKING_PHASES_DE:GEN_THINKING_PHASES_EN);
+  const label=twoPass?phases[0]:(LANG==='de'?'Wird geschrieben …':'Writing …');
+  body.innerHTML=`<div class="gen-thinking"><span class="gen-dots"><span></span><span></span><span></span></span><span id="gen-thinking-label">${label}</span></div>`;
+  if(!twoPass)return null;
+  let i=0;
+  return setInterval(()=>{
+    i=(i+1)%phases.length;
+    const el=document.getElementById('gen-thinking-label');
+    if(el)el.textContent=phases[i];
+  },3200);
+}
 async function runMod(name){
   const memCtx=getMemoryContext();
   const selectedPeople=getSelectedPeople();
@@ -5044,7 +5065,7 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
   const box=document.getElementById(rid),body=document.getElementById(bid);
   box.classList.add('show');
   body.textContent='';
-  body.innerHTML='<span class="stream-cursor">▍</span>';
+  let thinkingInterval=startThinkingIndicator(body,TWO_PASS_MODULES_FE.has(module));
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
   try{
     const instructionsKey=module==='text-gen'?('text-gen-'+(arguments[1]||'custom')):undefined;
@@ -5057,7 +5078,6 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
     const reader=resp.body.getReader();const dec=new TextDecoder();
     let buf='',fullText='',lastEventName='';
     let analysisId=null,hasBrandVoice=false,debugPrompt=null;
-    body.textContent='';
     while(true){
       const{done,value}=await reader.read();
       if(done)break;
@@ -5071,7 +5091,7 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
             if(lastEventName==='done'||evt.id){
               analysisId=evt.id;hasBrandVoice=!!evt.hasBrandVoice;
               if(evt.systemPrompt)debugPrompt=evt.systemPrompt;
-            } else if(evt.text){fullText+=evt.text;body.textContent=fullText;}
+            } else if(evt.text){if(thinkingInterval){clearInterval(thinkingInterval);thinkingInterval=null;}fullText+=evt.text;body.textContent=fullText;}
           }catch{}
           lastEventName='';
         }
@@ -5104,6 +5124,7 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
     }
     loadStats();
   }catch(e){
+    if(thinkingInterval){clearInterval(thinkingInterval);thinkingInterval=null;}
     const msg=e.message||'';
     if(/session revoked|invalid token|missing token/i.test(msg)){
       localStorage.removeItem('riq-token');
