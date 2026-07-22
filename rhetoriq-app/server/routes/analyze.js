@@ -1338,6 +1338,26 @@ router.post('/', requireAuth, async (req, res) => {
       }
     }
 
+    // ── REFERENZ-DOKUMENTE (gelten für ALLE Module dieses Klienten) ──────────
+    // e.g. a structural style guide (like a TEDtalk structure reference) that
+    // the advisor uploaded once and wants applied everywhere, not just the
+    // module it happened to be uploaded through.
+    let structuralRefBlock = '';
+    if (resolvedClientId) {
+      const { rows: refRows } = await pool.query(
+        `SELECT content FROM company_memory WHERE client_id=$1 AND memory_type='structural_reference'`,
+        [resolvedClientId]
+      );
+      if (refRows[0]?.content) {
+        structuralRefBlock = '\n\n════════════════════════════════════════\n'
+          + 'REFERENZ-DOKUMENT DIESES KLIENTEN — gilt für dieses und alle anderen Module\n'
+          + '════════════════════════════════════════\n'
+          + 'Die folgende Referenz wurde vom Berater hinterlegt, um Struktur, Aufbau oder Vorgehen für JEDE Textgenerierung dieses Klienten zu prägen, unabhängig vom aktuellen Modul. Wende sie sinngemäss an, so wie es für das aktuelle Format passt — übernimm die Struktur/Prinzipien, nicht zwingend jedes Detail wortwörtlich, wenn das Format eindeutig ein anderes ist.\n\n'
+          + sanitizeForPrompt(refRows[0].content)
+          + '\n\n════════════════════════════════════════\nENDE REFERENZ-DOKUMENT\n════════════════════════════════════════';
+      }
+    }
+
     // ── STRUKTURVORLAGEN (few-shot, cross-client) ────────────────────────────
     // Provide structural patterns only — brand voice overrides tone completely.
     if (advisorId) {
@@ -1376,6 +1396,7 @@ router.post('/', requireAuth, async (req, res) => {
     const systemBlocks = [];
     if (baseSystem) systemBlocks.push({ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } });
     if (brandVoiceBlock) systemBlocks.push({ type: 'text', text: brandVoiceBlock, cache_control: { type: 'ephemeral' } });
+    if (structuralRefBlock) systemBlocks.push({ type: 'text', text: structuralRefBlock, cache_control: { type: 'ephemeral' } });
     if (restDynamicSystem) systemBlocks.push({ type: 'text', text: restDynamicSystem });
     if (!systemBlocks.length) systemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
     systemBlocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
@@ -1472,6 +1493,7 @@ router.post('/stream', requireAuth, async (req, res) => {
     }
     let clientIndustry = null;
     let hasBrandVoice = false;
+    let structuralRefBlock = '';
     if (resolvedClientId) {
       const { rows: cRows } = await pool.query('SELECT industry FROM clients WHERE id=$1', [resolvedClientId]);
       clientIndustry = cRows[0]?.industry?.toLowerCase().trim() || null;
@@ -1489,6 +1511,18 @@ router.post('/stream', requireAuth, async (req, res) => {
         brandVoiceBlock += '════════════════════════════════════════\n'
           + 'ENDE BRAND VOICE — Ab hier gilt: dieser Output ist ein Unternehmenstext, kein KI-Output.\n'
           + '════════════════════════════════════════';
+      }
+      const { rows: refRows } = await pool.query(
+        `SELECT content FROM company_memory WHERE client_id=$1 AND memory_type='structural_reference'`,
+        [resolvedClientId]
+      );
+      if (refRows[0]?.content) {
+        structuralRefBlock = '\n\n════════════════════════════════════════\n'
+          + 'REFERENZ-DOKUMENT DIESES KLIENTEN — gilt für dieses und alle anderen Module\n'
+          + '════════════════════════════════════════\n'
+          + 'Die folgende Referenz wurde vom Berater hinterlegt, um Struktur, Aufbau oder Vorgehen für JEDE Textgenerierung dieses Klienten zu prägen, unabhängig vom aktuellen Modul. Wende sie sinngemäss an, so wie es für das aktuelle Format passt — übernimm die Struktur/Prinzipien, nicht zwingend jedes Detail wortwörtlich, wenn das Format eindeutig ein anderes ist.\n\n'
+          + sanitizeForPrompt(refRows[0].content)
+          + '\n\n════════════════════════════════════════\nENDE REFERENZ-DOKUMENT\n════════════════════════════════════════';
       }
     }
     if (advisorId) {
@@ -1529,6 +1563,7 @@ router.post('/stream', requireAuth, async (req, res) => {
     const streamSystemBlocks = [];
     if (baseSystem) streamSystemBlocks.push({ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } });
     if (brandVoiceBlock) streamSystemBlocks.push({ type: 'text', text: brandVoiceBlock, cache_control: { type: 'ephemeral' } });
+    if (structuralRefBlock) streamSystemBlocks.push({ type: 'text', text: structuralRefBlock, cache_control: { type: 'ephemeral' } });
     if (restDynamicSystem) streamSystemBlocks.push({ type: 'text', text: restDynamicSystem });
     if (!streamSystemBlocks.length) streamSystemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
     streamSystemBlocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });

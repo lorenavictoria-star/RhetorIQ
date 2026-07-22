@@ -1159,6 +1159,23 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <textarea id="bv-active-ta" style="display:none;width:100%;min-height:200px;padding:14px 16px;border:none;border-top:1.5px solid var(--ac);font-size:13px;line-height:1.7;resize:vertical;outline:none;font-family:'Instrument Sans',sans-serif;box-sizing:border-box"></textarea>
       </div>
 
+      <div id="struct-ref-panel" style="display:none;margin-bottom:28px;border:1px solid var(--bd);border-radius:12px;overflow:hidden">
+        <div style="padding:10px 16px;background:var(--sf);display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleStructRef()">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)">Referenz-Dokumente &mdash; gelten für ALLE Module dieses Klienten</div>
+          <span id="struct-ref-arrow" style="font-size:14px;color:var(--mu)">&#9660;</span>
+        </div>
+        <div id="struct-ref-body" style="display:none;padding:14px 16px">
+          <div style="font-size:12px;color:var(--mu);margin-bottom:10px">z.B. Struktur-Guidelines für Reden, Aufbau-Vorgaben, Vorlagen &mdash; wird bei JEDER Textgenerierung dieses Klienten berücksichtigt, unabhängig vom Modul (nicht nur dort, wo es hochgeladen wurde).</div>
+          <div class="upzone" onclick="document.getElementById('struct-ref-f').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Dokument hochladen</strong> &mdash; .txt, .pdf, .docx</div><input type="file" id="struct-ref-f" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'struct-ref-in','struct-ref-tags')"></div>
+          <div class="ftags" id="struct-ref-tags"></div>
+          <textarea id="struct-ref-in" placeholder="Oder Text direkt einfügen &mdash; mehrere Dokumente mit --- trennen." style="min-height:100px;margin-top:8px"></textarea>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+            <button class="tg-save-ref" onclick="saveStructRef()">Speichern</button>
+            <div id="struct-ref-status" style="font-size:11px;color:var(--mu)"></div>
+          </div>
+        </div>
+      </div>
+
       <div id="bv-main-wrap">
       <div class="tog">
         <button class="togbtn active" id="bv-tab-co" onclick="switchBrand('company',this)">Company</button>
@@ -3491,8 +3508,32 @@ async function savePersonProfile(personId,type,content){
 
 // COMPANY MEMORY
 async function loadMemory(){
-  if(!clientId){memory=[];updateMemBanner();return;}
-  try{const r=await api('/api/memory/'+clientId);memory=await r.json();updateMemBanner();renderMemory();}catch{}
+  if(!clientId){memory=[];updateMemBanner();renderStructRef();return;}
+  try{const r=await api('/api/memory/'+clientId);memory=await r.json();updateMemBanner();renderMemory();renderStructRef();}catch{}
+}
+function renderStructRef(){
+  const panel=document.getElementById('struct-ref-panel');
+  if(!panel)return;
+  panel.style.display=clientId?'block':'none';
+  const ta=document.getElementById('struct-ref-in');
+  if(ta)ta.value=(memory.find(m=>m.memory_type==='structural_reference')||{}).content||'';
+}
+function toggleStructRef(){
+  const body=document.getElementById('struct-ref-body'),arrow=document.getElementById('struct-ref-arrow');
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  arrow.textContent=open?'▲':'▼';
+}
+async function saveStructRef(){
+  if(!clientId)return alert('Bitte zuerst einen Klienten auswählen.');
+  const content=(document.getElementById('struct-ref-in')?.value||'').trim();
+  const status=document.getElementById('struct-ref-status');
+  status.textContent='Wird gespeichert…';
+  try{
+    await api('/api/memory/'+clientId+'/structural_reference',{method:'PUT',body:JSON.stringify({content})});
+    await loadMemory();
+    status.textContent=content?'✓ Gespeichert — gilt ab sofort für alle Module dieses Klienten.':'Entfernt.';
+  }catch(e){status.textContent='Fehler: '+safeText(e.message);}
 }
 async function runBrandVoiceUpdate(kind){
   if(!clientId)return alert('Bitte zuerst einen Klienten auswählen.');
