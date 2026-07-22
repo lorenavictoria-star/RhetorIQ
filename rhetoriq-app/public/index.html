@@ -4373,7 +4373,53 @@ async function suggestBriefSubject(briefingFieldId,subjectFieldId){
     }catch{}
   },200);
 }
+// ── MODULE DRAFT AUTOSAVE ──────────────────────────────────────
+// #mod-form is rebuilt from scratch every time any module is opened, which
+// used to silently wipe out whatever was typed if you switched modules by
+// accident. Any field (or already-generated result) with an id gets
+// saved to localStorage, scoped per client + module, and restored the next
+// time that module is opened — even after a reload.
+function moduleDraftKey(moduleName){return 'riq-moddraft-'+(clientId||'global')+'-'+moduleName;}
+function saveModuleDraft(moduleName){
+  if(!moduleName)return;
+  const form=document.getElementById('mod-form');
+  if(!form)return;
+  const draft={};
+  form.querySelectorAll('[id]').forEach(el=>{
+    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT'){
+      if(el.type==='file'||el.type==='checkbox'||el.type==='radio')return;
+      if(el.value)draft[el.id]={v:el.value};
+    } else if(el.classList.contains('rbody')&&el.textContent.trim()){
+      draft[el.id]={t:el.textContent};
+    }
+  });
+  const key=moduleDraftKey(moduleName);
+  if(Object.keys(draft).length)localStorage.setItem(key,JSON.stringify(draft));
+  else localStorage.removeItem(key);
+}
+function restoreModuleDraft(moduleName){
+  if(!moduleName)return;
+  const raw=localStorage.getItem(moduleDraftKey(moduleName));
+  if(!raw)return;
+  let draft;try{draft=JSON.parse(raw);}catch{return;}
+  Object.entries(draft).forEach(([id,val])=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    if(val.v!==undefined)el.value=val.v;
+    else if(val.t!==undefined){
+      el.textContent=val.t;
+      const rbox=el.closest('.rbox');if(rbox)rbox.classList.add('show');
+    }
+  });
+}
+let _draftSaveTimer=null;
+document.getElementById('mod-form')?.addEventListener('input',()=>{
+  clearTimeout(_draftSaveTimer);
+  _draftSaveTimer=setTimeout(()=>saveModuleDraft(window._currentModule),800);
+});
+
 function goModule(name,prefill){
+  saveModuleDraft(window._currentModule);
   // vs-gen/vs-cal have no standalone MDEFS entry — they're surfaced through
   // the Text Generator instead. Without this remap, clicking these module
   // tiles anywhere in the app (module list, quick-access, recent-modules
@@ -4394,6 +4440,7 @@ function goModule(name,prefill){
   else buildForm(name,def,prefill,form);
   if(name==='brief')fillBriefSender('br-sender');
   if(name==='presentation')loadPresentationDesign();
+  if(!prefill)restoreModuleDraft(name);
   goPage('module');
   setTimeout(injectTemplateBtn,50);
 }
