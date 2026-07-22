@@ -3280,8 +3280,15 @@ async function boot(user,role){
   if(isAdv){
     document.querySelectorAll('.ao-item').forEach(el=>{el.style.display=el.classList.contains('mni')||el.classList.contains('mm-tile')?'flex':'block';});
     const mmRev=document.getElementById('mm-reviews');if(mmRev)mmRev.style.display='flex';
-    loadAdvisorReviews();
+    await loadAdvisorReviews();
     setInterval(loadAdvisorReviews,60000);
+    // Deep link from the advisor-notification email (?review=123) — jump
+    // straight into that review's module instead of landing on Home.
+    const reviewParam=new URLSearchParams(location.search).get('review');
+    if(reviewParam){
+      history.replaceState(null,'',location.pathname);
+      openReviewInModule(parseInt(reviewParam,10));
+    }
   } else {
     const bvNav=document.getElementById('mn-brand-voice');if(bvNav)bvNav.style.display='none';
     const bvBtns=document.getElementById('bv-adv-btns');if(bvBtns)bvBtns.style.display='none';
