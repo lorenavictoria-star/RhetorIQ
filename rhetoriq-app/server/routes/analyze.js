@@ -1063,6 +1063,11 @@ RULES:
     system: `You write concise German or English business-letter subject lines (Betreff). Given a briefing describing what a formal letter is about, return ONLY the subject line text — nothing else, no quotes, no "Betreff:" prefix, no explanation. Match the language of the briefing. Keep it under 12 words, specific and professional (e.g. "Kündigung des Mietvertrags per 30.09.2026", "Terminbestätigung für unser Gespräch am 14. März").`,
     build: (d) => `Briefing:\n${sanitizeForPrompt(d.text||'')}`
   },
+  'suggest-title': {
+    label: 'Document Title Suggestion',
+    system: `You write short, fitting document titles for finished pieces of business writing (email, speech, LinkedIn post, brand voice document, review response, letter, etc.). Given the finished text, return ONLY a short descriptive title suitable as a document heading — nothing else, no quotes, no explanation, no prefix like "Title:". Match the language of the text. Keep it under 8 words and specific to the actual content, never generic like "Text" or "Document" or the module name alone. Examples: "Rede zum 25-jährigen Firmenjubiläum", "Antwort auf Beschwerde von Familie Meier", "LinkedIn-Post zur Produkteinführung Q3".`,
+    build: (d) => `Text:\n${sanitizeForPrompt((d.text || '').slice(0, 3000))}`
+  },
   'chat': {
     label: 'Help Chat',
     system: `You are the RhetorIQ assistant — a direct, knowledgeable guide for an AI-powered executive communication coaching platform built by Lorena Lienhard.
@@ -1192,7 +1197,7 @@ const MODULE_MAX_TOKENS = {
   'vs-cal': 1000, 'vs-gen': 1000, 'ht-guest-letter': 2000,
   'ht-review-response': 1500, 'ht-sales-pitch': 2000, 'customer-review': 1500,
   // Internal (fast + cheap)
-  router: 50, chat: 600, 'route-fill': 400, 'suggest-subject': 60,
+  router: 50, chat: 600, 'route-fill': 400, 'suggest-subject': 60, 'suggest-title': 30,
 };
 const DEFAULT_MAX_TOKENS = 2000;
 
@@ -1228,7 +1233,7 @@ const GLOBAL_STYLE_RULES = `FORMATTING RULES — apply to all output regardless 
 18. BRAND VOICE TAKES PRECEDENCE OVER EVERYTHING (applies to every module that produces client-facing prose, letters, posts, speeches, or reviews — not just Text Generator): if a BRAND VOICE block appears earlier in this system prompt, it is not optional background reading, it is the binding standard for every single sentence you write in this response, regardless of what tone, register, or style any module-specific instruction above suggests. Before finishing, check your own output against that brand voice block specifically: does every sentence sound like this company or person, not like a generic AI assistant or generic business consulting? If any sentence would read the same for a different company, rewrite it. If no brand voice block is present in this prompt, this rule does not apply and you should write in a professional, appropriate default voice as instructed by the module.`;
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
-const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'chat', 'vs-cal', 'vs-gen', 'rw', 'as', 'tc', 'before-after', 'rh-translate']);
+const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'suggest-title', 'chat', 'vs-cal', 'vs-gen', 'rw', 'as', 'tc', 'before-after', 'rh-translate']);
 const MODEL_SONNET = 'claude-sonnet-4-6';
 const MODEL_HAIKU  = 'claude-haiku-4-5-20251001';
 function resolveModel(module) {
@@ -1851,6 +1856,21 @@ router.post('/suggest-subject', requireAuth, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/analyze/suggest-title — cheap Haiku call to propose a fitting
+// document title from a finished generated text, used for Word export headings.
+router.post('/suggest-title', requireAuth, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || typeof text !== 'string' || text.trim().length < 10) return res.json({ title: '' });
+    const cfg = PROMPTS['suggest-title'];
+    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['suggest-title'], resolveModel('suggest-title'), 0);
+    res.json({ title: claudeResp.text.trim().replace(/^["']|["']$/g, '') });
+  } catch (e) {
+    console.error(e);
+    res.json({ title: '' }); // graceful fallback — frontend falls back to the module label
   }
 });
 

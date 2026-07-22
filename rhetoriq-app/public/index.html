@@ -2219,18 +2219,29 @@ function toggleLang(){
 applyLang();
 
 // ── WORD EXPORT ───────────────────────────────────────────────
-function exportDoc(bodyId, title){
+async function suggestDocTitle(content,fallback){
+  try{
+    const r=await api('/api/analyze/suggest-title',{method:'POST',body:JSON.stringify({text:content.slice(0,3000)})});
+    const d=await r.json();
+    return (d.title||'').trim()||fallback;
+  }catch{return fallback;}
+}
+async function exportDoc(bodyId, fallbackTitle, btn){
   const el=document.getElementById(bodyId);
   if(!el||!el.textContent.trim())return;
   const content=el.textContent.trim();
+  const origLabel=btn?btn.textContent:null;
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  const title=await suggestDocTitle(content,fallbackTitle);
+  if(btn){btn.disabled=false;btn.textContent=origLabel;}
   const date=new Date().toLocaleDateString('de-CH');
   const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-<head><meta charset="utf-8"><title>${title}</title>
+<head><meta charset="utf-8"><title>${safeText(title)}</title>
 <style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#111;margin:2cm;text-align:left}
 h1{font-size:16pt;font-weight:600;margin-bottom:6pt;color:#111;text-align:left}
 p.meta{font-size:9pt;color:#888;margin-bottom:24pt;text-align:left}
 pre{font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:pre-wrap;line-height:1.7;text-align:left}</style></head>
-<body><h1 align="left">${title}</h1><p class="meta" align="left">RhetorIQ &mdash; ${date}</p><pre align="left">${content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></body></html>`;
+<body><h1 align="left">${safeText(title)}</h1><p class="meta" align="left">RhetorIQ &mdash; ${date}</p><pre align="left">${content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></body></html>`;
   const blob=new Blob(['﻿'+html],{type:'application/msword'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -2310,7 +2321,7 @@ async function exportPptx(bodyId){
     // Word button
     const btn=document.createElement('button');
     btn.className='exbtn';btn.textContent=T[LANG]?.btn_word||'Word';
-    btn.onclick=()=>exportDoc(id,title);
+    btn.onclick=()=>exportDoc(id,title,btn);
     btns.insertBefore(btn,btns.firstChild);
     // Send to Advisor button
     const abtn=document.createElement('button');
