@@ -259,6 +259,19 @@ router.post('/:id/users', requireAdvisor, async (req, res) => {
       'INSERT INTO client_users (client_id, email, name, password_hash, role) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (client_id, email) DO UPDATE SET name=$3, password_hash=$4, role=$5 RETURNING id, email, name, role, created_at',
       [req.params.id, email.toLowerCase(), name, hash, role]
     );
+
+    // Also add them to the People directory (Voice DNA etc.) if not already
+    // there, so a new team member is immediately available for per-person
+    // features like Speaker Voice DNA — skip if a person with this name
+    // already exists for this client to avoid duplicates.
+    const { rows: existingPeople } = await pool.query(
+      'SELECT id FROM people WHERE client_id=$1 AND LOWER(name)=LOWER($2)',
+      [req.params.id, name]
+    );
+    if (!existingPeople.length) {
+      await pool.query('INSERT INTO people (client_id, name) VALUES ($1,$2)', [req.params.id, name]);
+    }
+
     res.status(201).json(rows[0]);
   } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
