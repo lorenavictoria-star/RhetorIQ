@@ -4744,13 +4744,13 @@ function buildTextGen(prefill,form){
         <div class="tg-tile-abbr" style="width:32px;height:32px;font-size:11px">${t.abbr}</div>
         <span style="font-size:15px;font-weight:700;color:var(--tx)">${t.label}</span>
       </div>
-      <div style="margin-bottom:14px">
+      ${isAdv?`<div style="margin-bottom:14px">
         <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:6px">${tl.tg_template_lbl}</div>
         <div class="upzone" onclick="document.getElementById('tg-rf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.tg_upload_tpl}</strong><br><span style="font-size:11px;color:var(--mu)">${tl.tg_tpl_sub}</span></div><input type="file" id="tg-rf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref-${t.id}','tg-rt-${t.id}')"></div>
         <div class="ftags" id="tg-rt-${t.id}"></div>
         <textarea id="tg-ref-${t.id}" placeholder="${tl.tg_tpl_ph}" style="margin-top:6px;min-height:70px;font-size:12px" onblur="saveTgRef('${t.id}')"></textarea>
         <div id="tg-ref-status-${t.id}" style="font-size:11px;color:var(--dm);margin-top:4px"></div>
-      </div>
+      </div>`:`<textarea id="tg-ref-${t.id}" style="display:none"></textarea>`}
       <div class="fg2"><label class="fl2">${t.fmtLabel}</label><select id="tg-fmt-${t.id}">${t.fmtOpts.map(o=>`<option>${o}</option>`).join('')}</select></div>
       ${people.length?buildPeopleSelector():''}
       <div class="upzone" onclick="document.getElementById('tg-tf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.tg_source_upload}</strong></div><input type="file" id="tg-tf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task-${t.id}','tg-tt-${t.id}')"></div>
