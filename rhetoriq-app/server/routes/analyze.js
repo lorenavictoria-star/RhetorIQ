@@ -1208,7 +1208,13 @@ const MODULE_MAX_TOKENS = {
   'cm-roadshow': 4000, 'cm-equity-story': 3500, 'brand-voice-co': 4000, 'brand-voice-ind': 4000, 'brand-voice-update': 4000,
   debrief: 3000, 'rh-translate': 3000, 'before-after': 3000,
   // Medium modules
-  'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 2000, brief: 3500, presentation: 8000,
+  // text-gen covers every Text Generator tile (email, LinkedIn, speech, …).
+  // Speeches in particular can legitimately run 2000-2500+ words (a 15-min
+  // talk), which was hitting the old 2000-token ceiling mid-sentence. Raised
+  // to the same 8000 already verified safe for presentation — well within
+  // the model's real output ceiling (unlike an earlier attempt to set this
+  // much higher, which broke generation outright — see presentation above).
+  'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 8000, brief: 3500, presentation: 8000,
   crisis: 2500, 'ht-crisis-comm': 2500, 'ht-positioning': 2500,
   'cm-qa-trainer': 2500, 'competitive-check': 2500,
   // Quick modules
