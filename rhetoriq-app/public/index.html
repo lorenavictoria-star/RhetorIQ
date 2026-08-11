@@ -2278,24 +2278,6 @@ async function suggestDocTitle(content,fallback){
     return (d.title||'').trim()||fallback;
   }catch{return fallback;}
 }
-// Converts plain generated text into uniform Word paragraphs instead of a
-// single <pre> blob — a <pre> preserves whatever blank-line pattern happened
-// to be in the raw text verbatim, so spacing between sections looked random
-// depending on how many blank lines the model left. Every paragraph now gets
-// the exact same margin, and ALL-CAPS section headings (the format every
-// module is instructed to use) get consistent heading spacing instead.
-function textToWordParagraphs(content){
-  const blocks=content.replace(/\r\n/g,'\n').split(/\n{2,}/).map(b=>b.trim()).filter(Boolean);
-  return blocks.map(block=>{
-    const escaped=block.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const lines=escaped.split('\n');
-    const isHeading=lines.length===1&&/^[A-ZÄÖÜ0-9][A-ZÄÖÜ0-9\s\-.,:/&']{3,}:?$/.test(block.trim())&&block===block.toUpperCase();
-    const html=lines.join('<br>');
-    return isHeading
-      ? `<p align="left" style="mso-style-name:'Normal';text-align:left;margin:20pt 0 8pt;font-weight:700;font-size:11pt">${html}</p>`
-      : `<p align="left" style="mso-style-name:'Normal';text-align:left;margin:0 0 12pt;font-size:11pt;line-height:1.6">${html}</p>`;
-  }).join('\n');
-}
 async function exportDoc(bodyId, fallbackTitle, btn){
   const el=document.getElementById(bodyId);
   if(!el||!el.textContent.trim())return;
@@ -2303,31 +2285,25 @@ async function exportDoc(bodyId, fallbackTitle, btn){
   const origLabel=btn?btn.textContent:null;
   if(btn){btn.disabled=true;btn.textContent='…';}
   const title=await suggestDocTitle(content,fallbackTitle);
+  try{
+    // Real .docx (Office Open XML), generated server-side via the `docx`
+    // package — not the old HTML-file-renamed-to-.doc trick, which some
+    // viewers (Google Docs import, some mobile Word apps) show as a raw
+    // web page instead of a proper document.
+    const resp=await fetch(API+'/api/analyze/export-docx',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({content,title})
+    });
+    if(!resp.ok)throw new Error('Export failed');
+    const blob=await resp.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=(title||'RhetorIQ').replace(/[^a-z0-9äöüÄÖÜ\s]/gi,'_').trim()+'.docx';
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},100);
+  }catch(e){alert('Word-Export fehlgeschlagen. Bitte kurz erneut versuchen.');}
   if(btn){btn.disabled=false;btn.textContent=origLabel;}
-  const date=new Date().toLocaleDateString('de-CH');
-  // NOTE: deliberately no <h1>/<h2> etc. — Word's HTML filter maps heading
-  // tags to whatever "Heading 1"/"Title" looks like in the user's own
-  // Normal.dotm (often centered, with large space-before), silently
-  // overriding any inline CSS here. Plain <p mso-style-name:"Normal"> avoids
-  // that style-mapping entirely so our own alignment/spacing always wins.
-  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-<head><meta charset="utf-8"><title>${safeText(title)}</title>
-<style>
-@page{margin:2cm}
-body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#111;margin:2cm 0 0 0;text-align:left;mso-margin-top-alt:0}
-p{margin:0;text-align:left;mso-alignment:left}
-</style></head>
-<body>
-<p align="left" style="mso-style-name:'Normal';text-align:left;font-size:16pt;font-weight:600;margin:0 0 6pt 0;color:#111">${safeText(title)}</p>
-<p align="left" style="mso-style-name:'Normal';text-align:left;font-size:9pt;color:#888;margin:0 0 24pt 0">RhetorIQ &mdash; ${date}</p>
-${textToWordParagraphs(content)}
-</body></html>`;
-  const blob=new Blob(['﻿'+html],{type:'application/msword'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download=(title||'RhetorIQ').replace(/[^a-z0-9äöüÄÖÜ\s]/gi,'_').trim()+'.doc';
-  document.body.appendChild(a);a.click();
-  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},100);
 }
 
 // ── PRESENTATION → PowerPoint export ────────────────────────────

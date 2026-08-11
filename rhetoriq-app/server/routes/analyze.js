@@ -1963,6 +1963,59 @@ router.post('/suggest-title', requireAuth, async (req, res) => {
   }
 });
 
+// POST /api/analyze/export-docx — generates a real Office Open XML .docx
+// (via the `docx` package) instead of the old trick of naming an HTML file
+// ".doc" — Word opened that fine, but it wasn't an actual Word file, and
+// some environments (Google Docs import, some mobile Word apps) show it as
+// a raw web page. This produces a genuine binary .docx.
+router.post('/export-docx', requireAuth, async (req, res) => {
+  try {
+    const { content, title } = req.body;
+    if (!content || typeof content !== 'string' || !content.trim()) {
+      return res.status(400).json({ error: 'No content provided' });
+    }
+    const { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } = require('docx');
+    const docTitle = (title && String(title).trim()) || 'RhetorIQ Dokument';
+    const date = new Date().toLocaleDateString('de-CH');
+
+    const blocks = content.replace(/\r\n/g, '\n').split(/\n{2,}/).map(b => b.trim()).filter(Boolean);
+    const bodyParagraphs = blocks.map(block => {
+      const lines = block.split('\n');
+      const isHeading = lines.length === 1
+        && /^[A-ZÄÖÜ0-9][A-ZÄÖÜ0-9\s\-.,:/&']{3,}:?$/.test(block.trim())
+        && block === block.toUpperCase();
+      return new Paragraph({
+        alignment: AlignmentType.LEFT,
+        spacing: isHeading ? { before: 280, after: 120 } : { after: 200 },
+        children: lines.flatMap((line, i) => i === 0
+          ? [new TextRun({ text: line, bold: isHeading, size: 22 })]
+          : [new TextRun({ break: 1, text: line, bold: isHeading, size: 22 })])
+      });
+    });
+
+    const doc = new Document({
+      styles: { default: { document: { run: { font: 'Calibri', size: 22 } } } },
+      sections: [{
+        properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } },
+        children: [
+          new Paragraph({ alignment: AlignmentType.LEFT, spacing: { after: 120 }, children: [new TextRun({ text: docTitle, bold: true, size: 32 })] }),
+          new Paragraph({ alignment: AlignmentType.LEFT, spacing: { after: 480 }, children: [new TextRun({ text: `RhetorIQ — ${date}`, size: 18, color: '888888' })] }),
+          ...bodyParagraphs
+        ]
+      }]
+    });
+
+    const buffer = await Packer.toBuffer(doc);
+    const safeName = docTitle.replace(/[^a-z0-9äöüÄÖÜ\s]/gi, '_').trim() || 'RhetorIQ';
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(safeName)}.docx"`);
+    res.send(buffer);
+  } catch (e) {
+    console.error('[export-docx]', e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /api/analyze/:id/rate — Task 16: thumbs up/down; Task 18: propagate to training examples
 router.post('/:id/rate', requireAuth, async (req, res) => {
   try {
