@@ -1988,6 +1988,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -4937,13 +4938,19 @@ function injectPresentationLogoUI(form){
   if(!form||document.getElementById('pres-logo-row'))return;
   const row=document.createElement('div');
   row.id='pres-logo-row';
-  row.style.cssText='margin:10px 0;padding:12px;border:1px dashed var(--bd);border-radius:8px;display:flex;align-items:center;gap:12px';
+  row.style.cssText='margin:10px 0;padding:12px;border:1px dashed var(--bd);border-radius:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap';
   row.innerHTML='<img id="pres-logo-preview" style="display:none;max-height:36px;max-width:120px;object-fit:contain">'
-    +'<div style="flex:1"><div style="font-size:12px;font-weight:600;margin-bottom:2px">Firmenlogo (optional, für jede Folie)</div>'
+    +'<div style="flex:1;min-width:180px"><div style="font-size:12px;font-weight:600;margin-bottom:2px">Firmenlogo (optional, für jede Folie)</div>'
     +'<div style="font-size:11px;color:var(--mu)">Einmal hochladen — wird für diesen Klienten gespeichert und danach automatisch auf jede exportierte PowerPoint gesetzt.</div></div>'
     +'<input type="file" id="pres-logo-input" accept="image/png,image/jpeg" style="display:none" onchange="handlePresLogoUpload(this)">'
-    +'<button type="button" class="obtn" onclick="document.getElementById(\'pres-logo-input\').click()">Hochladen</button>'
-    +'<input type="hidden" id="pres-logo-data">';
+    +'<button type="button" class="obtn" onclick="document.getElementById(\'pres-logo-input\').click()">Logo hochladen</button>'
+    +'<input type="hidden" id="pres-logo-data">'
+    +'<div style="flex-basis:100%;border-top:1px dashed var(--bd);margin-top:8px;padding-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
+    +'<div style="flex:1;min-width:180px"><div style="font-size:12px;font-weight:600;margin-bottom:2px">Echte Firmenvorlage (.pptx, optional)</div>'
+    +'<div id="pres-tpl-status" style="font-size:11px;color:var(--mu)">Lade die tatsächliche PowerPoint-Vorlage des Unternehmens hoch — Farbpalette und Schriftart werden automatisch daraus übernommen, nicht manuell geschätzt.</div></div>'
+    +'<input type="file" id="pres-tpl-input" accept=".pptx" style="display:none" onchange="handlePresTemplateUpload(this)">'
+    +'<button type="button" class="obtn" onclick="document.getElementById(\'pres-tpl-input\').click()">Vorlage hochladen</button>'
+    +'</div>';
   const firstField=form.querySelector('.fg2');
   if(firstField)firstField.parentNode.insertBefore(row,firstField);else form.prepend(row);
 }
@@ -4957,6 +4964,34 @@ function handlePresLogoUpload(input){
     savePresentationDesign();
   };
   reader.readAsDataURL(f);
+}
+// A .pptx is just a zip of XML — ppt/theme/theme1.xml holds the actual color
+// scheme (accent1 etc.) and font scheme (majorFont, used for headings) that
+// the company's real template uses. Extracting these directly from the
+// uploaded file guarantees the exported deck uses the exact same palette
+// and typeface as the source template, instead of a manually-guessed hex.
+async function handlePresTemplateUpload(input){
+  const f=input.files[0];if(!f)return;
+  const status=document.getElementById('pres-tpl-status');
+  if(status)status.textContent='Lese Vorlage…';
+  try{
+    if(typeof JSZip==='undefined')throw new Error('JSZip nicht geladen');
+    const zip=await JSZip.loadAsync(f);
+    const themeFile=zip.file('ppt/theme/theme1.xml')||Object.values(zip.files).find(z=>/ppt\/theme\/theme\d+\.xml$/.test(z.name));
+    if(!themeFile)throw new Error('Kein Farbschema in dieser Datei gefunden');
+    const xml=await themeFile.async('string');
+    const accentMatch=xml.match(/<a:accent1>\s*<a:srgbClr val="([0-9A-Fa-f]{6})"/)
+      || xml.match(/<a:dk2>\s*<a:srgbClr val="([0-9A-Fa-f]{6})"/);
+    const fontMatch=xml.match(/<a:majorFont>\s*<a:latin typeface="([^"]+)"/);
+    let applied=[];
+    if(accentMatch){const colorEl=document.getElementById('pres-color');if(colorEl){colorEl.value=accentMatch[1].toUpperCase();applied.push('Farbe #'+accentMatch[1].toUpperCase());}}
+    if(fontMatch&&fontMatch[1]&&!/^\+/.test(fontMatch[1])){const fontEl=document.getElementById('pres-font');if(fontEl){fontEl.value=fontMatch[1];applied.push('Schriftart '+fontMatch[1]);}}
+    if(!applied.length)throw new Error('Keine verwertbare Farbe/Schriftart in der Vorlage gefunden — bitte manuell eintragen');
+    savePresentationDesign();
+    if(status)status.textContent='✓ Aus Vorlage übernommen: '+applied.join(', ');
+  }catch(e){
+    if(status)status.textContent='Vorlage konnte nicht automatisch ausgelesen werden ('+(e.message||'Fehler')+') — bitte Farbe/Schriftart manuell eintragen.';
+  }
 }
 function loadPresentationDesign(){
   if(!clientId)return;
