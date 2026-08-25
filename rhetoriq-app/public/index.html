@@ -2314,11 +2314,16 @@ function parsePresentationText(text){
     const m=block.match(/^FOLIE\s*\d+\s*[—-]\s*(.+)/i);
     if(!m)return;
     const title=m[1].trim();
-    const inhaltM=block.match(/INHALT:\s*([\s\S]*?)(?=SPRECHERTEXT:|$)/i);
+    // VISUELL: is optional and sits between INHALT and SPRECHERTEXT — must be
+    // cut out of the INHALT capture explicitly, otherwise it silently ends up
+    // rendered as a bullet point on the slide instead of a design cue.
+    const inhaltM=block.match(/INHALT:\s*([\s\S]*?)(?=VISUELL:|SPRECHERTEXT:|$)/i);
+    const visM=block.match(/VISUELL:\s*([\s\S]*?)(?=SPRECHERTEXT:|$)/i);
     const sprechM=block.match(/SPRECHERTEXT:\s*([\s\S]*)/i);
     const bullets=inhaltM?inhaltM[1].split('\n').map(l=>l.replace(/^[-•]\s*/,'').trim()).filter(Boolean):[];
+    const visual=visM?visM[1].trim():'';
     const notes=sprechM?sprechM[1].trim():'';
-    slides.push({title,bullets,notes});
+    slides.push({title,bullets,visual,notes});
   });
   return slides;
 }
@@ -2328,12 +2333,15 @@ async function exportPptx(bodyId){
   if(typeof PptxGenJS==='undefined')return alert('PowerPoint-Bibliothek konnte nicht geladen werden. Bitte Seite neu laden und erneut versuchen.');
   const slides=parsePresentationText(text);
   if(!slides.length)return alert('Konnte keine Folien im generierten Text erkennen. Bitte zuerst eine Präsentation generieren.');
-  // Design reference from the client: hex color + font, if provided, otherwise
-  // fall back to RhetorIQ defaults. Validate the hex so a bad value can't
-  // produce a broken/invalid pptx.
+  // Design reference is the client's persisted visual identity (color, font,
+  // logo) — read from the saved fields so every export for this client keeps
+  // the exact same look, not just when the advisor happens to retype it.
+  // Validate the hex so a bad value can't produce a broken/invalid pptx.
   const rawColor=(document.getElementById('pres-color')?.value||'').replace(/^#/,'').trim();
   const primaryColor=/^[0-9a-fA-F]{6}$/.test(rawColor)?rawColor.toUpperCase():'1A3D2E';
   const fontFace=(document.getElementById('pres-font')?.value||'').trim()||'Arial';
+  const logo=window._presLogo||document.getElementById('pres-logo-data')?.value||'';
+  const isAskSlide=(i)=>i===slides.length-1&&slides.length>1;
   const pptx=new PptxGenJS();
   pptx.defineLayout({name:'RIQ',width:10,height:5.63});
   pptx.layout='RIQ';
@@ -2343,10 +2351,20 @@ async function exportPptx(bodyId){
       slide.background={color:primaryColor};
       slide.addText(s.title,{x:0.5,y:2,w:9,h:1.5,fontSize:36,bold:true,color:'FFFFFF',align:'center',fontFace});
       if(s.bullets.length)slide.addText(s.bullets.join('\n'),{x:0.5,y:3.5,w:9,h:1,fontSize:16,color:'CBD5C0',align:'center',fontFace});
+    }else if(isAskSlide(i)){
+      // The closing ask carries the actual decision being requested — give it
+      // visual weight instead of blending in like every other content slide.
+      slide.background={color:primaryColor};
+      slide.addText(s.title,{x:0.6,y:0.8,w:8.8,h:1.3,fontSize:30,bold:true,color:'FFFFFF',fontFace});
+      if(s.bullets.length)slide.addText(s.bullets.map(b=>({text:b,options:{bullet:true,breakLine:true}})),{x:0.6,y:2.2,w:8.8,h:2.5,fontSize:20,bold:true,color:'FFFFFF',fontFace,valign:'top'});
     }else{
-      slide.addText(s.title,{x:0.5,y:0.3,w:9,h:0.8,fontSize:26,bold:true,color:primaryColor,fontFace});
-      if(s.bullets.length)slide.addText(s.bullets.map(b=>({text:b,options:{bullet:true,breakLine:true}})),{x:0.6,y:1.3,w:8.8,h:3.8,fontSize:18,color:'222222',fontFace,valign:'top'});
+      slide.addText(s.title,{x:0.5,y:0.3,w:logo?7.6:8.9,h:0.9,fontSize:24,bold:true,color:primaryColor,fontFace});
+      slide.addShape(pptx.ShapeType.line,{x:0.5,y:1.15,w:logo?7.6:8.9,h:0,line:{color:primaryColor,width:1.5}});
+      if(s.bullets.length)slide.addText(s.bullets.map(b=>({text:b,options:{bullet:true,breakLine:true}})),{x:0.6,y:1.4,w:8.8,h:s.visual?3.0:3.7,fontSize:18,color:'222222',fontFace,valign:'top'});
+      if(s.visual)slide.addText('📊 '+s.visual,{x:0.6,y:4.5,w:8.8,h:0.6,fontSize:12,italic:true,color:'888888',fontFace});
     }
+    if(logo&&i!==0)slide.addImage({data:logo,x:8.5,y:0.25,w:1.1,h:0.55,sizing:{type:'contain',w:1.1,h:0.55}});
+    slide.addText(String(i+1),{x:9.55,y:5.35,w:0.4,h:0.25,fontSize:9,color:i===0||isAskSlide(i)?'FFFFFF':'999999',align:'right',fontFace});
     if(s.notes)slide.addNotes(s.notes);
   });
   const fname=(slides[0].title||'Praesentation').replace(/[^a-zA-Z0-9äöüÄÖÜ \-]/g,'').trim().slice(0,60)||'Praesentation';
@@ -2615,9 +2633,14 @@ function clearModuleDraft(){
   if(!confirm('Aktuellen Entwurf in diesem Modul löschen und leer neu beginnen?'))return;
   const form=document.getElementById('mod-form');
   if(form){
+    // pres-color/pres-font/pres-design-notes/pres-logo-data are the client's
+    // persisted visual identity, not draft content — "+ Neu" must clear the
+    // briefing, never silently drop back to RhetorIQ's default green/Arial.
+    const PRESERVE_IDS=new Set(['pres-color','pres-font','pres-design-notes','pres-logo-data']);
     form.querySelectorAll('input,textarea').forEach(el=>{
       if(el.type==='checkbox'||el.type==='radio'||el.type==='file'||el.id==='')return;
-      if(el.closest('#tpl-bar'))return;
+      if(el.closest('#tpl-bar')||el.closest('#pres-logo-row'))return;
+      if(PRESERVE_IDS.has(el.id))return;
       el.value='';
     });
     // Also clear any already-generated result text — that's stored in a
@@ -4642,7 +4665,7 @@ function goModule(name,prefill){
   else if(def.special==='argreaction')buildArgReaction(prefill,form);
   else buildForm(name,def,prefill,form);
   if(name==='brief')fillBriefSender('br-sender');
-  if(name==='presentation')loadPresentationDesign();
+  if(name==='presentation'){injectPresentationLogoUI(form);loadPresentationDesign();}
   if(!prefill)restoreModuleDraft(name);
   goPage('module');
   setTimeout(injectTemplateBtn,50);
@@ -4903,6 +4926,38 @@ function loadLiProfile(){
 }
 // Presentation design (color/font/notes) is remembered per client automatically —
 // no manual save button, it just persists silently after the first generation.
+// The company's visual identity (color, font, logo) for presentations is a
+// fixed setting, not draft content — once saved, every future PPTX export
+// for this client must keep using it automatically, not just when the
+// advisor happens to retype it. window._presLogo holds the current data URL
+// in memory; #pres-logo-data (hidden) carries it across a page reload until
+// loadPresentationDesign() re-fetches it from the server.
+window._presLogo = '';
+function injectPresentationLogoUI(form){
+  if(!form||document.getElementById('pres-logo-row'))return;
+  const row=document.createElement('div');
+  row.id='pres-logo-row';
+  row.style.cssText='margin:10px 0;padding:12px;border:1px dashed var(--bd);border-radius:8px;display:flex;align-items:center;gap:12px';
+  row.innerHTML='<img id="pres-logo-preview" style="display:none;max-height:36px;max-width:120px;object-fit:contain">'
+    +'<div style="flex:1"><div style="font-size:12px;font-weight:600;margin-bottom:2px">Firmenlogo (optional, für jede Folie)</div>'
+    +'<div style="font-size:11px;color:var(--mu)">Einmal hochladen — wird für diesen Klienten gespeichert und danach automatisch auf jede exportierte PowerPoint gesetzt.</div></div>'
+    +'<input type="file" id="pres-logo-input" accept="image/png,image/jpeg" style="display:none" onchange="handlePresLogoUpload(this)">'
+    +'<button type="button" class="obtn" onclick="document.getElementById(\'pres-logo-input\').click()">Hochladen</button>'
+    +'<input type="hidden" id="pres-logo-data">';
+  const firstField=form.querySelector('.fg2');
+  if(firstField)firstField.parentNode.insertBefore(row,firstField);else form.prepend(row);
+}
+function handlePresLogoUpload(input){
+  const f=input.files[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    window._presLogo=e.target.result;
+    const hid=document.getElementById('pres-logo-data');if(hid)hid.value=window._presLogo;
+    const prev=document.getElementById('pres-logo-preview');if(prev){prev.src=window._presLogo;prev.style.display='block';}
+    savePresentationDesign();
+  };
+  reader.readAsDataURL(f);
+}
 function loadPresentationDesign(){
   if(!clientId)return;
   const m=memory.find(m=>m.memory_type==='presentation_design');
@@ -4913,13 +4968,18 @@ function loadPresentationDesign(){
     if(colorEl&&!colorEl.value&&d.color)colorEl.value=d.color;
     if(fontEl&&!fontEl.value&&d.font)fontEl.value=d.font;
     if(notesEl&&!notesEl.value&&d.notes)notesEl.value=d.notes;
+    if(d.logo){
+      window._presLogo=d.logo;
+      const hid=document.getElementById('pres-logo-data');if(hid)hid.value=d.logo;
+      const prev=document.getElementById('pres-logo-preview');if(prev){prev.src=d.logo;prev.style.display='block';}
+    }
   }catch{}
 }
 function savePresentationDesign(){
   if(!clientId)return;
-  const color=g('pres-color'),font=g('pres-font'),notes=g('pres-design-notes');
-  if(!color&&!font&&!notes)return;
-  api('/api/memory/'+clientId+'/presentation_design',{method:'PUT',body:JSON.stringify({content:JSON.stringify({color,font,notes})})}).then(()=>loadMemory()).catch(()=>{});
+  const color=g('pres-color'),font=g('pres-font'),notes=g('pres-design-notes'),logo=window._presLogo||g('pres-logo-data')||'';
+  if(!color&&!font&&!notes&&!logo)return;
+  api('/api/memory/'+clientId+'/presentation_design',{method:'PUT',body:JSON.stringify({content:JSON.stringify({color,font,notes,logo})})}).then(()=>loadMemory()).catch(()=>{});
 }
 
 function toggleVorbild(id){const b=document.getElementById('vorbild-body-'+id),a=document.getElementById('vorbild-arrow-'+id);const open=b.style.display==='none';b.style.display=open?'block':'none';if(a)a.textContent=open?'−':'+';}
