@@ -1080,7 +1080,7 @@ RULES:
   },
   'suggest-subject': {
     label: 'Subject Line Suggestion',
-    system: `You write concise German or English business-letter subject lines (Betreff). Given a briefing describing what a formal letter is about, return ONLY the subject line text — nothing else, no quotes, no "Betreff:" prefix, no explanation. Match the language of the briefing. Keep it under 12 words, specific and professional (e.g. "Kündigung des Mietvertrags per 30.09.2026", "Terminbestätigung für unser Gespräch am 14. März").`,
+    system: `You write concise German or English business-letter subject lines (Betreff). Given a briefing describing what a formal letter is about, return ONLY the subject line text — nothing else, no quotes, no "Betreff:" prefix, no explanation. Match the language of the briefing. Keep it under 12 words, specific and professional (e.g. "Kündigung des Mietvertrags per 30.09.2026", "Terminbestätigung für unser Gespräch am 14. März"). If the subject line is German, always write umlauts as the real character (ä, ö, ü, Ä, Ö, Ü) — never as an ASCII digraph (ae, oe, ue).`,
     build: (d) => `Briefing:\n${sanitizeForPrompt(d.text||'')}`
   },
   'presentation-preflight': {
@@ -1102,12 +1102,14 @@ FRAGEN:
 - [Frage 3, optional]
 - [Frage 4, optional]
 
-Maximal 4 Fragen, jede so konkret wie möglich formuliert (nicht "Haben Sie mehr Informationen?", sondern z.B. "Welche konkrete Zahl belegt den genannten Kapazitätsengpass?"). Stelle nur Fragen zu Lücken, die für DIESES Briefing bei DIESER Dauer/DIESEM Anlass wirklich entscheidend sind.`,
+Maximal 4 Fragen, jede so konkret wie möglich formuliert (nicht "Haben Sie mehr Informationen?", sondern z.B. "Welche konkrete Zahl belegt den genannten Kapazitätsengpass?"). Stelle nur Fragen zu Lücken, die für DIESES Briefing bei DIESER Dauer/DIESEM Anlass wirklich entscheidend sind.
+
+Schreibe deutsche Umlaute immer als echtes Zeichen (ä, ö, ü, Ä, Ö, Ü) — niemals als ASCII-Ersatz (ae, oe, ue). "für", nicht "fuer"; "Rückfragen", nicht "Rueckfragen".`,
     build: (d) => `Thema/Titel: ${d.topic || 'Nicht angegeben'}\nAnlass: ${d.occasion || 'Nicht angegeben'}\nZielpublikum: ${d.audience || 'Nicht angegeben'}\nGewünschte Redezeit: ${d.duration || '15 Minuten'}\nKernbotschaft / Ziel: ${d.goal || 'Nicht angegeben'}\n\nBriefing-Material:\n${sanitizeForPrompt((d.text || '').slice(0, 4000))}`
   },
   'suggest-title': {
     label: 'Document Title Suggestion',
-    system: `You write short, fitting document titles for finished pieces of business writing (email, speech, LinkedIn post, brand voice document, review response, letter, etc.). Given the finished text, return ONLY a short descriptive title suitable as a document heading — nothing else, no quotes, no explanation, no prefix like "Title:". Match the language of the text. Keep it under 8 words and specific to the actual content, never generic like "Text" or "Document" or the module name alone. Examples: "Rede zum 25-jährigen Firmenjubiläum", "Antwort auf Beschwerde von Familie Meier", "LinkedIn-Post zur Produkteinführung Q3".`,
+    system: `You write short, fitting document titles for finished pieces of business writing (email, speech, LinkedIn post, brand voice document, review response, letter, etc.). Given the finished text, return ONLY a short descriptive title suitable as a document heading — nothing else, no quotes, no explanation, no prefix like "Title:". Match the language of the text. Keep it under 8 words and specific to the actual content, never generic like "Text" or "Document" or the module name alone. Examples: "Rede zum 25-jährigen Firmenjubiläum", "Antwort auf Beschwerde von Familie Meier", "LinkedIn-Post zur Produkteinführung Q3". If the title is German, always write umlauts as the real character (ä, ö, ü, Ä, Ö, Ü) — never as an ASCII digraph (ae, oe, ue).`,
     build: (d) => `Text:\n${sanitizeForPrompt((d.text || '').slice(0, 3000))}`
   },
   'consolidate-feedback': {
@@ -1189,7 +1191,8 @@ RULES:
 - Never make up features that don't exist.
 - Keep answers under 150 words unless a detailed explanation is genuinely needed.
 - NEVER use markdown formatting: no asterisks for bold (**text**), no hashtags for headers, no bullet dashes preceded by asterisks. Use plain text only. Structure with line breaks if needed.
-- NEVER use emojis of any kind.`,
+- NEVER use emojis of any kind.
+- When answering in German, always write umlauts as the real character (ä, ö, ü, Ä, Ö, Ü) — never as an ASCII digraph (ae, oe, ue).`,
     build: (d) => d.message
   },
   pr: {

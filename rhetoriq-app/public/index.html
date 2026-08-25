@@ -2344,7 +2344,7 @@ function renderPresentationQA(fullText,body){
     ? {ok:true,label:'Keine offenen Platzhalter'}
     : {ok:false,label:placeholderCount+' offene Platzhalter — vor dem Versand mit echten Fakten füllen'});
 
-  const durationM=fullText.match(/GESCH[ÄA]TZTE DAUER:\s*(\d+)/i);
+  const durationM=fullText.match(/GESCH(?:Ä|AE|A)TZTE DAUER:\s*(\d+)/i);
   if(durationM){
     const targetMin=parseInt(durationM[1],10);
     const totalWords=slides.reduce((sum,s)=>sum+(s.notes?s.notes.trim().split(/\s+/).filter(Boolean).length:0),0);
