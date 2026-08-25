@@ -1074,6 +1074,28 @@ RULES:
     system: `You write concise German or English business-letter subject lines (Betreff). Given a briefing describing what a formal letter is about, return ONLY the subject line text — nothing else, no quotes, no "Betreff:" prefix, no explanation. Match the language of the briefing. Keep it under 12 words, specific and professional (e.g. "Kündigung des Mietvertrags per 30.09.2026", "Terminbestätigung für unser Gespräch am 14. März").`,
     build: (d) => `Briefing:\n${sanitizeForPrompt(d.text||'')}`
   },
+  'presentation-preflight': {
+    label: 'Presentation Preflight Check',
+    system: `Du prüfst, ob ein Briefing für eine Präsentation inhaltlich ausreicht, um daraus beim ERSTEN Versuch eine überzeugende, faktengestützte Präsentation zu generieren — oder ob es zu dünn ist und die Ausgabe sonst voller Platzhalter-Klammern und generischer Aussagen würde.
+
+Bewerte NICHT die Rechtschreibung oder Form — nur, ob genug KONKRETES Material (Zahlen, Fakten, Beispiele, Namen, Argumente) vorhanden ist, um die verlangte Redezeit und den erklärten Zweck inhaltlich zu füllen. Ein 5-Minuten-Update braucht deutlich weniger Substanz als ein 20-minütiger Investoren-Pitch, bei dem es um viel Geld geht — bewerte relativ zu Dauer und Anlass.
+
+Antworte NUR in exakt einem der beiden folgenden Formate, ohne zusätzlichen Text:
+
+Wenn ausreichend:
+STATUS: AUSREICHEND
+
+Wenn zu dünn:
+STATUS: RUECKFRAGEN
+FRAGEN:
+- [Frage 1 — konkret, beantwortbar in 1-2 Sätzen, zielt auf eine fehlende Zahl/Fakt/Beispiel/Entscheidung]
+- [Frage 2]
+- [Frage 3, optional]
+- [Frage 4, optional]
+
+Maximal 4 Fragen, jede so konkret wie möglich formuliert (nicht "Haben Sie mehr Informationen?", sondern z.B. "Welche konkrete Zahl belegt den genannten Kapazitätsengpass?"). Stelle nur Fragen zu Lücken, die für DIESES Briefing bei DIESER Dauer/DIESEM Anlass wirklich entscheidend sind.`,
+    build: (d) => `Thema/Titel: ${d.topic || 'Nicht angegeben'}\nAnlass: ${d.occasion || 'Nicht angegeben'}\nZielpublikum: ${d.audience || 'Nicht angegeben'}\nGewünschte Redezeit: ${d.duration || '15 Minuten'}\nKernbotschaft / Ziel: ${d.goal || 'Nicht angegeben'}\n\nBriefing-Material:\n${sanitizeForPrompt((d.text || '').slice(0, 4000))}`
+  },
   'suggest-title': {
     label: 'Document Title Suggestion',
     system: `You write short, fitting document titles for finished pieces of business writing (email, speech, LinkedIn post, brand voice document, review response, letter, etc.). Given the finished text, return ONLY a short descriptive title suitable as a document heading — nothing else, no quotes, no explanation, no prefix like "Title:". Match the language of the text. Keep it under 8 words and specific to the actual content, never generic like "Text" or "Document" or the module name alone. Examples: "Rede zum 25-jährigen Firmenjubiläum", "Antwort auf Beschwerde von Familie Meier", "LinkedIn-Post zur Produkteinführung Q3".`,
@@ -1232,7 +1254,7 @@ const MODULE_MAX_TOKENS = {
   'vs-cal': 1000, 'vs-gen': 1000, 'ht-guest-letter': 2000,
   'ht-review-response': 1500, 'ht-sales-pitch': 2000, 'customer-review': 1500,
   // Internal (fast + cheap)
-  router: 50, chat: 600, 'route-fill': 400, 'suggest-subject': 60, 'suggest-title': 30, 'consolidate-feedback': 250,
+  router: 50, chat: 600, 'route-fill': 400, 'suggest-subject': 60, 'suggest-title': 30, 'consolidate-feedback': 250, 'presentation-preflight': 350,
 };
 const DEFAULT_MAX_TOKENS = 2000;
 
@@ -1344,7 +1366,7 @@ const GLOBAL_STYLE_RULES = `FORMATTING RULES — apply to all output regardless 
 20. THE CURRENT, EXPLICIT REQUEST ALWAYS OUTRANKS STORED PAST FEEDBACK: a "CUSTOM INSTRUCTIONS FOR THIS CLIENT" block and/or a "GELERNTE PRÄFERENZEN DIESES KLIENTEN" block, if present above, reflect preferences accumulated or refined from past generations over time. That history is a helpful default, not a constraint on this specific request. If anything in the user's current briefing, follow-up note, or explicit instruction for THIS generation conflicts with something recorded in that history (e.g. a learned preference says "more formal" but this request explicitly asks for a casual tone, or a learned preference says "avoid X" but the user is now explicitly asking for X), the current explicit instruction always wins outright — follow it exactly, without hedging, without blending the two, and without treating the old preference as still partially binding. Never respond as if the historical note is a rule the current request must be reconciled with. Stored history only fills gaps the current request leaves open; it never overrides what the user is explicitly asking for right now.`;
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
-const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'suggest-title', 'consolidate-feedback', 'chat', 'vs-cal', 'vs-gen', 'rw', 'as', 'tc', 'before-after', 'rh-translate']);
+const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'suggest-title', 'consolidate-feedback', 'presentation-preflight', 'chat', 'vs-cal', 'vs-gen', 'rw', 'as', 'tc', 'before-after', 'rh-translate']);
 // Model choice stays abstract everywhere in this file — a "sonnet" (capable)
 // or "haiku" (fast/cheap) preset, never a literal vendor model ID. The
 // vendor + literal model IDs live entirely behind lib/aiProvider — swapping
@@ -1970,6 +1992,31 @@ router.post('/suggest-title', requireAuth, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.json({ title: '' }); // graceful fallback — frontend falls back to the module label
+  }
+});
+
+// POST /api/analyze/presentation-preflight — before generating a presentation,
+// check whether the uploaded notes actually carry enough concrete substance
+// (numbers, facts, examples) for the requested duration/occasion. Sparse
+// notes can't be fixed by better prompting — the model would just fill the
+// gaps with bracketed placeholders. Surfacing 2-4 targeted questions first
+// gets real facts into the first generation instead of a second, corrective
+// round after the advisor notices the gaps.
+router.post('/presentation-preflight', requireAuth, async (req, res) => {
+  try {
+    const { data } = req.body;
+    if (!data || typeof data !== 'object') return res.json({ ready: true });
+    const cfg = PROMPTS['presentation-preflight'];
+    const resp = await callClaude(cfg.system, cfg.build(data), MODULE_MAX_TOKENS['presentation-preflight'], resolveModel('presentation-preflight'), 0);
+    const text = resp.text || '';
+    if (/STATUS:\s*RUECKFRAGEN/i.test(text)) {
+      const questions = [...text.matchAll(/^-\s*(.+)$/gm)].map(m => m[1].trim()).filter(Boolean).slice(0, 4);
+      if (questions.length) return res.json({ ready: false, questions });
+    }
+    res.json({ ready: true });
+  } catch (e) {
+    console.error('[presentation-preflight]', e);
+    res.json({ ready: true }); // fail open — never block generation on the preflight check itself
   }
 });
 

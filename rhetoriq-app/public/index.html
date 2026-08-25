@@ -2328,6 +2328,59 @@ function parsePresentationText(text){
   });
   return slides;
 }
+// Deterministic, client-side QA pass for a freshly generated presentation —
+// no extra API call/cost. Flags what a human reviewer should double-check
+// before the deck goes out, instead of relying on the advisor to spot it by
+// reading the whole script: leftover placeholders, timing that doesn't
+// match the requested duration, mixed headline styles, and a vague/missing
+// closing ask.
+function renderPresentationQA(fullText,body){
+  const slides=parsePresentationText(fullText);
+  if(!slides.length)return;
+  const checks=[];
+
+  const placeholderCount=(fullText.match(/\[[^\]\n]{4,80}\]/g)||[]).length;
+  checks.push(placeholderCount===0
+    ? {ok:true,label:'Keine offenen Platzhalter'}
+    : {ok:false,label:placeholderCount+' offene Platzhalter — vor dem Versand mit echten Fakten füllen'});
+
+  const durationM=fullText.match(/GESCH[ÄA]TZTE DAUER:\s*(\d+)/i);
+  if(durationM){
+    const targetMin=parseInt(durationM[1],10);
+    const totalWords=slides.reduce((sum,s)=>sum+(s.notes?s.notes.trim().split(/\s+/).filter(Boolean).length:0),0);
+    const expectedMin=Math.round(totalWords/125);
+    const withinRange=Math.abs(expectedMin-targetMin)<=Math.max(2,Math.round(targetMin*0.25));
+    checks.push(withinRange
+      ? {ok:true,label:'Sprechzeit passt zur geforderten Dauer ('+targetMin+' Min.)'}
+      : {ok:false,label:'Sprechertext ergibt ca. '+expectedMin+' statt '+targetMin+' Min. — Länge prüfen'});
+  }
+
+  const midSlides=slides.slice(1,-1);
+  if(midSlides.length>=2){
+    const assertions=midSlides.filter(s=>s.title.split(/\s+/).length>5).length;
+    const ratio=assertions/midSlides.length;
+    const consistent=ratio<=0.15||ratio>=0.85;
+    checks.push(consistent
+      ? {ok:true,label:'Folientitel-Stil konsistent durchgehalten'}
+      : {ok:false,label:'Folientitel mischen Themen-Titel und Aussage-Titel — auf einen Stil vereinheitlichen'});
+  }
+
+  const askSlide=slides[slides.length-1];
+  const askText=((askSlide?.bullets||[]).join(' ')+' '+(askSlide?.notes||'')).trim();
+  const hasConcreteAsk=/\d/.test(askText)||/(CHF|EUR|%|Frist|bis zum|unterschreiben|freigeben|budget|termin)/i.test(askText);
+  checks.push(hasConcreteAsk
+    ? {ok:true,label:'Schlussfolie enthält eine konkrete Forderung'}
+    : {ok:false,label:'Schlussfolie wirkt unkonkret — prüfen, ob der Ask klar genug ist'});
+
+  const box=document.createElement('div');
+  box.className='pres-qa-box';
+  box.style.cssText='margin-top:10px;padding:10px 14px;border:1px solid var(--bd);border-radius:8px;background:var(--sf)';
+  box.innerHTML='<div style="font-size:11px;font-weight:600;color:var(--mu);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Vor dem Versand prüfen</div>'
+    +checks.map(c=>'<div style="font-size:12px;padding:2px 0;color:'+(c.ok?'#2a7a2a':'#b3541e')+'">'+(c.ok?'✓':'⚠')+' '+safeText(c.label)+'</div>').join('');
+  let anchor=body;
+  while(anchor.nextSibling&&anchor.nextSibling.classList&&(anchor.nextSibling.classList.contains('gen-rating-bar')||anchor.nextSibling.classList.contains('gen-followup-box')))anchor=anchor.nextSibling;
+  anchor.insertAdjacentElement('afterend',box);
+}
 async function exportPptx(bodyId){
   const text=document.getElementById(bodyId)?.textContent?.trim();
   if(!text)return alert('Kein Ergebnis zum Exportieren vorhanden.');
@@ -2653,7 +2706,7 @@ function clearModuleDraft(){
     form.querySelectorAll('.rbody').forEach(el=>{el.textContent='';});
     // Remove the rating bar / follow-up box / debug panel left over from a
     // previous generation, and collapse the result box back to hidden.
-    form.querySelectorAll('.gen-rating-bar,.gen-followup-box').forEach(el=>el.remove());
+    form.querySelectorAll('.gen-rating-bar,.gen-followup-box,.pres-qa-box').forEach(el=>el.remove());
     form.querySelectorAll('details').forEach(el=>el.remove());
     form.querySelectorAll('.rbox').forEach(el=>el.classList.remove('show'));
   }
@@ -5442,11 +5495,58 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
   else if(name==='arg-reactions'){module='si';rid='arg-reactions-r';bid='arg-reactions-b';const t=g('ar-react-in');if(!t)return alert('Please enter text.');data={text:t+context,stakeholders:g('ar-react-sth'),severity:g('ar-react-sev')};}
   else if(name==='arg-culture'){module='la';rid='arg-culture-r';bid='arg-culture-b';const t=g('ar-cult-in');if(!t)return alert('Please enter text.');data={text:t+context,size:g('ar-cult-size'),focus:g('ar-cult-focus')};}
   else if(name==='pre-meeting'){module='pre-meeting';rid='pre-meeting-r';bid='pre-meeting-b';const sit=g('pm-sit');if(!sit)return alert('Please describe the meeting or situation.');const pCtx=getPeopleContext(getSelectedPeople());data={situation:sit,datetime:g('pm-dt'),format:g('pm-fmt'),participants:g('pm-part'),goal:g('pm-goal'),text:g('pm-bg'),peopleContext:pCtx+memCtx};}
-  else if(name==='presentation'){module='presentation';rid='presentation-r';bid='presentation-b';const topic=g('pres-topic');if(!topic)return alert('Bitte Thema/Titel angeben.');const designNotes=[g('pres-color')?('Primärfarbe #'+g('pres-color')):'',g('pres-font')?('Schriftart '+g('pres-font')):'',g('pres-design-notes')||''].filter(Boolean).join(', ');data={topic,occasion:g('pres-occasion'),audience:g('pres-audience'),duration:g('pres-duration'),goal:g('pres-goal'),designNotes,text:(g('pres-in')||'')+context,voiceProfile:context,geo:!!document.getElementById('geo-presentation')?.checked};savePresentationDesign();}
+  else if(name==='presentation'){
+    const topic=g('pres-topic');if(!topic)return alert('Bitte Thema/Titel angeben.');
+    const designNotes=[g('pres-color')?('Primärfarbe #'+g('pres-color')):'',g('pres-font')?('Schriftart '+g('pres-font')):'',g('pres-design-notes')||''].filter(Boolean).join(', ');
+    const presData={topic,occasion:g('pres-occasion'),audience:g('pres-audience'),duration:g('pres-duration'),goal:g('pres-goal'),designNotes,text:(g('pres-in')||'')+context,voiceProfile:context,geo:!!document.getElementById('geo-presentation')?.checked};
+    savePresentationDesign();
+    return runPresentationWithPreflight(presData,'presentation-r','presentation-b');
+  }
   else return;
 
   const instructionsKey=module==='text-gen'?('text-gen-'+(arguments[1]||'custom')):undefined;
   await generateAndStream(module,data,rid,bid,instructionsKey);
+}
+
+// Sparse notes can't be fixed by better prompting — the model would just
+// fill gaps with bracketed placeholders. Before generating, ask a cheap
+// Haiku pass whether the briefing has enough concrete substance for the
+// requested duration/occasion; if not, surface 2-4 targeted questions so
+// real facts make it into the FIRST generation instead of a corrective
+// second round.
+async function runPresentationWithPreflight(data,rid,bid){
+  const box=document.getElementById(rid),body=document.getElementById(bid);
+  box.classList.add('show');
+  let sib=body.nextSibling;
+  while(sib){const rm=sib;sib=sib.nextSibling;if(rm.classList&&(rm.classList.contains('gen-rating-bar')||rm.classList.contains('gen-followup-box')||rm.classList.contains('pres-qa-box'))||rm.tagName==='DETAILS')rm.remove();else break;}
+  body.innerHTML='<div class="spin"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:10px;font-size:13px;color:var(--mu)">Prüfe, ob die Notizen für eine überzeugende Präsentation ausreichen…</span></div>';
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+  try{
+    const r=await api('/api/analyze/presentation-preflight',{method:'POST',body:JSON.stringify({data})});
+    const d=await r.json();
+    if(d.ready||!d.questions||!d.questions.length)return generateAndStream('presentation',data,rid,bid);
+    renderPreflightQuestions(d.questions,data,rid,bid);
+  }catch(e){
+    return generateAndStream('presentation',data,rid,bid); // fail open
+  }
+}
+function renderPreflightQuestions(questions,data,rid,bid){
+  const body=document.getElementById(bid);
+  const qId=q=>'pfq-'+Math.random().toString(36).slice(2,9);
+  const ids=questions.map(()=>qId());
+  body.innerHTML='<div style="font-size:13px;font-weight:600;margin-bottom:4px">Bevor die Präsentation entsteht — ein paar kurze Ergänzungen machen sie beim ersten Wurf deutlich stärker:</div>'
+    +'<div style="font-size:12px;color:var(--mu);margin-bottom:12px">Optional — du kannst auch ohne Ergänzung direkt generieren, dann markiert RhetorIQ die fehlenden Stellen als Platzhalter.</div>'
+    +questions.map((q,i)=>'<div style="margin-bottom:10px"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">'+safeText(q)+'</label><textarea id="'+ids[i]+'" style="width:100%;min-height:50px;font-size:13px;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;resize:vertical;font-family:inherit;box-sizing:border-box"></textarea></div>').join('')
+    +'<div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">'
+    +'<button id="pfq-skip" style="padding:7px 14px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);cursor:pointer;font-size:12px">Ohne Ergänzung generieren</button>'
+    +'<button id="pfq-submit" style="padding:7px 16px;border:none;border-radius:6px;background:var(--ac,#1a3d2e);color:#fff;cursor:pointer;font-size:12px;font-weight:500">Ergänzen & generieren</button>'
+    +'</div>';
+  document.getElementById('pfq-skip').onclick=()=>generateAndStream('presentation',data,rid,bid);
+  document.getElementById('pfq-submit').onclick=()=>{
+    const answers=questions.map((q,i)=>{const v=document.getElementById(ids[i])?.value?.trim();return v?('F: '+q+'\nA: '+v):null;}).filter(Boolean);
+    const enriched={...data,text:data.text+(answers.length?'\n\n--- Ergänzende Angaben ---\n'+answers.join('\n\n'):'')};
+    generateAndStream('presentation',enriched,rid,bid);
+  };
 }
 
 // Shared by the initial generation (runMod) and by follow-up revisions
@@ -5483,9 +5583,9 @@ function attachResultActions(body,bid,analysisId,hasBrandVoice){
 async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
   const box=document.getElementById(rid),body=document.getElementById(bid);
   box.classList.add('show');
-  // clear any rating bar / follow-up box / debug panel left over from a previous run
+  // clear any rating bar / follow-up box / QA checklist / debug panel left over from a previous run
   let sib=body.nextSibling;
-  while(sib){const rm=sib;sib=sib.nextSibling;if(rm.classList&&(rm.classList.contains('gen-rating-bar')||rm.classList.contains('gen-followup-box'))||rm.tagName==='DETAILS')rm.remove();else break;}
+  while(sib){const rm=sib;sib=sib.nextSibling;if(rm.classList&&(rm.classList.contains('gen-rating-bar')||rm.classList.contains('gen-followup-box')||rm.classList.contains('pres-qa-box'))||rm.tagName==='DETAILS')rm.remove();else break;}
   body.textContent='';
   // Preserve the self-revision trail across follow-ups on this same result box
   // (clients often do 2-3 rounds themselves before sending to the advisor) —
@@ -5532,6 +5632,7 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
     }
     // Rating buttons + universal follow-up box — same for every module
     if(analysisId)attachResultActions(body,bid,analysisId,hasBrandVoice);
+    if(module==='presentation')renderPresentationQA(fullText,body);
     if(debugPrompt){
       const dbg=document.createElement('details');
       dbg.style.cssText='margin-top:8px;font-size:11px;border:1px solid var(--bd);border-radius:6px;overflow:hidden';
