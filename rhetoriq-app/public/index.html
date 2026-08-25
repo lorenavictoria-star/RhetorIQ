@@ -2372,6 +2372,16 @@ function renderPresentationQA(fullText,body){
     ? {ok:true,label:'Schlussfolie enthält eine konkrete Forderung'}
     : {ok:false,label:'Schlussfolie wirkt unkonkret — prüfen, ob der Ask klar genug ist'});
 
+  // Substance check: how many of the argument-carrying slides actually rest
+  // on a number/belief-worthy fact in their speaker text, vs. bare assertion.
+  if(midSlides.length>=2){
+    const withEvidence=midSlides.filter(s=>/\d/.test(s.notes||'')).length;
+    const evidenceRatio=withEvidence/midSlides.length;
+    checks.push(evidenceRatio>=0.6
+      ? {ok:true,label:'Argumentation stützt sich überwiegend auf Zahlen/Belege'}
+      : {ok:false,label:'Nur '+withEvidence+' von '+midSlides.length+' Kernfolien enthalten eine Zahl/einen Beleg — bei hohem Einsatz prüfen, ob mehr Substanz nötig ist'});
+  }
+
   const box=document.createElement('div');
   box.className='pres-qa-box';
   box.style.cssText='margin-top:10px;padding:10px 14px;border:1px solid var(--bd);border-radius:8px;background:var(--sf)';

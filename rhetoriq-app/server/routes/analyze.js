@@ -882,6 +882,15 @@ FORMATIERUNGSREGELN — zwingend exakt einhalten, da die Ausgabe maschinell in e
 - DIE ASK-FOLIE (letzte Folie): Formuliere eine konkrete, unmissverständliche Forderung — was genau soll das Publikum nach dieser Präsentation tun, entscheiden oder freigeben (z. B. eine Summe, ein Datum, eine Unterschrift, ein nächstes Meeting)? "Vielen Dank für Ihre Aufmerksamkeit" oder eine reine "Fragen?"-Folie ohne konkreten Ask ist bei geschäftskritischen Präsentationen ein Fehler und nicht erlaubt. INHALT dieser Folie: die konkrete Forderung in maximal 2 knappen Zeilen. SPRECHERTEXT: die Forderung ausformuliert, mit einem letzten starken Satz, der im Gedächtnis bleibt.
 - WENN EINE BESTEHENDE PRÄSENTATION/EIN BEISPIEL IM HINTERGRUNDMATERIAL VORLIEGT: Nutze sie ausschliesslich als Hinweis auf Struktur, Reihenfolge der Argumente, Foliendichte, Titelstil (klassisch vs. Assertion) und den Sprachduktus des Unternehmens. Übernimm NIEMALS unkritisch die inhaltliche Qualität, Schärfe oder Wortwahl des Beispiels — viele KMU-Präsentationen sind strukturell brauchbar, inhaltlich aber schwach (vage Aussagen, fehlende Zahlen, schwacher Schluss ohne Ask). Deine Aufgabe ist es, das Niveau spürbar über die Vorlage zu heben, während Duktus und Foliengefühl vertraut bleiben — nicht, die Schwächen des Beispiels zu reproduzieren.
 
+ARGUMENTATIONSTIEFE (bei Entscheidungen mit hohem finanziellem Einsatz gilt dieser Abschnitt mit maximaler Strenge — das Analyseniveau muss dem einer echten Investitionsvorlage oder eines Vorstandspapiers entsprechen, nicht dem eines Marketing-Pitches):
+- JEDE ZENTRALE BEHAUPTUNG BRAUCHT EINE VOLLSTÄNDIGE KETTE: Prämisse → Beleg (Zahl, Fakt, Referenz) → Implikation für die Entscheidung. Eine reine Behauptung ohne Beleg und ohne ausformulierte Konsequenz ist bei geschäftskritischen Präsentationen unzureichend, selbst wenn die Folie dadurch wortkarg bleibt — die Tiefe gehört in den SPRECHERTEXT, nicht auf die Folie.
+- MEHRERE STÜTZENDE BELEGE PRO KERNARGUMENT: Wo immer das Briefing es hergibt, stütze eine zentrale Aussage mit mindestens zwei unabhängigen Belegen (z. B. eine Zahl UND eine Referenz/ein Vergleichswert UND eine Konsequenz), statt mit einem einzelnen unbelegten Statement. Ein Argument, das nur auf einer Behauptung ruht, wirkt austauschbar — mehrere zusammenpassende Belege wirken analytisch fundiert.
+- QUANTIFIZIERE DEN EINSATZ, NICHT NUR DIE LÖSUNG: Bei hohem finanziellem Einsatz muss die Präsentation explizit machen, was die Entscheidung in Zahlen bedeutet — Kosten des Nichtstuns, Kosten der Investition, erwarteter Nutzen/Rendite, Zeithorizont, Risiko bei Verzögerung. Wenn diese Zahlen im Briefing fehlen, nutze Platzhalter (siehe Fakten-Treue) statt die quantitative Dimension ganz auszulassen — eine Folie ohne jede Zahl bei einer Millionen-Entscheidung ist ein Mangel, kein Stilmittel.
+- SZENARIO-LOGIK BEI UNSICHERHEIT: Wenn die Entscheidung mit Unsicherheit behaftet ist (Investition, Markteintritt, strategische Weichenstellung), baue wo sinnvoll eine kurze Szenario-Betrachtung ein (z. B. konservativ/realistisch/ambitioniert oder Best Case/Base Case/Worst Case) statt einer einzelnen unbedingten Prognose — das erhöht die analytische Glaubwürdigkeit gegenüber einem kritischen Publikum (Investoren, Verwaltungsrat, Geschäftsleitung).
+- MEHRERE EINWÄNDE BEI HOHEM EINSATZ: Bei Präsentationen mit grossem finanziellem Volumen reicht ein einzelner vorweggenommener Einwand oft nicht — nimm die zwei bis drei wahrscheinlichsten kritischen Fragen eines nüchtern-skeptischen Publikums vorweg (Kosten, Risiko, Umsetzbarkeit/Timing sind die häufigsten) und entkräfte jede einzeln mit einem eigenen Beleg, nicht mit einer pauschalen Beruhigung.
+- KEINE FÜLL-FOLIEN: Jede Folie muss einen eigenständigen Beitrag zur Kernargumentation leisten. Eine Folie, die nur bereits Gesagtes wiederholt oder ausschliesslich einleitet, ohne selbst eine Erkenntnis oder einen Beleg zu liefern, gehört gestrichen oder mit der Nachbarfolie zusammengelegt — Tiefe entsteht durch Substanz pro Folie, nicht durch Folienanzahl.
+- PERSPEKTIVE DES PUBLIKUMS MITDENKEN: Formuliere Nutzenargumente konsequent aus Sicht dessen, was für das Publikum auf dem Spiel steht (Risiko, Rendite, Reputation, Zeit), nicht nur aus Sicht des Vortragenden — bei Investoren/Verwaltungsrat heisst das explizit: Kapitalrendite, Risikoprofil, Exit-/Zeithorizont mitdenken, wo das Briefing das hergibt.
+
 INHALTLICHE REGELN:
 - TIMING & WORTANZAHL: Ein Sprecher liest ca. 120-130 Wörter pro Minute. Kalkuliere den SPRECHERTEXT exakt nach dieser Metrik. Wenn eine Präsentation 10 Minuten dauern soll, muss der gesamte Sprechertext kumuliert etwa 1'200 bis 1'300 Wörter umfassen. Zwinge dich nicht durch Füllwörter in die Länge, sondern durch inhaltliche Tiefe, Beispiele und Argumentationsschritte. Zähle beim Schreiben mit — die Gesamtwortzahl über alle Sprechertexte muss zur geforderten Redezeit passen, nicht nur die Foliengliederung.
 - FOLIEN-REDUKTION: INHALT-Stichpunkte dürfen absolut maximal 6-8 Wörter umfassen. Es sind visuelle Anker, keine Manuskripte. Lösche alle Füllwörter, Artikel (der, die, das) und Modalverben aus den Folien-Stichpunkten.
@@ -1262,8 +1271,11 @@ const DEFAULT_MAX_TOKENS = 2000;
 // is worth the extra latency/cost: draft, then have the model critique its own
 // draft against the brand voice and style rules, then output a revised final.
 const TWO_PASS_MODULES = new Set(['text-gen', 'presentation', 'brand-voice-co', 'brand-voice-ind']);
-function buildRevisionPrompt(originalUserMsg, draft) {
-  return `URSPRÜNGLICHER AUFTRAG:\n${originalUserMsg}\n\nENTWURF (erster Versuch):\n${draft}\n\nPrüfe diesen Entwurf kritisch gegen die Brand Voice und alle Regeln oben: wirkt er an irgendeiner Stelle generisch statt wie dieses Unternehmen, redundant, floskelhaft, oder strukturell schwach gemessen am Auftrag? Liefere eine überarbeitete, finale Fassung. Gib NUR den finalen Text aus, ohne Erklärung deiner Änderungen oder Meta-Kommentar.`;
+function buildRevisionPrompt(originalUserMsg, draft, module) {
+  const depthCheck = module === 'presentation'
+    ? ' Prüfe zusätzlich explizit auf Oberflächlichkeit: Steht irgendeine zentrale Behauptung ohne Beleg oder ausformulierte Implikation da? Gibt es Folien, die nichts Eigenständiges zur Argumentation beitragen? Ist der Einsatz (was bei Nichtstun verloren geht bzw. bei Handeln gewonnen wird) tatsächlich beziffert, wo das Briefing es hergibt? Ist der Schluss wirklich ein konkreter, unmissverständlicher Ask? Wo die Antwort nein ist, vertiefe die betroffene Stelle in der Überarbeitung spürbar, statt sie nur stilistisch zu glätten.'
+    : '';
+  return `URSPRÜNGLICHER AUFTRAG:\n${originalUserMsg}\n\nENTWURF (erster Versuch):\n${draft}\n\nPrüfe diesen Entwurf kritisch gegen die Brand Voice und alle Regeln oben: wirkt er an irgendeiner Stelle generisch statt wie dieses Unternehmen, redundant, floskelhaft, oder strukturell schwach gemessen am Auftrag?${depthCheck} Liefere eine überarbeitete, finale Fassung. Gib NUR den finalen Text aus, ohne Erklärung deiner Änderungen oder Meta-Kommentar.`;
 }
 
 // Optional, per-generation opt-in (data.geo === true, checked via a checkbox in
@@ -1531,7 +1543,7 @@ router.post('/', requireAuth, async (req, res) => {
     // the brand voice and style rules before returning the final text.
     // Skipped for follow-ups — that request is already a targeted revision.
     if (TWO_PASS_MODULES.has(module) && !(followUp && followUp.note)) {
-      const revisionResp = await callClaude(systemBlocks, buildRevisionPrompt(userMsg, claudeResp.text), MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
+      const revisionResp = await callClaude(systemBlocks, buildRevisionPrompt(userMsg, claudeResp.text, module), MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
       if (revisionResp.text) result = revisionResp.text;
       totalInputTokens += revisionResp.inputTokens;
       totalOutputTokens += revisionResp.outputTokens;
@@ -1703,7 +1715,7 @@ router.post('/stream', requireAuth, async (req, res) => {
     let draftInputTokens = 0, draftOutputTokens = 0;
     if (TWO_PASS_MODULES.has(module) && !aborted && !(followUp && followUp.note)) {
       const draftResp = await callClaude(streamSystemBlocks, userMsg, maxTokens, resolveModel(module));
-      if (draftResp.text) streamUserMsg = buildRevisionPrompt(userMsg, draftResp.text);
+      if (draftResp.text) streamUserMsg = buildRevisionPrompt(userMsg, draftResp.text, module);
       draftInputTokens = draftResp.inputTokens;
       draftOutputTokens = draftResp.outputTokens;
     }
