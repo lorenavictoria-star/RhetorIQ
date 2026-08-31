@@ -2279,7 +2279,7 @@ async function suggestDocTitle(content,fallback){
     return (d.title||'').trim()||fallback;
   }catch{return fallback;}
 }
-async function exportDoc(bodyId, fallbackTitle, btn){
+async function exportDoc(bodyId, fallbackTitle, btn, presentation){
   const el=document.getElementById(bodyId);
   if(!el||!el.textContent.trim())return;
   const content=el.textContent.trim();
@@ -2290,11 +2290,13 @@ async function exportDoc(bodyId, fallbackTitle, btn){
     // Real .docx (Office Open XML), generated server-side via the `docx`
     // package — not the old HTML-file-renamed-to-.doc trick, which some
     // viewers (Google Docs import, some mobile Word apps) show as a raw
-    // web page instead of a proper document.
+    // web page instead of a proper document. presentation:true switches the
+    // server to a dedicated presenter-script layout instead of the generic
+    // paragraph export.
     const resp=await fetch(API+'/api/analyze/export-docx',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({content,title})
+      body:JSON.stringify({content,title,presentation:!!presentation})
     });
     if(!resp.ok)throw new Error('Export failed');
     const blob=await resp.blob();
@@ -2460,10 +2462,13 @@ async function exportPptx(bodyId){
     rbtn.className='exbtn';rbtn.textContent='↺';rbtn.title='Regenerate';
     rbtn.onclick=regenFn;
     btns.insertBefore(rbtn,btns.firstChild);
-    // Word button
+    // Word button — presentations get a dedicated presenter-script layout
+    // instead of the generic paragraph export, since raw FOLIE/INHALT/
+    // SPRECHERTEXT scaffolding read out loud is unusable as a script.
+    const isPresentation=rid==='presentation-r';
     const btn=document.createElement('button');
-    btn.className='exbtn';btn.textContent=T[LANG]?.btn_word||'Word';
-    btn.onclick=()=>exportDoc(id,title,btn);
+    btn.className='exbtn';btn.textContent=isPresentation?'Skript (Word)':(T[LANG]?.btn_word||'Word');
+    btn.onclick=()=>exportDoc(id,title,btn,isPresentation);
     btns.insertBefore(btn,btns.firstChild);
     // Send to Advisor button
     const abtn=document.createElement('button');

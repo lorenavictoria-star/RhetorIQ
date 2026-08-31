@@ -2042,28 +2042,62 @@ router.post('/presentation-preflight', requireAuth, async (req, res) => {
 // a raw web page. This produces a genuine binary .docx.
 router.post('/export-docx', requireAuth, async (req, res) => {
   try {
-    const { content, title } = req.body;
+    const { content, title, presentation } = req.body;
     if (!content || typeof content !== 'string' || !content.trim()) {
       return res.status(400).json({ error: 'No content provided' });
     }
-    const { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } = require('docx');
+    const { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, BorderStyle } = require('docx');
     const docTitle = (title && String(title).trim()) || 'RhetorIQ Dokument';
     const date = new Date().toLocaleDateString('de-CH');
 
-    const blocks = content.replace(/\r\n/g, '\n').split(/\n{2,}/).map(b => b.trim()).filter(Boolean);
-    const bodyParagraphs = blocks.map(block => {
-      const lines = block.split('\n');
-      const isHeading = lines.length === 1
-        && /^[A-ZÄÖÜ0-9][A-ZÄÖÜ0-9\s\-.,:/&']{3,}:?$/.test(block.trim())
-        && block === block.toUpperCase();
-      return new Paragraph({
-        alignment: AlignmentType.LEFT,
-        spacing: isHeading ? { before: 280, after: 120 } : { after: 200 },
-        children: lines.flatMap((line, i) => i === 0
-          ? [new TextRun({ text: line, bold: isHeading, size: 22 })]
-          : [new TextRun({ break: 1, text: line, bold: isHeading, size: 22 })])
+    // A presentation's raw output (FOLIE n — Titel / INHALT: / SPRECHERTEXT:)
+    // is machine-parseable scaffolding, not something a presenter can read
+    // off a page — export it as an actual script instead: slide number and
+    // title as a heading, a compact recap of what's on the slide, then the
+    // speaker text as normal flowing prose.
+    let bodyParagraphs;
+    if (presentation) {
+      const durationM = content.match(/GESCH(?:Ä|AE|A)TZTE DAUER:\s*([^\n]+)/i);
+      const slideBlocks = content.split(/\n(?=FOLIE\s*\d+\s*[—-])/i);
+      bodyParagraphs = [];
+      if (durationM) {
+        bodyParagraphs.push(new Paragraph({ alignment: AlignmentType.LEFT, spacing: { after: 360 }, children: [new TextRun({ text: `Geschätzte Redezeit: ${durationM[1].trim()}`, italics: true, size: 20, color: '666666' })] }));
+      }
+      slideBlocks.forEach((block, i) => {
+        const titleM = block.match(/^FOLIE\s*(\d+)\s*[—-]\s*(.+)/i);
+        if (!titleM) return;
+        const inhaltM = block.match(/INHALT:\s*([\s\S]*?)(?=VISUELL:|SPRECHERTEXT:|$)/i);
+        const sprechM = block.match(/SPRECHERTEXT:\s*([\s\S]*)/i);
+        const recap = inhaltM ? inhaltM[1].split('\n').map(l => l.replace(/^[-•]\s*/, '').trim()).filter(Boolean).join(' · ') : '';
+        const notes = sprechM ? sprechM[1].trim() : '';
+        bodyParagraphs.push(new Paragraph({
+          pageBreakBefore: i > 0,
+          alignment: AlignmentType.LEFT,
+          spacing: { before: i > 0 ? 0 : 120, after: 60 },
+          border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: '1A3D2E', space: 4 } },
+          children: [new TextRun({ text: `Folie ${titleM[1]} — ${titleM[2].trim()}`, bold: true, size: 26, color: '1A3D2E' })]
+        }));
+        if (recap) bodyParagraphs.push(new Paragraph({ alignment: AlignmentType.LEFT, spacing: { after: 160 }, children: [new TextRun({ text: `Folie zeigt: ${recap}`, italics: true, size: 18, color: '888888' })] }));
+        notes.split(/\n+/).filter(Boolean).forEach(p => {
+          bodyParagraphs.push(new Paragraph({ alignment: AlignmentType.LEFT, spacing: { after: 160 }, line: 320, children: [new TextRun({ text: p.trim(), size: 22 })] }));
+        });
       });
-    });
+    } else {
+      const blocks = content.replace(/\r\n/g, '\n').split(/\n{2,}/).map(b => b.trim()).filter(Boolean);
+      bodyParagraphs = blocks.map(block => {
+        const lines = block.split('\n');
+        const isHeading = lines.length === 1
+          && /^[A-ZÄÖÜ0-9][A-ZÄÖÜ0-9\s\-.,:/&']{3,}:?$/.test(block.trim())
+          && block === block.toUpperCase();
+        return new Paragraph({
+          alignment: AlignmentType.LEFT,
+          spacing: isHeading ? { before: 280, after: 120 } : { after: 200 },
+          children: lines.flatMap((line, i) => i === 0
+            ? [new TextRun({ text: line, bold: isHeading, size: 22 })]
+            : [new TextRun({ break: 1, text: line, bold: isHeading, size: 22 })])
+        });
+      });
+    }
 
     const doc = new Document({
       styles: { default: { document: { run: { font: 'Calibri', size: 22 } } } },
