@@ -1375,7 +1375,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div class="page" id="page-usage" style="padding-left:0;padding-right:0">
       <div style="padding:0 16px">
         <div class="page-title" style="margin-bottom:4px">Usage</div>
-        <div style="font-size:14px;color:var(--mu);margin-bottom:16px">API calls per client — real token costs based on Claude Sonnet 4.6 pricing</div>
+        <div style="font-size:14px;color:var(--mu);margin-bottom:16px">API calls per client — real token costs based on Claude Sonnet pricing</div>
         <div style="display:flex;gap:8px;margin-bottom:20px">
           <button onclick="loadUsage()" style="padding:7px 16px;border:1.5px solid var(--ac);border-radius:8px;background:var(--ac);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Call Statistics</button>
           <button onclick="loadCosts(30)" style="padding:7px 16px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Token Costs (30d)</button>
@@ -1505,49 +1505,70 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div class="page" id="page-pricing">
       <button class="back" onclick="goHome()">&#8592; Home</button>
       <div class="page-title" style="margin-bottom:4px">Preise</div>
-      <div style="font-size:12px;color:var(--mu);margin-bottom:32px;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Transparente Konditionen · Keine Einrichtungsgebühr</div>
+      <div style="font-size:12px;color:var(--mu);margin-bottom:32px;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Transparente Konditionen · Einmalige Einrichtung, danach ein Preis pro Monat</div>
 
       <!-- Pricing cards -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:680px;margin-bottom:24px" class="pricing-grid">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;max-width:920px;margin-bottom:28px" class="pricing-grid">
 
-        <!-- Essential -->
-        <div style="border:1px solid var(--bd);border-radius:14px;padding:28px 24px;display:flex;flex-direction:column;gap:0">
-          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);margin-bottom:10px">Essential</div>
-          <div style="font-family:'Spectral',serif;font-size:38px;font-weight:400;color:var(--tx);line-height:1">CHF 220</div>
-          <div style="font-size:12px;color:var(--mu);margin-bottom:18px;margin-top:4px">pro Monat</div>
-          <div style="font-size:14px;color:var(--tx);line-height:1.5;margin-bottom:20px">Für Einzelpersonen und KMU, die ihre Kommunikation gezielt stärken möchten.</div>
-          <ul style="list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:10px">
-            <li style="font-size:13px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Brand Voice Profil</li>
-            <li style="font-size:13px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> 5 Kernmodule (Text, Reframe, Sprache, Auftritt, Vorbereitung)</li>
-            <li style="font-size:13px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Persönliches Onboarding durch Lorena Lienhard</li>
-            <li style="font-size:13px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> 30-tägige Testphase inklusive</li>
-            <li style="font-size:13px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Kündigung monatlich</li>
+        <!-- Starter -->
+        <div style="border:1px solid var(--bd);border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:0">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);margin-bottom:10px">Starter</div>
+          <div style="font-family:'Spectral',serif;font-size:34px;font-weight:400;color:var(--tx);line-height:1">CHF 290</div>
+          <div style="font-size:12px;color:var(--mu);margin-bottom:18px;margin-top:4px">pro Monat · bis ca. 60 Texte/Monat</div>
+          <div style="font-size:13px;color:var(--tx);line-height:1.5;margin-bottom:18px">Für Einzelpersonen und kleine Teams, die ihre Kommunikation gezielt stärken möchten.</div>
+          <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:9px">
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Brand Voice Profil</li>
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Alle Kernmodule</li>
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Persönliches Onboarding durch Lorena Lienhard</li>
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Rückmeldung innert 3h, 7 Tage die Woche</li>
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Kündigung monatlich</li>
           </ul>
-          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Essential%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:13px 0;border:1.5px solid var(--ac);border-radius:9px;color:var(--ac);font-size:14px;font-weight:600;text-decoration:none;font-family:'Instrument Sans',sans-serif;letter-spacing:.02em">Jetzt starten &rarr;</a>
+          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Starter%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:12px 0;border:1.5px solid var(--ac);border-radius:9px;color:var(--ac);font-size:13.5px;font-weight:600;text-decoration:none;font-family:'Instrument Sans',sans-serif;letter-spacing:.02em">Jetzt starten &rarr;</a>
         </div>
 
-        <!-- Professional (highlighted) -->
-        <div style="border-radius:14px;padding:28px 24px;display:flex;flex-direction:column;gap:0;background:var(--ac);color:#fff;position:relative">
+        <!-- Wachstum (highlighted) -->
+        <div style="border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:0;background:var(--ac);color:#fff;position:relative">
           <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:#fff;color:var(--ac);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;border-radius:20px;border:1.5px solid var(--ac);white-space:nowrap">Empfohlen</div>
-          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:10px">Professional</div>
-          <div style="font-family:'Spectral',serif;font-size:38px;font-weight:400;color:#fff;line-height:1">CHF 440</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:18px;margin-top:4px">pro Monat</div>
-          <div style="font-size:14px;color:rgba(255,255,255,.9);line-height:1.5;margin-bottom:20px">Für Teams und Power-User mit maximaler Tiefe und Prioritätssupport.</div>
-          <ul style="list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:10px">
-            <li style="font-size:13px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Alle Module ohne Einschränkung</li>
-            <li style="font-size:13px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Team-Zugang (mehrere Nutzer)</li>
-            <li style="font-size:13px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Erweiterte Trainingsdaten & Memory</li>
-            <li style="font-size:13px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Prioritätssupport & direkter Advisor-Zugang</li>
-            <li style="font-size:13px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> 30-tägige Testphase inklusive</li>
-            <li style="font-size:13px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Kündigung monatlich</li>
+          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:10px">Wachstum</div>
+          <div style="font-family:'Spectral',serif;font-size:34px;font-weight:400;color:#fff;line-height:1">CHF 590</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:18px;margin-top:4px">pro Monat · bis ca. 150 Texte/Monat</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.9);line-height:1.5;margin-bottom:18px">Für wachsende Teams mit regelmässigem Kommunikationsbedarf.</div>
+          <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:9px">
+            <li style="font-size:12.5px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Alle Module ohne Einschränkung</li>
+            <li style="font-size:12.5px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Team-Zugang (mehrere Nutzer, einzeln anmeldbar)</li>
+            <li style="font-size:12.5px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Erweiterte Trainingsdaten & Memory</li>
+            <li style="font-size:12.5px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Rückmeldung innert 3h, 7 Tage die Woche</li>
+            <li style="font-size:12.5px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Kündigung monatlich</li>
           </ul>
-          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Professional%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:13px 0;border:1.5px solid rgba(255,255,255,.8);border-radius:9px;color:#fff;font-size:14px;font-weight:600;text-decoration:none;font-family:'Instrument Sans',sans-serif;letter-spacing:.02em">Jetzt starten &rarr;</a>
+          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Wachstum%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:12px 0;border:1.5px solid rgba(255,255,255,.8);border-radius:9px;color:#fff;font-size:13.5px;font-weight:600;text-decoration:none;font-family:'Instrument Sans',sans-serif;letter-spacing:.02em">Jetzt starten &rarr;</a>
+        </div>
+
+        <!-- Team / Unlimited -->
+        <div style="border:1px solid var(--bd);border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:0">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);margin-bottom:10px">Team</div>
+          <div style="font-family:'Spectral',serif;font-size:34px;font-weight:400;color:var(--tx);line-height:1">CHF 990</div>
+          <div style="font-size:12px;color:var(--mu);margin-bottom:18px;margin-top:4px">pro Monat · unbegrenzte Nutzung</div>
+          <div style="font-size:13px;color:var(--tx);line-height:1.5;margin-bottom:18px">Für Teams und Power-User mit maximaler Tiefe und Volumen.</div>
+          <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:9px">
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Alles aus Wachstum, unbegrenzt</li>
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Beliebig viele Team-Mitglieder</li>
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Priorisierte Weiterentwicklung nach euren Bedürfnissen</li>
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Rückmeldung innert 3h, 7 Tage die Woche</li>
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Kündigung monatlich</li>
+          </ul>
+          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Team%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:12px 0;border:1.5px solid var(--ac);border-radius:9px;color:var(--ac);font-size:13.5px;font-weight:600;text-decoration:none;font-family:'Instrument Sans',sans-serif;letter-spacing:.02em">Jetzt starten &rarr;</a>
         </div>
       </div>
 
+      <!-- Human safety net explainer -->
+      <div style="max-width:920px;border:1px solid var(--bd);border-radius:14px;padding:22px 24px;margin-bottom:24px;background:var(--sf)">
+        <div style="font-size:13px;font-weight:700;color:var(--tx);margin-bottom:8px;display:flex;align-items:center;gap:8px"><i class="ti ti-headset" style="color:var(--ac)"></i> Ein Mensch bleibt erreichbar</div>
+        <div style="font-size:13.5px;color:var(--tx);line-height:1.6">In jeder Stufe steckt dasselbe Versprechen: läuft etwas nicht rund oder braucht ein Text eine persönliche Einschätzung, ist Lorena Lienhard selbst innert 3 Stunden erreichbar — an 7 Tagen die Woche, auch am Wochenende. Das ist im Abopreis enthalten und kostet in den meisten Monaten nichts extra. Nur wenn es tatsächlich zu einer persönlichen Bearbeitung kommt (z. B. über "An Beraterin senden"), wird die effektiv aufgewendete Zeit mit CHF 180.–/h verrechnet — minutengenau ab 30 Minuten, in 15-Minuten-Schritten. Keine versteckte Bereitschaftsgebühr, keine Überraschungen.</div>
+      </div>
+
       <!-- Trust line -->
-      <div style="font-size:13px;color:var(--mu);text-align:center;max-width:680px;padding-top:4px">
-        Persönliches Onboarding &nbsp;·&nbsp; Keine Einrichtungsgebühr &nbsp;·&nbsp; Kündigung monatlich
+      <div style="font-size:13px;color:var(--mu);text-align:center;max-width:920px;padding-top:4px">
+        Persönliches Onboarding &nbsp;·&nbsp; Einmalige Einrichtungsgebühr CHF [INSTALLATIONSPREIS] &nbsp;·&nbsp; Kündigung monatlich
       </div>
     </div>
 
@@ -2995,7 +3016,7 @@ async function loadUsage(){
             <div style="padding:14px 16px;font-size:13px;color:var(--mu);${border}">${last}</div>`;
         }).join('')}
       </div>
-      <div style="font-size:12px;color:var(--mu);margin-top:12px">Cost estimate based on avg 2,500 input + 1,000 output tokens/call at Claude Sonnet 4.6 pricing ($3/$15 per 1M tokens). Actual costs may vary.</div>`;
+      <div style="font-size:12px;color:var(--mu);margin-top:12px">Cost estimate based on avg 2,500 input + 1,000 output tokens/call at Claude Sonnet pricing ($3/$15 per 1M tokens). Actual costs may vary.</div>`;
   }catch(e){sum.innerHTML=`<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;}
 }
 // ── TOKEN COSTS PER CLIENT ────────────────────────────────────
@@ -3029,7 +3050,7 @@ async function loadCosts(days=30){
             <div style="padding:12px 14px;font-size:14px;font-weight:600;text-align:right;color:var(--ac);${border}">${fmt(row.cost_usd||0)}</div>`;
         }).join('')}
       </div>
-      <div style="font-size:12px;color:var(--mu)">Pricing: $3/1M input tokens · $15/1M output tokens (Claude Sonnet 4.6). Actual Anthropic invoice may differ slightly.</div>`;
+      <div style="font-size:12px;color:var(--mu)">Pricing: $3/1M input tokens · $15/1M output tokens (Claude Sonnet). Actual Anthropic invoice may differ slightly.</div>`;
   }catch(e){tbl.innerHTML=`<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;}
 }
 
