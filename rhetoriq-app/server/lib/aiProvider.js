@@ -19,7 +19,7 @@
 const ACTIVE_PROVIDER = process.env.AI_PROVIDER || 'anthropic';
 
 const MODEL_PRESETS = {
-  anthropic: { sonnet: 'claude-sonnet-4-6', haiku: 'claude-haiku-4-5-20251001' },
+  anthropic: { sonnet: 'claude-sonnet-5', haiku: 'claude-haiku-4-5-20251001' },
   // kimi: { sonnet: 'kimi-k2', haiku: 'kimi-k2-turbo' },  // example — add when needed
 };
 
