@@ -5649,14 +5649,22 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
       for(const line of lines){
         if(line.startsWith('event: '))lastEventName=line.slice(7).trim();
         if(line.startsWith('data: ')){
-          try{
-            const evt=JSON.parse(line.slice(6));
+          const isErrorEvent=lastEventName==='error';
+          let evt=null;
+          try{evt=JSON.parse(line.slice(6));}catch{}
+          // Server sends "event: error" on failure (incl. an upstream AI
+          // timeout) — this was previously silently dropped here, so the
+          // "thinking" animation just spun forever with no visible error,
+          // indistinguishable from an actual hang. Must throw so the catch
+          // block below shows the real message and stops the spinner.
+          if(isErrorEvent)throw new Error(evt?.error||'Server error');
+          if(evt){
             if(lastEventName==='done'||evt.id){
               analysisId=evt.id;hasBrandVoice=!!evt.hasBrandVoice;
               box._req.analysisId=analysisId;
               if(evt.systemPrompt)debugPrompt=evt.systemPrompt;
             } else if(evt.text){if(thinkingInterval){clearInterval(thinkingInterval);thinkingInterval=null;}fullText+=evt.text;body.textContent=fullText;}
-          }catch{}
+          }
           lastEventName='';
         }
       }
