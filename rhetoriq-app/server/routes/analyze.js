@@ -1712,14 +1712,15 @@ router.post('/stream', requireAuth, async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('X-Accel-Buffering', 'no'); // Disable Nginx buffering on Render
     res.flushHeaders();
+    console.log(`[trace] ${module} headers flushed`);
 
     // Fix 10: SSE keepalive to prevent proxy timeouts
-    const keepAlive = setInterval(() => res.write(': keep-alive\n\n'), 15000);
+    const keepAlive = setInterval(() => { console.log(`[trace] ${module} keepalive tick`); res.write(': keep-alive\n\n'); }, 15000);
 
     // Fix 13: Client disconnect handling
     let aborted = false;
     const abortController = new AbortController();
-    req.on('close', () => { aborted = true; abortController.abort(); clearInterval(keepAlive); });
+    req.on('close', () => { console.log(`[trace] ${module} client closed connection`); aborted = true; abortController.abort(); clearInterval(keepAlive); });
 
     const maxTokens = MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS;
     const streamSystemBlocks = [];
@@ -1737,7 +1738,9 @@ router.post('/stream', requireAuth, async (req, res) => {
     let streamUserMsg = userMsg;
     let draftInputTokens = 0, draftOutputTokens = 0;
     if (TWO_PASS_MODULES.has(module) && !aborted && !(followUp && followUp.note) && !(data && data.existingDraft)) {
+      console.log(`[trace] ${module} starting draft pass, maxTokens=${maxTokens}`);
       const draftResp = await callClaude(streamSystemBlocks, userMsg, maxTokens, resolveModel(module));
+      console.log(`[trace] ${module} draft pass done, chars=${(draftResp.text || '').length}`);
       if (draftResp.text) streamUserMsg = buildRevisionPrompt(userMsg, draftResp.text, module);
       draftInputTokens = draftResp.inputTokens;
       draftOutputTokens = draftResp.outputTokens;
@@ -1746,7 +1749,9 @@ router.post('/stream', requireAuth, async (req, res) => {
 
     let fullText = '';
     let inputTokens = 0, outputTokens = 0;
+    console.log(`[trace] ${module} calling streamText, model=${resolveModel(module)}, maxTokens=${maxTokens}`);
     try {
+      let firstChunk = true;
       for await (const evt of streamText({
         system: streamSystemBlocks,
         messages: [{ role: 'user', content: streamUserMsg }],
@@ -1755,6 +1760,7 @@ router.post('/stream', requireAuth, async (req, res) => {
         signal: abortController.signal
       })) {
         if (evt.type === 'text') {
+          if (firstChunk) { console.log(`[trace] ${module} first text chunk received`); firstChunk = false; }
           fullText += evt.text;
           res.write(`data: ${JSON.stringify({ text: evt.text })}\n\n`);
         } else if (evt.type === 'usage') {

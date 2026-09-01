@@ -100,6 +100,7 @@ async function* anthropicStream({ system, messages, maxTokens, model, temperatur
   const timer = setTimeout(() => internalController.abort(), GENERATE_TIMEOUT_MS);
 
   let res;
+  console.log(`[trace-ai] calling Anthropic, model=${model}, apiKeySet=${!!process.env.ANTHROPIC_API_KEY}, apiKeyLen=${(process.env.ANTHROPIC_API_KEY||'').length}`);
   try {
     res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -112,7 +113,9 @@ async function* anthropicStream({ system, messages, maxTokens, model, temperatur
       },
       body: JSON.stringify(body)
     });
+    console.log(`[trace-ai] Anthropic responded, status=${res.status}`);
   } catch (e) {
+    console.log(`[trace-ai] Anthropic fetch threw: ${e.name} ${e.message}`);
     if (e.name === 'AbortError' && !signal?.aborted) throw new Error('AI request timed out — please try again.');
     throw e;
   } finally {
