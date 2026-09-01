@@ -2515,7 +2515,24 @@ async function exportPptx(bodyId){
 })();
 
 function sf(s,h){document.getElementById(s).style.display='block';document.getElementById(h).style.display='none';}
-async function api(path,o={}){const r=await fetch(API+path,{...o,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(o.headers||{})}});if(!r.ok){const ct=r.headers.get('content-type')||'';if(!ct.includes('application/json'))throw new Error(`Server error (HTTP ${r.status})`);}return r;}
+// Every non-streaming call in the app goes through this one helper — it had
+// no timeout at all, so a silently-dead connection (proxy/network issue, not
+// necessarily a server bug) could hang any of these calls forever with zero
+// feedback. The dedicated SSE stream has its own stall timer; this covers
+// every other call site (e.g. presentation-preflight) in one place.
+async function api(path,o={}){
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),45000);
+  let r;
+  try{
+    r=await fetch(API+path,{...o,signal:o.signal||ctrl.signal,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(o.headers||{})}});
+  }catch(e){
+    if(e.name==='AbortError')throw new Error('Anfrage ohne Antwort abgebrochen (timed out) — bitte erneut versuchen.');
+    throw e;
+  }finally{clearTimeout(timer);}
+  if(!r.ok){const ct=r.headers.get('content-type')||'';if(!ct.includes('application/json'))throw new Error(`Server error (HTTP ${r.status})`);}
+  return r;
+}
 
 // XSS-safe innerHTML helper — sanitizes all user/AI content before DOM injection
 function safe(html){ return typeof DOMPurify!=='undefined'?DOMPurify.sanitize(html??'',{ALLOWED_TAGS:['b','i','em','strong','br','span','div','p','ul','ol','li','a','pre','code'],ALLOWED_ATTR:['style','class','href','target']}):String(html??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
