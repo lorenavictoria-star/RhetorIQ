@@ -19,7 +19,7 @@
 const ACTIVE_PROVIDER = process.env.AI_PROVIDER || 'anthropic';
 
 const MODEL_PRESETS = {
-  anthropic: { sonnet: 'claude-sonnet-4-6', haiku: 'claude-haiku-4-5-20251001' },
+  anthropic: { sonnet: 'claude-sonnet-5', haiku: 'claude-haiku-4-5-20251001' },
   // kimi: { sonnet: 'kimi-k2', haiku: 'kimi-k2-turbo' },  // example — add when needed
 };
 
@@ -28,6 +28,12 @@ function resolveModelId(preset) {
   if (!presets) throw new Error(`Unknown AI_PROVIDER: ${ACTIVE_PROVIDER}`);
   return presets[preset] || presets.sonnet;
 }
+
+// A stalled upstream call with no timeout hangs the whole request forever —
+// the user just sees the "thinking" indicator frozen with no way out. Two
+// full passes (draft + critique) can legitimately take a while for
+// long-form content, so this is generous, but it must still be finite.
+const GENERATE_TIMEOUT_MS = 120_000;
 
 // ── Anthropic implementation ────────────────────────────────────────────────
 async function anthropicGenerate({ system, messages, maxTokens, model, temperature }) {
@@ -42,16 +48,27 @@ async function anthropicGenerate({ system, messages, maxTokens, model, temperatu
   };
   if (temperature !== undefined) body.temperature = temperature;
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-beta': 'prompt-caching-2024-07-31'
-    },
-    body: JSON.stringify(body)
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), GENERATE_TIMEOUT_MS);
+  let res;
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31'
+      },
+      body: JSON.stringify(body)
+    });
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('AI request timed out — please try again.');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
   return {
@@ -74,17 +91,33 @@ async function* anthropicStream({ system, messages, maxTokens, model, temperatur
   };
   if (temperature !== undefined) body.temperature = temperature;
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    signal,
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-beta': 'prompt-caching-2024-07-31'
-    },
-    body: JSON.stringify(body)
-  });
+  // Guard the connection setup itself (not just the caller's own
+  // disconnect/abort signal) — if Anthropic never responds to open the
+  // stream, this would otherwise hang indefinitely with no way out.
+  const internalController = new AbortController();
+  const onExternalAbort = () => internalController.abort();
+  if (signal) signal.addEventListener('abort', onExternalAbort);
+  const timer = setTimeout(() => internalController.abort(), GENERATE_TIMEOUT_MS);
+
+  let res;
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      signal: internalController.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31'
+      },
+      body: JSON.stringify(body)
+    });
+  } catch (e) {
+    if (e.name === 'AbortError' && !signal?.aborted) throw new Error('AI request timed out — please try again.');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
