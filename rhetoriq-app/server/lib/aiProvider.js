@@ -136,9 +136,19 @@ async function* anthropicStream({ system, messages, maxTokens, model, temperatur
   // SSE keepalive pings in the route above are a DUMB timer, unrelated to
   // whether real generation is happening — they'd keep the connection looking
   // alive to the browser indefinitely while nothing is actually produced.
-  // Race every read against a per-chunk timeout so a genuine stall — not just
-  // a slow-but-progressing generation — surfaces as a real error.
+  //
+  // Two layers are needed here, confirmed by a live trace: Anthropic's own
+  // stream sends periodic `event: ping` frames while it works, which arrive
+  // as successful reader.read() calls even when zero real content has been
+  // produced yet. A per-chunk timeout that resets on every read — pings
+  // included — never fires in that case: a request was observed hanging for
+  // 5+ minutes with nothing but pings until an unrelated server restart
+  // killed it. So: readWithTimeout() below still catches a truly dead
+  // connection (no bytes at all, not even pings), while firstTokenDeadline
+  // separately caps the total time allowed before the FIRST real text_delta
+  // — that one is set once and only cleared by actual content, never by pings.
   const READ_TIMEOUT_MS = 45_000;
+  const FIRST_TOKEN_TIMEOUT_MS = 90_000;
   async function readWithTimeout() {
     let timer;
     const timeout = new Promise((_, reject) => {
@@ -150,7 +160,12 @@ async function* anthropicStream({ system, messages, maxTokens, model, temperatur
       clearTimeout(timer);
     }
   }
+  const streamStart = Date.now();
+  let gotFirstToken = false;
   while (true) {
+    if (!gotFirstToken && Date.now() - streamStart > FIRST_TOKEN_TIMEOUT_MS) {
+      throw new Error('AI request timed out — no content produced within 90s.');
+    }
     const { done, value } = await readWithTimeout();
     if (done) break;
     sseBuffer += decoder.decode(value, { stream: true });
@@ -163,6 +178,7 @@ async function* anthropicStream({ system, messages, maxTokens, model, temperatur
       let evt;
       try { evt = JSON.parse(raw); } catch (e) { console.warn('SSE parse error:', e.message, raw.slice(0, 100)); continue; }
       if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+        gotFirstToken = true;
         yield { type: 'text', text: evt.delta.text || '' };
       }
       if (evt.type === 'message_start' && evt.message?.usage) {
