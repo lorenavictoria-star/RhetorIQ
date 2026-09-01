@@ -19,7 +19,14 @@
 const ACTIVE_PROVIDER = process.env.AI_PROVIDER || 'anthropic';
 
 const MODEL_PRESETS = {
-  anthropic: { sonnet: 'claude-sonnet-5', haiku: 'claude-haiku-4-5-20251001' },
+  // TEMPORARY: reverted to claude-sonnet-4-6 to test whether claude-sonnet-5
+  // is currently capacity-constrained — a large existing-draft revision was
+  // observed taking 90-180s+ just to produce a first token on sonnet-5, with
+  // the connection opening instantly and nothing but Anthropic's own pings
+  // in between. If sonnet-4-6 handles the same input fast, that confirms a
+  // sonnet-5 capacity/latency issue (likely temporary, new-model launch
+  // demand) rather than a problem with the request itself.
+  anthropic: { sonnet: 'claude-sonnet-4-6', haiku: 'claude-haiku-4-5-20251001' },
   // kimi: { sonnet: 'kimi-k2', haiku: 'kimi-k2-turbo' },  // example — add when needed
 };
 
