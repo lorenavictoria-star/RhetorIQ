@@ -5631,9 +5631,20 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
   box._req={module,data,rid,bid,instructionsKey,history:priorHistory};
   let thinkingInterval=startThinkingIndicator(body,!followUp&&TWO_PASS_MODULES_FE.has(module));
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
+  // Browser fetch() has NO built-in timeout — if the connection (or an
+  // intermediary proxy) silently dies mid-request without a clean close,
+  // reader.read() can hang forever with no error, no matter how well the
+  // server itself behaves. This stall timer aborts client-side if no byte
+  // arrives for 90s, and resets on every chunk so a genuinely long but
+  // still-progressing generation is never cut short.
+  const streamAbort=new AbortController();
+  let stallTimer=null;
+  const resetStallTimer=()=>{if(stallTimer)clearTimeout(stallTimer);stallTimer=setTimeout(()=>streamAbort.abort(),90000);};
+  resetStallTimer();
   try{
     const resp=await fetch(API+'/api/analyze/stream',{
       method:'POST',
+      signal:streamAbort.signal,
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body:JSON.stringify({module,clientId,data,debug:debugMode&&isAdv,instructionsKey,followUp})
     });
@@ -5643,6 +5654,7 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
     let analysisId=null,hasBrandVoice=false,debugPrompt=null;
     while(true){
       const{done,value}=await reader.read();
+      resetStallTimer();
       if(done)break;
       buf+=dec.decode(value,{stream:true});
       const lines=buf.split('\n');buf=lines.pop();
@@ -5669,6 +5681,7 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
         }
       }
     }
+    if(stallTimer){clearTimeout(stallTimer);stallTimer=null;}
     if(module==='vs-cal')voiceProf=fullText;
     if(['crisis','si','st'].includes(module))showDebriefNudge(module,rid);
     if(['brand-voice-co','brand-voice-ind'].includes(module)&&clientId){
@@ -5687,7 +5700,8 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
     loadStats();
   }catch(e){
     if(thinkingInterval){clearInterval(thinkingInterval);thinkingInterval=null;}
-    const msg=e.message||'';
+    if(stallTimer){clearTimeout(stallTimer);stallTimer=null;}
+    const msg=e.name==='AbortError'?'Verbindung ohne Antwort abgebrochen (timed out)':(e.message||'');
     if(/session revoked|invalid token|missing token/i.test(msg)){
       localStorage.removeItem('riq-token');
       body.innerHTML='<div style="color:var(--er,#c0392b);padding:4px 0">⚠ Deine Sitzung ist abgelaufen. Bitte melde dich neu an.</div>'
