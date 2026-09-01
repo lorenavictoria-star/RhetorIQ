@@ -1545,7 +1545,12 @@ router.post('/', requireAuth, async (req, res) => {
     // Second pass: have the model critique and revise its own draft against
     // the brand voice and style rules before returning the final text.
     // Skipped for follow-ups — that request is already a targeted revision.
-    if (TWO_PASS_MODULES.has(module) && !(followUp && followUp.note)) {
+    // Also skipped when the user supplied an existingDraft to revise: that
+    // system prompt is already an editing pass on a complete document, not
+    // a from-scratch draft — running a second full pass on top just doubles
+    // latency (painfully so for long documents like a full speech) without
+    // improving quality, and risks over-editing an already-finished text.
+    if (TWO_PASS_MODULES.has(module) && !(followUp && followUp.note) && !(data && data.existingDraft)) {
       const revisionResp = await callClaude(systemBlocks, buildRevisionPrompt(userMsg, claudeResp.text, module), MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
       if (revisionResp.text) result = revisionResp.text;
       totalInputTokens += revisionResp.inputTokens;
@@ -1716,7 +1721,7 @@ router.post('/stream', requireAuth, async (req, res) => {
     // connection alive during this), then stream only the revised final pass.
     let streamUserMsg = userMsg;
     let draftInputTokens = 0, draftOutputTokens = 0;
-    if (TWO_PASS_MODULES.has(module) && !aborted && !(followUp && followUp.note)) {
+    if (TWO_PASS_MODULES.has(module) && !aborted && !(followUp && followUp.note) && !(data && data.existingDraft)) {
       const draftResp = await callClaude(streamSystemBlocks, userMsg, maxTokens, resolveModel(module));
       if (draftResp.text) streamUserMsg = buildRevisionPrompt(userMsg, draftResp.text, module);
       draftInputTokens = draftResp.inputTokens;

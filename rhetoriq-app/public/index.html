@@ -5646,7 +5646,7 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
   const priorHistory=(box._req&&box._req.history)||[];
   if(followUp&&followUp.note)priorHistory.push({note:followUp.note,textBefore:followUp.previousResult});
   box._req={module,data,rid,bid,instructionsKey,history:priorHistory};
-  let thinkingInterval=startThinkingIndicator(body,!followUp&&TWO_PASS_MODULES_FE.has(module));
+  let thinkingInterval=startThinkingIndicator(body,!followUp&&TWO_PASS_MODULES_FE.has(module)&&!(data&&data.existingDraft));
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
   // Browser fetch() has NO built-in timeout — if the connection (or an
   // intermediary proxy) silently dies mid-request without a clean close,
