@@ -148,7 +148,7 @@ async function* anthropicStream({ system, messages, maxTokens, model, temperatur
   // separately caps the total time allowed before the FIRST real text_delta
   // — that one is set once and only cleared by actual content, never by pings.
   const READ_TIMEOUT_MS = 45_000;
-  const FIRST_TOKEN_TIMEOUT_MS = 90_000;
+  const FIRST_TOKEN_TIMEOUT_MS = 180_000;
   async function readWithTimeout() {
     let timer;
     const timeout = new Promise((_, reject) => {
