@@ -1274,6 +1274,20 @@ const DEFAULT_MAX_TOKENS = 2000;
 // is worth the extra latency/cost: draft, then have the model critique its own
 // draft against the brand voice and style rules, then output a revised final.
 const TWO_PASS_MODULES = new Set(['text-gen', 'presentation', 'brand-voice-co', 'brand-voice-ind']);
+// A very common real-world pattern: the client already has a near-final
+// document (a full speech, an existing letter) and just wants it revised
+// against a briefing — but they don't always use the dedicated "existing
+// draft" field, sometimes pasting the whole thing into the main briefing
+// textarea instead. Either way, a large input means the two-pass
+// draft-then-critique cycle is doubling the wait on an already-substantial
+// piece of text for no real quality gain — skip it based on size alone,
+// not just on which field the text landed in.
+const LARGE_INPUT_CHARS = 4000; // roughly 700+ words
+function hasLargeInput(data) {
+  if (!data) return false;
+  const len = (data.existingDraft || '').length + (data.text || '').length;
+  return len > LARGE_INPUT_CHARS;
+}
 function buildRevisionPrompt(originalUserMsg, draft, module) {
   const depthCheck = module === 'presentation'
     ? ' Prüfe zusätzlich explizit auf Oberflächlichkeit: Steht irgendeine zentrale Behauptung ohne Beleg oder ausformulierte Implikation da? Gibt es Folien, die nichts Eigenständiges zur Argumentation beitragen? Ist der Einsatz (was bei Nichtstun verloren geht bzw. bei Handeln gewonnen wird) tatsächlich beziffert, wo das Briefing es hergibt? Ist der Schluss wirklich ein konkreter, unmissverständlicher Ask? Wo die Antwort nein ist, vertiefe die betroffene Stelle in der Überarbeitung spürbar, statt sie nur stilistisch zu glätten.'
@@ -1564,7 +1578,7 @@ router.post('/', requireAuth, async (req, res) => {
     // a from-scratch draft — running a second full pass on top just doubles
     // latency (painfully so for long documents like a full speech) without
     // improving quality, and risks over-editing an already-finished text.
-    if (TWO_PASS_MODULES.has(module) && !(followUp && followUp.note) && !(data && data.existingDraft)) {
+    if (TWO_PASS_MODULES.has(module) && !(followUp && followUp.note) && !hasLargeInput(data)) {
       const revisionResp = await callClaude(systemBlocks, buildRevisionPrompt(userMsg, claudeResp.text, module), MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
       if (revisionResp.text) result = revisionResp.text;
       totalInputTokens += revisionResp.inputTokens;
@@ -1737,7 +1751,7 @@ router.post('/stream', requireAuth, async (req, res) => {
     // connection alive during this), then stream only the revised final pass.
     let streamUserMsg = userMsg;
     let draftInputTokens = 0, draftOutputTokens = 0;
-    if (TWO_PASS_MODULES.has(module) && !aborted && !(followUp && followUp.note) && !(data && data.existingDraft)) {
+    if (TWO_PASS_MODULES.has(module) && !aborted && !(followUp && followUp.note) && !hasLargeInput(data)) {
       console.log(`[trace] ${module} starting draft pass, maxTokens=${maxTokens}`);
       const draftResp = await callClaude(streamSystemBlocks, userMsg, maxTokens, resolveModel(module));
       console.log(`[trace] ${module} draft pass done, chars=${(draftResp.text || '').length}`);
