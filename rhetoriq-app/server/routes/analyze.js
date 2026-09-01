@@ -1405,6 +1405,20 @@ async function callClaude(system, user, maxTokens, model, temperature) {
   };
 }
 
+// Fire-and-forget error log so the health-monitor job can proactively flag
+// generation failures to the advisor instead of her only finding out when a
+// client reports it. Reads straight from req so it works no matter where in
+// the handler the exception was thrown (before route-local consts existed).
+function logGenerationError(req, e) {
+  const module = req.body?.module || null;
+  const clientId = req.body?.clientId || (req.user?.role === 'client' ? req.user.clientId : null);
+  const advisorId = req.user?.role === 'advisor' ? req.user.id : (req.user?.advisorId || null);
+  pool.query(
+    'INSERT INTO generation_errors (client_id, advisor_id, module, error_message) VALUES ($1,$2,$3,$4)',
+    [clientId || null, advisorId || null, module, String(e?.message || e).slice(0, 500)]
+  ).catch(() => {});
+}
+
 // POST /api/analyze
 router.post('/', requireAuth, async (req, res) => {
   try {
@@ -1603,6 +1617,7 @@ router.post('/', requireAuth, async (req, res) => {
     res.json({ result, id: rows[0].id });
   } catch (e) {
     console.error(e);
+    logGenerationError(req, e);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1784,6 +1799,7 @@ router.post('/stream', requireAuth, async (req, res) => {
     res.end();
   } catch (e) {
     console.error(e);
+    logGenerationError(req, e);
     if (!res.headersSent) return res.status(500).json({ error: 'Internal server error' });
     res.write(`event: error\ndata: ${JSON.stringify({ error: e.message })}\n\n`);
     res.end();

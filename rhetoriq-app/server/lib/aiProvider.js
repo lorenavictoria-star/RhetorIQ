@@ -127,8 +127,28 @@ async function* anthropicStream({ system, messages, maxTokens, model, temperatur
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let sseBuffer = '';
+  // The connection-setup timeout above only guards opening the stream — once
+  // it's open, a stalled upstream (Anthropic stops sending bytes mid-response,
+  // no error, no close) leaves this loop awaiting reader.read() forever. The
+  // SSE keepalive pings in the route above are a DUMB timer, unrelated to
+  // whether real generation is happening — they'd keep the connection looking
+  // alive to the browser indefinitely while nothing is actually produced.
+  // Race every read against a per-chunk timeout so a genuine stall — not just
+  // a slow-but-progressing generation — surfaces as a real error.
+  const READ_TIMEOUT_MS = 45_000;
+  async function readWithTimeout() {
+    let timer;
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('AI stream stalled — no data received for 45s.')), READ_TIMEOUT_MS);
+    });
+    try {
+      return await Promise.race([reader.read(), timeout]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
   while (true) {
-    const { done, value } = await reader.read();
+    const { done, value } = await readWithTimeout();
     if (done) break;
     sseBuffer += decoder.decode(value, { stream: true });
     const lines = sseBuffer.split('\n');

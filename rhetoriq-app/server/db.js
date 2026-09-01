@@ -273,6 +273,17 @@ async function init() {
       END IF;
     END $$;
   `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS generation_errors (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL,
+      advisor_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      module TEXT,
+      error_message TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS generation_errors_created_idx ON generation_errors(created_at DESC);
+  `);
 }
 
 module.exports = { pool, init };
