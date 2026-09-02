@@ -4838,6 +4838,16 @@ function goModule(name,prefill){
 function goTextGenTile(tileId){
   goModule('text-gen');
   tgOpenTile(tileId);
+  // goModule() just set the header to the generic "Text Generator"
+  // title/description (from MDEFS) — override it with this specific
+  // format's own name and example, so opening "Social Media" actually
+  // reads "Social Media" at the top, not a generic umbrella label.
+  const entry=ALL_MODULES.find(m=>m.tile===tileId);
+  if(entry){
+    const titleEl=document.getElementById('mod-title'),descEl=document.getElementById('mod-desc');
+    if(titleEl)titleEl.textContent=entry.name;
+    if(descEl)descEl.textContent=entry.desc||'';
+  }
 }
 
 function buildForm(name,def,prefill,form){
@@ -5066,7 +5076,12 @@ function tgSetMode(id,mode){
 function tgCloseTile(id){
   document.getElementById('tg-panel-'+id).style.display='none';
   const rw=document.getElementById('tg-rbox-wrap-'+id);if(rw)rw.style.display='none';
-  document.getElementById('tg-tiles').style.display='grid';
+  // Every entry point now opens a specific format directly (goTextGenTile),
+  // so the internal tile grid is never shown on the way in anymore — "back"
+  // must return to the Text-Generator module list, not reveal that
+  // now-orphaned grid.
+  goPage('modules');setMN('modules');
+  filterModsCat('text-gen',document.getElementById('pill-text-gen'));
 }
 function tgSubToggle(id){
   const enabled=document.getElementById('tg-sub-enabled-'+id)?.checked;
@@ -6445,14 +6460,14 @@ const ALL_MODULES=[
   // standalone "Formal Letter" module is intentionally not listed anymore:
   // the "Brief" entry below already covers it exactly, so it was pure
   // duplication (same fix pattern as the earlier vs-gen/vs-cal removal).
-  {key:'text-gen-linkedin',name:'Social Media',cat:'text-gen',tag:'Text-Generator',tile:'linkedin',enableKey:'text-gen',desc:'LinkedIn Post, Artikel, Kommentar'},
-  {key:'text-gen-newsletter',name:'Newsletter',cat:'text-gen',tag:'Text-Generator',tile:'newsletter',enableKey:'text-gen',desc:'Vollausgabe, Einzelbeitrag, Teaser'},
-  {key:'text-gen-email',name:'E-Mail',cat:'text-gen',tag:'Text-Generator',tile:'email',enableKey:'text-gen',desc:'Extern, intern, formell'},
-  {key:'text-gen-speech',name:'Rede & Auftritt',cat:'text-gen',tag:'Text-Generator',tile:'speech',enableKey:'text-gen',desc:'Keynote, Townhall, Award'},
-  {key:'text-gen-press',name:'Presse & Medien',cat:'text-gen',tag:'Text-Generator',tile:'press',enableKey:'text-gen',desc:'Launch, Strategie, Krise'},
-  {key:'text-gen-website',name:'Website-Texte',cat:'text-gen',tag:'Text-Generator',tile:'website',enableKey:'text-gen',desc:'Homepage, About, Landing Page'},
-  {key:'text-gen-brief',name:'Brief',cat:'text-gen',tag:'Text-Generator',tile:'brief',enableKey:'text-gen',desc:'Formeller Geschäftsbrief'},
-  {key:'text-gen-custom',name:'Frei / Sonstiges',cat:'text-gen',tag:'Text-Generator',tile:'custom',enableKey:'text-gen',desc:'Talking Points, Proposal, Ankündigung'},
+  {key:'text-gen-linkedin',name:'Social Media',cat:'text-gen',tag:'Text-Generator',tile:'linkedin',enableKey:'text-gen',desc:'LinkedIn Post, Artikel, Kommentar',icon:'ti-brand-linkedin'},
+  {key:'text-gen-newsletter',name:'Newsletter',cat:'text-gen',tag:'Text-Generator',tile:'newsletter',enableKey:'text-gen',desc:'Vollausgabe, Einzelbeitrag, Teaser',icon:'ti-news'},
+  {key:'text-gen-email',name:'E-Mail',cat:'text-gen',tag:'Text-Generator',tile:'email',enableKey:'text-gen',desc:'Extern, intern, formell',icon:'ti-mail'},
+  {key:'text-gen-speech',name:'Rede & Auftritt',cat:'text-gen',tag:'Text-Generator',tile:'speech',enableKey:'text-gen',desc:'Keynote, Townhall, Award',icon:'ti-microphone'},
+  {key:'text-gen-press',name:'Presse & Medien',cat:'text-gen',tag:'Text-Generator',tile:'press',enableKey:'text-gen',desc:'Launch, Strategie, Krise',icon:'ti-speakerphone'},
+  {key:'text-gen-website',name:'Website-Texte',cat:'text-gen',tag:'Text-Generator',tile:'website',enableKey:'text-gen',desc:'Homepage, About, Landing Page',icon:'ti-world'},
+  {key:'text-gen-brief',name:'Brief',cat:'text-gen',tag:'Text-Generator',tile:'brief',enableKey:'text-gen',desc:'Formeller Geschäftsbrief',icon:'ti-file-text'},
+  {key:'text-gen-custom',name:'Frei / Sonstiges',cat:'text-gen',tag:'Text-Generator',tile:'custom',enableKey:'text-gen',desc:'Talking Points, Proposal, Ankündigung',icon:'ti-sparkles'},
   {key:'review',name:'Feedback Writer',cat:'creation',tag:'Writing — HR'},
   {key:'recognition',name:'Appreciation Writer',cat:'creation',tag:'Writing — HR'},
   {key:'pre-meeting',name:'Meeting Prep',cat:'prevention',tag:'Prevention',feat:true,isNew:true},
@@ -6591,10 +6606,12 @@ function renderModulesList(){
     const shortDesc=def?.desc?safeText(def.desc).replace(/&mdash;/g,'—').slice(0,90)+(def.desc.length>90?'…':''):(m.desc||'');
     const click=m.tile?`goTextGenTile('${m.tile}')`:(m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`);
     return `<div class="mrow${m.feat?' mrow-feat':''}${m.crisis?' mrow-crisis':''}" onclick="${click}">
-      <div class="mrow-left">
+      <div class="mrow-left" style="${m.icon?'display:flex;align-items:center;gap:12px':''}">
+        ${m.icon?`<i class="ti ${m.icon}" aria-hidden="true" style="font-size:18px;color:var(--mu);flex-shrink:0"></i><div>`:''}
         <div class="mrow-name">${displayName}</div>
-        <div class="mrow-tag">${m.tag}</div>
+        ${m.tile?'':`<div class="mrow-tag">${m.tag}</div>`}
         ${shortDesc?`<div style="font-size:12px;color:var(--mu);margin-top:3px;line-height:1.4">${shortDesc}</div>`:''}
+        ${m.icon?'</div>':''}
       </div>
       <div style="display:flex;align-items:center;gap:6px">
         <button onclick="toggleFav('${m.key}',event)" title="Pin to Quick Access" style="background:none;border:none;cursor:pointer;font-size:15px;padding:4px;color:${isFav?'#f59e0b':'var(--dm)'};line-height:1">${isFav?'★':'☆'}</button>
