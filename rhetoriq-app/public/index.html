@@ -4828,6 +4828,16 @@ function goModule(name,prefill){
   goPage('module');
   setTimeout(injectTemplateBtn,50);
 }
+// Text Generator formats (LinkedIn, Newsletter, Email, Speech, Press,
+// Website, Brief, Custom) are listed individually with their own clear name
+// under a "Text-Generator" category, instead of being buried as abbreviated
+// tiles inside one generic module — but they all still run through the same
+// underlying text-gen engine and DOM. This opens the module, then jumps
+// straight to the requested tile.
+function goTextGenTile(tileId){
+  goModule('text-gen');
+  tgOpenTile(tileId);
+}
 
 function buildForm(name,def,prefill,form){
   let h='';
@@ -6426,8 +6436,22 @@ document.addEventListener('click',e=>{const m=document.getElementById('more-menu
 const ALL_MODULES=[
   {key:'profiling',name:'How We Communicate',cat:'foundation',tag:'Basis'},
   {key:'brand-voice',name:'Brand Voice',cat:'foundation',tag:'Basis — Master Reference'},
-  {key:'text-gen',name:'Text Generator',cat:'creation',tag:'Writing'},
-  {key:'brief',name:'Formal Letter',cat:'creation',tag:'Writing',isNew:true},
+  // Text-Generator formats — each listed individually with its own clear
+  // name/icon under its own category, instead of one generic "Text
+  // Generator" module hiding eight abbreviated tiles inside it. All eight
+  // share the same underlying engine/enablement (enableKey:'text-gen') and
+  // route through goTextGenTile(tile) — see goModule() above. The
+  // standalone "Formal Letter" module is intentionally not listed anymore:
+  // the "Brief" entry below already covers it exactly, so it was pure
+  // duplication (same fix pattern as the earlier vs-gen/vs-cal removal).
+  {key:'text-gen-linkedin',name:'Social Media',cat:'text-gen',tag:'Text-Generator',tile:'linkedin',enableKey:'text-gen',desc:'LinkedIn Post, Artikel, Kommentar'},
+  {key:'text-gen-newsletter',name:'Newsletter',cat:'text-gen',tag:'Text-Generator',tile:'newsletter',enableKey:'text-gen',desc:'Vollausgabe, Einzelbeitrag, Teaser'},
+  {key:'text-gen-email',name:'E-Mail',cat:'text-gen',tag:'Text-Generator',tile:'email',enableKey:'text-gen',desc:'Extern, intern, formell'},
+  {key:'text-gen-speech',name:'Rede & Auftritt',cat:'text-gen',tag:'Text-Generator',tile:'speech',enableKey:'text-gen',desc:'Keynote, Townhall, Award'},
+  {key:'text-gen-press',name:'Presse & Medien',cat:'text-gen',tag:'Text-Generator',tile:'press',enableKey:'text-gen',desc:'Launch, Strategie, Krise'},
+  {key:'text-gen-website',name:'Website-Texte',cat:'text-gen',tag:'Text-Generator',tile:'website',enableKey:'text-gen',desc:'Homepage, About, Landing Page'},
+  {key:'text-gen-brief',name:'Brief',cat:'text-gen',tag:'Text-Generator',tile:'brief',enableKey:'text-gen',desc:'Formeller Geschäftsbrief'},
+  {key:'text-gen-custom',name:'Frei / Sonstiges',cat:'text-gen',tag:'Text-Generator',tile:'custom',enableKey:'text-gen',desc:'Talking Points, Proposal, Ankündigung'},
   {key:'review',name:'Feedback Writer',cat:'creation',tag:'Writing — HR'},
   {key:'recognition',name:'Appreciation Writer',cat:'creation',tag:'Writing — HR'},
   {key:'pre-meeting',name:'Meeting Prep',cat:'prevention',tag:'Prevention',feat:true,isNew:true},
@@ -6466,7 +6490,8 @@ let modsCatFilter='all',modsSearch='';
 function getCatMeta(){
   return {
     foundation:{icon:'◆',label:LANG==='de'?'Basis':'Foundation'},
-    creation:{icon:'✎',label:LANG==='de'?'Schreiben & Antworten':'Writing & Replies'},
+    'text-gen':{icon:'✎',label:'Text-Generator'},
+    creation:{icon:'✒',label:LANG==='de'?'Schreiben & Antworten':'Writing & Replies'},
     prevention:{icon:'⛨',label:LANG==='de'?'Krisen & Prävention':'Crisis & Prevention'},
     efficiency:{icon:'⚡',label:LANG==='de'?'Effizienz':'Efficiency'},
     growth:{icon:'↗',label:LANG==='de'?'Wachstum':'Growth'},
@@ -6498,7 +6523,7 @@ function renderModulesList(){
   }
   const q=modsSearch.toLowerCase();
   const filtered=ALL_MODULES.filter(m=>{
-    if(!modEnabled(m.key))return false;
+    if(!modEnabled(m.enableKey||m.key))return false;
     const matchCat=modsCatFilter==='all'||m.cat===modsCatFilter;
     const matchQ=!q||m.name.toLowerCase().includes(q)||m.tag.toLowerCase().includes(q);
     return matchCat&&matchQ;
@@ -6531,11 +6556,11 @@ function renderModulesList(){
   if(filtersBar)filtersBar.style.display=showCards?'none':'flex';
   if(showCards){
     list.innerHTML='';
-    const favMods=ALL_MODULES.filter(m=>favs.has(m.key)&&modEnabled(m.key));
+    const favMods=ALL_MODULES.filter(m=>favs.has(m.key)&&modEnabled(m.enableKey||m.key));
     if(favBox)favBox.innerHTML=favMods.length?`
       <div class="mcat-eyebrow">${LANG==='de'?'Meine häufigsten':'My favorites'}</div>
       <div class="mfav-grid">
-        ${favMods.map(m=>{const def=getMdefLang(m.key,MDEFS[m.key]);return `<div class="mfav-tile" onclick="${m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`}">${def?.title||m.name}</div>`;}).join('')}
+        ${favMods.map(m=>{const def=getMdefLang(m.key,MDEFS[m.key]);const click=m.tile?`goTextGenTile('${m.tile}')`:(m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`);return `<div class="mfav-tile" onclick="${click}">${def?.title||m.name}</div>`;}).join('')}
       </div>`:'';
     const catMeta=getCatMeta();
     const catCounts={};
@@ -6562,8 +6587,9 @@ function renderModulesList(){
     const def=getMdefLang(m.key,MDEFS[m.key]);
     const displayName=def?.title||m.name;
     const isFav=favs.has(m.key);
-    const shortDesc=def?.desc?safeText(def.desc).replace(/&mdash;/g,'—').slice(0,90)+(def.desc.length>90?'…':''):'';
-    return `<div class="mrow${m.feat?' mrow-feat':''}${m.crisis?' mrow-crisis':''}" onclick="${m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`}">
+    const shortDesc=def?.desc?safeText(def.desc).replace(/&mdash;/g,'—').slice(0,90)+(def.desc.length>90?'…':''):(m.desc||'');
+    const click=m.tile?`goTextGenTile('${m.tile}')`:(m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`);
+    return `<div class="mrow${m.feat?' mrow-feat':''}${m.crisis?' mrow-crisis':''}" onclick="${click}">
       <div class="mrow-left">
         <div class="mrow-name">${displayName}</div>
         <div class="mrow-tag">${m.tag}</div>
