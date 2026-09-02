@@ -4884,7 +4884,7 @@ function cmFillTpl(mfId){
 
 function buildTextGen(prefill,form){
   const tileData=[
-    {id:'linkedin',abbr:'LI',label:'LinkedIn',sub:'Post · Article · Comment',fmtLabel:'LinkedIn Format',fmtOpts:['LinkedIn Post','LinkedIn Article','LinkedIn Comment / Reply'],hasSubscription:true},
+    {id:'linkedin',abbr:'LI',label:'LinkedIn',sub:'Post · Article · Comment',fmtLabel:'Format',fmtOpts:['LinkedIn Post','LinkedIn Article','LinkedIn Comment / Reply'],hasSubscription:true},
     {id:'newsletter',abbr:'NL',label:'Newsletter',sub:'Edition · Section · Teaser',fmtLabel:'Newsletter Format',fmtOpts:['Newsletter — Full Edition','Newsletter — Single Section','Newsletter — Teaser / Preview'],hasSubscription:true},
     {id:'email',abbr:'EM',label:'Email',sub:'External · Internal · Formal',fmtLabel:'Email Type',fmtOpts:['External — Client / Partner','External — Press / Media','Internal — Team Update','Internal — Leadership Memo','Formal — Investor Letter','Formal — Customer Letter'],hasSubscription:false},
     {id:'speech',abbr:'SP',label:'Speech',sub:'Keynote · Opening · Town Hall',fmtLabel:'Speech Format',fmtOpts:['Keynote / Conference Speech','Opening Remarks','Town Hall Address','Award Ceremony Speech','Closing Statement','Other Speech'],hasSubscription:false},
@@ -6460,7 +6460,7 @@ const ALL_MODULES=[
   // standalone "Formal Letter" module is intentionally not listed anymore:
   // the "Brief" entry below already covers it exactly, so it was pure
   // duplication (same fix pattern as the earlier vs-gen/vs-cal removal).
-  {key:'text-gen-linkedin',name:'Social Media',cat:'text-gen',tag:'Text-Generator',tile:'linkedin',enableKey:'text-gen',desc:'LinkedIn Post, Artikel, Kommentar',icon:'ti-brand-linkedin'},
+  {key:'text-gen-linkedin',name:'Social Media',cat:'text-gen',tag:'Text-Generator',tile:'linkedin',enableKey:'text-gen',desc:'LinkedIn — als Post, Artikel oder Kommentar',icon:'ti-brand-linkedin'},
   {key:'text-gen-newsletter',name:'Newsletter',cat:'text-gen',tag:'Text-Generator',tile:'newsletter',enableKey:'text-gen',desc:'Vollausgabe, Einzelbeitrag, Teaser',icon:'ti-news'},
   {key:'text-gen-email',name:'E-Mail',cat:'text-gen',tag:'Text-Generator',tile:'email',enableKey:'text-gen',desc:'Extern, intern, formell',icon:'ti-mail'},
   {key:'text-gen-speech',name:'Rede & Auftritt',cat:'text-gen',tag:'Text-Generator',tile:'speech',enableKey:'text-gen',desc:'Keynote, Townhall, Award',icon:'ti-microphone'},
@@ -6606,12 +6606,13 @@ function renderModulesList(){
     const shortDesc=def?.desc?safeText(def.desc).replace(/&mdash;/g,'—').slice(0,90)+(def.desc.length>90?'…':''):(m.desc||'');
     const click=m.tile?`goTextGenTile('${m.tile}')`:(m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`);
     return `<div class="mrow${m.feat?' mrow-feat':''}${m.crisis?' mrow-crisis':''}" onclick="${click}">
-      <div class="mrow-left" style="${m.icon?'display:flex;align-items:center;gap:12px':''}">
-        ${m.icon?`<i class="ti ${m.icon}" aria-hidden="true" style="font-size:18px;color:var(--mu);flex-shrink:0"></i><div>`:''}
-        <div class="mrow-name">${displayName}</div>
+      <div class="mrow-left">
+        <div style="display:flex;align-items:center;gap:10px">
+          ${m.icon?`<i class="ti ${m.icon}" aria-hidden="true" style="font-size:17px;color:var(--mu);flex-shrink:0;line-height:1"></i>`:''}
+          <div class="mrow-name">${displayName}</div>
+        </div>
         ${m.tile?'':`<div class="mrow-tag">${m.tag}</div>`}
         ${shortDesc?`<div style="font-size:12px;color:var(--mu);margin-top:3px;line-height:1.4">${shortDesc}</div>`:''}
-        ${m.icon?'</div>':''}
       </div>
       <div style="display:flex;align-items:center;gap:6px">
         <button onclick="toggleFav('${m.key}',event)" title="Pin to Quick Access" style="background:none;border:none;cursor:pointer;font-size:15px;padding:4px;color:${isFav?'#f59e0b':'var(--dm)'};line-height:1">${isFav?'★':'☆'}</button>
