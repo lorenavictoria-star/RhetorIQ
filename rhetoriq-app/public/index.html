@@ -6450,8 +6450,8 @@ document.addEventListener('click',e=>{const m=document.getElementById('more-menu
 
 // MODULES LIST PAGE
 const ALL_MODULES=[
-  {key:'profiling',name:'How We Communicate',cat:'foundation',tag:'Basis'},
-  {key:'brand-voice',name:'Brand Voice',cat:'foundation',tag:'Basis — Master Reference'},
+  {key:'profiling',name:'How We Communicate',cat:'foundation',tag:'Basis',icon:'ti-radar-2'},
+  {key:'brand-voice',name:'Brand Voice',cat:'foundation',tag:'Basis — Master Reference',icon:'ti-fingerprint'},
   // Text-Generator formats — each listed individually with its own clear
   // name/icon under its own category, instead of one generic "Text
   // Generator" module hiding eight abbreviated tiles inside it. All eight
@@ -6468,27 +6468,27 @@ const ALL_MODULES=[
   {key:'text-gen-website',name:'Website-Texte',cat:'text-gen',tag:'Text-Generator',tile:'website',enableKey:'text-gen',desc:'Homepage, About, Landing Page',icon:'ti-world'},
   {key:'text-gen-brief',name:'Brief',cat:'text-gen',tag:'Text-Generator',tile:'brief',enableKey:'text-gen',desc:'Formeller Geschäftsbrief',icon:'ti-file-text'},
   {key:'text-gen-custom',name:'Frei / Sonstiges',cat:'text-gen',tag:'Text-Generator',tile:'custom',enableKey:'text-gen',desc:'Talking Points, Proposal, Ankündigung',icon:'ti-sparkles'},
-  {key:'review',name:'Feedback Writer',cat:'creation',tag:'Writing — HR'},
-  {key:'recognition',name:'Appreciation Writer',cat:'creation',tag:'Writing — HR'},
-  {key:'pre-meeting',name:'Meeting Prep',cat:'prevention',tag:'Prevention',feat:true,isNew:true},
-  {key:'arg-reaction',name:'Argument / Reaction Preview',cat:'prevention',tag:'Prevention',isNew:true},
-  {key:'crisis',name:'Crisis Response',cat:'prevention',tag:'Prevention — Emergency',crisis:true},
-  {key:'risk',name:'Risk Scan',cat:'prevention',tag:'Prevention'},
-  {key:'actionability',name:'Clarity Check',cat:'efficiency',tag:'Efficiency'},
-  {key:'thread',name:'Notes to Tasks',cat:'efficiency',tag:'Efficiency'},
-  {key:'rh-translate',name:'Translate',cat:'efficiency',tag:'Efficiency',isNew:true},
-  {key:'before-after',name:'Before / After',cat:'growth',tag:'Growth',isNew:true},
-  {key:'sparring',name:'2-Min. Training',cat:'growth',tag:'Growth',isNew:true},
-  {key:'debrief',name:'Debrief',cat:'growth',tag:'Growth',isNew:true},
+  {key:'review',name:'Feedback Writer',cat:'creation',tag:'Writing — HR',icon:'ti-message-2'},
+  {key:'recognition',name:'Appreciation Writer',cat:'creation',tag:'Writing — HR',icon:'ti-award'},
+  {key:'pre-meeting',name:'Meeting Prep',cat:'prevention',tag:'Prevention',feat:true,isNew:true,icon:'ti-calendar-event'},
+  {key:'arg-reaction',name:'Argument / Reaction Preview',cat:'prevention',tag:'Prevention',isNew:true,icon:'ti-message-question'},
+  {key:'crisis',name:'Crisis Response',cat:'prevention',tag:'Prevention — Emergency',crisis:true,icon:'ti-alert-triangle'},
+  {key:'risk',name:'Risk Scan',cat:'prevention',tag:'Prevention',icon:'ti-shield-search'},
+  {key:'actionability',name:'Clarity Check',cat:'efficiency',tag:'Efficiency',icon:'ti-checkbox'},
+  {key:'thread',name:'Notes to Tasks',cat:'efficiency',tag:'Efficiency',icon:'ti-list-check'},
+  {key:'rh-translate',name:'Translate',cat:'efficiency',tag:'Efficiency',isNew:true,icon:'ti-language'},
+  {key:'before-after',name:'Before / After',cat:'growth',tag:'Growth',isNew:true,icon:'ti-arrows-left-right'},
+  {key:'sparring',name:'2-Min. Training',cat:'growth',tag:'Growth',isNew:true,icon:'ti-target-arrow'},
+  {key:'debrief',name:'Debrief',cat:'growth',tag:'Growth',isNew:true,icon:'ti-clipboard-text'},
   // vs-gen/vs-cal deliberately not listed here — they've had no distinct
   // functionality for a while: opening either just redirects straight into
   // Text Generator (see goModule's remap below), so showing them as their
   // own cards was pure duplication. The remap and MNAMES label stay so old
   // history records referencing these keys still display sensibly.
-  {key:'crisis-toolkit',name:'Crisis Communication Toolkit',cat:'prevention',tag:'Prevention',isNew:true},
-  {key:'competitive-check',name:'Competitive Message Check',cat:'prevention',tag:'Prevention',isNew:true},
-  {key:'presentation',name:'Präsentation & Vortrag',cat:'creation',tag:'Writing',isNew:true},
-  {key:'customer-review',name:'Kundenrezension',cat:'creation',tag:'Writing',isNew:true},
+  {key:'crisis-toolkit',name:'Crisis Communication Toolkit',cat:'prevention',tag:'Prevention',isNew:true,icon:'ti-first-aid-kit'},
+  {key:'competitive-check',name:'Competitive Message Check',cat:'prevention',tag:'Prevention',isNew:true,icon:'ti-scale'},
+  {key:'presentation',name:'Präsentation & Vortrag',cat:'creation',tag:'Writing',isNew:true,icon:'ti-presentation'},
+  {key:'customer-review',name:'Kundenrezension',cat:'creation',tag:'Writing',isNew:true,icon:'ti-star'},
   // Capital Markets Suite — only shown when capitalMarketsEnabled
   {key:'cm-qa-trainer',name:'Analyst Q&A Trainer',cat:'capital-markets',tag:'Capital Markets',isNew:true},
   {key:'cm-equity-story',name:'Equity Story Builder',cat:'capital-markets',tag:'Capital Markets',isNew:true},
