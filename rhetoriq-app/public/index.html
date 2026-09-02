@@ -1360,6 +1360,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div class="mlist-filters" id="mlist-filters" style="display:none">
         <button class="mlist-pill active" id="pill-all" data-label="All" onclick="filterModsCat('all',this)">All</button>
         <button class="mlist-pill" id="pill-foundation" data-label="Basis" onclick="filterModsCat('foundation',this)">Basis</button>
+        <button class="mlist-pill" id="pill-text-gen" data-label="Text-Generator" onclick="filterModsCat('text-gen',this)">Text-Generator</button>
         <button class="mlist-pill" id="pill-creation" data-label="Writing" onclick="filterModsCat('creation',this)">Writing</button>
         <button class="mlist-pill" id="pill-prevention" data-label="Prevention" onclick="filterModsCat('prevention',this)">Prevention</button>
         <button class="mlist-pill" id="pill-efficiency" data-label="Efficiency" onclick="filterModsCat('efficiency',this)">Efficiency</button>
@@ -6635,7 +6636,7 @@ function filterModsList(q){modsSearch=q;renderModulesList();}
 function filterModsCat(cat,btn){
   modsCatFilter=cat;
   document.querySelectorAll('.mlist-pill').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+  if(btn)btn.classList.add('active');
   renderModulesList();
 }
 
