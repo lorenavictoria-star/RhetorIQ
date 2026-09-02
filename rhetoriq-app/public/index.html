@@ -3658,13 +3658,6 @@ async function saveModuleConfig(){
   finally{btn.textContent='Speichern';btn.disabled=false;}
 }
 
-async function revokeClientAccess(cid){
-  if(!confirm('Alle aktiven Sitzungen dieses Klienten (inkl. Team-Mitglieder) sofort beenden? Sie müssten sich neu einloggen.'))return;
-  try{
-    await api('/api/clients/'+cid+'/revoke-access',{method:'POST'});
-    alert('Zugriff für alle aktiven Sitzungen wurde gesperrt.');
-  }catch{alert('Fehler beim Sperren.');}
-}
 async function deleteClient(cid){
   const c=clients.find(x=>x.id==cid);
   const name=c?.name||'this client';
@@ -6177,24 +6170,16 @@ async function loadAdvisorDashboard(){
           <div class="adv-client-bar" style="margin-top:8px"><div class="adv-bar-track"><div class="adv-bar-fill" style="width:${pct}%"></div></div><span style="font-size:10px;color:var(--mu)">${c.analyses_7d||0} this week · Last active ${fmtDate(c.last_activity)}</span></div>
           ${tok?`<div class="tkcode" style="margin-top:8px;font-size:11px">${tokShort}</div>`:''}
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
-            ${tok?`<button class="obtn" onclick="copyTok('${tok}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail(${c.id},'${tok}')">Send by Email</button>`:''}
             <button class="obtn" style="color:#166534;border-color:#bbf7d0;background:#f0fdf4" onclick="sendWelcomeByEmail(${c.id})">Willkommens-E-Mail senden</button>
             <button class="obtn" onclick="openSetPassword(${c.id})">Set Password</button>
             <button class="obtn" onclick="openTeamModal(${c.id})">Team</button>
-            <button class="obtn" onclick="openAuditModal(${c.id})">Audit Log</button>
             <button class="obtn" style="color:#92400e;border-color:#fcd34d;background:#fffbeb" onclick="openFeedbackLearnings(${c.id},'${safeText(c.name)}')">Feedback-Lernstand</button>
             <button class="obtn" style="color:#5b21b6;border-color:#c4b5fd;background:#f5f3ff;font-weight:500" onclick="openModuleConfig(${c.id})"><i class="ti ti-layout-grid" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Module</button>
-            <button class="obtn" style="color:#047857;border-color:#a7f3d0;background:#ecfdf5;font-weight:500" onclick="openHealthScoreAdv(${c.id},'${safeText(c.name)}')">&#9670; Health Score</button>
             <button class="obtn" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-weight:500" onclick="sendPaymentLink(${c.id},this)">Zahlungslink senden</button>
           </div>
           <div id="pay-link-row-${c.id}" style="display:none;margin-top:8px;gap:6px;align-items:center">
             <input id="pay-link-url-${c.id}" type="text" readonly style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--br);border-radius:4px;background:var(--bg2);color:var(--tx);min-width:0">
             <button class="obtn" onclick="navigator.clipboard.writeText(document.getElementById('pay-link-url-${c.id}').value)">Kopieren</button>
-          </div>
-          <div style="display:flex;gap:6px;margin-top:8px">
-            <button class="obtn" onclick="revokeClientAccess(${c.id})">Zugriff sperren</button>
-            <button class="dbtn" onclick="delData(${c.id})">Delete Data</button>
-            <button class="dbtn" onclick="deleteClient(${c.id}).then(()=>loadAdvisorDashboard())">Delete Client</button>
           </div>
         </div>`;
       }).join(''):'<div style="color:var(--mu);font-size:13px;padding:16px 0">No clients yet.</div>'}
