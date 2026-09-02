@@ -1320,6 +1320,16 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
           <div id="memory-sub" style="font-size:13px;color:var(--mu);margin-top:3px">Saved permanently. Injected as context into every analysis.</div>
         </div>
       </div>
+      <div id="mem-upload-box" style="margin-bottom:20px;padding:14px;border:1px dashed var(--bd);border-radius:8px">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px">Referenzdokument hinzufügen</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <select id="mem-upload-type" style="flex:1;min-width:180px"></select>
+          <input type="file" id="mem-upload-file" accept=".txt,.pdf,.docx" multiple style="display:none" onchange="handleMemUpload(this)">
+          <button type="button" class="obtn" onclick="document.getElementById('mem-upload-file').click()">⇧ Datei hochladen</button>
+        </div>
+        <div style="font-size:11px;color:var(--mu);margin-top:6px">Wird zum gewählten Referenz-Typ hinzugefügt — jederzeit nutzbar, nicht nur beim Onboarding.</div>
+        <div id="mem-upload-status" style="font-size:11px;color:var(--dm);margin-top:4px"></div>
+      </div>
       <div id="memory-list"><div class="empty"><div class="ei">&#129504;</div><div id="memory-empty">No memory saved yet.</div></div></div>
     </div>
 
@@ -3886,6 +3896,50 @@ function toggleHomeMore(){
   toggle.classList.toggle('open',open);
   label.textContent=open?(T[LANG]?.home_more_hide||'Weniger anzeigen'):(T[LANG]?.home_more_show||'Statistiken & Übersicht anzeigen');
 }
+// Reference document types an advisor can attach to at any time — not just
+// during onboarding. Mirrors the Text Generator tiles (ref_tg_*) plus the
+// general brand voice source bucket.
+const MEM_REF_TYPES=[
+  {type:'ref_brand_voice_source',label:'Brand Voice — Quellmaterial'},
+  {type:'ref_tg_linkedin',label:'Referenz — LinkedIn'},
+  {type:'ref_tg_newsletter',label:'Referenz — Newsletter'},
+  {type:'ref_tg_email',label:'Referenz — Email'},
+  {type:'ref_tg_speech',label:'Referenz — Speech'},
+  {type:'ref_tg_press',label:'Referenz — Pressemitteilung'},
+  {type:'ref_tg_website',label:'Referenz — Website'},
+  {type:'structural_reference',label:'Struktur-Referenz (gilt für alle Module)'},
+];
+function renderMemUploadTypes(){
+  const sel=document.getElementById('mem-upload-type');
+  if(!sel)return;
+  sel.innerHTML=MEM_REF_TYPES.map(r=>`<option value="${r.type}">${r.label}</option>`).join('');
+}
+async function handleMemUpload(input){
+  if(!clientId){alert('Bitte zuerst einen Klienten auswählen.');return;}
+  const type=document.getElementById('mem-upload-type')?.value;
+  const status=document.getElementById('mem-upload-status');
+  if(status)status.textContent='Lese Dateien…';
+  let combined='';
+  for(const file of Array.from(input.files)){
+    try{
+      const text=await extractText(file);
+      combined+=(combined?'\n---\n':'')+text;
+    }catch(e){alert('Konnte '+file.name+' nicht lesen: '+e.message);}
+  }
+  input.value='';
+  if(!combined){if(status)status.textContent='';return;}
+  try{
+    // Append to any existing content under this reference type rather than
+    // overwriting it — uploading a second document later shouldn't erase
+    // the first one.
+    const existing=memory.find(m=>m.memory_type===type);
+    const merged=existing&&existing.content?existing.content+'\n---\n'+combined:combined;
+    await api('/api/memory/'+clientId+'/'+type,{method:'PUT',body:JSON.stringify({content:merged})});
+    await loadMemory();renderMemory();
+    if(status)status.textContent='✓ Gespeichert.';
+    setTimeout(()=>{if(status)status.textContent='';},2500);
+  }catch(e){if(status)status.textContent='Fehler beim Speichern.';}
+}
 function renderMemory(){
   const list=document.getElementById('memory-list');
   if(!clientId){list.innerHTML='<div class="empty"><div class="ei">&#129504;</div><div>Select a client first.</div></div>';return;}
@@ -4116,7 +4170,7 @@ function goPage(name){
   const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
   document.querySelector('.content').scrollTop=0;
   if(name==='people')loadPeople();
-  if(name==='memory')renderMemory();
+  if(name==='memory'){renderMemory();renderMemUploadTypes();}
   if(name==='brand-voice'){
     const bvWrap=document.getElementById('bv-main-wrap');
     const bvNoClient=document.getElementById('bv-no-client');
@@ -4871,23 +4925,29 @@ function buildTextGen(prefill,form){
         <div class="tg-tile-abbr" style="width:32px;height:32px;font-size:11px">${t.abbr}</div>
         <span style="font-size:15px;font-weight:700;color:var(--tx)">${t.label}</span>
       </div>
-      ${isAdv?`<div style="margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:6px">${tl.tg_template_lbl}</div>
-        <div class="upzone" onclick="document.getElementById('tg-rf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.tg_upload_tpl}</strong><br><span style="font-size:11px;color:var(--mu)">${tl.tg_tpl_sub}</span></div><input type="file" id="tg-rf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-ref-${t.id}','tg-rt-${t.id}')"></div>
-        <div class="ftags" id="tg-rt-${t.id}"></div>
-        <textarea id="tg-ref-${t.id}" placeholder="${tl.tg_tpl_ph}" style="margin-top:6px;min-height:70px;font-size:12px" onblur="saveTgRef('${t.id}')"></textarea>
-        <div id="tg-ref-status-${t.id}" style="font-size:11px;color:var(--dm);margin-top:4px"></div>
-      </div>`:`<textarea id="tg-ref-${t.id}" style="display:none"></textarea>`}
+      <div class="fg2" style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;background:var(--sf);border-radius:6px;font-size:12px;color:var(--mu)">
+          <span id="tg-ref-line-${t.id}">Referenzmaterial…</span>
+          ${isAdv?`<a onclick="goPage('memory')" style="cursor:pointer;font-weight:600;color:var(--ac,#1a3d2e);white-space:nowrap;flex-shrink:0">Verwalten →</a>`:''}
+        </div>
+        <textarea id="tg-ref-${t.id}" style="display:none"></textarea>
+      </div>
       <div class="fg2"><label class="fl2">${t.fmtLabel}</label><select id="tg-fmt-${t.id}">${t.fmtOpts.map(o=>`<option>${o}</option>`).join('')}</select></div>
       ${people.length?buildPeopleSelector():''}
-      <div class="upzone" onclick="document.getElementById('tg-tf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.tg_source_upload}</strong></div><input type="file" id="tg-tf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task-${t.id}','tg-tt-${t.id}')"></div>
+      <div style="display:flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin:14px 0 12px">
+        <button type="button" class="tg-mode-btn" id="tg-mode-new-${t.id}" onclick="tgSetMode('${t.id}','new')" style="flex:1;padding:9px;border:none;cursor:pointer;font-size:12px;font-weight:600">Neu schreiben</button>
+        <button type="button" class="tg-mode-btn" id="tg-mode-revise-${t.id}" onclick="tgSetMode('${t.id}','revise')" style="flex:1;padding:9px;border:none;cursor:pointer;font-size:12px;font-weight:600">Vorhandenes überarbeiten</button>
+      </div>
+      <div id="tg-newmode-upload-${t.id}" class="upzone" onclick="document.getElementById('tg-tf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.tg_source_upload}</strong></div><input type="file" id="tg-tf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task-${t.id}','tg-tt-${t.id}')"></div>
       <div class="ftags" id="tg-tt-${t.id}"></div>
-      ${(()=>{const micRow=`<label class="fl2" style="display:flex;align-items:center;justify-content:space-between">${tl.tg_briefing}<button type="button" class="vbtn-sm" id="tg-voice-${t.id}" onclick="toggleVoiceFor('tg-task-${t.id}','tg-voice-${t.id}')" title="Spracheingabe"><i class="ti ti-microphone"></i></button></label>`;
+      <div id="tg-revisemode-upload-${t.id}" class="upzone" style="display:none" onclick="document.getElementById('tg-df-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Vorhandenen Text/Datei hochladen</strong></div><input type="file" id="tg-df-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-draft-${t.id}','tg-dt-${t.id}')"></div>
+      <div class="ftags" id="tg-dt-${t.id}"></div>
+      <div class="fg2" id="tg-draft-wrap-${t.id}" style="display:none;margin-top:4px"><label class="fl2">Vorhandener Text</label><textarea id="tg-draft-${t.id}" placeholder="${tl.tg_draft_ph||'Fügen Sie hier einen bereits vorhandenen Entwurf ein — er wird nur überarbeitet, an die Brand Voice angepasst und verbessert, statt komplett neu geschrieben zu werden.'}" style="min-height:120px;font-size:12px"></textarea></div>
+      ${(()=>{const micRow=`<label class="fl2" style="display:flex;align-items:center;justify-content:space-between"><span id="tg-task-label-${t.id}">${tl.tg_briefing}</span><button type="button" class="vbtn-sm" id="tg-voice-${t.id}" onclick="toggleVoiceFor('tg-task-${t.id}','tg-voice-${t.id}')" title="Spracheingabe"><i class="ti ti-microphone"></i></button></label>`;
         if(t.id==='email')return `<div class="row2"><div class="fg2">${micRow}<textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:140px"></textarea></div><div class="fg2"><label class="fl2">Original Email &mdash; Reply To (optional)</label><textarea id="tg-reply-email" placeholder="Paste the email you are replying to here. The AI will draft a direct, on-point reply — answering every question raised, matching an appropriate register, and referencing the original naturally." style="min-height:140px"></textarea></div></div>`;
         if(t.id==='brief')return `<div class="fg2">${micRow}<textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px" onblur="suggestBriefSubject('tg-task-brief','tg-br-subject')"></textarea></div>`;
         return `<div class="fg2">${micRow}<textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px"></textarea></div>`;
       })()}
-      <div class="fg2" style="margin-top:4px"><label class="fl2">${tl.tg_draft_lbl||'Vorhandener Entwurf (optional)'}</label><textarea id="tg-draft-${t.id}" placeholder="${tl.tg_draft_ph||'Fügen Sie hier einen bereits vorhandenen Entwurf ein. Ist dieses Feld ausgefüllt, wird der Entwurf nur überarbeitet, an die Brand Voice angepasst und verbessert — statt komplett neu geschrieben. Das Briefing oben dient dann als Anweisung, was konkret verändert werden soll.'}" style="min-height:100px;font-size:12px"></textarea></div>
       <div class="row2">
         <div class="fg2"><label class="fl2">${tl.tg_audience}</label><select id="tg-aud-${t.id}"><option>B2B — C-Suite</option><option>B2B — HR Leaders</option><option>B2B — Finance / Investors</option><option>B2B — General Business</option><option>B2C — General Consumer</option><option>Internal — All Employees</option><option>Internal — Leadership Team</option><option>Media / Journalists</option></select></div>
         <div class="fg2"><label class="fl2">${tl.tg_tone}</label><select id="tg-tone-${t.id}"><option>Aus Voice Profile</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European — understated</option></select></div>
@@ -4980,6 +5040,24 @@ function tgOpenTile(id){
   loadVorbild(id);
   if(id==='newsletter')klvAutoLoad('newsletter');
   if(id==='brief')fillBriefSender('tg-br-sender');
+  // Default to "revise" if a draft was already restored (e.g. from a saved
+  // module draft) so the user doesn't lose their place; otherwise "new".
+  tgSetMode(id,document.getElementById('tg-draft-'+id)?.value?.trim()?'revise':'new');
+}
+// "Neu schreiben" vs "Vorhandenes überarbeiten" — one underlying briefing
+// field either way (the instructions), just relabelled, plus the draft
+// field and its own upload only shown in revise mode. Keeps the two real
+// use cases visually distinct without duplicating the briefing field.
+function tgSetMode(id,mode){
+  const isRevise=mode==='revise';
+  const newBtn=document.getElementById('tg-mode-new-'+id),reviseBtn=document.getElementById('tg-mode-revise-'+id);
+  if(newBtn){newBtn.style.background=isRevise?'var(--sf)':'var(--tx)';newBtn.style.color=isRevise?'var(--tx)':'#fff';}
+  if(reviseBtn){reviseBtn.style.background=isRevise?'var(--tx)':'var(--sf)';reviseBtn.style.color=isRevise?'#fff':'var(--tx)';}
+  const newUp=document.getElementById('tg-newmode-upload-'+id),reviseUp=document.getElementById('tg-revisemode-upload-'+id),draftWrap=document.getElementById('tg-draft-wrap-'+id),taskLbl=document.getElementById('tg-task-label-'+id);
+  if(newUp)newUp.style.display=isRevise?'none':'flex';
+  if(reviseUp)reviseUp.style.display=isRevise?'flex':'none';
+  if(draftWrap)draftWrap.style.display=isRevise?'block':'none';
+  if(taskLbl)taskLbl.textContent=isRevise?'Was soll geändert werden?':(T[LANG]?.tg_briefing||'Briefing / Inhalt');
 }
 function tgCloseTile(id){
   document.getElementById('tg-panel-'+id).style.display='none';
@@ -4992,26 +5070,16 @@ function tgSubToggle(id){
   if(body)body.style.display=enabled?'block':'none';
   if(!enabled)saveTgSubscription(id,false);
 }
-async function saveTgRef(id){
-  if(!clientId)return;
-  const val=document.getElementById('tg-ref-'+id)?.value?.trim();
-  if(!val)return;
-  const status=document.getElementById('tg-ref-status-'+id);
-  status.textContent='Speichern…';
-  try{
-    await api('/api/memory/'+clientId+'/ref_tg_'+id,{method:'PUT',body:JSON.stringify({content:val})});
-    status.textContent='Gespeichert';
-    await loadMemory();
-  }catch(e){status.textContent='Fehler beim Speichern';}
-}
+// Reference material (style examples, templates) is now managed centrally
+// in Company Memory, not per-tile — this just reflects what's already
+// stored there. The advisor edits/uploads it via the "Verwalten" link,
+// never inline in the module panel anymore.
 function loadTgRef(id){
   const m=memory.find(m=>m.memory_type==='ref_tg_'+id);
-  if(m&&m.content){
-    const ta=document.getElementById('tg-ref-'+id);
-    if(ta&&!ta.value)ta.value=m.content;
-    const st=document.getElementById('tg-ref-status-'+id);
-    if(st)st.textContent='Referenz aus Speicher geladen';
-  }
+  const ta=document.getElementById('tg-ref-'+id);
+  if(ta)ta.value=(m&&m.content)||'';
+  const line=document.getElementById('tg-ref-line-'+id);
+  if(line)line.textContent=(m&&m.content)?'✓ Referenzmaterial hinterlegt':'Kein Referenzmaterial hinterlegt';
 }
 function loadTgRefs(){['linkedin','newsletter','email','speech','press','website','custom'].forEach(id=>loadTgRef(id));}
 async function saveLiProfile(){
@@ -5512,7 +5580,6 @@ async function runMod(name){
   let module,data,rid,bid;
   if(name==='brand-voice-co'){module='brand-voice-co';rid='brand-voice-co-r';bid='brand-voice-co-b';const t=g('bv-co-in')||getRefContext('ref_brand_co');if(!t)return alert('Please enter text or save reference documents first.');data={text:t+context,company:g('bv-company'),industry:g('bv-industry'),values:g('bv-values'),audiences:g('bv-audiences')};}
   else if(name==='brand-voice-ind'){module='brand-voice-ind';rid='brand-voice-ind-r';bid='brand-voice-ind-b';const t=g('bv-ind-in')||getRefContext('ref_brand_ind');if(!t)return alert('Please enter text or save reference documents first.');data={text:t+context,person:g('bv-person'),role:g('bv-prole')};}
-  else if(name==='vs-cal'){module='vs-cal';rid='vs-cal-r';bid='vs-cal-b';const t=g('tg-ref');if(!t)return alert('Please enter reference texts.');data={text:t};}
   else if(name==='text-gen'&&arguments[1]==='brief'){const fid='brief';module='brief';rid='text-gen-r-'+fid;bid='text-gen-b-'+fid;const t=g('tg-task-'+fid);if(!t)return alert('Please enter a briefing.');data={text:t+context,sender:g('tg-br-sender'),recipient:g('tg-br-recipient'),subject:g('tg-br-subject'),tone:g('tg-fmt-'+fid)};}
   else if(name==='text-gen'){const fid=arguments[1]||'custom';module='text-gen';rid='text-gen-r-'+fid;bid='text-gen-b-'+fid;const t=g('tg-task-'+fid);if(!t&&!g('tg-draft-'+fid))return alert('Please enter a briefing or an existing draft to revise.');const ref=g('tg-ref-'+fid);const liProf=fid==='linkedin'?(g('tg-li-profile')||''):'';const liCtx=liProf?'\n\n---LINKEDIN PROFILE---\n'+liProf:'';
     let baseTone=g('tg-tone-'+fid)||'';
@@ -5700,7 +5767,6 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
       }
     }
     if(stallTimer){clearTimeout(stallTimer);stallTimer=null;}
-    if(module==='vs-cal')voiceProf=fullText;
     if(['crisis','si','st'].includes(module))showDebriefNudge(module,rid);
     if(['brand-voice-co','brand-voice-ind'].includes(module)&&clientId){
       api('/api/memory/'+clientId+'/brand_voice',{method:'PUT',body:JSON.stringify({content:fullText})}).then(()=>loadMemory()).catch(()=>{});
@@ -5773,7 +5839,6 @@ async function handleFiles(input,targetId,tagsId){
       if(tags){const tag=document.createElement('div');tag.className='ftag';tag.innerHTML='&#128196; '+safeText(file.name)+' <button onclick="this.parentElement.remove()">&times;</button>';tags.appendChild(tag);}
     }catch(e){alert('Could not read '+file.name+': '+e.message);}
   }input.value='';
-  if(targetId.startsWith('tg-ref-')){const id=targetId.replace('tg-ref-','');saveTgRef(id);}
 }
 async function extractText(file){
   const n=file.name.toLowerCase();
@@ -6390,8 +6455,11 @@ const ALL_MODULES=[
   {key:'before-after',name:'Before / After',cat:'growth',tag:'Growth',isNew:true},
   {key:'sparring',name:'2-Min. Training',cat:'growth',tag:'Growth',isNew:true},
   {key:'debrief',name:'Debrief',cat:'growth',tag:'Growth',isNew:true},
-  {key:'vs-gen',name:'Varianten-Generator',cat:'creation',tag:'Varianten'},
-  {key:'vs-cal',name:'Situations-Variante',cat:'creation',tag:'Varianten'},
+  // vs-gen/vs-cal deliberately not listed here — they've had no distinct
+  // functionality for a while: opening either just redirects straight into
+  // Text Generator (see goModule's remap below), so showing them as their
+  // own cards was pure duplication. The remap and MNAMES label stay so old
+  // history records referencing these keys still display sensibly.
   {key:'crisis-toolkit',name:'Crisis Communication Toolkit',cat:'prevention',tag:'Prevention',isNew:true},
   {key:'competitive-check',name:'Competitive Message Check',cat:'prevention',tag:'Prevention',isNew:true},
   {key:'presentation',name:'Präsentation & Vortrag',cat:'creation',tag:'Writing',isNew:true},
