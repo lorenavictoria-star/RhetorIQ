@@ -25,6 +25,15 @@ async function init() {
     );
 
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS email TEXT;
+    -- Client type (individual vs. company) was previously never persisted —
+    -- every welcome-email call site had to pass it fresh each time, and most
+    -- didn't, silently defaulting to "company" even for a person's name
+    -- (e.g. "Joanne Sieber" got addressed as "Sehr geehrte Damen und Herren
+    -- von Joanne Sieber"). Store it once at creation, plus the salutation/
+    -- last name needed for a correct personal greeting.
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS client_type TEXT;
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS salutation TEXT;
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_name TEXT;
     ALTER TABLE analyses DROP CONSTRAINT IF EXISTS analyses_client_id_fkey;
     ALTER TABLE analyses ADD CONSTRAINT analyses_client_id_fkey FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS password_hash TEXT;
