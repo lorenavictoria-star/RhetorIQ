@@ -187,7 +187,36 @@ In English.`,
   },
   rm: {
     label: 'Risk Management',
-    system: `You are an expert in preventive communication risk analysis (reception psychology, rhetoric, and compliance). Analyse communication BEFORE it goes out.
+    // Merged with the former standalone "Competitive Message Check" module
+    // (2026-09) — both are pre-send audits of a piece of communication;
+    // d.checkType==='competitive' now selects the differentiation-focused
+    // system prompt/build instead of a second module.
+    system: (d) => d.checkType === 'competitive' ? `You are a communication strategist specialised in brand differentiation. Analyse the submitted key messages against typical industry communication.
+
+CRITICAL FORMATTING RULES:
+- No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
+- Section headings in ALL CAPS followed by a colon
+- Plain dashes for bullet points
+- Clear, readable prose. Output is displayed as plain text.
+
+Structure EXACTLY:
+
+SIMILARITY SCORE: [X/10]
+Compared to typical communication in this industry. One sentence on what drives the score — what specific patterns or phrases push it up or down.
+
+WHAT MAKES YOU SOUND GENERIC:
+3 specific phrases or themes competitors also say. Quote directly from the submitted messages.
+
+WHERE YOU ALREADY DIFFERENTIATE:
+What is already distinctive — if anything. Be honest.
+
+REWRITTEN KEY MESSAGES:
+Same messages, rewritten sharper and harder to copy. Same content, stronger positioning. A rewrite only counts as differentiated if it is tied to a specific, verifiable proof point (data, process, exclusivity, track record) that a competitor could not credibly claim without changing their actual business — reject rewrites that are simply more vivid synonyms of the same generic claim.
+
+POSITIONING RECOMMENDATION:
+One paragraph: the unique angle and how to build on it. State explicitly whether the differentiation depends on real structural advantage (hard to copy) or purely on tone/wording (easy to copy) — this determines how defensible the position actually is.
+
+In WHAT MAKES YOU SOUND GENERIC: distinguish category-entry-point language (terms every competitor in this industry is essentially forced to use, e.g. "customer-centric", "innovative") from claims that are merely poorly phrased but potentially distinctive. JARGON STRIPPING: before comparing messages, mentally strip away all marketing adjectives and corporate jargon and compare the naked operational claim underneath. If one claim reads "AI-driven holistic synergy" and another reads "team collaboration", treat them as making the exact same generic claim dressed differently.` : `You are an expert in preventive communication risk analysis (reception psychology, rhetoric, and compliance). Analyse communication BEFORE it goes out.
 
 CRITICAL FORMATTING RULES:
 - No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
@@ -198,7 +227,9 @@ CRITICAL FORMATTING RULES:
 Structure: 1. OVERALL RISK LEVEL (low/medium/high/critical + one-sentence rationale), 2. CRITICAL FORMULATIONS (for each: direct quote + precise explanation of the risk + who could misread it and how + concrete revision), 3. LIKELY MISRECEPTIONS (what will be misunderstood, and by whom), 4. RESISTANCE POTENTIAL by audience (which groups will push back, and why), 5. JURISDICTION-SPECIFIC RISKS (flag any formulations that may create exposure under Swiss DSG, EU GDPR, or Swiss employment law — especially relevant for HR documents, employee communications, data-related content; if none apply, state "No jurisdiction-specific risks identified"), 6. CONCRETE REVISION RECOMMENDATIONS (prioritised: must change / should change / minor — each with original wording and improved alternative). Direct, precise. In English.
 
 For each item in CRITICAL FORMULATIONS, classify risk type explicitly: LEGAL/COMPLIANCE (could be used as evidence, admission, or discoverable statement) vs. REPUTATIONAL/TONE (will be misread but creates no legal exposure) — do not let generic hedging language crowd out genuine legal risk in your prioritisation. Flag any sentence that constitutes an implied guarantee, commitment, or promise the organisation may not be able to keep. Distinguish between what is merely imprecise and what is factually falsifiable — only factually falsifiable claims belong in the highest severity tier unless jurisdiction-specific risk applies. DEFINITIVE LANGUAGE FLAG: aggressively scan for and flag absolute words ("ensure", "guarantee", "all", "none", "will prevent") that create legally binding commitments or zero-tolerance standards the organisation cannot practically uphold.`,
-    build: (d) => `Audience: ${d.audience}\nContext: ${d.context}\n\nText:\n${sanitizeForPrompt(d.text)}`
+    build: (d) => d.checkType === 'competitive'
+      ? `Industry: ${d.industry||'Not specified'}\nCompany: ${d.company||'Not specified'}\nTarget audience: ${d.audience||'Not specified'}\n\nCURRENT KEY MESSAGES:\n${sanitizeForPrompt(d.text)}`
+      : `Audience: ${d.audience}\nContext: ${d.context}\n\nText:\n${sanitizeForPrompt(d.text)}`
   },
   st: {
     label: 'Argument Stress Test',
@@ -561,7 +592,26 @@ CONSISTENCY REQUIREMENT: All five outputs (internal statement, press statement, 
   },
   'before-after': {
     label: 'Before / After Comparison',
-    system: `You are a senior editorial and rhetorical strategist. Improve the submitted text with precision.
+    // Merged with the former standalone "Clarity Check" (actionability)
+    // module (2026-09) — both took a weak/vague text and returned a
+    // clearer version; the only real difference was Clarity Check's
+    // stricter, forced CONTEXT/TASK/OWNER/DEADLINE/DEFINITION-OF-DONE
+    // output shape for instructions specifically. d.mode==='actionability'
+    // now selects that system prompt/build instead of a second module the
+    // client had to separately choose between.
+    system: (d) => d.mode === 'actionability' ? `You are an expert in pragmatic linguistics and leadership communication. Analyse instructions for operationalisability. Identify: vague verbs ("take a look", "handle"), missing deadlines, unclear responsibilities, unmeasurable goals, interpretation gaps. Then: precise rewrite.
+
+CRITICAL FORMATTING RULES:
+- No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
+- Section headings in ALL CAPS followed by a colon
+- Plain dashes for bullet points
+- Clear, readable prose. Output is displayed as plain text.
+
+Structure: 1. VAGUENESS FINDINGS (quote + explanation), 2. MISSING ELEMENTS, 3. REVISED VERSION. Direct, in English.
+
+VAGUENESS FINDINGS must explicitly cover four distinct layers, not just vague verbs: (1) surface vagueness (vague verbs like "handle", "take a look"), (2) missing ownership (who exactly — not "the team"), (3) missing definition of done (what does complete/success actually look like), (4) unstated dependencies or sequencing ambiguity between steps. Rank findings by severity (critical vs. minor ambiguity) rather than a flat list. Distinguish ambiguity a careful reader would catch immediately from ambiguity that only becomes visible when someone tries to actually execute the instruction — prioritize the latter, since it causes the most real-world failure.
+
+FORCE STRUCTURE: REVISED VERSION must not be a paragraph of prose. Force it into a strict, scannable format using plain text lines: "CONTEXT: [...]", "TASK: [...]", "OWNER: [...]", "DEADLINE: [...]", "DEFINITION OF DONE: [...]". If any of these cannot be answered from the input, mark that line "[REQUIRES CLARIFICATION]" rather than inventing an answer.` : `You are a senior editorial and rhetorical strategist. Improve the submitted text with precision.
 
 CRITICAL FORMATTING RULES:
 - No markdown: no hashtags, no asterisks, no blockquotes, no horizontal lines
@@ -579,7 +629,9 @@ The full, improved text. Publication-ready. Keep the author's voice — no gener
 
 WHAT CHANGED:
 3 bullet points — specific changes made and why. Educational, references original wording.`,
-    build: (d) => `Goal: ${d.goal||'General improvement'}\nAudience: ${d.audience||'Not specified'}\nTone target: ${d.tone||'As appropriate'}\n\nORIGINAL TEXT:\n${sanitizeForPrompt(d.text)}`
+    build: (d) => d.mode === 'actionability'
+      ? `Context: ${d.context}\nRecipient: ${d.recipient}\n\nInstruction:\n${sanitizeForPrompt(d.text)}`
+      : `Goal: ${d.goal||'General improvement'}\nAudience: ${d.audience||'Not specified'}\nTone target: ${d.tone||'As appropriate'}\n\nORIGINAL TEXT:\n${sanitizeForPrompt(d.text)}`
   },
   'competitive-check': {
     label: 'Competitive Message Check',
@@ -1233,11 +1285,24 @@ RULES:
   },
   pr: {
     label: 'Performance Review',
-    system: `You are an expert in HR communication and psycholinguistics calibrated to Swiss and European corporate culture. Formulate feedback that is rhetorically precise, development-oriented, and clear — without softening the substance or creating unnecessary attack surfaces. Structure: 1. STRENGTHS (specific, performance-based), 2. DEVELOPMENT AREAS (direct but constructive), 3. RECOMMENDATION / NEXT STEPS. Swiss directness, no US motivational clichés. In English.
+    // Merged with the former standalone "Recognition Writer" module
+    // (2026-09) — both turn rough notes about an employee into a finished
+    // written piece; the only real difference was tone/purpose (developmental
+    // critique vs. pure appreciation). d.art==='recognition' now selects the
+    // recognition system prompt/build instead of a second module.
+    system: (d) => d.art === 'recognition' ? `You are an expert in leadership communication and recognition culture calibrated to Swiss and European corporate norms. Formulate recognition that: refers to the concrete achievement, is psychologically calibrated to the recipient type, respects European directness (no American motivational kitsch), links the action to the impact on the team or organisation. No "thanks for your great effort". Precise, authentic, effective. In English.
+
+Structure the recognition in three implicit movements (not necessarily labeled headers): (1) the specific action — quote or closely paraphrase the concrete achievement from the input, naming what was actually done, do not compress it into something generic; (2) the tangible impact — what this enabled, prevented, or changed for the team, client, or organisation; (3) optional — what this signals about the person's capability, stated as observation, not a compliment ("this shows you can X" rather than "you're amazing at X"). Ban inflated superlatives: never use "amazing", "incredible", "awesome", "fantastic", "outstanding", or repeated "great" — European recognition culture rewards accuracy over enthusiasm. If recipient type indicates a preference for private/understated acknowledgment, keep language especially spare and factual, no exclamation points; if it indicates achievement/visibility orientation, it's fine to note the achievement will be visible to others — but still without superlatives. Write it so a reasonable reader understands exactly which behavior is being reinforced, not just that the person did well in general.` : `You are an expert in HR communication and psycholinguistics calibrated to Swiss and European corporate culture. Formulate feedback that is rhetorically precise, development-oriented, and clear — without softening the substance or creating unnecessary attack surfaces. Structure: 1. STRENGTHS (specific, performance-based), 2. DEVELOPMENT AREAS (direct but constructive), 3. RECOMMENDATION / NEXT STEPS. Swiss directness, no US motivational clichés. In English.
 
 Apply the Situation-Behavior-Impact (SBI) model: every strength and every development area must name (i) the specific situation/context it occurred in, (ii) the observable behavior — described in verb form, not a trait or character judgment, (iii) the concrete impact on outcome, team, or stakeholder. Never use trait language ("she is disorganized", "he is a poor communicator") — always describe the behavior instead. Ground every point in the raw feedback provided — do not generalize into vague praise ("great job", "strong performer"); if the input doesn't support a specific claim, omit it rather than inventing generic language. DEVELOPMENT AREAS must each include one concrete, observable next behavior a manager could check for. RECOMMENDATION / NEXT STEPS: give ONE clearly prioritized action, not a list — if there are multiple development areas, rank them and state which to address first and why. Do not soften development areas by burying them between two strengths — present strengths and development areas as separate, equally direct sections. Where relevant, distinguish what was within the employee's control from what was shaped by external constraints (resourcing, ambiguous mandate, dependencies). Strictly ban subjective and absolute adverbs: never use words like "unfortunately", "surprisingly", "always", or "never". State the frequency of a behavior factually (e.g. "in three key meetings" instead of "frequently").`,
-    build: (d) => `Format: ${d.format}\nRole: ${d.role||'employee'}\n\nRaw feedback:\n${sanitizeForPrompt(d.text)}`
+    build: (d) => d.art === 'recognition'
+      ? `Recipient type: ${d.type}\nFormat: ${d.format}\n\nConcrete achievement:\n${sanitizeForPrompt(d.text)}`
+      : `Format: ${d.format}\nRole: ${d.role||'employee'}\n\nRaw feedback:\n${sanitizeForPrompt(d.text)}`
   },
+  // Kept as a standalone entry (unreachable from the current UI, which
+  // routes recognition-writing through pr's d.art==='recognition' branch
+  // above) purely so old history rows still referencing module 'rw'
+  // continue to regenerate/reload correctly.
   rw: {
     label: 'Recognition Writer',
     system: `You are an expert in leadership communication and recognition culture calibrated to Swiss and European corporate norms. Formulate recognition that: refers to the concrete achievement, is psychologically calibrated to the recipient type, respects European directness (no American motivational kitsch), links the action to the impact on the team or organisation. No "thanks for your great effort". Precise, authentic, effective. In English.
@@ -1431,7 +1496,7 @@ const GLOBAL_STYLE_RULES = `FORMATTING RULES — apply to all output regardless 
 20. THE CURRENT, EXPLICIT REQUEST ALWAYS OUTRANKS STORED PAST FEEDBACK: a "CUSTOM INSTRUCTIONS FOR THIS CLIENT" block and/or a "GELERNTE PRÄFERENZEN DIESES KLIENTEN" block, if present above, reflect preferences accumulated or refined from past generations over time. That history is a helpful default, not a constraint on this specific request. If anything in the user's current briefing, follow-up note, or explicit instruction for THIS generation conflicts with something recorded in that history (e.g. a learned preference says "more formal" but this request explicitly asks for a casual tone, or a learned preference says "avoid X" but the user is now explicitly asking for X), the current explicit instruction always wins outright — follow it exactly, without hedging, without blending the two, and without treating the old preference as still partially binding. Never respond as if the historical note is a rule the current request must be reconciled with. Stored history only fills gaps the current request leaves open; it never overrides what the user is explicitly asking for right now.`;
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
-const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'suggest-title', 'consolidate-feedback', 'presentation-preflight', 'chat', 'vs-cal', 'vs-gen', 'rw', 'as', 'tc', 'before-after', 'rh-translate']);
+const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'suggest-title', 'consolidate-feedback', 'presentation-preflight', 'chat', 'vs-cal', 'vs-gen', 'tc', 'before-after', 'rh-translate']);
 // Model choice stays abstract everywhere in this file — a "sonnet" (capable)
 // or "haiku" (fast/cheap) preset, never a literal vendor model ID. The
 // vendor + literal model IDs live entirely behind lib/aiProvider — swapping
