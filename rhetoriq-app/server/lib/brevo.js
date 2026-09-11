@@ -3,7 +3,14 @@ const https = require('https');
 // Shared Brevo transactional email sender, used across routes and jobs.
 async function brevoSend({ to, subject, text, senderName = 'RhetorIQ' }) {
   const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) { console.error('[brevo] BREVO_API_KEY missing'); return; }
+  // Failing loudly here matters: a silent return used to make every caller
+  // (including the welcome-email flow) look like it succeeded — the advisor
+  // saw "E-Mail gesendet" and the client never got anything, with nothing
+  // in the logs pointing at a missing/misconfigured API key.
+  if (!apiKey) {
+    console.error('[brevo] BREVO_API_KEY missing — email not sent');
+    throw new Error('E-Mail-Versand ist nicht konfiguriert (BREVO_API_KEY fehlt).');
+  }
 
   const payload = JSON.stringify({
     sender: { name: senderName, email: process.env.SMTP_FROM || 'contact@lorenalienhard.ch' },

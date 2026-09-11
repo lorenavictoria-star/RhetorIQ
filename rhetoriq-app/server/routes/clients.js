@@ -84,7 +84,7 @@ router.get('/', requireAdvisor, async (req, res) => {
   try {
     await ensureClientAddressColumn();
     const { rows } = await pool.query(
-      'SELECT id, name, industry, contact, slug, token, capital_markets_enabled, hotel_enabled, enabled_modules, address, created_at FROM clients WHERE advisor_id = $1 ORDER BY created_at DESC',
+      'SELECT id, name, industry, contact, slug, token, capital_markets_enabled, hotel_enabled, enabled_modules, address, created_at, email, client_type, salutation, last_name FROM clients WHERE advisor_id = $1 ORDER BY created_at DESC',
       [req.user.id]
     );
     res.json(rows);
