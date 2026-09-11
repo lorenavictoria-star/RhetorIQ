@@ -433,6 +433,11 @@ body.adv .vubtn{display:block}
 .cinp:focus{border-color:var(--tx)}
 .csnd{padding:8px 14px;background:var(--tx);color:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px}
 
+#fbbtn{position:fixed;bottom:calc(20px + var(--safe-bottom));left:20px;width:44px;height:44px;background:var(--ac);border:none;border-radius:50%;cursor:pointer;z-index:200;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.18);font-size:19px;color:#fff}
+#fbbtn:hover{opacity:.88}
+#fbpanel{position:fixed;bottom:calc(76px + var(--safe-bottom));left:20px;width:300px;background:#fff;border:1.5px solid var(--bd);border-radius:12px;z-index:200;display:none;flex-direction:column;box-shadow:0 6px 28px rgba(0,0,0,.12);overflow:hidden}
+#fbpanel.open{display:flex}
+
 /* HOME TWO-COLUMN LAYOUT */
 .home-grid{display:flex;gap:0;align-items:start}
 .home-left{flex:1;min-width:0}
@@ -1919,6 +1924,21 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     </div>
   </div>
   <div class="cft"><input class="cinp" id="chat-input" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')sendChat()"><button class="csnd" id="chat-send-btn" onclick="sendChat()">Send</button></div>
+</div>
+
+<!-- Feedback FAB -->
+<button id="fbbtn" onclick="toggleFeedback()" title="Feedback geben" aria-label="Feedback geben"><i class="ti ti-message-circle-2"></i></button>
+<div id="fbpanel">
+  <div class="chd">
+    <div><div class="cht">Feedback</div><div class="chsub">Was fällt dir auf?</div></div>
+    <button class="chc" onclick="toggleFeedback()">&times;</button>
+  </div>
+  <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+    <textarea id="fb-text" rows="4" placeholder="Kurz beschreiben, was du meinst…" style="width:100%;resize:none;border:1.5px solid var(--bd);border-radius:8px;padding:10px;font-family:inherit;font-size:13.5px"></textarea>
+    <div id="fb-err" style="display:none;font-size:12px;color:#c0392b">Bitte kurz beschreiben, bevor du sendest.</div>
+    <button id="fb-send-btn" class="csnd" style="width:100%;border-radius:8px" onclick="sendFeedback()">Senden</button>
+    <div id="fb-sent" style="display:none;font-size:13px;color:#1a7f4a;text-align:center;padding:4px 0">Danke, angekommen.</div>
+  </div>
 </div>
 
 <!-- Client Onboarding Modal -->
@@ -6009,6 +6029,42 @@ async function deleteAnalysis(id){
 function switchBrand(mode,btn){document.querySelectorAll('.togbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.bsec').forEach(s=>s.classList.remove('active'));document.getElementById('brand-'+mode).classList.add('active');}
 function cp(id){navigator.clipboard.writeText(document.getElementById(id).textContent).catch(()=>{});}
 function toggleChat(){document.getElementById('cpanel').classList.toggle('open');}
+
+function toggleFeedback(){
+  const p=document.getElementById('fbpanel');
+  p.classList.toggle('open');
+  if(p.classList.contains('open')){
+    document.getElementById('fb-err').style.display='none';
+    document.getElementById('fb-sent').style.display='none';
+    document.getElementById('fb-text').style.display='block';
+    document.getElementById('fb-send-btn').style.display='block';
+    document.getElementById('fb-text').focus();
+  }
+}
+async function sendFeedback(){
+  const ta=document.getElementById('fb-text');
+  const err=document.getElementById('fb-err');
+  const msg=ta.value.trim();
+  if(!msg){err.style.display='block';return;}
+  err.style.display='none';
+  const btn=document.getElementById('fb-send-btn');
+  btn.disabled=true;btn.textContent='Wird gesendet…';
+  const activePage=document.querySelector('.page.active');
+  const pageContext=activePage?activePage.id.replace('page-',''):(document.title||'unbekannt');
+  try{
+    const r=await api('/api/feedback',{method:'POST',body:JSON.stringify({message:msg,pageContext})});
+    if(!r.ok)throw new Error();
+    document.getElementById('fb-sent').style.display='block';
+    ta.style.display='none';
+    btn.style.display='none';
+    ta.value='';
+  }catch{
+    err.textContent='Senden fehlgeschlagen — bitte erneut versuchen.';
+    err.style.display='block';
+  }finally{
+    btn.disabled=false;btn.textContent='Senden';
+  }
+}
 
 function chatQuick(msg){
   document.getElementById('chat-qr')?.remove();

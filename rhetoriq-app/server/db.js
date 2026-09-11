@@ -293,6 +293,20 @@ async function init() {
     );
     CREATE INDEX IF NOT EXISTS generation_errors_created_idx ON generation_errors(created_at DESC);
   `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS feedback_notes (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL,
+      advisor_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      author_role TEXT,
+      author_label TEXT,
+      page_context TEXT,
+      message TEXT NOT NULL,
+      ai_solution TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS feedback_notes_created_idx ON feedback_notes(created_at DESC);
+  `);
 }
 
 module.exports = { pool, init };
