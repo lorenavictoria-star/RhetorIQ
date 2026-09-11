@@ -1345,6 +1345,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
           <button class="add-btn" id="clients-add-btn" onclick="openModal('nc-ov')">+ New Client</button>
         </div>
       </div>
+      <input type="text" id="clients-search" placeholder="Klient suchen…" oninput="filterAdvClients(this.value)" style="width:100%;padding:10px 14px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-bottom:14px;box-sizing:border-box;font-family:'Instrument Sans',sans-serif;color:var(--tx)">
       <div id="adv-dash-content"><div class="empty"><div class="ei">&#9711;</div><div>Loading&#8230;</div></div></div>
     </div>
 
@@ -3015,12 +3016,12 @@ async function loadUsage(){
     if(!d.rows.length){tbl.innerHTML='<div style="color:var(--mu);font-size:13px;padding:20px 0">No analyses recorded yet.</div>';return;}
     tbl.innerHTML=`
       <div style="display:grid;grid-template-columns:1fr 90px 90px 70px 90px 100px;gap:0;border:1px solid var(--bd);border-radius:8px;overflow:hidden">
-        <div style="padding:12px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd)">Client</div>
-        <div style="padding:12px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">This month</div>
-        <div style="padding:12px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Last month</div>
+        <div style="padding:12px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd)">Klient</div>
+        <div style="padding:12px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Dieser Monat</div>
+        <div style="padding:12px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Letzter Monat</div>
         <div style="padding:12px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Total</div>
-        <div style="padding:12px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Est. cost</div>
-        <div style="padding:12px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd)">Last active</div>
+        <div style="padding:12px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd);text-align:right">Kosten (geschätzt)</div>
+        <div style="padding:12px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);background:var(--sf);border-bottom:1px solid var(--bd)">Zuletzt aktiv</div>
         ${d.rows.map((row,i)=>{
           const border=i<d.rows.length-1?'border-bottom:1px solid var(--bd)':'';
           const last=row.last_activity?new Date(row.last_activity).toLocaleDateString('de-CH'):'—';
@@ -3034,7 +3035,7 @@ async function loadUsage(){
             <div style="padding:14px 16px;font-size:13px;color:var(--mu);${border}">${last}</div>`;
         }).join('')}
       </div>
-      <div style="font-size:12px;color:var(--mu);margin-top:12px">Cost estimate based on avg 2,500 input + 1,000 output tokens/call at Claude Sonnet pricing ($3/$15 per 1M tokens). Actual costs may vary.</div>`;
+      <div style="font-size:12px;color:var(--mu);margin-top:12px">Kosten pro Klient sind eine Schätzung (Ø 2'500 Input- + 1'000 Output-Token/Aufruf, Claude-Sonnet-Preise). Nur die Gesamtsumme oben ("This month"/"All time") basiert, wo verfügbar, auf echten Token-Zahlen — die einzelnen Klienten-Zeilen nicht.</div>`;
   }catch(e){sum.innerHTML=`<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;}
 }
 // ── TOKEN COSTS PER CLIENT ────────────────────────────────────
@@ -4277,14 +4278,14 @@ function toggleHomeRight(){
 function renderHomeModuleList(){
   const list=document.getElementById('hm-list');
   if(!list)return;
-  const CAT_LABEL={foundation:'Basis',creation:'Writing',prevention:'Prevention',efficiency:'Efficiency',growth:'Growth'};
+  const catMeta=getCatMeta();
   const catOrder=['foundation','creation','prevention','efficiency','growth'];
   let html='';
   let lastCat='';
   const sorted=[...ALL_MODULES].sort((a,b)=>catOrder.indexOf(a.cat)-catOrder.indexOf(b.cat));
   sorted.forEach(m=>{
     if(m.cat!==lastCat){
-      html+=`<div class="hm-cat-divider">${CAT_LABEL[m.cat]||m.cat}</div>`;
+      html+=`<div class="hm-cat-divider">${catMeta[m.cat]?.label||m.cat}</div>`;
       lastCat=m.cat;
     }
     const dest=m.key==='brand-voice'?`goPage('brand-voice')`:`goModule('${m.key}')`;
@@ -4297,7 +4298,7 @@ function renderHomeModuleList(){
 async function buildMostUsed(){
   const pills=document.getElementById('mu-pills');
   if(!pills)return;
-  const MOD_LABELS={'rp':'How We Communicate','cf':'Language Over Time','la':'Argument / Reaction Preview','rm':'Risk Scan','st':'Argument / Reaction Preview','si':'Argument / Reaction Preview','crisis':'Crisis Response','as':'Clarity Check','tc':'Notes to Tasks','rh-translate':'Translate','text-gen':'Text Generator','pr':'Feedback Writer','rw':'Appreciation Writer','sparring':'2-Min. Training','debrief':'Debrief','brand-voice-co':'Brand Voice','brand-voice-ind':'Brand Voice','pre-meeting':'Meeting Prep'};
+  const MOD_LABELS={'rp':'Kommunikationsanalyse','cf':'Sprache im Zeitverlauf','la':'Argument / Reaktions-Vorschau','rm':'Risiko-Scan','st':'Argument / Reaktions-Vorschau','si':'Argument / Reaktions-Vorschau','crisis':'Krisenreaktion','as':'Klarheits-Check','tc':'Notizen zu Aufgaben','rh-translate':'Übersetzen','text-gen':'Texten','pr':'Feedback-Schreiber','rw':'Wertschätzungs-Schreiber','sparring':'2-Min. Training','debrief':'Nachbesprechung','brand-voice-co':'Brand Voice','brand-voice-ind':'Brand Voice','pre-meeting':'Meeting-Vorbereitung'};
   const MOD_PAGE={'rp':'profiling','cf':'fingerprint','la':'language','rm':'risk','st':'stress','si':'impact','crisis':'crisis','as':'actionability','tc':'thread','rh-translate':'rh-translate','text-gen':'text-gen','pr':'review','rw':'recognition','sparring':'sparring','debrief':'debrief','brand-voice-co':'brand-voice','brand-voice-ind':'brand-voice','pre-meeting':'pre-meeting'};
   let extra=[];
   try{
@@ -4437,7 +4438,7 @@ const MDEFS={
   review:{title:'Feedback Writer',desc:'Rough notes about an employee in, precise written performance feedback out.',mf:'pr-in',ph:'"Often late, delivers strong quality, saved the client project last month, struggles with prioritisation..."',api:'pr',people:true,fields:[{id:'pr-role',type:'text',lbl:"Employee's Role",ph:'e.g. Senior Analyst, Project Manager'},{id:'pr-fmt',type:'sel',lbl:'Format',opts:['Written appraisal (HR document)','Verbal feedback (conversation guide)','360 feedback','Probationary review']}]},
   recognition:{title:'Appreciation Writer',desc:'Write a recognition for any employee that feels personal and genuine &mdash; not generic copy-paste.',mf:'rw-in',ph:'"Meier worked over the weekend to rescue the database migration. The client noticed. Said it was the best handover they ever received."',api:'rw',people:true,fields:[{id:'rw-type',type:'sel',lbl:'Recipient Type',opts:['The Analyst &mdash; values precision and evidence','The Executor &mdash; values impact and results','The Team Player &mdash; values group contribution','The Visionary &mdash; values ideas and vision','The Pragmatist &mdash; wants direct acknowledgement']},{id:'rw-fmt',type:'sel',lbl:'Format',opts:['Verbal recognition (conversation)','Written acknowledgement (email)','Public praise (team meeting)','Formal recognition (HR document)']}]},
   'text-gen':{title:'Text Generator',desc:'Briefing in, finished text out. LinkedIn, speech, press release, email &mdash; any format, in the authentic brand voice.',api:'text-gen',special:'textgen'},
-  brief:{title:'Formal Letter',desc:'Complete, properly formatted formal business letter &mdash; sender, recipient, subject line, salutation, and closing all done correctly.',mf:'br-in',ph:'What is this letter about? Key points, purpose, and any specific decisions or requests to communicate...',api:'brief',fields:[{id:'br-sender',type:'text',lbl:'Sender (name, company, address) <a onclick="editClientAddress(\'br-sender\')" style="cursor:pointer;text-decoration:underline;font-weight:400;text-transform:none;letter-spacing:0;font-size:11px">&#9998; hinterlegen</a>',ph:'e.g. Lorena Lienhard, RhetorIQ AG, Bahnhofstrasse 1, 8001 Zürich'},{id:'br-recipient',type:'text',lbl:'Recipient (name, company, address)',ph:'e.g. Herr Peter Muster, Muster AG, Musterstrasse 5, 8000 Zürich'},{id:'br-subject',type:'text',lbl:'Subject Line (Betreff)',ph:'e.g. Kündigung des Mietvertrags per 30.09.2026'},{id:'br-tone',type:'sel',lbl:'Briefart',opts:['Privatbrief — persönlich, an Einzelperson','Geschäftsbrief — formal, an Unternehmen/Partner','Behördenbrief / Amtliches Schreiben — sehr formal, rechtlich/behördlich']}]},
+  brief:{title:'Brief',desc:'Vollständiger, korrekt formatierter Geschäfts- oder Privatbrief &mdash; Absender, Empfänger, Betreff, Anrede und Grussformel richtig gesetzt.',mf:'br-in',ph:'Worum geht es in diesem Brief? Kernpunkte, Zweck und allfällige konkrete Entscheidungen oder Anliegen...',api:'brief',fields:[{id:'br-sender',type:'text',lbl:'Absender (Name, Firma, Adresse) <a onclick="editClientAddress(\'br-sender\')" style="cursor:pointer;text-decoration:underline;font-weight:400;text-transform:none;letter-spacing:0;font-size:11px">&#9998; hinterlegen</a>',ph:'z.B. Lorena Lienhard, RhetorIQ AG, Bahnhofstrasse 1, 8001 Zürich'},{id:'br-recipient',type:'text',lbl:'Empfänger (Name, Firma, Adresse)',ph:'z.B. Herr Peter Muster, Muster AG, Musterstrasse 5, 8000 Zürich'},{id:'br-subject',type:'text',lbl:'Betreff',ph:'z.B. Kündigung des Mietvertrags per 30.09.2026'},{id:'br-tone',type:'sel',lbl:'Briefart',opts:['Privatbrief — persönlich, an Einzelperson','Geschäftsbrief — formal, an Unternehmen/Partner','Behördenbrief / Amtliches Schreiben — sehr formal, rechtlich/behördlich']}]},
   'ghostwriter':{title:'Ghostwriter Mode',desc:'Paste past texts — emails, posts, speeches. The AI extracts your exact voice and writes new content that sounds authentically like you. No prompting required.',mf:'gw-in',ph:'Paste past texts here — emails, LinkedIn posts, speeches, memos. The more diverse, the better the style match.',api:'ghostwriter',mh:'160px',twopart:true,fields:[{id:'gw-format',type:'sel',lbl:'Format',opts:['LinkedIn Post','Email','Internal Announcement','Speech / Opening','Newsletter Section','Press Release','Custom']},{id:'gw-audience',type:'text',lbl:'Target Audience',ph:'e.g. Board, employees, media, LinkedIn followers'},{id:'gw-briefing',type:'ta',lbl:'What to write (briefing)',ph:'e.g. Announce our Q1 results with optimism but realism. Mention the new HR strategy without details yet.'},{id:'gw-length',type:'text',lbl:'Length guidance',ph:'e.g. 200 words, 3 paragraphs'}]},
   'crisis-toolkit':{title:'Crisis Communication Toolkit',desc:'Something happened. Get a complete communication kit in 2 minutes: internal statement, press release, employee FAQ, social media holding, action checklist.',mf:'ctk-in',ph:'Describe the situation with hard facts: what happened, when, who is affected, what is publicly known.',api:'crisis-toolkit',fields:[{id:'ctk-type',type:'sel',lbl:'Crisis Type',opts:['Reputational damage / Shitstorm','Workplace accident / Safety incident','Media leak / Unwanted disclosure','Leadership scandal','Product failure / Recall','Financial irregularity','Cybersecurity incident','Other']},{id:'ctk-company',type:'text',lbl:'Company / Context',ph:'e.g. Acme AG, Swiss SME, 200 employees'},{id:'ctk-aud',type:'text',lbl:'Affected Stakeholders',ph:'e.g. Employees, media, investors, customers'}]},
   'before-after':{title:'Before / After',desc:'Paste any text. Get a diagnosis of what is weak, a fully improved version, and a clear explanation of every change made.',mf:'ba-in',ph:'Paste the original text here — email, statement, announcement, speech section, LinkedIn post...',api:'before-after',fields:[{id:'ba-goal',type:'sel',lbl:'Improvement Goal',opts:['General improvement','More clarity & directness','More authority & presence','Warmer & more human','Stronger argumentation','Shorter & sharper']},{id:'ba-aud',type:'text',lbl:'Target Audience',ph:'e.g. Employees, investors, media'},{id:'ba-tone',type:'sel',lbl:'Tone Target',opts:['Keep existing tone','More formal','More conversational','Swiss / European — understated','International executive']}]},
@@ -4849,7 +4850,7 @@ function buildForm(name,def,prefill,form){
   h+=`<div class="ftags" id="mt-${name}"></div>`;
   const tplBtn=def.tpl?`<button type="button" onclick="cmFillTpl('${def.mf}')" style="margin-left:8px;padding:2px 9px;font-size:11px;border:1px solid var(--ac);border-radius:4px;background:transparent;cursor:pointer;font-family:inherit;color:var(--ac);font-weight:600;letter-spacing:.01em">📋 Prompt laden</button>`:'';
   const mfBlur=name==='brief'?` onblur="suggestBriefSubject('${def.mf}','br-subject')"`:'';
-  h+=`<div class="fg2"><label class="fl2">${tl.form_text}${tplBtn}</label><textarea id="${def.mf}" placeholder="${def.ph||''}" style="min-height:${def.mh||'130px'}"${mfBlur}></textarea></div>`;
+  h+=`<div class="fg2"><label class="fl2">${tl.form_text}${tplBtn}</label><div style="font-size:11px;color:var(--mu);margin:3px 0 6px">${LANG==='de'?'Je konkreter, desto besser das Ergebnis.':'The more concrete, the better the result.'}</div><textarea id="${def.mf}" placeholder="${def.ph||''}" style="min-height:${def.mh||'130px'}"${mfBlur}></textarea></div>`;
   if(def.twopart){const f2=def.fields.find(f=>f.type==='ta');if(f2)h+=`<div class="fg2"><label class="fl2">${f2.lbl}</label><textarea id="${f2.id}" placeholder="${f2.ph||''}"></textarea></div>`;}
   const others=def.fields.filter(f=>f.type!=='ta');
   if(others.length){h+=`<div class="row2">`;others.forEach(f=>{if(f.type==='text')h+=`<div class="fg2"><label class="fl2">${f.lbl}</label><input type="text" id="${f.id}" placeholder="${f.ph||''}"></div>`;else h+=`<div class="fg2"><label class="fl2">${f.lbl}</label><select id="${f.id}">${f.opts.map(o=>`<option>${o}</option>`).join('')}</select></div>`;});h+=`</div>`;}
@@ -4947,9 +4948,10 @@ function buildTextGen(prefill,form){
       <div class="ftags" id="tg-dt-${t.id}"></div>
       <div class="fg2" id="tg-draft-wrap-${t.id}" style="display:none;margin-top:4px"><label class="fl2">Vorhandener Text</label><textarea id="tg-draft-${t.id}" placeholder="${tl.tg_draft_ph||'Fügen Sie hier einen bereits vorhandenen Entwurf ein — er wird nur überarbeitet, an die Brand Voice angepasst und verbessert, statt komplett neu geschrieben zu werden.'}" style="min-height:120px;font-size:12px"></textarea></div>
       ${(()=>{const micRow=`<label class="fl2" style="display:flex;align-items:center;justify-content:space-between"><span id="tg-task-label-${t.id}">${tl.tg_briefing}</span><button type="button" class="vbtn-sm" id="tg-voice-${t.id}" onclick="toggleVoiceFor('tg-task-${t.id}','tg-voice-${t.id}')" title="Spracheingabe"><i class="ti ti-microphone"></i></button></label>`;
-        if(t.id==='email')return `<div class="row2"><div class="fg2">${micRow}<textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:140px"></textarea></div><div class="fg2"><label class="fl2">Original Email &mdash; Reply To (optional)</label><textarea id="tg-reply-email" placeholder="Paste the email you are replying to here. The AI will draft a direct, on-point reply — answering every question raised, matching an appropriate register, and referencing the original naturally." style="min-height:140px"></textarea></div></div>`;
-        if(t.id==='brief')return `<div class="fg2">${micRow}<textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px" onblur="suggestBriefSubject('tg-task-brief','tg-br-subject')"></textarea></div>`;
-        return `<div class="fg2">${micRow}<textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px"></textarea></div>`;
+        const briefTip=`<div style="font-size:11px;color:var(--mu);margin:3px 0 6px">${LANG==='de'?'Je konkreter das Briefing, desto besser das Ergebnis — Anlass, Zielgruppe und Kernbotschaft nennen.':'The more concrete the briefing, the better the result — name the occasion, audience, and core message.'}</div>`;
+        if(t.id==='email')return `<div class="row2"><div class="fg2">${micRow}${briefTip}<textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:140px"></textarea></div><div class="fg2"><label class="fl2">Original Email &mdash; Reply To (optional)</label><textarea id="tg-reply-email" placeholder="Paste the email you are replying to here. The AI will draft a direct, on-point reply — answering every question raised, matching an appropriate register, and referencing the original naturally." style="min-height:140px"></textarea></div></div>`;
+        if(t.id==='brief')return `<div class="fg2">${micRow}${briefTip}<textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px" onblur="suggestBriefSubject('tg-task-brief','tg-br-subject')"></textarea></div>`;
+        return `<div class="fg2">${micRow}${briefTip}<textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px"></textarea></div>`;
       })()}
       <div class="row2">
         <div class="fg2"><label class="fl2">${tl.tg_audience}</label><select id="tg-aud-${t.id}"><option>B2B — C-Suite</option><option>B2B — HR Leaders</option><option>B2B — Finance / Investors</option><option>B2B — General Business</option><option>B2C — General Consumer</option><option>Internal — All Employees</option><option>Internal — Leadership Team</option><option>Media / Journalists</option></select></div>
@@ -5570,7 +5572,10 @@ const GEN_THINKING_PHASES_EN=['Drafting …','Checking against the brand voice �
 function startThinkingIndicator(body,twoPass){
   const phases=(LANG==='de'?GEN_THINKING_PHASES_DE:GEN_THINKING_PHASES_EN);
   const label=twoPass?phases[0]:(LANG==='de'?'Wird geschrieben …':'Writing …');
-  body.innerHTML=`<div class="gen-thinking"><span class="gen-dots"><span></span><span></span><span></span></span><span id="gen-thinking-label">${label}</span></div>`;
+  const timeHint=LANG==='de'
+    ?(twoPass?'Dauert meist 30–60 Sekunden.':'Dauert meist 10–20 Sekunden.')
+    :(twoPass?'Usually takes 30–60 seconds.':'Usually takes 10–20 seconds.');
+  body.innerHTML=`<div class="gen-thinking"><span class="gen-dots"><span></span><span></span><span></span></span><span id="gen-thinking-label">${label}</span></div><div style="font-size:11.5px;color:var(--mu);margin-top:4px">${timeHint}</div>`;
   if(!twoPass)return null;
   let i=0;
   return setInterval(()=>{
@@ -6273,7 +6278,7 @@ async function loadAdvisorDashboard(){
           :subSt==='cancelled'
           ?'<span style="font-size:11px;font-weight:600;color:#b91c1c">&#9679; Abgelaufen</span>'
           :'<span style="font-size:11px;font-weight:600;color:#92400e">&#9679; Trial</span>';
-        return`<div class="adv-client-card">
+        return`<div class="adv-client-card" data-client-name="${safeText(c.name).toLowerCase()}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
               <div class="adv-client-name" style="display:flex;align-items:center;gap:8px">${safeText(c.name)} ${subBadge}</div>
@@ -6307,6 +6312,12 @@ async function loadAdvisorDashboard(){
           <div class="adv-feed-date">${fmtDateShort(a.created_at)}</div>
         </div>`).join('')}</div>`:''}`;
   }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:13px">Error: ${e.message}</div>`;}
+}
+function filterAdvClients(q){
+  const query=q.trim().toLowerCase();
+  document.querySelectorAll('#adv-dash-content .adv-client-card').forEach(card=>{
+    card.style.display=(!query||(card.dataset.clientName||'').includes(query))?'':'none';
+  });
 }
 
 async function sendPaymentLink(clientId, btn) {
@@ -6401,9 +6412,13 @@ async function loadAdvisorReviews(){
     list.innerHTML=pending.map(rv=>{
       const clientName=(clients.find(c=>c.id===rv.client_id)||{}).name||'—';
       const canOpenInModule=!!(rv.module_key&&rv.review_context);
+      const ageMs=Date.now()-new Date(rv.created_at).getTime();
+      const ageH=ageMs/3600000;
+      const ageLabel=ageH<1?`${Math.max(1,Math.round(ageMs/60000))} Min.`:`${ageH.toFixed(1)} Std.`;
+      const ageColor=ageH>3?'#b91c1c':(ageH>1.5?'#92400e':'#047857');
       return `
       <div class="rev-card" id="rvc-${rv.id}">
-        <div class="rev-card-meta">${safeText(clientName)} — ${safeText(rv.module_label||'Result')} &mdash; ${new Date(rv.created_at).toLocaleDateString('de-CH')}</div>
+        <div class="rev-card-meta">${safeText(clientName)} — ${safeText(rv.module_label||'Result')} &mdash; ${new Date(rv.created_at).toLocaleDateString('de-CH')} <span style="font-weight:600;color:${ageColor}">&middot; vor ${ageLabel}${ageH>3?' — SLA überschritten':''}</span></div>
         ${rv.client_note?`<div style="font-size:12px;color:var(--tx);background:var(--sf);border-left:3px solid var(--ac,#1a3d2e);padding:6px 10px;margin-bottom:8px;border-radius:0 6px 6px 0">💬 ${safeText(rv.client_note)}</div>`:''}
         <div class="rev-card-orig">${rv.original_text}</div>
         ${canOpenInModule?`<button class="rev-savebtn" style="width:100%;margin-bottom:8px" onclick="openReviewInModule(${rv.id})">Im Modul bearbeiten →</button>`:''}
@@ -6540,7 +6555,7 @@ document.addEventListener('click',e=>{const m=document.getElementById('more-menu
 
 // MODULES LIST PAGE
 const ALL_MODULES=[
-  {key:'profiling',name:'How We Communicate',cat:'foundation',tag:'Basis',icon:'ti-radar-2'},
+  {key:'profiling',name:'Kommunikationsanalyse',cat:'foundation',tag:'Basis',icon:'ti-radar-2'},
   {key:'brand-voice',name:'Brand Voice',cat:'foundation',tag:'Basis — Master Reference',icon:'ti-fingerprint'},
   // Text-Generator formats — each listed individually with its own clear
   // name/icon under its own category, instead of one generic "Text
@@ -6558,27 +6573,27 @@ const ALL_MODULES=[
   {key:'text-gen-website',name:'Website-Texte',cat:'text-gen',tag:'Texten',tile:'website',enableKey:'text-gen',desc:'Homepage, About, Landing Page',icon:'ti-world'},
   {key:'text-gen-brief',name:'Brief',cat:'text-gen',tag:'Texten',tile:'brief',enableKey:'text-gen',desc:'Formeller Geschäftsbrief',icon:'ti-file-text'},
   {key:'text-gen-custom',name:'Frei / Sonstiges',cat:'text-gen',tag:'Texten',tile:'custom',enableKey:'text-gen',desc:'Talking Points, Proposal, Ankündigung',icon:'ti-sparkles'},
-  {key:'review',name:'Feedback Writer',cat:'creation',tag:'Writing — HR',icon:'ti-message-2'},
-  {key:'recognition',name:'Appreciation Writer',cat:'creation',tag:'Writing — HR',icon:'ti-award'},
-  {key:'pre-meeting',name:'Meeting Prep',cat:'prevention',tag:'Prevention',feat:true,isNew:true,icon:'ti-calendar-event'},
-  {key:'arg-reaction',name:'Argument / Reaction Preview',cat:'prevention',tag:'Prevention',isNew:true,icon:'ti-message-question'},
-  {key:'crisis',name:'Crisis Response',cat:'prevention',tag:'Prevention — Emergency',crisis:true,icon:'ti-alert-triangle'},
-  {key:'risk',name:'Risk Scan',cat:'prevention',tag:'Prevention',icon:'ti-shield-search'},
-  {key:'actionability',name:'Clarity Check',cat:'efficiency',tag:'Efficiency',icon:'ti-checkbox'},
-  {key:'thread',name:'Notes to Tasks',cat:'efficiency',tag:'Efficiency',icon:'ti-list-check'},
-  {key:'rh-translate',name:'Translate',cat:'efficiency',tag:'Efficiency',isNew:true,icon:'ti-language'},
-  {key:'before-after',name:'Before / After',cat:'growth',tag:'Growth',isNew:true,icon:'ti-arrows-left-right'},
-  {key:'sparring',name:'2-Min. Training',cat:'growth',tag:'Growth',isNew:true,icon:'ti-target-arrow'},
-  {key:'debrief',name:'Debrief',cat:'growth',tag:'Growth',isNew:true,icon:'ti-clipboard-text'},
+  {key:'review',name:'Feedback-Schreiber',cat:'creation',tag:'Schreiben & Antworten — HR',icon:'ti-message-2'},
+  {key:'recognition',name:'Wertschätzungs-Schreiber',cat:'creation',tag:'Schreiben & Antworten — HR',icon:'ti-award'},
+  {key:'pre-meeting',name:'Meeting-Vorbereitung',cat:'prevention',tag:'Krisen & Prävention',feat:true,isNew:true,icon:'ti-calendar-event'},
+  {key:'arg-reaction',name:'Argument / Reaktions-Vorschau',cat:'prevention',tag:'Krisen & Prävention',isNew:true,icon:'ti-message-question'},
+  {key:'crisis',name:'Krisenreaktion',cat:'prevention',tag:'Krisen & Prävention — Notfall',crisis:true,icon:'ti-alert-triangle'},
+  {key:'risk',name:'Risiko-Scan',cat:'prevention',tag:'Krisen & Prävention',icon:'ti-shield-search'},
+  {key:'actionability',name:'Klarheits-Check',cat:'efficiency',tag:'Effizienz',icon:'ti-checkbox'},
+  {key:'thread',name:'Notizen zu Aufgaben',cat:'efficiency',tag:'Effizienz',icon:'ti-list-check'},
+  {key:'rh-translate',name:'Übersetzen',cat:'efficiency',tag:'Effizienz',isNew:true,icon:'ti-language'},
+  {key:'before-after',name:'Vorher / Nachher',cat:'growth',tag:'Wachstum',isNew:true,icon:'ti-arrows-left-right'},
+  {key:'sparring',name:'2-Min. Training',cat:'growth',tag:'Wachstum',isNew:true,icon:'ti-target-arrow'},
+  {key:'debrief',name:'Nachbesprechung',cat:'growth',tag:'Wachstum',isNew:true,icon:'ti-clipboard-text'},
   // vs-gen/vs-cal deliberately not listed here — they've had no distinct
   // functionality for a while: opening either just redirects straight into
   // Text Generator (see goModule's remap below), so showing them as their
   // own cards was pure duplication. The remap and MNAMES label stay so old
   // history records referencing these keys still display sensibly.
-  {key:'crisis-toolkit',name:'Crisis Communication Toolkit',cat:'prevention',tag:'Prevention',isNew:true,icon:'ti-first-aid-kit'},
-  {key:'competitive-check',name:'Competitive Message Check',cat:'prevention',tag:'Prevention',isNew:true,icon:'ti-scale'},
-  {key:'presentation',name:'Präsentation & Vortrag',cat:'creation',tag:'Writing',isNew:true,icon:'ti-presentation'},
-  {key:'customer-review',name:'Kundenrezension',cat:'creation',tag:'Writing',isNew:true,icon:'ti-star'},
+  {key:'crisis-toolkit',name:'Krisen-Kommunikationspaket',cat:'prevention',tag:'Krisen & Prävention',isNew:true,icon:'ti-first-aid-kit'},
+  {key:'competitive-check',name:'Wettbewerbs-Botschafts-Check',cat:'prevention',tag:'Krisen & Prävention',isNew:true,icon:'ti-scale'},
+  {key:'presentation',name:'Präsentation & Vortrag',cat:'creation',tag:'Schreiben & Antworten',isNew:true,icon:'ti-presentation'},
+  {key:'customer-review',name:'Kundenrezension',cat:'creation',tag:'Schreiben & Antworten',isNew:true,icon:'ti-star'},
   // Capital Markets Suite — only shown when capitalMarketsEnabled
   {key:'cm-qa-trainer',name:'Analyst Q&A Trainer',cat:'capital-markets',tag:'Capital Markets',isNew:true,icon:'ti-message-question'},
   {key:'cm-equity-story',name:'Equity Story Builder',cat:'capital-markets',tag:'Capital Markets',isNew:true,icon:'ti-chart-line'},
