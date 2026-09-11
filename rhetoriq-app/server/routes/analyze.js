@@ -483,10 +483,44 @@ Each exercise must require the person to actually produce something — write a 
   },
   'crisis': {
     label: 'Crisis Framing Engine',
-    system: `You are a crisis communication expert and rhetorical strategist. When a crisis breaks, the first 15 minutes define the narrative for weeks. Your job: given hard facts about a crisis, immediately generate THREE distinct rhetorical response strategies with precise, ready-to-use formulations. For each strategy: STRATEGY NAME & LOGIC (e.g. "Full Transparency" — why this approach), RISK LEVEL (low/medium/high with brief rationale), OPENING STATEMENT (exact words, 2–4 sentences, ready to deliver or send), KEY MESSAGES (3 bullet points), WHAT TO AVOID in this approach. End with: RECOMMENDED STRATEGY based on the facts given, with a one-paragraph rationale. Then: COMMUNICATION TIMELINE — four concrete milestones: T+0min (what goes out immediately), T+30min (what follows), T+2h (what is confirmed or expanded), T+24h (what closes the first cycle). No strategy without timing. Note: for a full ready-to-use crisis kit (internal statement, press release, employee FAQ, social holding statement), use the Crisis Communication Toolkit as the immediate next step. Tone: calm, fast, strategic. This is a "Red Button" tool. In English.
+    // Merged with the former standalone "Crisis Communication Toolkit"
+    // module (2026-09) — same crisis-type dropdown, same underlying
+    // situation, the only real difference was output depth. d.mode==='full'
+    // now selects the toolkit's system prompt/build instead of a second
+    // module the client had to separately choose between.
+    system: (d) => d.mode === 'full' ? `You are a crisis communication expert. Generate a complete, ready-to-use crisis communication kit.
+
+FORMATTING RULES: No markdown. No hashtags, asterisks, or horizontal lines. Section headings in ALL CAPS followed by a colon. Plain dashes for bullet points.
+
+Structure EXACTLY:
+
+SITUATION ASSESSMENT:
+Severity (1–5) · Reputational risk · Time pressure.
+
+1. INTERNAL STATEMENT (employees):
+Exact text, 150–200 words. Honest, stabilising, clear next steps.
+
+2. PRESS STATEMENT:
+Exact text, 100–150 words. Factual, controlled, no speculation.
+
+3. EMPLOYEE FAQ:
+5 questions employees will ask immediately + direct answers (2–3 sentences each).
+
+4. SOCIAL MEDIA HOLDING STATEMENT:
+Max 280 characters. Acknowledges, doesn't over-explain.
+
+5. PHRASES TO USE / NEVER SAY:
+3 phrases to use. 3 phrases to never say.
+
+NEXT 2 HOURS: ACTION CHECKLIST:
+6 concrete steps with time markers (T+15min, T+30min etc.).
+
+CONSISTENCY REQUIREMENT: All five outputs (internal statement, press statement, FAQ, social holding statement, and the phrases sections) must express one identical set of core facts and commitments — no version may imply more or less certainty or fault than another. If employees or press could receive contradictory information, flag this explicitly. The internal statement must be releasable before or simultaneously with the press statement, never after — note this sequencing constraint in the action checklist. For PHRASES TO USE / NEVER SAY: prioritize "never say" formulations that create legal admission risk (unconfirmed causation, liability language) or unkeepable promises, not generic tone complaints. Favor direct, accountable language over lawyer-hedged or PR-spin phrasing; avoid overqualification ("we are working to understand what may have potentially occurred") — calibrated for Swiss/European directness. ABSOLUTE TRUTH CONSTRAINT: treat the input facts as the absolute outer limit of reality. Do not invent mitigating circumstances, future investigations, or compensatory actions unless explicitly stated in the input. If the facts look bad, let every one of the five outputs reflect that severity.` : `You are a crisis communication expert and rhetorical strategist. When a crisis breaks, the first 15 minutes define the narrative for weeks. Your job: given hard facts about a crisis, immediately generate THREE distinct rhetorical response strategies with precise, ready-to-use formulations. For each strategy: STRATEGY NAME & LOGIC (e.g. "Full Transparency" — why this approach), RISK LEVEL (low/medium/high with brief rationale), OPENING STATEMENT (exact words, 2–4 sentences, ready to deliver or send), KEY MESSAGES (3 bullet points), WHAT TO AVOID in this approach. End with: RECOMMENDED STRATEGY based on the facts given, with a one-paragraph rationale. Then: COMMUNICATION TIMELINE — four concrete milestones: T+0min (what goes out immediately), T+30min (what follows), T+2h (what is confirmed or expanded), T+24h (what closes the first cycle). No strategy without timing. Note: if a full ready-to-use crisis kit (internal statement, press release, employee FAQ, social holding statement) is needed instead, switch this module to "Volles Kommunikationspaket" mode. Tone: calm, fast, strategic. This is a "Red Button" tool. In English.
 
 Before generating strategies, classify the crisis cluster from the facts given: victim (low organisational responsibility), accidental (moderate), or preventable (high responsibility) — state this classification and use it to filter which of the 3 strategies are credible; do not offer a denial or minimization strategy if the facts show clear organisational fault. In OPENING STATEMENT: sequence instructing information (what affected people should do now) before adjusting information (empathy, meaning-making) — safety/action first. Favor direct acknowledgment of fault over hedged or passive language ("mistakes were made") — calibrated for Swiss/European corporate culture: state ownership plainly, avoid American-style legal-hedge phrasing. If the facts have not yet become public, flag explicitly whether self-disclosure now would reduce reputational damage versus waiting. ABSOLUTE TRUTH CONSTRAINT: treat the input facts as the absolute outer limit of reality. Do not invent mitigating circumstances, future investigations, or compensatory actions unless explicitly stated in the input. If the facts look bad, let the strategy reflect that severity.`,
-    build: (d) => `CRISIS FACTS:\n${sanitizeForPrompt(d.text)}\n\nCrisis type: ${d.crisisType || 'Not specified'}\nAffected audiences: ${d.audiences || 'Not specified'}\nTime since crisis broke: ${d.timing || 'Immediate'}`
+    build: (d) => d.mode === 'full'
+      ? `SITUATION:\n${sanitizeForPrompt(d.text)}\n\nCrisis type: ${d.crisisType||'Not specified'}\nAffected stakeholders: ${d.audiences||'Not specified'}\nCompany/context: ${d.company||'Not specified'}`
+      : `CRISIS FACTS:\n${sanitizeForPrompt(d.text)}\n\nCrisis type: ${d.crisisType || 'Not specified'}\nAffected audiences: ${d.audiences || 'Not specified'}\nTime since crisis broke: ${d.timing || 'Immediate'}`
   },
   'ghostwriter': {
     label: 'Ghostwriter Mode',
@@ -1250,7 +1284,7 @@ FORMATTING RULES:
 const MODULE_MAX_TOKENS = {
   // Heavy analysis modules
   rp: 4000, cf: 3000, la: 3000, rm: 3000, si: 3000, st: 2500,
-  'crisis-toolkit': 4000, 'cm-earnings-analyzer': 4000, 'cm-board-coach': 4000,
+  'crisis-toolkit': 4000, crisis: 4000, 'cm-earnings-analyzer': 4000, 'cm-board-coach': 4000,
   'cm-roadshow': 4000, 'cm-equity-story': 3500, 'brand-voice-co': 4000, 'brand-voice-ind': 4000, 'brand-voice-update': 4000,
   debrief: 3000, 'rh-translate': 3000, 'before-after': 3000,
   // Medium modules
@@ -1261,7 +1295,7 @@ const MODULE_MAX_TOKENS = {
   // the model's real output ceiling (unlike an earlier attempt to set this
   // much higher, which broke generation outright — see presentation above).
   'pre-meeting': 2500, 'ghostwriter': 2500, 'text-gen': 8000, brief: 3500, presentation: 8000,
-  crisis: 2500, 'ht-crisis-comm': 2500, 'ht-positioning': 2500,
+  'ht-crisis-comm': 2500, 'ht-positioning': 2500,
   'cm-qa-trainer': 2500, 'competitive-check': 2500,
   // Quick modules
   as: 1500, tc: 1500, 'sparring': 1500, 'health-score': 1500,

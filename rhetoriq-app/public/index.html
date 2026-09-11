@@ -2051,7 +2051,7 @@ if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https:/
 const API='https://rhetoriq.ch';
 let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null,clientUserId=null,clientUserName=null,clientUserEmail=null;
 let debugMode=localStorage.getItem('riq-debug')==='1';
-const DEFAULT_MODULES=['profiling','brand-voice','text-gen','review','recognition','pre-meeting','arg-reaction','crisis','risk','actionability','thread','rh-translate','before-after','sparring','debrief','crisis-toolkit','competitive-check','presentation','customer-review'];
+const DEFAULT_MODULES=['profiling','brand-voice','text-gen','review','recognition','pre-meeting','arg-reaction','crisis','risk','actionability','thread','rh-translate','before-after','sparring','debrief','competitive-check','presentation','customer-review'];
 function modEnabled(key){if(enabledModules===null)return DEFAULT_MODULES.includes(key);return enabledModules.includes(key);}
 function hasSuite(prefix){return enabledModules&&enabledModules.some(k=>k.startsWith(prefix));}
 
@@ -3538,7 +3538,7 @@ let _mcClientId=null;
 const MC_SECTIONS=[
   {label:'Fundament',keys:['profiling','brand-voice','text-gen']},
   {label:'Schreiben',keys:['review','recognition','before-after','text-gen','brief','presentation','customer-review']},
-  {label:'Prävention',keys:['risk','crisis','crisis-toolkit','arg-reaction','competitive-check','pre-meeting']},
+  {label:'Prävention',keys:['risk','crisis','arg-reaction','competitive-check','pre-meeting']},
   {label:'Effizienz',keys:['actionability','thread','rh-translate']},
   {label:'Wachstum',keys:['sparring','debrief','before-after']},
 ];
@@ -4429,7 +4429,7 @@ const MDEFS={
   risk:{title:'Risk Scan',desc:'Ready to send? Paste the text first. Get a clear list of what could go wrong.',mf:'rm-in',ph:'Press release, CEO statement, internal announcement, investor letter...',api:'rm',fields:[{id:'rm-audience',type:'sel',lbl:'Target Audience',opts:['Employees','Investors','Media / Public','Customers','Board / Executive team','All simultaneously']},{id:'rm-context',type:'sel',lbl:'Situation',opts:['Strategy shift','Layoffs / Restructuring','Merger / Acquisition','Crisis','New product / Launch','Cultural change']}]},
   stress:{title:'Challenger Test',desc:'What will critics say? Get the hardest counterarguments before you walk into any room.',mf:'st-in',ph:'"We are introducing a new performance evaluation system..." or any position, strategy, or announcement.',api:'st',fields:[{id:'st-persp',type:'sel',lbl:'Perspectives',opts:['All (Media, Employees, Competitors)','Media / Public','Employees / Works council','Investors / Analysts','Critics / NGOs']},{id:'st-int',type:'sel',lbl:'Intensity',opts:['Moderate &mdash; fair criticism','Sharp &mdash; aggressive questioning','Maximum &mdash; hardest possible attack']}]},
   impact:{title:'Simulate Impact',desc:'Before any big announcement: how will employees, media, investors, and other stakeholders react?',mf:'si-in',ph:'Merger announcement, layoffs, strategy shift, leadership change, new policy...',api:'si',fields:[{id:'si-sth',type:'sel',lbl:'Stakeholders',opts:['All groups','Employees only','Media only','Investors only','Employees + Media']},{id:'si-sev',type:'sel',lbl:'Impact Level',opts:['Low &mdash; routine change','Medium &mdash; noticeable impact','High &mdash; significant transformation','Critical &mdash; existential crisis']}]},
-  crisis:{title:'Crisis Response',desc:'Something just happened. Paste the facts. Get 3 statements ready to use in 2 minutes.',mf:'cr-in',ph:'State the hard facts: what happened, when, who is affected, what is already known publicly.',api:'crisis',alert:true,fields:[{id:'cr-type',type:'sel',lbl:'Crisis Type',opts:['Reputational damage / Shitstorm','Workplace accident / Safety incident','Media leak / Unwanted disclosure','Leadership scandal','Product failure / Recall','Financial irregularity','Other']},{id:'cr-aud',type:'text',lbl:'Affected Audiences',ph:'e.g. Employees, Media, Investors, Customers'},{id:'cr-timing',type:'sel',lbl:'Time Since Crisis Broke',opts:['Just now (0-15 min)','Under 1 hour','1-3 hours','Several hours / next day']}]},
+  crisis:{title:'Krisenreaktion',desc:'Etwas ist gerade passiert. Fakten einfügen — je nach Umfang 3 sofort nutzbare Statements oder ein vollständiges Kommunikationspaket.',mf:'cr-in',ph:'State the hard facts: what happened, when, who is affected, what is already known publicly.',api:'crisis',alert:true,fields:[{id:'cr-mode',type:'sel',lbl:'Umfang',opts:['Kurzes Statement — 3 sofort nutzbare Optionen','Volles Kommunikationspaket — internes Statement, Medienmitteilung, FAQ, Social-Media, Checkliste']},{id:'cr-type',type:'sel',lbl:'Crisis Type',opts:['Reputational damage / Shitstorm','Workplace accident / Safety incident','Media leak / Unwanted disclosure','Leadership scandal','Product failure / Recall','Financial irregularity','Other']},{id:'cr-aud',type:'text',lbl:'Affected Audiences',ph:'e.g. Employees, Media, Investors, Customers'},{id:'cr-timing',type:'sel',lbl:'Time Since Crisis Broke',opts:['Just now (0-15 min)','Under 1 hour','1-3 hours','Several hours / next day']},{id:'cr-company',type:'text',lbl:'Company / Context (nur für volles Paket)',ph:'e.g. Acme AG, Swiss SME, 200 employees'}]},
   actionability:{title:'Clarity Check',desc:'Vague message? Paste it in. Get a version that is direct, clear, and actionable.',mf:'as-in',ph:'"We should take a look at the customer satisfaction topic..." or any unclear directive.',api:'as',fields:[{id:'as-ctx',type:'sel',lbl:'Format',opts:['Email delegation','Meeting minutes','Project briefing','Strategy document','Verbal instruction']},{id:'as-rec',type:'sel',lbl:'Recipient',opts:['Direct reports','Project team','Department head','External partners']}]},
   thread:{title:'Notes to Tasks',desc:'Paste anything messy &mdash; emails, meeting notes, Slack threads, board minutes, strategy docs. Get back: what was decided, what is open, who needs to act.',mf:'tc-in',ph:'Paste the full content here. No need to clean it up.',api:'tc',mh:'200px',fields:[{id:'tc-src',type:'sel',lbl:'Source Type',opts:['Email thread','Meeting notes / minutes','Slack / Teams chat','Board minutes','Strategy document','Mixed / multiple sources']},{id:'tc-goal',type:'sel',lbl:'Output Goal',opts:['Decision summary for CEO','Action items with owners','Summary for absent stakeholders','Identify blockers & open questions']}]},
   'rh-translate':{title:'Translate',desc:'Translate any text from DE to FR to EN to IT &mdash; keeping the exact tone, authority, and argumentation style. Not just words &mdash; full rhetorical impact.',mf:'rt-in',ph:'Paste the original text here.',api:'rh-translate',fields:[{id:'rt-src',type:'sel',lbl:'Source Language',opts:['German','English','French','Italian','Spanish']},{id:'rt-tgt',type:'sel',lbl:'Target Language',opts:['English','German','French','Italian','Spanish']},{id:'rt-ctx',type:'text',lbl:'Context / Audience',ph:'e.g. External investors, French-speaking employees'}]},
@@ -4842,7 +4842,7 @@ function goTextGenTile(tileId){
 
 function buildForm(name,def,prefill,form){
   let h='';
-  if(def.alert)h+=`<div class="crisis-alert">&#128308; Crisis Mode: you will receive 3 ready-to-use response strategies. Choose and adapt.</div>`+privBadge();
+  if(def.alert)h+=`<div class="crisis-alert">&#128308; Krisenmodus — wählen Sie unten den Umfang: 3 sofort nutzbare Statements, oder das volle Kommunikationspaket.</div>`+privBadge();
   else if(name==='risk'||name==='stress')h+=privBadge();
   if(def.people&&people.length)h+=buildPeopleSelector();
   const tl=T[LANG]||T.en;
@@ -5611,7 +5611,7 @@ async function runMod(name){
   else if(name==='risk'){module='rm';rid='risk-r';bid='risk-b';const t=g('rm-in');if(!t)return alert('Please enter text.');data={text:t+context,audience:g('rm-audience'),context:g('rm-context')};}
   else if(name==='stress'){module='st';rid='stress-r';bid='stress-b';const t=g('st-in');if(!t)return alert('Please enter text.');data={text:t+context,perspectives:g('st-persp'),intensity:g('st-int')};}
   else if(name==='impact'){module='si';rid='impact-r';bid='impact-b';const t=g('si-in');if(!t)return alert('Please enter text.');data={text:t+context,stakeholders:g('si-sth'),severity:g('si-sev')};}
-  else if(name==='crisis'){module='crisis';rid='crisis-r';bid='crisis-b';const t=g('cr-in');if(!t)return alert('Please enter the crisis facts.');data={text:t+context,crisisType:g('cr-type'),audiences:g('cr-aud'),timing:g('cr-timing')};}
+  else if(name==='crisis'){module='crisis';rid='crisis-r';bid='crisis-b';const t=g('cr-in');if(!t)return alert('Please enter the crisis facts.');const modeSel=g('cr-mode')||'';data={text:t+context,mode:modeSel.startsWith('Volles')?'full':'short',crisisType:g('cr-type'),audiences:g('cr-aud'),timing:g('cr-timing'),company:g('cr-company')};}
   else if(name==='actionability'){module='as';rid='actionability-r';bid='actionability-b';const t=g('as-in');if(!t)return alert('Please enter text.');data={text:t+context,context:g('as-ctx'),recipient:g('as-rec')};}
   else if(name==='thread'){module='tc';rid='thread-r';bid='thread-b';const t=g('tc-in');if(!t)return alert('Please enter text.');data={text:t+context,source:g('tc-src'),goal:g('tc-goal')};}
   else if(name==='rh-translate'){module='rh-translate';rid='rh-translate-r';bid='rh-translate-b';const t=g('rt-in');if(!t)return alert('Please enter text.');data={text:t,sourceLang:g('rt-src'),targetLang:g('rt-tgt'),context:g('rt-ctx'),voiceProfile:context};}
@@ -6590,7 +6590,11 @@ const ALL_MODULES=[
   // Text Generator (see goModule's remap below), so showing them as their
   // own cards was pure duplication. The remap and MNAMES label stay so old
   // history records referencing these keys still display sensibly.
-  {key:'crisis-toolkit',name:'Krisen-Kommunikationspaket',cat:'prevention',tag:'Krisen & Prävention',isNew:true,icon:'ti-first-aid-kit'},
+  // crisis-toolkit (2026-09): merged into 'crisis' itself as an "Umfang"
+  // (Kurzes Statement / Volles Kommunikationspaket) dropdown — same crisis
+  // type, same situation, the two cards only ever differed in output depth.
+  // MDEFS/MDEF_DE_KEY entries stay so old history rows referencing this key
+  // still display sensibly.
   {key:'competitive-check',name:'Wettbewerbs-Botschafts-Check',cat:'prevention',tag:'Krisen & Prävention',isNew:true,icon:'ti-scale'},
   {key:'presentation',name:'Präsentation & Vortrag',cat:'creation',tag:'Schreiben & Antworten',isNew:true,icon:'ti-presentation'},
   {key:'customer-review',name:'Kundenrezension',cat:'creation',tag:'Schreiben & Antworten',isNew:true,icon:'ti-star'},
