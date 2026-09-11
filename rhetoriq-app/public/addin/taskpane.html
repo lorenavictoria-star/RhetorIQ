@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>RhetorIQ für Outlook</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <style>
+    body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:16px;color:#1F2937;background:#fff;font-size:13px}
+    h1{font-size:16px;margin:0 0 4px;color:#1B4D2E}
+    .sub{font-size:11px;color:#6B7280;margin:0 0 16px}
+    label{display:block;font-size:11px;font-weight:600;color:#6B7280;margin:12px 0 4px;text-transform:uppercase;letter-spacing:.04em}
+    input,select,textarea{width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid #DDE3DF;border-radius:6px;font-size:13px;font-family:inherit;color:#1F2937}
+    textarea{min-height:90px;resize:vertical}
+    button{width:100%;padding:10px;border:none;border-radius:6px;background:#1B4D2E;color:#fff;font-size:13px;font-weight:600;cursor:pointer;margin-top:14px}
+    button:disabled{opacity:.5;cursor:default}
+    button.secondary{background:#fff;color:#1B4D2E;border:1.5px solid #1B4D2E;margin-top:8px}
+    #err{color:#b91c1c;font-size:12px;margin-top:8px;display:none}
+    #result{margin-top:14px;padding:10px;background:#F4F6F4;border-radius:6px;font-size:12.5px;white-space:pre-wrap;max-height:220px;overflow-y:auto;display:none}
+    #login-view,#main-view{display:none}
+    .hint{font-size:11px;color:#6B7280;margin-top:4px}
+  </style>
+</head>
+<body>
+  <h1>RhetorIQ</h1>
+  <div class="sub">E-Mail direkt in Ihrer Brand Voice generieren — Prototyp</div>
+
+  <div id="login-view">
+    <label>E-Mail</label>
+    <input type="email" id="login-email" placeholder="name@firma.ch">
+    <label>Passwort</label>
+    <input type="password" id="login-pw">
+    <button id="login-btn">Anmelden</button>
+    <div id="login-err" style="color:#b91c1c;font-size:12px;margin-top:8px;display:none"></div>
+  </div>
+
+  <div id="main-view">
+    <label>Briefing</label>
+    <textarea id="briefing" placeholder="Worum geht es in dieser E-Mail?"></textarea>
+    <label>Empfänger-Typ</label>
+    <select id="audience">
+      <option>B2B — General Business</option>
+      <option>B2B — C-Suite</option>
+      <option>B2B — HR Leaders</option>
+      <option>B2B — Finance / Investors</option>
+      <option>B2C — General Consumer</option>
+      <option>Internal — All Employees</option>
+      <option>Internal — Leadership Team</option>
+      <option>Media / Journalists</option>
+    </select>
+    <label>Ton</label>
+    <select id="tone">
+      <option>Aus Voice Profile</option>
+      <option>Authoritative &amp; Direct</option>
+      <option>Warm &amp; Human</option>
+      <option>Precise &amp; Data-driven</option>
+      <option>Swiss / European — understated</option>
+    </select>
+    <div class="hint" id="reply-hint" style="display:none">Antwort auf die geöffnete E-Mail wird automatisch berücksichtigt.</div>
+    <button id="gen-btn">Generieren</button>
+    <div id="result"></div>
+    <button id="insert-btn" class="secondary" style="display:none">In E-Mail einfügen</button>
+    <div id="err"></div>
+  </div>
+
+  <script src="taskpane.js"></script>
+</body>
+</html>
