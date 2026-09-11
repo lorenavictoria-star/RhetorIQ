@@ -367,7 +367,7 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .cn{font-size:15px;font-weight:600;margin-bottom:2px}
 .cm{font-size:12px;color:var(--mu)}
 .ca{display:flex;gap:6px;flex-shrink:0}
-.tkcode{font-family:monospace;font-size:11px;background:var(--sf);padding:3px 8px;border-radius:3px;color:var(--mu);margin-top:5px;display:inline-block}
+.tkcode{font-family:monospace;font-size:11px;background:var(--sf);padding:3px 8px;border-radius:3px;color:var(--mu);margin-top:5px;display:inline-block;word-break:break-all;max-width:100%}
 .dbtn{padding:7px 13px;background:#fff;border:1.5px solid #f00;font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;border-radius:4px;color:var(--red);font-weight:500}
 .dbtn:hover{background:#fff0f0}
 
@@ -410,8 +410,8 @@ body.adv .vubtn{display:block}
 .ei{font-size:36px;margin-bottom:10px;opacity:.35}
 
 /* CHAT */
-#cbtn{position:fixed;bottom:calc(20px + var(--safe-bottom));right:20px;width:48px;height:48px;background:var(--tx);border:none;border-radius:50%;cursor:pointer;z-index:200;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.18);font-size:22px;color:#fff}
-#cbtn:hover{background:#333}
+#cbtn{position:fixed;bottom:calc(20px + var(--safe-bottom));right:20px;width:48px;height:48px;background:var(--ac);border:none;border-radius:50%;cursor:pointer;z-index:200;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.18);font-size:22px;color:#fff}
+#cbtn:hover{opacity:.88}
 #cpanel{position:fixed;bottom:calc(80px + var(--safe-bottom));right:20px;width:340px;max-height:520px;background:#fff;border:1.5px solid var(--bd);border-radius:12px;z-index:200;display:none;flex-direction:column;box-shadow:0 6px 28px rgba(0,0,0,.12);overflow:hidden}
 #cpanel.open{display:flex}
 .chd{padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:var(--tx)}
@@ -1893,7 +1893,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   <div class="rev-list" id="rev-list"><div style="padding:20px;color:var(--mu);font-size:13px" id="rev-empty">No pending reviews.</div></div>
 </div>
 
-<button id="cbtn" onclick="toggleChat()">&#9697;</button>
+<button id="cbtn" onclick="toggleChat()" title="RhetorIQ Assistant" aria-label="RhetorIQ Assistant"><i class="ti ti-robot" aria-hidden="true"></i></button>
 <div id="cpanel">
   <div class="chd">
     <div><div class="cht">RhetorIQ Assistant</div><div class="chsub">Ask anything about the platform</div></div>
@@ -3475,7 +3475,7 @@ function renderClients(){
   if(hsel)hsel.innerHTML='<option value="">— '+(T[LANG]?.select_client_ph||'Select client')+' —</option>'+clients.map(c=>`<option value="${c.id}">${safeText(c.name)}</option>`).join('');
   const list=document.getElementById('clients-list');
   if(!clients.length){list.innerHTML='<div class="empty"><div class="ei">&#9711;</div><div>No clients yet.</div></div>';return;}
-  list.innerHTML=clients.map(c=>`<div class="cc" data-cid="${c.id}"><div><div class="cn">${safeText(c.name)}</div><div class="cm">${safeText(c.industry||'')} &mdash; ${safeText(c.contact||'')}</div><div class="tkcode">${safeText(c.token.substring(0,28))}&hellip;</div></div><div class="ca"><button class="obtn" onclick="copyTok('${c.token}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail(${c.id})">Send by Email</button><button class="obtn" style="color:#166534;border-color:#bbf7d0;background:#f0fdf4" onclick="sendWelcomeByEmail(${c.id})">Willkommens-E-Mail senden</button><button class="dbtn" onclick="delData(${c.id})">Delete All Data</button><button class="dbtn" onclick="deleteClient(${c.id})">Delete Client</button></div></div>`).join('');
+  list.innerHTML=clients.map(c=>`<div class="cc" data-cid="${c.id}"><div><div class="cn">${safeText(c.name)}</div><div class="cm">${safeText(c.industry||'')} &mdash; ${safeText(c.contact||'')}</div><div class="tkcode" style="user-select:all;cursor:text">${safeText(c.token)}</div></div><div class="ca"><button class="obtn" onclick="copyTok('${c.token}')">Copy Token</button><button class="obtn" style="color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff" onclick="sendTokenByEmail(${c.id})">Send by Email</button><button class="obtn" style="color:#166534;border-color:#bbf7d0;background:#f0fdf4" onclick="sendWelcomeByEmail(${c.id})">Willkommens-E-Mail senden</button><button class="dbtn" onclick="delData(${c.id})">Delete All Data</button><button class="dbtn" onclick="deleteClient(${c.id})">Delete Client</button></div></div>`).join('');
 }
 async function switchClient(id){
   clientId=id||null;
