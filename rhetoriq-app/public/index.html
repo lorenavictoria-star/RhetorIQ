@@ -691,8 +691,6 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   #page-module #mod-form > .tg-panel{grid-column:1}
   #page-module #mod-form > .rbox,
   #page-module #mod-form > .tg-rbox-wrap{grid-column:2;grid-row:1/20;position:sticky;top:20px;margin-top:0;max-height:calc(100vh - 160px);overflow-y:auto}
-  /* QUICK PANEL */
-  #quick-panel{width:280px}
 }
 @media(max-width:700px){
   .hdr{padding:0 16px;padding-top:var(--safe-top)}
@@ -1874,18 +1872,6 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   </div>
 </div>
 
-<!-- QUICK PANEL -->
-<div id="quick-panel" style="position:fixed;bottom:70px;right:0;width:240px;background:#fff;border:1px solid var(--bd);border-radius:10px 0 0 10px;box-shadow:-4px 0 20px rgba(0,0,0,.1);z-index:150;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;max-height:70vh">
-  <div style="padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
-    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu)">Quick Panel</span>
-    <button onclick="closeQuickPanel()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--mu);padding:0;line-height:1">&times;</button>
-  </div>
-  <div id="qp-list" style="overflow-y:auto;flex:1;padding:8px 0"></div>
-</div>
-<button id="qp-trigger" onclick="toggleQuickPanel()" title="Quick Panel" style="position:fixed;bottom:80px;right:0;background:var(--ac);color:#fff;border:none;border-radius:8px 0 0 8px;padding:10px 8px;cursor:pointer;z-index:149;display:none;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-family:'Instrument Sans',sans-serif;font-weight:600;letter-spacing:.04em;box-shadow:-2px 2px 8px rgba(0,0,0,.15)">
-  <i class="ti ti-layout-sidebar-right" style="font-size:16px"></i>
-</button>
-
 <!-- CMD+K PALETTE -->
 <div id="cmd-palette" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.4);backdrop-filter:blur(2px)" onclick="if(event.target===this)closePalette()">
   <div style="position:absolute;top:15%;left:50%;transform:translateX(-50%);width:min(560px,92vw);background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden">
@@ -2816,48 +2802,6 @@ function clearModuleDraft(){
   localStorage.removeItem(moduleDraftKey(modKey));
 }
 
-// ── QUICK PANEL ────────────────────────────────────────────────
-let _qpOpen=false;
-function toggleQuickPanel(){_qpOpen?closeQuickPanel():openQuickPanel();}
-function openQuickPanel(){
-  renderQuickPanel();
-  document.getElementById('quick-panel').style.transform='translateX(0)';
-  _qpOpen=true;
-}
-function closeQuickPanel(){
-  document.getElementById('quick-panel').style.transform='translateX(100%)';
-  _qpOpen=false;
-}
-function renderQuickPanel(){
-  const list=document.getElementById('qp-list');if(!list)return;
-  const favs=getFavs();
-  const storKey='riq-recent-'+(clientId||'global');
-  const recent=JSON.parse(localStorage.getItem(storKey)||'[]');
-  const pinned=(typeof ALL_MODULES!=='undefined'?ALL_MODULES:[]).filter(m=>favs.has(m.key)).slice(0,5);
-  const recentItems=recent.slice(0,5);
-  let html='';
-  if(pinned.length){
-    html+=`<div style="padding:6px 16px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu)">Pinned</div>`;
-    html+=pinned.map(m=>{
-      const def=getMdefLang(m.key,MDEFS[m.key]);
-      const name=def?.title||m.name;
-      return `<div onclick="closeQuickPanel();goModule('${m.key}')" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;transition:background .1s" onmouseenter="this.style.background='var(--sf)'" onmouseleave="this.style.background=''">
-        <span>${name}</span><span style="color:var(--mu);font-size:12px">↗</span></div>`;
-    }).join('');
-  }
-  if(recentItems.length){
-    html+=`<div style="padding:${pinned.length?'10px':'6px'} 16px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu)">Recent</div>`;
-    html+=recentItems.map(m=>`<div onclick="closeQuickPanel();goModule('${m.key}')" style="padding:10px 16px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between" onmouseenter="this.style.background='var(--sf)'" onmouseleave="this.style.background=''">
-      <span>${m.name}</span><span style="color:var(--mu);font-size:12px">↗</span></div>`).join('');
-  }
-  if(!pinned.length&&!recentItems.length){
-    html='<div style="padding:20px 16px;font-size:13px;color:var(--mu)">Use ☆ to pin modules here.</div>';
-  }
-  html+=`<div onclick="closeQuickPanel();openPalette()" style="padding:10px 16px;cursor:pointer;font-size:13px;color:var(--ac);display:flex;align-items:center;gap:6px" onmouseenter="this.style.background='var(--sf)'" onmouseleave="this.style.background=''">
-    <i class="ti ti-search" style="font-size:13px"></i> Search all modules</div>`;
-  list.innerHTML=html;
-}
-
 // ── QUICK ACCESS — PERSONALIZED ───────────────────────────────
 const QA_DEFAULTS=[
   {key:'pre-meeting',name:'Meeting Prep',action:()=>goModule('pre-meeting')},
@@ -3470,7 +3414,6 @@ async function boot(user,role){
   // show ⌘K label + quick panel trigger on desktop
   if(window.innerWidth>=900){
     const lbl=document.getElementById('hdr-cmd-label');if(lbl)lbl.style.display='inline';
-    const qpt=document.getElementById('qp-trigger');if(qpt)qpt.style.display='flex';
   }
   const _vlb=document.getElementById('voice-lang-btn');if(_vlb)_vlb.textContent=voiceLang.toUpperCase();
   if(!isAdv&&!localStorage.getItem('riq-tour-seen'))setTimeout(()=>openTour(0),600);
