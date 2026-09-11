@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "RhetorIQ — Text überall generieren",
+  "version": "0.1.0",
+  "description": "Generiert Text in Ihrer Brand Voice direkt in jedem Textfeld — LinkedIn, Gmail, CRM, überall.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "80": "icons/icon-80.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["https://rhetoriq.ch/*"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "exclude_matches": ["https://rhetoriq.ch/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
