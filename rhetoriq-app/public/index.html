@@ -1365,7 +1365,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div class="mlist-filters" id="mlist-filters" style="display:none">
         <button class="mlist-pill active" id="pill-all" data-label="All" onclick="filterModsCat('all',this)">All</button>
         <button class="mlist-pill" id="pill-foundation" data-label="Basis" onclick="filterModsCat('foundation',this)">Basis</button>
-        <button class="mlist-pill" id="pill-text-gen" data-label="Text-Generator" onclick="filterModsCat('text-gen',this)">Text-Generator</button>
+        <button class="mlist-pill" id="pill-text-gen" data-label="Texten" onclick="filterModsCat('text-gen',this)">Texten</button>
         <button class="mlist-pill" id="pill-creation" data-label="Writing" onclick="filterModsCat('creation',this)">Writing</button>
         <button class="mlist-pill" id="pill-prevention" data-label="Prevention" onclick="filterModsCat('prevention',this)">Prevention</button>
         <button class="mlist-pill" id="pill-efficiency" data-label="Efficiency" onclick="filterModsCat('efficiency',this)">Efficiency</button>
@@ -2252,7 +2252,7 @@ const T={
     mdef_review_desc:'Grobe Notizen zu einem Mitarbeitenden eingeben — präzises, schriftliches Leistungsfeedback erhalten.',
     mdef_recognition_title:'Wertschätzungs-Schreiber',
     mdef_recognition_desc:'Eine Anerkennung für Mitarbeitende verfassen, die persönlich und aufrichtig wirkt — kein generisches Copy-paste.',
-    mdef_textgen_title:'Text-Generator',
+    mdef_textgen_title:'Texten',
     mdef_textgen_desc:'Briefing rein — fertiger Text raus. LinkedIn, Rede, Pressemitteilung, E-Mail — jedes Format, in der authentischen Markenstimme.',
     mdef_ghostwriter_title:'Ghostwriter-Modus',
     mdef_ghostwriter_desc:'Vergangene Texte einfügen — E-Mails, Posts, Reden. Die KI extrahiert Ihre exakte Stimme und schreibt neuen Inhalt, der authentisch wie Sie klingt.',
@@ -2528,7 +2528,9 @@ async function exportPptx(bodyId){
     const tgMatch=rid.match(/^text-gen-r-(.+)$/);
     const regenFn=tgMatch?()=>runMod('text-gen',tgMatch[1]):()=>{const mod=rid.replace(/-r$/,'');runMod(mod);};
     const rbtn=document.createElement('button');
-    rbtn.className='exbtn';rbtn.textContent='↺';rbtn.title='Regenerate';
+    rbtn.className='exbtn';rbtn.textContent=LANG==='de'?'↺ Neu generieren':'↺ Regenerate';
+    rbtn.title=LANG==='de'?'Neu generieren':'Regenerate';
+    rbtn.setAttribute('aria-label',rbtn.title);
     rbtn.onclick=regenFn;
     btns.insertBefore(rbtn,btns.firstChild);
     // Word button — presentations get a dedicated presenter-script layout
@@ -5007,7 +5009,7 @@ function buildTextGen(prefill,form){
         <div class="fg2"><label class="fl2">${tl.tg_language}</label><select id="tg-lang-${t.id}"><option>Deutsch</option><option>English</option><option>Français</option><option>Italiano</option></select></div>
         <div class="fg2"><label class="fl2">${tl.tg_length}</label><input type="text" id="tg-len-${t.id}" placeholder="${tl.tg_length_ph}"></div>
       </div>
-      ${t.id==='linkedin'?`<div class="fg2" style="margin-top:4px"><label class="fl2">${tl.li_profile_lbl||'LinkedIn Profile / About (optional)'}</label><textarea id="tg-li-profile" placeholder="${tl.li_profile_ph||'Paste the About section and the last 3–5 posts of the LinkedIn profile here — so the output matches the person\'s authentic voice.'}" style="min-height:80px;font-size:12px"></textarea><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><button type="button" class="tg-save-ref" onclick="saveLiProfile()" style="font-size:11px;padding:5px 12px;border:1px solid var(--bd);border-radius:6px;background:var(--sf);cursor:pointer">Für diesen Klienten speichern</button><div id="tg-li-profile-status" style="font-size:11px;color:var(--mu)"></div></div></div>`:''}
+      ${t.id==='linkedin'?`<div class="fg2" style="margin-top:4px"><label class="fl2">${tl.li_profile_lbl||'LinkedIn Profile / About (optional)'}</label><textarea id="tg-li-profile" placeholder="${tl.li_profile_ph||'Paste the About section and the last 3–5 posts of the LinkedIn profile here — so the output matches the person\'s authentic voice.'}" style="min-height:80px;font-size:12px"></textarea><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><button type="button" class="tg-save-ref" onclick="saveLiProfile()" style="font-size:11px;padding:5px 12px;border:1px solid var(--bd);border-radius:6px;background:var(--sf);cursor:pointer">Dauerhaft speichern</button><div id="tg-li-profile-status" style="font-size:11px;color:var(--mu)"></div></div></div>`:''}
       ${t.id==='brief'?`<div class="row2"><div class="fg2"><label class="fl2">Sender (Absender) <a onclick="editClientAddress('tg-br-sender')" style="cursor:pointer;text-decoration:underline;font-weight:400;text-transform:none;letter-spacing:0;font-size:11px">&#9998; hinterlegen</a></label><input type="text" id="tg-br-sender" placeholder="e.g. Lorena Lienhard, RhetorIQ AG, Bahnhofstrasse 1, 8001 Zürich"></div><div class="fg2"><label class="fl2">Recipient (Adressat)</label><input type="text" id="tg-br-recipient" placeholder="e.g. Herr Peter Muster, Muster AG, Musterstrasse 5, 8000 Zürich"></div></div><div class="fg2"><label class="fl2">Subject Line (Betreff)</label><input type="text" id="tg-br-subject" placeholder="e.g. Kündigung des Mietvertrags per 30.09.2026"></div>`:''}
       ${t.id==='speech'?`<div class="fg2"><label class="fl2">Speaker — Voice DNA (optional)</label><select id="tg-speech-person"><option value="">— Brand Voice (default) —</option>${people.filter(p=>(p.profiles||[]).some(pr=>pr.profile_type==='voice')).map(p=>`<option value="${p.id}">${safeText(p.name)}${p.role?' — '+safeText(p.role):''}</option>`).join('')}</select></div>`:''}
       ${t.id==='newsletter'?`<div class="klaviyo-box" id="klaviyo-box-${t.id}" style="margin-bottom:14px;padding:14px;border:1.5px solid #e0d4f5;border-radius:8px;background:#f9f6ff">
@@ -5146,7 +5148,7 @@ async function saveLiProfile(){
   if(status)status.textContent='Speichern…';
   try{
     await api('/api/memory/'+clientId+'/ref_li_profile',{method:'PUT',body:JSON.stringify({content:val})});
-    if(status)status.textContent='✓ Gespeichert — wird bei jedem LinkedIn-Post für diesen Klienten automatisch verwendet.';
+    if(status)status.textContent='✓ Gespeichert — wird ab jetzt bei jedem LinkedIn-Post automatisch verwendet.';
     await loadMemory();
   }catch(e){if(status)status.textContent='Fehler beim Speichern';}
 }
@@ -6598,14 +6600,14 @@ const ALL_MODULES=[
   // standalone "Formal Letter" module is intentionally not listed anymore:
   // the "Brief" entry below already covers it exactly, so it was pure
   // duplication (same fix pattern as the earlier vs-gen/vs-cal removal).
-  {key:'text-gen-linkedin',name:'Social Media',cat:'text-gen',tag:'Text-Generator',tile:'linkedin',enableKey:'text-gen',desc:'LinkedIn — als Post, Artikel oder Kommentar',icon:'ti-brand-linkedin'},
-  {key:'text-gen-newsletter',name:'Newsletter',cat:'text-gen',tag:'Text-Generator',tile:'newsletter',enableKey:'text-gen',desc:'Vollausgabe, Einzelbeitrag, Teaser',icon:'ti-news'},
-  {key:'text-gen-email',name:'E-Mail',cat:'text-gen',tag:'Text-Generator',tile:'email',enableKey:'text-gen',desc:'Extern, intern, formell',icon:'ti-mail'},
-  {key:'text-gen-speech',name:'Rede & Auftritt',cat:'text-gen',tag:'Text-Generator',tile:'speech',enableKey:'text-gen',desc:'Keynote, Townhall, Award',icon:'ti-microphone'},
-  {key:'text-gen-press',name:'Presse & Medien',cat:'text-gen',tag:'Text-Generator',tile:'press',enableKey:'text-gen',desc:'Launch, Strategie, Krise',icon:'ti-speakerphone'},
-  {key:'text-gen-website',name:'Website-Texte',cat:'text-gen',tag:'Text-Generator',tile:'website',enableKey:'text-gen',desc:'Homepage, About, Landing Page',icon:'ti-world'},
-  {key:'text-gen-brief',name:'Brief',cat:'text-gen',tag:'Text-Generator',tile:'brief',enableKey:'text-gen',desc:'Formeller Geschäftsbrief',icon:'ti-file-text'},
-  {key:'text-gen-custom',name:'Frei / Sonstiges',cat:'text-gen',tag:'Text-Generator',tile:'custom',enableKey:'text-gen',desc:'Talking Points, Proposal, Ankündigung',icon:'ti-sparkles'},
+  {key:'text-gen-linkedin',name:'LinkedIn',cat:'text-gen',tag:'Texten',tile:'linkedin',enableKey:'text-gen',desc:'Als Post, Artikel oder Kommentar',icon:'ti-brand-linkedin'},
+  {key:'text-gen-newsletter',name:'Newsletter',cat:'text-gen',tag:'Texten',tile:'newsletter',enableKey:'text-gen',desc:'Vollausgabe, Einzelbeitrag, Teaser',icon:'ti-news'},
+  {key:'text-gen-email',name:'E-Mail',cat:'text-gen',tag:'Texten',tile:'email',enableKey:'text-gen',desc:'Extern, intern, formell',icon:'ti-mail'},
+  {key:'text-gen-speech',name:'Rede & Auftritt',cat:'text-gen',tag:'Texten',tile:'speech',enableKey:'text-gen',desc:'Keynote, Townhall, Award',icon:'ti-microphone'},
+  {key:'text-gen-press',name:'Presse & Medien',cat:'text-gen',tag:'Texten',tile:'press',enableKey:'text-gen',desc:'Launch, Strategie, Krise',icon:'ti-speakerphone'},
+  {key:'text-gen-website',name:'Website-Texte',cat:'text-gen',tag:'Texten',tile:'website',enableKey:'text-gen',desc:'Homepage, About, Landing Page',icon:'ti-world'},
+  {key:'text-gen-brief',name:'Brief',cat:'text-gen',tag:'Texten',tile:'brief',enableKey:'text-gen',desc:'Formeller Geschäftsbrief',icon:'ti-file-text'},
+  {key:'text-gen-custom',name:'Frei / Sonstiges',cat:'text-gen',tag:'Texten',tile:'custom',enableKey:'text-gen',desc:'Talking Points, Proposal, Ankündigung',icon:'ti-sparkles'},
   {key:'review',name:'Feedback Writer',cat:'creation',tag:'Writing — HR',icon:'ti-message-2'},
   {key:'recognition',name:'Appreciation Writer',cat:'creation',tag:'Writing — HR',icon:'ti-award'},
   {key:'pre-meeting',name:'Meeting Prep',cat:'prevention',tag:'Prevention',feat:true,isNew:true,icon:'ti-calendar-event'},
@@ -6644,7 +6646,7 @@ let modsCatFilter='all',modsSearch='';
 function getCatMeta(){
   return {
     foundation:{icon:'◆',label:LANG==='de'?'Basis':'Foundation'},
-    'text-gen':{icon:'✎',label:'Text-Generator'},
+    'text-gen':{icon:'✎',label:LANG==='de'?'Texten':'Texting'},
     creation:{icon:'✒',label:LANG==='de'?'Schreiben & Antworten':'Writing & Replies'},
     prevention:{icon:'⛨',label:LANG==='de'?'Krisen & Prävention':'Crisis & Prevention'},
     efficiency:{icon:'⚡',label:LANG==='de'?'Effizienz':'Efficiency'},
@@ -6684,10 +6686,12 @@ function renderModulesList(){
   });
   // Pill counts (always based on enabled modules for this client, independent of search)
   const enabledAll=ALL_MODULES.filter(m=>modEnabled(m.key)&&m.cat!=='capital-markets'&&m.cat!=='hotel');
+  const pillCatMeta=getCatMeta();
   document.querySelectorAll('.mlist-pill[data-label]').forEach(b=>{
     const cat=b.id.replace('pill-','');
     const n=cat==='all'?enabledAll.length:enabledAll.filter(m=>m.cat===cat).length;
-    b.textContent=`${b.dataset.label} (${n})`;
+    const label=cat==='all'?(LANG==='de'?'Alle':'All'):(pillCatMeta[cat]?.label||b.dataset.label);
+    b.textContent=`${label} (${n})`;
   });
   // Custom modules for current client
   const filteredCustom=(customModules||[]).filter(m=>!q||m.name.toLowerCase().includes(q)||(m.description||'').toLowerCase().includes(q));
