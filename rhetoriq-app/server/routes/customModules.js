@@ -184,6 +184,8 @@ router.post('/:id/run', requireAuth, async (req, res) => {
       );
     } catch {}
 
+    systemPrompt += '\n\nWICHTIG: Schreibe deutsche Umlaute IMMER als echtes Zeichen (ä, ö, ü, Ä, Ö, Ü) — niemals als ASCII-Ersatz (ae, oe, ue, Ae, Oe, Ue).';
+
     const result = await callClaude(systemPrompt, userMsg || 'Please proceed.');
     res.json({ result });
   } catch (e) {
