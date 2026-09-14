@@ -27,6 +27,10 @@ Office.onReady(() => {
   document.getElementById('login-btn').onclick = login;
   document.getElementById('gen-btn').onclick = generate;
   document.getElementById('insert-btn').onclick = insert;
+  document.getElementById('more-toggle').onclick = () => {
+    document.getElementById('more-toggle').classList.toggle('open');
+    document.getElementById('more-body').classList.toggle('open');
+  };
 });
 
 async function login() {
@@ -77,6 +81,7 @@ async function generate() {
           format: 'External — Client / Partner',
           audience: document.getElementById('audience').value,
           tone: document.getElementById('tone').value,
+          length: document.getElementById('length').value || undefined,
           language: 'Deutsch',
           replyTo: replyToText || undefined
         }

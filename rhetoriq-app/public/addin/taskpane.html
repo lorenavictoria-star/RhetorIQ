@@ -18,6 +18,11 @@
     #result{margin-top:14px;padding:10px;background:#F4F6F4;border-radius:6px;font-size:12.5px;white-space:pre-wrap;max-height:220px;overflow-y:auto;display:none}
     #login-view,#main-view{display:none}
     .hint{font-size:11px;color:#6B7280;margin-top:4px}
+    #more-toggle{width:100%;margin-top:10px;background:#fff;color:#1F2937;border:1.5px solid #DDE3DF;text-align:left;display:flex;justify-content:space-between;align-items:center;font-weight:600;padding:8px 10px}
+    #more-toggle .chev{transition:transform .15s}
+    #more-toggle.open .chev{transform:rotate(180deg)}
+    #more-body{display:none;margin-top:4px}
+    #more-body.open{display:block}
   </style>
 </head>
 <body>
@@ -36,26 +41,31 @@
   <div id="main-view">
     <label>Briefing</label>
     <textarea id="briefing" placeholder="Worum geht es in dieser E-Mail?"></textarea>
-    <label>Empfänger-Typ</label>
-    <select id="audience">
-      <option>B2B — General Business</option>
-      <option>B2B — C-Suite</option>
-      <option>B2B — HR Leaders</option>
-      <option>B2B — Finance / Investors</option>
-      <option>B2C — General Consumer</option>
-      <option>Internal — All Employees</option>
-      <option>Internal — Leadership Team</option>
-      <option>Media / Journalists</option>
-    </select>
-    <label>Ton</label>
-    <select id="tone">
-      <option>Aus Voice Profile</option>
-      <option>Authoritative &amp; Direct</option>
-      <option>Warm &amp; Human</option>
-      <option>Precise &amp; Data-driven</option>
-      <option>Swiss / European — understated</option>
-    </select>
     <div class="hint" id="reply-hint" style="display:none">Antwort auf die geöffnete E-Mail wird automatisch berücksichtigt.</div>
+    <button type="button" id="more-toggle">Weitere Optionen <span class="chev">&#9662;</span></button>
+    <div id="more-body">
+      <label>Empfänger-Typ</label>
+      <select id="audience">
+        <option>B2B — General Business</option>
+        <option>B2B — C-Suite</option>
+        <option>B2B — HR Leaders</option>
+        <option>B2B — Finance / Investors</option>
+        <option>B2C — General Consumer</option>
+        <option>Internal — All Employees</option>
+        <option>Internal — Leadership Team</option>
+        <option>Media / Journalists</option>
+      </select>
+      <label>Ton</label>
+      <select id="tone">
+        <option>Aus Voice Profile</option>
+        <option>Authoritative &amp; Direct</option>
+        <option>Warm &amp; Human</option>
+        <option>Precise &amp; Data-driven</option>
+        <option>Swiss / European — understated</option>
+      </select>
+      <label>Länge (optional)</label>
+      <input type="text" id="length" placeholder="z. B. 150 Wörter, kurz">
+    </div>
     <button id="gen-btn">Generieren</button>
     <div id="result"></div>
     <button id="insert-btn" class="secondary" style="display:none">In E-Mail einfügen</button>
