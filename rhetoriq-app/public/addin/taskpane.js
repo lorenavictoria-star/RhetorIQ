@@ -36,7 +36,7 @@ async function login() {
   err.style.display = 'none';
   if (!email || !pw) { err.textContent = 'E-Mail und Passwort eingeben.'; err.style.display = ''; return; }
   try {
-    const r = await fetch(API + '/auth/login', {
+    const r = await fetch(API + '/auth/client-password-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password: pw })
@@ -71,6 +71,7 @@ async function generate() {
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({
         module: 'text-gen',
+        instructionsKey: 'text-gen-email',
         data: {
           text: briefing,
           format: 'External — Client / Partner',
