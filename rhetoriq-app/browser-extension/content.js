@@ -34,6 +34,32 @@
     }
   }
 
+  // Guesses the right output format from the page + field, so the
+  // extension never defaults to "email" everywhere — a LinkedIn comment
+  // box should produce a short comment, a post box a full post, Gmail/
+  // Outlook-web a proper email, and anything unrecognised falls back to a
+  // neutral short-vs-long guess based on the field's own size.
+  function detectFormat(el) {
+    const host = location.hostname.replace(/^www\./, '');
+    const hint = [
+      el.getAttribute('aria-label'), el.getAttribute('placeholder'),
+      el.getAttribute('name'), el.id, el.className
+    ].filter(Boolean).join(' ').toLowerCase();
+
+    if (host.includes('linkedin.com')) {
+      if (hint.includes('comment') || hint.includes('kommentar')) return 'LinkedIn — Kommentar';
+      return 'LinkedIn — Post';
+    }
+    if (host.includes('mail.google.com')) return 'External — Client / Partner (E-Mail)';
+    if (host.includes('outlook.') || host.includes('bluewin.ch') || host.includes('gmx.')) return 'External — Client / Partner (E-Mail)';
+    if (host.includes('slack.com')) return 'Slack-Nachricht — kurz und direkt';
+    if (host.includes('teams.microsoft.com')) return 'Teams-Nachricht — kurz und direkt';
+    if (host.includes('twitter.com') || host.includes('x.com')) return 'X/Twitter-Post — kurz und pointiert';
+
+    const rect = el.getBoundingClientRect();
+    return rect.height < 60 ? 'Kurze Antwort / Kommentar' : 'Allgemeiner Text';
+  }
+
   function removeFab() {
     if (fab) { fab.remove(); fab = null; }
   }
@@ -68,9 +94,11 @@
     panel = document.createElement('div');
     panel.className = 'riq-panel';
     const existing = getFieldText(field).trim();
+    const format = detectFormat(field);
     panel.innerHTML = `
       <button class="riq-close">&times;</button>
       <div class="riq-panel-title">RhetorIQ — Text generieren</div>
+      <div class="riq-format-tag">${format}</div>
       <textarea placeholder="${existing ? 'Was soll geändert/beantwortet werden? (optional — vorhandener Inhalt wird berücksichtigt)' : 'Worum geht es? Kurz beschreiben…'}"></textarea>
       <div class="riq-err"></div>
       <div class="riq-result"></div>
@@ -107,7 +135,7 @@
       try {
         const res = await chrome.runtime.sendMessage({
           type: 'generate',
-          payload: { text: briefing || 'Antworte passend auf den folgenden Inhalt.', replyTo: existing || undefined }
+          payload: { text: briefing || 'Antworte passend auf den folgenden Inhalt.', replyTo: existing || undefined, format }
         });
         if (!res || !res.ok) {
           if (res && res.error === 'NOT_LOGGED_IN') {

@@ -32,7 +32,11 @@
   color: #1F2937;
   padding: 12px;
 }
-.riq-panel-title { font-size: 12px; font-weight: 700; color: #1B4D2E; margin-bottom: 8px; }
+.riq-panel-title { font-size: 12px; font-weight: 700; color: #1B4D2E; margin-bottom: 4px; }
+.riq-format-tag {
+  display: inline-block; font-size: 10.5px; font-weight: 600; color: #1B4D2E;
+  background: #EAF2ED; border-radius: 10px; padding: 2px 8px; margin-bottom: 8px;
+}
 .riq-panel textarea {
   width: 100%; box-sizing: border-box; min-height: 70px; resize: vertical;
   padding: 8px; border: 1.5px solid #DDE3DF; border-radius: 6px; font-family: inherit; font-size: 12.5px; color: #1F2937;
