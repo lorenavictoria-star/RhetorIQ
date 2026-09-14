@@ -46,8 +46,14 @@ async function sendWelcomeEmail({ clientType, salutation, lastName, companyName,
 
   const isDE = lang === 'de';
   const isCompany = clientType === 'company';
+  // FLAGA gets a warmer, personally-addressed welcome email instead of the
+  // generic "Sehr geehrte Damen und Herren" company template — requested
+  // specifically for this client, every other client keeps the default below.
+  const isFlaga = /flaga/i.test(companyName || '');
 
-  const salutationLine = isDE
+  const salutationLine = isFlaga
+    ? 'Liebe Familie Matteo, sehr geehrtes Team von FLAGA'
+    : isDE
     ? (isCompany
         ? `Sehr geehrte Damen und Herren von ${companyName},`
         : `Sehr geehrte${salutation === 'Herr' ? 'r Herr' : ' Frau'} ${lastName},`)
@@ -59,7 +65,9 @@ async function sendWelcomeEmail({ clientType, salutation, lastName, companyName,
     ? 'Willkommen bei RhetorIQ – Ihren Zugang einrichten'
     : 'Welcome to RhetorIQ – Set up your access';
 
-  const body = isDE
+  const body = isFlaga
+    ? `${salutationLine}\n\nwillkommen bei RhetorIQ. Als Verkaufsstelle im FLAGA-Netz schreiben Sie jeden Tag Kundenanfragen, Angebote und Nachrichten, die nach Ihnen klingen sollen, nicht nach einer Vorlage von der Stange. Genau dafür haben wir RhetorIQ für Sie eingerichtet.\n\nBitte richten Sie Ihren persönlichen Zugang über den folgenden Link ein:\n\n${setupLink}\n\nDieser Link ist 48 Stunden gültig. Sie werden dort aufgefordert, ein eigenes Passwort zu wählen. Danach ist Ihr Zugang vollständig personalisiert und gesichert.\n\nE-Mail: ${email}\nPlattform: https://rhetoriq.ch\n\nBei Fragen zur Einrichtung melden Sie sich direkt bei mir, ich begleite Sie in den ersten Wochen persönlich.\n\nFreundliche Grüsse\nLorena Lienhard\nRhetoric & Executive Communication Coaching\ncontact@lorenalienhard.ch · +41 79 957 39 76 · lorenalienhard.ch`
+    : isDE
     ? `${salutationLine}\n\nes freut mich, Sie bei RhetorIQ willkommen zu heissen.\n\nRhetorIQ gibt Ihnen präzise Werkzeuge für Ihre Führungskommunikation – zugeschnitten auf Ihre Stimme und Ihre Ziele.\n\nBitte richten Sie Ihren persönlichen Zugang über den folgenden Link ein:\n\n${setupLink}\n\nDieser Link ist 48 Stunden gültig. Sie werden dort aufgefordert, ein eigenes Passwort zu wählen. Danach ist Ihr Zugang vollständig personalisiert und gesichert.\n\nE-Mail: ${email}\nPlattform: https://rhetoriq.ch\n\nIch freue mich darauf, gemeinsam mit Ihnen zu arbeiten.\n\nHerzlich,\nLorena Lienhard\nRhetoric & Executive Communication Coaching\ncontact@lorenalienhard.ch · +41 79 957 39 76 · lorenalienhard.ch`
     : `${salutationLine}\n\nIt is a pleasure to welcome you to RhetorIQ.\n\nRhetorIQ gives you precise tools for your leadership communication – tailored to your voice and your goals.\n\nPlease set up your personal access using the link below:\n\n${setupLink}\n\nThis link is valid for 48 hours. You will be prompted to choose your own password. After that, your access is fully personalised and secured.\n\nEmail: ${email}\nPlatform: https://rhetoriq.ch\n\nI look forward to working with you.\n\nWarm regards,\nLorena Lienhard\nRhetoric & Executive Communication Coaching\ncontact@lorenalienhard.ch · +41 79 957 39 76 · lorenalienhard.ch`;
 
