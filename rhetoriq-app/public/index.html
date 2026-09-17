@@ -6426,6 +6426,7 @@ async function loadAdvisorDashboard(){
             <button class="obtn" onclick="openTeamModal(${c.id})">Team</button>
             <button class="obtn" style="color:#92400e;border-color:#fcd34d;background:#fffbeb" onclick="openFeedbackLearnings(${c.id},'${safeText(c.name)}')">Feedback-Lernstand</button>
             <button class="obtn" style="color:#5b21b6;border-color:#c4b5fd;background:#f5f3ff;font-weight:500" onclick="openModuleConfig(${c.id})"><i class="ti ti-layout-grid" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Module</button>
+            <button class="obtn" style="color:#b91c1c;border-color:#fecaca;background:#fef2f2" onclick="deleteClient(${c.id})"><i class="ti ti-trash" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Löschen</button>
             <button class="obtn" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-weight:500" onclick="sendPaymentLink(${c.id},this)">Zahlungslink senden</button>
           </div>
           <div id="pay-link-row-${c.id}" style="display:none;margin-top:8px;gap:6px;align-items:center">
