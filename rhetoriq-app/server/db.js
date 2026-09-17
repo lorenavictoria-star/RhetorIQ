@@ -49,6 +49,17 @@ async function init() {
     -- client explicitly when a plan calls for one.
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS monthly_token_limit BIGINT;
 
+    -- One-time token top-ups a client bought via Stripe (self-serve "Zusatzpaket"
+    -- when they hit their monthly quota). Kept separate from monthly_token_limit
+    -- since a top-up only covers the current month, not every month going forward.
+    CREATE TABLE IF NOT EXISTS usage_topups (
+      id SERIAL PRIMARY KEY,
+      client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+      tokens BIGINT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS usage_topups_client_idx ON usage_topups(client_id, created_at DESC);
+
     CREATE TABLE IF NOT EXISTS analyses (
       id SERIAL PRIMARY KEY,
       client_id INTEGER REFERENCES clients(id),

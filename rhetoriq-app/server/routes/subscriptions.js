@@ -111,19 +111,101 @@ router.post('/mark-active/:clientId', requireAdvisor, async (req, res) => {
 // Matched by the exact CHF amount charged (in Rappen) rather than a Stripe
 // Price ID, so this keeps working even if a price gets recreated/edited in
 // Stripe. Keep in sync with the actual prices configured there.
-// Starter 290/Wachstum 590/Team 990/Enterprise 2490 CHF per month ->
 // ~5'000 tokens per text as a buffer (covers longer formats like
 // presentations, not just short emails).
-const PRICE_TIER_TOKEN_LIMITS = {
-  29000: 300000,    // Starter — 60 Texte/Monat
-  59000: 750000,    // Wachstum — 150 Texte/Monat
-  99000: 1500000,   // Team — 300 Texte/Monat
-  249000: null,     // Enterprise — unbegrenzt
-};
+const TIERS = [
+  { name: 'Starter', amountCents: 29000, tokens: 300000 },     // 60 Texte/Monat
+  { name: 'Wachstum', amountCents: 59000, tokens: 750000 },    // 150 Texte/Monat
+  { name: 'Team', amountCents: 99000, tokens: 1500000 },       // 300 Texte/Monat
+  { name: 'Enterprise', amountCents: 249000, tokens: null },   // unbegrenzt
+];
+const PRICE_TIER_TOKEN_LIMITS = Object.fromEntries(TIERS.map(t => [t.amountCents, t.tokens]));
 function resolveTokenLimit(amountInCents, currency) {
   if (!amountInCents || (currency || '').toLowerCase() !== 'chf') return undefined;
   return PRICE_TIER_TOKEN_LIMITS.hasOwnProperty(amountInCents) ? PRICE_TIER_TOKEN_LIMITS[amountInCents] : undefined;
 }
+
+// One-time self-serve top-up, offered to a client the moment they hit their
+// monthly quota — covers the current month only (see usage_topups table),
+// doesn't change their recurring plan.
+const TOPUP = { amountCents: 9900, tokens: 100000, label: 'Kontingent-Zusatzpaket (+100\'000 Tokens)' };
+
+// ── POST /api/subscriptions/topup-link/:clientId ────────────────
+// Self-serve: client hit their monthly quota and wants to buy a one-time
+// top-up right now, without waiting on the advisor. No pre-created Stripe
+// Price needed — price_data builds it inline.
+router.post('/topup-link/:clientId', requireAuth, async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    if (req.user.role === 'client' && String(req.user.clientId) !== String(clientId)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const { rows } = await pool.query('SELECT id, name FROM clients WHERE id=$1', [clientId]);
+    if (!rows.length) return res.status(404).json({ error: 'Client not found' });
+
+    const stripe = getStripe();
+    const link = await stripe.paymentLinks.create({
+      line_items: [{
+        price_data: {
+          currency: 'chf',
+          unit_amount: TOPUP.amountCents,
+          product_data: { name: `RhetorIQ ${TOPUP.label} — ${rows[0].name}` },
+        },
+        quantity: 1,
+      }],
+      metadata: { clientId: String(clientId), clientName: rows[0].name, type: 'topup', tokens: String(TOPUP.tokens) },
+    });
+    res.json({ url: link.url, tokens: TOPUP.tokens, amountCents: TOPUP.amountCents });
+  } catch (e) {
+    console.error('[stripe] topup-link error:', e.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── POST /api/subscriptions/upgrade-link/:clientId ──────────────
+// Self-serve: client hit their monthly quota and wants to move up a tier
+// right now. Builds a new recurring Payment Link for the next tier's price
+// (no pre-created Stripe subscription Price needed) — the client pays and
+// their subscription_status/monthly_token_limit update automatically via
+// the webhook, same as any other payment.
+// NOTE: this does not cancel the client's existing subscription in Stripe —
+// check for and cancel the old one manually after an upgrade goes through,
+// until a full Customer Portal / proration flow is wired up.
+router.post('/upgrade-link/:clientId', requireAuth, async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    if (req.user.role === 'client' && String(req.user.clientId) !== String(clientId)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const { rows } = await pool.query('SELECT id, name, monthly_token_limit FROM clients WHERE id=$1', [clientId]);
+    if (!rows.length) return res.status(404).json({ error: 'Client not found' });
+
+    const currentLimit = rows[0].monthly_token_limit;
+    const currentIdx = TIERS.findIndex(t => t.tokens === currentLimit);
+    const nextTier = TIERS[currentIdx + 1];
+    if (!nextTier) {
+      return res.status(400).json({ error: 'Bereits auf der höchsten Stufe — bitte direkt bei der Beraterin melden.' });
+    }
+
+    const stripe = getStripe();
+    const link = await stripe.paymentLinks.create({
+      line_items: [{
+        price_data: {
+          currency: 'chf',
+          unit_amount: nextTier.amountCents,
+          recurring: { interval: 'month' },
+          product_data: { name: `RhetorIQ ${nextTier.name} Abo — ${rows[0].name}` },
+        },
+        quantity: 1,
+      }],
+      metadata: { clientId: String(clientId), clientName: rows[0].name, type: 'upgrade', targetTier: nextTier.name },
+    });
+    res.json({ url: link.url, tier: nextTier.name, amountCents: nextTier.amountCents });
+  } catch (e) {
+    console.error('[stripe] upgrade-link error:', e.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // ── POST /api/subscriptions/webhook ──────────────────────────
 // Stripe webhook. Must receive raw body — mount BEFORE express.json() in index.js.
@@ -152,7 +234,16 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       const obj = event.data.object;
       // clientId stored in metadata at payment-link creation time
       const clientId = obj.metadata?.clientId;
-      if (clientId) {
+      const isTopup = obj.metadata?.type === 'topup';
+      if (clientId && isTopup) {
+        // One-time top-up: add tokens for the current month only, never
+        // touch the recurring monthly_token_limit.
+        const tokens = parseInt(obj.metadata.tokens, 10) || 0;
+        if (tokens > 0) {
+          await pool.query('INSERT INTO usage_topups (client_id, tokens) VALUES ($1,$2)', [clientId, tokens]);
+          console.log(`[stripe] client ${clientId} → +${tokens} top-up tokens for this month (${event.type})`);
+        }
+      } else if (clientId) {
         // Figure out which plan was paid for, from the actual amount charged,
         // and apply the matching monthly token quota. Renewals hit this too
         // (invoice.paid), so an upgrade/downgrade takes effect automatically

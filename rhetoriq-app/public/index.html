@@ -5746,6 +5746,39 @@ function attachResultActions(body,bid,analysisId,hasBrandVoice){
   else body.parentNode.insertBefore(fuBox,body.nextSibling);
   return fuBox;
 }
+function renderQuotaExceeded(body,bid,clientId,rid,module,data,instructionsKey){
+  body.innerHTML='<div style="padding:14px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:13px;color:#991b1b;line-height:1.5">'
+    +'<div style="font-weight:600;margin-bottom:6px">Ihr monatliches Nutzungskontingent ist ausgeschöpft.</div>'
+    +'<div style="margin-bottom:12px">Wählen Sie, wie es weitergehen soll:</div>'
+    +'<div style="display:flex;flex-direction:column;gap:8px;max-width:340px">'
+    +'<button id="qe-topup-'+bid+'" style="padding:8px 12px;border:1px solid #991b1b;border-radius:6px;background:#fff;color:#991b1b;font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;font-family:inherit">Zusatzpaket kaufen (+100\'000 Tokens, CHF 99, einmalig)</button>'
+    +'<button id="qe-upgrade-'+bid+'" style="padding:8px 12px;border:1px solid #991b1b;border-radius:6px;background:#fff;color:#991b1b;font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;font-family:inherit">Auf nächste Abo-Stufe upgraden</button>'
+    +'<button id="qe-contact-'+bid+'" style="padding:8px 12px;border:1px solid #bd;border-radius:6px;background:transparent;color:var(--mu,#666);font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;font-family:inherit">Bei Lorena persönlich melden</button>'
+    +'</div><div id="qe-msg-'+bid+'" style="margin-top:10px;font-size:12px"></div>'
+    +'</div>';
+  const msgEl=document.getElementById('qe-msg-'+bid);
+  document.getElementById('qe-topup-'+bid).onclick=async()=>{
+    msgEl.textContent='Lädt…';
+    try{
+      const r=await api('/api/subscriptions/topup-link/'+clientId,{method:'POST'});
+      const d=await r.json();if(!r.ok)throw new Error(d.error);
+      window.open(d.url,'_blank');
+      msgEl.textContent='Zahlungsseite wurde in einem neuen Tab geöffnet.';
+    }catch(e){msgEl.textContent='Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.';}
+  };
+  document.getElementById('qe-upgrade-'+bid).onclick=async()=>{
+    msgEl.textContent='Lädt…';
+    try{
+      const r=await api('/api/subscriptions/upgrade-link/'+clientId,{method:'POST'});
+      const d=await r.json();if(!r.ok)throw new Error(d.error);
+      window.open(d.url,'_blank');
+      msgEl.textContent='Zahlungsseite wurde in einem neuen Tab geöffnet.';
+    }catch(e){msgEl.textContent=e.message||'Etwas ist schiefgelaufen.';}
+  };
+  document.getElementById('qe-contact-'+bid).onclick=()=>{
+    window.location.href='mailto:contact@lorenalienhard.ch?subject='+encodeURIComponent('RhetorIQ — Nutzungskontingent erweitern');
+  };
+}
 async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
   const box=document.getElementById(rid),body=document.getElementById(bid);
   box.classList.add('show');
@@ -5779,7 +5812,16 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body:JSON.stringify({module,clientId,data,debug:debugMode&&isAdv,instructionsKey,followUp})
     });
-    if(!resp.ok){const d=await resp.json();throw new Error(d.error||'Server error');}
+    if(!resp.ok){
+      const d=await resp.json();
+      if(d.quotaExceeded){
+        if(thinkingInterval){clearInterval(thinkingInterval);thinkingInterval=null;}
+        if(stallTimer){clearTimeout(stallTimer);stallTimer=null;}
+        renderQuotaExceeded(body,bid,d.clientId,rid,module,data,instructionsKey);
+        return;
+      }
+      throw new Error(d.error||'Server error');
+    }
     const reader=resp.body.getReader();const dec=new TextDecoder();
     let buf='',fullText='',lastEventName='';
     let analysisId=null,hasBrandVoice=false,debugPrompt=null,quotaWarning=null;

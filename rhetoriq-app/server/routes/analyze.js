@@ -52,15 +52,21 @@ const QUOTA_WARNING_THRESHOLD = 0.85;
 async function checkQuota(clientId) {
   if (!clientId) return { ok: true };
   const { rows: cRows } = await pool.query('SELECT name, monthly_token_limit FROM clients WHERE id=$1', [clientId]);
-  const limit = cRows[0]?.monthly_token_limit;
-  if (!limit) return { ok: true }; // no limit set = unlimited
+  const baseLimit = cRows[0]?.monthly_token_limit;
+  if (!baseLimit) return { ok: true }; // no limit set = unlimited
+  const { rows: topupRows } = await pool.query(
+    `SELECT COALESCE(SUM(tokens), 0)::bigint AS topup
+     FROM usage_topups WHERE client_id=$1 AND date_trunc('month', created_at) = date_trunc('month', NOW())`,
+    [clientId]
+  );
+  const limit = baseLimit + Number(topupRows[0].topup);
   const { rows } = await pool.query(
     `SELECT COALESCE(SUM(input_tokens + output_tokens), 0)::bigint AS used
      FROM usage_log WHERE client_id=$1 AND date_trunc('month', created_at) = date_trunc('month', NOW())`,
     [clientId]
   );
   const used = Number(rows[0].used);
-  if (used >= limit) return { ok: false, used, limit };
+  if (used >= limit) return { ok: false, used, limit, clientId };
   // Warm, opportunity-framed heads-up once usage crosses 85% — not a
   // restriction notice, an invitation to upgrade before they hit the wall.
   const clientName = cRows[0]?.name || '';
@@ -1588,7 +1594,7 @@ router.post('/', requireAuth, async (req, res) => {
       if (!quota.ok) {
         return res.status(429).json({
           error: 'Monatliches Nutzungskontingent erreicht. Bitte kontaktieren Sie Ihre Beraterin für eine Erweiterung.',
-          quotaExceeded: true, used: quota.used, limit: quota.limit
+          quotaExceeded: true, used: quota.used, limit: quota.limit, clientId: resolvedClientId
         });
       }
       quotaWarning = quota.warning || null;
@@ -1799,7 +1805,7 @@ router.post('/stream', requireAuth, async (req, res) => {
       if (!quota.ok) {
         return res.status(429).json({
           error: 'Monatliches Nutzungskontingent erreicht. Bitte kontaktieren Sie Ihre Beraterin für eine Erweiterung.',
-          quotaExceeded: true, used: quota.used, limit: quota.limit
+          quotaExceeded: true, used: quota.used, limit: quota.limit, clientId: resolvedClientId
         });
       }
     }
