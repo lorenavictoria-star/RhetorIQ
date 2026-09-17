@@ -181,7 +181,12 @@ router.post('/upgrade-link/:clientId', requireAuth, async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Client not found' });
 
     const currentLimit = rows[0].monthly_token_limit;
-    const currentIdx = TIERS.findIndex(t => t.tokens === currentLimit);
+    // currentLimit is null both for "no plan assigned yet" and for an actual
+    // Enterprise client (unlimited quota is stored as null too) — only match
+    // a real, non-null tier value here so an unassigned client correctly
+    // gets offered Starter as the next tier, instead of being treated as
+    // already on Enterprise and blocked from upgrading at all.
+    const currentIdx = TIERS.findIndex(t => t.tokens !== null && t.tokens === currentLimit);
     const nextTier = TIERS[currentIdx + 1];
     if (!nextTier) {
       return res.status(400).json({ error: 'Bereits auf der höchsten Stufe — bitte direkt bei der Beraterin melden.' });
