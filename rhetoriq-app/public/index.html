@@ -1860,6 +1860,9 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div id="mm-myprofile" onclick="openMyProfile()" class="mm-row" style="display:none;border-top:1px solid var(--bd)">
       <i class="ti ti-user-circle"></i> <span>Mein Profil</span>
     </div>
+    <div id="mm-billing" onclick="openBillingPortal()" class="mm-row" style="display:none;border-top:1px solid var(--bd)">
+      <i class="ti ti-credit-card"></i> <span>Abo verwalten</span>
+    </div>
     <div onclick="logout()" class="mm-row" style="border-top:1px solid var(--bd)">
       <i class="ti ti-logout"></i> <span id="mm-signout">Sign out</span>
     </div>
@@ -2690,6 +2693,15 @@ async function loginClient(){
   try{const r=await fetch(API+'/auth/client-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});const d=await r.json();if(!r.ok){err.textContent=d.error||'Invalid token';err.style.display='block';return;}token=d.token;localStorage.setItem('riq-token',token);boot(d.client,'client');}catch{err.textContent='Connection error';err.style.display='block';}
 }
 function logout(){token=null;localStorage.removeItem('riq-token');location.reload();}
+async function openBillingPortal(){
+  hideMore();
+  try{
+    const r=await api('/api/subscriptions/portal-link/'+clientId,{method:'POST'});
+    const d=await r.json();
+    if(!r.ok){alert(d.error||'Etwas ist schiefgelaufen.');return;}
+    window.location.href=d.url;
+  }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');}
+}
 
 // ── MY PROFILE (individual team-member self-service) ───────────
 function openMyProfile(){
@@ -3395,6 +3407,7 @@ async function boot(user,role){
   document.getElementById('uname').textContent=displayName;
   renderHomeGreeting(displayName,!isAdv&&!!clientUserName);
   const mpRow=document.getElementById('mm-myprofile');if(mpRow)mpRow.style.display=(!isAdv&&clientUserId)?'flex':'none';
+  const billRow=document.getElementById('mm-billing');if(billRow)billRow.style.display=isAdv?'none':'flex';
   if(isAdv){
     document.body.classList.add('adv');
     const mnCl=document.getElementById('mn-clients');if(mnCl)mnCl.style.display='flex';
@@ -5746,7 +5759,42 @@ function attachResultActions(body,bid,analysisId,hasBrandVoice){
   else body.parentNode.insertBefore(fuBox,body.nextSibling);
   return fuBox;
 }
-function renderQuotaExceeded(body,bid,clientId,rid,module,data,instructionsKey){
+const RIQ_TIERS=[
+  {name:'Starter',price:290,texts:'60'},
+  {name:'Wachstum',price:590,texts:'150'},
+  {name:'Team',price:990,texts:'300'},
+  {name:'Enterprise',price:2490,texts:'unbegrenzt'},
+];
+function renderPlanCards(containerId,clientId,onPicked){
+  const el=document.getElementById(containerId);
+  el.innerHTML=RIQ_TIERS.map(t=>
+    '<button data-tier="'+t.name+'" class="riq-plan-card" style="display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 14px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);cursor:pointer;text-align:left;font-family:inherit;margin-bottom:8px">'
+      +'<span><span style="font-weight:600;display:block">'+t.name+'</span><span style="font-size:11.5px;color:var(--mu)">'+t.texts+' Texte/Monat</span></span>'
+      +'<span style="font-weight:600;color:var(--ac)">CHF '+t.price+'.–</span>'
+    +'</button>'
+  ).join('')+'<div id="'+containerId+'-msg" style="margin-top:6px;font-size:12px;color:var(--mu)"></div>';
+  el.querySelectorAll('.riq-plan-card').forEach(btn=>{
+    btn.onclick=async()=>{
+      const msgEl=document.getElementById(containerId+'-msg');
+      msgEl.textContent='Lädt…';
+      try{
+        const r=await api('/api/subscriptions/choose-plan/'+clientId,{method:'POST',body:JSON.stringify({tier:btn.dataset.tier})});
+        const d=await r.json();if(!r.ok)throw new Error(d.error);
+        if(onPicked)onPicked(d);else window.location.href=d.url;
+      }catch(e){msgEl.textContent=e.message||'Etwas ist schiefgelaufen.';}
+    };
+  });
+}
+function renderQuotaExceeded(body,bid,clientId,rid,module,data,instructionsKey,cancelled){
+  if(cancelled){
+    body.innerHTML='<div style="padding:16px 18px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;font-size:13px;color:var(--tx);line-height:1.5">'
+      +'<div style="font-weight:600;margin-bottom:4px">Ihr Abo ist nicht mehr aktiv</div>'
+      +'<div style="color:var(--mu);margin-bottom:14px">Wählen Sie einen Plan, um RhetorIQ weiter zu nutzen.</div>'
+      +'<div id="qe-plans-'+bid+'" style="max-width:340px"></div>'
+      +'</div>';
+    renderPlanCards('qe-plans-'+bid,clientId);
+    return;
+  }
   body.innerHTML='<div style="padding:16px 18px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;font-size:13px;color:var(--tx);line-height:1.5">'
     +'<div style="font-weight:600;margin-bottom:4px">Ihr monatliches Nutzungskontingent ist ausgeschöpft</div>'
     +'<div style="color:var(--mu);margin-bottom:14px">Wählen Sie, wie es weitergehen soll.</div>'
@@ -5814,10 +5862,10 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
     });
     if(!resp.ok){
       const d=await resp.json();
-      if(d.quotaExceeded){
+      if(d.quotaExceeded||d.subscriptionCancelled){
         if(thinkingInterval){clearInterval(thinkingInterval);thinkingInterval=null;}
         if(stallTimer){clearTimeout(stallTimer);stallTimer=null;}
-        renderQuotaExceeded(body,bid,d.clientId,rid,module,data,instructionsKey);
+        renderQuotaExceeded(body,bid,d.clientId,rid,module,data,instructionsKey,!!d.subscriptionCancelled);
         return;
       }
       throw new Error(d.error||'Server error');
@@ -7414,7 +7462,7 @@ function privBadge(){return '<div class="priv-badge">&#128274; Data not stored f
   const ov = document.createElement('div');
   ov.id = 'setup-ov';
   ov.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:99999;padding:24px';
-  ov.innerHTML = `<div style="max-width:400px;width:100%;background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:32px 28px">
+  ov.innerHTML = `<div id="setup-card" style="max-width:400px;width:100%;background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:32px 28px">
     <div style="font-size:22px;font-weight:700;margin-bottom:6px">Zugang einrichten</div>
     <div id="setup-sub" style="font-size:14px;color:var(--mu);margin-bottom:24px">Link wird geprüft…</div>
     <div id="setup-form" style="display:none">
@@ -7431,7 +7479,11 @@ function privBadge(){return '<div class="priv-badge">&#128274; Data not stored f
         <input id="setup-pw2" type="password" placeholder="Wiederholen" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;margin-top:6px;font-size:14px;background:var(--bg);color:var(--tx);box-sizing:border-box">
       </div>
       <div id="setup-err" style="display:none;color:var(--red);font-size:13px;margin-bottom:12px"></div>
-      <button onclick="completeSetup('${t}')" style="width:100%;padding:12px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Passwort setzen & einloggen</button>
+      <button onclick="completeSetup('${t}')" style="width:100%;padding:12px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Weiter</button>
+    </div>
+    <div id="setup-plan" style="display:none">
+      <div id="setup-plan-cards"></div>
+      <a id="setup-plan-skip" style="display:block;text-align:center;margin-top:6px;font-size:12.5px;color:var(--mu);cursor:pointer;text-decoration:underline">Später entscheiden — jetzt einloggen</a>
     </div>
     <div id="setup-done" style="display:none;text-align:center;padding:12px 0">
       <div style="font-size:32px;margin-bottom:12px">✓</div>
@@ -7476,23 +7528,33 @@ async function completeSetup(t) {
       body: JSON.stringify({ token: t, password: pw1 })
     });
     const d = await r.json();
-    if (!r.ok) { err.textContent = d.error || 'Fehler.'; err.style.display='block'; btn.textContent='Passwort setzen & einloggen'; btn.disabled=false; return; }
-    document.getElementById('setup-form').style.display = 'none';
-    document.getElementById('setup-done').style.display = 'block';
-    // Log the client straight in with the token just issued, then clean the URL
+    if (!r.ok) { err.textContent = d.error || 'Fehler.'; err.style.display='block'; btn.textContent='Weiter'; btn.disabled=false; return; }
+    // Client is now authenticated (token stored) but not booted into the app
+    // yet — show the plan picker first so payment happens right at signup,
+    // while they're already here, instead of a separate later step.
     token = d.token;
     localStorage.setItem('riq-token', token);
-    setTimeout(() => {
-      window.history.replaceState({}, '', '/');
-      document.getElementById('setup-ov')?.remove();
-      const loginWrap = document.querySelector('.login-wrap');
-      if (loginWrap) loginWrap.style.display = '';
-      boot(d.client, 'client');
-    }, 1200);
+    setupClient = d.client;
+    document.getElementById('setup-form').style.display = 'none';
+    document.getElementById('setup-plan').style.display = 'block';
+    renderPlanCards('setup-plan-cards', d.client.id, (planResp) => { window.location.href = planResp.url; });
+    document.getElementById('setup-plan-skip').onclick = finishSetupSkipPlan;
   } catch(e) {
     err.textContent = 'Verbindungsfehler. Bitte erneut versuchen.'; err.style.display='block';
-    btn.textContent='Passwort setzen & einloggen'; btn.disabled=false;
+    btn.textContent='Weiter'; btn.disabled=false;
   }
+}
+let setupClient = null;
+function finishSetupSkipPlan() {
+  document.getElementById('setup-plan').style.display = 'none';
+  document.getElementById('setup-done').style.display = 'block';
+  setTimeout(() => {
+    window.history.replaceState({}, '', '/');
+    document.getElementById('setup-ov')?.remove();
+    const loginWrap = document.querySelector('.login-wrap');
+    if (loginWrap) loginWrap.style.display = '';
+    boot(setupClient, 'client');
+  }, 900);
 }
 
 // KEYBOARD

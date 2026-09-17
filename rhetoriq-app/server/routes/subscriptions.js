@@ -18,6 +18,11 @@ async function ensureColumn() {
   await pool.query(
     `ALTER TABLE clients ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trial'`
   );
+  // Needed to open a Stripe Customer Portal session for a client later (portal
+  // sessions are keyed by Stripe Customer ID, not by our own client ID).
+  await pool.query(
+    `ALTER TABLE clients ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`
+  );
   migrationDone = true;
 }
 
@@ -212,6 +217,73 @@ router.post('/upgrade-link/:clientId', requireAuth, async (req, res) => {
   }
 });
 
+// ── POST /api/subscriptions/choose-plan/:clientId ───────────────
+// Self-serve: client picks a plan on the setup page (right after setting
+// their password) and pays for it themselves. Any of the four tiers can be
+// chosen directly, unlike upgrade-link which only offers the next one up.
+router.post('/choose-plan/:clientId', requireAuth, async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    if (req.user.role === 'client' && String(req.user.clientId) !== String(clientId)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const { tier } = req.body;
+    const chosen = TIERS.find(t => t.name === tier);
+    if (!chosen) return res.status(400).json({ error: 'Unbekannter Plan' });
+
+    const { rows } = await pool.query('SELECT id, name FROM clients WHERE id=$1', [clientId]);
+    if (!rows.length) return res.status(404).json({ error: 'Client not found' });
+
+    const stripe = getStripe();
+    const link = await stripe.paymentLinks.create({
+      line_items: [{
+        price_data: {
+          currency: 'chf',
+          unit_amount: chosen.amountCents,
+          recurring: { interval: 'month' },
+          product_data: { name: `RhetorIQ ${chosen.name} Abo — ${rows[0].name}` },
+        },
+        quantity: 1,
+      }],
+      after_completion: { type: 'redirect', redirect: { url: 'https://rhetoriq.ch/?welcome=1' } },
+      metadata: { clientId: String(clientId), clientName: rows[0].name, type: 'choose-plan', targetTier: chosen.name },
+    });
+    res.json({ url: link.url, tier: chosen.name, amountCents: chosen.amountCents });
+  } catch (e) {
+    console.error('[stripe] choose-plan error:', e.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── POST /api/subscriptions/portal-link/:clientId ───────────────
+// Self-serve cancellation/management: opens Stripe's hosted Customer Portal,
+// where the client can cancel or view their subscription themselves without
+// the advisor doing it manually in Stripe. Requires stripe_customer_id to
+// already be on file, which the webhook captures at first payment.
+router.post('/portal-link/:clientId', requireAuth, async (req, res) => {
+  try {
+    await ensureColumn();
+    const { clientId } = req.params;
+    if (req.user.role === 'client' && String(req.user.clientId) !== String(clientId)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const { rows } = await pool.query('SELECT stripe_customer_id FROM clients WHERE id=$1', [clientId]);
+    if (!rows.length) return res.status(404).json({ error: 'Client not found' });
+    if (!rows[0].stripe_customer_id) {
+      return res.status(400).json({ error: 'Noch kein aktives Abo hinterlegt — bitte bei der Beraterin melden.' });
+    }
+    const stripe = getStripe();
+    const session = await stripe.billingPortal.sessions.create({
+      customer: rows[0].stripe_customer_id,
+      return_url: 'https://rhetoriq.ch/',
+    });
+    res.json({ url: session.url });
+  } catch (e) {
+    console.error('[stripe] portal-link error:', e.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ── POST /api/subscriptions/webhook ──────────────────────────
 // Stripe webhook. Must receive raw body — mount BEFORE express.json() in index.js.
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -240,6 +312,12 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       // clientId stored in metadata at payment-link creation time
       const clientId = obj.metadata?.clientId;
       const isTopup = obj.metadata?.type === 'topup';
+      // Save the Stripe Customer ID the first time we see it, so the client
+      // can later open the Customer Portal to manage/cancel their own
+      // subscription (portal sessions are keyed by Customer ID, not by ours).
+      if (clientId && obj.customer) {
+        await pool.query('UPDATE clients SET stripe_customer_id=$2 WHERE id=$1', [clientId, obj.customer]);
+      }
       if (clientId && isTopup) {
         // One-time top-up: add tokens for the current month only, never
         // touch the recurring monthly_token_limit.

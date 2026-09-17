@@ -51,7 +51,10 @@ async function checkCostAlert(clientId, advisorId) {
 const QUOTA_WARNING_THRESHOLD = 0.85;
 async function checkQuota(clientId) {
   if (!clientId) return { ok: true };
-  const { rows: cRows } = await pool.query('SELECT name, monthly_token_limit FROM clients WHERE id=$1', [clientId]);
+  const { rows: cRows } = await pool.query('SELECT name, monthly_token_limit, subscription_status FROM clients WHERE id=$1', [clientId]);
+  if (cRows[0]?.subscription_status === 'cancelled') {
+    return { ok: false, cancelled: true, used: 0, limit: 0 };
+  }
   const baseLimit = cRows[0]?.monthly_token_limit;
   if (!baseLimit) return { ok: true }; // no limit set = unlimited
   const { rows: topupRows } = await pool.query(
@@ -1592,7 +1595,10 @@ router.post('/', requireAuth, async (req, res) => {
     if (resolvedClientId) {
       const quota = await checkQuota(resolvedClientId);
       if (!quota.ok) {
-        return res.status(429).json({
+        return res.status(429).json(quota.cancelled ? {
+          error: 'Ihr Abo ist nicht mehr aktiv.',
+          subscriptionCancelled: true, clientId: resolvedClientId
+        } : {
           error: 'Monatliches Nutzungskontingent erreicht. Bitte kontaktieren Sie Ihre Beraterin für eine Erweiterung.',
           quotaExceeded: true, used: quota.used, limit: quota.limit, clientId: resolvedClientId
         });
@@ -1803,7 +1809,10 @@ router.post('/stream', requireAuth, async (req, res) => {
       const quota = await checkQuota(resolvedClientId);
       quotaWarning = quota.warning || null;
       if (!quota.ok) {
-        return res.status(429).json({
+        return res.status(429).json(quota.cancelled ? {
+          error: 'Ihr Abo ist nicht mehr aktiv.',
+          subscriptionCancelled: true, clientId: resolvedClientId
+        } : {
           error: 'Monatliches Nutzungskontingent erreicht. Bitte kontaktieren Sie Ihre Beraterin für eine Erweiterung.',
           quotaExceeded: true, used: quota.used, limit: quota.limit, clientId: resolvedClientId
         });
