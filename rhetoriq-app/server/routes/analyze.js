@@ -48,9 +48,10 @@ async function checkCostAlert(clientId, advisorId) {
 // reach their monthly_token_limit (set per client, tied to their subscription
 // tier — NULL/0 means unlimited). This runs BEFORE the AI call so an
 // over-quota request never reaches the API and never costs anything.
+const QUOTA_WARNING_THRESHOLD = 0.85;
 async function checkQuota(clientId) {
   if (!clientId) return { ok: true };
-  const { rows: cRows } = await pool.query('SELECT monthly_token_limit FROM clients WHERE id=$1', [clientId]);
+  const { rows: cRows } = await pool.query('SELECT name, monthly_token_limit FROM clients WHERE id=$1', [clientId]);
   const limit = cRows[0]?.monthly_token_limit;
   if (!limit) return { ok: true }; // no limit set = unlimited
   const { rows } = await pool.query(
@@ -60,7 +61,13 @@ async function checkQuota(clientId) {
   );
   const used = Number(rows[0].used);
   if (used >= limit) return { ok: false, used, limit };
-  return { ok: true, used, limit };
+  // Warm, opportunity-framed heads-up once usage crosses 85% — not a
+  // restriction notice, an invitation to upgrade before they hit the wall.
+  const clientName = cRows[0]?.name || '';
+  const warning = used >= limit * QUOTA_WARNING_THRESHOLD
+    ? `Liebe/r ${clientName}, Sie nutzen RhetorIQ diesen Monat richtig aktiv – schon ${Math.round(used / limit * 100)} % Ihres Kontingents sind ausgeschöpft. Damit Ihnen nichts fehlt, verlängern wir Ihr Kontingent gerne unkompliziert. Melden Sie sich einfach kurz bei Ihrer persönlichen Beraterin Lorena.`
+    : null;
+  return { ok: true, used, limit, warning };
 }
 
 // Sanitize user-controlled text before injecting into system prompts.
@@ -1575,6 +1582,7 @@ router.post('/', requireAuth, async (req, res) => {
     // ("text-gen-linkedin") via the gear icon, distinct from the generic
     // module key ("text-gen") used for module-wide feedback — fetch both.
     const resolvedClientId = clientId || (req.user.role === 'client' ? req.user.clientId : null);
+    let quotaWarning = null;
     if (resolvedClientId) {
       const quota = await checkQuota(resolvedClientId);
       if (!quota.ok) {
@@ -1583,6 +1591,7 @@ router.post('/', requireAuth, async (req, res) => {
           quotaExceeded: true, used: quota.used, limit: quota.limit
         });
       }
+      quotaWarning = quota.warning || null;
       const keys = instructionsKey && instructionsKey !== module ? [module, instructionsKey] : [module];
       const { rows: customRows } = await pool.query(
         'SELECT instructions FROM client_module_prompts WHERE client_id=$1 AND module_key=ANY($2)',
@@ -1757,7 +1766,7 @@ router.post('/', requireAuth, async (req, res) => {
       req.app.locals.wss.broadcast({ type: 'analysis', analysis });
     }
 
-    res.json({ result, id: rows[0].id });
+    res.json({ result, id: rows[0].id, quotaWarning });
   } catch (e) {
     console.error(e);
     logGenerationError(req, e);
@@ -1783,8 +1792,10 @@ router.post('/stream', requireAuth, async (req, res) => {
     const resolvedClientId = clientId || (req.user.role === 'client' ? req.user.clientId : null);
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
 
+    let quotaWarning = null;
     if (resolvedClientId) {
       const quota = await checkQuota(resolvedClientId);
+      quotaWarning = quota.warning || null;
       if (!quota.ok) {
         return res.status(429).json({
           error: 'Monatliches Nutzungskontingent erreicht. Bitte kontaktieren Sie Ihre Beraterin für eine Erweiterung.',
@@ -1952,7 +1963,7 @@ router.post('/stream', requireAuth, async (req, res) => {
       ).catch(() => {});
     }
 
-    const donePayload = { id: rows[0].id, hasBrandVoice };
+    const donePayload = { id: rows[0].id, hasBrandVoice, quotaWarning };
     if (isDebug) donePayload.systemPrompt = baseSystem + (brandVoiceBlock ? '\n\n[BRAND VOICE CACHED]\n' + brandVoiceBlock : '') + (restDynamicSystem ? '\n\n--- DYNAMIC ---\n' + restDynamicSystem : '');
     res.write(`event: done\ndata: ${JSON.stringify(donePayload)}\n\n`);
     res.end();
