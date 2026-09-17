@@ -863,6 +863,15 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       </div>
       <button onclick="closeModal('mc-ov')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--mu);line-height:1;padding:0 0 0 12px">×</button>
     </div>
+    <div style="padding:12px 20px;border-bottom:1px solid var(--bd);flex-shrink:0">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-bottom:8px">Monatliches Nutzungskontingent</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <input type="number" id="mc-token-limit" min="0" step="10000" placeholder="unlimitiert" style="width:150px;padding:7px 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg)">
+        <span style="font-size:12px;color:var(--mu)">Tokens/Monat &middot; leer lassen = unlimitiert</span>
+        <button class="lbtn" style="padding:5px 12px;font-size:11px" onclick="saveTokenLimit()">Speichern</button>
+      </div>
+      <div style="font-size:11px;color:var(--mu);margin-top:6px" id="mc-token-usage"></div>
+    </div>
     <div id="mc-body" style="overflow-y:auto;flex:1;padding:8px 0"></div>
     <div style="padding:10px 20px;border-top:1px solid var(--bd);flex-shrink:0">
       <div id="mc-custom-form" style="display:none;margin-bottom:12px;padding:14px;background:var(--sf);border-radius:8px;border:1px solid var(--bd)">
@@ -3556,9 +3565,33 @@ function _mcUpdateCount(){
   const el=document.getElementById('mc-count');
   if(el)el.textContent=checked+' Module ausgewählt';
 }
+async function loadTokenUsage(cid){
+  const el=document.getElementById('mc-token-usage');
+  const input=document.getElementById('mc-token-limit');
+  input.value='';el.textContent='Lädt…';
+  try{
+    const r=await api('/api/clients/'+cid+'/token-usage');
+    const d=await r.json();if(!r.ok)throw new Error(d.error);
+    if(d.limit)input.value=d.limit;
+    const usedFmt=d.used.toLocaleString('de-CH');
+    el.textContent=d.limit
+      ? `Diesen Monat verbraucht: ${usedFmt} / ${d.limit.toLocaleString('de-CH')} Tokens`
+      : `Diesen Monat verbraucht: ${usedFmt} Tokens (unlimitiert)`;
+  }catch(e){el.textContent='';console.error(e);}
+}
+async function saveTokenLimit(){
+  if(!_mcClientId)return;
+  const raw=document.getElementById('mc-token-limit').value.trim();
+  try{
+    const r=await api('/api/clients/'+_mcClientId+'/token-limit',{method:'PUT',body:JSON.stringify({monthlyTokenLimit:raw===''?null:raw})});
+    const d=await r.json();if(!r.ok)throw new Error(d.error);
+    loadTokenUsage(_mcClientId);
+  }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
+}
 function openModuleConfig(cid){
   _mcClientId=cid;
   const c=clients.find(x=>x.id==cid);if(!c)return;
+  loadTokenUsage(cid);
   document.getElementById('mc-title').textContent='Module — '+c.name;
   const em=c.enabled_modules;
   // build body HTML
