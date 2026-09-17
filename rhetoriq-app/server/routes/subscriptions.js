@@ -107,6 +107,24 @@ router.post('/mark-active/:clientId', requireAdvisor, async (req, res) => {
   }
 });
 
+// ── Pricing tiers → monthly token quota ────────────────────────
+// Matched by the exact CHF amount charged (in Rappen) rather than a Stripe
+// Price ID, so this keeps working even if a price gets recreated/edited in
+// Stripe. Keep in sync with the actual prices configured there.
+// Starter 290/Wachstum 590/Team 990/Enterprise 2490 CHF per month ->
+// ~5'000 tokens per text as a buffer (covers longer formats like
+// presentations, not just short emails).
+const PRICE_TIER_TOKEN_LIMITS = {
+  29000: 300000,    // Starter — 60 Texte/Monat
+  59000: 750000,    // Wachstum — 150 Texte/Monat
+  99000: 1500000,   // Team — 300 Texte/Monat
+  249000: null,     // Enterprise — unbegrenzt
+};
+function resolveTokenLimit(amountInCents, currency) {
+  if (!amountInCents || (currency || '').toLowerCase() !== 'chf') return undefined;
+  return PRICE_TIER_TOKEN_LIMITS.hasOwnProperty(amountInCents) ? PRICE_TIER_TOKEN_LIMITS[amountInCents] : undefined;
+}
+
 // ── POST /api/subscriptions/webhook ──────────────────────────
 // Stripe webhook. Must receive raw body — mount BEFORE express.json() in index.js.
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -135,11 +153,25 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       // clientId stored in metadata at payment-link creation time
       const clientId = obj.metadata?.clientId;
       if (clientId) {
-        await pool.query(
-          `UPDATE clients SET subscription_status='active' WHERE id=$1`,
-          [clientId]
-        );
-        console.log(`[stripe] client ${clientId} → active (${event.type})`);
+        // Figure out which plan was paid for, from the actual amount charged,
+        // and apply the matching monthly token quota. Renewals hit this too
+        // (invoice.paid), so an upgrade/downgrade takes effect automatically
+        // at the next billing cycle, not just at first signup.
+        const amount = event.type === 'checkout.session.completed' ? obj.amount_total : obj.amount_paid;
+        const tokenLimit = resolveTokenLimit(amount, obj.currency);
+        if (tokenLimit !== undefined) {
+          await pool.query(
+            `UPDATE clients SET subscription_status='active', monthly_token_limit=$2 WHERE id=$1`,
+            [clientId, tokenLimit]
+          );
+          console.log(`[stripe] client ${clientId} → active, monthly_token_limit=${tokenLimit} (${event.type}, ${amount} ${obj.currency})`);
+        } else {
+          await pool.query(
+            `UPDATE clients SET subscription_status='active' WHERE id=$1`,
+            [clientId]
+          );
+          console.log(`[stripe] client ${clientId} → active, amount ${amount} ${obj.currency} matched no known tier — token limit left unchanged (${event.type})`);
+        }
       }
     } else if (event.type === 'customer.subscription.deleted') {
       const obj = event.data.object;
