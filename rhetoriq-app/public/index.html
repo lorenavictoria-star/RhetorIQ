@@ -5785,11 +5785,11 @@ function renderPlanCards(containerId,clientId,onPicked){
     };
   });
 }
-function renderQuotaExceeded(body,bid,clientId,rid,module,data,instructionsKey,cancelled){
-  if(cancelled){
+function renderQuotaExceeded(body,bid,clientId,rid,module,data,instructionsKey,cancelled,pendingPlan){
+  if(cancelled||pendingPlan){
     body.innerHTML='<div style="padding:16px 18px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;font-size:13px;color:var(--tx);line-height:1.5">'
-      +'<div style="font-weight:600;margin-bottom:4px">Ihr Abo ist nicht mehr aktiv</div>'
-      +'<div style="color:var(--mu);margin-bottom:14px">Wählen Sie einen Plan, um RhetorIQ weiter zu nutzen.</div>'
+      +'<div style="font-weight:600;margin-bottom:4px">'+(cancelled?'Ihr Abo ist nicht mehr aktiv':'Bitte wählen Sie zuerst einen Plan')+'</div>'
+      +'<div style="color:var(--mu);margin-bottom:14px">Wählen Sie einen Plan, um RhetorIQ zu nutzen.</div>'
       +'<div id="qe-plans-'+bid+'" style="max-width:340px"></div>'
       +'</div>';
     renderPlanCards('qe-plans-'+bid,clientId);
@@ -5862,10 +5862,10 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
     });
     if(!resp.ok){
       const d=await resp.json();
-      if(d.quotaExceeded||d.subscriptionCancelled){
+      if(d.quotaExceeded||d.subscriptionCancelled||d.pendingPlan){
         if(thinkingInterval){clearInterval(thinkingInterval);thinkingInterval=null;}
         if(stallTimer){clearTimeout(stallTimer);stallTimer=null;}
-        renderQuotaExceeded(body,bid,d.clientId,rid,module,data,instructionsKey,!!d.subscriptionCancelled);
+        renderQuotaExceeded(body,bid,d.clientId,rid,module,data,instructionsKey,!!d.subscriptionCancelled,!!d.pendingPlan);
         return;
       }
       throw new Error(d.error||'Server error');
@@ -7545,9 +7545,10 @@ async function completeSetup(t) {
   }
 }
 let setupClient = null;
-function finishSetupSkipPlan() {
+async function finishSetupSkipPlan() {
   document.getElementById('setup-plan').style.display = 'none';
   document.getElementById('setup-done').style.display = 'block';
+  try{ await api('/api/subscriptions/skip-plan/'+setupClient.id,{method:'POST'}); }catch(e){}
   setTimeout(() => {
     window.history.replaceState({}, '', '/');
     document.getElementById('setup-ov')?.remove();

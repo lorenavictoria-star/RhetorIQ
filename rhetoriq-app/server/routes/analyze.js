@@ -55,6 +55,9 @@ async function checkQuota(clientId) {
   if (cRows[0]?.subscription_status === 'cancelled') {
     return { ok: false, cancelled: true, used: 0, limit: 0 };
   }
+  if (cRows[0]?.subscription_status === 'pending_plan') {
+    return { ok: false, pendingPlan: true, used: 0, limit: 0 };
+  }
   const baseLimit = cRows[0]?.monthly_token_limit;
   if (!baseLimit) return { ok: true }; // no limit set = unlimited
   const { rows: topupRows } = await pool.query(
@@ -1598,6 +1601,9 @@ router.post('/', requireAuth, async (req, res) => {
         return res.status(429).json(quota.cancelled ? {
           error: 'Ihr Abo ist nicht mehr aktiv.',
           subscriptionCancelled: true, clientId: resolvedClientId
+        } : quota.pendingPlan ? {
+          error: 'Bitte wählen Sie zuerst einen Plan.',
+          pendingPlan: true, clientId: resolvedClientId
         } : {
           error: 'Monatliches Nutzungskontingent erreicht. Bitte kontaktieren Sie Ihre Beraterin für eine Erweiterung.',
           quotaExceeded: true, used: quota.used, limit: quota.limit, clientId: resolvedClientId
@@ -1812,6 +1818,9 @@ router.post('/stream', requireAuth, async (req, res) => {
         return res.status(429).json(quota.cancelled ? {
           error: 'Ihr Abo ist nicht mehr aktiv.',
           subscriptionCancelled: true, clientId: resolvedClientId
+        } : quota.pendingPlan ? {
+          error: 'Bitte wählen Sie zuerst einen Plan.',
+          pendingPlan: true, clientId: resolvedClientId
         } : {
           error: 'Monatliches Nutzungskontingent erreicht. Bitte kontaktieren Sie Ihre Beraterin für eine Erweiterung.',
           quotaExceeded: true, used: quota.used, limit: quota.limit, clientId: resolvedClientId

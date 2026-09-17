@@ -135,6 +135,26 @@ function resolveTokenLimit(amountInCents, currency) {
 // doesn't change their recurring plan.
 const TOPUP = { amountCents: 9900, tokens: 100000, label: 'Kontingent-Zusatzpaket (+100\'000 Tokens)' };
 
+// ── POST /api/subscriptions/skip-plan/:clientId ─────────────────
+// Client chose "Später entscheiden" on the setup page instead of paying
+// right away. Marks them explicitly as pending-plan so generation is
+// gated until they pick one — distinct from 'trial', which existing/
+// advisor-managed clients keep and which is never gated.
+router.post('/skip-plan/:clientId', requireAuth, async (req, res) => {
+  try {
+    await ensureColumn();
+    const { clientId } = req.params;
+    if (req.user.role === 'client' && String(req.user.clientId) !== String(clientId)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    await pool.query(`UPDATE clients SET subscription_status='pending_plan' WHERE id=$1`, [clientId]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[stripe] skip-plan error:', e.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ── POST /api/subscriptions/topup-link/:clientId ────────────────
 // Self-serve: client hit their monthly quota and wants to buy a one-time
 // top-up right now, without waiting on the advisor. No pre-created Stripe
