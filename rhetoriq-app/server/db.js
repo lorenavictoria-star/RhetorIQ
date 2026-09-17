@@ -43,6 +43,11 @@ async function init() {
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS capital_markets_enabled BOOLEAN DEFAULT FALSE;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS hotel_enabled BOOLEAN DEFAULT FALSE;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS enabled_modules TEXT[];
+    -- Monthly token quota per client, tied to their subscription tier. NULL
+    -- (the default) means unlimited — existing clients are never retroactively
+    -- capped just by deploying this column; the advisor sets a limit per
+    -- client explicitly when a plan calls for one.
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS monthly_token_limit BIGINT;
 
     CREATE TABLE IF NOT EXISTS analyses (
       id SERIAL PRIMARY KEY,

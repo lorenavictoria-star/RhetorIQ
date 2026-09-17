@@ -43,6 +43,26 @@ async function checkCostAlert(clientId, advisorId) {
   }
 }
 
+// ── Monthly token quota ─────────────────────────────────────────────
+// Hard stop once a client's usage_log tokens for the current calendar month
+// reach their monthly_token_limit (set per client, tied to their subscription
+// tier — NULL/0 means unlimited). This runs BEFORE the AI call so an
+// over-quota request never reaches the API and never costs anything.
+async function checkQuota(clientId) {
+  if (!clientId) return { ok: true };
+  const { rows: cRows } = await pool.query('SELECT monthly_token_limit FROM clients WHERE id=$1', [clientId]);
+  const limit = cRows[0]?.monthly_token_limit;
+  if (!limit) return { ok: true }; // no limit set = unlimited
+  const { rows } = await pool.query(
+    `SELECT COALESCE(SUM(input_tokens + output_tokens), 0)::bigint AS used
+     FROM usage_log WHERE client_id=$1 AND date_trunc('month', created_at) = date_trunc('month', NOW())`,
+    [clientId]
+  );
+  const used = Number(rows[0].used);
+  if (used >= limit) return { ok: false, used, limit };
+  return { ok: true, used, limit };
+}
+
 // Sanitize user-controlled text before injecting into system prompts.
 // Strips prompt-injection patterns while preserving legitimate content.
 function sanitizeForPrompt(text) {
@@ -1556,6 +1576,13 @@ router.post('/', requireAuth, async (req, res) => {
     // module key ("text-gen") used for module-wide feedback — fetch both.
     const resolvedClientId = clientId || (req.user.role === 'client' ? req.user.clientId : null);
     if (resolvedClientId) {
+      const quota = await checkQuota(resolvedClientId);
+      if (!quota.ok) {
+        return res.status(429).json({
+          error: 'Monatliches Nutzungskontingent erreicht. Bitte kontaktieren Sie Ihre Beraterin für eine Erweiterung.',
+          quotaExceeded: true, used: quota.used, limit: quota.limit
+        });
+      }
       const keys = instructionsKey && instructionsKey !== module ? [module, instructionsKey] : [module];
       const { rows: customRows } = await pool.query(
         'SELECT instructions FROM client_module_prompts WHERE client_id=$1 AND module_key=ANY($2)',
@@ -1755,6 +1782,16 @@ router.post('/stream', requireAuth, async (req, res) => {
       : cfg.build(data);
     const resolvedClientId = clientId || (req.user.role === 'client' ? req.user.clientId : null);
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+
+    if (resolvedClientId) {
+      const quota = await checkQuota(resolvedClientId);
+      if (!quota.ok) {
+        return res.status(429).json({
+          error: 'Monatliches Nutzungskontingent erreicht. Bitte kontaktieren Sie Ihre Beraterin für eine Erweiterung.',
+          quotaExceeded: true, used: quota.used, limit: quota.limit
+        });
+      }
+    }
 
     // Same injections as main endpoint — fetch both the generic module key and,
     // for Text Generator, the tile-specific gear-icon key (e.g. "text-gen-linkedin")
@@ -2310,6 +2347,6 @@ router.post('/:id/rate', requireAuth, async (req, res) => {
 
 // Exposed for tests only — doesn't change Express behavior, since routers are
 // callable objects and consumers only ever use `require(...)` as the router.
-router._internal = { sanitizeForPrompt, capText, PROMPTS, MODULE_MAX_TOKENS, HAIKU_MODULES, GLOBAL_STYLE_RULES };
+router._internal = { sanitizeForPrompt, capText, PROMPTS, MODULE_MAX_TOKENS, HAIKU_MODULES, GLOBAL_STYLE_RULES, checkQuota };
 
 module.exports = router;

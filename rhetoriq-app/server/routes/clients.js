@@ -431,6 +431,54 @@ router.put('/:id/hotel-toggle', requireAdvisor, async (req, res) => {
   }
 });
 
+// PUT /api/clients/:id/token-limit — set or clear this client's monthly
+// token quota (tie the value to their subscription tier). null/0 = unlimited.
+router.put('/:id/token-limit', requireAdvisor, async (req, res) => {
+  try {
+    const { monthlyTokenLimit } = req.body;
+    const limit = (monthlyTokenLimit === null || monthlyTokenLimit === undefined || monthlyTokenLimit === '')
+      ? null
+      : parseInt(monthlyTokenLimit, 10);
+    if (limit !== null && (!Number.isFinite(limit) || limit < 0)) {
+      return res.status(400).json({ error: 'monthlyTokenLimit must be a positive number or null' });
+    }
+    const { rows } = await pool.query(
+      'UPDATE clients SET monthly_token_limit = $1 WHERE id = $2 AND advisor_id = $3 RETURNING monthly_token_limit',
+      [limit, req.params.id, req.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
+    res.json({ monthlyTokenLimit: rows[0].monthly_token_limit });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/clients/:id/token-usage — current-month usage vs. quota, for
+// both the advisor dashboard and the client's own "usage" view.
+router.get('/:id/token-usage', requireAuth, async (req, res) => {
+  try {
+    const clientId = req.params.id;
+    if (req.user.role === 'client' && String(req.user.clientId) !== String(clientId)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const { rows: cRows } = await pool.query(
+      'SELECT monthly_token_limit FROM clients WHERE id = $1' + (req.user.role === 'advisor' ? ' AND advisor_id = $2' : ''),
+      req.user.role === 'advisor' ? [clientId, req.user.id] : [clientId]
+    );
+    if (!cRows[0]) return res.status(404).json({ error: 'Client not found' });
+    const { rows } = await pool.query(
+      `SELECT COALESCE(SUM(input_tokens + output_tokens), 0)::bigint AS used
+       FROM usage_log WHERE client_id=$1 AND date_trunc('month', created_at) = date_trunc('month', NOW())`,
+      [clientId]
+    );
+    res.json({ used: Number(rows[0].used), limit: cRows[0].monthly_token_limit });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 router.delete('/:id', requireAdvisor, async (req, res) => {
   try {
     await pool.query(
