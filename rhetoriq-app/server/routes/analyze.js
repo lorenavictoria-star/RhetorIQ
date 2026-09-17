@@ -71,7 +71,7 @@ async function checkQuota(clientId) {
   // restriction notice, an invitation to upgrade before they hit the wall.
   const clientName = cRows[0]?.name || '';
   const warning = used >= limit * QUOTA_WARNING_THRESHOLD
-    ? `Liebe/r ${clientName}, Sie nutzen RhetorIQ diesen Monat richtig aktiv – schon ${Math.round(used / limit * 100)} % Ihres Kontingents sind ausgeschöpft. Damit Ihnen nichts fehlt, verlängern wir Ihr Kontingent gerne unkompliziert. Melden Sie sich einfach kurz bei Ihrer persönlichen Beraterin Lorena.`
+    ? `Liebe/r ${clientName}, Sie nutzen RhetorIQ diesen Monat richtig aktiv – schon ${Math.round(used / limit * 100)} % Ihres Kontingents sind ausgeschöpft.`
     : null;
   return { ok: true, used, limit, warning };
 }
