@@ -2064,6 +2064,10 @@ const API='https://rhetoriq.ch';
 let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null,clientUserId=null,clientUserName=null,clientUserEmail=null;
 let debugMode=localStorage.getItem('riq-debug')==='1';
 const DEFAULT_MODULES=['profiling','brand-voice','text-gen','review','pre-meeting','arg-reaction','crisis','risk','thread','rh-translate','before-after','sparring','debrief','presentation','customer-review'];
+// Fixed Anrede/Ton presets for Email & Brief — replaces the free-form Ton-Kalibrator
+// sliders for these two formats. Each label must match a key in the backend's
+// TONE_PRESETS map (server/routes/analyze.js) verbatim.
+const TONE_PRESETS=['Geschäftlich · Sie','Geschäftlich · Du','Intern · Sie','Intern · Du','Presse / Behörden · Sie','Kundenservice · Sie','Kundenservice · Du','Akquise / Erstkontakt · Sie','Reklamation / Beschwerde · Sie','Lieferant / Partner · Sie','Team-Update von Führungskraft · Du'];
 function modEnabled(key){if(enabledModules===null)return DEFAULT_MODULES.includes(key);return enabledModules.includes(key);}
 function hasSuite(prefix){return enabledModules&&enabledModules.some(k=>k.startsWith(prefix));}
 
@@ -5001,7 +5005,7 @@ function buildTextGen(prefill,form){
       })()}
       <div class="row2">
         <div class="fg2"><label class="fl2">${tl.tg_audience}</label><select id="tg-aud-${t.id}"><option>B2B — C-Suite</option><option>B2B — HR Leaders</option><option>B2B — Finance / Investors</option><option>B2B — General Business</option><option>B2C — General Consumer</option><option>Internal — All Employees</option><option>Internal — Leadership Team</option><option>Media / Journalists</option></select></div>
-        <div class="fg2"><label class="fl2">${tl.tg_tone}</label><select id="tg-tone-${t.id}"><option>Aus Voice Profile</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European — understated</option></select></div>
+        <div class="fg2"><label class="fl2">${tl.tg_tone}</label><select id="tg-tone-${t.id}">${(t.id==='email'||t.id==='brief')?TONE_PRESETS.map(o=>`<option>${o}</option>`).join(''):`<option>Aus Voice Profile</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European — understated</option>`}</select>${(t.id==='email'||t.id==='brief')?`<div style="font-size:11px;color:var(--mu);margin-top:4px">Bleibt immer Geschäftspartner — "Du" ändert nur die Anrede, nie die Höflichkeit.</div>`:''}</div>
       </div>
       <div class="row2">
         <div class="fg2"><label class="fl2">${tl.tg_language}</label><select id="tg-lang-${t.id}"><option>Deutsch</option><option>English</option><option>Français</option><option>Italiano</option></select></div>
@@ -5042,7 +5046,7 @@ function buildTextGen(prefill,form){
           <div id="vorbild-status-${t.id}" style="font-size:11px;color:var(--dm);margin-top:2px"></div>
         </div>
       </div>
-      <div class="tone-cal-box">
+      ${(t.id==='email'||t.id==='brief')?'':`<div class="tone-cal-box">
         <div class="tone-cal-hdr" onclick="toggleToneCal('${t.id}')">
           <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)">${tl.tone_cal||'Tone Calibrator'}</span>
           <span id="tone-cal-arrow-${t.id}" style="font-size:16px;color:var(--mu);line-height:1">+</span>
@@ -5051,7 +5055,7 @@ function buildTextGen(prefill,form){
           <div class="tone-row"><span class="tone-lbl">${tl.tone_conv||'Conversational'}</span><input type="range" id="tone-formal-${t.id}" min="0" max="100" value="50"><span class="tone-lbl" style="text-align:right">${tl.tone_formal||'Formal'}</span></div>
           <div class="tone-row"><span class="tone-lbl">${tl.tone_dipl||'Diplomatic'}</span><input type="range" id="tone-edge-${t.id}" min="0" max="100" value="50"><span class="tone-lbl" style="text-align:right">${tl.tone_direct||'Direct'}</span></div>
         </div>
-      </div>
+      </div>`}
       <div class="fg2" style="margin-top:4px;display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="tg-geo-${t.id}" style="width:16px;height:16px;cursor:pointer">
         <label for="tg-geo-${t.id}" style="font-size:12px;color:var(--tx);cursor:pointer">GEO-Optimierung &mdash; für KI-Suchmaschinen wie ChatGPT/Perplexity optimieren (Brand Voice bleibt immer im Vordergrund)</label>
@@ -5639,7 +5643,7 @@ async function runMod(name){
   let module,data,rid,bid;
   if(name==='brand-voice-co'){module='brand-voice-co';rid='brand-voice-co-r';bid='brand-voice-co-b';const t=g('bv-co-in')||getRefContext('ref_brand_co');if(!t)return alert('Please enter text or save reference documents first.');data={text:t+context,company:g('bv-company'),industry:g('bv-industry'),values:g('bv-values'),audiences:g('bv-audiences')};}
   else if(name==='brand-voice-ind'){module='brand-voice-ind';rid='brand-voice-ind-r';bid='brand-voice-ind-b';const t=g('bv-ind-in')||getRefContext('ref_brand_ind');if(!t)return alert('Please enter text or save reference documents first.');data={text:t+context,person:g('bv-person'),role:g('bv-prole')};}
-  else if(name==='text-gen'&&arguments[1]==='brief'){const fid='brief';module='brief';rid='text-gen-r-'+fid;bid='text-gen-b-'+fid;const t=g('tg-task-'+fid);if(!t)return alert('Please enter a briefing.');data={text:t+context,sender:g('tg-br-sender'),recipient:g('tg-br-recipient'),subject:g('tg-br-subject'),tone:g('tg-fmt-'+fid)};}
+  else if(name==='text-gen'&&arguments[1]==='brief'){const fid='brief';module='brief';rid='text-gen-r-'+fid;bid='text-gen-b-'+fid;const t=g('tg-task-'+fid);if(!t)return alert('Please enter a briefing.');data={text:t+context,sender:g('tg-br-sender'),recipient:g('tg-br-recipient'),subject:g('tg-br-subject'),briefArt:g('tg-fmt-'+fid),tone:g('tg-tone-'+fid)};}
   else if(name==='text-gen'){const fid=arguments[1]||'custom';module='text-gen';rid='text-gen-r-'+fid;bid='text-gen-b-'+fid;const t=g('tg-task-'+fid);if(!t&&!g('tg-draft-'+fid))return alert('Please enter a briefing or an existing draft to revise.');const ref=g('tg-ref-'+fid);const liProf=fid==='linkedin'?(g('tg-li-profile')||''):'';const liCtx=liProf?'\n\n---LINKEDIN PROFILE---\n'+liProf:'';
     let baseTone=g('tg-tone-'+fid)||'';
     const tCalBody=document.getElementById('tone-cal-body-'+fid);

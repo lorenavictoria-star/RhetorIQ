@@ -6,6 +6,31 @@ const { generateText, streamText, resolveModelId } = require('../lib/aiProvider'
 
 const router = express.Router();
 
+// ── Fixed Anrede/Ton presets for Email & Brief ──────────────────────
+// Replaces the old free-form Ton-Kalibrator sliders for these two formats.
+// Each preset is a hard baseline the model must follow; the client's
+// individual Brand Voice (wording, rhythm, recurring phrases) then overlays
+// on top of it, but never overrides the register (Sie/Du) or the underlying
+// posture (deescalating, celebratory, formal, etc.) the preset defines.
+const TONE_PRESETS = {
+  'Geschäftlich · Sie': 'Formell-höflich, sachlich-professionell, respektvolle Distanz. Vollständige Sätze, keine Umgangssprache. Anrede "Sehr geehrte(r) [Titel] [Name]", Verabschiedung "Freundliche Grüsse". Warm, aber nie vertraulich.',
+  'Geschäftlich · Du': 'Partnerschaftlich-modern, professionell aber persönlich-nahbar. Klare, vollständige Sätze, kein Slang. Anrede mit Vorname ("Lieber/Liebe [Vorname]"), Verabschiedung "Herzliche Grüsse". Inhaltlich genauso verbindlich und sorgfältig wie die Sie-Form — nur die Distanz sinkt, nicht die Sorgfalt.',
+  'Intern · Sie': 'Respektvoll-formell wie extern, aber mit implizitem Kontext-Vorsprung (Projektnamen/Abkürzungen ohne Erklärung sind okay). Etwas kürzer und direkter als extern, da keine Repräsentationsfunktion.',
+  'Intern · Du': 'Locker-kollegial, kurze prägnante Sätze, darf informell sein ("kurz zur Info", "meld dich"), bleibt aber sachlich und lösungsorientiert — kein Sarkasmus, keine Deadline-Härte.',
+  'Presse / Behörden · Sie': 'Höchstformell, zurückhaltend, jedes Wort abwägend. Keine Werbesprache, keine Superlative, keine rhetorischen Fragen. Neutraler Ton auch bei kritischen Themen, Fokus auf Fakten statt Meinung. Anrede "Sehr geehrte Damen und Herren" falls kein Name bekannt.',
+  'Kundenservice · Sie': 'Warm, empathisch, lösungsorientiert, aber mit formeller Distanz. Erst Verständnis zeigen, dann konkrete Lösung. Kurze, aktive Sätze ("Wir kümmern uns sofort darum für Sie").',
+  'Kundenservice · Du': 'Warm, empathisch, lösungsorientiert, nah am Menschen. Kurze Sätze, aktive Sprache ("Wir kümmern uns sofort darum"). Locker aber nie flapsig — kein Sarkasmus, keine Emoji-Übertreibung.',
+  'Akquise / Erstkontakt · Sie': 'Selbstbewusst-überzeugend, aber nie aufdringlich oder reisserisch. Klarer Mehrwert im ersten Satz, kein Bauchladen. Höflich-verbindlich, lässt der Gegenseite erkennbar Raum ("Gerne stelle ich Ihnen..." statt "Sie müssen...").',
+  'Reklamation / Beschwerde · Sie': 'Immer Sie-Form, auch wenn sonst per Du kommuniziert wird — die Formalität signalisiert Ernsthaftigkeit. Deeskalierend, ruhig, ernsthaft. Erst Verständnis/Bedauern ausdrücken, dann konkrete Lösung/nächste Schritte, keine Rechtfertigungs-Kaskaden. Keine Schuldzuweisung, kein weichgespülter Konjunktiv ("könnte eventuell") — klare, verbindliche Aussagen.',
+  'Lieferant / Partner · Sie': 'Sachlich-kooperativ auf Augenhöhe (nicht Kunde-oben/Lieferant-unten), keine Verkaufsabsicht. Klar in der Sache, aber mit Blick auf die langfristige Beziehung — kein Befehlston, konkrete Absprachen statt vager Erwartungen.',
+  'Team-Update von Führungskraft · Du': 'Du-Form, klar, transparent, motivierend — aber nicht kumpelhaft-flach. Kernaussage zuerst, dann Kontext. Zeigt Richtung/Entscheidung klar auf statt diplomatisch zu verwässern, bleibt aber wertschätzend im Ton.'
+};
+function toneGuidance(toneLabel) {
+  const desc = TONE_PRESETS[toneLabel];
+  if (!desc) return '';
+  return `\n\nTON-VORGABE — ${toneLabel} (verbindliche Grundhaltung, hat Vorrang vor allgemeinen Stilentscheidungen):\n${desc}\nDie individuelle Brand Voice darf Wortschatz, Rhythmus und Eigenheiten überlagern, aber niemals dieses Sie/Du-Register oder diese Grundhaltung verändern.`;
+}
+
 // ── Cost alerting ────────────────────────────────────────────────
 // Claude Sonnet 4.6 pricing — keep in sync with routes/advisor.js PRICE_INPUT/OUTPUT
 const COST_PRICE_INPUT = 3 / 1_000_000;
@@ -393,10 +418,10 @@ Adjust register to the context: board-level conversations require gravitas and e
 
 WORD COMMENTS SECTION: If the draft ends with a section titled "--- Kommentare im Dokument ---" (or similar), that section is NOT part of the document body — it is a list of the client's own Word review comments, each naming the exact passage it was left on and what the client wants changed there. Treat every line in that section as a specific, binding instruction: locate the referenced passage in the draft above and apply that exact change to it, in addition to any instructions given separately below. The finished output must never include that comments section itself, and never reference "comments" or "the document" — it is a clean, final piece of text with the requested changes already applied.
 
-ANTI-HALLUCINATION: Only revise wording and tone. Never invent metrics, company names, dates, or concrete examples that were not in the original draft or instructions. If the instructions ask for a fact the draft doesn't contain, use an explicit bracketed placeholder instead of inventing one.${d.voiceProfile?'\n\nVoice/Brand Profile:\n'+d.voiceProfile:''}`
+ANTI-HALLUCINATION: Only revise wording and tone. Never invent metrics, company names, dates, or concrete examples that were not in the original draft or instructions. If the instructions ask for a fact the draft doesn't contain, use an explicit bracketed placeholder instead of inventing one.${d.voiceProfile?'\n\nVoice/Brand Profile:\n'+d.voiceProfile:''}${toneGuidance(d.tone)}`
       : `You are a precision ghostwriter and communication strategist specialised in executive and corporate communication. Write exclusively in the defined voice/style. Output must be publication-ready — no placeholders, no generic filler. Adapt register, length, and argumentation to the specific format and audience.${getFormatBlock(d.format)}
 
-ANTI-HALLUCINATION: The "no placeholders" rule above is about polish, not about inventing facts. If the provided briefing is too thin to meet the requested length or format requirements, do not invent metrics, company names, dates, or concrete examples to fill the gap. Instead use explicit bracketed placeholders (e.g. [Insert specific metric on X here]) at exactly the points where a real fact is missing, so the structural requirement is met without fabricating content.${d.replyTo?'\n\nThis is a REPLY to an existing email. Write a direct, on-point response: address every question or request raised in the original email, reference it naturally where appropriate, and match a register consistent with the original sender\'s tone unless the briefing says otherwise. Do not repeat the original email back verbatim — respond to it.':''}${d.voiceProfile?'\n\nVoice/Brand Profile:\n'+d.voiceProfile:''}`,
+ANTI-HALLUCINATION: The "no placeholders" rule above is about polish, not about inventing facts. If the provided briefing is too thin to meet the requested length or format requirements, do not invent metrics, company names, dates, or concrete examples to fill the gap. Instead use explicit bracketed placeholders (e.g. [Insert specific metric on X here]) at exactly the points where a real fact is missing, so the structural requirement is met without fabricating content.${d.replyTo?'\n\nThis is a REPLY to an existing email. Write a direct, on-point response: address every question or request raised in the original email, reference it naturally where appropriate, and match a register consistent with the original sender\'s tone unless the briefing says otherwise. Do not repeat the original email back verbatim — respond to it.':''}${d.voiceProfile?'\n\nVoice/Brand Profile:\n'+d.voiceProfile:''}${toneGuidance(d.tone)}`,
     build: (d) => d.existingDraft
       ? `Format: ${d.format}\nAudience: ${d.audience}\nTone: ${d.tone}\nLanguage: ${d.language||'English'}\n\n---EXISTING DRAFT TO REVISE---\n${sanitizeForPrompt(d.existingDraft)}\n---END EXISTING DRAFT---\n\nInstructions for the revision (what to change, if anything specific):\n${sanitizeForPrompt(d.text) || '(No specific instructions — just adapt the draft above to the defined voice/style and improve weak or generic phrasing.)'}`
       : `Format: ${d.format}\nAudience: ${d.audience}\nTone: ${d.tone}\nLanguage: ${d.language||'English'}\nLength guidance: ${d.length||'As appropriate'}${d.replyTo?`\n\n---ORIGINAL EMAIL TO REPLY TO---\n${d.replyTo}\n---END ORIGINAL EMAIL---`:''}\n\nBriefing / Content to work with:\n${sanitizeForPrompt(d.text)}`
@@ -1352,7 +1377,7 @@ Structure the recognition in three implicit movements (not necessarily labeled h
   },
   brief: {
     label: 'Formal Letter',
-    system: `You are an expert in formal business correspondence calibrated to Swiss and European conventions (DIN 5008 / Swiss business letter norms). Your task is to produce a complete, properly formatted formal letter — not just body text.
+    system: (d) => `You are an expert in formal business correspondence calibrated to Swiss and European conventions (DIN 5008 / Swiss business letter norms). Your task is to produce a complete, properly formatted formal letter — not just body text.
 
 CRITICAL: The output MUST always include every one of these elements, in this exact order, even if the user's briefing does not explicitly mention them. If information is missing, construct a plausible, professional placeholder in square brackets (e.g. [Absender-Adresse], [Datum]) rather than omitting the block:
 
@@ -1360,7 +1385,7 @@ CRITICAL: The output MUST always include every one of these elements, in this ex
 2. ADRESSAT (recipient block) — name, company if given, full address, on separate lines, below the sender block, left-aligned.
 3. ORT UND DATUM (place and date) — right-aligned, e.g. "Zürich, [current or specified date]".
 4. BETREFF (subject line) — one bolded/clear line, no "Betreff:" prefix redundancy if already clear, concise and specific to the matter.
-5. ANREDE (salutation) — correct formal form calibrated to language and recipient (e.g. "Sehr geehrte Frau X" / "Sehr geehrter Herr Y" / "Sehr geehrte Damen und Herren" in German; "Dear Mr./Ms. X" in English). Never use a casual greeting.
+5. ANREDE (salutation) — correct formal form calibrated to language and recipient (e.g. "Sehr geehrte Frau X" / "Sehr geehrter Herr Y" / "Sehr geehrte Damen und Herren" in German; "Dear Mr./Ms. X" in English) — UNLESS a Du-register TON-VORGABE below explicitly applies, in which case use its matching salutation (e.g. "Lieber [Vorname]" / "Liebe [Vorname]") instead, while every other structural element of the letter stays exactly as formal as usual.
 6. BRIEFTEXT (body) — clear paragraph structure: state the core matter or request within the first two sentences of the opening paragraph — context can follow, but do not delay the actual purpose of the letter with throat-clearing. Core content and any decisions/requests in the middle, and a closing paragraph with next steps or a courteous close. Formal register throughout — no colloquialisms, no contractions in English, no casual connectors. Avoid bureaucratic hedge phrasing (e.g. "we would like to kindly inform you that it might be the case that...") — formal register should still be direct. For a "Privatbrief" (personal letter to an individual) specifically: signal warmth through a specific personal reference (naming the relationship or shared history) in the opening, not through softer syntax that weakens the request.
 
 UNWELCOME NEWS (price increases, policy changes, service reductions): when the briefing describes a change the recipient will not welcome, structure the argument as ETHOS BEFORE LOGOS — open by establishing credibility and strength (track record, fleet, staff, reliability, length of partnership), so the change is announced from a position of strength, not defended from a position of weakness. Only after that credibility is established does the letter state the change and its cost logic. Never open with the transactional fact itself ("Ab [Datum] verrechnen wir…") and never frame the change defensively ("wir geben die Kosten transparent weiter", "das ist auf Dauer nicht mehr tragbar") — frame it positively as fairness or accurate alignment with actual effort/cost ("possibly fair am tatsächlichen Aufwand orientiert"). This is the one case where "core matter in the first two sentences" is superseded: establish credibility for two or three sentences first, then deliver the change directly and without hedging.
@@ -1380,8 +1405,8 @@ FORMATTING RULES:
 - Detect the language from the briefing and sender/recipient names; write the entire letter in that language (German, French, Italian, or English). Default to German (Swiss orthography: "ss" not "ß") if the language is ambiguous.
 - Match formality to the "Briefart" (letter type) provided: Privatbrief (personal letter, warmer but still formal), Geschäftsbrief (standard formal business), or Behördenbrief/Amtliches Schreiben (very formal, legal/official register) — but never drop below standard formal register regardless of letter type.
 - Do not invent facts, figures, or commitments beyond what the briefing states. Where a specific decision or number is missing but structurally required, use a bracketed placeholder instead of fabricating it.
-- The letter must be immediately usable and print-ready in structure — a reader should be able to paste it directly into a Word document.`,
-    build: (d) => `Sender (Absender):\n${d.sender||'[not provided — use placeholder]'}\n\nRecipient (Adressat):\n${d.recipient||'[not provided — use placeholder]'}\n\nSubject (Betreff):\n${d.subject||'[derive a concise subject line from the briefing below]'}\n\nBriefart: ${d.tone||'Geschäftsbrief — formal, an Unternehmen/Partner'}\n\nBriefing / key points to communicate:\n${sanitizeForPrompt(d.text)}`
+- The letter must be immediately usable and print-ready in structure — a reader should be able to paste it directly into a Word document.${toneGuidance(d.tone)}`,
+    build: (d) => `Sender (Absender):\n${d.sender||'[not provided — use placeholder]'}\n\nRecipient (Adressat):\n${d.recipient||'[not provided — use placeholder]'}\n\nSubject (Betreff):\n${d.subject||'[derive a concise subject line from the briefing below]'}\n\nBriefart: ${d.briefArt||'Geschäftsbrief — formal, an Unternehmen/Partner'}\n\nBriefing / key points to communicate:\n${sanitizeForPrompt(d.text)}`
   }
 };
 
