@@ -217,6 +217,28 @@ async function init() {
     CREATE INDEX IF NOT EXISTS usage_log_advisor_idx ON usage_log(advisor_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS usage_log_client_idx ON usage_log(client_id, created_at DESC);
 
+    -- Durable outbox for every email that MUST arrive (advisor review requests,
+    -- feedback notifications, weekly/monthly reports). The email is written
+    -- here BEFORE any network call is attempted, so a crash, redeploy, or
+    -- transient Brevo failure can never silently lose it — a background
+    -- sweeper (server/lib/emailOutbox.js) keeps retrying every row that
+    -- isn't 'sent' yet, independently of the request that created it.
+    CREATE TABLE IF NOT EXISTS email_outbox (
+      id SERIAL PRIMARY KEY,
+      kind TEXT NOT NULL,
+      to_email TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      sender_name TEXT NOT NULL DEFAULT 'RhetorIQ',
+      status TEXT NOT NULL DEFAULT 'pending',
+      attempts INTEGER NOT NULL DEFAULT 0,
+      last_error TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      sent_at TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS email_outbox_status_idx ON email_outbox(status, created_at);
+    CREATE INDEX IF NOT EXISTS email_outbox_kind_idx ON email_outbox(kind, sent_at DESC);
+
     -- Task 10: Brand Voice version history
     CREATE TABLE IF NOT EXISTS company_memory_history (
       id SERIAL PRIMARY KEY,

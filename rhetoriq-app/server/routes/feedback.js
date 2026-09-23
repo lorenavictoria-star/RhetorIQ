@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
-const { brevoSend } = require('../lib/brevo');
+const { queueEmail } = require('../lib/emailOutbox');
 const { generateText, resolveModelId } = require('../lib/aiProvider');
 
 const ADVISOR_NOTIFY_EMAIL = process.env.ADVISOR_EMAIL || 'contact@lorenalienhard.ch';
@@ -57,7 +57,8 @@ router.post('/', requireAuth, async (req, res) => {
         solution = '(Konnte automatisch keinen Lösungsvorschlag erstellen.)';
       }
 
-      await brevoSend({
+      await queueEmail({
+        kind: 'feedback',
         to: ADVISOR_NOTIFY_EMAIL,
         subject: `RhetorIQ — Neues Feedback von ${authorLabel}`,
         text: `${authorLabel} (${req.user.role === 'advisor' ? 'Beraterin' : 'Klient'}) hat Feedback hinterlassen.\n\nSeite/Kontext: ${pageContext || 'nicht angegeben'}\n\n--- Feedback ---\n${message.trim()}\n\n--- Vorschlag zur Umsetzung ---\n${solution}\n`,

@@ -28,8 +28,9 @@ const morgan = require('morgan');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { init, pool } = require('./db');
 const cron = require('node-cron');
-const { runWeeklyReport }  = require('./jobs/weekly-report');
+const { runWeeklyReport, ensureRecentWeeklyReport } = require('./jobs/weekly-report');
 const { runMonthlyReport } = require('./jobs/monthly-report');
+const { sweepOutbox } = require('./lib/emailOutbox');
 
 const app = express();
 
@@ -238,6 +239,31 @@ app.post('/api/admin/report/monthly', requireAdvisor, async (req, res) => {
   runMonthlyReport().catch(e => console.error(e));
   res.json({ ok: true, message: 'Monthly report triggered — arrives by email in ~30s' });
 });
+
+// Visibility into the email outbox (feedback, "an Beraterin senden", reports):
+// so a failure is something you can check and re-trigger yourself, not a
+// silent gap you only discover when a client mentions it weeks later.
+app.get('/api/admin/email-outbox', requireAdvisor, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, kind, to_email, subject, status, attempts, last_error, created_at, sent_at
+       FROM email_outbox ORDER BY created_at DESC LIMIT 100`
+    );
+    res.json(rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+app.post('/api/admin/email-outbox/:id/retry', requireAdvisor, async (req, res) => {
+  try {
+    const { attemptSend } = require('./lib/emailOutbox');
+    await attemptSend(parseInt(req.params.id, 10));
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 app.use('/api/audit', require('./routes/audit'));
 
 
@@ -301,6 +327,21 @@ const PORT = process.env.PORT || 3001;
 
   console.log('[cron] Weekly report: every Monday 08:03 Zurich');
   console.log('[cron] Monthly report: 1st of month 08:07 Zurich');
+
+  // ── Email reliability: outbox sweeper + missed-report catch-up ─────
+  // node-cron only fires while the process is running at that exact instant
+  // — a redeploy or restart right at 08:03 Monday silently skips that tick
+  // with no built-in retry. ensureRecentWeeklyReport() runs once at boot and
+  // sends immediately if no report went out in the last 8 days, so a missed
+  // cron tick self-heals on the next restart instead of waiting a full week.
+  // sweepOutbox() retries every not-yet-sent email (feedback, "an Beraterin
+  // senden", reports) every 3 minutes, independent of whatever request or
+  // process originally tried to send it — this is what makes delivery
+  // actually reliable rather than best-effort.
+  ensureRecentWeeklyReport().catch(e => console.error('[weekly-report] boot catch-up failed:', e.message));
+  sweepOutbox().catch(e => console.error('[email-outbox] boot sweep failed:', e.message));
+  cron.schedule('*/3 * * * *', () => sweepOutbox().catch(e => console.error('[email-outbox] sweep failed:', e.message)));
+  console.log('[cron] Email outbox sweep: every 3 minutes');
 })();
 
 function gracefulShutdown(signal) {

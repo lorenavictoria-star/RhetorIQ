@@ -1,11 +1,7 @@
 const { pool } = require('../db');
-const { brevoSend: brevoSendShared } = require('../lib/brevo');
+const { queueEmail } = require('../lib/emailOutbox');
 
 const ADVISOR_EMAIL = process.env.ADVISOR_EMAIL || 'contact@lorenalienhard.ch';
-
-const brevoSend = (opts) => brevoSendShared({ senderName: 'RhetorIQ Reports', ...opts }).catch(e => {
-  console.error('[weekly-report] Brevo send failed:', e.message);
-});
 
 // ── Main report function ─────────────────────────────────────────────────────
 async function runWeeklyReport() {
@@ -147,16 +143,40 @@ async function runWeeklyReport() {
 
     const reportText = lines.join('\n');
 
-    await brevoSend({
+    await queueEmail({
+      kind: 'weekly-report',
       to: ADVISOR_EMAIL,
       subject: `RhetorIQ Wochenbericht — ${week}`,
-      text: reportText
+      text: reportText,
+      senderName: 'RhetorIQ Reports'
     });
 
-    console.log(`[weekly-report] Sent to ${ADVISOR_EMAIL}`);
+    console.log(`[weekly-report] Queued for ${ADVISOR_EMAIL}`);
   } catch (e) {
     console.error('[weekly-report] Error:', e.message);
   }
 }
 
-module.exports = { runWeeklyReport };
+// Catch-up safety net: if the server was down, mid-redeploy, or otherwise
+// not running at exactly Monday 08:03 Zurich, node-cron's in-process timer
+// simply never fires for that tick — there is no built-in catch-up. Call
+// this once on every boot: if no weekly report has actually been sent
+// (email_outbox status='sent') in the last 8 days, run one immediately
+// instead of silently waiting up to another 7 days for the next scheduled tick.
+async function ensureRecentWeeklyReport() {
+  try {
+    const { rows } = await pool.query(
+      `SELECT sent_at FROM email_outbox WHERE kind='weekly-report' AND status='sent' ORDER BY sent_at DESC LIMIT 1`
+    );
+    const lastSent = rows[0]?.sent_at;
+    const overdue = !lastSent || (Date.now() - new Date(lastSent).getTime()) > 8 * 24 * 60 * 60 * 1000;
+    if (overdue) {
+      console.log('[weekly-report] No successful send in the last 8 days — running catch-up now.');
+      await runWeeklyReport();
+    }
+  } catch (e) {
+    console.error('[weekly-report] Catch-up check failed:', e.message);
+  }
+}
+
+module.exports = { runWeeklyReport, ensureRecentWeeklyReport };
