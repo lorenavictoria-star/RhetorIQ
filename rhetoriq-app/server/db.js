@@ -236,6 +236,7 @@ async function init() {
       created_at TIMESTAMPTZ DEFAULT NOW(),
       sent_at TIMESTAMPTZ
     );
+    ALTER TABLE email_outbox ADD COLUMN IF NOT EXISTS alerted_at TIMESTAMPTZ;
     CREATE INDEX IF NOT EXISTS email_outbox_status_idx ON email_outbox(status, created_at);
     CREATE INDEX IF NOT EXISTS email_outbox_kind_idx ON email_outbox(kind, sent_at DESC);
 
