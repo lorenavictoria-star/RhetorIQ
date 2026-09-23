@@ -4986,7 +4986,7 @@ function buildTextGen(prefill,form){
         </div>
         <textarea id="tg-ref-${t.id}" style="display:none"></textarea>
       </div>
-      <div class="fg2"><label class="fl2">${t.fmtLabel}</label><select id="tg-fmt-${t.id}">${t.fmtOpts.map(o=>`<option>${o}</option>`).join('')}</select></div>
+      ${t.id==='email'?'':`<div class="fg2"><label class="fl2">${t.fmtLabel}</label><select id="tg-fmt-${t.id}">${t.fmtOpts.map(o=>`<option>${o}</option>`).join('')}</select></div>`}
       ${people.length?buildPeopleSelector():''}
       <div style="display:flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin:14px 0 12px">
         <button type="button" class="tg-mode-btn" id="tg-mode-new-${t.id}" onclick="tgSetMode('${t.id}','new')" style="flex:1;padding:9px;border:none;cursor:pointer;font-size:12px;font-weight:600">Neu schreiben</button>
@@ -5004,8 +5004,8 @@ function buildTextGen(prefill,form){
         return `<div class="fg2">${micRow}${briefTip}<textarea id="tg-task-${t.id}" placeholder="${tl.tg_briefing_ph}" style="min-height:100px"></textarea></div>`;
       })()}
       <div class="row2">
-        <div class="fg2"><label class="fl2">${tl.tg_audience}</label><select id="tg-aud-${t.id}"><option>B2B — C-Suite</option><option>B2B — HR Leaders</option><option>B2B — Finance / Investors</option><option>B2B — General Business</option><option>B2C — General Consumer</option><option>Internal — All Employees</option><option>Internal — Leadership Team</option><option>Media / Journalists</option></select></div>
-        <div class="fg2"><label class="fl2">${tl.tg_tone}</label><select id="tg-tone-${t.id}">${(t.id==='email'||t.id==='brief')?TONE_PRESETS.map(o=>`<option>${o}</option>`).join(''):`<option>Aus Voice Profile</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European — understated</option>`}</select>${(t.id==='email'||t.id==='brief')?`<div style="font-size:11px;color:var(--mu);margin-top:4px">Bleibt immer Geschäftspartner — "Du" ändert nur die Anrede, nie die Höflichkeit.</div>`:''}</div>
+        ${(t.id==='email'||t.id==='brief')?'':`<div class="fg2"><label class="fl2">${tl.tg_audience}</label><select id="tg-aud-${t.id}"><option>B2B — C-Suite</option><option>B2B — HR Leaders</option><option>B2B — Finance / Investors</option><option>B2B — General Business</option><option>B2C — General Consumer</option><option>Internal — All Employees</option><option>Internal — Leadership Team</option><option>Media / Journalists</option></select></div>`}
+        <div class="fg2" style="${(t.id==='email'||t.id==='brief')?'grid-column:1 / -1':''}"><label class="fl2">${tl.tg_tone}</label><select id="tg-tone-${t.id}">${(t.id==='email'||t.id==='brief')?TONE_PRESETS.map(o=>`<option>${o}</option>`).join(''):`<option>Aus Voice Profile</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European — understated</option>`}</select>${(t.id==='email'||t.id==='brief')?`<div style="font-size:11px;color:var(--mu);margin-top:4px">Bleibt immer Geschäftspartner — "Du" ändert nur die Anrede, nie die Höflichkeit. Die Ton-Variante bestimmt bereits Zielgruppe und Kontext.</div>`:''}</div>
       </div>
       <div class="row2">
         <div class="fg2"><label class="fl2">${tl.tg_language}</label><select id="tg-lang-${t.id}"><option>Deutsch</option><option>English</option><option>Français</option><option>Italiano</option></select></div>
@@ -5654,7 +5654,7 @@ async function runMod(name){
     const replyTo=fid==='email'?(g('tg-reply-email')||''):'';
     const existingDraft=g('tg-draft-'+fid);
     const geo=!!document.getElementById('tg-geo-'+fid)?.checked;
-    data={text:t,format:g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:baseTone,language:g('tg-lang-'+fid),length:g('tg-len-'+fid),replyTo,existingDraft,geo,voiceProfile:(voiceProf||'')+context+liCtx+speechVoiceCtx+vorbildCtx+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
+    data={text:t,format:fid==='email'?'Email':g('tg-fmt-'+fid),audience:g('tg-aud-'+fid),tone:baseTone,language:g('tg-lang-'+fid),length:g('tg-len-'+fid),replyTo,existingDraft,geo,voiceProfile:(voiceProf||'')+context+liCtx+speechVoiceCtx+vorbildCtx+(ref?'\n\n---TEMPLATE EXAMPLES---\n'+ref:'')};}
   else if(name==='profiling'){module='rp';rid='profiling-r';bid='profiling-b';const t=g('rp-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('rp-name'),industry:g('rp-industry')};}
   else if(name==='fingerprint'){module='cf';rid='fingerprint-r';bid='fingerprint-b';const t=g('cf-in');if(!t)return alert('Please enter text.');data={text:t+context,name:g('cf-name'),focus:g('cf-focus')};}
   else if(name==='language'){module='la';rid='language-r';bid='language-b';const t=g('la-in');if(!t)return alert('Please enter text.');data={text:t+context,size:g('la-size'),focus:g('la-focus')};}
