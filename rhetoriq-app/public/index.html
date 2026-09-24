@@ -383,8 +383,8 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .modal{background:#fff;border-radius:10px;padding:28px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,.15);max-height:90vh;overflow-y:auto}
 /* Kunden-Workspace opens in its own browser tab (via openWorkspaceTab) so it
    should fill that tab like a page, not sit as a small centered dialog. */
-#ws-ov.full-page{align-items:stretch;justify-content:stretch;padding:0}
-#ws-ov.full-page .modal{max-width:none;width:100%;height:100vh;max-height:100vh;border-radius:0}
+#ws-ov.full-page{align-items:stretch;justify-content:stretch;padding:0;background:var(--bg)}
+#ws-ov.full-page .modal{max-width:none;width:100vw;height:100vh;max-height:100vh;border-radius:0;padding:0;box-shadow:none}
 .modal h2{font-family:'Spectral',serif;font-size:24px;font-weight:400;margin-bottom:4px}
 .modal p{font-size:13px;color:var(--mu);margin-bottom:20px}
 .mf{margin-bottom:14px}
