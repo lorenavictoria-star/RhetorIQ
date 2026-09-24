@@ -924,10 +924,9 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       </div>
     </div>
     <div style="display:flex;gap:8px;padding:10px 20px 0;border-bottom:1px solid var(--bd);flex-shrink:0;flex-wrap:wrap">
-      <button class="mlist-pill active" id="ws-tab-overview" onclick="wsSwitchTab('overview')">Übersicht</button>
       <button class="mlist-pill" id="ws-tab-voice" onclick="wsSwitchTab('voice')">Brand Voice</button>
       <button class="mlist-pill" id="ws-tab-prompts" onclick="wsSwitchTab('prompts')">Modul-Prompts</button>
-      <button class="mlist-pill" id="ws-tab-reviews" onclick="wsSwitchTab('reviews')">Freigaben <span id="ws-rev-count" style="display:none;background:var(--ac,#1a3d2e);color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;font-weight:700"></span></button>
+      <button class="mlist-pill active" id="ws-tab-reviews" onclick="wsSwitchTab('reviews')">Freigaben <span id="ws-rev-count" style="display:none;background:var(--ac,#1a3d2e);color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;font-weight:700"></span></button>
       <button class="mlist-pill" id="ws-tab-feedback" onclick="wsSwitchTab('feedback')">Feedback &amp; Lernstand</button>
       <button class="mlist-pill" id="ws-tab-admin" onclick="wsSwitchTab('admin')">Verwaltung</button>
     </div>
@@ -6701,7 +6700,7 @@ async function deleteReview(id){
 async function wsRefresh(){
   const ov=document.getElementById('ws-ov');
   if(!ov||!ov.classList.contains('show')||!_wsClientId)return;
-  const activeTab=['overview','voice','prompts','reviews','feedback'].find(t=>document.getElementById('ws-tab-'+t)?.classList.contains('active'))||'overview';
+  const activeTab=['voice','prompts','reviews','feedback','admin'].find(t=>document.getElementById('ws-tab-'+t)?.classList.contains('active'))||'reviews';
   await wsLoad();
   wsSwitchTab(activeTab);
 }
@@ -7474,7 +7473,7 @@ async function openWorkspace(cid,fullPage){
   _wsChatHistory=[];_wsActiveReviewId=null;
   document.getElementById('ws-chat-log').innerHTML='<div style="font-size:12px;color:var(--mu);line-height:1.6">Kennt Brand Voice, Modul-Vorgaben und Feedback-Lernstand dieses Kunden. Im Tab Freigaben automatisch an die gerade geöffnete Anfrage angehängt — Textstelle im Feld markieren und dann die Anweisung schreiben, damit klar ist, worauf sie sich bezieht.</div>';
   await wsLoad();
-  wsSwitchTab('overview');
+  wsSwitchTab('reviews');
 }
 
 async function wsLoad(){
@@ -7534,11 +7533,10 @@ async function wsLoadFeedback(){
 }
 
 function wsSwitchTab(tab){
-  ['overview','voice','prompts','reviews','feedback','admin'].forEach(t=>document.getElementById('ws-tab-'+t).classList.toggle('active',t===tab));
+  ['voice','prompts','reviews','feedback','admin'].forEach(t=>document.getElementById('ws-tab-'+t).classList.toggle('active',t===tab));
   const body=document.getElementById('ws-body');
   body.innerHTML='<div style="padding:20px;color:var(--mu);font-size:13px">Lädt…</div>';
-  if(tab==='overview')wsRenderOverview(body);
-  else if(tab==='voice')wsRenderVoice(body);
+  if(tab==='voice')wsRenderVoice(body);
   else if(tab==='prompts')wsRenderPrompts(body);
   else if(tab==='reviews')wsRenderReviews(body);
   else if(tab==='feedback')wsRenderFeedback(body);
@@ -7568,21 +7566,6 @@ function wsRenderAdmin(body){
 async function wsDeleteClient(){
   await deleteClient(_wsClientId);
   if(!clients.find(x=>x.id==_wsClientId))closeModal('ws-ov'); // client actually got deleted (deleteClient() confirms first)
-}
-
-// Compact, read-only row for the Übersicht tab — full inline editing lives
-// only in the Freigaben tab (wsReviewCard) to keep the overview scannable.
-function wsReviewSummaryRow(rv){
-  const ageMs=Date.now()-new Date(rv.created_at).getTime();
-  const ageH=ageMs/3600000;
-  const ageLabel=ageH<1?`${Math.max(1,Math.round(ageMs/60000))} Min.`:`${ageH.toFixed(1)} Std.`;
-  const ageColor=ageH>3?'#b91c1c':(ageH>1.5?'#92400e':'#047857');
-  return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)">
-    <div>
-      <span style="font-size:13px;font-weight:600;color:var(--tx)">${safeText(rv.module_label||'Text')}</span>
-      <span style="font-size:11.5px;color:${ageColor};font-weight:600;margin-left:8px">vor ${ageLabel}${ageH>3?' — SLA überschritten':''}</span>
-    </div>
-  </div>`;
 }
 
 // Inline editor — stays inside the Workspace instead of jumping into the
@@ -7632,35 +7615,6 @@ function wsReviewCard(rv,idx){
       <button class="rev-savebtn" onclick="saveReview(${rv.id},true)">An Klient senden (E-Mail)</button>
     </div>
   </div>`;
-}
-
-function wsRenderOverview(body){
-  const bv=(_wsData.brandVoice||[]).find(m=>m.memory_type==='brand_voice');
-  body.innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr;gap:16px">
-      <div>
-        <div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Wartet auf dich — Freigaben (${_wsReviews.length})</div>
-        ${_wsReviews.length?_wsReviews.slice(0,3).map(rv=>wsReviewSummaryRow(rv)).join(''):'<div style="font-size:13px;color:var(--mu);padding:8px 0">Keine offenen Freigaben.</div>'}
-        ${_wsReviews.length?`<div style="margin-top:8px"><button class="obtn" onclick="wsSwitchTab('reviews')">${_wsReviews.length>3?'Alle '+_wsReviews.length+' bearbeiten':'Bearbeiten'} →</button></div>`:''}
-      </div>
-      <div>
-        <div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Brand Voice</div>
-        <div style="font-size:12.5px;color:var(--tx);background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:12px;line-height:1.6;max-height:120px;overflow:hidden">${bv?safeText(bv.content).slice(0,400)+(bv.content.length>400?'…':''):'Noch keine Brand Voice hinterlegt.'}</div>
-        <button class="obtn" style="margin-top:8px" onclick="wsSwitchTab('voice')">Öffnen &amp; bearbeiten →</button>
-      </div>
-      <div id="ws-ov-feedback">
-        <div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Feedback &amp; Lernstand</div>
-        <div style="font-size:13px;color:var(--mu)">Lädt…</div>
-      </div>
-    </div>`;
-  wsLoadFeedback().then(rows=>{
-    const el=document.getElementById('ws-ov-feedback');
-    if(!el)return;
-    const top=rows.slice(0,3);
-    el.innerHTML=`<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Feedback &amp; Lernstand</div>
-      ${top.length?top.map(f=>wsFeedbackCard(f)).join(''):'<div style="font-size:13px;color:var(--mu)">Noch kein gelernter Stand.</div>'}
-      <button class="obtn" style="margin-top:4px" onclick="wsSwitchTab('feedback')">Alle ansehen →</button>`;
-  });
 }
 
 function wsFeedbackCard(f){
