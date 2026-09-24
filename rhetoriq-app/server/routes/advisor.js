@@ -138,4 +138,44 @@ router.get('/costs', requireAdvisor, async (req, res) => {
   }
 });
 
+// GET /api/advisor/workspace/:clientId — the consolidated per-client
+// "workspace": everything the advisor previously had to gather from separate
+// corners of the app (client meta/plan, Brand Voice, module-prompt overrides)
+// in one call. Pending review requests and feedback learnings are fetched by
+// the frontend from their existing dedicated endpoints (/api/reviews,
+// /api/audit/:clientId/feedback-*) and merged into this same workspace view,
+// rather than duplicated here.
+router.get('/workspace/:clientId', requireAdvisor, async (req, res) => {
+  try {
+    const clientId = parseInt(req.params.clientId, 10);
+    if (isNaN(clientId)) return res.status(400).json({ error: 'Invalid client ID' });
+
+    const { rows: cRows } = await pool.query(
+      `SELECT id, name, industry, contact, slug, token, subscription_status,
+              monthly_token_limit, client_type, created_at
+       FROM clients WHERE id=$1 AND advisor_id=$2`,
+      [clientId, req.user.id]
+    );
+    if (!cRows[0]) return res.status(404).json({ error: 'Client not found' });
+
+    const [{ rows: brandVoice }, { rows: modulePrompts }] = await Promise.all([
+      pool.query(
+        `SELECT memory_type, content, updated_at FROM company_memory
+         WHERE client_id=$1 AND memory_type LIKE 'brand_voice%' ORDER BY updated_at DESC`,
+        [clientId]
+      ),
+      pool.query(
+        `SELECT module_key, instructions, updated_at FROM client_module_prompts
+         WHERE client_id=$1 ORDER BY module_key`,
+        [clientId]
+      )
+    ]);
+
+    res.json({ client: cRows[0], brandVoice, modulePrompts });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
