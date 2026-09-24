@@ -4,6 +4,28 @@ const { pool } = require('../db');
 const jwt = require('jsonwebtoken');
 const { queueEmail } = require('../lib/emailOutbox');
 
+// The advisor now finishes reviews from inside the per-client Workspace
+// (rather than always jumping into the client's own module UI), so "An
+// Klient senden" must actively notify the client by email — the existing WS
+// broadcast only reaches a client who happens to have the app open right now.
+async function notifyClientOfReviewedText(clientId, moduleLabel, editedText) {
+  if (!clientId) return;
+  try {
+    const { rows } = await pool.query('SELECT name, email FROM clients WHERE id=$1', [clientId]);
+    const client = rows[0];
+    if (!client?.email) return;
+    await queueEmail({
+      kind: 'review-response',
+      to: client.email,
+      subject: `RhetorIQ — Ihr überarbeiteter Text ist bereit${moduleLabel ? ' (' + moduleLabel + ')' : ''}`,
+      text: `Guten Tag${client.name ? ' ' + client.name : ''}\n\nIhre Beraterin hat den eingereichten Text überarbeitet. Der finale Text:\n\n${editedText}\n\nSie finden ihn auch direkt in Ihrem RhetorIQ-Konto unter der jeweiligen Anfrage.\n\nFreundliche Grüsse\nRhetorIQ`,
+      senderName: 'RhetorIQ'
+    });
+  } catch (e) {
+    console.error('[reviews] client notification email failed:', e.message);
+  }
+}
+
 const ADVISOR_NOTIFY_EMAIL = process.env.ADVISOR_EMAIL || 'contact@lorenalienhard.ch';
 
 function auth(req, res, next) {
@@ -130,6 +152,8 @@ router.put('/:id', auth, async (req, res) => {
         editedText,
         moduleLabel: rows[0].module_label
       });
+      notifyClientOfReviewedText(rows[0].client_id, rows[0].module_label, editedText)
+        .catch(e => console.error('[reviews] notify failed:', e.message));
     }
     res.json(rows[0]);
   } catch (e) {

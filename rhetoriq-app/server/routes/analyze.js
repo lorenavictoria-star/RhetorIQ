@@ -1782,9 +1782,9 @@ router.post('/', requireAuth, async (req, res) => {
       : (req.user.clientUserName || req.user.clientName || 'Klient');
 
     const { rows } = await pool.query(
-      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, created_at`,
-      [resolvedClientId, advisorId, module, cfg.label, data, result, generatedBy, hasBrandVoice]
+      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice, feedback_key)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id, created_at`,
+      [resolvedClientId, advisorId, module, cfg.label, data, result, generatedBy, hasBrandVoice, instructionsKey || module]
     );
 
     const analysis = { id: rows[0].id, module, label: cfg.label, result, createdAt: rows[0].created_at, clientId: resolvedClientId };
@@ -1995,9 +1995,9 @@ router.post('/stream', requireAuth, async (req, res) => {
       ? (req.user.name || 'Advisor')
       : (req.user.clientUserName || req.user.clientName || 'Klient');
     const { rows } = await pool.query(
-      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, created_at`,
-      [resolvedClientId, advisorId, module, cfg.label, data, fullText, generatedBy, hasBrandVoice]
+      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice, feedback_key)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id, created_at`,
+      [resolvedClientId, advisorId, module, cfg.label, data, fullText, generatedBy, hasBrandVoice, instructionsKey || module]
     );
     // Fix 11: Log usage for client analyses too
     if (advisorId || resolvedClientId) {
@@ -2377,7 +2377,7 @@ router.post('/:id/rate', requireAuth, async (req, res) => {
     const ownershipValue = req.user.role === 'advisor' ? req.user.id : req.user.clientId;
 
     const { rows } = await pool.query(
-      `UPDATE analyses SET user_rating=$1, feedback_note=$4 WHERE id=$2 AND ${ownershipClause} RETURNING id, module, client_id, advisor_id`,
+      `UPDATE analyses SET user_rating=$1, feedback_note=$4 WHERE id=$2 AND ${ownershipClause} RETURNING id, module, feedback_key, client_id, advisor_id`,
       [rating, req.params.id, ownershipValue, note || null]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });
@@ -2395,8 +2395,12 @@ router.post('/:id/rate', requireAuth, async (req, res) => {
     // Categorize and consolidate this feedback into a compact, continuously
     // refined per-category summary for this client+module (see
     // consolidateFeedback above) instead of appending to a raw growing log.
+    // Uses feedback_key (per Text-Generator tile, e.g. "text-gen-email") when
+    // available, instead of the generic "text-gen" shared across all seven
+    // tiles — otherwise feedback from completely different formats gets
+    // pooled into one meaningless, misleadingly-high occurrence count.
     if (note && note.trim() && analysis.client_id) {
-      consolidateFeedback(analysis.client_id, analysis.module, rating, note.trim())
+      consolidateFeedback(analysis.client_id, analysis.feedback_key || analysis.module, rating, note.trim())
         .catch(e => console.error('[rate] feedback consolidation failed:', e.message));
     }
 

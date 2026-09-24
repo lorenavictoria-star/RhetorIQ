@@ -481,13 +481,18 @@ router.get('/:id/token-usage', requireAuth, async (req, res) => {
 
 router.delete('/:id', requireAdvisor, async (req, res) => {
   try {
-    await pool.query(
+    const { rowCount } = await pool.query(
       'DELETE FROM clients WHERE id = $1 AND advisor_id = $2',
       [req.params.id, req.user.id]
     );
+    if (!rowCount) return res.status(404).json({ error: 'Client not found (or belongs to a different advisor account)' });
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: 'Server error' });
+    // Surface the real Postgres error (e.g. a foreign-key constraint on a
+    // table that isn't cascade-deleted yet) instead of a generic message —
+    // this was previously swallowed, making delete failures undiagnosable.
+    console.error('[clients] delete failed:', e.message);
+    res.status(500).json({ error: e.message || 'Server error' });
   }
 });
 

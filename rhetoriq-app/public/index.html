@@ -381,6 +381,10 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center;padding:24px}
 .ov.show{display:flex}
 .modal{background:#fff;border-radius:10px;padding:28px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,.15);max-height:90vh;overflow-y:auto}
+/* Kunden-Workspace opens in its own browser tab (via openWorkspaceTab) so it
+   should fill that tab like a page, not sit as a small centered dialog. */
+#ws-ov.full-page{align-items:stretch;justify-content:stretch;padding:0}
+#ws-ov.full-page .modal{max-width:none;width:100%;height:100vh;max-height:100vh;border-radius:0}
 .modal h2{font-family:'Spectral',serif;font-size:24px;font-weight:400;margin-bottom:4px}
 .modal p{font-size:13px;color:var(--mu);margin-bottom:20px}
 .mf{margin-bottom:14px}
@@ -918,6 +922,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <button class="mlist-pill" id="ws-tab-prompts" onclick="wsSwitchTab('prompts')">Modul-Prompts</button>
       <button class="mlist-pill" id="ws-tab-reviews" onclick="wsSwitchTab('reviews')">Freigaben <span id="ws-rev-count" style="display:none;background:var(--ac,#1a3d2e);color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;font-weight:700"></span></button>
       <button class="mlist-pill" id="ws-tab-feedback" onclick="wsSwitchTab('feedback')">Feedback &amp; Lernstand</button>
+      <button class="mlist-pill" id="ws-tab-admin" onclick="wsSwitchTab('admin')">Verwaltung</button>
     </div>
     <div id="ws-body" style="overflow-y:auto;flex:1;padding:16px 20px"></div>
   </div>
@@ -3462,6 +3467,14 @@ async function boot(user,role){
       history.replaceState(null,'',location.pathname);
       openReviewInModule(parseInt(reviewParam,10));
     }
+    // Deep link from openWorkspaceTab() (?workspace=123) — this tab was opened
+    // solely to show one client's Workspace full-screen, so open it as soon
+    // as the client list (and thus this client's name) is loaded.
+    const workspaceParam=new URLSearchParams(location.search).get('workspace');
+    if(workspaceParam){
+      history.replaceState(null,'',location.pathname);
+      openWorkspace(parseInt(workspaceParam,10),true);
+    }
   } else {
     const bvNav=document.getElementById('mn-brand-voice');if(bvNav)bvNav.style.display='none';
     const bvBtns=document.getElementById('bv-adv-btns');if(bvBtns)bvBtns.style.display='none';
@@ -3729,11 +3742,12 @@ async function deleteClient(cid){
   const name=c?.name||'this client';
   if(!confirm('Delete client "'+name+'" and ALL their data?\n\nThis cannot be undone.'))return;
   try{
-    await api('/api/clients/'+cid,{method:'DELETE'});
+    const r=await api('/api/clients/'+cid,{method:'DELETE'});
+    if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error||'Error deleting client.');}
     clients=clients.filter(c=>c.id!==cid);
     if(clientId===cid){clientId=null;people=[];memory=[];}
     renderClients();loadStats();
-  }catch{alert('Error deleting client.');}
+  }catch(e){alert(e.message||'Error deleting client.');}
 }
 async function delData(cid){
   const c=clients.find(x=>x.id==cid);
@@ -6450,7 +6464,7 @@ async function loadAdvisorDashboard(){
           <div class="adv-client-bar" style="margin-top:8px"><div class="adv-bar-track"><div class="adv-bar-fill" style="width:${pct}%"></div></div><span style="font-size:10px;color:var(--mu)">${c.analyses_7d||0} this week · Last active ${fmtDate(c.last_activity)}</span></div>
           ${tok?`<div class="tkcode" style="margin-top:8px;font-size:11px">${tokShort}</div>`:''}
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
-            <button class="obtn" style="color:#fff;background:var(--ac,#1a3d2e);border-color:var(--ac,#1a3d2e);font-weight:600" onclick="openWorkspace(${c.id})"><i class="ti ti-briefcase" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Workspace</button>
+            <button class="obtn" style="color:#fff;background:var(--ac,#1a3d2e);border-color:var(--ac,#1a3d2e);font-weight:600" onclick="openWorkspaceTab(${c.id})"><i class="ti ti-briefcase" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Workspace</button>
             <button class="obtn" style="color:#166534;border-color:#bbf7d0;background:#f0fdf4" onclick="sendWelcomeByEmail(${c.id})">Willkommens-E-Mail senden</button>
             <button class="obtn" onclick="openSetPassword(${c.id})">Set Password</button>
             <button class="obtn" onclick="openTeamModal(${c.id})">Team</button>
@@ -6659,7 +6673,7 @@ async function saveReview(id,send){
   activeBtn.textContent=T[LANG]?.review_editing||'Speichert…';
   try{
     await api('/api/reviews/'+id,{method:'PUT',body:JSON.stringify({editedText:text,send})});
-    if(send){document.getElementById('rvc-'+id)?.remove();loadAdvisorReviews();}
+    if(send){document.getElementById('rvc-'+id)?.remove();loadAdvisorReviews();await wsRefresh();}
     else{btns.forEach(b=>b.disabled=false);activeBtn.textContent='✓ Gespeichert';setTimeout(()=>{activeBtn.textContent=origLabel;},1500);}
   }catch(e){btns.forEach(b=>b.disabled=false);activeBtn.textContent=origLabel;}
 }
@@ -6670,7 +6684,19 @@ async function deleteReview(id){
     await api('/api/reviews/'+id,{method:'DELETE'});
     document.getElementById('rvc-'+id)?.remove();
     loadAdvisorReviews();
+    await wsRefresh();
   }catch(e){alert('Fehler beim Löschen.');}
+}
+
+// Keeps the Workspace's Freigaben/Übersicht tabs in sync after a review is
+// saved/sent/deleted from inside the Workspace itself — a no-op if the
+// Workspace isn't open, or open for a different client.
+async function wsRefresh(){
+  const ov=document.getElementById('ws-ov');
+  if(!ov||!ov.classList.contains('show')||!_wsClientId)return;
+  const activeTab=['overview','voice','prompts','reviews','feedback'].find(t=>document.getElementById('ws-tab-'+t)?.classList.contains('active'))||'overview';
+  await wsLoad();
+  wsSwitchTab(activeTab);
 }
 
 function openReviewPanel(){
@@ -7414,11 +7440,20 @@ async function fblLoadHistory(){
 let _wsClientId=null,_wsData=null,_wsReviews=[],_wsFeedback=null;
 const WS_RECURRING_THRESHOLD=4; // 4+ occurrences of the same module+category in 30 days -> flag as "adjust the prompt"
 
-async function openWorkspace(cid){
+// Opens the Workspace in its own browser tab (same origin, so it re-uses the
+// already-logged-in token from localStorage) instead of a small modal inside
+// the current tab — lets the advisor keep the dashboard open in one tab and
+// work through a client's Workspace full-screen in another.
+function openWorkspaceTab(cid){
+  window.open(location.origin+'/?workspace='+cid,'_blank');
+}
+
+async function openWorkspace(cid,fullPage){
   _wsClientId=cid;
   const c=clients.find(x=>x.id==cid);
   document.getElementById('ws-title').textContent='Workspace — '+(c?safeText(c.name):'');
   document.getElementById('ws-sub').textContent='Lädt…';
+  document.getElementById('ws-ov').classList.toggle('full-page',!!fullPage);
   openModal('ws-ov');
   await wsLoad();
   wsSwitchTab('overview');
@@ -7471,7 +7506,7 @@ async function wsLoadFeedback(){
 }
 
 function wsSwitchTab(tab){
-  ['overview','voice','prompts','reviews','feedback'].forEach(t=>document.getElementById('ws-tab-'+t).classList.toggle('active',t===tab));
+  ['overview','voice','prompts','reviews','feedback','admin'].forEach(t=>document.getElementById('ws-tab-'+t).classList.toggle('active',t===tab));
   const body=document.getElementById('ws-body');
   body.innerHTML='<div style="padding:20px;color:var(--mu);font-size:13px">Lädt…</div>';
   if(tab==='overview')wsRenderOverview(body);
@@ -7479,21 +7514,75 @@ function wsSwitchTab(tab){
   else if(tab==='prompts')wsRenderPrompts(body);
   else if(tab==='reviews')wsRenderReviews(body);
   else if(tab==='feedback')wsRenderFeedback(body);
+  else if(tab==='admin')wsRenderAdmin(body);
 }
 
+// "Verwaltung" — every per-client action that used to live only as a button
+// on the client card (client card still has them too, this just means the
+// advisor never has to leave the Workspace to reach them).
+function wsRenderAdmin(body){
+  const c=clients.find(x=>x.id==_wsClientId)||{};
+  body.innerHTML=`<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:12px">Verwaltung — ${safeText(c.name||'')}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <button class="obtn" style="color:#166534;border-color:#bbf7d0;background:#f0fdf4" onclick="sendWelcomeByEmail(_wsClientId)">Willkommens-E-Mail senden</button>
+      <button class="obtn" onclick="openSetPassword(_wsClientId,(clients.find(x=>x.id==_wsClientId)||{}).name)">Set Password</button>
+      <button class="obtn" onclick="openTeamModal(_wsClientId,(clients.find(x=>x.id==_wsClientId)||{}).name)">Team</button>
+      <button class="obtn" style="color:#5b21b6;border-color:#c4b5fd;background:#f5f3ff;font-weight:500" onclick="openModuleConfig(_wsClientId)"><i class="ti ti-layout-grid" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Module anpassen</button>
+      <button class="obtn" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-weight:500" onclick="sendPaymentLink(_wsClientId,this)">Zahlungslink senden</button>
+      <button class="obtn" style="color:#b91c1c;border-color:#fecaca;background:#fef2f2" onclick="wsDeleteClient()"><i class="ti ti-trash" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Kunde löschen</button>
+    </div>
+    <div id="pay-link-row-${_wsClientId}" style="display:none;margin-top:10px;gap:6px;align-items:center">
+      <input id="pay-link-url-${_wsClientId}" type="text" readonly style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--br);border-radius:4px;background:var(--bg2);color:var(--tx);min-width:0">
+      <button class="obtn" onclick="navigator.clipboard.writeText(document.getElementById('pay-link-url-${_wsClientId}').value)">Kopieren</button>
+    </div>
+    <div style="font-size:11px;color:var(--mu);margin-top:14px">Feedback-Lernstand steht als eigener Tab oben ("Feedback &amp; Lernstand") — hier zusätzlich mit Häufigkeit pro Modul.</div>`;
+}
+async function wsDeleteClient(){
+  await deleteClient(_wsClientId);
+  if(!clients.find(x=>x.id==_wsClientId))closeModal('ws-ov'); // client actually got deleted (deleteClient() confirms first)
+}
+
+// Compact, read-only row for the Übersicht tab — full inline editing lives
+// only in the Freigaben tab (wsReviewCard) to keep the overview scannable.
+function wsReviewSummaryRow(rv){
+  const ageMs=Date.now()-new Date(rv.created_at).getTime();
+  const ageH=ageMs/3600000;
+  const ageLabel=ageH<1?`${Math.max(1,Math.round(ageMs/60000))} Min.`:`${ageH.toFixed(1)} Std.`;
+  const ageColor=ageH>3?'#b91c1c':(ageH>1.5?'#92400e':'#047857');
+  return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)">
+    <div>
+      <span style="font-size:13px;font-weight:600;color:var(--tx)">${safeText(rv.module_label||'Text')}</span>
+      <span style="font-size:11.5px;color:${ageColor};font-weight:600;margin-left:8px">vor ${ageLabel}${ageH>3?' — SLA überschritten':''}</span>
+    </div>
+  </div>`;
+}
+
+// Inline editor — stays inside the Workspace instead of jumping into the
+// client's own module UI. "An Klient senden" saves AND emails the client the
+// revised draft (see notifyClientOfReviewedText in server/routes/reviews.js);
+// "Nur speichern" keeps it in the queue without notifying; "Löschen" discards
+// the request entirely. Button order (Löschen, Nur speichern, Senden) must
+// match what saveReview()/deleteReview() expect (btns[1]/btns[last]).
 function wsReviewCard(rv,idx){
   const ageMs=Date.now()-new Date(rv.created_at).getTime();
   const ageH=ageMs/3600000;
   const ageLabel=ageH<1?`${Math.max(1,Math.round(ageMs/60000))} Min.`:`${ageH.toFixed(1)} Std.`;
   const ageColor=ageH>3?'#b91c1c':(ageH>1.5?'#92400e':'#047857');
-  return `<div style="display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--bd)">
-    <div style="width:20px;height:20px;border-radius:50%;background:var(--sf);color:var(--mu);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${idx+1}</div>
-    <div style="flex:1;min-width:0">
-      <div style="font-size:13px;font-weight:600;color:var(--tx)">${safeText(rv.module_label||'Text')}</div>
-      <div style="font-size:11.5px;color:${ageColor};margin-top:2px;font-weight:600">Eingegangen vor ${ageLabel}${ageH>3?' — SLA überschritten':''}</div>
-      ${rv.client_note?`<div style="font-size:12px;color:var(--tx);background:var(--sf);border-left:3px solid var(--ac,#1a3d2e);padding:5px 9px;margin-top:6px;border-radius:0 6px 6px 0">💬 ${safeText(rv.client_note)}</div>`:''}
+  return `<div class="rev-card" id="rvc-${rv.id}" style="padding:12px 0;border-bottom:1px solid var(--bd)">
+    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+      <div style="width:20px;height:20px;border-radius:50%;background:var(--sf);color:var(--mu);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${idx+1}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--tx)">${safeText(rv.module_label||'Text')}</div>
+        <div style="font-size:11.5px;color:${ageColor};margin-top:2px;font-weight:600">Eingegangen vor ${ageLabel}${ageH>3?' — SLA überschritten':''}</div>
+        ${rv.client_note?`<div style="font-size:12px;color:var(--tx);background:var(--sf);border-left:3px solid var(--ac,#1a3d2e);padding:5px 9px;margin-top:6px;border-radius:0 6px 6px 0">💬 ${safeText(rv.client_note)}</div>`:''}
+      </div>
     </div>
-    <button class="obtn" style="background:var(--ac,#1a3d2e);color:#fff;border:none;white-space:nowrap" onclick="closeModal('ws-ov');openReviewInModule(${rv.id})">Bearbeiten</button>
+    <textarea class="rev-card-edit" id="rev-edit-${rv.id}" style="width:100%;min-height:140px;font-size:13px;padding:10px;border:1px solid var(--bd);border-radius:8px;font-family:inherit;resize:vertical;box-sizing:border-box">${safeText(rv.edited_text||rv.original_text)}</textarea>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+      <button class="obtn" style="color:var(--red);border-color:var(--red)" onclick="deleteReview(${rv.id})">Löschen</button>
+      <button class="obtn" onclick="saveReview(${rv.id},false)">Nur speichern</button>
+      <button class="rev-savebtn" onclick="saveReview(${rv.id},true)">An Klient senden (E-Mail)</button>
+    </div>
   </div>`;
 }
 
@@ -7503,8 +7592,8 @@ function wsRenderOverview(body){
     <div style="display:grid;grid-template-columns:1fr;gap:16px">
       <div>
         <div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Wartet auf dich — Freigaben (${_wsReviews.length})</div>
-        ${_wsReviews.length?_wsReviews.slice(0,5).map((rv,i)=>wsReviewCard(rv,i)).join(''):'<div style="font-size:13px;color:var(--mu);padding:8px 0">Keine offenen Freigaben.</div>'}
-        ${_wsReviews.length>5?`<div style="margin-top:8px"><button class="obtn" onclick="wsSwitchTab('reviews')">Alle ${_wsReviews.length} ansehen →</button></div>`:''}
+        ${_wsReviews.length?_wsReviews.slice(0,3).map(rv=>wsReviewSummaryRow(rv)).join(''):'<div style="font-size:13px;color:var(--mu);padding:8px 0">Keine offenen Freigaben.</div>'}
+        ${_wsReviews.length?`<div style="margin-top:8px"><button class="obtn" onclick="wsSwitchTab('reviews')">${_wsReviews.length>3?'Alle '+_wsReviews.length+' bearbeiten':'Bearbeiten'} →</button></div>`:''}
       </div>
       <div>
         <div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Brand Voice</div>
@@ -7528,14 +7617,56 @@ function wsRenderOverview(body){
 
 function wsFeedbackCard(f){
   const rec=f.recurring;
-  return `<div style="border:1px solid ${rec?'#e8b4ab':'var(--bd)'};background:${rec?'#fdf3f1':'var(--bg)'};border-radius:8px;padding:10px 12px;margin-bottom:8px">
+  const cardId='ws-fbcard-'+f.module_key.replace(/[^a-z0-9-]/gi,'_')+'-'+f.category;
+  return `<div id="${cardId}" style="border:1px solid ${rec?'#e8b4ab':'var(--bd)'};background:${rec?'#fdf3f1':'var(--bg)'};border-radius:8px;padding:10px 12px;margin-bottom:8px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <span style="font-size:12.5px;font-weight:700;color:var(--tx)">${safeText(f.module_key)}</span>
       <span style="font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:10px;${rec?'background:#d84a3a;color:#fff':'background:var(--sf);color:var(--mu)'}">${rec?'⚠ ':''}${f.count}×</span>
     </div>
     <div style="font-size:12px;color:var(--tx)"><b>${FBL_CAT_LABEL[f.category]||f.category}</b> — ${safeText(f.summary)}</div>
-    ${rec?'<div style="font-size:11px;color:#a8392c;font-weight:600;margin-top:4px">Wiederkehrend — Modul-Prompt vermutlich anpassen</div>':''}
+    ${rec?`<div style="font-size:11px;color:#a8392c;font-weight:600;margin-top:4px">Wiederkehrend — Modul-Prompt vermutlich anpassen</div>
+    <button class="obtn" style="margin-top:6px;background:#d84a3a;color:#fff;border:none" onclick="wsSuggestPromptFix('${cardId}','${f.module_key}','${f.category}')">Prompt anpassen — Lösung vorschlagen</button>
+    <div id="${cardId}-suggest" style="display:none;margin-top:8px"></div>`:''}
   </div>`;
+}
+
+// Turns a recurring feedback pattern into a concrete, one-click prompt fix —
+// asks the AI for a targeted instruction addition, lets the advisor review/
+// edit it, then saves it straight into this client+module's prompt.
+async function wsSuggestPromptFix(cardId,moduleKey,category){
+  const target=document.getElementById(cardId+'-suggest');
+  target.style.display='block';
+  target.innerHTML='<div style="font-size:12px;color:var(--mu)">Erarbeite Lösungsvorschlag…</div>';
+  const f=(_wsFeedback||[]).find(x=>x.module_key===moduleKey&&x.category===category);
+  try{
+    const r=await api('/api/module-prompts/suggest-from-feedback',{method:'POST',body:JSON.stringify({clientId:_wsClientId,moduleKey,category,summary:f?.summary||''})});
+    const d=await r.json();
+    if(!d.suggestion){target.innerHTML='<div style="font-size:12px;color:var(--mu)">Kein Vorschlag verfügbar.</div>';return;}
+    const safeId=cardId+'-ta';
+    target.innerHTML=`
+      ${d.existingInstructions?`<div style="font-size:11px;color:var(--mu);margin-bottom:6px">Bestehende Anweisung wird ergänzt, nicht ersetzt.</div>`:''}
+      <textarea id="${safeId}" style="width:100%;min-height:70px;font-size:12.5px;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;font-family:inherit;resize:vertical;box-sizing:border-box">${safeText(d.suggestion)}</textarea>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <span id="${cardId}-status" style="font-size:11px;color:var(--mu);align-self:center"></span>
+        <button class="obtn" onclick="wsApplyPromptFix('${safeId}','${moduleKey}','${cardId}')">In Modul-Prompt übernehmen</button>
+      </div>`;
+  }catch(e){target.innerHTML='<div style="font-size:12px;color:#c0392b">Fehler beim Erstellen des Vorschlags.</div>';}
+}
+async function wsApplyPromptFix(taId,moduleKey,cardId){
+  const ta=document.getElementById(taId);
+  const status=document.getElementById(cardId+'-status');
+  const addition=ta.value.trim();
+  if(!addition)return;
+  status.textContent='Speichert…';
+  try{
+    const existing=(_wsData.modulePrompts||[]).find(p=>p.module_key===moduleKey);
+    const merged=existing&&existing.instructions?existing.instructions.trim()+'\n\n'+addition:addition;
+    await api('/api/module-prompts/'+_wsClientId+'/'+encodeURIComponent(moduleKey),{method:'POST',body:JSON.stringify({instructions:merged})});
+    status.textContent='✓ Übernommen';
+    // refresh cached modulePrompts so the Modul-Prompts tab reflects it too
+    const r=await api('/api/advisor/workspace/'+_wsClientId);
+    _wsData=await r.json();
+  }catch(e){status.textContent='Fehler beim Speichern.';}
 }
 
 function wsRenderReviews(body){

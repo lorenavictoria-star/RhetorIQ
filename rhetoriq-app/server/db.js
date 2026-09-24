@@ -70,6 +70,14 @@ async function init() {
       result TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+    -- Text Generator tiles (Email, LinkedIn, Newsletter, Speech, Press,
+    -- Website, Custom) all share the generic module='text-gen', which used to
+    -- collapse their feedback into one shared, meaningless bucket (13 ratings
+    -- across 7 different formats showing as "text-gen ⚠ 13×"). feedback_key
+    -- carries the per-tile instructionsKey (e.g. "text-gen-email") when
+    -- available, falling back to module for everything else, so feedback
+    -- learnings/history stay per-format instead of pooled.
+    ALTER TABLE analyses ADD COLUMN IF NOT EXISTS feedback_key TEXT;
 
     CREATE TABLE IF NOT EXISTS people (
       id SERIAL PRIMARY KEY,

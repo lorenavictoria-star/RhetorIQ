@@ -103,6 +103,54 @@ Nur die Anweisung selbst, kein Intro, kein Outro. Auf Deutsch.`;
   }
 });
 
+// POST /api/module-prompts/suggest-from-feedback — turns a recurring
+// (4+ occurrence) feedback pattern for one client+module into a concrete
+// instruction addition, so the advisor can fix the root cause in one click
+// instead of manually rewriting the prompt each time the same complaint recurs.
+router.post('/suggest-from-feedback', requireAuth, async (req, res) => {
+  if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Forbidden' });
+  const { clientId, moduleKey, category, summary } = req.body;
+  if (!clientId || !moduleKey || !summary) return res.status(400).json({ error: 'Missing params' });
+
+  const { rows: existingRows } = await pool.query(
+    'SELECT instructions FROM client_module_prompts WHERE client_id=$1 AND module_key=$2',
+    [clientId, moduleKey]
+  );
+  const existingInstructions = existingRows[0]?.instructions || '';
+
+  const CAT_LABEL = { TON: 'Ton', STRUKTUR: 'Struktur', FAKTEN: 'Fakten', FORMAT: 'Format', SONSTIGES: 'Sonstiges' };
+
+  const prompt = `Du bist ein KI-Prompt-Experte. Ein Kunde hat wiederholt (4 oder mehr Mal) dasselbe Feedback zur Kategorie "${CAT_LABEL[category] || category}" beim Modul "${moduleKey}" gegeben. Das ist der aktuelle, konsolidierte Lernstand aus diesem Feedback:
+
+"${summary}"
+
+${existingInstructions ? `Bereits bestehende individuelle Anweisung für dieses Modul bei diesem Kunden:\n"${existingInstructions}"\n\n` : ''}Schreibe eine kurze, konkrete Ergänzung (2-4 Sätze) für die individuelle Modul-Anweisung dieses Kunden, die genau dieses wiederkehrende Problem behebt — als klare, bindende Regel formuliert, nicht als Beschreibung des Problems. ${existingInstructions ? 'Ergänze die bestehende Anweisung sinnvoll, wiederhole sie nicht.' : ''}
+
+Nur die Ergänzung selbst, kein Intro, kein Outro. Auf Deutsch.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+    res.json({ suggestion: data.content?.[0]?.text?.trim() || '', existingInstructions });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /api/module-prompts/generate-starters
 router.post('/generate-starters', requireAuth, async (req, res) => {
   if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Forbidden' });
