@@ -90,13 +90,41 @@ router.get('/:clientId/feedback-learnings', requireAuth, requireAdvisor, async (
     if (!clientRows[0]) return res.status(404).json({ error: 'Client not found' });
 
     const { rows } = await pool.query(
-      `SELECT module_key, category, summary, updated_at
+      `SELECT module_key, category, summary, updated_at, resolved_at
        FROM client_feedback_learnings
        WHERE client_id=$1
        ORDER BY module_key, category`,
       [clientId]
     );
     res.json(rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/audit/:clientId/feedback-learnings/resolve — marks a recurring
+// feedback pattern as addressed (called right after the advisor applies a
+// "Prompt anpassen" fix in the Workspace). Occurrences before this moment no
+// longer count toward the recurring-flag threshold; if the client raises the
+// same issue again afterward, it starts accumulating fresh and can flag again.
+router.post('/:clientId/feedback-learnings/resolve', requireAuth, requireAdvisor, async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { moduleKey, category } = req.body;
+    if (!moduleKey || !category) return res.status(400).json({ error: 'Missing moduleKey or category' });
+    const { rows: clientRows } = await pool.query(
+      'SELECT id FROM clients WHERE id=$1 AND advisor_id=$2',
+      [clientId, req.user.id]
+    );
+    if (!clientRows[0]) return res.status(404).json({ error: 'Client not found' });
+
+    await pool.query(
+      `UPDATE client_feedback_learnings SET resolved_at=NOW()
+       WHERE client_id=$1 AND module_key=$2 AND category=$3`,
+      [clientId, moduleKey, category]
+    );
+    res.json({ ok: true });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });

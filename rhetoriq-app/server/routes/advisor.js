@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../db');
 const { requireAdvisor } = require('../middleware/auth');
+const { generateText, resolveModelId } = require('../lib/aiProvider');
 
 const router = express.Router();
 
@@ -174,6 +175,84 @@ router.get('/workspace/:clientId', requireAdvisor, async (req, res) => {
     res.json({ client: cRows[0], brandVoice, modulePrompts });
   } catch (e) {
     console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/advisor/workspace/:clientId/chat — the persistent KI-Assistent
+// docked in the Workspace, visible across every tab. Always has this
+// client's Brand Voice, module-prompt overrides, and feedback learnings as
+// context. When editing a Freigabe (review), the frontend also sends the
+// review's current text; if the advisor asks for a rewrite, the model wraps
+// the full revised text between REVISED_MARKER_START/END so the frontend can
+// offer a one-click "Ins Textfeld übernehmen" instead of manual copy/paste.
+const REVISED_START = '---REVISED TEXT START---';
+const REVISED_END = '---REVISED TEXT END---';
+
+router.post('/workspace/:clientId/chat', requireAdvisor, async (req, res) => {
+  try {
+    const clientId = parseInt(req.params.clientId, 10);
+    if (isNaN(clientId)) return res.status(400).json({ error: 'Invalid client ID' });
+    const { message, history, activeReviewText } = req.body;
+    if (!message || !message.trim()) return res.status(400).json({ error: 'Missing message' });
+
+    const { rows: cRows } = await pool.query(
+      'SELECT id, name, industry FROM clients WHERE id=$1 AND advisor_id=$2',
+      [clientId, req.user.id]
+    );
+    if (!cRows[0]) return res.status(404).json({ error: 'Client not found' });
+    const client = cRows[0];
+
+    const [{ rows: brandVoice }, { rows: modulePrompts }, { rows: learnings }] = await Promise.all([
+      pool.query(`SELECT content FROM company_memory WHERE client_id=$1 AND memory_type LIKE 'brand_voice%' ORDER BY updated_at DESC`, [clientId]),
+      pool.query('SELECT module_key, instructions FROM client_module_prompts WHERE client_id=$1', [clientId]),
+      pool.query('SELECT module_key, category, summary FROM client_feedback_learnings WHERE client_id=$1', [clientId])
+    ]);
+
+    const contextParts = [
+      `Klient: ${client.name}${client.industry ? ' (Branche: ' + client.industry + ')' : ''}`,
+      brandVoice.length ? 'Brand Voice:\n' + brandVoice.map(b => b.content).join('\n\n').slice(0, 3000) : null,
+      modulePrompts.length ? 'Individuelle Modul-Vorgaben:\n' + modulePrompts.map(p => `[${p.module_key}] ${p.instructions}`).join('\n') : null,
+      learnings.length ? 'Bekannte Feedback-Lernstände:\n' + learnings.map(l => `[${l.module_key}/${l.category}] ${l.summary}`).join('\n') : null
+    ].filter(Boolean).join('\n\n');
+
+    const systemPrompt = `Du bist die persönliche KI-Assistentin der Beraterin (nicht des Kunden) für die Bearbeitung von Texten und Fragen rund um diesen einen Klienten. Du kennst dessen Brand Voice, individuelle Modul-Vorgaben und bisherige Feedback-Lernstände (unten).
+
+Wenn die Beraterin einen konkreten Text überarbeitet haben möchte (z.B. während sie eine Freigabe-Anfrage bearbeitet und dir den aktuellen Text mitgegeben hat), gib die VOLLSTÄNDIGE überarbeitete Fassung zurück, exakt eingerahmt zwischen den Zeilen "${REVISED_START}" und "${REVISED_END}", gefolgt von maximal 1-2 kurzen Sätzen was du geändert hast. Bei allgemeinen Fragen oder Ratschlägen antworte normal, ohne diese Marker.
+
+KONTEXT ZU DIESEM KLIENTEN:
+${contextParts}`;
+
+    const messages = [];
+    (Array.isArray(history) ? history : []).slice(-10).forEach(h => {
+      if (h.role === 'user' || h.role === 'assistant') messages.push({ role: h.role, content: h.text });
+    });
+    const userContent = activeReviewText
+      ? `AKTUELLER TEXT, DER GERADE BEARBEITET WIRD:\n${activeReviewText}\n\n---\n\nAnweisung der Beraterin: ${message.trim()}`
+      : message.trim();
+    messages.push({ role: 'user', content: userContent });
+
+    const resp = await generateText({
+      system: systemPrompt,
+      messages,
+      maxTokens: 3000,
+      model: resolveModelId('sonnet'),
+      temperature: 0.5
+    });
+
+    let reply = resp.text || '';
+    let revisedText = null;
+    const startIdx = reply.indexOf(REVISED_START);
+    const endIdx = reply.indexOf(REVISED_END);
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+      revisedText = reply.slice(startIdx + REVISED_START.length, endIdx).trim();
+      reply = (reply.slice(0, startIdx) + reply.slice(endIdx + REVISED_END.length)).trim();
+      if (!reply) reply = 'Überarbeitete Fassung erstellt.';
+    }
+
+    res.json({ reply, revisedText });
+  } catch (e) {
+    console.error('[advisor] workspace chat failed:', e.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

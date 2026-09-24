@@ -924,7 +924,17 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <button class="mlist-pill" id="ws-tab-feedback" onclick="wsSwitchTab('feedback')">Feedback &amp; Lernstand</button>
       <button class="mlist-pill" id="ws-tab-admin" onclick="wsSwitchTab('admin')">Verwaltung</button>
     </div>
-    <div id="ws-body" style="overflow-y:auto;flex:1;padding:16px 20px"></div>
+    <div style="display:flex;flex:1;min-height:0">
+      <div id="ws-body" style="overflow-y:auto;flex:1;padding:16px 20px;min-width:0"></div>
+      <div style="width:360px;flex-shrink:0;border-left:1px solid var(--bd);display:flex;flex-direction:column">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--bd);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);font-weight:700">KI-Assistent — dieser Kunde</div>
+        <div id="ws-chat-log" style="flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px;font-size:12.5px"></div>
+        <div style="padding:10px 12px;border-top:1px solid var(--bd);display:flex;gap:8px;flex-shrink:0">
+          <textarea id="ws-chat-input" placeholder="z.B. &quot;mach den Text direkter&quot; oder eine Frage" style="flex:1;border:1px solid var(--bd);border-radius:8px;padding:8px 10px;font-size:12.5px;resize:none;min-height:40px;max-height:120px;font-family:inherit;box-sizing:border-box" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();wsChatSend();}"></textarea>
+          <button onclick="wsChatSend()" style="padding:8px 14px;border:none;border-radius:8px;background:var(--ac,#1a3d2e);color:#fff;font-size:12px;font-weight:500;align-self:flex-end">Senden</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -6465,17 +6475,7 @@ async function loadAdvisorDashboard(){
           ${tok?`<div class="tkcode" style="margin-top:8px;font-size:11px">${tokShort}</div>`:''}
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
             <button class="obtn" style="color:#fff;background:var(--ac,#1a3d2e);border-color:var(--ac,#1a3d2e);font-weight:600" onclick="openWorkspaceTab(${c.id})"><i class="ti ti-briefcase" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Workspace</button>
-            <button class="obtn" style="color:#166534;border-color:#bbf7d0;background:#f0fdf4" onclick="sendWelcomeByEmail(${c.id})">Willkommens-E-Mail senden</button>
-            <button class="obtn" onclick="openSetPassword(${c.id})">Set Password</button>
             <button class="obtn" onclick="openTeamModal(${c.id})">Team</button>
-            <button class="obtn" style="color:#92400e;border-color:#fcd34d;background:#fffbeb" onclick="openFeedbackLearnings(${c.id},'${safeText(c.name)}')">Feedback-Lernstand</button>
-            <button class="obtn" style="color:#5b21b6;border-color:#c4b5fd;background:#f5f3ff;font-weight:500" onclick="openModuleConfig(${c.id})"><i class="ti ti-layout-grid" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Module</button>
-            <button class="obtn" style="color:#b91c1c;border-color:#fecaca;background:#fef2f2" onclick="deleteClient(${c.id})"><i class="ti ti-trash" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Löschen</button>
-            <button class="obtn" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-weight:500" onclick="sendPaymentLink(${c.id},this)">Zahlungslink senden</button>
-          </div>
-          <div id="pay-link-row-${c.id}" style="display:none;margin-top:8px;gap:6px;align-items:center">
-            <input id="pay-link-url-${c.id}" type="text" readonly style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--br);border-radius:4px;background:var(--bg2);color:var(--tx);min-width:0">
-            <button class="obtn" onclick="navigator.clipboard.writeText(document.getElementById('pay-link-url-${c.id}').value)">Kopieren</button>
           </div>
         </div>`;
       }).join(''):'<div style="color:var(--mu);font-size:13px;padding:16px 0">No clients yet.</div>'}
@@ -7437,7 +7437,7 @@ async function fblLoadHistory(){
 // Everything for one client — Übersicht, Brand Voice, Modul-Prompts,
 // Freigaben (FIFO by Eingang), Feedback & Lernstand — in one place instead
 // of scattered across the client card's separate buttons/modals.
-let _wsClientId=null,_wsData=null,_wsReviews=[],_wsFeedback=null;
+let _wsClientId=null,_wsData=null,_wsReviews=[],_wsFeedback=null,_wsChatHistory=[],_wsActiveReviewId=null;
 const WS_RECURRING_THRESHOLD=4; // 4+ occurrences of the same module+category in 30 days -> flag as "adjust the prompt"
 
 // Opens the Workspace in its own browser tab (same origin, so it re-uses the
@@ -7455,6 +7455,8 @@ async function openWorkspace(cid,fullPage){
   document.getElementById('ws-sub').textContent='Lädt…';
   document.getElementById('ws-ov').classList.toggle('full-page',!!fullPage);
   openModal('ws-ov');
+  _wsChatHistory=[];_wsActiveReviewId=null;
+  document.getElementById('ws-chat-log').innerHTML='<div style="font-size:12px;color:var(--mu);line-height:1.6">Kennt Brand Voice, Modul-Vorgaben und Feedback-Lernstand dieses Kunden. Öffne eine Freigabe und klicke in ihr Textfeld, um sie hier direkt mit zu überarbeiten.</div>';
   await wsLoad();
   wsSwitchTab('overview');
 }
@@ -7488,9 +7490,17 @@ async function wsLoadFeedback(){
     const learnings=await lr.json();
     const history=await hr.json();
     const cutoff=Date.now()-30*24*60*60*1000;
+    const learningByKey={};
+    learnings.forEach(l=>{learningByKey[l.module_key+'|'+l.category]=l;});
     const counts={};
     history.forEach(h=>{
-      if(!h.category||new Date(h.created_at).getTime()<cutoff)return;
+      if(!h.category)return;
+      const ts=new Date(h.created_at).getTime();
+      if(ts<cutoff)return;
+      // Occurrences before a "Prompt anpassen" resolution no longer count —
+      // otherwise a fixed issue would keep showing as recurring forever.
+      const learning=learningByKey[h.module_key+'|'+h.category];
+      if(learning?.resolved_at&&ts<new Date(learning.resolved_at).getTime())return;
       const key=h.module_key+'|'+h.category;
       if(!counts[key])counts[key]={module_key:h.module_key,category:h.category,count:0,last_at:h.created_at};
       counts[key].count++;
@@ -7498,7 +7508,9 @@ async function wsLoadFeedback(){
     });
     const rows=learnings.map(l=>{
       const c=counts[l.module_key+'|'+l.category];
-      return {...l,count:c?c.count:0,last_at:c?c.last_at:l.updated_at,recurring:(c?c.count:0)>=WS_RECURRING_THRESHOLD};
+      const count=c?c.count:0;
+      const recentlyResolved=!!l.resolved_at&&count<WS_RECURRING_THRESHOLD;
+      return {...l,count,last_at:c?c.last_at:l.updated_at,recurring:count>=WS_RECURRING_THRESHOLD,resolved:recentlyResolved};
     }).sort((a,b)=>b.count-a.count);
     _wsFeedback=rows;
   }catch(e){_wsFeedback=[];}
@@ -7563,6 +7575,25 @@ function wsReviewSummaryRow(rv){
 // "Nur speichern" keeps it in the queue without notifying; "Löschen" discards
 // the request entirely. Button order (Löschen, Nur speichern, Senden) must
 // match what saveReview()/deleteReview() expect (btns[1]/btns[last]).
+// Shows what the client wanted BEFORE — their own self-revision rounds on
+// this exact text (review_context.revisionHistory) and their past thumbs-up/
+// down ratings on earlier, separate submissions of the same module — as a
+// collapsed <details> above the editor so it's available without cluttering
+// the card by default.
+function wsReviewHistoryBlock(rv){
+  const revHist=(rv.review_context&&Array.isArray(rv.review_context.revisionHistory))?rv.review_context.revisionHistory:[];
+  const pastRatings=Array.isArray(rv.pastRatings)?rv.pastRatings:[];
+  if(!revHist.length&&!pastRatings.length)return '';
+  const revHtml=revHist.length?`<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Eigene Anpassungsrunden des Klienten (vor dem Senden)</div>
+    ${revHist.map((h,i)=>`<div style="font-size:12px;color:var(--tx);margin-bottom:4px"><b>${i+1}.</b> ${safeText(h.note||'—')}</div>`).join('')}</div>`:'';
+  const ratingsHtml=pastRatings.length?`<div><div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Bisherige Bewertungen zu diesem Modul</div>
+    ${pastRatings.map(p=>`<div style="font-size:12px;color:var(--tx);margin-bottom:4px">${p.user_rating===1?'👍':'👎'} ${p.feedback_note?safeText(p.feedback_note):'<span style="color:var(--mu)">(ohne Notiz)</span>'} <span style="color:var(--mu);font-size:10.5px">— ${new Date(p.created_at).toLocaleDateString('de-CH')}</span></div>`).join('')}</div>`:'';
+  return `<details style="margin-bottom:10px;border:1px solid var(--bd);border-radius:8px;padding:8px 10px">
+    <summary style="font-size:12px;font-weight:600;color:var(--tx);cursor:pointer">Was der Klient bisher wollte anzeigen</summary>
+    <div style="margin-top:8px">${revHtml}${ratingsHtml}</div>
+  </details>`;
+}
+
 function wsReviewCard(rv,idx){
   const ageMs=Date.now()-new Date(rv.created_at).getTime();
   const ageH=ageMs/3600000;
@@ -7577,7 +7608,8 @@ function wsReviewCard(rv,idx){
         ${rv.client_note?`<div style="font-size:12px;color:var(--tx);background:var(--sf);border-left:3px solid var(--ac,#1a3d2e);padding:5px 9px;margin-top:6px;border-radius:0 6px 6px 0">💬 ${safeText(rv.client_note)}</div>`:''}
       </div>
     </div>
-    <textarea class="rev-card-edit" id="rev-edit-${rv.id}" style="width:100%;min-height:140px;font-size:13px;padding:10px;border:1px solid var(--bd);border-radius:8px;font-family:inherit;resize:vertical;box-sizing:border-box">${safeText(rv.edited_text||rv.original_text)}</textarea>
+    ${wsReviewHistoryBlock(rv)}
+    <textarea class="rev-card-edit" id="rev-edit-${rv.id}" onfocus="_wsActiveReviewId=${rv.id}" style="width:100%;min-height:480px;font-size:13.5px;line-height:1.6;padding:14px;border:1px solid var(--bd);border-radius:8px;font-family:inherit;resize:vertical;box-sizing:border-box">${safeText(rv.edited_text||rv.original_text)}</textarea>
     <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
       <button class="obtn" style="color:var(--red);border-color:var(--red)" onclick="deleteReview(${rv.id})">Löschen</button>
       <button class="obtn" onclick="saveReview(${rv.id},false)">Nur speichern</button>
@@ -7624,6 +7656,7 @@ function wsFeedbackCard(f){
       <span style="font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:10px;${rec?'background:#d84a3a;color:#fff':'background:var(--sf);color:var(--mu)'}">${rec?'⚠ ':''}${f.count}×</span>
     </div>
     <div style="font-size:12px;color:var(--tx)"><b>${FBL_CAT_LABEL[f.category]||f.category}</b> — ${safeText(f.summary)}</div>
+    ${f.resolved?'<div style="font-size:11px;color:#047857;font-weight:600;margin-top:4px">✓ Gelöst — Prompt wurde angepasst</div>':''}
     ${rec?`<div style="font-size:11px;color:#a8392c;font-weight:600;margin-top:4px">Wiederkehrend — Modul-Prompt vermutlich anpassen</div>
     <button class="obtn" style="margin-top:6px;background:#d84a3a;color:#fff;border:none" onclick="wsSuggestPromptFix('${cardId}','${f.module_key}','${f.category}')">Prompt anpassen — Lösung vorschlagen</button>
     <div id="${cardId}-suggest" style="display:none;margin-top:8px"></div>`:''}
@@ -7645,14 +7678,14 @@ async function wsSuggestPromptFix(cardId,moduleKey,category){
     const safeId=cardId+'-ta';
     target.innerHTML=`
       ${d.existingInstructions?`<div style="font-size:11px;color:var(--mu);margin-bottom:6px">Bestehende Anweisung wird ergänzt, nicht ersetzt.</div>`:''}
-      <textarea id="${safeId}" style="width:100%;min-height:70px;font-size:12.5px;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;font-family:inherit;resize:vertical;box-sizing:border-box">${safeText(d.suggestion)}</textarea>
+      <textarea id="${safeId}" style="width:100%;min-height:220px;font-size:13px;line-height:1.6;padding:12px;border:1px solid var(--bd);border-radius:6px;font-family:inherit;resize:vertical;box-sizing:border-box">${safeText(d.suggestion)}</textarea>
       <div style="display:flex;gap:8px;margin-top:6px">
         <span id="${cardId}-status" style="font-size:11px;color:var(--mu);align-self:center"></span>
-        <button class="obtn" onclick="wsApplyPromptFix('${safeId}','${moduleKey}','${cardId}')">In Modul-Prompt übernehmen</button>
+        <button class="obtn" onclick="wsApplyPromptFix('${safeId}','${moduleKey}','${category}','${cardId}')">In Modul-Prompt übernehmen &amp; als gelöst markieren</button>
       </div>`;
   }catch(e){target.innerHTML='<div style="font-size:12px;color:#c0392b">Fehler beim Erstellen des Vorschlags.</div>';}
 }
-async function wsApplyPromptFix(taId,moduleKey,cardId){
+async function wsApplyPromptFix(taId,moduleKey,category,cardId){
   const ta=document.getElementById(taId);
   const status=document.getElementById(cardId+'-status');
   const addition=ta.value.trim();
@@ -7662,10 +7695,20 @@ async function wsApplyPromptFix(taId,moduleKey,cardId){
     const existing=(_wsData.modulePrompts||[]).find(p=>p.module_key===moduleKey);
     const merged=existing&&existing.instructions?existing.instructions.trim()+'\n\n'+addition:addition;
     await api('/api/module-prompts/'+_wsClientId+'/'+encodeURIComponent(moduleKey),{method:'POST',body:JSON.stringify({instructions:merged})});
+    // Mark this recurring pattern as resolved so it stops showing red until
+    // the client raises the same issue again after the fix.
+    await api('/api/audit/'+_wsClientId+'/feedback-learnings/resolve',{method:'POST',body:JSON.stringify({moduleKey,category})});
     status.textContent='✓ Übernommen';
-    // refresh cached modulePrompts so the Modul-Prompts tab reflects it too
+    // refresh cached modulePrompts + feedback so both tabs reflect it
     const r=await api('/api/advisor/workspace/'+_wsClientId);
     _wsData=await r.json();
+    _wsFeedback=null;
+    await wsLoadFeedback();
+    const card=document.getElementById(cardId);
+    if(card){
+      const f=(_wsFeedback||[]).find(x=>x.module_key===moduleKey&&x.category===category);
+      if(f)card.outerHTML=wsFeedbackCard(f);
+    }
   }catch(e){status.textContent='Fehler beim Speichern.';}
 }
 
@@ -7748,6 +7791,55 @@ function wsRenderFeedback(body){
     body.innerHTML=`<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Feedback &amp; Lernstand — letzte 30 Tage, nach Modul</div>
       ${rows.length?rows.map(f=>wsFeedbackCard(f)).join(''):'<div style="font-size:13px;color:var(--mu);padding:8px 0">Noch kein gelernter Stand — entsteht automatisch, sobald 👍/👎-Feedback mit Notiz abgegeben wird.</div>'}`;
   });
+}
+
+// ── Persistent KI-Assistent (right-docked, visible across all Workspace
+// tabs) — always has this client's Brand Voice/prompts/feedback as context.
+// When a review textarea has focus (_wsActiveReviewId set) and the reply
+// contains a revised text, offers a one-click "Ins Textfeld übernehmen".
+function wsChatMsgEl(role,text){
+  const div=document.createElement('div');
+  const isUser=role==='user';
+  div.style.cssText='align-self:'+(isUser?'flex-end':'flex-start')+';max-width:92%';
+  div.innerHTML=`<div style="background:${isUser?'var(--ac,#1a3d2e)':'var(--sf)'};color:${isUser?'#fff':'var(--tx)'};padding:8px 11px;border-radius:10px;white-space:pre-wrap;line-height:1.5">${safeText(text)}</div>`;
+  return div;
+}
+async function wsChatSend(){
+  const input=document.getElementById('ws-chat-input');
+  const msg=input.value.trim();
+  if(!msg||!_wsClientId)return;
+  input.value='';
+  input.disabled=true;
+  const log=document.getElementById('ws-chat-log');
+  log.appendChild(wsChatMsgEl('user',msg));
+  const thinking=wsChatMsgEl('assistant','…');
+  log.appendChild(thinking);
+  log.scrollTop=log.scrollHeight;
+  const activeReviewText=_wsActiveReviewId?document.getElementById('rev-edit-'+_wsActiveReviewId)?.value:null;
+  try{
+    const r=await api('/api/advisor/workspace/'+_wsClientId+'/chat',{method:'POST',body:JSON.stringify({message:msg,history:_wsChatHistory,activeReviewText})});
+    const d=await r.json();
+    thinking.remove();
+    _wsChatHistory.push({role:'user',text:msg},{role:'assistant',text:d.reply||''});
+    const replyEl=wsChatMsgEl('assistant',d.reply||'(keine Antwort)');
+    log.appendChild(replyEl);
+    if(d.revisedText&&_wsActiveReviewId){
+      const applyBtn=document.createElement('button');
+      applyBtn.className='obtn';
+      applyBtn.style.cssText='margin-top:6px;background:var(--ac,#1a3d2e);color:#fff;border:none;font-size:11.5px';
+      applyBtn.textContent='Ins Textfeld übernehmen';
+      applyBtn.onclick=()=>{
+        const ta=document.getElementById('rev-edit-'+_wsActiveReviewId);
+        if(ta){ta.value=d.revisedText;applyBtn.textContent='✓ Übernommen';applyBtn.disabled=true;}
+      };
+      replyEl.appendChild(document.createElement('br'));
+      replyEl.appendChild(applyBtn);
+    }
+    log.scrollTop=log.scrollHeight;
+  }catch(e){
+    thinking.remove();
+    log.appendChild(wsChatMsgEl('assistant','Fehler — bitte erneut versuchen.'));
+  }finally{input.disabled=false;input.focus();}
 }
 
 // MODULE PROMPT CUSTOMIZATION

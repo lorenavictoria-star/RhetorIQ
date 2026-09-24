@@ -161,6 +161,12 @@ async function init() {
       updated_at TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(client_id, module_key, category)
     );
+    -- Set when the advisor applies a "Prompt anpassen" fix for this recurring
+    -- pattern (see POST /api/audit/:clientId/feedback-learnings/resolve).
+    -- Occurrences before this timestamp no longer count toward the recurring
+    -- (4+) flag in the Workspace, so a resolved issue stops showing red until
+    -- the client raises it again after the fix.
+    ALTER TABLE client_feedback_learnings ADD COLUMN IF NOT EXISTS resolved_at TIMESTAMPTZ;
 
     -- Full raw feedback history — never injected into generation prompts,
     -- kept purely so nothing is ever truly lost and an advisor can review it.

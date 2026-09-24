@@ -118,6 +118,18 @@ router.get('/', auth, async (req, res) => {
     const { rows } = await pool.query(
       `SELECT * FROM review_requests WHERE status IN ('pending', 'edited') ORDER BY created_at DESC`
     );
+    // So the advisor sees what this client has liked/disliked before, not just
+    // the text currently up for review — small N here, pending reviews are few.
+    await Promise.all(rows.map(async rv => {
+      if (!rv.client_id || !rv.module_label) { rv.pastRatings = []; return; }
+      const { rows: past } = await pool.query(
+        `SELECT result, user_rating, feedback_note, created_at FROM analyses
+         WHERE client_id=$1 AND module_label=$2 AND user_rating IS NOT NULL
+         ORDER BY created_at DESC LIMIT 5`,
+        [rv.client_id, rv.module_label]
+      );
+      rv.pastRatings = past;
+    }));
     res.json(rows);
   } catch (e) {
     console.error(e);
