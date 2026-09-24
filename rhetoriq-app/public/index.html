@@ -937,7 +937,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <div style="padding:10px 14px;border-bottom:1px solid var(--bd);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);font-weight:700">KI-Assistent — dieser Kunde</div>
         <div id="ws-chat-log" style="flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px;font-size:12.5px"></div>
         <div style="padding:10px 12px;border-top:1px solid var(--bd);display:flex;gap:8px;flex-shrink:0">
-          <textarea id="ws-chat-input" placeholder="z.B. &quot;mach den Text direkter&quot; oder eine Frage" style="flex:1;border:1px solid var(--bd);border-radius:8px;padding:8px 10px;font-size:12.5px;resize:none;min-height:40px;max-height:120px;font-family:inherit;box-sizing:border-box" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();wsChatSend();}"></textarea>
+          <textarea id="ws-chat-input" placeholder="Textstelle markieren + Anweisung, z.B. &quot;direkter&quot; — oder allgemeine Frage" style="flex:1;border:1px solid var(--bd);border-radius:8px;padding:8px 10px;font-size:12.5px;resize:none;min-height:40px;max-height:120px;font-family:inherit;box-sizing:border-box" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();wsChatSend();}"></textarea>
           <button onclick="wsChatSend()" style="padding:8px 14px;border:none;border-radius:8px;background:var(--ac,#1a3d2e);color:#fff;font-size:12px;font-weight:500;align-self:flex-end">Senden</button>
         </div>
       </div>
@@ -7472,7 +7472,7 @@ async function openWorkspace(cid,fullPage){
   }
   openModal('ws-ov');
   _wsChatHistory=[];_wsActiveReviewId=null;
-  document.getElementById('ws-chat-log').innerHTML='<div style="font-size:12px;color:var(--mu);line-height:1.6">Kennt Brand Voice, Modul-Vorgaben und Feedback-Lernstand dieses Kunden. Im Tab Freigaben ist der Assistent automatisch an die gerade geöffnete Anfrage angehängt — einfach Anweisung schreiben.</div>';
+  document.getElementById('ws-chat-log').innerHTML='<div style="font-size:12px;color:var(--mu);line-height:1.6">Kennt Brand Voice, Modul-Vorgaben und Feedback-Lernstand dieses Kunden. Im Tab Freigaben automatisch an die gerade geöffnete Anfrage angehängt — Textstelle im Feld markieren und dann die Anweisung schreiben, damit klar ist, worauf sie sich bezieht.</div>';
   await wsLoad();
   wsSwitchTab('overview');
 }
@@ -7855,13 +7855,25 @@ async function wsChatSend(){
   input.value='';
   input.disabled=true;
   const log=document.getElementById('ws-chat-log');
+  const activeTa=_wsActiveReviewId?document.getElementById('rev-edit-'+_wsActiveReviewId):null;
+  const activeReviewText=activeTa?activeTa.value:null;
+  // If the advisor highlighted a passage in the review textarea before typing
+  // the instruction, send exactly that snippet too — so "mach das direkter"
+  // means the selected sentence, not a guess at which part of a long text.
+  const selectedText=(activeTa&&activeTa.selectionStart!==activeTa.selectionEnd)
+    ?activeTa.value.substring(activeTa.selectionStart,activeTa.selectionEnd):null;
+  if(selectedText){
+    const tag=document.createElement('div');
+    tag.style.cssText='align-self:flex-end;font-size:11px;color:var(--mu);background:var(--sf);border-radius:6px;padding:4px 8px;max-width:92%';
+    tag.textContent='Bezug: "'+(selectedText.length>80?selectedText.slice(0,80)+'…':selectedText)+'"';
+    log.appendChild(tag);
+  }
   log.appendChild(wsChatMsgEl('user',msg));
   const thinking=wsChatMsgEl('assistant','…');
   log.appendChild(thinking);
   log.scrollTop=log.scrollHeight;
-  const activeReviewText=_wsActiveReviewId?document.getElementById('rev-edit-'+_wsActiveReviewId)?.value:null;
   try{
-    const r=await api('/api/advisor/workspace/'+_wsClientId+'/chat',{method:'POST',body:JSON.stringify({message:msg,history:_wsChatHistory,activeReviewText})});
+    const r=await api('/api/advisor/workspace/'+_wsClientId+'/chat',{method:'POST',body:JSON.stringify({message:msg,history:_wsChatHistory,activeReviewText,selectedText})});
     const d=await r.json();
     thinking.remove();
     _wsChatHistory.push({role:'user',text:msg},{role:'assistant',text:d.reply||''});

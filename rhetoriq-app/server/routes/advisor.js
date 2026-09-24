@@ -193,7 +193,7 @@ router.post('/workspace/:clientId/chat', requireAdvisor, async (req, res) => {
   try {
     const clientId = parseInt(req.params.clientId, 10);
     if (isNaN(clientId)) return res.status(400).json({ error: 'Invalid client ID' });
-    const { message, history, activeReviewText } = req.body;
+    const { message, history, activeReviewText, selectedText } = req.body;
     if (!message || !message.trim()) return res.status(400).json({ error: 'Missing message' });
 
     const { rows: cRows } = await pool.query(
@@ -218,7 +218,7 @@ router.post('/workspace/:clientId/chat', requireAdvisor, async (req, res) => {
 
     const systemPrompt = `Du bist die persönliche KI-Assistentin der Beraterin (nicht des Kunden) für die Bearbeitung von Texten und Fragen rund um diesen einen Klienten. Du kennst dessen Brand Voice, individuelle Modul-Vorgaben und bisherige Feedback-Lernstände (unten).
 
-Wenn die Beraterin einen konkreten Text überarbeitet haben möchte (z.B. während sie eine Freigabe-Anfrage bearbeitet und dir den aktuellen Text mitgegeben hat), gib die VOLLSTÄNDIGE überarbeitete Fassung zurück, exakt eingerahmt zwischen den Zeilen "${REVISED_START}" und "${REVISED_END}", gefolgt von maximal 1-2 kurzen Sätzen was du geändert hast. Bei allgemeinen Fragen oder Ratschlägen antworte normal, ohne diese Marker.
+Wenn die Beraterin einen konkreten Text überarbeitet haben möchte (z.B. während sie eine Freigabe-Anfrage bearbeitet und dir den aktuellen Text mitgegeben hat), gib die VOLLSTÄNDIGE überarbeitete Fassung des GESAMTEN Textes zurück (nicht nur den geänderten Ausschnitt), exakt eingerahmt zwischen den Zeilen "${REVISED_START}" und "${REVISED_END}", gefolgt von maximal 1-2 kurzen Sätzen was du geändert hast. Wenn dir zusätzlich ein AUSGEWÄHLTER ABSCHNITT mitgegeben wird, bezieht sich die Anweisung ausschliesslich auf diesen Abschnitt — ändere im Gesamttext nur diese Stelle, alles andere bleibt exakt wie im aktuellen Text stehen. Bei allgemeinen Fragen oder Ratschlägen antworte normal, ohne diese Marker.
 
 KONTEXT ZU DIESEM KLIENTEN:
 ${contextParts}`;
@@ -228,7 +228,7 @@ ${contextParts}`;
       if (h.role === 'user' || h.role === 'assistant') messages.push({ role: h.role, content: h.text });
     });
     const userContent = activeReviewText
-      ? `AKTUELLER TEXT, DER GERADE BEARBEITET WIRD:\n${activeReviewText}\n\n---\n\nAnweisung der Beraterin: ${message.trim()}`
+      ? `AKTUELLER TEXT, DER GERADE BEARBEITET WIRD:\n${activeReviewText}${selectedText ? `\n\n---\n\nAUSGEWÄHLTER ABSCHNITT (die Anweisung bezieht sich nur hierauf):\n${selectedText}` : ''}\n\n---\n\nAnweisung der Beraterin: ${message.trim()}`
       : message.trim();
     messages.push({ role: 'user', content: userContent });
 
