@@ -925,9 +925,8 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     </div>
     <div style="display:flex;gap:8px;padding:10px 20px 0;border-bottom:1px solid var(--bd);flex-shrink:0;flex-wrap:wrap">
       <button class="mlist-pill" id="ws-tab-voice" onclick="wsSwitchTab('voice')">Brand Voice</button>
-      <button class="mlist-pill" id="ws-tab-prompts" onclick="wsSwitchTab('prompts')">Modul-Prompts</button>
+      <button class="mlist-pill" id="ws-tab-prompts" onclick="wsSwitchTab('prompts')">Modul-Prompts &amp; Feedback</button>
       <button class="mlist-pill active" id="ws-tab-reviews" onclick="wsSwitchTab('reviews')">Freigaben <span id="ws-rev-count" style="display:none;background:var(--ac,#1a3d2e);color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;font-weight:700"></span></button>
-      <button class="mlist-pill" id="ws-tab-feedback" onclick="wsSwitchTab('feedback')">Feedback &amp; Lernstand</button>
       <button class="mlist-pill" id="ws-tab-admin" onclick="wsSwitchTab('admin')">Verwaltung</button>
     </div>
     <div style="display:flex;flex:1;min-height:0">
@@ -6700,7 +6699,7 @@ async function deleteReview(id){
 async function wsRefresh(){
   const ov=document.getElementById('ws-ov');
   if(!ov||!ov.classList.contains('show')||!_wsClientId)return;
-  const activeTab=['voice','prompts','reviews','feedback','admin'].find(t=>document.getElementById('ws-tab-'+t)?.classList.contains('active'))||'reviews';
+  const activeTab=['voice','prompts','reviews','admin'].find(t=>document.getElementById('ws-tab-'+t)?.classList.contains('active'))||'reviews';
   await wsLoad();
   wsSwitchTab(activeTab);
 }
@@ -7533,13 +7532,12 @@ async function wsLoadFeedback(){
 }
 
 function wsSwitchTab(tab){
-  ['voice','prompts','reviews','feedback','admin'].forEach(t=>document.getElementById('ws-tab-'+t).classList.toggle('active',t===tab));
+  ['voice','prompts','reviews','admin'].forEach(t=>document.getElementById('ws-tab-'+t).classList.toggle('active',t===tab));
   const body=document.getElementById('ws-body');
   body.innerHTML='<div style="padding:20px;color:var(--mu);font-size:13px">Lädt…</div>';
   if(tab==='voice')wsRenderVoice(body);
   else if(tab==='prompts')wsRenderPrompts(body);
   else if(tab==='reviews')wsRenderReviews(body);
-  else if(tab==='feedback')wsRenderFeedback(body);
   else if(tab==='admin')wsRenderAdmin(body);
 }
 
@@ -7561,7 +7559,7 @@ function wsRenderAdmin(body){
       <input id="pay-link-url-${_wsClientId}" type="text" readonly style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--br);border-radius:4px;background:var(--bg2);color:var(--tx);min-width:0">
       <button class="obtn" onclick="navigator.clipboard.writeText(document.getElementById('pay-link-url-${_wsClientId}').value)">Kopieren</button>
     </div>
-    <div style="font-size:11px;color:var(--mu);margin-top:14px">Feedback-Lernstand steht als eigener Tab oben ("Feedback &amp; Lernstand") — hier zusätzlich mit Häufigkeit pro Modul.</div>`;
+    <div style="font-size:11px;color:var(--mu);margin-top:14px">Feedback-Lernstand steht direkt im Tab "Modul-Prompts &amp; Feedback" oben, jeweils über der passenden Modul-Anweisung.</div>`;
 }
 async function wsDeleteClient(){
   await deleteClient(_wsClientId);
@@ -7668,17 +7666,13 @@ async function wsApplyPromptFix(taId,moduleKey,category,cardId){
     // Mark this recurring pattern as resolved so it stops showing red until
     // the client raises the same issue again after the fix.
     await api('/api/audit/'+_wsClientId+'/feedback-learnings/resolve',{method:'POST',body:JSON.stringify({moduleKey,category})});
-    status.textContent='✓ Übernommen';
-    // refresh cached modulePrompts + feedback so both tabs reflect it
+    // refresh cached modulePrompts + feedback, then re-render the whole
+    // merged tab — simpler and safer than patching two separate DOM spots
+    // (the feedback card and the module's own prompt textarea) individually.
     const r=await api('/api/advisor/workspace/'+_wsClientId);
     _wsData=await r.json();
     _wsFeedback=null;
-    await wsLoadFeedback();
-    const card=document.getElementById(cardId);
-    if(card){
-      const f=(_wsFeedback||[]).find(x=>x.module_key===moduleKey&&x.category===category);
-      if(f)card.outerHTML=wsFeedbackCard(f);
-    }
+    wsRenderPrompts(document.getElementById('ws-body'));
   }catch(e){status.textContent='Fehler beim Speichern.';}
 }
 
@@ -7740,23 +7734,38 @@ async function wsSaveVoice(){
   }catch(e){status.textContent='Fehler beim Speichern.';}
 }
 
+// Merged view: for each module, its feedback (the diagnosis — what the
+// client actually complained about) sits directly above its individual
+// prompt (the treatment — what the AI is told to do about it), instead of
+// two separate tabs that only related to each other via the "Prompt
+// anpassen" button and were otherwise hard to connect mentally.
 function wsRenderPrompts(body){
-  const prompts=_wsData.modulePrompts||[];
-  body.innerHTML=`<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Modul-Prompts — individuelle Anweisungen pro Modul</div>
-    <div id="ws-prompts-list">${prompts.length?prompts.map(p=>wsPromptRow(p.module_key,p.instructions)).join(''):'<div style="font-size:13px;color:var(--mu);padding:8px 0">Noch keine individuellen Modul-Prompts hinterlegt.</div>'}</div>
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--bd)">
-      <div style="font-size:12px;color:var(--mu);margin-bottom:6px">Neues Modul hinzufügen (z.B. text-gen-email, brief, profiling):</div>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="ws-new-prompt-key" placeholder="Modul-Key" style="width:200px;padding:7px 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;font-family:inherit">
-        <button class="obtn" onclick="wsAddPromptRow()">+ Hinzufügen</button>
-      </div>
-    </div>`;
+  body.innerHTML='<div style="padding:16px;color:var(--mu);font-size:13px">Lädt…</div>';
+  wsLoadFeedback().then(feedbackRows=>{
+    const prompts=_wsData.modulePrompts||[];
+    const promptByKey={};
+    prompts.forEach(p=>{promptByKey[p.module_key]=p.instructions;});
+    const feedbackByKey={};
+    feedbackRows.forEach(f=>{(feedbackByKey[f.module_key]=feedbackByKey[f.module_key]||[]).push(f);});
+    const allKeys=[...new Set([...Object.keys(promptByKey),...Object.keys(feedbackByKey)])].sort();
+    body.innerHTML=`<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Modul-Prompts &amp; Feedback — pro Modul</div>
+      <div id="ws-prompts-list">${allKeys.length?allKeys.map(k=>wsModuleSection(k,promptByKey[k]||'',feedbackByKey[k]||[])).join(''):'<div style="font-size:13px;color:var(--mu);padding:8px 0">Noch keine individuellen Modul-Prompts oder Feedback-Lernstände vorhanden.</div>'}</div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--bd)">
+        <div style="font-size:12px;color:var(--mu);margin-bottom:6px">Neues Modul hinzufügen (z.B. text-gen-email, brief, profiling):</div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="ws-new-prompt-key" placeholder="Modul-Key" style="width:200px;padding:7px 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;font-family:inherit">
+          <button class="obtn" onclick="wsAddPromptRow()">+ Hinzufügen</button>
+        </div>
+      </div>`;
+  });
 }
-function wsPromptRow(moduleKey,instructions){
+function wsModuleSection(moduleKey,instructions,feedbackItems){
   const safeId=moduleKey.replace(/[^a-z0-9-]/gi,'_');
-  return `<div style="margin-bottom:14px" id="ws-prompt-row-${safeId}">
-    <div style="font-size:12.5px;font-weight:700;color:var(--tx);margin-bottom:4px">${safeText(moduleKey)}</div>
-    <textarea id="ws-prompt-ta-${safeId}" style="width:100%;min-height:70px;font-size:12.5px;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;font-family:inherit;resize:vertical;box-sizing:border-box">${safeText(instructions||'')}</textarea>
+  return `<div style="margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--bd)" id="ws-prompt-row-${safeId}">
+    <div style="font-size:13px;font-weight:700;color:var(--tx);margin-bottom:8px">${safeText(moduleKey)}</div>
+    ${feedbackItems.length?feedbackItems.map(f=>wsFeedbackCard(f)).join(''):''}
+    <div style="font-size:11px;color:var(--mu);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.04em;font-weight:600">Individuelle Anweisung</div>
+    <textarea id="ws-prompt-ta-${safeId}" style="width:100%;min-height:90px;font-size:12.5px;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;font-family:inherit;resize:vertical;box-sizing:border-box">${safeText(instructions||'')}</textarea>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
       <span id="ws-prompt-status-${safeId}" style="font-size:11px;color:var(--mu);align-self:center"></span>
       <button class="obtn" onclick="wsSavePrompt('${moduleKey}','${safeId}')">Speichern</button>
@@ -7769,7 +7778,7 @@ function wsAddPromptRow(){
   if(!key)return;
   const list=document.getElementById('ws-prompts-list');
   if(list.querySelector('div[style*="color:var(--mu)"]'))list.innerHTML=''; // clear "none yet" placeholder
-  list.insertAdjacentHTML('beforeend',wsPromptRow(key,''));
+  list.insertAdjacentHTML('beforeend',wsModuleSection(key,'',[]));
   input.value='';
 }
 async function wsSavePrompt(moduleKey,safeId){
@@ -7781,14 +7790,6 @@ async function wsSavePrompt(moduleKey,safeId){
     status.textContent='✓ Gespeichert';
     setTimeout(()=>{if(status)status.textContent='';},2000);
   }catch(e){status.textContent='Fehler beim Speichern.';}
-}
-
-function wsRenderFeedback(body){
-  body.innerHTML='<div style="padding:16px;color:var(--mu);font-size:13px">Lädt…</div>';
-  wsLoadFeedback().then(rows=>{
-    body.innerHTML=`<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Feedback &amp; Lernstand — letzte 30 Tage, nach Modul</div>
-      ${rows.length?rows.map(f=>wsFeedbackCard(f)).join(''):'<div style="font-size:13px;color:var(--mu);padding:8px 0">Noch kein gelernter Stand — entsteht automatisch, sobald 👍/👎-Feedback mit Notiz abgegeben wird.</div>'}`;
-  });
 }
 
 // ── Persistent KI-Assistent (right-docked, visible across all Workspace
