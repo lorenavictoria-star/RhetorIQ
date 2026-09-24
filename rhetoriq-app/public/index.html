@@ -383,8 +383,8 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .modal{background:#fff;border-radius:10px;padding:28px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,.15);max-height:90vh;overflow-y:auto}
 /* Kunden-Workspace opens in its own browser tab (via openWorkspaceTab) so it
    should fill that tab like a page, not sit as a small centered dialog. */
-#ws-ov.full-page{align-items:stretch;justify-content:stretch;padding:0;background:var(--bg)}
-#ws-ov.full-page .modal{max-width:none;width:100vw;height:100vh;max-height:100vh;border-radius:0;padding:0;box-shadow:none}
+#ws-ov.full-page{position:fixed;inset:0;display:flex;align-items:stretch;justify-content:stretch;padding:0;background:var(--bg)}
+#ws-ov.full-page .modal{max-width:none;width:100%;height:100%;max-height:none;border-radius:0;padding:0;box-shadow:none;display:flex;flex-direction:column;box-sizing:border-box}
 .modal h2{font-family:'Spectral',serif;font-size:24px;font-weight:400;margin-bottom:4px}
 .modal p{font-size:13px;color:var(--mu);margin-bottom:20px}
 .mf{margin-bottom:14px}
@@ -7437,7 +7437,7 @@ async function fblLoadHistory(){
 // Everything for one client — Übersicht, Brand Voice, Modul-Prompts,
 // Freigaben (FIFO by Eingang), Feedback & Lernstand — in one place instead
 // of scattered across the client card's separate buttons/modals.
-let _wsClientId=null,_wsData=null,_wsReviews=[],_wsFeedback=null,_wsChatHistory=[],_wsActiveReviewId=null;
+let _wsClientId=null,_wsData=null,_wsReviews=[],_wsFeedback=null,_wsChatHistory=[],_wsActiveReviewId=null,_wsExpandedReviewId=null;
 const WS_RECURRING_THRESHOLD=4; // 4+ occurrences of the same module+category in 30 days -> flag as "adjust the prompt"
 
 // Opens the Workspace in its own browser tab (same origin, so it re-uses the
@@ -7456,7 +7456,7 @@ async function openWorkspace(cid,fullPage){
   document.getElementById('ws-ov').classList.toggle('full-page',!!fullPage);
   openModal('ws-ov');
   _wsChatHistory=[];_wsActiveReviewId=null;
-  document.getElementById('ws-chat-log').innerHTML='<div style="font-size:12px;color:var(--mu);line-height:1.6">Kennt Brand Voice, Modul-Vorgaben und Feedback-Lernstand dieses Kunden. Öffne eine Freigabe und klicke in ihr Textfeld, um sie hier direkt mit zu überarbeiten.</div>';
+  document.getElementById('ws-chat-log').innerHTML='<div style="font-size:12px;color:var(--mu);line-height:1.6">Kennt Brand Voice, Modul-Vorgaben und Feedback-Lernstand dieses Kunden. Im Tab Freigaben ist der Assistent automatisch an die gerade geöffnete Anfrage angehängt — einfach Anweisung schreiben.</div>';
   await wsLoad();
   wsSwitchTab('overview');
 }
@@ -7712,9 +7712,37 @@ async function wsApplyPromptFix(taId,moduleKey,category,cardId){
   }catch(e){status.textContent='Fehler beim Speichern.';}
 }
 
+// Accordion: only one review is fully expanded (big editor + history + chat
+// target) at a time — the rest are compact one-line rows. Keeps the editor
+// wide/uncluttered instead of stacking several full editors at once, and
+// makes clear which review the KI-Assistent is currently "attached" to.
 function wsRenderReviews(body){
+  if(!_wsExpandedReviewId||!_wsReviews.some(r=>r.id===_wsExpandedReviewId)){
+    _wsExpandedReviewId=_wsReviews.length?_wsReviews[0].id:null;
+  }
   body.innerHTML=`<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Freigaben — nach Eingang (${_wsReviews.length})</div>
-    ${_wsReviews.length?_wsReviews.map((rv,i)=>wsReviewCard(rv,i)).join(''):'<div style="font-size:13px;color:var(--mu);padding:8px 0">Keine offenen Freigaben.</div>'}`;
+    ${_wsReviews.length?_wsReviews.map((rv,i)=>rv.id===_wsExpandedReviewId?wsReviewCard(rv,i):wsReviewCollapsedRow(rv,i)).join(''):'<div style="font-size:13px;color:var(--mu);padding:8px 0">Keine offenen Freigaben.</div>'}`;
+  _wsActiveReviewId=_wsExpandedReviewId; // KI-Assistent is "attached" to the expanded review without needing a manual click into its field first
+}
+function wsToggleReviewExpand(id){
+  _wsExpandedReviewId=id;
+  wsRenderReviews(document.getElementById('ws-body'));
+}
+function wsReviewCollapsedRow(rv,idx){
+  const ageMs=Date.now()-new Date(rv.created_at).getTime();
+  const ageH=ageMs/3600000;
+  const ageLabel=ageH<1?`${Math.max(1,Math.round(ageMs/60000))} Min.`:`${ageH.toFixed(1)} Std.`;
+  const ageColor=ageH>3?'#b91c1c':(ageH>1.5?'#92400e':'#047857');
+  return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd)">
+    <div style="display:flex;gap:10px;align-items:center;min-width:0">
+      <div style="width:20px;height:20px;border-radius:50%;background:var(--sf);color:var(--mu);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${idx+1}</div>
+      <div style="min-width:0">
+        <span style="font-size:13px;font-weight:600;color:var(--tx)">${safeText(rv.module_label||'Text')}</span>
+        <span style="font-size:11.5px;color:${ageColor};font-weight:600;margin-left:8px">vor ${ageLabel}${ageH>3?' — SLA überschritten':''}</span>
+      </div>
+    </div>
+    <button class="obtn" onclick="wsToggleReviewExpand(${rv.id})">Bearbeiten</button>
+  </div>`;
 }
 
 function wsRenderVoice(body){
