@@ -257,4 +257,46 @@ ${contextParts}`;
   }
 });
 
+// GET /api/advisor/client-usage/:clientId?since=YYYY-MM-DD — token usage for
+// one client from a specific date onward (not just "this calendar month",
+// which /costs and the quota check are scoped to). Built as a direct date
+// comparison rather than the '/costs' route's `days || ' days'` interval
+// trick, which currently 500s for unrelated reasons.
+router.get('/client-usage/:clientId', requireAdvisor, async (req, res) => {
+  try {
+    const clientId = parseInt(req.params.clientId, 10);
+    if (isNaN(clientId)) return res.status(400).json({ error: 'Invalid client ID' });
+    const since = req.query.since ? new Date(req.query.since) : null;
+    if (!since || isNaN(since.getTime())) return res.status(400).json({ error: 'Missing or invalid since=YYYY-MM-DD' });
+
+    const { rows: cRows } = await pool.query(
+      'SELECT id, name, monthly_token_limit FROM clients WHERE id=$1 AND advisor_id=$2',
+      [clientId, req.user.id]
+    );
+    if (!cRows[0]) return res.status(404).json({ error: 'Client not found' });
+
+    const { rows } = await pool.query(
+      `SELECT COALESCE(SUM(input_tokens),0)::bigint AS input_tokens,
+              COALESCE(SUM(output_tokens),0)::bigint AS output_tokens,
+              COUNT(*)::int AS calls
+       FROM usage_log WHERE client_id=$1 AND created_at >= $2`,
+      [clientId, since]
+    );
+    const usage = rows[0];
+    const totalTokens = Number(usage.input_tokens) + Number(usage.output_tokens);
+    res.json({
+      client: cRows[0].name,
+      since: since.toISOString().slice(0, 10),
+      calls: usage.calls,
+      inputTokens: Number(usage.input_tokens),
+      outputTokens: Number(usage.output_tokens),
+      totalTokens,
+      monthlyLimit: cRows[0].monthly_token_limit
+    });
+  } catch (e) {
+    console.error('[advisor] client-usage failed:', e.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
