@@ -4227,7 +4227,7 @@ async function deleteMemory(type){
 }
 function getMemoryContext(){
   if(!memory.length)return '';
-  return '\n\n---\nCOMPANY MEMORY (use as background context):\n'+memory.map(m=>'['+m.memory_type.toUpperCase()+']\n'+m.content).join('\n\n');
+  return '\n\n---\nCOMPANY MEMORY — BRAND VOICE REFERENCE ONLY (use exclusively for tone, vocabulary, rhythm and stylistic patterns; never state any fact, history, date, or background detail from this section in the output unless the briefing/draft above explicitly asks for that specific information):\n'+memory.map(m=>'['+m.memory_type.toUpperCase()+']\n'+m.content).join('\n\n');
 }
 function getPeopleContext(selectedIds){
   if(!selectedIds||!selectedIds.length)return '';
