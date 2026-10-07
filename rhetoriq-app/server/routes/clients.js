@@ -188,7 +188,7 @@ router.post('/:id/send-token', requireAdvisor, async (req, res) => {
     await brevoSend({
       to,
       subject: 'RhetorIQ – Ihr persönlicher Zugangscode / Your personal access token',
-      text: `Access Token für ${client.name} / Access token for ${client.name}:\n\n${client.token}\n\nPlattform / Platform: https://rhetoriq.ch\n\n--\nLorena Lienhard\ncontact@lorenalienhard.ch`
+      text: `Access Token für ${client.name} / Access token for ${client.name}:\n\n${client.token}\n\nPlattform / Platform: https://rhetoriq.ch/login\n\n--\nLorena Lienhard\ncontact@lorenalienhard.ch`
     });
 
     res.json({ ok: true, sentTo: to });

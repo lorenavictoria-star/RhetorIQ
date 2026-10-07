@@ -290,7 +290,10 @@ app.use((err, req, res, _next) => {
 
 // ── Serve Frontend ────────────────────────────────────────────
 const FRONTEND = path.join(__dirname, '..', 'public');
-app.use(express.static(FRONTEND));
+// Landingpage auf "/", die App (mit Login) bleibt unter /index.html und /login erreichbar.
+app.get('/', (req, res) => res.sendFile(path.join(FRONTEND, Object.keys(req.query).length ? 'index.html' : 'landing.html')));
+app.get('/login', (_, res) => res.redirect(302, '/index.html'));
+app.use(express.static(FRONTEND, { index: false }));
 app.get('*', (_, res) => res.sendFile(path.join(FRONTEND, 'index.html')));
 
 // ── Seed Advisor Account ──────────────────────────────────────

@@ -60,7 +60,7 @@ async function checkCostAlert(clientId, advisorId) {
     await brevoSend({
       to: ADVISOR_NOTIFY_EMAIL,
       subject: `RhetorIQ — Kostenwarnung: ${clientName} über $${COST_ALERT_THRESHOLD_USD} heute`,
-      text: `${clientName} hat heute bereits $${costToday.toFixed(2)} an API-Kosten verursacht (Schwelle: $${COST_ALERT_THRESHOLD_USD}).\n\nDetails: https://rhetoriq.ch (Advisor Dashboard -> Kosten)\n`,
+      text: `${clientName} hat heute bereits $${costToday.toFixed(2)} an API-Kosten verursacht (Schwelle: $${COST_ALERT_THRESHOLD_USD}).\n\nDetails: https://rhetoriq.ch/login (Advisor Dashboard -> Kosten)\n`,
       senderName: 'RhetorIQ'
     });
   } catch (e) {

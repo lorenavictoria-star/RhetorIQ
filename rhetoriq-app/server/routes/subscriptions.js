@@ -295,7 +295,7 @@ router.post('/portal-link/:clientId', requireAuth, async (req, res) => {
     const stripe = getStripe();
     const session = await stripe.billingPortal.sessions.create({
       customer: rows[0].stripe_customer_id,
-      return_url: 'https://rhetoriq.ch/',
+      return_url: 'https://rhetoriq.ch/login',
     });
     res.json({ url: session.url });
   } catch (e) {
