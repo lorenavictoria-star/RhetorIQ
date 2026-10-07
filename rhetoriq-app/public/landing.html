@@ -255,7 +255,7 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
       dots.appendChild(mk("circle",{cx:x,cy:y,r:9,fill:"none",stroke:"#f1ede4","stroke-opacity":.25,"stroke-width":1}));
       dots.appendChild(mk("circle",{cx:x,cy:y,r:4.6,fill:"#f1ede4"}));
       var lb=document.createElement("span");lb.className="plb";lb.textContent=L[i];lb.style.left=(x/360*100)+"%";lb.style.top=((y<96?10:164)/170*100)+"%";lbs.appendChild(lb)});
-    var T=[["Gerade und gleich.","Ohne Stimme klingt jeder Text gleich. Eine KI allein zieht den Durchschnitt, die glatte Linie."],["Ihre Stimme liegt darüber.","Aus Ihrem Workshop kommt Ihre Brand Voice. Sie legt Höhen und Tiefen auf den Text."],["Meine Hand setzt die Punkte.","Ich bewahre die Wörter, die nur Sie sagen, schaffe Klarheit und halte die Handschrift fest, an der man Sie erkennt."]];
+    var T=[["Gerade und gleich.","Ohne Stimme klingt jeder Text gleich. Eine KI allein zieht den Durchschnitt, die glatte Linie."],["Hier kommt Ihre Stimme dazu.","Aus Ihrem Workshop kommt Ihre Brand Voice. Sie legt Höhen und Tiefen auf den Text."],["Meine Hand setzt Ihre Worte.","Ich bewahre die Wörter, die nur Sie sagen, schaffe Klarheit und halte die Handschrift fest, an der man Sie erkennt."]];
     var stp=document.getElementById("vstp"),cur=0,timer=null,touched=false;
     function sh(i){cur=i;[].forEach.call(stp.children,function(b,j){b.setAttribute("aria-selected",j===i)});
       var h=document.getElementById("vh");h.textContent=T[i][0];h.className="";document.getElementById("vn").textContent=T[i][1];
