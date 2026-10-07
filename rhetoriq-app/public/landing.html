@@ -89,6 +89,18 @@ h2{font:400 clamp(36px,5vw,60px)/1.05 var(--serif);margin:0 0 18px;letter-spacin
 .tab{font:400 13px var(--sans);color:var(--mute);background:transparent;border:1px solid #2c2c29;border-radius:99px;padding:8px 18px;cursor:pointer}
 .tab[aria-selected="true"]{color:var(--ink);background:var(--cream);border-color:var(--cream)}
 .book{margin-top:44px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+
+dialog.rqd{background:var(--panel);color:var(--cream);border:1px solid var(--line);border-radius:16px;padding:32px;width:min(560px,calc(100vw - 32px));font:300 16px/1.65 var(--sans)}
+dialog.rqd::backdrop{background:rgba(0,0,0,.72)}
+.rqd h3{font:400 28px/1.15 var(--serif);margin:0 0 6px}
+.rqd .sub{margin:0 0 20px;font-size:14px;color:var(--mute)}
+.rqd form{display:grid;gap:18px}
+.rqd label{display:grid;gap:6px;font-size:13px;letter-spacing:.04em;color:var(--mute)}
+.rqd input,.rqd textarea{font:300 16px var(--sans);color:var(--cream);background:transparent;border:0;border-bottom:1px solid #3a3a37;border-radius:0;padding:10px 0;outline:0;width:100%;resize:vertical}
+.rqd input:focus,.rqd textarea:focus{border-bottom-color:var(--gold)}
+.rqd .act{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.rqd .msg{font-size:13px;color:var(--mute);margin:0}
+.rqd .x{position:absolute;top:14px;right:18px;background:none;border:0;color:var(--mute);font:300 26px/1 var(--sans);cursor:pointer}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
 .card h3{font:400 26px var(--serif);margin:0 0 4px}
 .card .sub{font-size:13px;color:var(--mute);margin:0 0 18px}
@@ -245,7 +257,8 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     </div>
   </section>
 
-  <footer><span>Rhetor<span class="iq">IQ</span> von Lorena Lienhard</span><span>Datenschutz</span></footer>
+  <dialog class="rqd" id="rqd" aria-labelledby="rqdt"><button class="x" type="button" id="rqx" aria-label="Schliessen">&times;</button><h3 id="rqdt">Gespräch anfragen</h3><p class="sub">Zwanzig Minuten, kostenlos und unverbindlich.</p><form id="rqf" novalidate><label>Name<input id="fn" type="text" autocomplete="name" required></label><label>E-Mail<input id="fe" type="email" autocomplete="email" required></label><label>Ihr Anliegen<textarea id="ft" rows="4" placeholder="Worum geht es?"></textarea></label><div class="act"><button class="btn" type="submit">Anfrage senden</button></div><p class="msg" id="rqm" aria-live="polite"></p></form></dialog>
+<footer><span>Rhetor<span class="iq">IQ</span> von Lorena Lienhard</span><span>Datenschutz</span></footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -288,7 +301,10 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     }
   })();
 
-  document.getElementById("go").onclick=function(){var u=["contact","lorenalienhard.ch"].join("@");location.href="mailto:"+u+"?subject="+encodeURIComponent("Gespräch zu RhetorIQ")+"&body="+encodeURIComponent("Guten Tag Frau Lienhard\n\nIch möchte gern ein Gespräch zu RhetorIQ vereinbaren.\n")};
+  (function(){var d=document.getElementById("rqd"),f=document.getElementById("rqf"),m=document.getElementById("rqm");function op(e){if(e)e.preventDefault();m.textContent="";if(d.showModal)d.showModal();else d.setAttribute("open","")}
+Array.prototype.forEach.call(document.querySelectorAll('a[href="#buchen"],#go'),function(a){a.addEventListener("click",op)});
+document.getElementById("rqx").onclick=function(){d.close()};d.addEventListener("click",function(e){if(e.target===d)d.close()});
+f.addEventListener("submit",function(ev){ev.preventDefault();var n=f.fn.value.trim(),e=f.fe.value.trim(),t=f.ft.value.trim();if(!n||!/^\S+@\S+\.\S+$/.test(e)){m.textContent="Bitte Name und eine gültige E-Mail-Adresse angeben.";return}var u=["contact","lorenalienhard.ch"].join("@"),b="Name: "+n+"\nE-Mail: "+e+"\n\n"+t,a=document.createElement("a");a.href="mailto:"+u+"?subject="+encodeURIComponent("Gespräch zu RhetorIQ")+"&body="+encodeURIComponent(b);document.body.appendChild(a);a.click();a.remove();m.textContent="Danke. Ihr E-Mail-Programm öffnet sich mit der fertigen Anfrage, bitte noch auf Senden klicken."})})();
   if(!window.THREE)return;
   var el=document.getElementById("ball"),reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
   var r=new THREE.WebGLRenderer({antialias:true,alpha:true});r.setPixelRatio(Math.min(devicePixelRatio,2));
