@@ -146,9 +146,6 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     <div>
       <h1>Rhetor<span class="iq">IQ</span> trifft <span class="eq">EQ</span>.</h1>
       <p class="lead"><b>RhetorIQ ist die KI-Plattform, die Ihre Unternehmenssprache lernt.</b> Ich begleite Sie dabei persönlich und adjustiere Text von Hand nach: Der <span class="iq">IQ</span> entwirft, mein <span class="eq">EQ</span> trifft Ihre Stimme.<br><br>Ich denke mit, handle mit, trage mit.</p>
-      <div class="hc" id="hc"><div class="hct">Eine Mitteilung, vier Stimmen</div><div class="tabs" id="tones" role="tablist" aria-label="Unternehmen" style="margin:0 0 18px"></div>
-        <div class="cmp"><div><div class="tag">Entwurf der KI</div><div class="ht ki" id="hki"></div></div><div><div class="tag" style="color:var(--gold)">Mit meinem Feinschliff</div><div class="ht" id="hlo"></div></div></div>
-        <div class="hnote"><span class="eq">Stimme</span> <span id="hno"></span></div></div>
       <p class="or"><a href="#buchen">Gespräch buchen</a> oder <a href="#preise">Preise ansehen</a></p>
     </div>
     <div id="ball" role="img" aria-label="Ein goldener und ein silberner Faden, zu einem Knäuel gewickelt"></div>
@@ -243,16 +240,7 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function(){
-  var H=[["Bank","Sehr geehrte Frau Keller, Ihr Beratungstermin verschiebt sich um zwei Tage auf Donnerstag, 14 Uhr. Die Unterlagen erhalten Sie vorab per Post.","sachlich, klar, verbindlich"],
-   ["Hotel","Liebe Frau Keller, Ihre Anreise verschiebt sich um zwei Tage auf Donnerstag. Ich freue mich auf Sie, Ihr Zimmer mit Seeblick steht bereit.","herzlich, einladend, persönlich"],
-   ["KMU FLAGA","Guten Tag Frau Keller, Ihre Gasflaschen kommen am Donnerstag. Der Fahrer meldet sich eine Stunde vorher. Bei Fragen erreichen Sie mich direkt.","bodenständig, direkt, nah"],
-   ["Schule","Liebe Eltern, der Elternabend verschiebt sich auf Donnerstag, 19 Uhr. Die Unterlagen finden Sie im Elternportal. Bei Fragen melden Sie sich gern im Sekretariat.","freundlich, klar, verbindlich"]];
-  var KI={"Bank": "Wir möchten Sie darüber informieren, dass sich der vereinbarte Beratungstermin leider verschiebt.", "Hotel": "Wir freuen uns, Ihnen mitteilen zu dürfen, dass sich Ihre Anreise leider verschiebt.", "KMU FLAGA": "Wir möchten Sie darauf hinweisen, dass die Lieferung Ihrer Gasflaschen am Donnerstag erfolgen wird.", "Schule": "Wir bitten Sie, zur Kenntnis zu nehmen, dass der Elternabend verschoben wurde."};
-  var tones=document.getElementById("tones");
-  function showT(i){document.getElementById("hki").textContent=KI[H[i][0]];document.getElementById("hlo").textContent=H[i][1];document.getElementById("hno").textContent=H[i][2]+". Diese Unterschiede halte ich im Workshop fest.";
-    [].forEach.call(tones.children,function(b,j){b.setAttribute("aria-selected",j===i)})}
-  H.forEach(function(t,i){var b=document.createElement("button");b.className="tab";b.setAttribute("role","tab");b.textContent=t[0];b.onclick=function(){showT(i)};tones.appendChild(b)});
-  showT(0);
+
   (function(){
     var X=[14,74,134,194,254,314,346],V=[96,62,118,76,116,90,96],F=[96,48,128,64,124,82,96],NS="http://www.w3.org/2000/svg";
     function path(a){var d="M"+X[0]+" "+a[0];for(var i=0;i<X.length-1;i++){var mx=(X[i]+X[i+1])/2;d+=" C"+mx+" "+a[i]+" "+mx+" "+a[i+1]+" "+X[i+1]+" "+a[i+1]}return d}
