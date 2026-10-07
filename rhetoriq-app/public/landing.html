@@ -347,19 +347,21 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     var ball=doc(document.getElementById("ball")),btn=doc(document.querySelector("#buchen .card .btn"));
     var cx=ball.l+ball.w/2,cy=ball.t+ball.h/2,E=[btn.l-14,btn.t+btn.h/2],m=W<820,X=m?10:24,P,S,yu=0;
     path.setAttribute("stroke-width",Math.max(2,ball.w*.0075).toFixed(2));
-    var h1=doc(document.querySelector("h1"));X=Math.max(6,h1.l-26);
+    var h1=doc(document.querySelector("h1"));X=Math.max(6,doc(document.querySelector(".wrap")).l-26);
+    var rg=document.createRange();rg.selectNodeContents(document.querySelector("h1"));var rb=rg.getBoundingClientRect();
+    var X1=Math.max(8,Math.min(rb.left+scrollX,doc(document.querySelector(".lead")).l,doc(document.getElementById("hc")).l)-26),heroB=doc(document.querySelector(".hero")).b;
     function fmt(p){return p[0].toFixed(1)+" "+p[1].toFixed(1)}
     function strip(d){return d.replace(/^M[^C]*/,"")}
-    var rx=Math.max(14,h1.l-X-6),ry=80,d,mid=[];
+    var rx=20,ry=80,d,mid=[];
     var yEnd=E[1],RE=150;
-    for(var y=h1.t+700;y<yEnd-RE-120;y+=300)mid.push([X+Math.sin(y/300)*(m?2:5),y]);
+    for(var y=heroB+320;y<yEnd-RE-120;y+=300)mid.push([X+Math.sin(y/300)*(m?2:5),y]);
     var tail=" C"+fmt([X,yEnd-RE*.35])+" "+fmt([X+(E[0]-X)*.4,yEnd])+" "+fmt(E);
     var rr=ball.w*.31,gapY=h1.t-20;
     S=[cx-rr*.62,cy+rr*.78];
-    var sx=S[0]-ball.w*.2,A=[X+rx,gapY],B=[X,gapY+ry];
+    var sx=Math.max(X1+rx+40,S[0]-ball.w*.2),A=[X1+rx,gapY],B=[X1,gapY+ry];
     d=smooth([S,[S[0]-ball.w*.04,S[1]+(gapY-S[1])*.45],[sx,gapY],[(sx+A[0])/2,gapY],A]);
-    d+=" C"+fmt([A[0]-rx*.55,gapY])+" "+fmt([X,gapY+ry*.45])+" "+fmt(B);
-    d+=strip(smooth([B,[X,gapY+380]].concat(mid,[[X,yEnd-RE]])));
+    d+=" C"+fmt([A[0]-rx*.55,gapY])+" "+fmt([X1,gapY+ry*.45])+" "+fmt(B);
+    d+=strip(smooth([B,[X1,gapY+ry+90],[(X1+X)/2,(gapY+heroB)/2],[X+8,heroB-80],[X,heroB+20]].concat(mid,[[X,yEnd-RE]])));
     stub=0;y0=gapY;
     path.setAttribute("d",d+tail);L=path.getTotalLength();path.style.strokeDasharray=L+" "+L;
     TB=[];for(var l=0;l<=L;l+=4)TB.push([l,path.getPointAtLength(l).y]);TB.push([L,path.getPointAtLength(L).y]);S1=S[1];
