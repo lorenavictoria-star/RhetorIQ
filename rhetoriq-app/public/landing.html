@@ -341,7 +341,7 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     var cx=ball.l+ball.w/2,cy=ball.t+ball.h/2,E=[btn.l-14,btn.t+btn.h/2],m=W<820,X=m?10:24,P,S,yu=0;
     path.setAttribute("stroke-width","1.1");path.style.opacity=".75";
     function fmt(p){return p[0].toFixed(1)+" "+p[1].toFixed(1)}
-    var wr=doc(document.querySelector(".wrap")),X=Math.min(W-8,wr.l+wr.w+(m?-2:30)),rr=ball.w*.31;
+    var wr=doc(document.querySelector(".wrap")),X=Math.min(W-8,wr.l+wr.w+(m?-2:-8)),rr=ball.w*.31;
     var yEnd=btn.t+btn.h/2,Eb=[btn.l+btn.w+12,yEnd],RE=170,heroB=doc(document.querySelector(".hero")).b;
     S=[cx+rr*.35,cy+rr*.93];
     var dx=X-S[0],dy=Math.max(140,Math.abs(dx)*.9),B=[X,S[1]+dy];
