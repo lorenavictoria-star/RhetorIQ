@@ -127,6 +127,7 @@ h2{font:400 clamp(36px,5vw,60px)/1.05 var(--serif);margin:0 0 18px;letter-spacin
 @media (max-width:820px){.cmp{grid-template-columns:1fr}.cmp>div+div{padding-left:0;border-left:0;border-top:1px solid var(--line)}}
 .cta2{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}.stp3{font:400 clamp(24px,2.6vw,32px)/1.15 var(--serif);color:var(--gold);margin:30px 0 8px}.hero .cta2{margin-top:6px}
 .motto{font:400 clamp(26px,3.3vw,42px)/1.15 var(--serif);margin:0 0 36px;max-width:820px;letter-spacing:-.005em}h3.stp3{font-family:var(--serif)!important;font-weight:400!important;color:var(--gold)!important}
+.brk{display:flex;align-items:center;gap:18px;margin-top:84px}.brk span{flex:1;border-top:1px solid var(--line)}.brk p{margin:0;font:400 11px var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--mute2)}.brk b{font-weight:400}
 footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px;color:#6c6a63;border-top:1px solid var(--line);margin-top:110px}
 @media (max-width:820px){
   .hero{grid-template-columns:1fr;padding-block:20px 50px}
@@ -147,17 +148,18 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
   <header class="hero">
     <div>
       <h1>Rhetor<span class="iq">IQ</span> trifft <span class="eq">EQ</span>.</h1>
-      <p class="lead"><b>RhetorIQ ist die KI-Plattform, die Ihre Unternehmenssprache lernt.</b> Ich begleite Sie dabei persönlich und adjustiere Text von Hand nach: Der <span class="iq">IQ</span> entwirft, mein <span class="eq">EQ</span> trifft Ihre Stimme.</p>
+      <p class="lead"><b>RhetorIQ ist die KI-Plattform, die Ihre Unternehmenssprache lernt.</b> Ich begleite Sie dabei persönlich und adjustiere Text von Hand nach: Der <span class="iq">IQ</span> entwirft, mein <span class="eq">EQ</span> trifft Ihre Stimme. Ein <span class="eq">goldener Faden</span> für alles, was Sie sagen.</p>
       <div class="cta2"><a class="btn" href="#buchen">Gespräch buchen</a><a class="btn ghost" href="#preise">Preise ansehen</a></div>
     </div>
     <div id="ball" role="img" aria-label="Ein goldener und ein silberner Faden, zu einem Knäuel gewickelt"></div>
   </header>
 
-  <section id="beispiel" style="padding-top:78px;margin-top:80px;border-top:1px solid var(--line)">
+  <div class="brk" aria-hidden="false"><span></span><p>Ich <b class="eq">denke</b> mit</p><span></span></div>
+  <section id="beispiel" style="padding-top:60px">
     <p class="eyebrow">So wirkt RhetorIQ</p>
     <h2>Wie Ihre Stimme auf den Text kommt.</h2>
     <h3 class="stp3" id="vh">Gerade und gleich.</h3>
-    <p class="p" id="vn" style="min-height:56px"></p>
+    <p class="p" id="vn" style="min-height:96px"></p>
     <div class="vz"><svg viewBox="0 0 360 170" role="img" aria-label="Eine gerade Linie wird zu Ihrer Stimme"><title>Linie wird zur Stimme</title>
       <defs><linearGradient id="vgl" x1="0" x2="1"><stop offset="0" stop-color="#b8935a"/><stop offset=".5" stop-color="#f0d9a0"/><stop offset="1" stop-color="#c99a52"/></linearGradient>
       <linearGradient id="vfl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9b26a" stop-opacity=".16"/><stop offset="1" stop-color="#d9b26a" stop-opacity="0"/></linearGradient></defs>
@@ -169,6 +171,7 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     <div class="tabs" id="vstp" role="tablist" aria-label="Schritte" style="margin-top:22px"><button class="tab" role="tab" aria-selected="true">1 Die KI allein</button><button class="tab" role="tab" aria-selected="false">2 Ihre Stimme</button><button class="tab" role="tab" aria-selected="false">3 Meine Hand</button></div>
   </section>
 
+  <div class="brk" aria-hidden="false"><span></span><p>Ich <b class="eq">handle</b> mit</p><span></span></div>
   <section id="so">
     <p class="eyebrow">So funktioniert es</p>
     <h2><span class="iq">IQ</span> entwirft. <span class="eq">EQ</span> schärft.</h2>
@@ -193,6 +196,7 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     </div>
   </section>
 
+  <div class="brk" aria-hidden="false"><span></span><p>Ich trage zum <b class="eq">Erfolg</b> mit</p><span></span></div>
   <section id="zahlen">
     <p class="eyebrow">Warum sich das lohnt</p>
     <h2>Zahlen, die für sich sprechen.</h2>
@@ -254,10 +258,10 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
       dots.appendChild(mk("circle",{cx:x,cy:y,r:9,fill:"none",stroke:"#f1ede4","stroke-opacity":.25,"stroke-width":1}));
       dots.appendChild(mk("circle",{cx:x,cy:y,r:4.6,fill:"#f1ede4"}));
       var lb=document.createElement("span");lb.className="plb";lb.textContent=L[i];lb.style.left=(x/360*100)+"%";lb.style.top=((y<96?10:164)/170*100)+"%";lbs.appendChild(lb)});
-    var T=[["Gerade und gleich.","Ohne Stimme klingt jeder Text gleich. Eine KI allein zieht den Durchschnitt, die glatte Linie."],["Hier kommt Ihre Stimme dazu.","Aus Ihrem Workshop kommt Ihre Brand Voice. Sie legt Höhen und Tiefen auf den Text."],["Meine Hand setzt Ihre Worte.","Ich bewahre die Wörter, die nur Sie sagen, schaffe Klarheit und halte die Handschrift fest, an der man Sie erkennt."]];
+    var T=[["Gerade und gleich.","KI-Werkzeuge glätten die Töne eines Unternehmens zu einem einheitlichen Standard. Die erkennbare Stimme, Ihre DNA, verschwindet. Zurück bleibt ein Text ohne Handschrift."],["Hier kommt Ihre Stimme dazu.","In jedem Unternehmen sprechen viele Stimmen, und jede klingt ein wenig anders. Genau das macht es erkennbar. Aus dem Workshop kommt Ihre Brand Voice, sie legt Höhen und Tiefen auf den Text."],["Meine Hand setzt Ihre Worte.","Wo man die Handschrift nicht mehr erkennt, reisst der Faden und mit ihm das Vertrauen. Darum bewahre ich die Wörter, die nur Sie sagen, schaffe Klarheit und halte Ihre Handschrift fest."]];
     var stp=document.getElementById("vstp"),cur=0,timer=null,touched=false;
     function sh(i){cur=i;[].forEach.call(stp.children,function(b,j){b.setAttribute("aria-selected",j===i)});
-      var h=document.getElementById("vh");h.textContent=T[i][0];h.className="";document.getElementById("vn").textContent=T[i][1];
+      var h=document.getElementById("vh");h.textContent=T[i][0];h.className="stp3";document.getElementById("vn").textContent=T[i][1];
       document.getElementById("vflat").setAttribute("stroke",i===0?"#8a8780":"#3a3a37");document.getElementById("vflat").setAttribute("stroke-dasharray",i===0?"":"2 5");
       document.getElementById("vvo").setAttribute("opacity",i===1?1:(i===2?.6:0));
       document.getElementById("vfin").setAttribute("opacity",i===2?1:0);document.getElementById("var").setAttribute("opacity",i===2?1:0);dots.setAttribute("opacity",i===2?1:0);lbs.style.opacity=i===2?1:0}
