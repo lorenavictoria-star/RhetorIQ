@@ -123,6 +123,8 @@ h2{font:400 clamp(36px,5vw,60px)/1.05 var(--serif);margin:0 0 18px;letter-spacin
 @media (max-width:820px){.rip{grid-template-columns:1fr}}
 .hero>div:not(#ball){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);column-gap:clamp(24px,4vw,56px);align-items:start;grid-template-rows:auto auto 1fr;width:100%}.hero h1{grid-column:1/-1}.hero .lead{grid-column:1;grid-row:2;max-width:none;margin:0}.hero .hc{grid-column:2;grid-row:2/4;max-width:none;width:100%}.hero .or{grid-column:1;grid-row:3;margin-top:22px;align-self:start}
 @media (max-width:820px){.hero>div:not(#ball){display:block}.hero .lead{margin:0 0 30px}.hero .hc{margin-top:0}}
+.hero>div:not(#ball){display:block;width:100%}.hero .lead{max-width:760px;margin:0 0 36px}.hero .hc{max-width:1000px;width:100%;margin:0}.cmp{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--line)}.cmp>div{padding:22px 26px 22px 0}.cmp>div+div{padding-left:26px;border-left:1px solid var(--line)}.cmp .ht{font-size:clamp(20px,2.1vw,26px)}.hc .ht.ki{color:#6c6a63}.hc .hnote{border-top:1px solid var(--line);padding-top:14px}.hero .or{margin-top:22px}
+@media (max-width:820px){.cmp{grid-template-columns:1fr}.cmp>div+div{padding-left:0;border-left:0;border-top:1px solid var(--line)}}
 footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px;color:#6c6a63;border-top:1px solid var(--line);margin-top:110px}
 @media (max-width:820px){
   .hero{grid-template-columns:1fr;padding-block:20px 50px}
@@ -144,9 +146,9 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     <div>
       <h1>Rhetor<span class="iq">IQ</span> trifft <span class="eq">EQ</span>.</h1>
       <p class="lead"><b>RhetorIQ ist die KI-Plattform, die Ihre Unternehmenssprache lernt.</b> Ich begleite Sie dabei persönlich und adjustiere Text von Hand nach: Der <span class="iq">IQ</span> entwirft, mein <span class="eq">EQ</span> trifft Ihre Stimme.<br><br>Ich denke mit, handle mit, trage mit.</p>
-      <div class="hc" id="hc"><div class="hct">Eine Mitteilung, vier Stimmen</div><div class="tabs" id="tones" role="tablist" aria-label="Unternehmen" style="margin:0 0 14px"></div>
-        <div class="ht gt" id="hlo"></div>
-        <div class="hnote" style="margin-top:14px"><span class="eq">Stimme</span> <span id="hno"></span></div></div>
+      <div class="hc" id="hc"><div class="hct">Eine Mitteilung, vier Stimmen</div><div class="tabs" id="tones" role="tablist" aria-label="Unternehmen" style="margin:0 0 18px"></div>
+        <div class="cmp"><div><div class="tag">Entwurf der KI</div><div class="ht ki" id="hki"></div></div><div><div class="tag" style="color:var(--gold)">Mit meinem Feinschliff</div><div class="ht" id="hlo"></div></div></div>
+        <div class="hnote"><span class="eq">Stimme</span> <span id="hno"></span></div></div>
       <p class="or"><a href="#buchen">Gespräch buchen</a> oder <a href="#preise">Preise ansehen</a></p>
     </div>
     <div id="ball" role="img" aria-label="Ein goldener und ein silberner Faden, zu einem Knäuel gewickelt"></div>
@@ -245,8 +247,9 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
    ["Hotel","Liebe Frau Keller, Ihre Anreise verschiebt sich um zwei Tage auf Donnerstag. Ich freue mich auf Sie, Ihr Zimmer mit Seeblick steht bereit.","herzlich, einladend, persönlich"],
    ["KMU FLAGA","Guten Tag Frau Keller, Ihre Gasflaschen kommen am Donnerstag. Der Fahrer meldet sich eine Stunde vorher. Bei Fragen erreichen Sie mich direkt.","bodenständig, direkt, nah"],
    ["Schule","Liebe Eltern, der Elternabend verschiebt sich auf Donnerstag, 19 Uhr. Die Unterlagen finden Sie im Elternportal. Bei Fragen melden Sie sich gern im Sekretariat.","freundlich, klar, verbindlich"]];
+  var KI={"Bank": "Wir möchten Sie darüber informieren, dass sich der vereinbarte Beratungstermin leider verschiebt.", "Hotel": "Wir freuen uns, Ihnen mitteilen zu dürfen, dass sich Ihre Anreise leider verschiebt.", "KMU FLAGA": "Wir möchten Sie darauf hinweisen, dass die Lieferung Ihrer Gasflaschen am Donnerstag erfolgen wird.", "Schule": "Wir bitten Sie, zur Kenntnis zu nehmen, dass der Elternabend verschoben wurde."};
   var tones=document.getElementById("tones");
-  function showT(i){document.getElementById("hlo").textContent=H[i][1];document.getElementById("hno").textContent=H[i][2]+". Diese Unterschiede halte ich im Workshop fest.";
+  function showT(i){document.getElementById("hki").textContent=KI[H[i][0]];document.getElementById("hlo").textContent=H[i][1];document.getElementById("hno").textContent=H[i][2]+". Diese Unterschiede halte ich im Workshop fest.";
     [].forEach.call(tones.children,function(b,j){b.setAttribute("aria-selected",j===i)})}
   H.forEach(function(t,i){var b=document.createElement("button");b.className="tab";b.setAttribute("role","tab");b.textContent=t[0];b.onclick=function(){showT(i)};tones.appendChild(b)});
   showT(0);
