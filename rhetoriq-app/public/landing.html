@@ -253,13 +253,13 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     var X=[14,74,134,194,254,314,346],V=[96,62,118,76,116,90,96],F=[96,48,128,64,124,82,96],NS="http://www.w3.org/2000/svg";
     function path(a){var d="M"+X[0]+" "+a[0];for(var i=0;i<X.length-1;i++){var mx=(X[i]+X[i+1])/2;d+=" C"+mx+" "+a[i]+" "+mx+" "+a[i+1]+" "+X[i+1]+" "+a[i+1]}return d}
     var fd=path(F);document.getElementById("vvo").setAttribute("d",path(V));document.getElementById("vfin").setAttribute("d",fd);document.getElementById("var").setAttribute("d",fd+" L346 170 L14 170 Z");
-    var dots=document.getElementById("vdots"),lbs=document.getElementById("vlbs"),L=["Eigene Wörter","Klarheit","Handschrift"],P=[1,3,4];
+    var dots=document.getElementById("vdots"),lbs=document.getElementById("vlbs"),L=["Eigene Wörter","Klarheit","DNA"],P=[1,3,4];
     function mk(t,at){var e=document.createElementNS(NS,t);for(var k in at)e.setAttribute(k,at[k]);return e}
     P.forEach(function(p,i){var x=X[p],y=F[p];dots.appendChild(mk("line",{x1:x,y1:y,x2:x,y2:y<96?20:150,stroke:"#2c2c29","stroke-width":1}));
       dots.appendChild(mk("circle",{cx:x,cy:y,r:9,fill:"none",stroke:"#f1ede4","stroke-opacity":.25,"stroke-width":1}));
       dots.appendChild(mk("circle",{cx:x,cy:y,r:4.6,fill:"#f1ede4"}));
       var lb=document.createElement("span");lb.className="plb";lb.textContent=L[i];lb.style.left=(x/360*100)+"%";lb.style.top=((y<96?10:164)/170*100)+"%";lbs.appendChild(lb)});
-    var T=[["Gerade und gleich.","KI-Werkzeuge glätten die Töne eines Unternehmens zu einem einheitlichen Standard. Die erkennbare Stimme, Ihre DNA, verschwindet. Zurück bleibt ein Text ohne Handschrift."],["Hier kommt Ihre Stimme dazu.","In jedem Unternehmen sprechen viele Stimmen, und jede klingt ein wenig anders. Genau das macht es erkennbar. Aus dem Workshop kommt Ihre Brand Voice, sie legt Höhen und Tiefen auf den Text."],["Meine Hand setzt Ihre Worte.","Wo man die Handschrift nicht mehr erkennt, reisst der Faden und mit ihm das Vertrauen. Darum bewahre ich die Wörter, die nur Sie sagen, schaffe Klarheit und halte Ihre Handschrift fest."]];
+    var T=[["Gerade und gleich.","KI-Werkzeuge glätten die Töne eines Unternehmens zu einem einheitlichen Standard. Die erkennbare Stimme verschwindet. Zurück bleibt ein Text ohne Ihre DNA."],["Hier kommt Ihre Stimme dazu.","In jedem Unternehmen sprechen viele Stimmen, und jede klingt ein wenig anders. Genau das macht es erkennbar. Aus dem Workshop kommt Ihre Brand Voice, sie legt Höhen und Tiefen auf den Text."],["Meine Hand setzt Ihre Worte.","Wo man die DNA nicht mehr erkennt, reisst der Faden und mit ihm das Vertrauen. Darum bewahre ich die Wörter, die nur Sie sagen, schaffe Klarheit und halte Ihre DNA fest."]];
     var stp=document.getElementById("vstp"),cur=0,timer=null,touched=false;
     function sh(i){cur=i;[].forEach.call(stp.children,function(b,j){b.setAttribute("aria-selected",j===i)});
       var h=document.getElementById("vh");h.textContent=T[i][0];h.className="stp3";document.getElementById("vn").textContent=T[i][1];
