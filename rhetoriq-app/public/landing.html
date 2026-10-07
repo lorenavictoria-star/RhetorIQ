@@ -139,7 +139,7 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     <div>
       <h1>Rhetor<span class="iq">IQ</span> trifft <span class="eq">EQ</span>.</h1>
       <p class="lead"><b>Eine KI schreibt in Ihrer Unternehmenssprache.</b> Ich, Lorena Lienhard, Rhetorik-Coach und Redenschreiberin, lese jeden Text von Hand nach. Der <span class="iq">IQ</span> entwirft, mein <span class="eq">EQ</span> trifft den Ton.</p>
-      <div class="hc" id="hc"><div class="hct">Eine Mitteilung, drei Unternehmen</div><div class="tabs" id="tones" role="tablist" aria-label="Unternehmen" style="margin:0 0 14px"></div>
+      <div class="hc" id="hc"><div class="hct">Eine Mitteilung, vier Stimmen</div><div class="tabs" id="tones" role="tablist" aria-label="Unternehmen" style="margin:0 0 14px"></div>
         <div class="ht gt" id="hlo"></div>
         <div class="hnote" style="margin-top:14px"><span class="eq">Stimme</span> <span id="hno"></span></div></div>
       <p class="or"><a href="#buchen">Gespräch buchen</a> oder <a href="#preise">Preise ansehen</a></p>
@@ -247,7 +247,8 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
 (function(){
   var H=[["Treuhand","Sehr geehrte Frau Keller, Ihr Beratungstermin verschiebt sich um zwei Tage auf Donnerstag, 14 Uhr. Die Unterlagen erhalten Sie vorab per Post.","sachlich, klar, verbindlich"],
    ["Hotel","Liebe Frau Keller, Ihre Anreise verschiebt sich um zwei Tage auf Donnerstag. Ich freue mich auf Sie, Ihr Zimmer mit Seeblick steht bereit.","herzlich, einladend, persönlich"],
-   ["Industrie","Guten Tag Frau Keller. Lieferung neu: Donnerstag. Sendungsnummer folgt heute.","knapp, präzise, ohne Umweg"]];
+   ["KMU Schreinerei","Guten Tag Frau Keller, Ihre Küche wird am Donnerstag montiert. Mein Team ist ab 7 Uhr bei Ihnen. Bei Fragen erreichen Sie mich direkt.","bodenständig, direkt, nah"],
+   ["Gemeinde","Sehr geehrte Frau Keller, Ihre Baubewilligung ist erteilt. Die Verfügung kommt diese Woche per Post. Die Beschwerdefrist beträgt 30 Tage.","amtlich, klar, verständlich"]];
   var tones=document.getElementById("tones");
   function showT(i){document.getElementById("hlo").textContent=H[i][1];document.getElementById("hno").textContent=H[i][2]+". Diese Unterschiede halte ich im Workshop fest.";
     [].forEach.call(tones.children,function(b,j){b.setAttribute("aria-selected",j===i)})}
@@ -355,7 +356,7 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     var h1=doc(document.querySelector("h1"));X=Math.max(6,h1.l-26);
     function fmt(p){return p[0].toFixed(1)+" "+p[1].toFixed(1)}
     function strip(d){return d.replace(/^M[^C]*/,"")}
-    var R=Math.min(110,Math.max(60,(h1.l-X)*2+60)),d,mid=[];
+    var rx=Math.max(14,h1.l-X-6),ry=80,d,mid=[];
     var yEnd=E[1],RE=150;
     for(var y=ball.b+700;y<yEnd-RE-120;y+=300)mid.push([X+Math.sin(y/300)*(m?2:5),y]);
     var tail=" C"+fmt([X,yEnd-RE*.35])+" "+fmt([X+(E[0]-X)*.4,yEnd])+" "+fmt(E);
@@ -363,11 +364,11 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
       var rr=ball.w*.31;yu=h1.b+19;
       var sy=Math.min(Math.max(yu,cy-rr*.9),cy+rr*.9);
       S=[cx-Math.sqrt(Math.max(0,rr*rr-(sy-cy)*(sy-cy))),sy];
-      var ux=S[0]-ball.w*.2,A=[X+R,yu],B=[X,yu+R];
+      var ux=S[0]-ball.w*.2,A=[X+rx,yu],B=[X,yu+ry];
       d=smooth([S,[S[0]-ball.w*.05,(S[1]+yu)/2],[ux,yu],[(ux+A[0])/2,yu],A]);
-      d+=" C"+fmt([A[0]-R*.55,yu])+" "+fmt([X,yu+R*.45])+" "+fmt(B);
+      d+=" C"+fmt([A[0]-rx*.55,yu])+" "+fmt([X,yu+ry*.45])+" "+fmt(B);
       d+=strip(smooth([B,[X,ball.b+380]].concat(mid,[[X,yEnd-RE]])));
-      stub=0;y0=yu+R;
+      stub=0;y0=yu+ry;
     }else{
       S=[cx-ball.w*.25,cy+ball.w*.2];
       var dx=S[0]-X,dy=Math.max(130,dx*.7),B2=[X,S[1]+dy];
@@ -380,8 +381,8 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     yE=E[1];upd(true)}
   function upd(j){var p=Math.min(1,Math.max(0,(scrollY+innerHeight*.7-y0)/(yE-y0)));tgt=p;if(j)cur=p;off()}
   function off(){path.style.strokeDashoffset=L*(1-Math.max(cur,Math.min(1,stub/L)))}
-  function tick(){cur+=(tgt-cur)*.12;off();requestAnimationFrame(tick)}
-  addEventListener("scroll",function(){upd(false)},{passive:true});
+  var lastTick=0;function tick(){lastTick=Date.now();var sy=window.pageYOffset||document.documentElement.scrollTop||0;if(sy!==lastY){lastY=sy;upd(false)}cur+=(tgt-cur)*.12;off();requestAnimationFrame(tick)}var lastY=-1;
+  addEventListener("scroll",function(){upd(Date.now()-lastTick>250)},{passive:true});
   addEventListener("resize",build);addEventListener("load",function(){build();setTimeout(build,800)});
   setTimeout(build,300);tick();
 })();
