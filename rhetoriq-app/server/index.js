@@ -239,6 +239,7 @@ app.use('/api/inquiries', inquiries.advisorRouter);
 app.use('/api/onboarding-drafts', require('./routes/onboardingDrafts'));
 app.use('/api/files', require('./routes/files'));
 app.use('/api/help-chat', require('./routes/helpChat'));
+app.use('/api/memory-suggest', require('./routes/memorySuggest'));
 
 // Manual report trigger (advisor only)
 const { requireAdvisor } = require('./middleware/auth');

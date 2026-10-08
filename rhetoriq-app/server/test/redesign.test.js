@@ -24,7 +24,8 @@ test.before(async () => {
     ['/api/advisor', require('../routes/advisor')],
     ['/api/clients', require('../routes/clientStats')],
     ['/api/help-chat', require('../routes/helpChat')],
-    ['/api/analyze', require('../routes/analyze')]
+    ['/api/analyze', require('../routes/analyze')],
+    ['/api/memory-suggest', require('../routes/memorySuggest')]
   ]);
 });
 test.after(async () => { await srv.close(); });
@@ -600,4 +601,42 @@ test('Kundenliste: Dashboard liefert Zugangscode und Abo-Status mit (eine Anfrag
   assert.equal(c.subscription_status, 'trial');
   assert.equal((await srv.call('GET', '/api/advisor/dashboard')).status, 401);
   assert.equal((await srv.call('GET', '/api/advisor/dashboard', { token: H.clientToken(cl.id) })).status, 403);
+});
+
+// ── Gedächtnis-Upload: KI schlägt den Typ vor ──────────────
+test('Gedächtnis-Zuordnung: Vorschlag, Absicherungen und Rückfall bei Fehlern', async () => {
+  const cl = await H.addClient('Gedächtnis AG');
+  const T = H.clientToken(cl.id);
+  const post = (token, body) => srv.call('POST', '/api/memory-suggest', { token, body });
+  assert.equal((await post(null, { text: 'x' })).status, 401);
+  assert.equal((await post(T, { text: '  ' })).status, 400);
+  assert.equal((await post(H.clientToken(cl.id, { readOnly: true }), { text: 'Hallo' })).status, 403);
+
+  H.ai.calls.length = 0;
+  H.ai.reply = '{"type":"ref_tg_email","confidence":0.93,"summary":"Eine Kundenmail zur Preisanpassung."}';
+  const ok = await post(T, { filename: 'Mail Kunden.docx', text: 'Guten Tag Frau Keller, ab dem 1. April …' });
+  assert.equal(ok.status, 200);
+  assert.deepEqual([ok.body.type, ok.body.label], ['ref_tg_email', 'Referenz E-Mail']);
+  assert.ok(ok.body.confidence > 0.9);
+  assert.equal(H.ai.calls.length, 1);
+  assert.ok(String(H.ai.calls[0].model).includes('haiku'), 'günstiges Modell erwartet');
+  assert.ok(H.ai.calls[0].maxTokens <= 200);
+
+  // lange Texte werden gekürzt (Kosten)
+  H.ai.calls.length = 0;
+  await post(T, { filename: 'lang.pdf', text: 'a'.repeat(50000) });
+  assert.ok(H.ai.calls[0].messages[0].content.length < 3000);
+
+  // unbekannter Typ aus der KI wird nicht übernommen
+  H.ai.reply = '{"type":"geheim_alles","confidence":1,"summary":"x"}';
+  assert.equal((await post(T, { text: 'Hallo' })).body.type, null);
+  // kein JSON
+  H.ai.reply = 'Das ist eine E-Mail.';
+  assert.equal((await post(T, { text: 'Hallo' })).body.type, null);
+  // KI nicht erreichbar: die Oberfläche bekommt «kein Vorschlag», keinen Fehler
+  H.ai.fail = true;
+  const down = await post(T, { text: 'Hallo' });
+  assert.equal(down.status, 200);
+  assert.equal(down.body.type, null);
+  H.ai.fail = false;
 });
