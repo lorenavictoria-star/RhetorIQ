@@ -8965,5 +8965,87 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
   };
 })();
 </script>
+<script id="rq-rev-js">
+// ═══ F3 Workspace Eingang / Freigaben: Auftrag und Frist oben, KI-Vorschlag direkt sichtbar ═══
+(function(){
+  var E=rqEsc,SUG={};
+  function when(due){
+    if(!due)return null;var d=new Date(due);if(isNaN(d))return null;
+    var now=new Date(),sod=function(x){return new Date(x.getFullYear(),x.getMonth(),x.getDate());},diff=Math.round((sod(d)-sod(now))/86400000);
+    var day=diff===0?'heute':diff===1?'morgen':diff===-1?'gestern':d.toLocaleDateString('de-CH',{day:'numeric',month:'long'});
+    return {label:day+', '+d.toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'})+' Uhr',over:d<now};
+  }
+  function instr(rv){return (rv.instruction||rv.client_note||'').trim();}
+  function who(rv){var c=(typeof clients!=='undefined'?clients:[]).filter(function(x){return x.id==rv.client_id;})[0]||{};return c.contact||c.name||'der Klient';}
+  function age(rv){var ms=Date.now()-new Date(rv.created_at).getTime(),h=ms/3600000;return {txt:h<1?Math.max(1,Math.round(ms/60000))+' Min.':h.toFixed(1)+' Std.',late:h>3};}
+  window.wsReviewCollapsedRow=function(rv,idx){
+    var a=age(rv),f=when(rv.due_at),i=instr(rv);
+    return '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--bd)"><div style="min-width:0"><b style="font-weight:500">'+E(rv.module_label||'Text')+'</b>'
+      +(f?' <span class="rq-pill" style="border:1px solid '+(f.over?'#a8392c':'var(--ac)')+';color:'+(f.over?'#a8392c':'var(--ac)')+';padding:2px 10px;font-size:12px;margin-left:6px">Frist: '+E(f.label)+'</span>':'')
+      +'<div class="rq-hint" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46ch">vor '+a.txt+(a.late?' · SLA überschritten':'')+(i?' · '+E(i):'')+'</div></div><button class="rq-btn ghost sm" onclick="wsToggleReviewExpand('+rv.id+')">Öffnen</button></div>';
+  };
+  window.wsReviewCard=function(rv,idx){
+    var a=age(rv),f=when(rv.due_at),i=instr(rv);
+    return '<div class="rev-card" id="rvc-'+rv.id+'" style="padding:6px 0 16px;display:flex;flex-direction:column;gap:16px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-family:var(--serif);font-weight:400;font-size:24px">'+E(rv.module_label||'Text')+'</b><span class="rq-hint" style="color:'+(a.late?'#a8392c':'var(--mu)')+'">Eingegangen vor '+a.txt+(a.late?' · SLA überschritten':'')+'</span></div>'
+      +'<div class="rq-card gold" id="rq-auftrag-'+rv.id+'"><div class="rq-acts" style="justify-content:space-between"><span class="rq-eb g">Auftrag von '+E(who(rv))+'</span>'
+        +'<span class="rq-chip on" style="min-height:36px;cursor:default;'+(f&&f.over?'color:#a8392c;border-color:#a8392c;background:#fff':'')+'">'+(f?'Frist: '+E(f.label)+(f.over?' (überschritten)':''):'Frist: 3 Stunden ab Eingang')+'</span></div>'
+        +'<div style="font-size:17px;line-height:1.55">'+(i?E(i):'<span class="rq-hint">Kein Auftrag angegeben. Bitte den Text im Sinn der Brand Voice prüfen.</span>')+'</div></div>'
+      +wsReviewHistoryBlock(rv)
+      +'<div class="rq-card" id="rq-sug-'+rv.id+'"></div>'
+      +'<div class="rq-edit" style="display:flex;flex-direction:column;gap:8px"><span class="rq-eb">Text zum Senden (frei bearbeitbar)</span>'
+        +'<textarea class="rev-card-edit rq-in" id="rev-edit-'+rv.id+'" onfocus="_wsActiveReviewId='+rv.id+'" style="min-height:260px;font-size:15px;line-height:1.6">'+safeText(rv.edited_text||rv.original_text)+'</textarea>'
+        +'<div class="rq-acts"><button class="rq-btn danger sm" onclick="deleteReview('+rv.id+')">Löschen</button><button class="rq-btn ghost sm" onclick="saveReview('+rv.id+',false)">Nur speichern</button><button class="rq-btn sm" onclick="saveReview('+rv.id+',true)">An Klient senden (E-Mail)</button></div></div>'
+      +'</div>';
+  };
+  function ctx(id){return (typeof _wsReviews!=='undefined'?_wsReviews:[]).filter(function(r){return r.id===id;})[0];}
+  function paint(id){
+    var el=document.getElementById('rq-sug-'+id);if(!el)return;var s=SUG[id]||{};
+    var h='<div class="rq-acts" style="justify-content:space-between"><span class="rq-eb g">KI-Vorschlag</span><span class="rq-chip on" style="min-height:32px;font-size:13px;cursor:default">kennt diesen Klienten</span></div>';
+    if(s.loading)h+='<div><span class="rq-spin"></span>Die KI schreibt einen Vorschlag …</div>';
+    else if(s.err)h+='<div class="rq-err">'+E(s.err)+'</div><div class="rq-acts"><button class="rq-btn ghost sm" data-sug="retry">Erneut versuchen</button></div>';
+    else if(s.text){
+      h+=(s.reply&&s.reply!==s.text?'<div class="rq-hint" style="font-size:14.5px">'+E(s.reply)+'</div>':'')+'<div class="rq-doc">'+E(s.text)+'</div>'
+        +'<div class="rq-acts"><button class="rq-btn sm" data-sug="send"'+(s.busy?' disabled':'')+'>Übernehmen und senden</button><button class="rq-btn ghost sm" data-sug="draft"'+(s.busy?' disabled':'')+'>Als Entwurf sichern</button><button class="rq-btn ghost sm" data-sug="take">In Textfeld übernehmen</button>'+(s.note?'<span class="'+(s.noteErr?'rq-err':'rq-ok')+'">'+E(s.note)+'</span>':'')+'</div>'
+        +'<div class="rq-acts" style="flex-wrap:nowrap"><input class="rq-in" id="rq-sugin-'+id+'" placeholder="Anpassen oder nachfragen, zum Beispiel «kürzer»" style="flex:1;min-width:0"><button class="rq-btn ghost sm" data-sug="ask">Anpassen</button></div>';
+    }
+    el.innerHTML=h;
+  }
+  async function ask(id,followup){
+    var rv=ctx(id);if(!rv)return;var s=SUG[id]=SUG[id]||{hist:[]};if(s.loading)return;
+    s.loading=true;s.err='';paint(id);
+    var i=instr(rv);
+    var msg=followup||(i?('Mache einen Vorschlag für die überarbeitete Fassung des Textes. Auftrag der Klientin: «'+i+'». Antworte mit der fertigen Fassung.'):'Prüfe den Text im Sinn der Brand Voice dieses Klienten und schlage eine verbesserte Fassung vor.');
+    try{
+      var d=await rqJ('/api/advisor/workspace/'+rv.client_id+'/chat',{method:'POST',body:JSON.stringify({message:msg,history:s.hist,activeReviewText:(s.text||rv.edited_text||rv.original_text),selectedText:null})});
+      s.hist.push({role:'user',text:msg},{role:'assistant',text:d.reply||''});
+      s.text=(d.revisedText||d.reply||'').trim();s.reply=d.revisedText?(d.reply||''):'';
+      if(!s.text)throw new Error('Die KI hat keinen Vorschlag geliefert.');
+    }catch(e){s.err='Der Vorschlag konnte nicht erstellt werden. '+e.message;}
+    s.loading=false;paint(id);
+  }
+  document.addEventListener('click',async function(e){
+    var b=e.target.closest&&e.target.closest('[data-sug]');if(!b)return;
+    var card=b.closest('[id^=rq-sug-]');if(!card)return;var id=parseInt(card.id.replace('rq-sug-',''),10),s=SUG[id]||{},a=b.getAttribute('data-sug');
+    if(a==='retry')return ask(id);
+    if(a==='ask'){var inp=document.getElementById('rq-sugin-'+id),v=inp&&inp.value.trim();if(v)ask(id,v);return;}
+    var ta=document.getElementById('rev-edit-'+id);
+    if(a==='take'){if(ta){ta.value=s.text;ta.focus();}s.note='Im Textfeld unten übernommen.';s.noteErr=false;return paint(id);}
+    if(a==='send'){if(ta)ta.value=s.text;s.busy=true;paint(id);try{await saveReview(id,true);}finally{s.busy=false;}return;}
+    if(a==='draft'){
+      s.busy=true;s.note='';paint(id);
+      try{await rqJ('/api/reviews/'+id+'/save-draft',{method:'POST',body:JSON.stringify({editedText:s.text})});s.note='Entwurf gesichert. Du findest ihn unter Ablage, Entwürfe.';s.noteErr=false;}
+      catch(er){s.note='Sichern hat nicht geklappt. '+er.message;s.noteErr=true;}
+      s.busy=false;paint(id);
+    }
+  });
+  var _r=window.wsRenderReviews;
+  window.wsRenderReviews=function(body){
+    var r=_r.apply(this,arguments);
+    if(typeof _wsExpandedReviewId!=='undefined'&&_wsExpandedReviewId){var id=_wsExpandedReviewId;if(SUG[id]&&(SUG[id].text||SUG[id].loading||SUG[id].err))paint(id);else ask(id);}
+    return r;
+  };
+})();
+</script>
 </body>
 </html>
