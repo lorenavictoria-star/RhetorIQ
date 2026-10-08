@@ -7037,7 +7037,7 @@ function renderModulesList(){
     return matchCat&&matchQ;
   });
   // Pill counts (always based on enabled modules for this client, independent of search)
-  const enabledAll=ALL_MODULES.filter(m=>modEnabled(m.key)&&m.cat!=='capital-markets'&&m.cat!=='hotel');
+  const enabledAll=ALL_MODULES.filter(m=>modEnabled(m.enableKey||m.key)&&m.cat!=='capital-markets'&&m.cat!=='hotel');
   const pillCatMeta=getCatMeta();
   document.querySelectorAll('.mlist-pill[data-label]').forEach(b=>{
     const cat=b.id.replace('pill-','');
