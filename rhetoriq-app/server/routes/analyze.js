@@ -2081,6 +2081,22 @@ router.post('/chat', requireAuth, async (req, res) => {
   }
 });
 
+// DELETE /api/analyze/unassigned — advisor removes all her own texts that belong to no client
+// (e.g. test generations made without selecting a client). Must be before /:id.
+router.delete('/unassigned', requireAuth, async (req, res) => {
+  if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Advisor only' });
+  try {
+    const { rowCount } = await pool.query(
+      'DELETE FROM analyses WHERE client_id IS NULL AND advisor_id = $1',
+      [req.user.id]
+    );
+    res.json({ deleted: rowCount });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // DELETE /api/analyze/client/:clientId — delete all analyses for a client (must be before /:id)
 router.delete('/client/:clientId', requireAuth, async (req, res) => {
   try {

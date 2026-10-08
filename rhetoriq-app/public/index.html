@@ -3188,6 +3188,16 @@ async function cmDelete(){
   goPage('modules');renderModulesList();
 }
 
+// Texte ohne Klient (zum Beispiel Tests) endgültig löschen
+async function deleteUnassignedUsage(n){
+  if(!confirm(n+' Texte ohne Klient endgültig löschen? Das lässt sich nicht rückgängig machen.'))return;
+  try{
+    const r=await api('/api/analyze/unassigned',{method:'DELETE'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d.error||'Fehler');
+  }catch(e){return alert('Löschen nicht möglich: '+e.message);}
+  loadUsage();
+}
 async function loadUsage(){
   const dbgBtn=document.getElementById('debug-toggle-btn');
   if(dbgBtn){dbgBtn.textContent=debugMode?'🔍 Debug ON':'🔍 Debug OFF';dbgBtn.style.background=debugMode?'#fff3cd':'var(--sf)';}
@@ -3221,7 +3231,7 @@ async function loadUsage(){
           const last=row.last_activity?new Date(row.last_activity).toLocaleDateString('de-CH'):'—';
           const cost=fmt(row.total_calls*(d.costAllTime&&d.totalAllTime?d.costAllTime/d.totalAllTime:0.045));
           return `
-            <div style="padding:14px 16px;font-size:15px;font-weight:500;${border}">${safeText(row.client_name||'')}</div>
+            <div style="padding:14px 16px;font-size:15px;font-weight:500;${border}">${row.client_id?safeText(row.client_name||''):`Ohne Klient <button class="obtn" style="font-size:12px;padding:5px 12px;margin-left:8px;color:var(--red);border-color:var(--red)" onclick="deleteUnassignedUsage(${row.total_calls})">Löschen</button>`}</div>
             <div style="padding:14px 10px;font-size:15px;text-align:right;color:var(--ac);font-weight:600;${border}">${row.this_month}</div>
             <div style="padding:14px 10px;font-size:15px;text-align:right;color:var(--mu);${border}">${row.last_month}</div>
             <div style="padding:14px 10px;font-size:15px;text-align:right;color:var(--mu);${border}">${row.total_calls}</div>
