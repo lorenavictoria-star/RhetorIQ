@@ -52,6 +52,25 @@ function ensureSchema() {
       )`);
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS instruction TEXT`);
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS due_at TIMESTAMPTZ`);
+    // Lernvorschläge aus den Korrekturen der Beraterin (Vergleich KI-Text und gesendete Fassung)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS learning_suggestions (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+        module_key TEXT NOT NULL,
+        module_label TEXT,
+        category TEXT NOT NULL,
+        observation TEXT NOT NULL,
+        example_before TEXT,
+        example_after TEXT,
+        occurrences INTEGER NOT NULL DEFAULT 1,
+        status TEXT NOT NULL DEFAULT 'offen',
+        source_review_id INTEGER,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS learning_suggestions_client_idx ON learning_suggestions (client_id, status)`);
+    await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS learned_at TIMESTAMPTZ`);
     // Abo-Status direkt am Klienten (derselbe Befehl wie in routes/subscriptions.js), damit die Kundenliste ihn mitladen kann
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trial'`);
     // Indizes für die häufigsten Abfragen (Kundenliste, Verlauf, Nutzung)

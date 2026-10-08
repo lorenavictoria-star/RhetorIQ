@@ -7,6 +7,7 @@ const { requireAdvisor } = require('../middleware/auth');
 const { ensureSchema } = require('../lib/schemaRedesign');
 const { saveFile } = require('../lib/fileStore');
 const { entwurfName, auftragBlock } = require('../lib/onboardingMails');
+const { learnFromReview } = require('../lib/learnFromCorrections');
 
 const heute = () => new Date().toLocaleDateString('de-CH', { timeZone: 'Europe/Zurich', day: '2-digit', month: '2-digit', year: 'numeric' });
 
@@ -207,6 +208,8 @@ router.put('/:id', requireAdvisor, async (req, res) => {
       notifyClientOfReviewedText(rows[0].client_id, rows[0].module_label, editedText)
         .catch(e => console.error('[reviews] notify failed:', e.message));
       storeSentCopy(rows[0], editedText);
+      // Aus den Korrekturen lernen: im Hintergrund, höchstens ein günstiger Aufruf, nur bei echter Änderung
+      learnFromReview(rows[0].id).catch(e => console.error('[learning] failed:', e.message));
     }
     res.json(rows[0]);
   } catch (e) {

@@ -25,7 +25,8 @@ test.before(async () => {
     ['/api/clients', require('../routes/clientStats')],
     ['/api/help-chat', require('../routes/helpChat')],
     ['/api/analyze', require('../routes/analyze')],
-    ['/api/memory-suggest', require('../routes/memorySuggest')]
+    ['/api/memory-suggest', require('../routes/memorySuggest')],
+    ['/api/learning', require('../routes/learning')]
   ]);
 });
 test.after(async () => { await srv.close(); });
@@ -687,4 +688,84 @@ test('Zweiter Durchgang: Text Generator und Präsentation nur auf Wunsch, Brand 
   assert.equal(useTwoPass('brand-voice-co', {}), true);
   assert.equal(useTwoPass('brand-voice-ind', { thorough: false }), true);
   assert.equal(useTwoPass('review', { thorough: true }), false, 'andere Module hatten nie einen zweiten Durchgang');
+});
+
+// ── Lernen aus den Korrekturen der Beraterin ───────────────
+test('Lernbausteine: Änderungsanteil, Ähnlichkeit, Auswertung der KI-Antwort', () => {
+  const L = require('../lib/learnFromCorrections');
+  const a = 'Wir erhöhen die Preise ab April. Das ist leider nötig. Wir bedanken uns für Ihr Verständnis.';
+  assert.equal(L.changedShare(a, a), 0);
+  assert.ok(L.changedShare(a, 'Ab April steigen die Preise um 3 Prozent. Danke für Ihr Verständnis.') > 0.9);
+  assert.equal(L.changedShare('', 'x'), 0);
+  assert.ok(L.similar('Kürzere Sätze mit höchstens 20 Wörtern.', 'Bitte kürzere Sätze, höchstens 20 Wörter.'));
+  assert.ok(!L.similar('Kürzere Sätze mit höchstens 20 Wörtern.', 'Immer mit Sie ansprechen.'));
+  const obs = L.parseObservations('Hier: [{"category":"ton","observation":"Wärmerer Schluss mit persönlichem Dank.","before":"Freundliche Grüsse","after":"Herzlichen Dank"},{"category":"X","observation":"zu kurz"},{"category":"FORMAT","observation":"Kein Fettdruck in E-Mails verwenden."}]');
+  assert.equal(obs.length, 2);
+  assert.equal(obs[0].category, 'TON');
+  assert.equal(L.parseObservations('kein json').length, 0);
+  assert.equal(L.learnKeyFor({ module_key: 'text-gen', module_tile: 'email' }), 'text-gen-email');
+  assert.equal(L.learnKeyFor({ module_key: 'review' }), 'pr');
+});
+
+test('Lernen aus Korrekturen: Vorschlag entsteht, zählt mit, wird übernommen oder verworfen', async () => {
+  await H.pool.query(`CREATE TABLE IF NOT EXISTS client_feedback_learnings (id SERIAL PRIMARY KEY, client_id INTEGER, module_key TEXT NOT NULL, category TEXT NOT NULL, summary TEXT NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(client_id, module_key, category))`);
+  await H.pool.query(`CREATE TABLE IF NOT EXISTS client_feedback_history (id SERIAL PRIMARY KEY, client_id INTEGER, module_key TEXT, category TEXT, rating INTEGER, note TEXT)`);
+  const cl = await H.addClient('Lern AG');
+  const T = H.clientToken(cl.id);
+  const orig = 'Wir erhöhen die Preise per 1. April um drei Prozent. Das ist leider unumgänglich geworden. Wir bedanken uns für Ihr Verständnis und verbleiben.';
+  const fin = 'Ab dem 1. April steigen unsere Preise um drei Prozent. Damit sichern wir die Qualität. Herzlichen Dank für Ihr Vertrauen.';
+  H.ai.fail = false;
+  H.ai.calls.length = 0;
+  H.ai.reply = '[{"category":"TON","observation":"Persönlicher, warmer Schluss mit Dank statt Floskel.","before":"verbleiben","after":"Herzlichen Dank für Ihr Vertrauen"}]';
+  const send = async () => {
+    const c = await srv.call('POST', '/api/reviews', { token: T, body: { moduleLabel: 'E-Mail', originalText: orig, moduleKey: 'text-gen', moduleTile: 'email', note: 'bitte wärmer' } });
+    const r = await srv.call('PUT', `/api/reviews/${c.body.id}`, { token: A(), body: { editedText: fin, send: true } });
+    assert.equal(r.status, 200);
+    for (let i = 0; i < 40; i++) { // die Auswertung läuft im Hintergrund
+      const { rows } = await H.pool.query('SELECT learned_at FROM review_requests WHERE id=$1', [c.body.id]);
+      if (rows[0] && rows[0].learned_at) break;
+      await new Promise(r2 => setTimeout(r2, 50));
+    }
+    return c.body.id;
+  };
+  await send();
+  const list1 = await srv.call('GET', `/api/learning?client_id=${cl.id}`, { token: A() });
+  assert.equal(list1.status, 200);
+  assert.equal(list1.body.length, 1);
+  assert.equal(list1.body[0].module_key, 'text-gen-email');
+  assert.equal(list1.body[0].occurrences, 1);
+  assert.equal(H.ai.calls.length, 1, 'genau ein Aufruf');
+  assert.ok(String(H.ai.calls[0].model).includes('haiku'));
+  // gleiche Korrektur nochmals: kein zweiter Vorschlag, aber Zähler steigt
+  await send();
+  const list2 = await srv.call('GET', `/api/learning?client_id=${cl.id}`, { token: A() });
+  assert.equal(list2.body.length, 1);
+  assert.equal(list2.body[0].occurrences, 2);
+  // unveränderter Text: kein KI-Aufruf
+  H.ai.calls.length = 0;
+  const same = await srv.call('POST', '/api/reviews', { token: T, body: { moduleLabel: 'E-Mail', originalText: orig, moduleKey: 'text-gen', moduleTile: 'email' } });
+  await srv.call('PUT', `/api/reviews/${same.body.id}`, { token: A(), body: { editedText: orig, send: true } });
+  await new Promise(r => setTimeout(r, 300));
+  assert.equal(H.ai.calls.length, 0, 'ohne Änderung keine Kosten');
+  // Rechte
+  const id = list2.body[0].id;
+  assert.equal((await srv.call('GET', '/api/learning')).status, 401);
+  assert.equal((await srv.call('GET', '/api/learning', { token: T })).status, 403);
+  assert.equal((await srv.call('POST', `/api/learning/${id}/accept`, { token: T })).status, 403);
+  // Übernehmen (mit angepasstem Wortlaut)
+  const acc = await srv.call('POST', `/api/learning/${id}/accept`, { token: A(), body: { observation: 'Schluss warm und persönlich, mit Dank' } });
+  assert.equal(acc.status, 200);
+  assert.ok(acc.body.summary.includes('Schluss warm und persönlich, mit Dank.'));
+  const { rows: lrn } = await H.pool.query(`SELECT summary FROM client_feedback_learnings WHERE client_id=$1 AND module_key='text-gen-email' AND category='TON'`, [cl.id]);
+  assert.equal(lrn.length, 1);
+  assert.equal((await srv.call('POST', `/api/learning/${id}/accept`, { token: A() })).status, 409);
+  assert.equal((await srv.call('GET', `/api/learning?client_id=${cl.id}`, { token: A() })).body.length, 0);
+  // Verwerfen: neue, andere Beobachtung, verworfen kommt nicht wieder
+  H.ai.reply = '[{"category":"FORMAT","observation":"Keine Aufzählungen in E-Mails verwenden.","before":"- Punkt","after":"Fliesstext"}]';
+  await send();
+  const l3 = await srv.call('GET', `/api/learning?client_id=${cl.id}`, { token: A() });
+  assert.equal(l3.body.length, 1);
+  assert.equal((await srv.call('POST', `/api/learning/${l3.body[0].id}/reject`, { token: A() })).status, 200);
+  await send();
+  assert.equal((await srv.call('GET', `/api/learning?client_id=${cl.id}`, { token: A() })).body.length, 0, 'verworfen heisst verworfen');
 });
