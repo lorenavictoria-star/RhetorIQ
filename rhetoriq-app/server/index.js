@@ -231,6 +231,7 @@ app.use('/api/setup', require('./routes/setup'));
 const inquiries = require('./routes/inquiries');
 app.use('/api/inquiry', inquiries.publicRouter);
 app.use('/api/inquiries', inquiries.advisorRouter);
+app.use('/api/onboarding-drafts', require('./routes/onboardingDrafts'));
 
 // Manual report trigger (advisor only)
 const { requireAdvisor } = require('./middleware/auth');
@@ -322,6 +323,8 @@ const PORT = process.env.PORT || 3001;
 (async () => {
   await init();
   await seedAdvisor();
+  // Neue Tabellen/Spalten (additiv); ein Fehler hier darf den Start nicht verhindern.
+  require('./lib/schemaRedesign').ensureSchema().catch(e => console.error('[schema-redesign] failed:', e.message));
   server.listen(PORT, () => console.log(`RhetorIQ server running on :${PORT}`));
 
   // ── Scheduled reports ──────────────────────────────────────────

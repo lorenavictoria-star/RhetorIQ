@@ -118,6 +118,15 @@ advisorRouter.get('/', requireAdvisor, async (req, res) => {
     const { rows } = await pool.query(
       `SELECT id, name, company, email, message, status, anrede, workshop_date, ack_sent_at, vorab_sent_at, created_at
        FROM inquiries WHERE status != 'archiviert' ORDER BY created_at DESC LIMIT 100`);
+    // Zusatzfeld draft_id (Onboarding-Entwurf zur Anfrage). Das bisherige Format bleibt unverändert;
+    // schlägt die Zusatzabfrage fehl, wird die Liste wie bisher geliefert.
+    try {
+      await require('../lib/schemaRedesign').ensureSchema();
+      const d = await pool.query(
+        `SELECT inquiry_id, MAX(id) AS draft_id FROM onboarding_drafts WHERE inquiry_id IS NOT NULL GROUP BY inquiry_id`);
+      const byInq = new Map(d.rows.map(r => [r.inquiry_id, r.draft_id]));
+      rows.forEach(r => { r.draft_id = byInq.get(r.id) || null; });
+    } catch (e2) { console.error('[inquiries] draft_id lookup failed:', e2.message); }
     res.json(rows);
   } catch (e) {
     console.error(e);
@@ -159,4 +168,4 @@ advisorRouter.post('/:id/archive', requireAdvisor, async (req, res) => {
   }
 });
 
-module.exports = { publicRouter, advisorRouter };
+module.exports = { publicRouter, advisorRouter, ensureTable };
