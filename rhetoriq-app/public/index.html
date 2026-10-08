@@ -8542,59 +8542,6 @@ tryAutoLogin();
 })();
 </script>
 
-<script id="rq-wiz-js">
-// ═══ Onboarding-Ablauf: Klient, Workshop, Module, Dokumente, Prüfen (nutzt nur vorhandene Funktionen) ═══
-(function(){
-  var STEPS=['Klient','Workshop','Module','Dokumente','Prüfen'],step=0;
-  function esc(t){return (typeof safeText==='function')?safeText(t):String(t==null?'':t);}
-  function cur(){return (typeof clients!=='undefined'?clients:[]).filter(function(c){return String(c.id)===String(clientId);})[0];}
-  function box(){
-    var w=document.getElementById('rq-wiz');
-    if(!w){w=document.createElement('div');w.id='rq-wiz';w.setAttribute('role','dialog');w.setAttribute('aria-label','Onboarding');
-      w.innerHTML='<div class="rq-wbox"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h2>Onboarding</h2><div style="color:var(--mu);font-size:14px">Neuen Kunden in fünf Schritten einrichten</div></div><button type="button" class="obtn" onclick="rqWizClose()" aria-label="Schliessen">&times;</button></div><div class="rq-steps" id="rq-steps"></div><div class="rq-wbody" id="rq-wbody"></div><div class="rq-wnav"><button type="button" class="obtn" id="rq-wprev">Zurück</button><button type="button" class="lbtn" id="rq-wnext" style="width:auto">Weiter</button></div></div>';
-      document.body.appendChild(w);
-      document.getElementById('rq-wprev').onclick=function(){go(step-1);};
-      document.getElementById('rq-wnext').onclick=function(){if(step>=STEPS.length-1)rqWizClose();else go(step+1);};
-    }
-    return w;
-  }
-  window.rqWizClose=function(){var w=document.getElementById('rq-wiz');if(w)w.classList.remove('show');};
-  window.rqWizard=function(){box().classList.add('show');go(0);};
-  async function go(n){
-    step=Math.max(0,Math.min(STEPS.length-1,n));
-    document.getElementById('rq-steps').innerHTML=STEPS.map(function(t,i){return '<button type="button" class="'+(i===step?'act':(i<step?'done':''))+'" data-i="'+i+'"><b>'+(i+1)+'</b>'+t+'</button>';}).join('');
-    document.querySelectorAll('#rq-steps button').forEach(function(b){b.onclick=function(){go(parseInt(b.getAttribute('data-i'),10));};});
-    document.getElementById('rq-wprev').style.visibility=step===0?'hidden':'visible';
-    document.getElementById('rq-wnext').textContent=step===STEPS.length-1?'Fertig':'Weiter';
-    var b=document.getElementById('rq-wbody'),c=cur();
-    if(step===0){
-      var opts=(typeof clients!=='undefined'?clients:[]).map(function(x){return '<option value="'+x.id+'"'+(String(x.id)===String(clientId)?' selected':'')+'>'+esc(x.name)+'</option>';}).join('');
-      b.innerHTML='<p>Wählen Sie einen bestehenden Kunden oder legen Sie einen neuen an.</p><select id="rq-wsel" class="fi"><option value="">Kunde wählen</option>'+opts+'</select><button type="button" class="obtn" id="rq-wnew">+ Neuen Kunden anlegen</button>';
-      document.getElementById('rq-wsel').onchange=function(){if(this.value){var s=document.getElementById('client-select');if(s)s.value=this.value;switchClient(this.value);}};
-      document.getElementById('rq-wnew').onclick=function(){rqWizClose();openModal('nc-ov');};
-    } else if(step===1){
-      b.innerHTML='<p>Der Workshop klärt Ziele, Stimme und Textarten des Kunden.</p><p style="color:var(--mu)">Anfragen und die Vorab-E-Mail zum Workshop-Termin bearbeiten Sie unter Kunden, im Kasten «Neue Anfragen».</p><button type="button" class="obtn" id="rq-wgo">Zu den Anfragen</button><div class="rq-open">Workshop-Mappe automatisch erzeugen: noch nicht verfügbar.</div>';
-      document.getElementById('rq-wgo').onclick=function(){rqWizClose();goPage('clients');loadAdvisorDashboard();if(window.rqMarkRail)rqMarkRail('clients');};
-    } else if(step===2){
-      var names=(typeof NC_MODULE_LABELS!=='undefined')?Object.keys(NC_MODULE_LABELS).map(function(k){return NC_MODULE_LABELS[k];}).join(', '):'';
-      b.innerHTML='<p>Legen Sie fest, welche Module dieser Kunde nutzen darf.</p><p style="color:var(--mu);font-size:14px">'+esc(names)+'</p>'+(c?'<button type="button" class="obtn" id="rq-wmod">Module für '+esc(c.name)+' wählen</button>':'<p style="color:var(--mu)">Bitte zuerst im Schritt Klient einen Kunden wählen.</p>');
-      var mb=document.getElementById('rq-wmod');if(mb)mb.onclick=function(){openModuleConfig(c.id);};
-    } else if(step===3){
-      b.innerHTML='<p>Laden Sie alle Unterlagen des Kunden hoch. Die KI sortiert sie und legt sie ab.</p>'+(c?'<button type="button" class="obtn" id="rq-wdoc">Dokumente hochladen</button>':'<p style="color:var(--mu)">Bitte zuerst im Schritt Klient einen Kunden wählen.</p>');
-      var db=document.getElementById('rq-wdoc');if(db)db.onclick=function(){openOnboarding();};
-    } else {
-      if(!c){b.innerHTML='<p style="color:var(--mu)">Bitte zuerst im Schritt Klient einen Kunden wählen.</p>';return;}
-      b.innerHTML='<p>Lädt…</p>';
-      var mods='alle',docs='–',bv='–';
-      try{var r=await api('/api/clients/'+c.id+'/cm-status');var d=await r.json();if(Array.isArray(d.enabled_modules))mods=d.enabled_modules.length+' Module';}catch(e){}
-      try{var r2=await api('/api/memory/'+c.id);var m=await r2.json();if(Array.isArray(m)){docs=m.length+' abgelegt';bv=m.some(function(x){return /brand_voice/.test(x.memory_type||'');})?'vorhanden':'fehlt noch';}}catch(e){}
-      b.innerHTML='<p>Zusammenfassung für <b>'+esc(c.name)+'</b></p><div class="rq-li" style="cursor:default"><i class="ti ti-user"></i><div><b>Klient</b><small>'+esc(c.industry||'')+'</small></div><span></span></div><div class="rq-li" style="cursor:default"><i class="ti ti-layout-grid"></i><div><b>Module</b><small>'+esc(mods)+'</small></div><span></span></div><div class="rq-li" style="cursor:default"><i class="ti ti-file-text"></i><div><b>Dokumente</b><small>'+esc(docs)+'</small></div><span></span></div><div class="rq-li" style="cursor:default"><i class="ti ti-wave-sine"></i><div><b>Brand Voice</b><small>'+esc(bv)+'</small></div><span></span></div>';
-    }
-  }
-  // Menüpunkt "Onboarding" öffnet den Ablauf (das alte Modal bleibt über die Kopfzeile und Schritt 4 erreichbar)
-  var _bld=window.rqBuildRail;
-})();
-</script>
 <style id="rq-live-css">
 .rq-card{border:1px solid var(--bd);background:#fff;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
 .rq-card.gold{border-color:var(--ac);background:var(--acl)}
@@ -8626,6 +8573,10 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
 @keyframes rqsp{to{transform:rotate(360deg)}}
 @media(max-width:640px){.rq-two{grid-template-columns:1fr}}
 #rq-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--tx);color:#fff;padding:12px 20px;z-index:900;font-size:14px;max-width:90vw}
+.rq-list{display:flex;flex-direction:column}
+#rq-wiz .rq-wbox{max-width:880px}
+#rq-wiz .rq-wbody{display:flex;flex-direction:column;gap:18px}
+#rq-wiz .rq-wbody p{margin:0}
 </style>
 <script id="rq-util-js">
 // ═══ Gemeinsame Helfer für die neuen Server-Funktionen ═══
@@ -8675,6 +8626,254 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
   };
   window.RQ_SECTORS={kmu:'KMU / Allgemein',hotellerie:'Hotellerie / Tourismus',capital:'Capital / Finance',bildung:'Bildung / Public Sector',nonprofit:'Non-Profit / NGO',tech:'Tech / Startup',beratung:'Beratung / Coaching'};
   window.RQ_SECMODS={kmu:['text-gen','before-after','profiling','review','recognition','pre-meeting','risk','actionability','thread'],hotellerie:['text-gen','before-after','vs-gen','vs-cal','profiling','review','recognition','pre-meeting','sparring','debrief'],capital:['text-gen','vs-gen','vs-cal','profiling','review','pre-meeting','risk','sparring'],bildung:['text-gen','before-after','profiling','review','recognition','pre-meeting','actionability'],nonprofit:['text-gen','before-after','vs-gen','profiling','review','recognition','pre-meeting'],tech:['text-gen','before-after','vs-gen','vs-cal','profiling','review','pre-meeting','risk','actionability','thread','sparring'],beratung:['text-gen','before-after','vs-gen','profiling','review','recognition','pre-meeting','risk','sparring','debrief','thread']};
+})();
+</script>
+<script id="rq-wiz-js">
+// ═══ Onboarding: Klient, Workshop, Module, Dokumente, Prüfen (echte Entwürfe auf dem Server) und Entwürfe in der Kundenliste ═══
+(function(){
+  var STEPS=['Klient','Workshop','Module','Dokumente','Prüfen'];
+  var W=null;
+  function blank(){return {d:{id:null,firma:'',kontakt:'',email:'',webseite:'',sektor:'kmu',anrede:'sie',titel:'',workshop_datum:'',schritt:1,module:[],vorschlaege:null,status:'workshop_offen'},step:1,files:[],wsFiles:[],upFiles:[],saved:false,done:null,busy:false,scanning:false,docs:false,secOpen:false,msg:'',err:''};}
+  var E=rqEsc;
+  // Antworten vom Server in feste Formen bringen
+  function normRecs(v){
+    if(!v)return null;if(typeof v==='string'){try{v=JSON.parse(v);}catch(e){return null;}}
+    if(v.vorschlaege)v=v.vorschlaege;else if(v.recommendations)v=v.recommendations;else if(v.empfehlungen)v=v.empfehlungen;
+    if(!Array.isArray(v)){v=Object.keys(v||{}).map(function(k){return {module:k,grund:v[k]};});}
+    var out=[];v.forEach(function(x){
+      var raw=typeof x==='string'?x:(x.module||x.key||x.name||x.modul),k=rqModKey(raw);
+      if(k&&k!=='brand-voice'&&!out.some(function(o){return o.module===k;}))out.push({module:k,grund:typeof x==='string'?'':(x.grund||x.begruendung||x.reason||x.why||'')});
+    });
+    return out;
+  }
+  function normMods(v){
+    if(typeof v==='string'){try{v=JSON.parse(v);}catch(e){v=[];}}
+    var o=[];(Array.isArray(v)?v:[]).forEach(function(x){var k=rqModKey(x);if(k&&o.indexOf(k)<0)o.push(k);});return o;
+  }
+  function absorb(d){
+    if(!d)return;var x=W.d;
+    ['id','firma','kontakt','email','webseite','sektor','anrede','titel','workshop_datum','schritt','status','client_id'].forEach(function(k){if(d[k]!==undefined&&d[k]!==null)x[k]=d[k];});
+    if(d.workshop_datum===null)x.workshop_datum='';
+    if(d.module!==undefined)x.module=normMods(d.module);
+    if(d.vorschlaege!==undefined){var r=normRecs(d.vorschlaege);x.vorschlaege=r&&r.length?r:null;}
+    x.sektor=RQ_SECTORS[x.sektor]?x.sektor:'kmu';x.anrede=x.anrede==='du'?'du':'sie';
+  }
+  function body(){var d=W.d;return {firma:d.firma,kontakt:d.kontakt,email:d.email,webseite:d.webseite,sektor:d.sektor,anrede:d.anrede,titel:d.titel,workshop_datum:d.workshop_datum,schritt:d.schritt,module:d.module,status:d.status};}
+  function val(id){var el=document.getElementById(id);return el?el.value.trim():null;}
+  function collect(){
+    var m={firma:'rqw-firma',kontakt:'rqw-kontakt',email:'rqw-email',webseite:'rqw-web',workshop_datum:'rqw-datum'};
+    Object.keys(m).forEach(function(k){var v=val(m[k]);if(v!==null)W.d[k]=v;});
+  }
+  async function persist(extra){
+    collect();Object.assign(W.d,extra||{});
+    if(!W.d.firma)throw new Error('Bitte die Firma eintragen.');
+    var d=W.d.id?await rqJ('/api/onboarding-drafts/'+W.d.id,{method:'PUT',body:JSON.stringify(body())}):await rqJ('/api/onboarding-drafts',{method:'POST',body:JSON.stringify(body())});
+    var keepMods=W.d.module.slice(),keepRec=W.d.vorschlaege;
+    absorb(d&&d.draft?d.draft:d);
+    if(d&&d.module===undefined)W.d.module=keepMods;if(d&&d.vorschlaege===undefined)W.d.vorschlaege=keepRec;
+  }
+  function box(){
+    var w=document.getElementById('rq-wiz');
+    if(!w){w=document.createElement('div');w.id='rq-wiz';w.setAttribute('role','dialog');w.setAttribute('aria-label','Onboarding');
+      w.innerHTML='<div class="rq-wbox"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><h2>Onboarding</h2><div style="color:var(--mu);font-size:15px" id="rqw-sub">Neuen Klienten einrichten</div></div><button type="button" class="rq-btn ghost sm" onclick="rqWizClose()" aria-label="Schliessen">&times;</button></div><div class="rq-steps" id="rq-steps"></div><div class="rq-wbody" id="rq-wbody"></div></div>';
+      document.body.appendChild(w);
+      w.addEventListener('click',onClick);
+      w.addEventListener('change',function(e){var t=e.target;if(t.id==='rqw-files'){addFiles(t.files);t.value='';}});
+    }
+    return w;
+  }
+  window.rqWizClose=function(){var w=document.getElementById('rq-wiz');if(w)w.classList.remove('show');if(window.rqLoadDrafts)rqLoadDrafts();};
+  window.rqWizard=function(){W=blank();box().classList.add('show');render();};
+  window.rqWizardFromInquiry=async function(id,btn){
+    if(btn){btn.disabled=true;}
+    try{
+      var q=(window._rqInq||[]).filter(function(x){return x.id===id;})[0];
+      if(!q){var rows=await rqJ('/api/inquiries');q=(rows||[]).filter(function(x){return x.id===id;})[0];}
+      if(!q)throw new Error('Anfrage nicht gefunden.');
+      W=blank();W.d.firma=q.company||q.name||'';W.d.kontakt=q.name||'';W.d.email=q.email||'';W.d.inquiry_id=id;
+      var d=await rqJ('/api/onboarding-drafts',{method:'POST',body:JSON.stringify(Object.assign(body(),{inquiry_id:id}))});
+      absorb(d&&d.draft?d.draft:d);
+      box().classList.add('show');render();
+    }catch(e){rqToast('Onboarding konnte nicht gestartet werden. '+e.message);}
+    finally{if(btn)btn.disabled=false;}
+  };
+  window.rqWizardResume=async function(id){
+    try{
+      var d=await rqJ('/api/onboarding-drafts/'+id);
+      W=blank();absorb(d&&d.draft?d.draft:d);
+      W.step=W.d.status==='bereit'?5:3;
+      box().classList.add('show');render();loadFiles();
+    }catch(e){rqToast('Der Entwurf konnte nicht geöffnet werden. '+e.message);}
+  };
+  async function loadFiles(){
+    if(!W||!W.d.id)return;
+    try{
+      var rows=await rqJ('/api/files?draft_id='+W.d.id);if(!Array.isArray(rows))rows=rows&&rows.files||[];
+      W.wsFiles=rows.filter(function(f){return f.folder==='workshop';});
+      W.upFiles=rows.filter(function(f){return f.folder==='unterlagen';});
+      if(W.step===2||W.step===4)render();
+    }catch(e){}
+  }
+  function fname(f){return f.name||f.filename||f.original_name||'Datei';}
+  function pills(a,vals){return '<div class="rq-chips">'+vals.map(function(v){return '<button type="button" class="rq-chip'+(W.d[a]===v[0]?' on':'')+'" data-a="set" data-k="'+a+'" data-v="'+v[0]+'">'+v[1]+'</button>';}).join('')+'</div>';}
+  function msg(){return '<div id="rqw-msg">'+(W.err?'<div class="rq-err">'+E(W.err)+'</div>':'')+(W.msg?'<div class="rq-hint">'+W.msg+'</div>':'')+'</div>';}
+  function acts(back,next,extra){return '<div class="rq-acts" style="margin-top:6px">'+(back?'<button type="button" class="rq-btn ghost" data-a="go" data-v="'+back+'"'+(W.busy?' disabled':'')+'>Zurück</button>':'')+(extra||'')+(next?'<button type="button" class="rq-btn" data-a="'+next[0]+'"'+(W.busy?' disabled':'')+'>'+next[1]+'</button>':'')+'</div>';}
+  function render(){
+    var w=box(),d=W.d;
+    document.getElementById('rqw-sub').textContent=d.firma?('Neuen Klienten einrichten: '+d.firma):'Neuen Klienten einrichten';
+    var st=document.getElementById('rq-steps');
+    if(W.done){st.innerHTML='';}else{
+      st.innerHTML=STEPS.map(function(t,i){var n=i+1;return '<button type="button" class="'+(n===W.step?'act':(n<W.step?'done':''))+'" data-a="go" data-v="'+n+'"><b>'+n+'</b>'+t+'</button>';}).join('');}
+    var b=document.getElementById('rq-wbody'),h='';
+    if(W.done){
+      var c=W.done;h='<div class="rq-card gold"><span class="rq-eb g">Fertig</span><b style="font-family:var(--serif);font-weight:400;font-size:24px">'+E(d.firma)+' ist eingerichtet.</b><span>Die Einladung mit dem persönlichen Zugangslink ist an '+E(d.email||'die Ansprechperson')+' unterwegs ('+(d.anrede==='du'?'Du':'Sie')+'-Form).</span></div>'
+        +'<div class="rq-acts" style="margin-top:14px">'+(c.id?'<button type="button" class="rq-btn" data-a="openws">Workspace öffnen</button>':'')+((W.assign||[]).length&&c.id?'<button type="button" class="rq-btn ghost" data-a="assign">Dokumente jetzt zuordnen</button>':'')+'<button type="button" class="rq-btn ghost" data-a="close">Schliessen</button></div>';
+      b.innerHTML=h;return;
+    }
+    if(W.step===1){
+      h='<div class="rq-two"><div><label class="rq-lab" for="rqw-firma">Firma</label><input id="rqw-firma" class="rq-in" value="'+E(d.firma)+'" autocomplete="off"></div>'
+       +'<div><label class="rq-lab" for="rqw-kontakt">Ansprechperson</label><input id="rqw-kontakt" class="rq-in" value="'+E(d.kontakt)+'" autocomplete="off"></div>'
+       +'<div><label class="rq-lab" for="rqw-email">E-Mail</label><input id="rqw-email" type="email" class="rq-in" value="'+E(d.email)+'" autocomplete="off"></div>'
+       +'<div><label class="rq-lab" for="rqw-web">Webseite</label><input id="rqw-web" class="rq-in" placeholder="www.beispiel.ch" value="'+E(d.webseite)+'" autocomplete="off"></div></div>'
+       +msg()+acts(0,['next1','Weiter']);
+    } else if(W.step===2){
+      h=(W.saved?'<div class="rq-card gold"><span class="rq-eb g">Zwischengespeichert</span><span>'+E(d.firma)+' steht unter Kunden als «Workshop offen». Nach dem Workshop machst du hier weiter.</span><div class="rq-acts"><button type="button" class="rq-btn" data-a="go" data-v="3">Nach dem Workshop weiter mit den Modulen</button></div></div>':'')
+       +'<div class="rq-two"><div><span class="rq-lab">Anrede</span>'+pills('anrede',[['sie','Sie'],['du','Du']])+'</div><div><span class="rq-lab">Frau oder Herr</span>'+pills('titel',[['Frau','Frau'],['Herr','Herr']])+'</div></div>'
+       +'<div><label class="rq-lab" for="rqw-datum">Termin des Workshops</label><input id="rqw-datum" class="rq-in" placeholder="z. B. 14. Oktober 2026" value="'+E(d.workshop_datum)+'" style="max-width:360px"></div>'
+       +'<div class="rq-card"><span class="rq-eb">Webseite prüfen</span><span class="rq-hint">Die KI liest '+E(d.webseite||'die Webseite')+' und empfiehlt Module mit Begründung.</span>'
+       +'<div class="rq-acts"><button type="button" class="rq-btn" data-a="scan"'+(W.scanning||!d.webseite?' disabled':'')+'>'+(W.scanning?'<span class="rq-spin" style="border-top-color:#fff"></span>Die KI prüft die Webseite …':'Webseite prüfen')+'</button>'+(d.webseite?'':'<span class="rq-hint">Bitte zuerst im Schritt 1 eine Webseite eintragen.</span>')+'</div>'
+       +(d.vorschlaege?'<div class="rq-list" style="margin-top:6px">'+d.vorschlaege.map(function(r){return '<div class="rq-li" style="cursor:default"><i class="ti ti-check"></i><div><b>'+E(rqModName(r.module))+'</b><small>'+E(r.grund)+'</small></div><span class="rq-pill">empfohlen</span></div>';}).join('')+'</div>':'')+'</div>'
+       +'<div class="rq-card"><span class="rq-eb">Workshop-Mappe für '+E(d.firma)+'</span><span class="rq-hint">Fünf Word-Dateien: Briefing für dich, Einführungsgespräch, Workshop, Erfassungsbogen und die Vorab-E-Mail.</span>'
+       +'<div class="rq-acts"><button type="button" class="rq-btn'+(W.wsFiles.length?' ghost':'')+'" data-a="docs"'+(W.docs?' disabled':'')+'>'+(W.docs?'<span class="rq-spin"></span>Die Mappe wird erstellt …':(W.wsFiles.length?'Mappe neu erstellen':'Workshop-Mappe erstellen'))+'</button></div>'
+       +(W.wsFiles.length?'<div class="rq-list" style="margin-top:6px">'+W.wsFiles.map(function(f){return '<div class="rq-li" style="cursor:default"><i class="ti ti-file-text"></i><div><b>'+E(fname(f))+'</b><small>Word'+(f.size?' · '+rqSize(f.size):'')+'</small></div><button type="button" class="rq-btn ghost sm" data-a="dl" data-v="'+f.id+'">Herunterladen</button></div>';}).join('')+'</div>':'')+'</div>'
+       +msg()+acts(1,['next2','Weiter zu den Modulen'],'<button type="button" class="rq-btn ghost" data-a="save"'+(W.busy?' disabled':'')+'>Zwischenspeichern</button>')
+       +'<span class="rq-hint">Nach dem Workshop wählst du die Module aus.</span>';
+    } else if(W.step===3){
+      var rec=(d.vorschlaege||[]).map(function(r){return r.module;});
+      var base=rec.length?rec:RQ_SECMODS[d.sektor]||[];
+      var others=RQ_MODS.map(function(m){return m[0];}).filter(function(k){return k!=='brand-voice'&&base.indexOf(k)<0;});
+      var chip=function(k){var on=d.module.indexOf(k)>=0,r=(d.vorschlaege||[]).filter(function(x){return x.module===k;})[0];return '<button type="button" class="rq-chip'+(on?' on':'')+'" data-a="mod" data-v="'+k+'"'+(r&&r.grund?' title="'+E(r.grund)+'"':'')+'>'+(on?'✓ ':'+ ')+E(rqModName(k))+'</button>';};
+      h='<p class="rq-hint" style="max-width:62ch">Was im Workshop besprochen wurde, wählst du hier aus. '+(rec.length?'Die Empfehlungen der KI sind schon markiert.':'Die Vorauswahl richtet sich nach dem Sektor.')+'</p>'
+       +'<details'+(W.secOpen?' open':'')+' data-sec><summary class="rq-hint" style="cursor:pointer;min-height:40px;display:flex;align-items:center">Sektor: '+RQ_SECTORS[d.sektor]+' · ändern</summary><div class="rq-chips" style="margin:8px 0 14px">'+Object.keys(RQ_SECTORS).map(function(k){return '<button type="button" class="rq-chip'+(k===d.sektor?' on':'')+'" data-a="sec" data-v="'+k+'">'+RQ_SECTORS[k]+'</button>';}).join('')+'</div></details>'
+       +'<div><span class="rq-eb">'+(rec.length?'Empfohlen für '+E(d.firma):'Passend zum Sektor')+'</span><div class="rq-chips" style="margin-top:8px"><span class="rq-chip on fix">✓ Brand Voice</span>'+base.map(chip).join('')+'</div></div>'
+       +(others.length?'<div><span class="rq-eb">Weitere Module</span><div class="rq-chips" style="margin-top:8px">'+others.map(chip).join('')+'</div></div>':'')
+       +'<span class="rq-hint">Brand Voice ist immer dabei.</span>'+msg()+acts(2,['next3','Weiter']);
+    } else if(W.step===4){
+      h='<label class="rq-card" for="rqw-files" style="align-items:center;text-align:center;padding:32px 20px;border-style:dashed;cursor:pointer" id="rqw-drop"><i class="ti ti-upload" style="font-size:30px;color:var(--ac)"></i><b style="font-weight:500">Alle vorhandenen Dokumente hierher ziehen</b><span class="rq-hint">PDF, Word oder Text. Alles zusammen, die KI sortiert nach dem Anlegen.</span><span class="rq-btn ghost sm">Dateien auswählen</span></label><input id="rqw-files" type="file" multiple style="display:none">'
+       +((W.files.length||W.upFiles.length)?'<div class="rq-list">'+W.upFiles.map(function(f){return '<div class="rq-li" style="cursor:default"><i class="ti ti-file-text"></i><div><b>'+E(fname(f))+'</b><small>'+(f.size?rqSize(f.size)+' · ':'')+'hochgeladen</small></div><span class="rq-pill">bereit</span></div>';}).join('')+W.files.map(function(f,i){return '<div class="rq-li" style="cursor:default"><i class="ti ti-file-text"></i><div><b>'+E(f.name)+'</b><small>'+rqSize(f.size)+'</small></div><button type="button" class="rq-btn ghost sm" data-a="rmfile" data-v="'+i+'">Entfernen</button></div>';}).join('')+'</div>':'<span class="rq-hint">Dieser Schritt lässt sich auch überspringen. Unterlagen kannst du später unter Ablage hochladen.</span>')
+       +msg()+acts(3,['next4',W.files.length?'Hochladen und weiter':'Weiter']);
+    } else {
+      var nf=W.files.length+W.upFiles.length;
+      var row=function(ic,t,s){return '<div class="rq-li" style="cursor:default"><i class="ti '+ic+'"></i><div><b>'+t+'</b><small>'+s+'</small></div><span></span></div>';};
+      h='<p class="rq-hint" style="max-width:64ch">Prüfe die Angaben. Beim Bestätigen wird '+E(d.firma)+' angelegt und die Ansprechperson eingeladen.</p>'
+       +'<div class="rq-list">'+row('ti-user','Klient',E(d.firma)+(d.kontakt?' · '+E(d.kontakt):'')+(d.email?' · '+E(d.email):''))+row('ti-world','Webseite',E(d.webseite||'keine Angabe'))+row('ti-layout-grid','Module','Brand Voice'+(d.module.filter(function(k){return k!=='brand-voice';}).length?', '+d.module.filter(function(k){return k!=='brand-voice';}).map(rqModName).map(E).join(', '):''))+row('ti-file-text','Dokumente',nf?nf+(nf===1?' Datei':' Dateien'):'keine hochgeladen')+row('ti-calendar','Workshop',E(d.workshop_datum||'kein Termin eingetragen'))+'</div>'
+       +'<div class="rq-card"><span class="rq-eb">Einladung mit Zugangslink an '+E(d.kontakt||d.firma)+'</span><div><span class="rq-lab">Anrede</span>'+pills('anrede',[['sie','Sie'],['du','Du']])+'</div></div>'
+       +msg()+acts(4,['finish','Bestätigen und Klienten einladen'])+'<span class="rq-hint">Beim Bestätigen geht die Einladung mit dem persönlichen Zugangslink raus.</span>';
+    }
+    b.innerHTML=h;
+    var f0=b.querySelector('input.rq-in');if(f0&&W.step===1&&!f0.value)f0.focus();
+    var dz=document.getElementById('rqw-drop');
+    if(dz){dz.ondragover=function(e){e.preventDefault();dz.style.borderColor='var(--ac)';};dz.ondragleave=function(){dz.style.borderColor='';};dz.ondrop=function(e){e.preventDefault();dz.style.borderColor='';addFiles(e.dataTransfer.files);};}
+  }
+  function addFiles(fl){W.files=W.files.concat(Array.prototype.slice.call(fl));render();}
+  function setMsg(m,e){W.msg=m||'';W.err=e||'';var el=document.getElementById('rqw-msg');if(el)el.innerHTML=(W.err?'<div class="rq-err">'+E(W.err)+'</div>':'')+(W.msg?'<div class="rq-hint">'+W.msg+'</div>':'');}
+  async function step(n,extra){
+    W.busy=true;setMsg('Speichert …');
+    try{await persist(Object.assign({schritt:n},extra||{}));W.busy=false;W.step=n;W.msg='';W.err='';
+      if(n===3&&!W.d.module.length)W.d.module=((W.d.vorschlaege||[]).length?W.d.vorschlaege.map(function(r){return r.module;}):(RQ_SECMODS[W.d.sektor]||[]).slice());
+      render();if(n===2||n===4)loadFiles();}
+    catch(e){W.busy=false;setMsg('',e.message);render();}
+  }
+  async function onClick(e){
+    var t=e.target.closest&&e.target.closest('[data-a]');if(!t||!W)return;var a=t.getAttribute('data-a'),v=t.getAttribute('data-v');
+    if(a==='go'){var n=parseInt(v,10);if(W.done||W.busy)return;collect();
+      if(n>1&&!W.d.id){if(!(val('rqw-firma')||W.d.firma)){setMsg('','Bitte zuerst die Firma eintragen.');return;}return step(n);}
+      if(n===W.step)return;return step(n);}
+    if(a==='next1')return step(2);
+    if(a==='next2')return step(3);
+    if(a==='next3')return step(4,{module:withBV(W.d.module)});
+    if(a==='next4'){
+      W.busy=true;render();setMsg('Lädt Dokumente hoch …');
+      try{
+        for(var i=0;i<W.files.length;i++){setMsg('Lädt hoch: '+E(W.files[i].name)+' ('+(i+1)+' von '+W.files.length+')');await rqUp(W.files[i],{draft_id:W.d.id,folder:'unterlagen'});}
+        W.assign=(W.assign||[]).concat(W.files);W.files=[];W.busy=false;await step(5);
+      }catch(er){W.busy=false;render();setMsg('','Das Hochladen hat nicht geklappt: '+er.message);}
+      return;}
+    if(a==='set'){collect();var k=t.getAttribute('data-k');W.d[k]=(W.d[k]===v&&k==='titel')?'':v;return render();}
+    if(a==='mod'){var ix=W.d.module.indexOf(v);if(ix>=0)W.d.module.splice(ix,1);else W.d.module.push(v);return render();}
+    if(a==='sec'){W.d.sektor=v;W.secOpen=true;if(!W.d.vorschlaege)W.d.module=(RQ_SECMODS[v]||[]).slice();return render();}
+    if(a==='rmfile'){W.files.splice(parseInt(v,10),1);return render();}
+    if(a==='dl'){try{var f=W.wsFiles.filter(function(x){return String(x.id)===v;})[0];await rqDl('/api/files/'+v+'/download',f?fname(f):'Datei');}catch(er){setMsg('',er.message);}return;}
+    if(a==='save'){W.busy=true;setMsg('Speichert …');try{await persist({status:'workshop_offen',schritt:2});W.busy=false;W.saved=true;W.msg='';W.err='';render();}catch(er){W.busy=false;setMsg('',er.message);render();}return;}
+    if(a==='scan'){
+      W.scanning=true;W.err='';render();
+      try{await persist({});var d=await rqJ('/api/onboarding-drafts/'+W.d.id+'/scan',{method:'POST',body:'{}'});
+        var rr=normRecs(d&&(d.draft?d.draft.vorschlaege:null)||d);if(!rr||!rr.length)rr=normRecs(d&&d.draft&&d.draft.vorschlaege);
+        W.d.vorschlaege=rr&&rr.length?rr:null;if(!W.d.vorschlaege)W.err='Die KI hat keine Empfehlungen gefunden. Bitte die Webseite prüfen.';
+        else W.d.module=withBV(W.d.vorschlaege.map(function(r){return r.module;}));
+      }catch(er){W.err='Die Webseitenprüfung hat nicht geklappt. '+er.message;}
+      W.scanning=false;render();return;}
+    if(a==='docs'){
+      W.docs=true;W.err='';render();
+      try{await persist({});var r=await rqJ('/api/onboarding-drafts/'+W.d.id+'/workshop-docs',{method:'POST',body:'{}'});
+        var fl=Array.isArray(r)?r:(r&&(r.files||r.docs||r.dateien))||[];
+        if(!fl.length){var rows=await rqJ('/api/files?draft_id='+W.d.id);fl=(Array.isArray(rows)?rows:[]).filter(function(f){return f.folder==='workshop';});}
+        W.wsFiles=fl;if(!fl.length)W.err='Es wurden keine Dateien erstellt.';
+      }catch(er){W.err='Die Mappe konnte nicht erstellt werden. '+er.message;}
+      W.docs=false;render();return;}
+    if(a==='finish'){
+      W.busy=true;render();setMsg('Klient wird angelegt …');
+      try{await persist({schritt:5,status:'bereit'});
+        var r2=await rqJ('/api/onboarding-drafts/'+W.d.id+'/finish',{method:'POST',body:JSON.stringify({anrede:W.d.anrede,titel:W.d.titel})});
+        var c=(r2&&(r2.client||{}))||{};if(!c.id)c.id=r2&&(r2.clientId||r2.client_id);
+        W.done={id:c.id||null};W.busy=false;
+        if(typeof loadAdvisorDashboard==='function')loadAdvisorDashboard();
+        render();
+      }catch(er){W.busy=false;render();setMsg('','Das Einladen hat nicht geklappt: '+er.message);}
+      return;}
+    if(a==='openws'){rqWizClose();goPage('clients');openWorkspace(W.done.id,true);return;}
+    if(a==='assign'){
+      var cid=W.done.id,files=(W.assign||[]).slice();rqWizClose();
+      try{await loadAdvisorDashboard();var s=document.getElementById('client-select');if(s)s.value=String(cid);await switchClient(String(cid));}catch(er){}
+      openOnboarding();_obFiles=files;renderObFileList();return;}
+    if(a==='close')return rqWizClose();
+  }
+  function withBV(m){var o=m.filter(function(k){return k!=='brand-voice';});o.unshift('brand-voice');return o;}
+
+  // ── F2: Anfragen mit «Onboarding starten», Entwürfe in der Kundenliste ──
+  var _li=window.loadInquiries;
+  window.loadInquiries=async function(){
+    var r=await _li.apply(this,arguments);
+    try{
+      var rows=await rqJ('/api/inquiries');window._rqInq=Array.isArray(rows)?rows:[];
+      document.querySelectorAll('#inq-box [data-inq]').forEach(function(row){
+        if(row.querySelector('[data-rq-start]'))return;
+        var id=parseInt(row.getAttribute('data-inq'),10),q=window._rqInq.filter(function(x){return x.id===id;})[0];if(!q)return;
+        var b=document.createElement('button');b.type='button';b.className='add-btn';b.setAttribute('data-rq-start','1');b.textContent='Onboarding starten';
+        b.style.cssText='margin-top:10px;min-height:44px';
+        b.onclick=function(){rqWizardFromInquiry(id,b);};
+        row.appendChild(b);
+      });
+    }catch(e){}
+    return r;
+  };
+  window.rqLoadDrafts=async function(){
+    var anchor=document.getElementById('inq-box');if(!anchor)return;
+    var host=document.getElementById('rq-drafts');
+    if(!host){host=document.createElement('div');host.id='rq-drafts';anchor.parentNode.insertBefore(host,anchor.nextSibling);}
+    try{
+      var rows=await rqJ('/api/onboarding-drafts');rows=(Array.isArray(rows)?rows:[]).filter(function(d){return d.status!=='abgeschlossen';});
+      if(!rows.length){host.innerHTML='';return;}
+      host.innerHTML='<div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin:6px 0 8px">Onboarding in Arbeit</div>'+rows.map(function(d){
+        var when=rqDate(d.updated_at||d.created_at);
+        return '<div class="rq-card" style="flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px" data-draft="'+d.id+'"><div><b style="font-weight:500">'+E(d.firma||'Ohne Namen')+'</b>'+(d.kontakt?' · '+E(d.kontakt):'')+'<div class="rq-hint">'+(d.workshop_datum?'Workshop: '+E(d.workshop_datum)+' · ':'')+(when?'gespeichert '+when:'')+'</div></div><div class="rq-acts"><span class="rq-pill" style="border:1px solid var(--ac);color:var(--ac);padding:2px 10px;font-size:12px">'+(d.status==='bereit'?'Bereit':'Workshop offen')+'</span><button type="button" class="rq-btn sm" data-draft-go="'+d.id+'">Fortsetzen</button><button type="button" class="rq-btn ghost sm" data-draft-del="'+d.id+'">Verwerfen</button></div></div>';
+      }).join('');
+      host.querySelectorAll('[data-draft-go]').forEach(function(b){b.onclick=function(){rqWizardResume(parseInt(b.getAttribute('data-draft-go'),10));};});
+      host.querySelectorAll('[data-draft-del]').forEach(function(b){b.onclick=async function(){if(!confirm('Diesen Entwurf verwerfen?'))return;try{await rqJ('/api/onboarding-drafts/'+b.getAttribute('data-draft-del'),{method:'DELETE'});rqLoadDrafts();}catch(e){rqToast('Verwerfen nicht möglich. '+e.message);}};});
+    }catch(e){host.innerHTML='';}
+  };
+  var _lad=window.loadAdvisorDashboard;
+  window.loadAdvisorDashboard=async function(){var r=await _lad.apply(this,arguments);rqLoadDrafts();return r;};
 })();
 </script>
 <script id="rq-help-js">
