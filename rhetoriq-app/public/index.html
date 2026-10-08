@@ -8493,23 +8493,51 @@ tryAutoLogin();
   }
   tabs();
   function esc(t){return (typeof safeText==='function')?safeText(t):String(t==null?'':t);}
+  var FOLD=[['entwuerfe','Entwürfe','ti-pencil','Fassungen, die du als Entwurf gesichert hast'],['workshop','Workshop','ti-presentation','Mappe und Unterlagen zum Workshop'],['unterlagen','Unterlagen','ti-folder','Dokumente des Kunden'],['gesendet','Gesendet','ti-send','Texte, die an den Kunden gegangen sind']];
+  function ftype(n){var m=/\.([a-z0-9]+)$/i.exec(n||'');return m?m[1].toUpperCase():'Datei';}
   async function renderStore(body){
-    var cid=_wsClientId;
-    try{
-      var r=await api('/api/memory/'+cid);var rows=await r.json();
-      if(!r.ok||!Array.isArray(rows))throw new Error('Keine Daten');
-      var h='<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mu);margin-bottom:12px">Ablage: Referenzdokumente dieses Kunden</div>';
-      if(!rows.length)h+='<div class="rq-empty">Noch keine Dokumente abgelegt.</div>';
-      rows.forEach(function(m){
-        var words=(m.content||'').split(/\s+/).filter(Boolean).length;
-        var d=m.updated_at?new Date(m.updated_at).toLocaleDateString('de-CH'):'';
-        h+='<div class="rq-li" style="cursor:default"><i class="ti ti-file-text" aria-hidden="true"></i><div><b>'+esc((typeof REF_LABELS!=='undefined'&&REF_LABELS[m.memory_type])||m.memory_type)+'</b><small>'+words+' Wörter'+(d?' · '+d:'')+'</small></div><span></span></div>';
+    var cid=_wsClientId,c=(typeof clients!=='undefined'?clients:[]).filter(function(x){return String(x.id)===String(cid);})[0]||{};
+    var rows=null,err='';
+    try{rows=await rqJ('/api/files?client_id='+cid);if(!Array.isArray(rows))rows=[];}catch(e){err=e.message;}
+    if(String(_wsClientId)!==String(cid))return;
+    var h='<div class="rq-hint" style="margin-bottom:14px">Alles zu '+esc(c.name||'diesem Kunden')+' an einem Ort. Die Ordner entstehen beim Anlegen des Kunden.</div>';
+    if(err)h+='<div class="rq-err" style="margin-bottom:12px">Die Ablage konnte nicht geladen werden. '+esc(err)+'</div>';
+    else{
+      FOLD.forEach(function(f){
+        var list=rows.filter(function(x){return x.folder===f[0];});
+        h+='<div style="margin-bottom:22px"><div class="rq-qa-h" style="margin-top:4px">'+f[1]+' · '+list.length+'</div>';
+        if(!list.length)h+='<div class="rq-empty">'+f[3]+'. Noch nichts abgelegt.</div>';
+        list.forEach(function(x){
+          h+='<div class="rq-li" style="cursor:default" data-fid="'+x.id+'"><i class="ti '+f[2]+'" aria-hidden="true"></i><div><b>'+esc(x.name)+'</b><small>'+ftype(x.name)+(x.size?' · '+rqSize(x.size):'')+(x.created_at?' · '+rqDate(x.created_at):'')+'</small></div><span class="rq-acts" style="flex-wrap:nowrap"><button type="button" class="rq-btn ghost sm" data-fa="dl">Herunterladen</button><button type="button" class="rq-btn danger sm" data-fa="del" aria-label="Löschen">Löschen</button></span></div>';
+        });
+        h+='</div>';
       });
-      h+='<div style="margin-top:16px"><button class="obtn" id="ws-store-open">Dokumente verwalten und hochladen</button></div>';
-      body.innerHTML=h;
-      var ob=document.getElementById('ws-store-open');
-      if(ob)ob.onclick=function(){closeModal('ws-ov');var sel=document.getElementById('client-select');if(sel){sel.value=String(cid);}switchClient(String(cid));goPage('memory');if(window.rqMarkRail)rqMarkRail('memory');};
-    }catch(e){body.innerHTML='<div class="rq-empty">Die Ablage konnte nicht geladen werden.</div>';}
+    }
+    h+='<div class="rq-card" style="margin-bottom:22px"><span class="rq-eb">Unterlage hochladen</span><div class="rq-acts"><select id="ws-up-folder" class="rq-in" style="width:auto;min-width:180px">'+FOLD.map(function(f){return '<option value="'+f[0]+'"'+(f[0]==='unterlagen'?' selected':'')+'>'+f[1]+'</option>';}).join('')+'</select><label class="rq-btn" style="cursor:pointer">Datei wählen<input type="file" id="ws-up-file" multiple style="display:none"></label><button type="button" class="rq-btn ghost" id="ws-zip">Alles als ZIP laden</button></div><div id="ws-up-msg" class="rq-hint"></div></div>';
+    h+='<details><summary class="rq-hint" style="cursor:pointer;min-height:40px;display:flex;align-items:center">Firmengedächtnis: Referenzdokumente verwalten</summary><div id="ws-mem" style="margin-top:8px"></div></details>';
+    body.innerHTML=h;
+    var msg=document.getElementById('ws-up-msg');
+    body.onclick=async function(e){
+      var b=e.target.closest&&e.target.closest('[data-fa]');if(!b)return;var row=b.closest('[data-fid]'),id=row.getAttribute('data-fid'),nm=row.querySelector('b').textContent;
+      if(b.getAttribute('data-fa')==='dl'){try{await rqDl('/api/files/'+id+'/download',nm);}catch(er){rqToast(er.message);}}
+      else if(confirm('«'+nm+'» wirklich löschen?')){try{await rqJ('/api/files/'+id,{method:'DELETE'});renderStore(body);}catch(er){rqToast('Löschen nicht möglich. '+er.message);}}
+    };
+    document.getElementById('ws-zip').onclick=async function(){msg.className='rq-hint';msg.textContent='Das ZIP wird vorbereitet …';try{await rqDl('/api/files/zip?client_id='+cid,(c.name||'Ablage')+'.zip');msg.textContent='';}catch(er){msg.className='rq-err';msg.textContent=er.message;}};
+    document.getElementById('ws-up-file').onchange=async function(){
+      var fl=Array.prototype.slice.call(this.files),folder=document.getElementById('ws-up-folder').value;this.value='';
+      for(var i=0;i<fl.length;i++){msg.className='rq-hint';msg.textContent='Lädt hoch: '+fl[i].name+' ('+(i+1)+' von '+fl.length+')';
+        try{await rqUp(fl[i],{client_id:cid,folder:folder});}catch(er){msg.className='rq-err';msg.textContent='Hochladen nicht möglich: '+er.message;return;}}
+      renderStore(body);
+    };
+    // Firmengedächtnis (bisherige Ansicht, bleibt erhalten)
+    try{
+      var r=await api('/api/memory/'+cid);var mem=await r.json(),host=document.getElementById('ws-mem');
+      if(host&&r.ok&&Array.isArray(mem)){
+        host.innerHTML=(mem.length?'':'<div class="rq-empty">Noch keine Dokumente abgelegt.</div>')+mem.map(function(m){var words=(m.content||'').split(/\s+/).filter(Boolean).length;return '<div class="rq-li" style="cursor:default"><i class="ti ti-file-text"></i><div><b>'+esc((typeof REF_LABELS!=='undefined'&&REF_LABELS[m.memory_type])||m.memory_type)+'</b><small>'+words+' Wörter'+(m.updated_at?' · '+rqDate(m.updated_at):'')+'</small></div><span></span></div>';}).join('')+'<div style="margin-top:12px"><button class="rq-btn ghost sm" id="ws-store-open">Dokumente verwalten und hochladen</button></div>';
+        var ob=document.getElementById('ws-store-open');
+        if(ob)ob.onclick=function(){closeModal('ws-ov');var sel=document.getElementById('client-select');if(sel){sel.value=String(cid);}switchClient(String(cid));goPage('memory');if(window.rqMarkRail)rqMarkRail('memory');};
+      }
+    }catch(e){}
   }
   var _ws=window.wsSwitchTab;
   window.wsSwitchTab=function(tab){
@@ -8639,6 +8667,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
   function normRecs(v){
     if(!v)return null;if(typeof v==='string'){try{v=JSON.parse(v);}catch(e){return null;}}
     if(v.vorschlaege)v=v.vorschlaege;else if(v.recommendations)v=v.recommendations;else if(v.empfehlungen)v=v.empfehlungen;
+    if(v&&!Array.isArray(v)&&Array.isArray(v.module))v=v.module.map(function(p){return Array.isArray(p)?{module:p[0],grund:p[1]}:p;});
     if(!Array.isArray(v)){v=Object.keys(v||{}).map(function(k){return {module:k,grund:v[k]};});}
     var out=[];v.forEach(function(x){
       var raw=typeof x==='string'?x:(x.module||x.key||x.name||x.modul),k=rqModKey(raw);
@@ -8658,7 +8687,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
     if(d.vorschlaege!==undefined){var r=normRecs(d.vorschlaege);x.vorschlaege=r&&r.length?r:null;}
     x.sektor=RQ_SECTORS[x.sektor]?x.sektor:'kmu';x.anrede=x.anrede==='du'?'du':'sie';
   }
-  function body(){var d=W.d;return {firma:d.firma,kontakt:d.kontakt,email:d.email,webseite:d.webseite,sektor:d.sektor,anrede:d.anrede,titel:d.titel,workshop_datum:d.workshop_datum,schritt:d.schritt,module:d.module,status:d.status};}
+  function body(){var d=W.d;return {firma:d.firma,kontakt:d.kontakt,email:d.email,webseite:d.webseite,sektor:d.sektor,anrede:d.anrede,titel:d.titel,workshop_datum:d.workshop_datum,schritt:d.schritt,module:d.module.map(rqModName),status:d.status};}
   function val(id){var el=document.getElementById(id);return el?el.value.trim():null;}
   function collect(){
     var m={firma:'rqw-firma',kontakt:'rqw-kontakt',email:'rqw-email',webseite:'rqw-web',workshop_datum:'rqw-datum'};
@@ -9034,7 +9063,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
     if(a==='send'){if(ta)ta.value=s.text;s.busy=true;paint(id);try{await saveReview(id,true);}finally{s.busy=false;}return;}
     if(a==='draft'){
       s.busy=true;s.note='';paint(id);
-      try{await rqJ('/api/reviews/'+id+'/save-draft',{method:'POST',body:JSON.stringify({editedText:s.text})});s.note='Entwurf gesichert. Du findest ihn unter Ablage, Entwürfe.';s.noteErr=false;}
+      try{await rqJ('/api/reviews/'+id+'/save-draft',{method:'POST',body:JSON.stringify({text:s.text,moduleLabel:(ctx(id)||{}).module_label})});s.note='Entwurf gesichert. Du findest ihn unter Ablage, Entwürfe.';s.noteErr=false;}
       catch(er){s.note='Sichern hat nicht geklappt. '+er.message;s.noteErr=true;}
       s.busy=false;paint(id);
     }
