@@ -63,7 +63,7 @@ async function setupBase() {
     password_hash TEXT, must_change_password BOOLEAN DEFAULT FALSE, token_version INTEGER NOT NULL DEFAULT 1,
     enabled_modules TEXT[], privacy_acknowledged_at TIMESTAMPTZ)`);
   await pool.query(`CREATE TABLE client_users (id SERIAL PRIMARY KEY, client_id INTEGER, token_version INTEGER NOT NULL DEFAULT 1)`);
-  await pool.query(`CREATE TABLE analyses (id SERIAL PRIMARY KEY, client_id INTEGER, advisor_id INTEGER, module TEXT NOT NULL, module_label TEXT, input_data JSONB, result TEXT, created_at TIMESTAMPTZ DEFAULT NOW())`);
+  await pool.query(`CREATE TABLE analyses (id SERIAL PRIMARY KEY, client_id INTEGER, advisor_id INTEGER, module TEXT NOT NULL, module_label TEXT, input_data JSONB, result TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), user_rating SMALLINT, feedback_note TEXT)`);
   await pool.query(`CREATE TABLE review_requests (
     id SERIAL PRIMARY KEY, client_id INTEGER, module_label TEXT, original_text TEXT NOT NULL, edited_text TEXT, client_note TEXT,
     status TEXT NOT NULL DEFAULT 'pending', created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW(),

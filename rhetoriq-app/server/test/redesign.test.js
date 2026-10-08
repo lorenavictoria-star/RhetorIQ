@@ -247,3 +247,44 @@ test('S5 Senden an Klienten legt Kopie in gesendet ab, Altverhalten bleibt', asy
   assert.equal(f.rows[0].data.toString(), 'Finaler Text');
   assert.ok(H.mails.some(m => m.kind === 'review-response'));
 });
+
+// ── S6 Auftrag an Beraterin ────────────────────────────────
+test('S6 Review-Anfrage: Altverhalten ohne neue Felder, Standardfrist 3 Stunden', async () => {
+  const cl = await H.addClient('Auftrag AG');
+  H.mails.length = 0;
+  const before = Date.now();
+  const r = await srv.call('POST', '/api/reviews', { token: H.clientToken(cl.id), body: { clientId: cl.id, moduleLabel: 'E-Mail', originalText: 'Hallo Welt', note: 'Bitte kürzen' } });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.original_text, 'Hallo Welt');
+  assert.equal(r.body.instruction, null);
+  const due = new Date(r.body.due_at).getTime();
+  assert.ok(Math.abs(due - (before + 3 * 3600 * 1000)) < 60 * 1000);
+  await new Promise(x => setTimeout(x, 100));
+  const mail = H.mails.find(m => m.kind === 'review-request');
+  assert.ok(mail);
+  assert.ok(!mail.text.includes('Bis spätestens'));
+  assert.ok(mail.text.includes('Bitte kürzen'));
+});
+
+test('S6 Review-Anfrage mit Auftrag und Frist: gespeichert, in GET und in der Mail', async () => {
+  const cl = await H.addClient('Auftrag2 AG');
+  H.mails.length = 0;
+  const dueIso = new Date(Date.now() + 26 * 3600 * 1000).toISOString();
+  const r = await srv.call('POST', '/api/reviews', { token: H.clientToken(cl.id), body: { clientId: cl.id, moduleLabel: 'Brief', originalText: 'Text', instruction: 'Bitte freundlicher im Ton', dueAt: dueIso } });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.instruction, 'Bitte freundlicher im Ton');
+  assert.equal(new Date(r.body.due_at).toISOString(), dueIso);
+  await new Promise(x => setTimeout(x, 100));
+  const mail = H.mails.find(m => m.kind === 'review-request' && m.text.includes('Auftrag'));
+  assert.match(mail.text, /Bitte freundlicher im Ton/);
+  assert.match(mail.text, /Bis spätestens: /);
+  const list = await srv.call('GET', '/api/reviews', { token: A() });
+  const row = list.body.find(x => x.id === r.body.id);
+  assert.equal(row.instruction, 'Bitte freundlicher im Ton');
+  assert.ok(row.due_at);
+  // ungültige Frist
+  assert.equal((await srv.call('POST', '/api/reviews', { token: H.clientToken(cl.id), body: { clientId: cl.id, originalText: 'T', dueAt: 'kein Datum' } })).status, 400);
+  assert.equal((await srv.call('POST', '/api/reviews', { token: H.clientToken(cl.id), body: { clientId: cl.id, originalText: 'T', dueAt: '2001-01-01T00:00:00Z' } })).status, 400);
+  assert.equal((await srv.call('POST', '/api/reviews', { body: { originalText: 'T' } })).status, 401);
+  assert.equal((await srv.call('POST', '/api/reviews', { token: H.clientToken(cl.id), body: { clientId: cl.id } })).status, 400);
+});

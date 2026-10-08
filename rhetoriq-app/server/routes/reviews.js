@@ -6,7 +6,7 @@ const { queueEmail } = require('../lib/emailOutbox');
 const { requireAdvisor } = require('../middleware/auth');
 const { ensureSchema } = require('../lib/schemaRedesign');
 const { saveFile } = require('../lib/fileStore');
-const { entwurfName } = require('../lib/onboardingMails');
+const { entwurfName, auftragBlock } = require('../lib/onboardingMails');
 
 const heute = () => new Date().toLocaleDateString('de-CH', { timeZone: 'Europe/Zurich', day: '2-digit', month: '2-digit', year: 'numeric' });
 
@@ -61,6 +61,16 @@ function auth(req, res, next) {
 router.post('/', auth, async (req, res) => {
   const { clientId, moduleLabel, originalText, note, moduleKey, moduleTile, reviewContext, revisionHistory } = req.body;
   if (!originalText) return res.status(400).json({ error: 'No text provided' });
+  // Optional: freier Auftrag des Klienten und "Bis spätestens" (ISO). Ohne Frist gilt created_at + 3 Stunden.
+  const instruction = typeof req.body.instruction === 'string' ? req.body.instruction.trim().slice(0, 4000) : '';
+  let dueGiven = null;
+  if (req.body.dueAt) {
+    const d = new Date(req.body.dueAt);
+    if (isNaN(d.getTime())) return res.status(400).json({ error: 'Ungültige Frist (dueAt).' });
+    if (d.getTime() < Date.now() - 60 * 1000) return res.status(400).json({ error: 'Die Frist liegt in der Vergangenheit.' });
+    dueGiven = d;
+  }
+  const dueAt = dueGiven || new Date(Date.now() + 3 * 60 * 60 * 1000);
   // Self-revision rounds (via the follow-up box) the client already did on
   // this exact text before sending it on — stored inside review_context so
   // openReviewInModule() and the notification email both have it.
@@ -68,11 +78,18 @@ router.post('/', auth, async (req, res) => {
     ? { ...reviewContext, revisionHistory: Array.isArray(revisionHistory) ? revisionHistory : [] }
     : (Array.isArray(revisionHistory) && revisionHistory.length ? { revisionHistory } : null);
   try {
-    const { rows } = await pool.query(
-      `INSERT INTO review_requests (client_id, module_label, original_text, client_note, module_key, module_tile, review_context)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [clientId || null, moduleLabel || null, originalText, note || null, moduleKey || null, moduleTile || null, contextWithHistory ? JSON.stringify(contextWithHistory) : null]
-    );
+    const baseParams = [clientId || null, moduleLabel || null, originalText, note || null, moduleKey || null, moduleTile || null, contextWithHistory ? JSON.stringify(contextWithHistory) : null];
+    // Neue Spalten (instruction, due_at) nur nutzen, wenn das Schema bereitsteht; sonst wie bisher.
+    const schemaOk = await ensureSchema().then(() => true, e => { console.error('[reviews] schema ensure failed:', e.message); return false; });
+    const { rows } = schemaOk
+      ? await pool.query(
+          `INSERT INTO review_requests (client_id, module_label, original_text, client_note, module_key, module_tile, review_context, instruction, due_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+          [...baseParams, instruction || null, dueAt])
+      : await pool.query(
+          `INSERT INTO review_requests (client_id, module_label, original_text, client_note, module_key, module_tile, review_context)
+           VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+          baseParams);
     req.app.locals.wss.broadcast({ type: 'review_new', id: rows[0].id });
     res.json(rows[0]);
 
@@ -121,7 +138,7 @@ router.post('/', auth, async (req, res) => {
         kind: 'review-request',
         to: ADVISOR_NOTIFY_EMAIL,
         subject: `RhetorIQ — Neue Freigabe-Anfrage: ${clientName}${moduleLabel ? ' (' + moduleLabel + ')' : ''}`,
-        text: `Ein Klient hat einen Text zur Prüfung eingereicht.\n\nKlient: ${clientName}\nModul: ${moduleLabel || 'Nicht angegeben'}\n${note ? '\nFeedback / Auftrag des Klienten:\n' + note + '\n' : ''}\n--- Textauszug ---\n${preview}${revisionBlock}${historyBlock}\n\nJetzt bearbeiten: https://rhetoriq.ch/?review=${rows[0].id}\n`,
+        text: `Ein Klient hat einen Text zur Prüfung eingereicht.\n\nKlient: ${clientName}\nModul: ${moduleLabel || 'Nicht angegeben'}\n${note ? '\nFeedback / Auftrag des Klienten:\n' + note + '\n' : ''}${(instruction || dueGiven) ? auftragBlock({ instruction, dueAt }) : ''}\n--- Textauszug ---\n${preview}${revisionBlock}${historyBlock}\n\nJetzt bearbeiten: https://rhetoriq.ch/?review=${rows[0].id}\n`,
         senderName: 'RhetorIQ'
       });
     })().catch(e => console.error('[reviews] advisor notification email failed:', e.message));
@@ -135,6 +152,7 @@ router.post('/', auth, async (req, res) => {
 // (both untouched 'pending' ones and drafts saved but not yet sent — 'edited')
 router.get('/', auth, async (req, res) => {
   try {
+    await ensureSchema().catch(e => console.error('[reviews] schema ensure failed:', e.message)); // liefert instruction/due_at mit
     const { rows } = await pool.query(
       `SELECT * FROM review_requests WHERE status IN ('pending', 'edited') ORDER BY created_at DESC`
     );
