@@ -93,6 +93,7 @@ router.post('/:clientId/:type/rollback/:historyId', requireAuth, async (req, res
 router.put('/:clientId/:type', requireAuth, async (req, res) => {
   try {
     if (!await checkOwnership(req, res, req.params.clientId)) return;
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(req.params.type)) return res.status(400).json({ error: 'Ungültiger Gedächtnis-Typ.' });
     const { content } = req.body;
 
     // Task 10: archive existing value before overwriting

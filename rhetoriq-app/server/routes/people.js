@@ -1,13 +1,15 @@
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { allowedClientId, ownPerson } = require('../middleware/ownership');
 
 const router = express.Router();
 
 // GET /api/people?clientId=X
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const clientId = req.query.clientId || (req.user.role === 'client' ? req.user.clientId : null);
+    // Klienten sehen nur ihre eigenen Personen, egal was in der Anfrage steht
+    const clientId = await allowedClientId(req, req.query.clientId);
     if (!clientId) return res.json([]);
     const { rows } = await pool.query(
       `SELECT p.*,
@@ -29,8 +31,10 @@ router.get('/', requireAuth, async (req, res) => {
 // POST /api/people
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const { clientId, name, role, department, notes } = req.body;
+    const { name, role, department, notes } = req.body;
     if (!name) return res.status(400).json({ error: 'Name required' });
+    const clientId = await allowedClientId(req, req.body.clientId);
+    if (!clientId) return res.status(403).json({ error: 'Kein Zugriff auf diesen Klienten.' });
     const { rows } = await pool.query(
       `INSERT INTO people (client_id, name, role, department, notes)
        VALUES ($1,$2,$3,$4,$5) RETURNING *`,
@@ -44,7 +48,7 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // PUT /api/people/:id
-router.put('/:id', requireAuth, async (req, res) => {
+router.put('/:id', requireAuth, ownPerson('id'), async (req, res) => {
   try {
     const { name, role, department, notes } = req.body;
     const { rows } = await pool.query(
@@ -60,7 +64,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 });
 
 // DELETE /api/people/:id
-router.delete('/:id', requireAuth, async (req, res) => {
+router.delete('/:id', requireAuth, ownPerson('id'), async (req, res) => {
   try {
     await pool.query('DELETE FROM people WHERE id=$1', [req.params.id]);
     res.json({ ok: true });
@@ -71,7 +75,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
 });
 
 // POST /api/people/:id/profile — save/update a profile for a person
-router.post('/:id/profile', requireAuth, async (req, res) => {
+router.post('/:id/profile', requireAuth, ownPerson('id'), async (req, res) => {
   try {
     const { profile_type, content } = req.body;
     const { rows } = await pool.query(
@@ -90,7 +94,7 @@ router.post('/:id/profile', requireAuth, async (req, res) => {
 });
 
 // DELETE /api/people/:id/profile/:type
-router.delete('/:id/profile/:type', requireAuth, async (req, res) => {
+router.delete('/:id/profile/:type', requireAuth, ownPerson('id'), async (req, res) => {
   try {
     await pool.query(
       'DELETE FROM people_profiles WHERE person_id=$1 AND profile_type=$2',

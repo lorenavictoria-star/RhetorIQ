@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { canAccessClient, allowedClientId } = require('../middleware/ownership');
 
 const router = express.Router();
 
@@ -90,8 +91,8 @@ Rules:
 
 // GET /api/custom-modules?clientId=X
 router.get('/', requireAuth, async (req, res) => {
-  const { clientId } = req.query;
-  if (!clientId) return res.status(400).json({ error: 'clientId required' });
+  const clientId = await allowedClientId(req, req.query.clientId);
+  if (!clientId) return res.status(req.query.clientId ? 403 : 400).json({ error: req.query.clientId ? 'Kein Zugriff auf diesen Klienten.' : 'clientId required' });
   try {
     const { rows } = await pool.query(
       'SELECT * FROM custom_modules WHERE client_id=$1 ORDER BY created_at',
@@ -109,6 +110,7 @@ router.post('/', requireAuth, async (req, res) => {
   if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Advisor only' });
   const { client_id, name, description, system_prompt, input_fields, icon } = req.body;
   if (!client_id || !name || !system_prompt) return res.status(400).json({ error: 'client_id, name, system_prompt required' });
+  if (!(await canAccessClient(req, client_id))) return res.status(403).json({ error: 'Kein Zugriff auf diesen Klienten.' });
   try {
     const { rows } = await pool.query(
       `INSERT INTO custom_modules (client_id, advisor_id, name, description, system_prompt, input_fields, icon)
@@ -154,11 +156,14 @@ router.delete('/:id', requireAuth, async (req, res) => {
 
 // POST /api/custom-modules/:id/run — run a custom module
 router.post('/:id/run', requireAuth, async (req, res) => {
-  const { inputs, clientId } = req.body;
+  const { inputs } = req.body;
   try {
     const { rows } = await pool.query('SELECT * FROM custom_modules WHERE id=$1', [req.params.id]);
     if (!rows.length) return res.status(404).json({ error: 'Module not found' });
     const mod = rows[0];
+    // Ein Modul läuft nur im Arbeitsbereich, dem es gehört
+    if (!(await canAccessClient(req, mod.client_id))) return res.status(403).json({ error: 'Kein Zugriff auf dieses Modul.' });
+    const clientId = mod.client_id;
 
     // Build user message by substituting {field_id} placeholders
     let userMsg = '';

@@ -3,6 +3,7 @@ const multer = require('multer');
 const https = require('https');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { allowedClientId } = require('../middleware/ownership');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 200 * 1024 * 1024 } });
 const router = express.Router();
@@ -82,8 +83,8 @@ async function appendToMemory(clientId, advisorId, type, content) {
 
 // POST /api/onboard — accepts multipart files + clientId
 router.post('/', requireAuth, upload.array('files', 30), async (req, res) => {
-  const { clientId } = req.body;
-  if (!clientId) return res.status(400).json({ error: 'clientId required' });
+  const clientId = await allowedClientId(req, req.body.clientId);
+  if (!clientId) return res.status(req.body.clientId ? 403 : 400).json({ error: req.body.clientId ? 'Kein Zugriff auf diesen Klienten.' : 'clientId required' });
   const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
 
   const brandVoiceSources = [];

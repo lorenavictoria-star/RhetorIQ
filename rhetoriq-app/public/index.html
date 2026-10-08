@@ -2960,7 +2960,9 @@ async function api(path,o={}){
 // XSS-safe innerHTML helper — sanitizes all user/AI content before DOM injection
 function safe(html){ return typeof DOMPurify!=='undefined'?DOMPurify.sanitize(html??'',{ALLOWED_TAGS:['b','i','em','strong','br','span','div','p','ul','ol','li','a','pre','code'],ALLOWED_ATTR:['style','class','href','target']}):String(html??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 // For plain text slots (no HTML needed at all)
-function safeText(str){ return String(str??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function safeText(str){ return String(str??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+// Text sicher als Argument in einem onclick-Attribut einsetzen (keine Anführungszeichen, keine Klammern möglich)
+function jsArg(str){ return "decodeURIComponent('"+encodeURIComponent(String(str??'')).replace(/'/g,'%27')+"')"; }
 
 // AUTH
 async function registerAdvisor(){
@@ -4183,12 +4185,12 @@ function renderPeople(){
         <div class="pcard-info"><div class="pname">${safeText(p.name||'')}</div><div class="prole">${safeText(p.role||'')}${p.department?' &mdash; '+safeText(p.department):''}</div></div>
         <div class="pcard-actions">
           <button class="obtn" onclick="openEditPerson(${p.id})">Edit</button>
-          <button class="dbtn2" onclick="deletePerson(${p.id},'${p.name}')">Remove</button>
+          <button class="dbtn2" onclick="deletePerson(${p.id},${jsArg(p.name)})">Remove</button>
         </div>
       </div>
       ${p.notes?`<div style="font-size:12px;color:var(--mu);margin-top:8px;font-style:italic">${safeText(p.notes)}</div>`:''}
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-        <button class="obtn" style="font-size:12px" onclick="openPersonVoiceGenerate(${p.id},'${p.name.replace(/'/g,"\\'")}','${p.role||''}')">&#9670; Generate Voice DNA</button>
+        <button class="obtn" style="font-size:12px" onclick="openPersonVoiceGenerate(${p.id},${jsArg(p.name)},${jsArg(p.role||'')})">&#9670; Generate Voice DNA</button>
         <button class="obtn" style="font-size:12px" onclick="openPersonVoiceImport(${p.id},'${p.name.replace(/'/g,"\\'")}')">&#8593; Import Voice DNA</button>
         ${hasVoice?`<button class="obtn" style="font-size:12px" onclick="viewPersonProfile(${p.id},'voice','Voice DNA')">View Voice DNA</button>`:''}
       </div>
@@ -4305,7 +4307,7 @@ function updateMemBanner(){
   sub.textContent=memory.length+' memory item'+(memory.length!==1?'s':'')+' saved';
   const chips=document.getElementById('mem-chips');
   const LABELS={brand_voice:'Brand Voice DNA',rhetoric_summary:'Rhetoric Summary',key_facts:'Key Facts',culture_notes:'Culture Notes'};
-  chips.innerHTML=memory.map(m=>`<span class="mem-chip done">${LABELS[m.memory_type]||m.memory_type}</span>`).join('');
+  chips.innerHTML=memory.map(m=>`<span class="mem-chip done">${safeText(LABELS[m.memory_type]||m.memory_type)}</span>`).join('');
 }
 function toggleMemBanner(){
   const body=document.getElementById('mem-body');const btn=document.getElementById('mem-toggle-btn');
@@ -4426,20 +4428,20 @@ function renderMemory(){
   const LABELS={brand_voice:'Brand Voice DNA',rhetoric_summary:'Rhetoric Summary',key_facts:'Key Facts',culture_notes:'Culture Notes',ref_tg_linkedin:'Reference — LinkedIn',ref_tg_email:'Reference — Email',ref_tg_speech:'Reference — Speech',ref_tg_newsletter:'Reference — Newsletter',ref_tg_press:'Reference — Press',ref_tg_website:'Reference — Website',ref_brand_voice_source:'Brand Voice Sources'};
   list.innerHTML=memory.map((m,i)=>{
     const d=new Date(m.updated_at).toLocaleDateString(DLOC());
-    const label=LABELS[m.memory_type]||m.memory_type;
+    const label=safeText(LABELS[m.memory_type]||m.memory_type);
     return `<div class="mem-page-section" id="mem-sec-${i}">
       <div class="mem-page-hd">
         <span class="mem-page-type">${label}</span>
         <div class="mem-actions">
           <span class="mem-page-date">Updated ${d}</span>
           <button class="obtn" style="margin-left:8px" onclick="memEdit(${i})">Edit</button>
-          <button class="obtn" style="margin-left:4px;border-color:var(--red);color:var(--red)" onclick="deleteMemory('${m.memory_type}')">Delete</button>
+          <button class="obtn" style="margin-left:4px;border-color:var(--red);color:var(--red)" onclick="deleteMemory(${jsArg(m.memory_type)})">Delete</button>
         </div>
       </div>
       <div class="mem-page-body" id="mem-body-${i}" onclick="memEdit(${i})" style="cursor:text;white-space:pre-wrap">${safeText(m.content)}</div>
       <textarea id="mem-ta-${i}" style="display:none;width:100%;min-height:200px;padding:12px;border:1.5px solid var(--ac);border-radius:4px;font-size:13px;line-height:1.7;resize:vertical;outline:none"></textarea>
       <div id="mem-btns-${i}" style="display:none;margin-top:8px;display:none;gap:8px">
-        <button class="runbtn" onclick="memSave(${i},'${m.memory_type}')">Save</button>
+        <button class="runbtn" onclick="memSave(${i},${jsArg(m.memory_type)})">Save</button>
         <button class="obtn" onclick="memCancel(${i})">Cancel</button>
       </div>
     </div>`;
@@ -7126,10 +7128,10 @@ async function loadAdvisorReviews(){
       <div class="rev-card" id="rvc-${rv.id}">
         <div class="rev-card-meta">${safeText(clientName)} — ${safeText(rv.module_label||'Result')} &mdash; ${new Date(rv.created_at).toLocaleDateString(DLOC())} <span style="font-weight:600;color:${ageColor}">&middot; vor ${ageLabel}${ageH>3?' — SLA überschritten':''}</span></div>
         ${rv.client_note?`<div style="font-size:12px;color:var(--tx);background:var(--sf);border-left:3px solid var(--ac,#1a3d2e);padding:6px 10px;margin-bottom:8px;border-radius:0 6px 6px 0">💬 ${safeText(rv.client_note)}</div>`:''}
-        <div class="rev-card-orig">${rv.original_text}</div>
+        <div class="rev-card-orig">${safeText(rv.original_text)}</div>
         ${canOpenInModule?`<button class="rev-savebtn" style="width:100%;margin-bottom:8px" onclick="openReviewInModule(${rv.id})">Im Modul bearbeiten →</button>`:''}
         <details${canOpenInModule?'':' open'}><summary style="font-size:11px;color:var(--mu);cursor:pointer;margin-bottom:6px">${canOpenInModule?'Alternativ: direkt hier bearbeiten':'Bearbeiten'}</summary>
-        <textarea class="rev-card-edit" id="rev-edit-${rv.id}">${rv.edited_text||rv.original_text}</textarea>
+        <textarea class="rev-card-edit" id="rev-edit-${rv.id}">${safeText(rv.edited_text||rv.original_text)}</textarea>
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
           <button class="obtn" style="color:var(--red);border-color:var(--red)" onclick="deleteReview(${rv.id})">${T[LANG]?.review_delete||'Löschen'}</button>
           <button class="obtn" onclick="saveReview(${rv.id},false)">${T[LANG]?.review_save_only||'Nur speichern'}</button>
@@ -7885,8 +7887,8 @@ async function openAuditModal(cid,cname){
         <tbody>${rows.map((a,i)=>`<tr style="${i%2?'background:var(--sf)':''}">
           <td style="padding:8px 12px;color:var(--mu);white-space:nowrap">${new Date(a.created_at).toLocaleString(DLOC(),{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</td>
           <td style="padding:8px 12px"><span style="color:${modColor(a.module)};font-weight:600">${safeText(a.module_label||a.module)}</span></td>
-          <td style="padding:8px 12px;color:var(--tx)">${a.generated_by||'Klient'}</td>
-          <td style="padding:8px 12px;color:var(--mu);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(a.result_preview||'').substring(0,120)}</td>
+          <td style="padding:8px 12px;color:var(--tx)">${safeText(a.generated_by||'Klient')}</td>
+          <td style="padding:8px 12px;color:var(--mu);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${safeText((a.result_preview||'').substring(0,120))}</td>
         </tr>`).join('')}</tbody>
       </table>`;
   }catch(e){document.getElementById('audit-table-wrap').innerHTML=`<div style="padding:16px;color:#c0392b;font-size:13px">${e.message}</div>`;}

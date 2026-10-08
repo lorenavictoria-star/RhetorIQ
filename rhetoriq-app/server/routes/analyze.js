@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { canAccessClient } = require('../middleware/ownership');
 const { brevoSend } = require('../lib/brevo');
 const { generateText, streamText, resolveModelId } = require('../lib/aiProvider');
 
@@ -1672,7 +1673,13 @@ router.post('/', requireAuth, async (req, res) => {
     // (LinkedIn, Newsletter, etc.) save instructions under a tile-specific key
     // ("text-gen-linkedin") via the gear icon, distinct from the generic
     // module key ("text-gen") used for module-wide feedback — fetch both.
-    const resolvedClientId = clientId || (req.user.role === 'client' ? req.user.clientId : null);
+    // Klienten arbeiten immer mit ihrem eigenen Arbeitsbereich, egal was in der Anfrage steht. Die Beraterin nur mit ihren Klienten.
+    let resolvedClientId = null;
+    if (req.user.role === 'client') resolvedClientId = req.user.clientId;
+    else if (clientId) {
+      if (!(await canAccessClient(req, clientId))) return res.status(403).json({ error: 'Kein Zugriff auf diesen Klienten.' });
+      resolvedClientId = clientId;
+    }
     let quotaWarning = null;
     if (resolvedClientId) {
       const quota = await checkQuota(resolvedClientId);
@@ -1892,7 +1899,13 @@ router.post('/stream', requireAuth, async (req, res) => {
     const userMsg = (followUp && followUp.note)
       ? buildFollowUpPrompt(cfg.build(data), sanitizeForPrompt(followUp.previousResult || ''), sanitizeForPrompt(followUp.note))
       : cfg.build(data);
-    const resolvedClientId = clientId || (req.user.role === 'client' ? req.user.clientId : null);
+    // Klienten arbeiten immer mit ihrem eigenen Arbeitsbereich, egal was in der Anfrage steht. Die Beraterin nur mit ihren Klienten.
+    let resolvedClientId = null;
+    if (req.user.role === 'client') resolvedClientId = req.user.clientId;
+    else if (clientId) {
+      if (!(await canAccessClient(req, clientId))) return res.status(403).json({ error: 'Kein Zugriff auf diesen Klienten.' });
+      resolvedClientId = clientId;
+    }
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
 
     let quotaWarning = null;
@@ -2171,8 +2184,10 @@ router.delete('/unassigned', requireAuth, async (req, res) => {
 
 // DELETE /api/analyze/client/:clientId — delete all analyses for a client (must be before /:id)
 router.delete('/client/:clientId', requireAuth, async (req, res) => {
+  if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Advisor only' });
   try {
-    const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+    if (!(await canAccessClient(req, req.params.clientId))) return res.status(403).json({ error: 'Kein Zugriff auf diesen Klienten.' });
+    const advisorId = req.user.id;
     const { rowCount } = await pool.query(
       'DELETE FROM analyses WHERE client_id = $1 AND advisor_id = $2',
       [req.params.clientId, advisorId]
@@ -2187,8 +2202,14 @@ router.delete('/client/:clientId', requireAuth, async (req, res) => {
 // DELETE /api/analyze/:id — delete single analysis
 router.delete('/:id', requireAuth, async (req, res) => {
   try {
-    const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
-    await pool.query('DELETE FROM analyses WHERE id = $1 AND advisor_id = $2', [req.params.id, advisorId]);
+    if (req.user.role === 'advisor') {
+      await pool.query('DELETE FROM analyses WHERE id = $1 AND advisor_id = $2', [req.params.id, req.user.id]);
+    } else if (req.user.role === 'client' && req.user.clientUserRole === 'admin' && !req.user.readOnly) {
+      // Klienten-Admin darf nur Texte des eigenen Klienten löschen
+      await pool.query('DELETE FROM analyses WHERE id = $1 AND client_id = $2', [req.params.id, req.user.clientId]);
+    } else {
+      return res.status(403).json({ error: 'Nicht erlaubt' });
+    }
     res.json({ ok: true });
   } catch (e) {
     console.error(e);
@@ -2199,8 +2220,18 @@ router.delete('/:id', requireAuth, async (req, res) => {
 // GET /api/analyze/health-score — generate communication health score from history
 router.get('/health-score', requireAuth, async (req, res) => {
   try {
-    const clientId = req.query.clientId || null;
-    const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+    // Klienten sehen nur die eigene Auswertung, die Beraterin nur die ihrer Klienten
+    let clientId = null;
+    if (req.user.role === 'client') clientId = req.user.clientId;
+    else if (req.query.clientId) {
+      if (!(await canAccessClient(req, req.query.clientId))) return res.status(403).json({ error: 'Kein Zugriff auf diesen Klienten.' });
+      clientId = req.query.clientId;
+    }
+    let advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+    if (!advisorId && clientId) {
+      const { rows: cr } = await pool.query('SELECT advisor_id FROM clients WHERE id=$1', [clientId]);
+      advisorId = cr[0] && cr[0].advisor_id;
+    }
     let query, params, excerptQuery, excerptParams;
     if (clientId) {
       query = `SELECT module, module_label, created_at FROM analyses WHERE client_id=$1 AND advisor_id=$2 AND created_at > NOW() - INTERVAL '90 days' ORDER BY created_at DESC LIMIT 100`;

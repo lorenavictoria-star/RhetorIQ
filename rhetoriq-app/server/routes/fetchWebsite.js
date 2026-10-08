@@ -1,44 +1,19 @@
 const express = require('express');
 const { requireAuth } = require('../middleware/auth');
+const { safeFetchHtml, htmlToText } = require('../lib/safeFetch');
 const router = express.Router();
 
-// POST /api/fetch-website
+// POST /api/fetch-website (Schutz gegen Abrufe interner Adressen über lib/safeFetch)
 router.post('/', requireAuth, async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: 'URL required' });
-
   try {
-    const r = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RhetorIQ/1.0)' },
-      signal: AbortSignal.timeout(10000)
-    });
-    if (!r.ok) return res.status(400).json({ error: `Website returned ${r.status}` });
-
-    const html = await r.text();
-
-    // Strip HTML tags, scripts, styles — keep readable text
-    const text = html
-      .replace(/<script[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[\s\S]*?<\/style>/gi, '')
-      .replace(/<nav[\s\S]*?<\/nav>/gi, '')
-      .replace(/<footer[\s\S]*?<\/footer>/gi, '')
-      .replace(/<header[\s\S]*?<\/header>/gi, '')
-      .replace(/<!--[\s\S]*?-->/g, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/\s{2,}/g, ' ')
-      .trim()
-      .slice(0, 8000); // cap at 8000 chars
-
+    const page = await safeFetchHtml(url);
+    const text = htmlToText(page.html, 8000);
     res.json({ text, chars: text.length });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Could not fetch website' });
+    console.error('[fetch-website]', e.message);
+    res.status(400).json({ error: 'Webseite konnte nicht abgerufen werden.' });
   }
 });
 
