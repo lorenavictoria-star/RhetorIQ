@@ -3600,7 +3600,9 @@ async function boot(user,role){
     document.querySelectorAll('.ao-item').forEach(el=>{el.style.display=el.classList.contains('mni')||el.classList.contains('mm-tile')?'flex':'block';});
     const mmRev=document.getElementById('mm-reviews');if(mmRev)mmRev.style.display='flex';
     await loadAdvisorReviews();
-    setInterval(loadAdvisorReviews,60000);
+    // Neue Freigaben kommen sofort per WebSocket. Die Abfrage ist nur das Sicherheitsnetz: selten, und nicht bei verstecktem Tab.
+    setInterval(()=>{if(!document.hidden)loadAdvisorReviews();},300000);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadAdvisorReviews();});
     // Deep link from the advisor-notification email (?review=123) — jump
     // straight into that review's module instead of landing on Home.
     const reviewParam=new URLSearchParams(location.search).get('review');
@@ -3673,7 +3675,7 @@ function toggleDebugMode(){
 // STATS
 async function loadStats(){
   let analyses=0;
-  try{const r=await api('/api/analyze/history'+(clientId?'?clientId='+clientId:''));const d=await r.json();analyses=Array.isArray(d)?d.length:0;}catch{}
+  try{const r=await api('/api/analyze/count'+(clientId?'?clientId='+clientId:''));const d=await r.json();analyses=Number(d.count)||0;}catch{}
   const nc=clients.length,np=people.length;
   document.getElementById('stat-analyses').textContent=analyses;
   document.getElementById('stat-clients').textContent=nc;
@@ -4547,11 +4549,11 @@ async function buildMostUsed(){
   const MOD_PAGE={'rp':'profiling','cf':'fingerprint','la':'language','rm':'risk','st':'stress','si':'impact','crisis':'crisis','as':'actionability','tc':'thread','rh-translate':'rh-translate','text-gen':'text-gen','pr':'review','rw':'recognition','sparring':'sparring','debrief':'debrief','brand-voice-co':'brand-voice','brand-voice-ind':'brand-voice','pre-meeting':'pre-meeting'};
   let extra=[];
   try{
-    const r=await api('/api/analyze/history'+(clientId?'?clientId='+clientId:''));
+    const r=await api('/api/analyze/module-counts'+(clientId?'?clientId='+clientId:''));
     const rows=await r.json();
-    if(!Array.isArray(rows))throw new Error('no history');
+    if(!Array.isArray(rows))throw new Error('no counts');
     const counts={};
-    rows.forEach(h=>{if(h.module&&h.module!=='pre-meeting')counts[h.module]=(counts[h.module]||0)+1;});
+    rows.forEach(h=>{if(h.module&&h.module!=='pre-meeting')counts[h.module]=Number(h.n)||0;});
     extra=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([mod])=>({mod,page:MOD_PAGE[mod]||mod,label:MOD_LABELS[mod]||mod}));
   }catch{}
   pills.innerHTML=`<button class="mu-pill featured" onclick="goModule('pre-meeting')">Pre-Meeting Brief</button>`
@@ -6265,8 +6267,9 @@ async function loadHistory(){
   const c=clients.find(x=>x.id==clientId);
   if(sub)sub.textContent=c?`${c.name} — ${T[LANG]?.hist_sub||'Grouped by module.'}`:(T[LANG]?.hist_sub||'Grouped by module.');
   try{
-    const r=await api('/api/analyze/history'+(clientId?'?clientId='+clientId:''));
+    const r=await api('/api/analyze/history?preview=1'+(clientId?'&clientId='+clientId:''));
     _histRows=await r.json();
+    if(!Array.isArray(_histRows))_histRows=[];
     renderHistory();
   }catch{el.innerHTML='<div class="empty"><div class="ei">&#9888;</div><div>Could not load.</div></div>';}
 }
@@ -6318,12 +6321,28 @@ function renderHistory(){
     </details>`;
   }).join('');
 }
-function toggleHistItem(id){
-  const full=document.getElementById('hist-full-'+id);
-  if(full)full.style.display=full.style.display==='none'?'block':'none';
-}
-function cpHistText(id){
+// Der Verlauf lädt nur Vorschauen. Den ganzen Text holt die Plattform erst, wenn du einen Eintrag öffnest oder kopierst.
+async function histEnsureFull(id){
   const h=_histRows.find(x=>x.id===id);
+  if(!h||h._full||!h.result_length||h.result_length<=(h.result||'').length)return h;
+  const box=document.getElementById('hist-full-'+id);
+  if(box)box.textContent='Lade den ganzen Text …';
+  try{
+    const r=await api('/api/analyze/'+id);
+    const d=await r.json();
+    if(r.ok){h.result=d.result;h._full=true;if(box)box.textContent=d.result;}
+  }catch{}
+  return h;
+}
+async function toggleHistItem(id){
+  const full=document.getElementById('hist-full-'+id);
+  if(!full)return;
+  const open=full.style.display==='none';
+  full.style.display=open?'block':'none';
+  if(open)await histEnsureFull(id);
+}
+async function cpHistText(id){
+  const h=await histEnsureFull(id);
   if(h)navigator.clipboard.writeText(h.result||'').catch(()=>{});
 }
 async function deleteAnalysis(id){
@@ -6589,13 +6608,23 @@ function toggleToneCal(fid){
 // ── ADVISOR DASHBOARD ─────────────────────────────────────────
 
 // ── Anfragen aus dem Kontaktformular (Status "Anfrage" in Kunden) ──
+// Anfragen: mehrere Teile der Seite brauchen sie. Gemeinsam wird nur einmal alle 15 Sekunden abgeholt.
+let _inqCache=null;
+function getInquiriesShared(force){
+  const now=Date.now();
+  if(!force&&_inqCache&&now-_inqCache.t<15000)return _inqCache.p;
+  const p=api('/api/inquiries').then(async r=>({ok:r.ok,data:await r.json().catch(()=>null)}));
+  _inqCache={t:now,p};
+  p.catch(()=>{_inqCache=null;});
+  return p;
+}
 async function loadInquiries(){
   const box=document.getElementById('inq-box');
   if(!box)return;
   try{
-    const r=await api('/api/inquiries');
-    const rows=await r.json();
-    if(!r.ok||!Array.isArray(rows)||!rows.length){box.innerHTML='';return;}
+    const res=await getInquiriesShared();
+    const rows=res.data;
+    if(!res.ok||!Array.isArray(rows)||!rows.length){box.innerHTML='';return;}
     box.innerHTML='<div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin-bottom:8px">Neue Anfragen</div>'+rows.map(q=>{
       const done=q.status==='vorab_gesendet';
       const when=new Date(q.created_at).toLocaleString('de-CH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
@@ -6622,6 +6651,7 @@ async function sendVorab(id,btn){
   if(!datum)return alert('Bitte den Workshop-Termin eintragen.');
   btn.disabled=true;
   try{
+    _inqCache=null;
     const r=await api('/api/inquiries/'+id+'/vorab',{method:'POST',body:JSON.stringify({anrede:row.querySelector('.inq-anrede').value,titel:row.querySelector('.inq-titel').value,datum})});
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||'Fehler');
@@ -6631,6 +6661,7 @@ async function sendVorab(id,btn){
 async function deleteInquiry(id){
   if(!confirm('Anfrage endgültig löschen? Name, E-Mail-Adresse und Nachricht werden entfernt.'))return;
   try{
+    _inqCache=null;
     const r=await api('/api/inquiries/'+id,{method:'DELETE'});
     if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error||'Fehler');}
   }catch(e){return alert('Löschen nicht möglich: '+e.message);}
@@ -6647,12 +6678,13 @@ async function loadAdvisorDashboard(){
   el.innerHTML='<div class="empty"><div class="ei">&#8987;</div><div>Loading…</div></div>';
   loadInquiries();
   try{
-    const r=await api('/api/advisor/dashboard');
+    // Beide Abfragen gleichzeitig (statt nacheinander); die Kundenliste zeigt sich, sobald sie da sind.
+    const [r,rc]=await Promise.all([api('/api/advisor/dashboard'),api('/api/clients').catch(()=>null)]);
     const d=await r.json();
     if(!r.ok)throw new Error(d.error);
     const {stats,clients:dashClients,recent}=d;
     // sync global clients array + dropdowns
-    try{const rc=await api('/api/clients');clients=await rc.json();}catch{}
+    try{if(rc&&rc.ok)clients=await rc.json();}catch{}
     document.getElementById('stat-clients').textContent=clients.length;
     const sel=document.getElementById('client-select');
     if(sel)sel.innerHTML='<option value="">'+(T[LANG]?.select_client_ph||'Select client')+'</option>'+clients.map(c=>`<option value="${c.id}">${safeText(c.name)}</option>`).join('');
@@ -6661,11 +6693,8 @@ async function loadAdvisorDashboard(){
     const maxA=dashClients.reduce((m,c)=>Math.max(m,parseInt(c.total_analyses)||0),1);
     // build a token lookup from global clients array
     const tokMap=Object.fromEntries(clients.map(c=>[String(c.id),c.token]));
-    // fetch subscription statuses for all clients
-    const subStatuses={};
-    await Promise.all(dashClients.map(async c=>{
-      try{const sr=await api('/api/subscriptions/status/'+c.id);if(sr.ok){const sd=await sr.json();subStatuses[c.id]=sd.subscription_status||'trial';}else subStatuses[c.id]='trial';}catch{subStatuses[c.id]='trial';}
-    }));
+    // Abo-Status kommt jetzt direkt mit der Kundenliste (früher eine Anfrage pro Klient)
+    const subStatuses=Object.fromEntries(dashClients.map(c=>[c.id,c.subscription_status||'trial']));
     el.innerHTML=`
       <div class="adv-stats">
         <div class="adv-stat"><div class="adv-stat-n">${stats.total_clients||0}</div><div class="adv-stat-l">Clients</div></div>
@@ -6803,6 +6832,7 @@ async function loadAdvisorReviews(){
     // Update badge
     const badge=document.getElementById('rev-badge');
     if(badge){badge.textContent=pending.length;badge.classList.toggle('show',pending.length>0);}
+    if(window.rqSyncRev)window.rqSyncRev();
     window._advisorReviews=reviews;
     if(!pending.length){list.innerHTML=`<div style="padding:20px;color:var(--mu);font-size:13px">${T[LANG]?.review_none||'No pending reviews.'}</div>`;return;}
     list.innerHTML=pending.map(rv=>{
@@ -8433,7 +8463,6 @@ tryAutoLogin();
   }
   var ls0=document.getElementById('login-screen');
   if(ls0){new MutationObserver(onShown).observe(ls0,{attributes:true,attributeFilter:['class']});onShown();}
-  setInterval(rqSyncRev,3000);
 })();
 </script>
 
@@ -8511,7 +8540,7 @@ tryAutoLogin();
   }
   async function loadInq(){
     if(typeof isAdv==='undefined'||!isAdv)return;
-    try{var r=await api('/api/inquiries');var d=await r.json();inq=(r.ok&&Array.isArray(d))?d:[];}catch(e){inq=[];}
+    try{var res=await getInquiriesShared();inq=(res.ok&&Array.isArray(res.data))?res.data:[];}catch(e){inq=[];}
     renderDay();
   }
   window.rqRenderDay=renderDay;
@@ -8792,7 +8821,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
     if(btn){btn.disabled=true;}
     try{
       var q=(window._rqInq||[]).filter(function(x){return x.id===id;})[0];
-      if(!q){var rows=await rqJ('/api/inquiries');q=(rows||[]).filter(function(x){return x.id===id;})[0];}
+      if(!q){var rows=(await getInquiriesShared(true)).data;q=(rows||[]).filter(function(x){return x.id===id;})[0];}
       if(!q)throw new Error('Anfrage nicht gefunden.');
       W=blank();W.d.firma=q.company||q.name||'';W.d.kontakt=q.name||'';W.d.email=q.email||'';W.d.inquiry_id=id;
       var d=await rqJ('/api/onboarding-drafts',{method:'POST',body:JSON.stringify(Object.assign(body(),{inquiry_id:id}))});
@@ -8952,7 +8981,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
   window.loadInquiries=async function(){
     var r=await _li.apply(this,arguments);
     try{
-      var rows=await rqJ('/api/inquiries');window._rqInq=Array.isArray(rows)?rows:[];
+      var rows=(await getInquiriesShared()).data;window._rqInq=Array.isArray(rows)?rows:[];
       document.querySelectorAll('#inq-box [data-inq]').forEach(function(row){
         if(row.querySelector('[data-rq-start]'))return;
         var id=parseInt(row.getAttribute('data-inq'),10),q=window._rqInq.filter(function(x){return x.id===id;})[0];if(!q)return;
@@ -9115,6 +9144,8 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
       h+=(s.reply&&s.reply!==s.text?'<div class="rq-hint" style="font-size:14.5px">'+E(s.reply)+'</div>':'')+'<div class="rq-doc">'+E(s.text)+'</div>'
         +'<div class="rq-acts"><button class="rq-btn sm" data-sug="send"'+(s.busy?' disabled':'')+'>Übernehmen und senden</button><button class="rq-btn ghost sm" data-sug="draft"'+(s.busy?' disabled':'')+'>Als Entwurf sichern</button><button class="rq-btn ghost sm" data-sug="take">In Textfeld übernehmen</button>'+(s.note?'<span class="'+(s.noteErr?'rq-err':'rq-ok')+'">'+E(s.note)+'</span>':'')+'</div>'
         +'<div class="rq-acts" style="flex-wrap:nowrap"><input class="rq-in" id="rq-sugin-'+id+'" placeholder="Anpassen oder nachfragen, zum Beispiel «kürzer»" style="flex:1;min-width:0"><button class="rq-btn ghost sm" data-sug="ask">Anpassen</button></div>';
+    }else{
+      h+='<div class="rq-hint" style="font-size:14.5px">Die KI schreibt einen Vorschlag, sobald du es möchtest. Beim blossen Öffnen entstehen keine Kosten.</div><div class="rq-acts"><button class="rq-btn sm" data-sug="start">KI-Vorschlag erstellen</button></div>';
     }
     el.innerHTML=h;
   }
@@ -9134,7 +9165,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
   document.addEventListener('click',async function(e){
     var b=e.target.closest&&e.target.closest('[data-sug]');if(!b)return;
     var card=b.closest('[id^=rq-sug-]');if(!card)return;var id=parseInt(card.id.replace('rq-sug-',''),10),s=SUG[id]||{},a=b.getAttribute('data-sug');
-    if(a==='retry')return ask(id);
+    if(a==='retry'||a==='start')return ask(id);
     if(a==='ask'){var inp=document.getElementById('rq-sugin-'+id),v=inp&&inp.value.trim();if(v)ask(id,v);return;}
     var ta=document.getElementById('rev-edit-'+id);
     if(a==='take'){if(ta){ta.value=s.text;ta.focus();}s.note='Im Textfeld unten übernommen.';s.noteErr=false;return paint(id);}
@@ -9149,7 +9180,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
   var _r=window.wsRenderReviews;
   window.wsRenderReviews=function(body){
     var r=_r.apply(this,arguments);
-    if(typeof _wsExpandedReviewId!=='undefined'&&_wsExpandedReviewId){var id=_wsExpandedReviewId;if(SUG[id]&&(SUG[id].text||SUG[id].loading||SUG[id].err))paint(id);else ask(id);}
+    if(typeof _wsExpandedReviewId!=='undefined'&&_wsExpandedReviewId){var id=_wsExpandedReviewId;paint(id);}  // Vorschlag nur auf Knopfdruck (a==='start'), nie automatisch
     return r;
   };
 })();

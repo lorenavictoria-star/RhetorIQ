@@ -138,7 +138,7 @@ async function runWeeklyReport() {
     lines.push(
       '',
       '─'.repeat(52),
-      'Dieser Bericht wird automatisch jeden Montag um 08:00 generiert.',
+      'Dieser Bericht wird automatisch jeden Sonntag um 08:00 generiert.',
       'RhetorIQ · contact@lorenalienhard.ch'
     );
 
@@ -181,7 +181,7 @@ async function runWeeklyReport() {
 }
 
 // Catch-up safety net: if the server was down, mid-redeploy, or otherwise
-// not running at exactly Monday 08:03 Zurich, node-cron's in-process timer
+// not running at exactly Sunday 08:00 Zurich, node-cron's in-process timer
 // simply never fires for that tick — there is no built-in catch-up. Call
 // this once on every boot: if no weekly report has actually been sent
 // (email_outbox status='sent') in the last 8 days, run one immediately

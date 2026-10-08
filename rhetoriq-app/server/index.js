@@ -335,18 +335,18 @@ const PORT = process.env.PORT || 3001;
   server.listen(PORT, () => console.log(`RhetorIQ server running on :${PORT}`));
 
   // ── Scheduled reports ──────────────────────────────────────────
-  // Weekly: every Monday at 08:03 (off-minute to avoid fleet collisions)
-  cron.schedule('3 8 * * 1', () => runWeeklyReport(), { timezone: 'Europe/Zurich' });
+  // Weekly: every Sunday at 08:00 Zurich
+  cron.schedule('0 8 * * 0', () => runWeeklyReport(), { timezone: 'Europe/Zurich' });
 
   // Monthly: 1st of each month at 08:07
   cron.schedule('7 8 1 * *', () => runMonthlyReport(), { timezone: 'Europe/Zurich' });
 
-  console.log('[cron] Weekly report: every Monday 08:03 Zurich');
+  console.log('[cron] Weekly report: every Sunday 08:00 Zurich');
   console.log('[cron] Monthly report: 1st of month 08:07 Zurich');
 
   // ── Email reliability: outbox sweeper + missed-report catch-up ─────
   // node-cron only fires while the process is running at that exact instant
-  // — a redeploy or restart right at 08:03 Monday silently skips that tick
+  // — a redeploy or restart right at 08:00 Sunday silently skips that tick
   // with no built-in retry. ensureRecentWeeklyReport() runs once at boot and
   // sends immediately if no report went out in the last 8 days, so a missed
   // cron tick self-heals on the next restart instead of waiting a full week.
