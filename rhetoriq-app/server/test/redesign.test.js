@@ -15,7 +15,8 @@ test.before(async () => {
   await H.setupBase();
   srv = await H.startApp([
     ['/api/inquiries', require('../routes/inquiries').advisorRouter],
-    ['/api/onboarding-drafts', require('../routes/onboardingDrafts')]
+    ['/api/onboarding-drafts', require('../routes/onboardingDrafts')],
+    ['/api/files', require('../routes/files')]
   ]);
 });
 test.after(async () => { await srv.close(); });
@@ -148,4 +149,65 @@ test('S3 Workshop-Mappe: vier gültige DOCX im Ordner workshop, Rechte', async (
   const n = await H.pool.query('SELECT COUNT(*)::int AS n FROM client_files WHERE draft_id=$1', [id]);
   assert.equal(n.rows[0].n, 4);
   assert.equal((await srv.call('POST', '/api/onboarding-drafts/9999/workshop-docs', { token: A() })).status, 404);
+});
+
+// ── S4 Ablage ──────────────────────────────────────────────
+test('S4 Ablage: Upload (JSON und multipart), Liste, Download, ZIP, Löschen', async () => {
+  const JSZip = require('jszip');
+  const cl = await H.addClient('Ablage AG');
+  const up = await srv.call('POST', '/api/files', { token: A(), body: { client_id: cl.id, folder: 'unterlagen', name: 'Strategie.txt', mime: 'text/plain', dataBase64: Buffer.from('Hallo Welt').toString('base64') } });
+  assert.equal(up.status, 201);
+  assert.equal(up.body.size, 10);
+  // multipart
+  const fd = new FormData();
+  fd.append('client_id', String(cl.id)); fd.append('folder', 'entwuerfe');
+  fd.append('file', new Blob([Buffer.from('Entwurf')], { type: 'text/plain' }), 'E.txt');
+  const mp = await fetch(srv.base + '/api/files', { method: 'POST', headers: { Authorization: 'Bearer ' + A() }, body: fd });
+  assert.equal(mp.status, 201);
+  const list = await srv.call('GET', `/api/files?client_id=${cl.id}`, { token: A() });
+  assert.equal(list.body.length, 2);
+  assert.ok(!('data' in list.body[0]));
+  assert.equal((await srv.call('GET', `/api/files?client_id=${cl.id}&folder=entwuerfe`, { token: A() })).body.length, 1);
+  const dl = await srv.call('GET', `/api/files/${up.body.id}/download`, { token: A(), raw: true });
+  assert.equal(dl.status, 200);
+  assert.equal(Buffer.from(await dl.arrayBuffer()).toString(), 'Hallo Welt');
+  assert.match(dl.headers.get('content-disposition'), /attachment/);
+  const z = await srv.call('GET', `/api/files/zip?client_id=${cl.id}`, { token: A(), raw: true });
+  const zip = await JSZip.loadAsync(Buffer.from(await z.arrayBuffer()));
+  assert.deepEqual(Object.keys(zip.files).filter(n => !n.endsWith('/')).sort(), ['entwuerfe/E.txt', 'unterlagen/Strategie.txt']);
+  assert.equal((await srv.call('DELETE', `/api/files/${up.body.id}`, { token: A() })).status, 200);
+  assert.equal((await srv.call('DELETE', `/api/files/${up.body.id}`, { token: A() })).status, 404);
+});
+
+test('S4 Ablage: Grenzen und Rechte', async () => {
+  const cl = await H.addClient('Rechte AG');
+  const other = await H.addClient('Fremd AG');
+  const post = (body, token = A()) => srv.call('POST', '/api/files', { token, body });
+  assert.equal((await post({ client_id: cl.id, name: 'a.txt', dataBase64: 'QQ==' }, null)).status, 401);
+  assert.equal((await post({ client_id: cl.id, name: 'a.txt', dataBase64: 'QQ==' }, H.clientToken(cl.id))).status, 403);
+  assert.equal((await post({ client_id: cl.id, name: 'virus.exe', dataBase64: 'QQ==' })).status, 400);
+  assert.equal((await post({ client_id: cl.id, folder: 'x', name: 'a.txt', dataBase64: 'QQ==' })).status, 400);
+  assert.equal((await post({ name: 'a.txt', dataBase64: 'QQ==' })).status, 400);
+  assert.equal((await post({ client_id: 99999, name: 'a.txt', dataBase64: 'QQ==' })).status, 404);
+  const fd = new FormData();
+  fd.append('client_id', String(cl.id));
+  fd.append('file', new Blob([Buffer.alloc(10 * 1024 * 1024 + 10, 65)]), 'gross.txt');
+  const big = await fetch(srv.base + '/api/files', { method: 'POST', headers: { Authorization: 'Bearer ' + A() }, body: fd });
+  assert.equal(big.status, 413);
+  // Klient liest nur eigene Unterlagen
+  const mine = await post({ client_id: cl.id, folder: 'unterlagen', name: 'mein.txt', dataBase64: 'QQ==' });
+  const intern = await post({ client_id: cl.id, folder: 'workshop', name: 'intern.txt', dataBase64: 'QQ==' });
+  const fremd = await post({ client_id: other.id, folder: 'unterlagen', name: 'fremd.txt', dataBase64: 'QQ==' });
+  const CT = H.clientToken(cl.id);
+  const l = await srv.call('GET', '/api/files', { token: CT });
+  assert.deepEqual(l.body.map(f => f.name), ['mein.txt']);
+  assert.equal((await srv.call('GET', `/api/files?client_id=${other.id}`, { token: CT })).status, 403);
+  assert.equal((await srv.call('GET', `/api/files?client_id=${cl.id}&folder=workshop`, { token: CT })).status, 403);
+  assert.equal((await srv.call('GET', `/api/files?draft_id=1`, { token: CT })).status, 403);
+  assert.equal((await srv.call('GET', `/api/files/${mine.body.id}/download`, { token: CT })).status, 200);
+  assert.equal((await srv.call('GET', `/api/files/${intern.body.id}/download`, { token: CT })).status, 404);
+  assert.equal((await srv.call('GET', `/api/files/${fremd.body.id}/download`, { token: CT })).status, 404);
+  assert.equal((await srv.call('DELETE', `/api/files/${mine.body.id}`, { token: CT })).status, 403);
+  assert.equal((await srv.call('GET', '/api/files')).status, 401);
+  assert.equal((await srv.call('GET', '/api/files', { token: A() })).status, 400);
 });
