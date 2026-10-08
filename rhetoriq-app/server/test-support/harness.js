@@ -44,6 +44,9 @@ stub('lib/emailOutbox.js', {
   attemptSend: async () => {}
 });
 
+const brevoMails = [];
+stub('lib/brevo.js', { brevoSend: async (m) => { brevoMails.push(m); return {}; } });
+
 const ai = { calls: [], reply: '{}', fail: false };
 stub('lib/aiProvider.js', {
   generateText: async (opts) => {
@@ -107,6 +110,6 @@ async function startApp(mounts) {
 }
 
 module.exports = {
-  pool, mem, mails, ai, setupBase, advisorToken, clientToken, addClient, startApp,
+  pool, mem, mails, brevoMails, ai, setupBase, advisorToken, clientToken, addClient, startApp,
   setMailFail: v => { mailFail = v; }
 };

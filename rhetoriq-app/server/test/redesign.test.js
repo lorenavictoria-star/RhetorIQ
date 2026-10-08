@@ -17,7 +17,8 @@ test.before(async () => {
     ['/api/inquiries', require('../routes/inquiries').advisorRouter],
     ['/api/onboarding-drafts', require('../routes/onboardingDrafts')],
     ['/api/files', require('../routes/files')],
-    ['/api/reviews', require('../routes/reviews')]
+    ['/api/reviews', require('../routes/reviews')],
+    ['/api/clients', require('../routes/clients')]
   ]);
 });
 test.after(async () => { await srv.close(); });
@@ -287,4 +288,90 @@ test('S6 Review-Anfrage mit Auftrag und Frist: gespeichert, in GET und in der Ma
   assert.equal((await srv.call('POST', '/api/reviews', { token: H.clientToken(cl.id), body: { clientId: cl.id, originalText: 'T', dueAt: '2001-01-01T00:00:00Z' } })).status, 400);
   assert.equal((await srv.call('POST', '/api/reviews', { body: { originalText: 'T' } })).status, 401);
   assert.equal((await srv.call('POST', '/api/reviews', { token: H.clientToken(cl.id), body: { clientId: cl.id } })).status, 400);
+});
+
+// ── S7 Klient anlegen aus Entwurf ──────────────────────────
+async function readyDraft(extra = {}) {
+  const c = await srv.call('POST', '/api/onboarding-drafts', { token: A(), body: {
+    firma: 'Keller Bau AG', kontakt: 'Anna Keller', email: 'anna@keller.ch', sektor: 'kmu', anrede: 'du', titel: 'Frau',
+    workshop_datum: '14. Oktober 2026', module: ['Text Generator', 'Risiko-Scan', 'Debrief'], ...extra } });
+  return c.body;
+}
+
+test('S7 finish: legt Klienten an, Module, Dateien, Status, Einladung (Du, 7 Tage)', async () => {
+  await require('../routes/inquiries').ensureTable();
+  const q = await H.pool.query(`INSERT INTO inquiries (name, company, email) VALUES ('Anna Keller','Keller Bau AG','anna@keller.ch') RETURNING id`);
+  const d = await readyDraft({ inquiry_id: q.rows[0].id });
+  await srv.call('POST', `/api/onboarding-drafts/${d.id}/workshop-docs`, { token: A() });
+  H.mails.length = 0;
+  const r = await srv.call('POST', `/api/onboarding-drafts/${d.id}/finish`, { token: A(), body: { privacyAcknowledged: true } });
+  assert.equal(r.status, 201);
+  assert.equal(r.body.inviteSent, true);
+  assert.deepEqual([...r.body.client.enabled_modules].sort(), ['brand-voice', 'debrief', 'risk', 'text-gen']);
+  assert.equal(r.body.draft.status, 'abgeschlossen');
+  assert.equal(r.body.draft.client_id, r.body.client.id);
+  const cl = await H.pool.query('SELECT * FROM clients WHERE id=$1', [r.body.client.id]);
+  assert.equal(cl.rows[0].name, 'Keller Bau AG');
+  assert.equal(cl.rows[0].client_type, 'company');
+  assert.equal(cl.rows[0].last_name, 'Keller');
+  assert.equal(cl.rows[0].must_change_password, true);
+  const files = await H.pool.query('SELECT client_id FROM client_files WHERE draft_id=$1', [d.id]);
+  assert.equal(files.rows.length, 4);
+  assert.ok(files.rows.every(f => f.client_id === r.body.client.id));
+  assert.equal((await H.pool.query('SELECT status FROM inquiries WHERE id=$1', [q.rows[0].id])).rows[0].status, 'klient');
+  const tok = await H.pool.query('SELECT token, expires_at FROM onboarding_tokens WHERE client_id=$1', [r.body.client.id]);
+  assert.equal(tok.rows.length, 1);
+  const days = (new Date(tok.rows[0].expires_at) - Date.now()) / 86400000;
+  assert.ok(days > 6.9 && days < 7.1, 'Gültigkeit ' + days);
+  const mail = H.mails.find(m => m.kind === 'client_invite');
+  assert.equal(mail.to, 'anna@keller.ch');
+  assert.equal(mail.subject, 'Dein Zugang zu RhetorIQ');
+  assert.match(mail.text, /^Liebe Anna/);
+  assert.ok(mail.text.includes('https://app.test/setup?t=' + tok.rows[0].token));
+  assert.match(mail.text, /Der Link gilt 7 Tage/);
+  // Doppelter Abschluss
+  assert.equal((await srv.call('POST', `/api/onboarding-drafts/${d.id}/finish`, { token: A(), body: { privacyAcknowledged: true } })).status, 409);
+});
+
+test('S7 finish: Sie-Form, Pflichtangaben, Rechte', async () => {
+  const d = await readyDraft({ anrede: 'sie', kontakt: 'Beat Meier', titel: 'Herr', firma: 'Meier Treuhand' });
+  const url = `/api/onboarding-drafts/${d.id}/finish`;
+  assert.equal((await srv.call('POST', url, { body: { privacyAcknowledged: true } })).status, 401);
+  assert.equal((await srv.call('POST', url, { token: H.clientToken(1), body: { privacyAcknowledged: true } })).status, 403);
+  assert.equal((await srv.call('POST', url, { token: A(), body: {} })).status, 400);
+  const noMail = await srv.call('POST', '/api/onboarding-drafts', { token: A(), body: { firma: 'Ohne Mail GmbH' } });
+  assert.equal((await srv.call('POST', `/api/onboarding-drafts/${noMail.body.id}/finish`, { token: A(), body: { privacyAcknowledged: true } })).status, 400);
+  H.mails.length = 0;
+  const r = await srv.call('POST', url, { token: A(), body: { privacyAcknowledged: true } });
+  assert.equal(r.status, 201);
+  const mail = H.mails.find(m => m.kind === 'client_invite');
+  assert.equal(mail.subject, 'Ihr Zugang zu RhetorIQ');
+  assert.match(mail.text, /^Guten Tag Herr Meier/);
+  assert.match(mail.text, /Ihre Plattform ist bereit/);
+});
+
+test('S7 finish: Mailfehler legt Klienten trotzdem an und meldet inviteSent false', async () => {
+  const d = await readyDraft({ firma: 'Mailfehler AG', kontakt: 'Cora Test' });
+  H.setMailFail(true);
+  const r = await srv.call('POST', `/api/onboarding-drafts/${d.id}/finish`, { token: A(), body: { privacyAcknowledged: true } });
+  H.setMailFail(false);
+  assert.equal(r.status, 201);
+  assert.equal(r.body.inviteSent, false);
+  assert.ok(r.body.client.id);
+});
+
+test('S7 Regression: bestehendes POST /api/clients unverändert (Antwort, Willkommensmail 48 h)', async () => {
+  H.brevoMails.length = 0;
+  const r = await srv.call('POST', '/api/clients', { token: A(), body: { name: 'Joanne Sieber', email: 'j@sieber.ch', privacyAcknowledged: true, enabled_modules: ['brand-voice', 'text-gen'] } });
+  assert.equal(r.status, 201);
+  assert.equal(r.body.name, 'Joanne Sieber');
+  assert.equal(r.body.client_type, 'individual');
+  assert.equal(r.body.last_name, 'Sieber');
+  assert.equal(r.body.salutation, 'Frau');
+  assert.deepEqual(r.body.enabled_modules, ['brand-voice', 'text-gen']);
+  assert.ok(r.body.token && r.body.slug.startsWith('joanne-sieber-'));
+  await new Promise(x => setTimeout(x, 100));
+  assert.match(H.brevoMails[0].text, /48 Stunden gültig/);
+  assert.equal((await srv.call('POST', '/api/clients', { token: A(), body: { name: 'X' } })).status, 400);
+  assert.equal((await srv.call('POST', '/api/clients', { body: { name: 'X', privacyAcknowledged: true } })).status, 401);
 });

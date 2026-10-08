@@ -8,6 +8,11 @@ const { scanWebsite } = require('../lib/websiteScan');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { buildWorkshopDocs } = require('../lib/workshopDocs');
 const { saveFile } = require('../lib/fileStore');
+const crypto = require('crypto');
+const { createClientRecord } = require('../lib/clientCreate');
+const { toEnabledModules } = require('../lib/moduleCatalog');
+const { queueEmail } = require('../lib/emailOutbox');
+const { einladungMail, FRIST_TAGE } = require('../lib/onboardingMails');
 
 // Onboarding-Entwürfe (Zwischenspeichern des Ablaufs vor dem Workshop).
 //   POST   /api/onboarding-drafts            neuer Entwurf (optional aus inquiry_id)
@@ -283,6 +288,83 @@ router.post('/:id/workshop-docs', requireAdvisor, async (req, res) => {
     res.json({ ok: true, files: saved });
   } catch (e) {
     console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/onboarding-drafts/:id/finish: legt den Klienten an, setzt die Module, übernimmt die Dateien
+// des Entwurfs, setzt Entwurf auf 'abgeschlossen' und die Anfrage auf 'klient' und sendet die Einladung
+// mit Zugangslink (7 Tage gültig, Du- oder Sie-Form). Body: { privacyAcknowledged: true } ist Pflicht
+// (wie bei POST /api/clients); optional clientType ('company'|'individual'), lastName.
+router.post('/:id/finish', requireAdvisor, async (req, res) => {
+  let claimed = null;
+  try {
+    await ensureSchema();
+    const id = parseId(req.params.id);
+    if (!id) return res.status(400).json({ error: 'Ungültige ID.' });
+    const d = await loadDraft(id);
+    if (!d) return res.status(404).json({ error: 'Entwurf nicht gefunden.' });
+    if (d.client_id || d.status === 'abgeschlossen') return res.status(409).json({ error: 'Dieser Entwurf ist bereits abgeschlossen.' });
+    if (!(req.body && req.body.privacyAcknowledged === true)) return res.status(400).json({ error: 'Datenschutz-Bestätigung erforderlich' });
+    const name = clip(d.firma || d.kontakt, 200);
+    if (!name) return res.status(400).json({ error: 'Im Entwurf fehlt die Firma.' });
+    if (!d.email || !EMAIL_RE.test(d.email)) return res.status(400).json({ error: 'Im Entwurf fehlt eine gültige E-Mail-Adresse.' });
+
+    // Den Entwurf zuerst reservieren, damit ein doppelter Klick keinen zweiten Klienten anlegt.
+    const claim = await pool.query(
+      `UPDATE onboarding_drafts SET status='abgeschlossen', updated_at=NOW() WHERE id=$1 AND client_id IS NULL AND status <> 'abgeschlossen' RETURNING id`, [id]);
+    if (!claim.rows.length) return res.status(409).json({ error: 'Dieser Entwurf ist bereits abgeschlossen.' });
+    claimed = d.status;
+
+    const kontaktTeile = String(d.kontakt || '').trim().split(/\s+/).filter(Boolean);
+    const clientType = ['company', 'individual'].includes(req.body.clientType)
+      ? req.body.clientType : (d.firma && d.firma !== d.kontakt ? 'company' : 'individual');
+    const { row: client } = await createClientRecord({
+      advisorId: req.user.id,
+      name,
+      industry: SEKTOR_NAME[d.sektor] || '',
+      contact: clip(d.kontakt, 500),
+      email: d.email,
+      clientType,
+      salutation: d.titel === 'Herr' ? 'Herr' : 'Frau',
+      lastName: clip(req.body.lastName, 120) || (kontaktTeile.length ? kontaktTeile[kontaktTeile.length - 1] : ''),
+      enabledModules: toEnabledModules(d.module)
+    });
+    claimed = null;
+    await pool.query('UPDATE onboarding_drafts SET client_id=$1, updated_at=NOW() WHERE id=$2', [client.id, id]);
+    await pool.query('UPDATE client_files SET client_id=$1 WHERE draft_id=$2 AND client_id IS NULL', [client.id, id]);
+    if (d.inquiry_id) {
+      await require('./inquiries').ensureTable();
+      await pool.query(`UPDATE inquiries SET status='klient' WHERE id=$1`, [d.inquiry_id]);
+    }
+
+    // Einladung: der bestehende Ablauf (onboarding_tokens, /setup?t=...) mit 7 Tagen Gültigkeit.
+    let inviteSent = false;
+    const expires = new Date(Date.now() + FRIST_TAGE * 24 * 60 * 60 * 1000);
+    try {
+      const setupToken = crypto.randomBytes(32).toString('hex');
+      await pool.query('INSERT INTO onboarding_tokens (client_id, token, expires_at) VALUES ($1,$2,$3)', [client.id, setupToken, expires]);
+      const link = `${process.env.APP_URL || 'https://rhetoriq.ch'}/setup?t=${setupToken}`;
+      const mail = einladungMail({ kontakt: d.kontakt || d.firma, anrede: d.anrede === 'du' ? 'du' : 'sie', titel: d.titel, link });
+      await queueEmail({ kind: 'client_invite', to: d.email, subject: mail.subject, text: mail.text, senderName: 'Lorena Lienhard' });
+      inviteSent = true;
+    } catch (e) {
+      console.error('[onboarding-drafts] invite failed:', e.message);
+    }
+    const fresh = await loadDraft(id);
+    res.status(201).json({
+      ok: true,
+      client: { id: client.id, name: client.name, email: client.email, slug: client.slug, enabled_modules: client.enabled_modules },
+      inviteSent,
+      inviteExpiresAt: inviteSent ? expires.toISOString() : null,
+      draft: fresh
+    });
+  } catch (e) {
+    console.error(e);
+    if (claimed) {
+      // Klient wurde nicht angelegt: Reservierung zurücknehmen.
+      await pool.query(`UPDATE onboarding_drafts SET status=$1 WHERE id=$2 AND client_id IS NULL`, [claimed, parseId(req.params.id)]).catch(() => {});
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });
