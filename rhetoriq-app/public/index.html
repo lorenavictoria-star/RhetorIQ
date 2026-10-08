@@ -18,12 +18,13 @@
 <meta property="og:url" content="https://rhetoriq.ch/">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;1,200;1,300;1,400&family=Instrument+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Inter+Tight:wght@300;400;500;600;700&display=swap');
 :root{
   /* Palette */
-  --bg:#FFFFFF;--sf:#F4F4F2;--bd:#E2E0DC;--tx:#0E0D0B;--mu:#747068;--dm:#ABA49C;--red:#C02020;
+  --bg:#FFFFFF;--sf:#FFFFFF;--bg2:#FFFFFF;--bd:#E2E0DC;--tx:#0E0D0B;--mu:#6A665F;--dm:#8E8880;--red:#B42318;
+  --serif:'Newsreader',Georgia,serif;--sans:'Inter Tight',system-ui,sans-serif;--rail:#0E0D0B;--rail-tx:#F1EDE4;--rail-mu:#9A978E;--rail-ln:#2A2824;--rail-ac:#D9B26A;
   /* Accent — Porsche Racing Green */
-  --ac:#1B4D2E;--acl:#EAF2ED;--ac-light:#EAF2ED;--acc:#1B4D2E;
+  --ac:#97702A;--acl:#FBF6EA;--ac-light:#FBF6EA;--acc:#97702A;
   /* Transitions */
   --t-fast:120ms ease;--t-base:200ms ease;
   /* Safe areas */
@@ -31,20 +32,20 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-html,body{height:100%;font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--tx);font-size:15px;line-height:1.6}
-button,input,select,textarea{font-family:'Instrument Sans',sans-serif}
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--tx);font-size:15px;line-height:1.6}
+button,input,select,textarea{font-family:var(--sans)}
 
 /* LOGIN */
 #login-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px}
 #login-screen.hidden{display:none}
 .lbox{width:100%;max-width:380px}
-.llogo{font-family:'Spectral',serif;font-size:32px;font-weight:400;margin-bottom:4px}
+.llogo{font-family:var(--serif);font-size:32px;font-weight:400;margin-bottom:4px}
 .ltag{font-size:13px;color:var(--mu);margin-bottom:40px}
 .fl{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:6px}
-.fi{width:100%;padding:14px 16px;border:1.5px solid var(--bd);font-family:'Instrument Sans',sans-serif;font-size:15px;color:var(--tx);background:var(--sf);outline:none;border-radius:4px}
+.fi{width:100%;padding:14px 16px;border:1.5px solid var(--bd);font-family:var(--sans);font-size:15px;color:var(--tx);background:var(--sf);outline:none;border-radius:4px}
 .fi:focus{border-color:var(--tx)}
 .fg{margin-bottom:16px}
-.lbtn{width:100%;padding:15px;background:var(--tx);color:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;border-radius:4px;margin-top:8px}
+.lbtn{width:100%;padding:15px;background:var(--tx);color:#fff;border:none;font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;border-radius:4px;margin-top:8px}
 .lbtn:hover{background:#333}
 .lerr{color:var(--red);font-size:13px;margin-top:8px;display:none}
 .lsw{text-align:center;margin-top:20px;font-size:13px;color:var(--mu)}
@@ -56,13 +57,13 @@ button,input,select,textarea{font-family:'Instrument Sans',sans-serif}
 
 /* HEADER — Version C */
 .hdr{flex-shrink:0;border-bottom:1px solid var(--bd);padding:0 24px;padding-top:var(--safe-top);height:calc(52px + var(--safe-top));display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
-.hlogo{font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;flex-shrink:0;color:var(--tx)}
+.hlogo{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;flex-shrink:0;color:var(--tx)}
 .hnav{display:none!important}
 .nb{display:none}
 .hright{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .wsd{display:none}
 .huname{display:none}
-.sout{font-size:12px;color:var(--mu);cursor:pointer;background:none;border:none;font-family:'Instrument Sans',sans-serif;text-decoration:none;letter-spacing:.02em}
+.sout{font-size:12px;color:var(--mu);cursor:pointer;background:none;border:none;font-family:var(--sans);text-decoration:none;letter-spacing:.02em}
 .sout:hover{color:var(--tx)}
 
 /* CLIENT BAR */
@@ -70,10 +71,10 @@ button,input,select,textarea{font-family:'Instrument Sans',sans-serif}
 body.adv .cbar{display:flex}
 body.adv .adv-only{display:block!important}
 .cbar-lbl{font-size:12px;color:var(--mu);flex-shrink:0;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
-.cbar select{padding:8px 14px;border:1.5px solid var(--bd);background:#fff;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;color:var(--tx);border-radius:6px;outline:none;cursor:pointer;min-width:200px;transition:border-color .15s}
+.cbar select{padding:8px 14px;border:1.5px solid var(--bd);background:#fff;font-family:var(--sans);font-size:14px;font-weight:500;color:var(--tx);border-radius:6px;outline:none;cursor:pointer;min-width:200px;transition:border-color .15s}
 .cbar select:focus,.cbar select[data-active="true"]{border-color:var(--ac);background:#fff}
 .cbar-active{border-color:var(--ac)!important;color:var(--ac)!important}
-.ncbtn{margin-left:auto;padding:8px 16px;background:var(--tx);color:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px;flex-shrink:0}
+.ncbtn{margin-left:auto;padding:8px 16px;background:var(--tx);color:#fff;border:none;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;border-radius:6px;flex-shrink:0}
 .ncbtn:hover{background:#333}
 
 /* CONTENT */
@@ -83,10 +84,10 @@ body.adv .adv-only{display:block!important}
 
 /* MODULES LIST PAGE */
 .mod-search-wrap{margin-bottom:16px}
-.mod-search-inp{width:100%;padding:11px 14px;border:1px solid var(--bd);background:var(--sf);font-family:'Instrument Sans',sans-serif;font-size:14px;color:var(--tx);border-radius:6px;outline:none}
+.mod-search-inp{width:100%;padding:11px 14px;border:1px solid var(--bd);background:var(--sf);font-family:var(--sans);font-size:14px;color:var(--tx);border-radius:6px;outline:none}
 .mod-search-inp:focus{border-color:var(--tx);background:#fff}
 .mlist-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
-.mlist-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--bd);background:#fff;color:var(--mu);font-family:'Instrument Sans',sans-serif}
+.mlist-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--bd);background:#fff;color:var(--mu);font-family:var(--sans)}
 .mlist-pill:hover{border-color:var(--tx);color:var(--tx)}
 .mlist-pill.active{background:var(--tx);color:#fff;border-color:var(--tx)}
 .mcat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
@@ -118,12 +119,12 @@ body.adv .adv-only{display:block!important}
 .pi-text{font-size:13px;color:var(--tx)}
 .pi-text strong{font-weight:600}
 .pi-actions{display:flex;gap:6px;flex-shrink:0}
-.pi-go{padding:6px 14px;background:var(--tx);color:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:4px}
+.pi-go{padding:6px 14px;background:var(--tx);color:#fff;border:none;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;border-radius:4px}
 .pi-dismiss{background:none;border:none;font-size:16px;color:var(--mu);cursor:pointer;padding:0 4px}
 
 /* SECTION TABS (Concept B) */
 .stabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px}
-.stab{padding:8px 18px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid var(--bd);background:#fff;color:var(--mu);font-family:'Instrument Sans',sans-serif}
+.stab{padding:8px 18px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid var(--bd);background:#fff;color:var(--mu);font-family:var(--sans)}
 .stab:hover{border-color:var(--tx);color:var(--tx)}
 .stab.active{background:var(--tx);color:#fff;border-color:var(--tx)}
 
@@ -146,9 +147,9 @@ body.adv .adv-only{display:block!important}
 .router-title{font-size:13px;font-weight:600;letter-spacing:.02em;margin-bottom:2px}
 .router-sub{font-size:12px;color:var(--mu);margin-bottom:12px}
 .router-row{display:flex;gap:8px;align-items:flex-start}
-.rtarea{flex:1;padding:13px 14px;border:1.5px solid var(--bd);font-family:'Instrument Sans',sans-serif;font-size:14px;color:var(--tx);background:#fff;resize:none;height:72px;outline:none;border-radius:6px;line-height:1.6}
+.rtarea{flex:1;padding:13px 14px;border:1.5px solid var(--bd);font-family:var(--sans);font-size:14px;color:var(--tx);background:#fff;resize:none;height:72px;outline:none;border-radius:6px;line-height:1.6}
 .rtarea::placeholder{color:var(--dm)}
-.rbtn{padding:11px 18px;background:var(--tx);color:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px;white-space:nowrap;flex-shrink:0;align-self:flex-end;letter-spacing:.02em}
+.rbtn{padding:11px 18px;background:var(--tx);color:#fff;border:none;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;border-radius:6px;white-space:nowrap;flex-shrink:0;align-self:flex-end;letter-spacing:.02em}
 .rbtn:hover{background:#333}
 .rstat{font-size:12px;color:var(--mu);margin-top:8px;min-height:18px}
 
@@ -157,19 +158,19 @@ body.adv .adv-only{display:block!important}
 .mem-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
 .mem-title{font-size:13px;font-weight:600}
 .mem-sub{font-size:12px;color:var(--mu);margin-top:2px}
-.mem-toggle{font-size:12px;color:var(--mu);background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif}
+.mem-toggle{font-size:12px;color:var(--mu);background:none;border:none;cursor:pointer;font-family:var(--sans)}
 .mem-body{margin-top:14px;display:none}
 .mem-body.open{display:block}
 .mem-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .mem-chip{font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--bd);background:var(--sf);color:var(--mu);display:flex;align-items:center;gap:5px}
 .mem-chip.done{border-color:#4a4;color:#4a4}
 .mem-chip.done::before{content:'&#10003;'}
-.mem-edit{font-size:12px;color:var(--mu);text-decoration:underline;cursor:pointer;background:none;border:none;font-family:'Instrument Sans',sans-serif}
+.mem-edit{font-size:12px;color:var(--mu);text-decoration:underline;cursor:pointer;background:none;border:none;font-family:var(--sans)}
 
 /* STATS */
 .stats{display:flex;gap:10px;margin-bottom:24px}
 .stat{flex:1;padding:14px;border:1.5px solid var(--bd);border-radius:8px;text-align:center;background:#fff}
-.sn{font-family:'Spectral',serif;font-size:36px;font-weight:300;line-height:1}
+.sn{font-family:var(--serif);font-size:36px;font-weight:300;line-height:1}
 .sl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-top:3px}
 .stat.ao{display:none}
 body.adv .stat.ao{display:block}
@@ -182,15 +183,15 @@ body.adv #mm-advisor-section{display:block!important}
 .mm-tile{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 10px;border:1px solid var(--bd);border-radius:8px;cursor:pointer;background:var(--sf);transition:border-color .15s,background .15s;text-align:left}
 .mm-tile:hover{border-color:var(--ac);background:var(--acl)}
 .mm-tile-i{font-size:20px;color:var(--mu);line-height:1}
-.mm-tile-l{font-size:13px;font-weight:500;color:var(--tx);line-height:1.2;font-family:'Instrument Sans',sans-serif}
-.mm-row{padding:9px 14px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--tx);transition:background .15s;font-family:'Instrument Sans',sans-serif}
+.mm-tile-l{font-size:13px;font-weight:500;color:var(--tx);line-height:1.2;font-family:var(--sans)}
+.mm-row{padding:9px 14px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--tx);transition:background .15s;font-family:var(--sans)}
 .mm-row:hover{background:var(--sf)}
 .mm-row i{font-size:14px;color:var(--mu)}
 
 /* MODULE PAGE */
-.back{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--mu);cursor:pointer;margin-bottom:24px;background:none;border:none;font-family:'Instrument Sans',sans-serif;padding:0}
+.back{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--mu);cursor:pointer;margin-bottom:24px;background:none;border:none;font-family:var(--sans);padding:0}
 .back:hover{color:var(--tx)}
-.mtitle{font-family:'Spectral',serif;font-size:32px;font-weight:400;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.mtitle{font-family:var(--serif);font-size:32px;font-weight:400;margin-bottom:6px;display:flex;align-items:center;gap:10px}
 .mod-prompt-btn{background:none;border:1px solid var(--bd);border-radius:6px;padding:4px 7px;cursor:pointer;color:var(--mu);font-size:15px;line-height:1;flex-shrink:0;margin-top:2px}
 .mod-prompt-btn:hover{background:var(--bg2);color:var(--ac)}
 .mod-prompt-dot{width:6px;height:6px;border-radius:50%;background:var(--ac);display:inline-block;margin-left:2px;vertical-align:middle}
@@ -198,13 +199,13 @@ body.adv #mm-advisor-section{display:block!important}
 .fl2{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:7px}
 .row2 .fl2{min-height:28px}
 .fg2{margin-bottom:18px}
-textarea{width:100%;padding:12px 14px;border:1.5px solid var(--bd);font-family:'Instrument Sans',sans-serif;font-size:14px;color:var(--tx);background:var(--sf);resize:vertical;min-height:130px;outline:none;border-radius:4px;line-height:1.7}
+textarea{width:100%;padding:12px 14px;border:1.5px solid var(--bd);font-family:var(--sans);font-size:14px;color:var(--tx);background:var(--sf);resize:vertical;min-height:130px;outline:none;border-radius:4px;line-height:1.7}
 textarea:focus{border-color:var(--tx);background:#fff}
 textarea::placeholder{color:var(--dm)}
-select,input[type=text]{width:100%;padding:11px 13px;border:1.5px solid var(--bd);font-family:'Instrument Sans',sans-serif;font-size:14px;color:var(--tx);background:var(--sf);outline:none;border-radius:4px;-webkit-appearance:none}
+select,input[type=text]{width:100%;padding:11px 13px;border:1.5px solid var(--bd);font-family:var(--sans);font-size:14px;color:var(--tx);background:var(--sf);outline:none;border-radius:4px;-webkit-appearance:none}
 select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.runbtn{padding:13px 32px;background:var(--tx);color:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border-radius:4px;margin-top:4px}
+.runbtn{padding:13px 32px;background:var(--tx);color:#fff;border:none;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;border-radius:4px;margin-top:4px}
 .runbtn:hover{background:#333}
 .runbtn.crisis-btn{background:var(--red)}
 .runbtn.crisis-btn:hover{background:#a00}
@@ -259,13 +260,13 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .rhead{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--sf);border-bottom:1px solid var(--bd)}
 .rlbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
 .rbtns{display:flex;gap:6px}
-.cpbtn,.svbtn,.exbtn{padding:5px 12px;background:#fff;border:1.5px solid var(--bd);font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:4px;color:var(--tx)}
+.cpbtn,.svbtn,.exbtn{padding:5px 12px;background:#fff;border:1.5px solid var(--bd);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;border-radius:4px;color:var(--tx)}
 .cpbtn:hover,.svbtn:hover,.exbtn:hover{border-color:var(--tx)}
 .svbtn{background:var(--tx);color:#fff;border-color:var(--tx)}
 .svbtn:hover{background:#333}
 .exbtn{color:#1a5a9a;border-color:#b8d4f0;background:#f0f7ff}
 .exbtn:hover{background:#dceeff;border-color:#1a5a9a}
-.advbtn{color:#2a7a2a;border-color:#b0d9b0;background:#f0fff0;padding:5px 12px;border:1.5px solid #b0d9b0;font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:4px}
+.advbtn{color:#2a7a2a;border-color:#b0d9b0;background:#f0fff0;padding:5px 12px;border:1.5px solid #b0d9b0;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;border-radius:4px}
 .advbtn:hover{background:#d4f4d4;border-color:#2a7a2a}
 .advbtn.sent{color:var(--mu);border-color:var(--bd);background:#fff;cursor:default}
 .rev-badge{display:none;position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#c00;border-radius:50%;font-size:9px;font-weight:700;color:#fff;align-items:center;justify-content:center}
@@ -279,9 +280,9 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .rev-card{border:1.5px solid var(--bd);border-radius:8px;padding:14px;margin-bottom:10px;background:#fff}
 .rev-card-meta{font-size:10px;color:var(--mu);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
 .rev-card-orig{font-size:12px;color:var(--mu);white-space:pre-wrap;margin-bottom:10px;max-height:100px;overflow-y:auto;border-left:3px solid var(--bd);padding-left:10px}
-.rev-card-edit{width:100%;min-height:120px;font-size:13px;font-family:'Instrument Sans',sans-serif;border:1.5px solid var(--bd);border-radius:6px;padding:10px;resize:vertical;outline:none}
+.rev-card-edit{width:100%;min-height:120px;font-size:13px;font-family:var(--sans);border:1.5px solid var(--bd);border-radius:6px;padding:10px;resize:vertical;outline:none}
 .rev-card-edit:focus{border-color:var(--tx)}
-.rev-savebtn{margin-top:8px;padding:8px 18px;background:var(--tx);color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif}
+.rev-savebtn{margin-top:8px;padding:8px 18px;background:var(--tx);color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans)}
 .rev-savebtn:hover{background:#333}
 .rbody{padding:20px;font-size:14px;line-height:1.85;white-space:pre-wrap;color:var(--tx);outline:none;cursor:text}
 .rbody:hover{background:var(--sl)}
@@ -322,7 +323,7 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .adv-bar-track{flex:1;height:4px;background:var(--bd);border-radius:2px;overflow:hidden}
 .adv-bar-fill{height:100%;background:var(--tx);border-radius:2px;transition:width .3s}
 .adv-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:18px 0 8px}
-.hs-adv-score{font-family:'Spectral',serif;font-size:72px;font-weight:300;line-height:1;color:var(--tx);text-align:center;margin:16px 0 4px}
+.hs-adv-score{font-family:var(--serif);font-size:72px;font-weight:300;line-height:1;color:var(--tx);text-align:center;margin:16px 0 4px}
 .hs-adv-label{font-size:13px;color:var(--mu);text-align:center;margin-bottom:20px}
 .hs-adv-body{font-size:13px;line-height:1.75;color:var(--tx);white-space:pre-wrap;background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:16px;max-height:55vh;overflow-y:auto}
 .adv-feed-item{display:flex;align-items:baseline;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:12px}
@@ -333,20 +334,20 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 
 /* BRAND TOGGLE */
 .tog{display:flex;border:1.5px solid var(--bd);border-radius:6px;margin-bottom:20px;overflow:hidden;display:inline-flex}
-.togbtn{padding:10px 20px;background:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;color:var(--mu)}
+.togbtn{padding:10px 20px;background:#fff;border:none;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;color:var(--mu)}
 .togbtn.active{background:var(--tx);color:#fff;font-weight:600}
 .bsec{display:none}
 .bsec.active{display:block}
 
 /* TABS (text gen) */
 .tabs{display:flex;border-bottom:1.5px solid var(--bd);margin-bottom:20px}
-.tab{padding:9px 18px;background:none;border:none;border-bottom:2px solid transparent;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:500;color:var(--mu);cursor:pointer;margin-bottom:-1.5px}
+.tab{padding:9px 18px;background:none;border:none;border-bottom:2px solid transparent;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--mu);cursor:pointer;margin-bottom:-1.5px}
 .tab.active{color:var(--tx);border-bottom-color:var(--tx)}
 
 /* PEOPLE DIRECTORY PAGE */
 .pdir-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.page-title{font-family:'Spectral',serif;font-size:32px;font-weight:400}
-.add-btn{padding:9px 18px;background:var(--tx);color:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px}
+.page-title{font-family:var(--serif);font-size:32px;font-weight:400}
+.add-btn{padding:9px 18px;background:var(--tx);color:#fff;border:none;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;border-radius:4px}
 .add-btn:hover{background:#333}
 .pcard{border:1.5px solid var(--bd);border-radius:8px;padding:18px 20px;margin-bottom:10px;background:#fff}
 .pcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
@@ -357,9 +358,9 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .prof-tag{font-size:12px;padding:4px 10px;border-radius:20px;border:1px solid var(--bd);background:var(--sf);cursor:pointer}
 .prof-tag.done{border-color:#4a4;color:#2a6;background:#f0fff0}
 .prof-tag.done:hover{background:#e0ffe0}
-.obtn{padding:7px 13px;background:#fff;border:1.5px solid var(--bd);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;border-radius:4px;color:var(--tx);font-weight:500}
+.obtn{padding:7px 13px;background:#fff;border:1.5px solid var(--bd);font-family:var(--sans);font-size:12px;cursor:pointer;border-radius:4px;color:var(--tx);font-weight:500}
 .obtn:hover{border-color:var(--tx)}
-.dbtn2{padding:7px 13px;background:#fff;border:1.5px solid #f00;font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;border-radius:4px;color:var(--red);font-weight:500}
+.dbtn2{padding:7px 13px;background:#fff;border:1.5px solid #f00;font-family:var(--sans);font-size:12px;cursor:pointer;border-radius:4px;color:var(--red);font-weight:500}
 .dbtn2:hover{background:#fff0f0}
 
 /* MEMORY PAGE */
@@ -377,7 +378,7 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .cm{font-size:12px;color:var(--mu)}
 .ca{display:flex;gap:6px;flex-shrink:0}
 .tkcode{font-family:monospace;font-size:11px;background:var(--sf);padding:3px 8px;border-radius:3px;color:var(--mu);margin-top:5px;display:inline-block;word-break:break-all;max-width:100%}
-.dbtn{padding:7px 13px;background:#fff;border:1.5px solid #f00;font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;border-radius:4px;color:var(--red);font-weight:500}
+.dbtn{padding:7px 13px;background:#fff;border:1.5px solid #f00;font-family:var(--sans);font-size:12px;cursor:pointer;border-radius:4px;color:var(--red);font-weight:500}
 .dbtn:hover{background:#fff0f0}
 
 /* HISTORY */
@@ -401,11 +402,11 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 #ws-ov{z-index:499}
 #ws-ov.full-page{position:fixed;inset:0;display:flex;align-items:stretch;justify-content:stretch;padding:0;background:var(--bg)}
 #ws-ov.full-page .modal{max-width:none;width:100%;height:100%;max-height:none;border-radius:0;padding:0;box-shadow:none;display:flex;flex-direction:column;box-sizing:border-box}
-.modal h2{font-family:'Spectral',serif;font-size:24px;font-weight:400;margin-bottom:4px}
+.modal h2{font-family:var(--serif);font-size:24px;font-weight:400;margin-bottom:4px}
 .modal p{font-size:13px;color:var(--mu);margin-bottom:20px}
 .mf{margin-bottom:14px}
 .mact{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
-.mact button{padding:9px 18px;border-radius:4px;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.mact button{padding:9px 18px;border-radius:4px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer}
 .mcanc{background:#fff;border:1.5px solid var(--bd);color:var(--mu)}
 .mconf{background:var(--tx);border:1.5px solid var(--tx);color:#fff}
 .mconf:hover{background:#333}
@@ -420,7 +421,7 @@ select:focus,input[type=text]:focus{border-color:var(--tx);background:#fff}
 .vph{text-align:center;padding:20px}
 .vfoot{padding:10px 14px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center}
 .vfn{font-size:13px;font-weight:600}
-.vubtn{font-size:12px;padding:5px 10px;background:#fff;border:1.5px solid var(--bd);border-radius:4px;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-weight:500;display:none}
+.vubtn{font-size:12px;padding:5px 10px;background:#fff;border:1.5px solid var(--bd);border-radius:4px;cursor:pointer;font-family:var(--sans);font-weight:500;display:none}
 body.adv .vubtn{display:block}
 .vubtn:hover{border-color:var(--tx)}
 .vc input[type=file]{display:none}
@@ -440,7 +441,7 @@ body.adv .vubtn{display:block}
 .chc{background:none;border:none;color:rgba(255,255,255,.8);font-size:20px;cursor:pointer;line-height:1;padding:0}
 .chc:hover{color:#fff}
 .chat-quickreplies{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-.chat-qr-btn{background:none;border:1px solid var(--bd);border-radius:20px;padding:5px 12px;font-size:11px;font-family:'Instrument Sans',sans-serif;color:var(--tx);cursor:pointer;transition:border-color .15s}
+.chat-qr-btn{background:none;border:1px solid var(--bd);border-radius:20px;padding:5px 12px;font-size:11px;font-family:var(--sans);color:var(--tx);cursor:pointer;transition:border-color .15s}
 .chat-qr-btn:hover{border-color:var(--tx)}
 .cht{font-size:14px;font-weight:600}
 .chc{background:none;border:none;font-size:18px;cursor:pointer;color:var(--mu)}
@@ -449,9 +450,9 @@ body.adv .vubtn{display:block}
 .cm2.u{background:var(--tx);color:#fff;align-self:flex-end;border-radius:8px 8px 2px 8px}
 .cm2.b{background:var(--sf);color:var(--tx);align-self:flex-start;border-radius:8px 8px 8px 2px}
 .cft{padding:8px 10px;border-top:1px solid var(--bd);display:flex;gap:6px;flex-shrink:0}
-.cinp{flex:1;padding:8px 11px;border:1.5px solid var(--bd);font-family:'Instrument Sans',sans-serif;font-size:13px;outline:none;border-radius:6px;color:var(--tx)}
+.cinp{flex:1;padding:8px 11px;border:1.5px solid var(--bd);font-family:var(--sans);font-size:13px;outline:none;border-radius:6px;color:var(--tx)}
 .cinp:focus{border-color:var(--tx)}
-.csnd{padding:8px 14px;background:var(--tx);color:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px}
+.csnd{padding:8px 14px;background:var(--tx);color:#fff;border:none;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;border-radius:6px}
 
 #fbbtn{position:fixed;bottom:calc(20px + var(--safe-bottom));left:20px;width:44px;height:44px;background:var(--ac);border:none;border-radius:50%;cursor:pointer;z-index:200;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.18);font-size:19px;color:#fff}
 #fbbtn:hover{opacity:.88}
@@ -488,7 +489,7 @@ body.adv .vubtn{display:block}
 .mu-row{display:none}
 .mu-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:10px}
 .mu-pills{display:flex;gap:8px;flex-wrap:wrap}
-.mu-pill{padding:8px 16px;border:1.5px solid var(--bd);border-radius:4px;font-size:13px;font-weight:500;cursor:pointer;background:#fff;color:var(--tx);font-family:'Instrument Sans',sans-serif;transition:border-color .15s}
+.mu-pill{padding:8px 16px;border:1.5px solid var(--bd);border-radius:4px;font-size:13px;font-weight:500;cursor:pointer;background:#fff;color:var(--tx);font-family:var(--sans);transition:border-color .15s}
 .mu-pill:hover{border-color:var(--tx)}
 .mu-pill.featured{border-color:var(--tx);background:var(--tx);color:#fff}
 .mu-pill.featured:hover{background:#333}
@@ -498,7 +499,7 @@ body.adv .vubtn{display:block}
 .dsec-title{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--tx);margin-bottom:8px}
 .dsec-body{font-size:13px;color:var(--mu);line-height:1.65}
 .contact-card{border:1.5px solid var(--bd);border-radius:10px;padding:24px 26px;background:#fff;margin-bottom:16px}
-.contact-tagline{font-family:'Spectral',serif;font-size:22px;font-weight:400;color:var(--tx);margin-bottom:4px;font-style:italic}
+.contact-tagline{font-family:var(--serif);font-size:22px;font-weight:400;color:var(--tx);margin-bottom:4px;font-style:italic}
 .contact-role{font-size:13px;color:var(--mu);margin-bottom:24px;line-height:1.5}
 .contact-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--bd);font-size:14px}
 .contact-row:last-child{border-bottom:none}
@@ -515,10 +516,10 @@ body.adv .vubtn{display:block}
 .ref-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .ref-chip{font-size:12px;padding:4px 10px;border-radius:20px;background:#dceeff;color:#1a5a9a;display:flex;align-items:center;gap:5px}
 .ref-chip button{background:none;border:none;cursor:pointer;font-size:13px;color:#4a80c0;line-height:1;padding:0}
-.ref-load-btn{font-size:12px;color:#1a5a9a;text-decoration:underline;cursor:pointer;background:none;border:none;font-family:'Instrument Sans',sans-serif;margin-top:8px;display:block}
-.save-ref-btn{padding:9px 18px;background:#f0f7ff;border:1.5px solid #b8d4f0;color:#1a5a9a;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px;margin-right:8px}
+.ref-load-btn{font-size:12px;color:#1a5a9a;text-decoration:underline;cursor:pointer;background:none;border:none;font-family:var(--sans);margin-top:8px;display:block}
+.save-ref-btn{padding:9px 18px;background:#f0f7ff;border:1.5px solid #b8d4f0;color:#1a5a9a;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;border-radius:4px;margin-right:8px}
 .save-ref-btn:hover{background:#dceeff}
-.bv-btn{padding:9px 18px;background:var(--bg);border:1.5px solid var(--bd);color:var(--tx);font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border-radius:4px}
+.bv-btn{padding:9px 18px;background:var(--bg);border:1.5px solid var(--bd);color:var(--tx);font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;border-radius:4px}
 .bv-btn:hover{border-color:var(--tx)}
 .bv-btn.bv-btn-primary{background:var(--tx);color:#fff;border-color:var(--tx);font-weight:600}
 .bv-btn.bv-btn-primary:hover{background:#333}
@@ -542,11 +543,11 @@ body.adv .vubtn{display:block}
 .hs-widget{border:1.5px solid var(--bd);border-radius:8px;padding:20px;margin-bottom:24px;background:#fff}
 .hs-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .hs-title{font-size:14px;font-weight:600}
-.hs-score{font-family:'Spectral',serif;font-size:48px;font-weight:300;line-height:1;color:var(--tx)}
+.hs-score{font-family:var(--serif);font-size:48px;font-weight:300;line-height:1;color:var(--tx)}
 .hs-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-top:2px}
 .hs-result{font-size:13px;line-height:1.7;color:var(--tx);white-space:pre-wrap;margin-top:12px;display:none}
 .hs-result.show{display:block}
-.hs-genbtn{padding:8px 16px;background:var(--tx);color:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px}
+.hs-genbtn{padding:8px 16px;background:var(--tx);color:#fff;border:none;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;border-radius:4px}
 .hs-genbtn:hover{background:#333}
 
 /* PRIVACY BADGE */
@@ -557,13 +558,13 @@ body.adv .vubtn{display:block}
 .debrief-nudge.show{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .debrief-nudge-text{font-size:13px;color:var(--tx)}
 .debrief-nudge-text strong{font-weight:600}
-.dn-btn{padding:8px 16px;background:var(--tx);color:#fff;border:none;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px;flex-shrink:0}
+.dn-btn{padding:8px 16px;background:var(--tx);color:#fff;border:none;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;border-radius:4px;flex-shrink:0}
 .dn-btn:hover{background:#333}
 .dn-dismiss{background:none;border:none;font-size:18px;color:var(--mu);cursor:pointer;flex-shrink:0}
 
 /* MODAL TABS */
 .mtabs{display:flex;border-bottom:1.5px solid var(--bd);margin-bottom:18px;margin-top:4px}
-.mtab{padding:8px 16px;background:none;border:none;border-bottom:2px solid transparent;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:500;color:var(--mu);cursor:pointer;margin-bottom:-1.5px}
+.mtab{padding:8px 16px;background:none;border:none;border-bottom:2px solid transparent;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--mu);cursor:pointer;margin-bottom:-1.5px}
 .mtab.active{color:var(--tx);border-bottom-color:var(--tx)}
 .mtabpanel{display:none}
 .mtabpanel.active{display:block}
@@ -590,11 +591,11 @@ body.adv .vubtn{display:block}
 button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 
 /* ── LOGO — Spectral serif, green IQ ────────────────────────── */
-.hlogo{font-family:'Spectral',serif;font-size:18px;font-weight:300;letter-spacing:.02em;text-transform:none;display:flex;align-items:center;gap:9px}
+.hlogo{font-family:var(--serif);font-size:18px;font-weight:300;letter-spacing:.02em;text-transform:none;display:flex;align-items:center;gap:9px}
 .hlogo-mark{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--ac);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .hlogo-dot{width:5px;height:5px;border-radius:50%;background:var(--ac);display:block}
 .hlogo-iq{color:var(--ac)}
-.llogo{font-family:'Spectral',serif;font-size:36px;font-weight:300;letter-spacing:.01em}
+.llogo{font-family:var(--serif);font-size:36px;font-weight:300;letter-spacing:.01em}
 .llogo .llogo-iq{color:var(--ac)}
 
 /* ── LEFT NAV ────────────────────────────────────────────────── */
@@ -605,10 +606,10 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
 .home-more-toggle:hover{text-decoration:underline}
 .home-more-toggle i{font-size:14px;transition:transform .15s}
 .home-more-toggle.open i{transform:rotate(180deg)}
-.home-ghost{position:absolute;top:-14px;left:-10px;font-family:'Spectral',serif;font-style:italic;font-size:110px;font-weight:200;color:transparent;-webkit-text-stroke:0.5px #EAECE9;line-height:1;pointer-events:none;white-space:nowrap;letter-spacing:-.03em;user-select:none;z-index:0}
+.home-ghost{position:absolute;top:-14px;left:-10px;font-family:var(--serif);font-style:italic;font-size:110px;font-weight:200;color:transparent;-webkit-text-stroke:0.5px #EAECE9;line-height:1;pointer-events:none;white-space:nowrap;letter-spacing:-.03em;user-select:none;z-index:0}
 .home-eyebrow{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--ac);margin-bottom:12px;display:flex;align-items:center;gap:9px;position:relative;z-index:1}
 .home-eyebrow::after{content:'';flex:0 0 28px;height:0.5px;background:var(--ac)}
-.home-h1{font-family:'Spectral',serif;font-style:italic;font-size:38px;font-weight:300;line-height:1.1;color:var(--tx);margin-bottom:6px;letter-spacing:-.01em;position:relative;z-index:1}
+.home-h1{font-family:var(--serif);font-style:italic;font-size:38px;font-weight:300;line-height:1.1;color:var(--tx);margin-bottom:6px;letter-spacing:-.01em;position:relative;z-index:1}
 .home-h1 strong{font-style:normal;font-weight:400;color:var(--ac)}
 .home-sub{font-size:12px;color:var(--mu);line-height:1.65;margin-bottom:20px;max-width:420px;position:relative;z-index:1}
 
@@ -618,13 +619,13 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
 .qa-card:hover{border-color:var(--ac);background:var(--acl)}
 .qa-card:hover .qa-name{color:var(--ac)}
 .qa-tag{display:none}
-.qa-name{font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:500;color:var(--tx);line-height:1.3;transition:color var(--t-fast)}
+.qa-name{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--tx);line-height:1.3;transition:color var(--t-fast)}
 .qa-desc{display:none}
 .qa-arr{display:none}
 .qa-card-wide{grid-column:span 1;border:0.5px solid var(--bd);padding:10px 8px;cursor:pointer;background:var(--sf);transition:border-color var(--t-base),background var(--t-base);border-radius:8px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px}
 .qa-card-wide:hover{border-color:var(--ac);background:var(--acl)}
 .qa-wide-icon{width:18px;height:18px;background:var(--ac);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;flex-shrink:0}
-.qa-wide-name{font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:500;color:var(--tx)}
+.qa-wide-name{font-family:var(--sans);font-size:11px;font-weight:500;color:var(--tx)}
 .qa-wide-desc{display:none}
 .qa-wide-arr{display:none}
 @media (max-width:520px){.qa-section{grid-template-columns:repeat(2,1fr)}}
@@ -726,6 +727,49 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   #cpanel{width:calc(100vw - 24px);right:12px}
   .pricing-grid{grid-template-columns:1fr!important}
 }
+/* ═══ REDESIGN 2026: Weiss, Gold, eckig, nur feine Linien ═══ */
+html,body,button,input,select,textarea{font-family:var(--sans)}
+h1,h2,h3,.page-title,.mtitle,.modal h2,.home-h1,.sn,.hs-score,.hs-adv-score,.contact-tagline,.llogo,.hlogo{font-family:var(--serif)}
+.home-h1{font-style:normal;font-weight:400}
+.home-ghost{display:none}
+/* Eckig, ohne Schatten (runde Ausnahmen unten) */
+*,*::before,*::after{border-radius:0!important;box-shadow:none!important;text-shadow:none!important}
+.av,.wsd,.hlogo-mark,.hlogo-dot,.rq-dot{border-radius:50%!important}
+/* Schwarz-Weiss-Flächen werden Linien und Gold */
+:root{--btn-h:44px}
+.lbtn,.ncbtn,.runbtn,.add-btn,.rbtn,.mconf,.pi-go,.dn-btn,.hs-genbtn{background:var(--ac);color:#fff;border:1px solid var(--ac);min-height:var(--btn-h);padding:10px 20px;text-transform:none;letter-spacing:.01em;font-size:14px;font-weight:600;cursor:pointer}
+.lbtn:hover,.ncbtn:hover,.runbtn:hover,.add-btn:hover,.rbtn:hover,.mconf:hover,.pi-go:hover,.dn-btn:hover,.hs-genbtn:hover{background:#7d5c20;border-color:#7d5c20}
+.mcanc,.sout,.tab,.stab,.mlist-pill{min-height:var(--btn-h)}
+.mcanc{background:#fff;border:1px solid var(--bd);color:var(--tx);padding:10px 20px;cursor:pointer}
+.stab,.mlist-pill{background:#fff;color:var(--mu);border:1px solid var(--bd);padding:8px 18px;display:inline-flex;align-items:center}
+.stab.active,.mlist-pill.active{background:#fff!important;color:var(--ac)!important;border-color:var(--ac)!important}
+.stab:hover,.mlist-pill:hover{border-color:var(--ac);color:var(--ac)}
+.fi,input[type=text],input[type=email],input[type=password],input[type=search],input[type=number],input[type=url],input[type=tel],input[type=date],select,textarea{background:#fff!important;border:1px solid var(--bd);color:var(--tx)}
+.fi,input[type=text],input[type=email],input[type=password],input[type=search],input[type=number],input[type=url],input[type=tel],select{min-height:var(--btn-h)}
+.fi:focus,input:focus,select:focus,textarea:focus{border-color:var(--ac)!important;outline:none}
+/* Karten: nur feine Linien */
+.mcard,.qa-card,.qa-card-wide,.mcat-card,.router-box,.rbox,.mm-tile,.card,.pi-banner,.mfav-tile{background:#fff!important;border:1px solid var(--bd)!important;color:var(--tx)}
+.mfav-tile{color:var(--ac)!important}
+.mcard:hover,.qa-card:hover,.mcat-card:hover,.mm-tile:hover,.mfav-tile:hover{border-color:var(--ac)!important;transform:none}
+.mcard.red-btn{border-color:var(--bd)!important}
+.new-badge,.mrow-new{background:#fff!important;color:var(--ac)!important;border:1px solid var(--ac)}
+.router-box{padding:20px 0;border-left:none!important;border-right:none!important}
+.mfav-tile{text-align:left}
+/* Modals */
+.ov{background:rgba(14,13,11,.55)}
+.modal{border:1px solid var(--tx);background:#fff}
+.mact{gap:10px}
+/* Tabellen */
+table{border-collapse:collapse}
+th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);font-weight:500;background:#fff}
+td,th{border-bottom:1px solid var(--bd)}
+/* KI-Ausgabe immer Inter Tight */
+.rbox,.rbox *,.rtarea,textarea,.rbody,pre{font-family:var(--sans)}
+a{color:var(--ac)}
+::selection{background:#EBD9AE}
+/* Grosse Schrift */
+html.rq-big{zoom:1.15}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
@@ -857,7 +901,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <div class="mf" style="margin-bottom:0"><label class="fl">Email</label><input type="email" id="tm-email" placeholder="anna@company.com"></div>
         <div class="mf" style="margin-bottom:0"><label class="fl">Password</label><input type="text" id="tm-pw" placeholder="min. 8 characters"></div>
         <div class="mf" style="margin-bottom:0"><label class="fl">Role</label>
-          <select id="tm-role" style="width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);font-size:13px;font-family:'Instrument Sans',sans-serif">
+          <select id="tm-role" style="width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);font-size:13px;font-family:var(--sans)">
             <option value="editor">Editor (can generate)</option>
             <option value="viewer">Viewer (read only)</option>
             <option value="admin">Admin (full access)</option>
@@ -1000,8 +1044,8 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div id="hs-adv-loading" style="text-align:center;padding:40px 0;color:var(--mu);font-size:13px">Score wird generiert…</div>
     <div id="hs-adv-body" class="hs-adv-body" style="display:none"></div>
     <div id="hs-adv-actions" style="display:none;margin-top:14px;display:none;gap:8px;flex-wrap:wrap">
-      <button onclick="hsAdvPrint()" style="padding:8px 16px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">&#128438; Als PDF drucken</button>
-      <button onclick="hsAdvCopy()" style="padding:8px 16px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif" id="hs-adv-copy-btn">&#128203; Text kopieren</button>
+      <button onclick="hsAdvPrint()" style="padding:8px 16px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">&#128438; Als PDF drucken</button>
+      <button onclick="hsAdvCopy()" style="padding:8px 16px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="hs-adv-copy-btn">&#128203; Text kopieren</button>
     </div>
     <div style="font-size:11px;color:var(--mu);margin-top:10px">Basiert auf den letzten 90 Tagen · Nur für Advisor sichtbar</div>
   </div>
@@ -1109,9 +1153,9 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div class="hright">
       <span class="wsd" id="ws-dot" style="display:none"></span>
       <span class="huname" id="uname"></span>
-      <button onclick="openPalette()" title="Search modules (⌘K)" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu);background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:'Instrument Sans',sans-serif"><i class="ti ti-search" style="font-size:13px"></i><span style="display:none" id="hdr-cmd-label">⌘K</span></button>
-      <button id="lang-toggle" onclick="toggleLang()" style="font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--mu);background:none;border:1px solid var(--bd);border-radius:4px;padding:4px 8px;cursor:pointer;font-family:'Instrument Sans',sans-serif">DE</button>
-      <button onclick="openTour(0)" title="Einführung / Tour" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--mu);background:none;border:1px solid var(--bd);border-radius:50%;cursor:pointer;font-family:'Instrument Sans',sans-serif">?</button>
+      <button onclick="openPalette()" title="Search modules (⌘K)" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu);background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:var(--sans)"><i class="ti ti-search" style="font-size:13px"></i><span style="display:none" id="hdr-cmd-label">⌘K</span></button>
+      <button id="lang-toggle" onclick="toggleLang()" style="font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--mu);background:none;border:1px solid var(--bd);border-radius:4px;padding:4px 8px;cursor:pointer;font-family:var(--sans)">DE</button>
+      <button onclick="openTour(0)" title="Einführung / Tour" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--mu);background:none;border:1px solid var(--bd);border-radius:50%;cursor:pointer;font-family:var(--sans)">?</button>
       <button class="sout" id="hdr-signout" onclick="logout()">Sign out</button>
     </div>
   </header>
@@ -1130,7 +1174,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <!-- HOME -->
     <div class="page active" id="page-home">
       <div id="onboarding-home-btn" style="display:none;margin-bottom:16px">
-        <button onclick="openOnboarding()" style="width:100%;padding:12px 16px;background:var(--acl);color:var(--ac);border:0.5px solid var(--ac);font-size:13px;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;font-family:'Instrument Sans',sans-serif">
+        <button onclick="openOnboarding()" style="width:100%;padding:12px 16px;background:var(--acl);color:var(--ac);border:0.5px solid var(--ac);font-size:13px;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;font-family:var(--sans)">
           <i class="ti ti-upload" aria-hidden="true"></i>
           <div><div id="ob-btn-title">New Client Onboarding</div><div style="font-size:10px;font-weight:300;opacity:.8" id="ob-btn-sub">Upload all documents — AI sorts and saves them automatically</div></div>
         </button>
@@ -1225,20 +1269,20 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div id="bv-no-client" style="display:none;padding:32px 0;text-align:center;color:var(--mu);font-size:14px">
         <div style="font-size:28px;margin-bottom:12px">&#9670;</div>
         <div>Please select a client first.</div>
-        <button onclick="goPage('clients');loadAdvisorDashboard();setMN('clients')" style="margin-top:16px;padding:8px 18px;border:1px solid var(--bd);border-radius:6px;background:var(--sf);font-size:13px;cursor:pointer;font-family:'Instrument Sans',sans-serif">Go to Clients</button>
+        <button onclick="goPage('clients');loadAdvisorDashboard();setMN('clients')" style="margin-top:16px;padding:8px 18px;border:1px solid var(--bd);border-radius:6px;background:var(--sf);font-size:13px;cursor:pointer;font-family:var(--sans)">Go to Clients</button>
       </div>
       <!-- ── Aktive Brand Voice — immer sichtbar, sofort editierbar ── -->
       <div id="bv-active-panel" style="display:none;margin-bottom:28px;border:2px solid var(--ac);border-radius:12px;overflow:hidden">
         <div style="background:var(--ac);padding:10px 16px;display:flex;align-items:center;justify-content:space-between">
           <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff">Aktive Brand Voice — wird bei jeder Generierung injiziert</div>
           <div id="bv-adv-btns" style="display:flex;gap:8px">
-            <button id="bv-active-edit-btn" onclick="bvActiveEdit()" style="padding:4px 12px;border:1.5px solid rgba(255,255,255,.6);border-radius:6px;background:transparent;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Bearbeiten</button>
-            <button id="bv-active-save-btn" onclick="bvActiveSave()" style="display:none;padding:4px 12px;border:none;border-radius:6px;background:#fff;color:var(--ac);font-size:11px;font-weight:700;cursor:pointer;font-family:'Instrument Sans',sans-serif">Speichern</button>
-            <button id="bv-active-cancel-btn" onclick="bvActiveCancel()" style="display:none;padding:4px 12px;border:1.5px solid rgba(255,255,255,.6);border-radius:6px;background:transparent;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Abbrechen</button>
+            <button id="bv-active-edit-btn" onclick="bvActiveEdit()" style="padding:4px 12px;border:1.5px solid rgba(255,255,255,.6);border-radius:6px;background:transparent;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans)">Bearbeiten</button>
+            <button id="bv-active-save-btn" onclick="bvActiveSave()" style="display:none;padding:4px 12px;border:none;border-radius:6px;background:#fff;color:var(--ac);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans)">Speichern</button>
+            <button id="bv-active-cancel-btn" onclick="bvActiveCancel()" style="display:none;padding:4px 12px;border:1.5px solid rgba(255,255,255,.6);border-radius:6px;background:transparent;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans)">Abbrechen</button>
           </div>
         </div>
         <div id="bv-active-view" style="padding:14px 16px;font-size:13px;line-height:1.7;color:var(--tx);white-space:pre-wrap;max-height:200px;overflow-y:auto;background:var(--sf)"></div>
-        <textarea id="bv-active-ta" style="display:none;width:100%;min-height:200px;padding:14px 16px;border:none;border-top:1.5px solid var(--ac);font-size:13px;line-height:1.7;resize:vertical;outline:none;font-family:'Instrument Sans',sans-serif;box-sizing:border-box"></textarea>
+        <textarea id="bv-active-ta" style="display:none;width:100%;min-height:200px;padding:14px 16px;border:none;border-top:1.5px solid var(--ac);font-size:13px;line-height:1.7;resize:vertical;outline:none;font-family:var(--sans);box-sizing:border-box"></textarea>
       </div>
 
       <div id="struct-ref-panel" style="display:none;margin-bottom:28px;border:1px solid var(--bd);border-radius:12px;overflow:hidden">
@@ -1349,8 +1393,8 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div class="mdesc" id="cm-desc"></div>
       <div id="cm-fields" style="margin-top:16px"></div>
       <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
-        <button onclick="runCustomModule()" id="cm-run-btn" style="padding:10px 22px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:14px;font-family:'Instrument Sans',sans-serif;font-weight:500;cursor:pointer">Run</button>
-        <button onclick="cmDelete()" style="padding:10px 16px;background:transparent;color:var(--mu);border:1px solid var(--bd);border-radius:8px;font-size:13px;font-family:'Instrument Sans',sans-serif;cursor:pointer" id="cm-del-btn" class="ao">Delete Module</button>
+        <button onclick="runCustomModule()" id="cm-run-btn" style="padding:10px 22px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:14px;font-family:var(--sans);font-weight:500;cursor:pointer">Run</button>
+        <button onclick="cmDelete()" style="padding:10px 16px;background:transparent;color:var(--mu);border:1px solid var(--bd);border-radius:8px;font-size:13px;font-family:var(--sans);cursor:pointer" id="cm-del-btn" class="ao">Delete Module</button>
       </div>
       <div class="rbox" id="cm-result-box" style="margin-top:16px;display:none">
         <div class="rhead"><span class="rlbl" id="cm-result-label"></span><div class="rbtns"><button class="cpbtn" onclick="cp('cm-result-body')">Copy</button></div></div>
@@ -1409,7 +1453,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         </div>
       </div>
       <div id="inq-box"></div>
-      <input type="text" id="clients-search" placeholder="Klient suchen…" oninput="filterAdvClients(this.value)" style="width:100%;padding:10px 14px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-bottom:14px;box-sizing:border-box;font-family:'Instrument Sans',sans-serif;color:var(--tx)">
+      <input type="text" id="clients-search" placeholder="Klient suchen…" oninput="filterAdvClients(this.value)" style="width:100%;padding:10px 14px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;margin-bottom:14px;box-sizing:border-box;font-family:var(--sans);color:var(--tx)">
       <div id="adv-dash-content"><div class="empty"><div class="ei">&#9711;</div><div>Loading&#8230;</div></div></div>
     </div>
 
@@ -1456,9 +1500,9 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <div class="page-title" style="margin-bottom:4px">Usage</div>
         <div style="font-size:14px;color:var(--mu);margin-bottom:16px">API calls per client — real token costs based on Claude Sonnet pricing</div>
         <div style="display:flex;gap:8px;margin-bottom:20px">
-          <button onclick="loadUsage()" style="padding:7px 16px;border:1.5px solid var(--ac);border-radius:8px;background:var(--ac);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Call Statistics</button>
-          <button onclick="loadCosts(30)" style="padding:7px 16px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Token Costs (30d)</button>
-          <button onclick="loadCosts(90)" style="padding:7px 16px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Token Costs (90d)</button>
+          <button onclick="loadUsage()" style="padding:7px 16px;border:1.5px solid var(--ac);border-radius:8px;background:var(--ac);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Call Statistics</button>
+          <button onclick="loadCosts(30)" style="padding:7px 16px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Token Costs (30d)</button>
+          <button onclick="loadCosts(90)" style="padding:7px 16px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Token Costs (90d)</button>
         </div>
       </div>
       <div id="usage-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:0;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)"></div>
@@ -1466,13 +1510,13 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div style="padding:0 16px"><div id="costs-table"></div></div>
       <div style="padding:32px 16px 0;border-top:1px solid var(--bd);margin-top:24px">
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:12px">Invite Code — Neuen Advisor einladen</div>
-        <button id="invite-gen-btn" onclick="generateInviteCode()" style="padding:9px 18px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Generate Invite Code</button>
+        <button id="invite-gen-btn" onclick="generateInviteCode()" style="padding:9px 18px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Generate Invite Code</button>
         <div id="invite-code-out" style="display:none;margin-top:10px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:14px;font-weight:600;color:#15803d;letter-spacing:.05em;font-family:monospace"></div>
         <div style="font-size:12px;color:var(--mu);margin-top:8px">Der Code ist 7 Tage gültig und kann nur einmal verwendet werden. Teile ihn direkt mit dem neuen Advisor.</div>
       </div>
       <div style="padding:24px 16px 0;border-top:1px solid var(--bd);margin-top:8px">
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:12px">Developer — Debug-Modus</div>
-        <button id="debug-toggle-btn" onclick="toggleDebugMode()" style="padding:9px 18px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif"></button>
+        <button id="debug-toggle-btn" onclick="toggleDebugMode()" style="padding:9px 18px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)"></button>
         <div style="font-size:12px;color:var(--mu);margin-top:8px">Wenn aktiv: nach jeder Generierung wird der vollständige System-Prompt angezeigt (nur für dich als Advisor sichtbar).</div>
       </div>
     </div>
@@ -1489,14 +1533,14 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
           <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:3px">Klient-Daten importieren</div>
           <div style="font-size:12px;color:var(--mu)">Alle bisherigen Analysen + Company Memory eines Klienten als Trainingsbeispiele übernehmen.</div>
         </div>
-        <select id="tr-import-client" style="padding:9px 12px;border:1.5px solid var(--bd);background:#fff;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);border-radius:8px;outline:none;min-width:180px"></select>
-        <button onclick="trImportClient()" id="tr-import-btn" style="padding:9px 18px;background:var(--tx);color:#fff;border:none;border-radius:8px;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Importieren</button>
+        <select id="tr-import-client" style="padding:9px 12px;border:1.5px solid var(--bd);background:#fff;font-family:var(--sans);font-size:13px;color:var(--tx);border-radius:8px;outline:none;min-width:180px"></select>
+        <button onclick="trImportClient()" id="tr-import-btn" style="padding:9px 18px;background:var(--tx);color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Importieren</button>
       </div>
 
       <!-- Module selector -->
       <div style="margin-bottom:16px">
         <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);display:block;margin-bottom:6px">Modul auswählen</label>
-        <select id="tr-module-sel" onchange="trLoadModule()" style="padding:10px 14px;border:1.5px solid var(--bd);background:var(--sf);font-family:'Instrument Sans',sans-serif;font-size:14px;color:var(--tx);border-radius:8px;outline:none;width:100%;max-width:400px"></select>
+        <select id="tr-module-sel" onchange="trLoadModule()" style="padding:10px 14px;border:1.5px solid var(--bd);background:var(--sf);font-family:var(--sans);font-size:14px;color:var(--tx);border-radius:8px;outline:none;width:100%;max-width:400px"></select>
       </div>
 
       <!-- Example count badge + filter -->
@@ -1513,25 +1557,25 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:14px">+ Neues Beispiel</div>
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Modul <span style="color:#e53e3e">*</span></label>
-          <select id="tr-form-module" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);background:#fff;outline:none;box-sizing:border-box">
+          <select id="tr-form-module" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:var(--sans);font-size:13px;color:var(--tx);background:#fff;outline:none;box-sizing:border-box">
             <option value="">— Modul auswählen —</option>
           </select>
         </div>
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Label (optional)</label>
-          <input id="tr-label" placeholder="z.B. CEO, Krise…" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);background:#fff;outline:none;box-sizing:border-box">
+          <input id="tr-label" placeholder="z.B. CEO, Krise…" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:var(--sans);font-size:13px;color:var(--tx);background:#fff;outline:none;box-sizing:border-box">
         </div>
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Branche <span style="color:var(--mu);font-weight:400">(optional — z.B. hotel, pharma, finance, immobilien)</span></label>
-          <input id="tr-industry" placeholder="hotel" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);background:#fff;outline:none;box-sizing:border-box">
+          <input id="tr-industry" placeholder="hotel" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:var(--sans);font-size:13px;color:var(--tx);background:#fff;outline:none;box-sizing:border-box">
         </div>
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Input <span style="color:var(--mu);font-weight:400">(was der Klient eingibt)</span></label>
-          <textarea id="tr-input" rows="4" placeholder="Beispiel-Input des Klienten…" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);background:#fff;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+          <textarea id="tr-input" rows="4" placeholder="Beispiel-Input des Klienten…" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:var(--sans);font-size:13px;color:var(--tx);background:#fff;outline:none;resize:vertical;box-sizing:border-box"></textarea>
         </div>
         <div style="margin-bottom:14px">
           <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Output <span style="color:var(--mu);font-weight:400">(idealer Output — dein Qualitätsstandard)</span></label>
-          <textarea id="tr-output" rows="7" placeholder="Idealer Output / Muster-Ergebnis…" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--tx);background:#fff;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+          <textarea id="tr-output" rows="7" placeholder="Idealer Output / Muster-Ergebnis…" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:var(--sans);font-size:13px;color:var(--tx);background:#fff;outline:none;resize:vertical;box-sizing:border-box"></textarea>
         </div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <div>
@@ -1544,7 +1588,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
               <span onclick="trSetRating(5)" class="tr-star" data-v="5" style="font-size:22px;cursor:pointer;color:#d1d5db">★</span>
             </div>
           </div>
-          <button onclick="trSaveExample()" style="margin-left:auto;padding:10px 22px;background:var(--tx);color:#fff;border:none;border-radius:8px;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Beispiel speichern</button>
+          <button onclick="trSaveExample()" style="margin-left:auto;padding:10px 22px;background:var(--tx);color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer">Beispiel speichern</button>
         </div>
       </div>
 
@@ -1592,7 +1636,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <!-- Starter -->
         <div style="border:1px solid var(--bd);border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:0">
           <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);margin-bottom:10px">Starter</div>
-          <div style="font-family:'Spectral',serif;font-size:34px;font-weight:400;color:var(--tx);line-height:1">CHF 290</div>
+          <div style="font-family:var(--serif);font-size:34px;font-weight:400;color:var(--tx);line-height:1">CHF 290</div>
           <div style="font-size:12px;color:var(--mu);margin-bottom:18px;margin-top:4px">pro Monat · bis ca. 60 Texte/Monat</div>
           <div style="font-size:13px;color:var(--tx);line-height:1.5;margin-bottom:18px">Für Einzelpersonen und kleine Teams, die ihre Kommunikation gezielt stärken möchten.</div>
           <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:9px">
@@ -1602,14 +1646,14 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
             <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Rückmeldung innert 3h, 7 Tage die Woche</li>
             <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Kündigung monatlich</li>
           </ul>
-          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Starter%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:12px 0;border:1.5px solid var(--ac);border-radius:9px;color:var(--ac);font-size:13.5px;font-weight:600;text-decoration:none;font-family:'Instrument Sans',sans-serif;letter-spacing:.02em">Jetzt starten &rarr;</a>
+          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Starter%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:12px 0;border:1.5px solid var(--ac);border-radius:9px;color:var(--ac);font-size:13.5px;font-weight:600;text-decoration:none;font-family:var(--sans);letter-spacing:.02em">Jetzt starten &rarr;</a>
         </div>
 
         <!-- Wachstum (highlighted) -->
         <div style="border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:0;background:var(--ac);color:#fff;position:relative">
           <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:#fff;color:var(--ac);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;border-radius:20px;border:1.5px solid var(--ac);white-space:nowrap">Empfohlen</div>
           <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:10px">Wachstum</div>
-          <div style="font-family:'Spectral',serif;font-size:34px;font-weight:400;color:#fff;line-height:1">CHF 590</div>
+          <div style="font-family:var(--serif);font-size:34px;font-weight:400;color:#fff;line-height:1">CHF 590</div>
           <div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:18px;margin-top:4px">pro Monat · bis ca. 150 Texte/Monat</div>
           <div style="font-size:13px;color:rgba(255,255,255,.9);line-height:1.5;margin-bottom:18px">Für wachsende Teams mit regelmässigem Kommunikationsbedarf.</div>
           <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:9px">
@@ -1619,13 +1663,13 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
             <li style="font-size:12.5px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Rückmeldung innert 3h, 7 Tage die Woche</li>
             <li style="font-size:12.5px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Kündigung monatlich</li>
           </ul>
-          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Wachstum%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:12px 0;border:1.5px solid rgba(255,255,255,.8);border-radius:9px;color:#fff;font-size:13.5px;font-weight:600;text-decoration:none;font-family:'Instrument Sans',sans-serif;letter-spacing:.02em">Jetzt starten &rarr;</a>
+          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Wachstum%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:12px 0;border:1.5px solid rgba(255,255,255,.8);border-radius:9px;color:#fff;font-size:13.5px;font-weight:600;text-decoration:none;font-family:var(--sans);letter-spacing:.02em">Jetzt starten &rarr;</a>
         </div>
 
         <!-- Team -->
         <div style="border:1px solid var(--bd);border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:0">
           <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);margin-bottom:10px">Team</div>
-          <div style="font-family:'Spectral',serif;font-size:34px;font-weight:400;color:var(--tx);line-height:1">CHF 990</div>
+          <div style="font-family:var(--serif);font-size:34px;font-weight:400;color:var(--tx);line-height:1">CHF 990</div>
           <div style="font-size:12px;color:var(--mu);margin-bottom:18px;margin-top:4px">pro Monat · bis ca. 300 Texte/Monat</div>
           <div style="font-size:13px;color:var(--tx);line-height:1.5;margin-bottom:18px">Für Teams und Power-User mit maximaler Tiefe und Volumen.</div>
           <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:9px">
@@ -1635,13 +1679,13 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
             <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Rückmeldung innert 3h, 7 Tage die Woche</li>
             <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Kündigung monatlich</li>
           </ul>
-          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Team%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:12px 0;border:1.5px solid var(--ac);border-radius:9px;color:var(--ac);font-size:13.5px;font-weight:600;text-decoration:none;font-family:'Instrument Sans',sans-serif;letter-spacing:.02em">Jetzt starten &rarr;</a>
+          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Team%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:12px 0;border:1.5px solid var(--ac);border-radius:9px;color:var(--ac);font-size:13.5px;font-weight:600;text-decoration:none;font-family:var(--sans);letter-spacing:.02em">Jetzt starten &rarr;</a>
         </div>
 
         <!-- Enterprise -->
         <div style="border:1px solid var(--bd);border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:0">
           <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);margin-bottom:10px">Enterprise</div>
-          <div style="font-family:'Spectral',serif;font-size:34px;font-weight:400;color:var(--tx);line-height:1">CHF 2&#39;490</div>
+          <div style="font-family:var(--serif);font-size:34px;font-weight:400;color:var(--tx);line-height:1">CHF 2&#39;490</div>
           <div style="font-size:12px;color:var(--mu);margin-bottom:18px;margin-top:4px">pro Monat · unbegrenzte Nutzung</div>
           <div style="font-size:13px;color:var(--tx);line-height:1.5;margin-bottom:18px">Für grosse Teams und Organisationen mit sehr hohem, kontinuierlichem Bedarf.</div>
           <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:9px">
@@ -1651,7 +1695,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
             <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Bis zu 5h/Monat persönliche Bearbeitung inklusive, danach CHF 180.–/h</li>
             <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Rückmeldung innert 3h, 365 Tage im Jahr</li>
           </ul>
-          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Enterprise%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:12px 0;border:1.5px solid var(--ac);border-radius:9px;color:var(--ac);font-size:13.5px;font-weight:600;text-decoration:none;font-family:'Instrument Sans',sans-serif;letter-spacing:.02em">Kontakt aufnehmen &rarr;</a>
+          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Enterprise%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:12px 0;border:1.5px solid var(--ac);border-radius:9px;color:var(--ac);font-size:13.5px;font-weight:600;text-decoration:none;font-family:var(--sans);letter-spacing:.02em">Kontakt aufnehmen &rarr;</a>
         </div>
       </div>
       <div style="font-size:12px;color:var(--mu);text-align:center;max-width:1180px;margin-bottom:28px">10 % Rabatt bei jährlicher Zahlung, auf allen Stufen.</div>
@@ -1802,7 +1846,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div class="mni" id="mn-more" title="More" onclick="toggleMore()"><div class="mni-i">&#8943;</div><div class="mni-l" id="mn-more-l">More</div></div>
   </nav>
 
-  <div id="more-menu" style="display:none;position:fixed;bottom:70px;right:12px;background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.13);z-index:200;width:248px;overflow:hidden;font-family:'Instrument Sans',sans-serif">
+  <div id="more-menu" style="display:none;position:fixed;bottom:70px;right:12px;background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.13);z-index:200;width:248px;overflow:hidden;font-family:var(--sans)">
 
     <!-- Workspace grid -->
     <div style="padding:12px 12px 8px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)">Workspace</div>
@@ -1838,7 +1882,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 
     <!-- About collapsed -->
     <div style="border-top:1px solid var(--bd);padding:4px 0">
-      <div onclick="document.getElementById('mm-about-body').style.display=document.getElementById('mm-about-body').style.display==='none'?'block':'none'" style="padding:10px 14px;font-size:13px;font-weight:500;cursor:pointer;color:var(--tx);display:flex;align-items:center;justify-content:space-between;font-family:'Instrument Sans',sans-serif">
+      <div onclick="document.getElementById('mm-about-body').style.display=document.getElementById('mm-about-body').style.display==='none'?'block':'none'" style="padding:10px 14px;font-size:13px;font-weight:500;cursor:pointer;color:var(--tx);display:flex;align-items:center;justify-content:space-between;font-family:var(--sans)">
         <span>About & Info</span><span style="font-size:13px;color:var(--mu)">&#9660;</span>
       </div>
       <div id="mm-about-body" style="display:none">
@@ -1884,7 +1928,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   <div style="position:absolute;top:15%;left:50%;transform:translateX(-50%);width:min(560px,92vw);background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden">
     <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--bd);gap:10px">
       <span style="color:var(--mu);font-size:16px">&#9670;</span>
-      <input id="cmd-inp" placeholder="Search modules…" autocomplete="off" style="flex:1;border:none;outline:none;font-size:16px;font-family:'Instrument Sans',sans-serif;color:var(--tx);background:transparent" oninput="paletteSearch(this.value)" onkeydown="paletteKey(event)">
+      <input id="cmd-inp" placeholder="Search modules…" autocomplete="off" style="flex:1;border:none;outline:none;font-size:16px;font-family:var(--sans);color:var(--tx);background:transparent" oninput="paletteSearch(this.value)" onkeydown="paletteKey(event)">
       <kbd style="font-size:11px;color:var(--mu);background:var(--sf);border:1px solid var(--bd);border-radius:4px;padding:2px 6px">ESC</kbd>
     </div>
     <div id="cmd-results" style="max-height:360px;overflow-y:auto"></div>
@@ -1980,10 +2024,10 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div style="display:flex;gap:6px;margin-bottom:20px" id="tour-dots"></div>
     <div id="tour-body"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:26px">
-      <button onclick="closeTour()" style="background:none;border:none;color:var(--mu);font-size:12px;cursor:pointer;font-family:'Instrument Sans',sans-serif" id="tour-skip">Überspringen</button>
+      <button onclick="closeTour()" style="background:none;border:none;color:var(--mu);font-size:12px;cursor:pointer;font-family:var(--sans)" id="tour-skip">Überspringen</button>
       <div style="display:flex;gap:8px">
-        <button onclick="tourStep(-1)" id="tour-back" style="padding:9px 16px;border:1px solid var(--bd);border-radius:8px;background:transparent;color:var(--tx);cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:13px">Zurück</button>
-        <button onclick="tourStep(1)" id="tour-next" style="padding:9px 18px;border:none;border-radius:8px;background:var(--ac,#1a3d2e);color:#fff;cursor:pointer;font-weight:600;font-family:'Instrument Sans',sans-serif;font-size:13px">Weiter</button>
+        <button onclick="tourStep(-1)" id="tour-back" style="padding:9px 16px;border:1px solid var(--bd);border-radius:8px;background:transparent;color:var(--tx);cursor:pointer;font-family:var(--sans);font-size:13px">Zurück</button>
+        <button onclick="tourStep(1)" id="tour-next" style="padding:9px 18px;border:none;border-radius:8px;background:var(--ac,#1a3d2e);color:#fff;cursor:pointer;font-weight:600;font-family:var(--sans);font-size:13px">Weiter</button>
       </div>
     </div>
   </div>
@@ -2000,7 +2044,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <input type="file" id="pv-file-input" multiple accept=".txt,.pdf,.docx,.doc,.mp3,.mp4,.wav,.m4a,.ogg,.webm,.mov,.avi,.aac,.flac" style="display:none" onchange="pvHandleFiles(this.files)">
     <div id="pv-file-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
     <label class="fl2">Texts by this person — emails, speeches, posts, memos (separate with ---)</label>
-    <textarea id="pv-gen-text" style="width:100%;height:160px;padding:10px;font-size:13px;font-family:'Instrument Sans',sans-serif;border:1.5px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);resize:vertical;box-sizing:border-box;margin-top:6px" placeholder="Paste texts here — or upload files above. The more diverse, the better the voice profile."></textarea>
+    <textarea id="pv-gen-text" style="width:100%;height:160px;padding:10px;font-size:13px;font-family:var(--sans);border:1.5px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);resize:vertical;box-sizing:border-box;margin-top:6px" placeholder="Paste texts here — or upload files above. The more diverse, the better the voice profile."></textarea>
     <div id="pv-gen-status" style="font-size:12px;color:var(--mu);margin-top:8px;min-height:16px"></div>
     <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
       <button class="obtn" onclick="document.getElementById('person-voice-generate-ov').style.display='none'">Cancel</button>
@@ -2013,7 +2057,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     <div style="font-size:15px;font-weight:700;margin-bottom:2px">Import Voice DNA</div>
     <div id="pv-imp-name" style="font-size:12px;color:var(--mu);margin-bottom:14px"></div>
     <label class="fl2">Paste existing Voice DNA analysis</label>
-    <textarea id="pv-imp-text" style="width:100%;height:200px;padding:10px;font-size:13px;font-family:'Instrument Sans',sans-serif;border:1.5px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);resize:vertical;box-sizing:border-box;margin-top:6px" placeholder="Paste Voice DNA here..."></textarea>
+    <textarea id="pv-imp-text" style="width:100%;height:200px;padding:10px;font-size:13px;font-family:var(--sans);border:1.5px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);resize:vertical;box-sizing:border-box;margin-top:6px" placeholder="Paste Voice DNA here..."></textarea>
     <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
       <button class="obtn" onclick="document.getElementById('person-voice-import-ov').style.display='none'">Cancel</button>
       <button class="bv-btn bv-btn-primary" onclick="submitPersonVoiceImport()">Save to Profile</button>
@@ -2024,7 +2068,7 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
   <div style="background:var(--bg);border-radius:10px;max-width:560px;width:100%;padding:28px 24px;box-shadow:0 8px 40px rgba(0,0,0,.18)">
     <div style="font-size:15px;font-weight:700;margin-bottom:4px">Import Brand Voice to Memory</div>
     <div style="font-size:12px;color:var(--mu);margin-bottom:16px">Paste your existing Brand Voice analysis. It will be saved directly to this client's memory and used as context in all modules.</div>
-    <textarea id="import-memory-text" style="width:100%;height:220px;padding:10px;font-size:13px;font-family:'Instrument Sans',sans-serif;border:1.5px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);resize:vertical;box-sizing:border-box" placeholder="Paste Brand Voice analysis here..."></textarea>
+    <textarea id="import-memory-text" style="width:100%;height:220px;padding:10px;font-size:13px;font-family:var(--sans);border:1.5px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);resize:vertical;box-sizing:border-box" placeholder="Paste Brand Voice analysis here..."></textarea>
     <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
       <button class="obtn" onclick="closeImportMemory()">Cancel</button>
       <button class="bv-btn bv-btn-primary" onclick="submitImportMemory()">Save to Memory</button>
@@ -2793,10 +2837,10 @@ function injectTemplateBtn(){
   // from clients. "+ Neu" (clear draft) is a genuine everyday action and
   // stays visible for everyone.
   const tplControls=isAdv?`<span style="font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Templates</span>
-    <button onclick="loadTemplate()" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:'Instrument Sans',sans-serif">Load ▾</button>
-    <button onclick="saveTemplate()" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:'Instrument Sans',sans-serif">Save</button>
+    <button onclick="loadTemplate()" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:var(--sans)">Load ▾</button>
+    <button onclick="saveTemplate()" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:var(--sans)">Save</button>
     <span style="width:1px;height:16px;background:var(--bd);margin:0 2px"></span>`:'';
-  bar.innerHTML=`${tplControls}<button onclick="clearModuleDraft()" title="Entwurf löschen und leer neu beginnen" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:'Instrument Sans',sans-serif">＋ Neu</button>`;
+  bar.innerHTML=`${tplControls}<button onclick="clearModuleDraft()" title="Entwurf löschen und leer neu beginnen" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:var(--sans)">＋ Neu</button>`;
   form.insertBefore(bar,form.firstChild);
 }
 function clearModuleDraft(){
@@ -2969,9 +3013,9 @@ function openCustomModule(id){
   // render input fields
   const fields=m.input_fields||[];
   document.getElementById('cm-fields').innerHTML=fields.map(f=>{
-    if(f.type==='textarea')return`<div class="fg2" style="margin-bottom:14px"><label class="fl2">${f.label}</label><textarea id="cm-f-${f.id}" rows="4" placeholder="${f.placeholder||''}" style="width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:'Instrument Sans',sans-serif;resize:vertical;box-sizing:border-box"></textarea></div>`;
-    if(f.type==='select')return`<div class="fg2" style="margin-bottom:14px"><label class="fl2">${f.label}</label><select id="cm-f-${f.id}" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;background:var(--bg);font-size:14px;font-family:'Instrument Sans',sans-serif">${(f.options||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
-    return`<div class="fg2" style="margin-bottom:14px"><label class="fl2">${f.label}</label><input type="text" id="cm-f-${f.id}" placeholder="${f.placeholder||''}" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:'Instrument Sans',sans-serif;box-sizing:border-box"></div>`;
+    if(f.type==='textarea')return`<div class="fg2" style="margin-bottom:14px"><label class="fl2">${f.label}</label><textarea id="cm-f-${f.id}" rows="4" placeholder="${f.placeholder||''}" style="width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:var(--sans);resize:vertical;box-sizing:border-box"></textarea></div>`;
+    if(f.type==='select')return`<div class="fg2" style="margin-bottom:14px"><label class="fl2">${f.label}</label><select id="cm-f-${f.id}" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;background:var(--bg);font-size:14px;font-family:var(--sans)">${(f.options||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
+    return`<div class="fg2" style="margin-bottom:14px"><label class="fl2">${f.label}</label><input type="text" id="cm-f-${f.id}" placeholder="${f.placeholder||''}" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;font-family:var(--sans);box-sizing:border-box"></div>`;
   }).join('');
   // show/hide delete button for advisors only
   const delBtn=document.getElementById('cm-del-btn');
@@ -3027,7 +3071,7 @@ async function loadUsage(){
     const costM=fmt(d.costThisMonth??d.totalThisMonth*(d.costPerCall||0.045));
     const costAll=fmt(d.costAllTime??d.totalAllTime*(d.costPerCall||0.045));
     const tokLabel=d.tokens?(` · ${(Number(d.tokens.month_input)/1000).toFixed(0)}K in / ${(Number(d.tokens.month_output)/1000).toFixed(0)}K out`):'';
-    const card=(label,val,sub)=>`<div style="padding:20px 16px;border-right:1px solid var(--bd);background:var(--sf)"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:8px">${label}</div><div style="font-size:32px;font-weight:300;font-family:'Spectral',serif;color:var(--tx);line-height:1">${val}</div><div style="font-size:13px;color:var(--mu);margin-top:6px">${sub}</div></div>`;
+    const card=(label,val,sub)=>`<div style="padding:20px 16px;border-right:1px solid var(--bd);background:var(--sf)"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:8px">${label}</div><div style="font-size:32px;font-weight:300;font-family:var(--serif);color:var(--tx);line-height:1">${val}</div><div style="font-size:13px;color:var(--mu);margin-top:6px">${sub}</div></div>`;
     sum.innerHTML=card('This month',d.totalThisMonth,`calls · ${costM}${tokLabel}`)+card('All time',d.totalAllTime,`calls · ${costAll}`);
     if(!d.rows.length){tbl.innerHTML='<div style="color:var(--mu);font-size:13px;padding:20px 0">No analyses recorded yet.</div>';return;}
     tbl.innerHTML=`
@@ -3187,7 +3231,7 @@ async function trLoadModule(){
           </div>
           <div style="display:flex;align-items:center;gap:4px">
             ${[1,2,3,4,5].map(v=>`<button onclick="trRate(${ex.id},${v})" style="font-size:15px;background:none;border:none;cursor:pointer;color:${(ex.rating||3)>=v?'#f59e0b':'#d1d5db'};padding:0;line-height:1" id="tr-star-${ex.id}-${v}">★</button>`).join('')}
-            <button onclick="trDelete(${ex.id})" style="margin-left:6px;padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:transparent;font-size:11px;color:var(--mu);cursor:pointer;font-family:'Instrument Sans',sans-serif">✕</button>
+            <button onclick="trDelete(${ex.id})" style="margin-left:6px;padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:transparent;font-size:11px;color:var(--mu);cursor:pointer;font-family:var(--sans)">✕</button>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -6514,8 +6558,8 @@ async function sendPaymentLink(clientId, btn) {
       <div style="font-size:16px;font-weight:600;margin-bottom:12px">Stripe-Preis wählen</div>
       <select id="price-pick-select" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;margin-bottom:16px;font-size:14px;background:var(--bg);color:var(--tx);box-sizing:border-box">${options}</select>
       <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button onclick="document.getElementById('price-pick-ov').remove()" style="padding:10px 16px;border:1px solid var(--bd);border-radius:8px;background:transparent;color:var(--tx);cursor:pointer;font-family:'Instrument Sans',sans-serif">Abbrechen</button>
-        <button id="price-pick-confirm" style="padding:10px 16px;border:none;border-radius:8px;background:var(--ac);color:#fff;cursor:pointer;font-weight:600;font-family:'Instrument Sans',sans-serif">Link erstellen</button>
+        <button onclick="document.getElementById('price-pick-ov').remove()" style="padding:10px 16px;border:1px solid var(--bd);border-radius:8px;background:transparent;color:var(--tx);cursor:pointer;font-family:var(--sans)">Abbrechen</button>
+        <button id="price-pick-confirm" style="padding:10px 16px;border:none;border-radius:8px;background:var(--ac);color:#fff;cursor:pointer;font-weight:600;font-family:var(--sans)">Link erstellen</button>
       </div>
     </div>`;
     document.body.appendChild(ov);
@@ -7964,7 +8008,7 @@ function legalBack(){
         <input id="setup-pw2" type="password" placeholder="Wiederholen" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;margin-top:6px;font-size:14px;background:var(--bg);color:var(--tx);box-sizing:border-box">
       </div>
       <div id="setup-err" style="display:none;color:var(--red);font-size:13px;margin-bottom:12px"></div>
-      <button onclick="completeSetup('${t}')" style="width:100%;padding:12px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif">Weiter</button>
+      <button onclick="completeSetup('${t}')" style="width:100%;padding:12px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans)">Weiter</button>
     </div>
     <div id="setup-plan" style="display:none">
       <div id="setup-plan-cards"></div>
