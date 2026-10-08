@@ -6,6 +6,8 @@ const { ALLE_MODULE, SEKTOR_NAME } = require('../lib/moduleCatalog');
 const { safeFetchHtml, htmlToText } = require('../lib/safeFetch');
 const { scanWebsite } = require('../lib/websiteScan');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
+const { buildWorkshopDocs } = require('../lib/workshopDocs');
+const { saveFile } = require('../lib/fileStore');
 
 // Onboarding-Entwürfe (Zwischenspeichern des Ablaufs vor dem Workshop).
 //   POST   /api/onboarding-drafts            neuer Entwurf (optional aus inquiry_id)
@@ -241,6 +243,44 @@ router.post('/:id/scan', requireAdvisor, scanLimit, async (req, res) => {
       'UPDATE onboarding_drafts SET vorschlaege=$1::jsonb, briefing=$1::jsonb, updated_at=NOW() WHERE id=$2 RETURNING *',
       [json, id]);
     res.json({ ok: true, quelle: page.url, vorschlaege: result, draft: rows[0] });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/onboarding-drafts/:id/workshop-docs: erzeugt Briefing, Einführungsgespräch, Leitfaden und
+// Erfassungsbogen (DOCX) und legt sie im Ordner 'workshop' des Entwurfs ab.
+// Optional im Body: branche, zielgruppen (für Teil A des Erfassungsbogens).
+router.post('/:id/workshop-docs', requireAdvisor, async (req, res) => {
+  try {
+    await ensureSchema();
+    const id = parseId(req.params.id);
+    if (!id) return res.status(400).json({ error: 'Ungültige ID.' });
+    const d = await loadDraft(id);
+    if (!d) return res.status(404).json({ error: 'Entwurf nicht gefunden.' });
+    if (!d.firma) return res.status(400).json({ error: 'Im Entwurf fehlt die Firma.' });
+    const b = d.briefing && typeof d.briefing === 'object' ? d.briefing : {};
+    const body = req.body || {};
+    const cfg = {
+      firma: d.firma,
+      kontakt: d.kontakt || '',
+      sektor: d.sektor || '',
+      datum: d.workshop_datum || '',
+      module: Array.isArray(d.module) ? d.module : [],
+      branche: clip(body.branche || b.branche, 160),
+      zielgruppen: clip(body.zielgruppen || b.zielgruppen, 400),
+      briefing: b
+    };
+    const docs = await buildWorkshopDocs(cfg);
+    // Frühere Fassungen derselben Mappe ersetzen (nur solange es noch keinen Klienten gibt).
+    await pool.query(`DELETE FROM client_files WHERE draft_id=$1 AND client_id IS NULL AND folder='workshop' AND name = ANY($2)`,
+      [id, docs.map(x => x.name)]);
+    const saved = [];
+    for (const f of docs) {
+      saved.push(await saveFile({ clientId: d.client_id || null, draftId: id, folder: 'workshop', name: f.name, mime: f.mime, buffer: f.buffer }));
+    }
+    res.json({ ok: true, files: saved });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });

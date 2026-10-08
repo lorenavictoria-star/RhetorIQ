@@ -115,3 +115,37 @@ test('S2 Scan: Fehlerfälle (kein Webseitenfeld, Abruf, KI, unlesbare Antwort), 
   assert.equal((await srv.call('POST', url, { token: H.clientToken(1) })).status, 403);
   assert.equal((await srv.call('POST', '/api/onboarding-drafts/9999/scan', { token: A() })).status, 404);
 });
+
+// ── S3 Workshop-Mappe ──────────────────────────────────────
+test('S3 Workshop-Mappe: vier gültige DOCX im Ordner workshop, Rechte', async () => {
+  const JSZip = require('jszip');
+  const c = await srv.call('POST', '/api/onboarding-drafts', { token: A(), body: {
+    firma: 'Keller Bau AG', kontakt: 'Anna Keller', sektor: 'kmu', workshop_datum: '14. Oktober 2026',
+    module: ['Text Generator', 'Risiko-Scan'], briefing: { blick: ['Punkt eins'], module: [['Text Generator', 'Alltag']], fragen: ['Frage?'] } } });
+  const id = c.body.id;
+  const url = `/api/onboarding-drafts/${id}/workshop-docs`;
+  assert.equal((await srv.call('POST', url)).status, 401);
+  assert.equal((await srv.call('POST', url, { token: H.clientToken(1) })).status, 403);
+  const r = await srv.call('POST', url, { token: A(), body: { branche: 'Bau und Handwerk' } });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.body.files.map(f => f.name), [
+    '0_Briefing_Keller_Bau_AG.docx', '1_Einfuehrungsgespraech_Keller_Bau_AG.docx', '2_Workshop_Leitfaden_Keller_Bau_AG.docx', '3_Erfassungsbogen_Keller_Bau_AG.docx']);
+  assert.ok(r.body.files.every(f => f.folder === 'workshop' && f.draft_id === id && f.client_id === null && f.size > 5000));
+  const { rows } = await H.pool.query('SELECT name, data FROM client_files WHERE draft_id=$1 ORDER BY name', [id]);
+  assert.equal(rows.length, 4);
+  for (const f of rows) {
+    const zip = await JSZip.loadAsync(f.data);
+    const xml = await zip.file('word/document.xml').async('string');
+    assert.ok(xml.includes('<w:body>'), f.name);
+  }
+  const intro = await JSZip.loadAsync(rows.find(x => x.name.startsWith('1_')).data);
+  const ixml = await intro.file('word/document.xml').async('string');
+  assert.ok(ixml.includes('Datum: 14. Oktober 2026'));
+  assert.ok(ixml.includes('[✓] Risiko-Scan') && ixml.includes('[✓] Brand Voice'));
+  assert.ok(!ixml.includes('Hotellerie / Tourismus'));
+  // erneutes Erzeugen ersetzt die Dateien, keine Duplikate
+  await srv.call('POST', url, { token: A() });
+  const n = await H.pool.query('SELECT COUNT(*)::int AS n FROM client_files WHERE draft_id=$1', [id]);
+  assert.equal(n.rows[0].n, 4);
+  assert.equal((await srv.call('POST', '/api/onboarding-drafts/9999/workshop-docs', { token: A() })).status, 404);
+});

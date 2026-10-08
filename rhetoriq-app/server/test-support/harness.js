@@ -10,7 +10,24 @@ const { newDb } = require('pg-mem');
 
 const mem = newDb();
 const { Pool } = mem.adapters.createPg();
-const pool = new Pool();
+const rawPool = new Pool();
+
+// pg-mem verschluckt sich an manchen Binärinhalten (BYTEA). Für die Tests werden Buffer
+// deshalb als Hex-Text abgelegt und beim Lesen wieder zurückverwandelt. Nur Testhilfe.
+const HEXTAG = 'HEX:';
+const pool = {
+  async query(sql, params) {
+    const p = params && params.map(v => (Buffer.isBuffer(v) ? Buffer.from(HEXTAG + v.toString('hex')) : v));
+    const r = await rawPool.query(sql, p);
+    for (const row of r.rows || []) {
+      for (const k of Object.keys(row)) {
+        const v = row[k];
+        if (Buffer.isBuffer(v) && v.subarray(0, 4).toString() === HEXTAG) row[k] = Buffer.from(v.subarray(4).toString(), 'hex');
+      }
+    }
+    return r;
+  }
+};
 
 function stub(rel, exports) {
   const p = require.resolve(path.join(__dirname, '..', rel));
