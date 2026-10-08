@@ -3609,6 +3609,11 @@ async function boot(user,role){
       history.replaceState(null,'',location.pathname);
       openWorkspace(parseInt(workspaceParam,10),true);
     }
+    // Versteckter Direktlink zur Seite «Beispiele für den Aufbau» (nicht im Menü): /?seite=beispiele
+    if(new URLSearchParams(location.search).get('seite')==='beispiele'){
+      history.replaceState(null,'',location.pathname);
+      goPage('training');loadTraining();
+    }
   } else {
     const bvNav=document.getElementById('mn-brand-voice');if(bvNav)bvNav.style.display='none';
     const bvBtns=document.getElementById('bv-adv-btns');if(bvBtns)bvBtns.style.display='none';
