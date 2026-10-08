@@ -228,6 +228,9 @@ app.use('/api/custom-modules', require('./routes/customModules'));
 app.use('/api/module-examples', require('./routes/moduleExamples'));
 app.use('/api/module-prompts', require('./routes/modulePrompts'));
 app.use('/api/setup', require('./routes/setup'));
+const inquiries = require('./routes/inquiries');
+app.use('/api/inquiry', inquiries.publicRouter);
+app.use('/api/inquiries', inquiries.advisorRouter);
 
 // Manual report trigger (advisor only)
 const { requireAdvisor } = require('./middleware/auth');
