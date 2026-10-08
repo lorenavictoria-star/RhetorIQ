@@ -802,3 +802,33 @@ test('Bereits gelernt: ansehen, anpassen, entfernen, nur die eigene Beraterin', 
   assert.equal((await srv.call('GET', `/api/learning/learned?client_id=${cl.id}`, { token: A() })).body.length, 1);
   assert.equal((await srv.call('DELETE', `/api/learning/learned/${id}`, { token: A() })).status, 404);
 });
+
+// ── Zweiter Durchgang: Zwischenspeicher ─────────────────────
+test('Zweiter Durchgang: Zwischenspeicher-Markierungen im erlaubten Rahmen, Prompt unverändert', () => {
+  const { tuneCache, draftUserContent, revisionUserContent, buildRevisionPrompt, draftModelFor } = require('../routes/analyze')._internal;
+  const mk = (cc) => ({ type: 'text', text: 'x'.repeat(10), ...(cc ? { cache_control: { type: 'ephemeral' } } : {}) });
+  // Alle drei bisherigen Markierungen vorhanden: danach höchstens drei im System, die letzte immer dabei
+  const blocks = [mk(true), mk(true), mk(true), mk(false), mk(false), mk(false)];
+  tuneCache(blocks);
+  const marked = blocks.map((b, i) => b.cache_control ? i : -1).filter(i => i >= 0);
+  assert.ok(marked.length <= 3, 'höchstens drei im System');
+  assert.ok(marked.includes(blocks.length - 1), 'das Ende des Systems ist markiert');
+  assert.ok(!marked.includes(0), 'die kleinste, früheste Markierung entfällt');
+  // Auftrag: erster Durchgang und zweiter Durchgang beginnen mit demselben markierten Block
+  const msg = 'Auftrag mit Briefing und Kontext';
+  const d1 = draftUserContent(msg);
+  const d2 = revisionUserContent(msg, 'Mein Entwurf', 'text-gen');
+  assert.equal(d1[0].text, d2[0].text);
+  assert.ok(d1[0].cache_control && d2[0].cache_control);
+  assert.equal(marked.length + 1 <= 4, true, 'zusammen höchstens vier Markierungen');
+  assert.ok(d2[1].text.includes('Mein Entwurf') && d2[1].text.includes('Liefere eine überarbeitete, finale Fassung'));
+  // der klassische Prompt bleibt wie bisher
+  assert.ok(buildRevisionPrompt(msg, 'E', 'text-gen').startsWith('URSPRÜNGLICHER AUFTRAG:\n' + msg + '\n\nENTWURF (erster Versuch):\nE'));
+  // Entwurfsmodell: Standard wie bisher, günstig nur auf Wunsch
+  delete process.env.DRAFT_MODEL;
+  const std = draftModelFor('text-gen');
+  process.env.DRAFT_MODEL = 'haiku';
+  const gunstig = draftModelFor('text-gen');
+  delete process.env.DRAFT_MODEL;
+  assert.ok(String(std).includes('sonnet') && String(gunstig).includes('haiku'));
+});

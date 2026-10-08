@@ -1466,11 +1466,44 @@ function hasLargeInput(data) {
   const len = (data.existingDraft || '').length + (data.text || '').length;
   return len > LARGE_INPUT_CHARS;
 }
-function buildRevisionPrompt(originalUserMsg, draft, module) {
+// Entwurf und Prüfanweisung des zweiten Durchgangs (alles hinter dem Auftrag)
+function revisionTail(draft, module) {
   const depthCheck = module === 'presentation'
     ? ' Prüfe zusätzlich explizit auf Oberflächlichkeit: Steht irgendeine zentrale Behauptung ohne Beleg oder ausformulierte Implikation da? Gibt es Folien, die nichts Eigenständiges zur Argumentation beitragen? Ist der Einsatz (was bei Nichtstun verloren geht bzw. bei Handeln gewonnen wird) tatsächlich beziffert, wo das Briefing es hergibt? Ist der Schluss wirklich ein konkreter, unmissverständlicher Ask? Wo die Antwort nein ist, vertiefe die betroffene Stelle in der Überarbeitung spürbar, statt sie nur stilistisch zu glätten.'
     : '';
-  return `URSPRÜNGLICHER AUFTRAG:\n${originalUserMsg}\n\nENTWURF (erster Versuch):\n${draft}\n\nPrüfe diesen Entwurf kritisch gegen die Brand Voice und alle Regeln oben: wirkt er an irgendeiner Stelle generisch statt wie dieses Unternehmen, redundant, floskelhaft, oder strukturell schwach gemessen am Auftrag?${depthCheck} Liefere eine überarbeitete, finale Fassung. Gib NUR den finalen Text aus, ohne Erklärung deiner Änderungen oder Meta-Kommentar.`;
+  return `\n\nENTWURF (erster Versuch):\n${draft}\n\nPrüfe diesen Entwurf kritisch gegen die Brand Voice und alle Regeln oben: wirkt er an irgendeiner Stelle generisch statt wie dieses Unternehmen, redundant, floskelhaft, oder strukturell schwach gemessen am Auftrag?${depthCheck} Liefere eine überarbeitete, finale Fassung. Gib NUR den finalen Text aus, ohne Erklärung deiner Änderungen oder Meta-Kommentar.`;
+}
+function buildRevisionPrompt(originalUserMsg, draft, module) {
+  return `URSPRÜNGLICHER AUFTRAG:\n${originalUserMsg}${revisionTail(draft, module)}`;
+}
+
+// ── Zwischenspeicher für den zweiten Durchgang ────────────────────────────────
+// Beide Durchgänge beginnen mit demselben System und demselben Auftrag. Markiert man diesen Anfang, liest der
+// Anbieter ihn beim zweiten Durchgang für einen Zehntel des Preises, statt ihn voll zu berechnen. Die Anweisungen
+// an die KI bleiben inhaltlich gleich.
+// Anthropic erlaubt höchstens vier Markierungen: höchstens drei im System, eine beim Auftrag.
+function tuneCache(blocks) {
+  if (!blocks.length) return blocks;
+  blocks[blocks.length - 1].cache_control = { type: 'ephemeral' };
+  const marked = blocks.filter(b => b.cache_control);
+  while (marked.length > 3) { const first = marked.shift(); delete first.cache_control; }
+  return blocks;
+}
+// Erster Durchgang: der Auftrag als markierter Block
+function draftUserContent(userMsg) {
+  return [{ type: 'text', text: userMsg, cache_control: { type: 'ephemeral' } }];
+}
+// Zweiter Durchgang: derselbe Auftragsblock (aus dem Zwischenspeicher), dahinter Entwurf und Prüfanweisung
+function revisionUserContent(userMsg, draft, module) {
+  return [
+    { type: 'text', text: userMsg, cache_control: { type: 'ephemeral' } },
+    { type: 'text', text: '\n\n(Der Text oberhalb ist der URSPRÜNGLICHE AUFTRAG.)' + revisionTail(draft, module) }
+  ];
+}
+// Optional: den stillen Entwurf mit dem günstigen Modell schreiben (Umgebungsvariable DRAFT_MODEL=haiku).
+// Standard ist dasselbe Modell wie bisher. Der Zwischenspeicher gilt je Modell, deshalb entfällt er in diesem Fall.
+function draftModelFor(module) {
+  return process.env.DRAFT_MODEL === 'haiku' ? resolveModelId('haiku') : resolveModel(module);
 }
 
 // Optional, per-generation opt-in (data.geo === true, checked via a checkbox in
@@ -1760,7 +1793,10 @@ router.post('/', requireAuth, async (req, res) => {
     if (restDynamicSystem) systemBlocks.push({ type: 'text', text: restDynamicSystem });
     if (!systemBlocks.length) systemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
     systemBlocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
-    const claudeResp = await callClaude(systemBlocks, userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
+    const willTwoPass = useTwoPass(module, req.body) && !(followUp && followUp.note) && !hasLargeInput(data);
+    const cheapDraft = willTwoPass && draftModelFor(module) !== resolveModel(module);
+    if (TWO_PASS_MODULES.has(module) && !cheapDraft) tuneCache(systemBlocks);   // Zwischenspeicher (siehe tuneCache)
+    const claudeResp = await callClaude(systemBlocks, willTwoPass && !cheapDraft ? draftUserContent(userMsg) : userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, willTwoPass ? draftModelFor(module) : resolveModel(module));
     let result = claudeResp.text;
     let totalInputTokens = claudeResp.inputTokens, totalOutputTokens = claudeResp.outputTokens;
 
@@ -1772,8 +1808,8 @@ router.post('/', requireAuth, async (req, res) => {
     // a from-scratch draft — running a second full pass on top just doubles
     // latency (painfully so for long documents like a full speech) without
     // improving quality, and risks over-editing an already-finished text.
-    if (useTwoPass(module, req.body) && !(followUp && followUp.note) && !hasLargeInput(data)) {
-      const revisionResp = await callClaude(systemBlocks, buildRevisionPrompt(userMsg, claudeResp.text, module), MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
+    if (willTwoPass) {
+      const revisionResp = await callClaude(systemBlocks, cheapDraft ? buildRevisionPrompt(userMsg, claudeResp.text, module) : revisionUserContent(userMsg, claudeResp.text, module), MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
       if (revisionResp.text) result = revisionResp.text;
       totalInputTokens += revisionResp.inputTokens;
       totalOutputTokens += revisionResp.outputTokens;
@@ -1961,16 +1997,19 @@ router.post('/stream', requireAuth, async (req, res) => {
     if (restDynamicSystem) streamSystemBlocks.push({ type: 'text', text: restDynamicSystem });
     if (!streamSystemBlocks.length) streamSystemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
     streamSystemBlocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
+    const willTwoPassS = useTwoPass(module, req.body) && !(followUp && followUp.note) && !hasLargeInput(data);
+    const cheapDraftS = willTwoPassS && draftModelFor(module) !== resolveModel(module);
+    if (TWO_PASS_MODULES.has(module) && !cheapDraftS) tuneCache(streamSystemBlocks);   // Zwischenspeicher (siehe tuneCache)
 
     // Two-pass modules: draft silently first (keepalive pings keep the SSE
     // connection alive during this), then stream only the revised final pass.
     let streamUserMsg = userMsg;
     let draftInputTokens = 0, draftOutputTokens = 0;
-    if (useTwoPass(module, req.body) && !aborted && !(followUp && followUp.note) && !hasLargeInput(data)) {
+    if (willTwoPassS && !aborted) {
       console.log(`[trace] ${module} starting draft pass, maxTokens=${maxTokens}`);
-      const draftResp = await callClaude(streamSystemBlocks, userMsg, maxTokens, resolveModel(module));
+      const draftResp = await callClaude(streamSystemBlocks, cheapDraftS ? userMsg : draftUserContent(userMsg), maxTokens, draftModelFor(module));
       console.log(`[trace] ${module} draft pass done, chars=${(draftResp.text || '').length}`);
-      if (draftResp.text) streamUserMsg = buildRevisionPrompt(userMsg, draftResp.text, module);
+      if (draftResp.text) streamUserMsg = cheapDraftS ? buildRevisionPrompt(userMsg, draftResp.text, module) : revisionUserContent(userMsg, draftResp.text, module);
       draftInputTokens = draftResp.inputTokens;
       draftOutputTokens = draftResp.outputTokens;
     }
@@ -2513,7 +2552,7 @@ router.post('/:id/rate', requireAuth, async (req, res) => {
 
 // Exposed for tests only — doesn't change Express behavior, since routers are
 // callable objects and consumers only ever use `require(...)` as the router.
-router._internal = { sanitizeForPrompt, capText, PROMPTS, MODULE_MAX_TOKENS, HAIKU_MODULES, GLOBAL_STYLE_RULES, checkQuota };
+router._internal = { sanitizeForPrompt, capText, PROMPTS, MODULE_MAX_TOKENS, HAIKU_MODULES, GLOBAL_STYLE_RULES, checkQuota, tuneCache, draftUserContent, revisionUserContent, buildRevisionPrompt, draftModelFor };
 
 module.exports = router;
 module.exports.useTwoPass = useTwoPass;
