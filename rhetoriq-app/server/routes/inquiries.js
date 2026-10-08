@@ -35,6 +35,7 @@ async function ensureTable() {
   tableEnsured = true;
 }
 
+const ALLOWED_ORIGINS = ['https://rhetoriq.ch', 'https://www.rhetoriq.ch'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const clip = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
 
@@ -55,13 +56,19 @@ const inquiryLimit = rateLimit({
 
 publicRouter.post('/', inquiryLimit, async (req, res) => {
   try {
+    // Zugelassen sind (a) Aufrufe mit dem geheimen Schlüssel (INQUIRY_KEY, für Server-zu-Server)
+    // und (b) Absendungen aus dem Anfrageformular der eigenen Landingpage (Absenderprüfung).
     const secret = process.env.INQUIRY_KEY;
-    if (!secret) return res.status(503).json({ error: 'Anfragen sind nicht eingerichtet.' });
     const given = req.headers['x-inquiry-key'] || req.body.key;
-    if (!sameKey(given, secret)) return res.status(401).json({ error: 'Nicht erlaubt.' });
+    const keyOk = !!secret && !!given && sameKey(given, secret);
+    const origin = String(req.headers.origin || req.headers.referer || '');
+    const fromSite = ALLOWED_ORIGINS.some(o => origin === o || origin.startsWith(o + '/'));
+    if (!keyOk && !fromSite) return res.status(401).json({ error: 'Nicht erlaubt.' });
 
     // Honeypot: dieses versteckte Feld füllen nur Bots aus.
     if (req.body.website2) return res.json({ ok: true });
+    // Zeitfalle: Menschen brauchen mehr als 2 Sekunden bis zum Absenden.
+    if (!keyOk && !(Number(req.body.elapsed) >= 2000)) return res.json({ ok: true });
 
     const name = clip(req.body.name, 120);
     const email = clip(req.body.email, 200).toLowerCase();
@@ -75,6 +82,12 @@ publicRouter.post('/', inquiryLimit, async (req, res) => {
       `SELECT id FROM inquiries WHERE email=$1 AND created_at > NOW() - INTERVAL '10 minutes' LIMIT 1`, [email]);
     if (dup.rows.length) return res.json({ ok: true });
 
+    const flood = await pool.query(`SELECT COUNT(*)::int AS n FROM inquiries WHERE created_at > NOW() - INTERVAL '1 hour'`);
+    if (flood.rows[0].n >= 60) return res.json({ ok: true });
+    const ackRecent = await pool.query(
+      `SELECT (SELECT COUNT(*) FROM inquiries WHERE email=$1 AND ack_sent_at > NOW() - INTERVAL '24 hours')::int AS same,
+              (SELECT COUNT(*) FROM inquiries WHERE ack_sent_at > NOW() - INTERVAL '1 hour')::int AS hour`, [email]);
+    const sendAck = ackRecent.rows[0].same === 0 && ackRecent.rows[0].hour < 30;
     const { rows } = await pool.query(
       `INSERT INTO inquiries (name, company, email, message) VALUES ($1,$2,$3,$4) RETURNING id`,
       [name, company, email, message]);
@@ -82,7 +95,7 @@ publicRouter.post('/', inquiryLimit, async (req, res) => {
 
     // Eingangsbestätigung an die Anfragende Person (Sie-Form, weil noch nichts geklärt ist).
     const ack = ackText({ name });
-    queueEmail({ kind: 'inquiry_ack', to: email, subject: 'Ihre Anfrage bei RhetorIQ', text: ack, senderName: 'Lorena Lienhard' })
+    if (sendAck) queueEmail({ kind: 'inquiry_ack', to: email, subject: 'Ihre Anfrage bei RhetorIQ', text: ack, senderName: 'Lorena Lienhard' })
       .then(() => pool.query('UPDATE inquiries SET ack_sent_at=NOW() WHERE id=$1', [id]))
       .catch(e => console.error('[inquiry] ack failed:', e.message));
 
