@@ -8407,7 +8407,7 @@ tryAutoLogin();
   function top3(){
     if(window._rqTopServer&&window._rqTopServer.length){
       var sv=[];window._rqTopServer.forEach(function(r){
-        var k=String(r.module||''),m=meta(k)||(typeof ALL_MODULES!=='undefined'?ALL_MODULES:[]).filter(function(x){return x.enableKey===k&&!x.tile;})[0];
+        var k=String(r.module||''),m=meta(k)||meta('text-gen-'+k)||(typeof MDEFS!=='undefined'?Object.keys(MDEFS).filter(function(x){return MDEFS[x].api===k&&meta(x);}).map(meta)[0]:null)||(typeof ALL_MODULES!=='undefined'?ALL_MODULES:[]).filter(function(x){return x.enableKey===k&&!x.tile;})[0];
         if(m&&!sv.some(function(o){return o.key===m.key;}))sv.push({key:m.key,n:+r.count||0});
       });
       FALL.forEach(function(f){if(sv.length<3&&!sv.some(function(o){return o.key===f[0];}))sv.push({key:f[0],n:0});});
@@ -9246,7 +9246,7 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     box.innerHTML='<span class="rq-eb">Zugriffsprotokoll · Ansicht des Klienten</span><div class="rq-hint">Lädt …</div>';body.appendChild(box);
     rqJ('/api/advisor/view-as-log/'+cid).then(function(rows){
       rows=Array.isArray(rows)?rows:(rows&&rows.rows)||[];
-      box.innerHTML='<span class="rq-eb">Zugriffsprotokoll · Ansicht des Klienten</span>'+(rows.length?'<div class="rq-list">'+rows.map(function(x){var t=x.created_at||x.opened_at||x.at;return '<div class="rq-li" style="cursor:default"><i class="ti ti-lock"></i><div><b>Ansicht geöffnet</b><small>'+E(x.advisor_name||x.advisor||'Beraterin')+' · '+E(rqDateTime(t))+'</small></div><span class="rq-hint">'+(x.duration_min?x.duration_min+' Min.':'')+'</span></div>';}).join('')+'</div>':'<div class="rq-hint">Noch keine Ansicht geöffnet.</div>');
+      box.innerHTML='<span class="rq-eb">Zugriffsprotokoll · Ansicht des Klienten</span>'+(rows.length?'<div class="rq-list">'+rows.map(function(x){var t=x.started_at||x.created_at||x.opened_at||x.at;return '<div class="rq-li" style="cursor:default"><i class="ti ti-lock"></i><div><b>Ansicht geöffnet</b><small>'+E(x.advisor_name||x.advisor||'Beraterin')+' · '+E(rqDateTime(t))+'</small></div><span class="rq-hint">'+(x.duration_min?x.duration_min+' Min.':'')+'</span></div>';}).join('')+'</div>':'<div class="rq-hint">Noch keine Ansicht geöffnet.</div>');
     }).catch(function(e){box.innerHTML='<span class="rq-eb">Zugriffsprotokoll · Ansicht des Klienten</span><div class="rq-err">Das Protokoll konnte nicht geladen werden. '+E(e.message)+'</div>';});
     return r;
   };
