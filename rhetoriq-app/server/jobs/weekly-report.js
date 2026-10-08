@@ -1,5 +1,6 @@
 const { pool } = require('../db');
 const { queueEmail } = require('../lib/emailOutbox');
+const { buildWeeklyTextsXlsx } = require('../lib/weeklyExcel');
 
 const ADVISOR_EMAIL = process.env.ADVISOR_EMAIL || 'contact@lorenalienhard.ch';
 
@@ -141,6 +142,27 @@ async function runWeeklyReport() {
       'RhetorIQ · contact@lorenalienhard.ch'
     );
 
+    // Alle Texte der Woche als Excel-Liste im Anhang (ersetzt das Durchblättern des Verlaufs in der Plattform)
+    let attachments;
+    try {
+      const { rows: weekTexts } = await pool.query(`
+        SELECT a.created_at, c.name AS client_name, a.module, a.module_label, a.user_rating, a.result
+        FROM analyses a
+        LEFT JOIN clients c ON c.id = a.client_id
+        WHERE a.created_at > NOW() - INTERVAL '7 days' AND a.result IS NOT NULL
+        ORDER BY c.name NULLS LAST, a.created_at DESC
+        LIMIT 2000
+      `);
+      if (weekTexts.length) {
+        const buf = await buildWeeklyTextsXlsx(weekTexts);
+        const stamp = new Date().toISOString().slice(0, 10);
+        attachments = [{ name: `RhetorIQ_Texte_Woche_${stamp}.xlsx`, contentBase64: buf.toString('base64') }];
+        lines.splice(lines.length - 3, 0, `TEXTE DIESER WOCHE: ${weekTexts.length} Texte als Excel-Liste im Anhang.`, '');
+      }
+    } catch (e) {
+      console.error('[weekly-report] Excel attachment failed:', e.message);
+    }
+
     const reportText = lines.join('\n');
 
     await queueEmail({
@@ -148,7 +170,8 @@ async function runWeeklyReport() {
       to: ADVISOR_EMAIL,
       subject: `RhetorIQ Wochenbericht — ${week}`,
       text: reportText,
-      senderName: 'RhetorIQ Reports'
+      senderName: 'RhetorIQ Reports',
+      attachments
     });
 
     console.log(`[weekly-report] Queued for ${ADVISOR_EMAIL}`);

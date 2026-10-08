@@ -533,3 +533,28 @@ test('Verlauf: Beraterin und Admin-Rolle ja, normale Klienten und Ansicht nein',
   assert.equal(admin.body.length, 1);
   assert.equal((await get(tok(adminId, 'admin', { readOnly: true }))).status, 403);
 });
+
+// ── Wochenbericht: Excel-Liste und Mail-Anhang ─────────────
+test('Excel-Liste der Wochentexte ist eine gültige Datei mit allen Zeilen', async () => {
+  const { buildWeeklyTextsXlsx } = require('../lib/weeklyExcel');
+  const JSZip = require('jszip');
+  const buf = await buildWeeklyTextsXlsx([
+    { created_at: new Date(), client_name: 'Keller Bau AG', module_label: 'E-Mail', user_rating: 1, result: 'Guten Tag Frau Keller, ab dem 1. April …' },
+    { created_at: new Date(), client_name: null, module_label: 'Rede', user_rating: null, result: 'Sehr geehrte Damen und Herren' }
+  ]);
+  assert.ok(Buffer.isBuffer(buf) && buf.length > 1000);
+  const zip = await JSZip.loadAsync(buf);
+  assert.ok(zip.file('xl/worksheets/sheet1.xml'));
+  const shared = await zip.file('xl/sharedStrings.xml').async('string');
+  assert.ok(shared.includes('Keller Bau AG') && shared.includes('Ohne Klient') && shared.includes('Sehr geehrte Damen und Herren'));
+  assert.ok(shared.includes('Datum') && shared.includes('Textart'));
+});
+
+test('Brevo-Inhalt: Anhang wird mitgeschickt, ohne Anhang unverändert', () => {
+  const { buildPayload } = require('../lib/brevoPayload');
+  const ohne = buildPayload({ to: 'a@b.ch', subject: 'S', text: 'T', senderName: 'X' });
+  assert.equal(ohne.attachment, undefined);
+  assert.equal(ohne.to[0].email, 'a@b.ch');
+  const mit = buildPayload({ to: 'a@b.ch', subject: 'S', text: 'T', senderName: 'X', attachments: [{ name: 'a.xlsx', contentBase64: 'QUJD' }] });
+  assert.deepEqual(mit.attachment, [{ name: 'a.xlsx', content: 'QUJD' }]);
+});
