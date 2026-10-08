@@ -8395,6 +8395,14 @@ tryAutoLogin();
     if(m.tile)goTextGenTile(m.tile);else if(m.key==='brand-voice')goPage('brand-voice');else goModule(m.key);
   }
   function top3(){
+    if(window._rqTopServer&&window._rqTopServer.length){
+      var sv=[];window._rqTopServer.forEach(function(r){
+        var k=String(r.module||''),m=meta(k)||(typeof ALL_MODULES!=='undefined'?ALL_MODULES:[]).filter(function(x){return x.enableKey===k&&!x.tile;})[0];
+        if(m&&!sv.some(function(o){return o.key===m.key;}))sv.push({key:m.key,n:+r.count||0});
+      });
+      FALL.forEach(function(f){if(sv.length<3&&!sv.some(function(o){return o.key===f[0];}))sv.push({key:f[0],n:0});});
+      if(sv.length)return sv.slice(0,3);
+    }
     var u=uses(),keys=Object.keys(u).filter(function(k){return meta(k);}).sort(function(a,b){return u[b]-u[a];}).slice(0,3);
     var out=keys.map(function(k){return {key:k,n:u[k]};});
     FALL.forEach(function(f){if(out.length<3&&!out.some(function(o){return o.key===f[0];}))out.push({key:f[0],n:0});});
@@ -8585,6 +8593,177 @@ tryAutoLogin();
   }
   // Menüpunkt "Onboarding" öffnet den Ablauf (das alte Modal bleibt über die Kopfzeile und Schritt 4 erreichbar)
   var _bld=window.rqBuildRail;
+})();
+</script>
+<style id="rq-live-css">
+.rq-card{border:1px solid var(--bd);background:#fff;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.rq-card.gold{border-color:var(--ac);background:var(--acl)}
+.rq-eb{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mu)}
+.rq-eb.g{color:var(--ac)}
+.rq-chips{display:flex;flex-wrap:wrap;gap:8px}
+.rq-chip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:8px 16px;border:1px solid var(--bd);background:#fff;color:var(--tx);font-family:var(--sans);font-size:15px;cursor:pointer}
+.rq-chip.on{border-color:var(--ac);background:var(--acl);color:var(--ac)}
+.rq-chip.fix{cursor:default}
+.rq-chip:hover:not(.fix){border-color:var(--ac)}
+.rq-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:10px 22px;background:var(--ac);color:#fff;border:1px solid var(--ac);font-family:var(--sans);font-size:15px;font-weight:500;cursor:pointer}
+.rq-btn:hover{filter:brightness(.94)}
+.rq-btn.ghost{background:#fff;color:var(--tx);border-color:var(--bd)}
+.rq-btn.ghost:hover{border-color:var(--ac);color:var(--ac);filter:none}
+.rq-btn.sm{min-height:40px;padding:6px 14px;font-size:14px}
+.rq-btn.danger{background:#fff;color:#a8392c;border-color:#e3b8b1}
+.rq-btn:disabled{opacity:.5;cursor:not-allowed}
+.rq-acts{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.rq-in{width:100%;min-height:48px;padding:10px 14px;border:1px solid var(--bd);background:#fff;font-family:var(--sans);font-size:16px;color:var(--tx);border-radius:0}
+.rq-in:focus{outline:2px solid var(--ac);outline-offset:-1px;border-color:var(--ac)}
+textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
+.rq-lab{display:block;font-size:13px;color:var(--mu);margin-bottom:6px}
+.rq-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.rq-hint{font-size:13.5px;color:var(--mu);line-height:1.5}
+.rq-err{color:#a8392c;font-size:14px}
+.rq-ok{color:#2f6b3c;font-size:14px}
+.rq-doc{white-space:pre-wrap;line-height:1.65;font-size:15px;padding:14px 16px;border:1px solid var(--bd);background:#fff}
+.rq-spin{display:inline-block;width:14px;height:14px;border:2px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:rqsp .8s linear infinite;vertical-align:-2px;margin-right:8px}
+@keyframes rqsp{to{transform:rotate(360deg)}}
+@media(max-width:640px){.rq-two{grid-template-columns:1fr}}
+#rq-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--tx);color:#fff;padding:12px 20px;z-index:900;font-size:14px;max-width:90vw}
+</style>
+<script id="rq-util-js">
+// ═══ Gemeinsame Helfer für die neuen Server-Funktionen ═══
+(function(){
+  window.rqEsc=function(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
+  // JSON-Aufruf über die bestehende api(); wirft bei Fehlern mit lesbarer Meldung
+  window.rqJ=async function(path,o){
+    var r=await api(path,o||{}),d=null;
+    try{d=await r.json();}catch(e){}
+    if(!r.ok)throw new Error((d&&(d.error||d.message))||('Fehler '+r.status));
+    return d;
+  };
+  function dlName(r,fb){
+    var cd=r.headers.get('content-disposition')||'',m=/filename\*=UTF-8''([^;]+)/i.exec(cd);
+    if(m){try{return decodeURIComponent(m[1]);}catch(e){}}
+    m=/filename="?([^";]+)"?/i.exec(cd);return m?m[1]:fb;
+  }
+  // Datei mit Anmeldung laden und speichern
+  window.rqDl=async function(path,fallbackName){
+    var r=await fetch(API+path,{headers:{Authorization:'Bearer '+token}});
+    if(!r.ok){var m='Der Download hat nicht geklappt.';try{var d=await r.json();if(d&&d.error)m=d.error;}catch(e){}throw new Error(m);}
+    var b=await r.blob(),a=document.createElement('a');
+    a.href=URL.createObjectURL(b);a.download=dlName(r,fallbackName||'Datei');
+    document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
+  };
+  // Mehrteiliger Upload (Anmeldung, aber kein JSON-Kopf)
+  window.rqUp=async function(file,fields){
+    var fd=new FormData();Object.keys(fields||{}).forEach(function(k){if(fields[k]!=null)fd.append(k,fields[k]);});
+    fd.append('file',file,file.name);
+    var r=await fetch(API+'/api/files',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd}),d=null;
+    try{d=await r.json();}catch(e){}
+    if(!r.ok)throw new Error((d&&d.error)||('Upload fehlgeschlagen ('+r.status+')'));
+    return d;
+  };
+  window.rqToast=function(msg){
+    var t=document.getElementById('rq-toast');if(!t){t=document.createElement('div');t.id='rq-toast';document.body.appendChild(t);}
+    t.textContent=msg;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(function(){t.style.display='none';},3500);
+  };
+  window.rqSize=function(n){n=+n||0;return n>=1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';};
+  window.rqDate=function(d){if(!d)return '';var x=new Date(d);return isNaN(x)?'':x.toLocaleDateString('de-CH',{day:'numeric',month:'short',year:'numeric'});};
+  window.rqDateTime=function(d){if(!d)return '';var x=new Date(d);return isNaN(x)?'':x.toLocaleString('de-CH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});};
+  // Module: Anzeigename, Schlüssel (enabled_modules)
+  window.RQ_MODS=[['brand-voice','Brand Voice'],['text-gen','Text Generator'],['before-after','Vorher / Nachher'],['vs-gen','Varianten-Generator'],['vs-cal','Situations-Variante'],['profiling','Kommunikations-Profil'],['review','Feedback Writer'],['recognition','Wertschätzung'],['pre-meeting','Meeting-Vorbereitung'],['risk','Risiko-Scan'],['actionability','Klarheits-Check'],['thread','Notizen zu Aufgaben'],['sparring','Einwand-Training'],['debrief','Debrief']];
+  window.rqModName=function(k){var m=RQ_MODS.filter(function(x){return x[0]===k;})[0];return m?m[1]:k;};
+  window.rqModKey=function(v){ // Name oder Schlüssel zu Schlüssel
+    v=String(v||'');var m=RQ_MODS.filter(function(x){return x[0]===v||x[1].toLowerCase()===v.toLowerCase();})[0];return m?m[0]:null;
+  };
+  window.RQ_SECTORS={kmu:'KMU / Allgemein',hotellerie:'Hotellerie / Tourismus',capital:'Capital / Finance',bildung:'Bildung / Public Sector',nonprofit:'Non-Profit / NGO',tech:'Tech / Startup',beratung:'Beratung / Coaching'};
+  window.RQ_SECMODS={kmu:['text-gen','before-after','profiling','review','recognition','pre-meeting','risk','actionability','thread'],hotellerie:['text-gen','before-after','vs-gen','vs-cal','profiling','review','recognition','pre-meeting','sparring','debrief'],capital:['text-gen','vs-gen','vs-cal','profiling','review','pre-meeting','risk','sparring'],bildung:['text-gen','before-after','profiling','review','recognition','pre-meeting','actionability'],nonprofit:['text-gen','before-after','vs-gen','profiling','review','recognition','pre-meeting'],tech:['text-gen','before-after','vs-gen','vs-cal','profiling','review','pre-meeting','risk','actionability','thread','sparring'],beratung:['text-gen','before-after','vs-gen','profiling','review','recognition','pre-meeting','risk','sparring','debrief','thread']};
+})();
+</script>
+<script id="rq-help-js">
+// ═══ F8 Frage stellen (echter Aufruf) und F9 häufigste Textarten vom Server ═══
+(function(){
+  window.rqAsk=function(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    var i=document.getElementById('rq-ci'),q=(i.value||'').trim();if(!q||i.disabled)return false;
+    var l=document.getElementById('rq-cl'),f=i.closest('form'),btn=f&&f.querySelector('button');
+    var u=document.createElement('div');u.className='rq-m u';u.textContent=q;l.appendChild(u);
+    var a=document.createElement('div');a.className='rq-m';a.innerHTML='<span class="rq-spin"></span>Ich suche die Antwort …';l.appendChild(a);
+    i.value='';i.disabled=true;if(btn)btn.disabled=true;l.scrollTop=l.scrollHeight;
+    rqJ('/api/help-chat',{method:'POST',body:JSON.stringify({question:q})}).then(function(d){
+      a.textContent=(d&&d.answer)||'Dazu habe ich keine Antwort gefunden. Formulieren Sie die Frage bitte anders.';
+    }).catch(function(err){
+      a.className='rq-m';a.style.borderColor='#e3b8b1';a.style.color='#a8392c';
+      a.textContent='Das hat nicht geklappt. '+(err&&err.message&&!/^Fehler \d+$/.test(err.message)?err.message+' ':'')+'Bitte versuchen Sie es in einem Moment noch einmal.';
+    }).finally(function(){i.disabled=false;if(btn)btn.disabled=false;i.focus();l.scrollTop=l.scrollHeight;});
+    return false;
+  };
+  // F9
+  var done={};
+  function loadTop(){
+    if(typeof isAdv!=='undefined'&&isAdv)return;
+    var cid=(typeof clientId!=='undefined')&&clientId;if(!cid||done[cid]===1)return;done[cid]=1;
+    rqJ('/api/clients/'+cid+'/top-modules').then(function(rows){
+      if(!Array.isArray(rows)||!rows.length)return;
+      window._rqTopServer=rows;if(window.renderQuickAccess)renderQuickAccess();
+    }).catch(function(){});
+  }
+  var ls=document.getElementById('login-screen');
+  function after(){if(ls&&ls.classList.contains('hidden'))setTimeout(loadTop,600);}
+  if(ls){new MutationObserver(after).observe(ls,{attributes:true,attributeFilter:['class']});after();}
+})();
+</script>
+<script id="rq-send-js">
+// ═══ F4 Klient: «An Beraterin senden» mit Auftrag und Frist ═══
+(function(){
+  window.sendToAdvisor=function(bodyId,moduleLabel,btn){
+    var rbox=btn.closest('.rbox');
+    if(!rbox||rbox.querySelector('.adv-note-box'))return;
+    var rhead=btn.closest('.rhead')||btn.parentNode,id=String(bodyId).replace(/[^\w-]/g,'');
+    var box=document.createElement('div');box.className='adv-note-box';
+    box.style.cssText='padding:18px 20px;border-top:1px solid var(--bd);background:#fff;display:flex;flex-direction:column;gap:12px';
+    box.innerHTML='<span class="rq-eb g">Was soll Lorena tun?</span>'
+      +'<textarea id="adv-note-'+id+'" class="rq-in" style="min-height:110px" placeholder="Beschreiben Sie in eigenen Worten, was Lorena am Text tun soll."></textarea>'
+      +'<div class="rq-acts"><button type="button" class="rq-chip adv-due-tog">+ Bis spätestens</button><input type="datetime-local" id="adv-due-'+id+'" class="rq-in adv-due" style="display:none;width:auto;min-width:230px" aria-label="Frist">'
+      +'<span class="rq-hint adv-due-hint">Ohne Angabe erhalten Sie den Text innert 3 Stunden.</span></div>'
+      +'<div class="rq-acts" style="justify-content:flex-end"><button type="button" class="rq-btn ghost adv-note-cancel">Abbrechen</button><button type="button" class="rq-btn adv-note-send">Senden</button></div>';
+    var tog=box.querySelector('.adv-due-tog'),due=box.querySelector('.adv-due'),hint=box.querySelector('.adv-due-hint');
+    tog.onclick=function(){
+      var open=due.style.display==='none';
+      if(open){var d=new Date(Date.now()+86400000);d.setMinutes(0,0,0);d.setHours(12);var p=function(n){return String(n).padStart(2,'0');};
+        due.min=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
+        if(!due.value)due.value=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':00';
+        due.style.display='';tog.classList.add('on');tog.textContent='Bis spätestens';hint.textContent='Lorena richtet sich nach diesem Termin.';}
+      else{due.style.display='none';due.value='';tog.classList.remove('on');tog.textContent='+ Bis spätestens';hint.textContent='Ohne Angabe erhalten Sie den Text innert 3 Stunden.';}
+    };
+    box.querySelector('.adv-note-cancel').onclick=function(){box.remove();};
+    box.querySelector('.adv-note-send').onclick=function(){submitToAdvisor(bodyId,moduleLabel,btn,box);};
+    rhead.insertAdjacentElement('afterend',box);
+    box.querySelector('textarea').focus();
+  };
+  window.submitToAdvisor=async function(bodyId,moduleLabel,btn,box){
+    var body=document.getElementById(bodyId),text=body&&body.textContent&&body.textContent.trim();
+    if(!text)return;
+    var id=String(bodyId).replace(/[^\w-]/g,''),ta=document.getElementById('adv-note-'+id),note=(ta&&ta.value||'').trim();
+    var dv=box.querySelector('.adv-due'),dueAt=null;
+    if(dv&&dv.value){var dd=new Date(dv.value);if(!isNaN(dd))dueAt=dd.toISOString();}
+    var sendBtn=box.querySelector('.adv-note-send');sendBtn.disabled=true;sendBtn.textContent='Sende …';
+    var req=btn.closest('.rbox')&&btn.closest('.rbox')._req||null;
+    var reviewContext=req?{module:req.module,data:req.data,instructionsKey:req.instructionsKey}:null;
+    var revisionHistory=((req&&req.history)||[]).map(function(h){return {note:h.note,textBefore:(h.textBefore||'').length>300?h.textBefore.slice(0,300)+'…':h.textBefore};});
+    try{
+      var payload={clientId:clientId,moduleLabel:moduleLabel,originalText:text,note:note,moduleKey:window._currentModule||null,moduleTile:window._currentTgTile||null,reviewContext:reviewContext,revisionHistory:revisionHistory};
+      if(note)payload.instruction=note;
+      if(dueAt)payload.dueAt=dueAt;
+      await rqJ('/api/reviews',{method:'POST',body:JSON.stringify(payload)});
+      box.remove();btn.classList.add('sent');
+      btn.textContent=(T[LANG]&&T[LANG].review_sent_short)||'Gesendet';
+      btn.title=(T[LANG]&&T[LANG].review_sent)||'An Beraterin gesendet';
+      var rbox=btn.closest('.rbox');
+      if(rbox&&!rbox.querySelector('.adv-confirm')){
+        var c=document.createElement('div');c.className='adv-confirm';c.style.cssText='font-size:14px;color:#2f6b3c;padding:12px 20px;border-top:1px solid var(--bd)';
+        c.textContent=dueAt?('Gesendet. Lorena meldet sich bis '+rqDateTime(dueAt)+'.'):((T[LANG]&&T[LANG].review_sent)||'Gesendet. Sie erhalten den Text innert 3 Stunden.');
+        rbox.appendChild(c);
+      }
+    }catch(e){sendBtn.disabled=false;sendBtn.textContent='Senden';rqToast('Das Senden hat nicht geklappt. Bitte versuchen Sie es noch einmal.');}
+  };
 })();
 </script>
 </body>
