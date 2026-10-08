@@ -2043,9 +2043,9 @@ router.get('/history', requireAuth, async (req, res) => {
       advisorId = cr[0] && cr[0].advisor_id;
     }
 
-    // ?preview=1: nur die ersten 300 Zeichen jedes Textes liefern (der volle Text kommt bei Bedarf über GET /:id).
+    // ?preview=1: nur die ersten 100 Zeichen jedes Textes liefern (die Liste zeigt ohnehin nur ca. 90) (der volle Text kommt bei Bedarf über GET /:id).
     // Ohne den Parameter bleibt die Antwort wie bisher.
-    const resultCol = req.query.preview === '1' ? 'LEFT(result, 300) AS result, LENGTH(result) AS result_length' : 'result';
+    const resultCol = req.query.preview === '1' ? 'LEFT(result, 100) AS result, LENGTH(result) AS result_length' : 'result';
     let query, params;
     if (clientId) {
       query = `SELECT id, module, module_label, ${resultCol}, created_at FROM analyses WHERE client_id = $1 AND advisor_id = $2 ORDER BY created_at DESC LIMIT 50`;

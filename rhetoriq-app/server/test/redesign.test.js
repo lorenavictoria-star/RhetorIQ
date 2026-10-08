@@ -575,7 +575,7 @@ test('Zähler, Modul-Zähler und Verlauf-Vorschau liefern keine vollen Texte', a
   const prev = await srv.call('GET', `/api/analyze/history?clientId=${cl.id}&preview=1`, { token: adv });
   assert.equal(prev.status, 200);
   assert.equal(prev.body.length, 3);
-  assert.equal(prev.body[0].result.length, 300);
+  assert.equal(prev.body[0].result.length, 100);
   assert.equal(prev.body[0].result_length, 2000);
   const full = await srv.call('GET', `/api/analyze/history?clientId=${cl.id}`, { token: adv });
   assert.equal(full.body[0].result.length, 2000);
