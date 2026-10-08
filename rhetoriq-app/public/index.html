@@ -780,6 +780,53 @@ a{color:var(--ac)}
 .ltag{margin-bottom:32px;letter-spacing:.14em;text-transform:uppercase;font-size:11px}
 .lbtn{width:100%}
 @media(max-width:800px){#login-screen{flex-direction:column;overflow-y:auto}#login-screen .lside{flex:0 0 auto;min-height:70vh}#login-screen .lhero{flex:0 0 240px;border-left:0;border-top:1px solid var(--bd)}.ball3d{top:4px;width:220px}#login-thread{display:none}}
+/* ═══ Seitenleiste (Desktop) und Kopfzeile ═══ */
+#rq-rail{display:none}
+.rq-hbtn{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 14px;background:#fff;border:1px solid var(--bd);color:var(--tx);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--sans)}
+.rq-hbtn:hover{border-color:var(--ac);color:var(--ac)}
+.hdr button{min-height:36px}
+.hright{gap:8px}
+.mnav{background:#fff;border-top:1px solid var(--bd)}
+.mni{min-height:48px;justify-content:center}
+.mni-l{font-size:11px}
+.mni.active .mni-i,.mni.active .mni-l{color:var(--ac)}
+.mm-tile,.mm-row{min-height:44px}
+#more-menu{border:1px solid var(--tx)!important}
+@media (min-width:900px){
+  .app{padding-left:248px!important}
+  .mnav{display:none!important}
+  #more-menu{display:none!important}
+  .hdr .hlogo{visibility:hidden}
+  #rq-rail{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:248px;background:var(--rail);color:var(--rail-tx);z-index:150;padding:22px 0 14px;overflow-y:auto}
+  html.rq-big #rq-rail{bottom:auto;height:calc(100vh / 1.15)}
+  html.rq-big .app{height:calc(100vh / 1.15)}
+  #rq-rail .rq-logo{font-family:var(--serif);font-size:26px;padding:0 22px 22px;cursor:pointer;letter-spacing:.01em}
+  #rq-rail .rq-logo b{color:var(--rail-ac);font-weight:500}
+  #rq-rail .rq-g{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--rail-mu);padding:18px 22px 6px}
+  #rq-rail a.rq-n{display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 22px;color:var(--rail-mu);font-size:15px;cursor:pointer;border-left:2px solid transparent;text-decoration:none}
+  #rq-rail a.rq-n i{font-size:18px;width:20px;text-align:center}
+  #rq-rail a.rq-n:hover{color:var(--rail-tx)}
+  #rq-rail a.rq-n.act{color:var(--rail-ac);border-left-color:var(--rail-ac);background:rgba(217,178,106,.08)}
+  #rq-rail a.rq-n .rq-cnt{margin-left:auto;font-size:11px;color:var(--rail-ac);border:1px solid var(--rail-ac);padding:0 7px;min-width:20px;text-align:center}
+  #rq-rail .rq-sp{flex:1}
+  #rq-rail .rq-big{display:flex;align-items:center;gap:10px;margin:8px 22px;min-height:44px;padding:8px 12px;border:1px solid var(--rail-ln);color:var(--rail-tx);background:transparent;font-size:14px;cursor:pointer;font-family:var(--sans);text-align:left}
+  #rq-rail .rq-big[aria-pressed=true]{border-color:var(--rail-ac);color:var(--rail-ac)}
+  #fbbtn,#fbpanel{left:268px!important}
+  #rq-rail .rq-legal{display:flex;gap:12px;padding:6px 22px 0;font-size:11px}
+  #rq-rail .rq-legal a{color:var(--rail-mu);cursor:pointer}
+  #rq-rail .rq-legal a:hover{color:var(--rail-tx)}
+}
+/* Chatfenster "Frage stellen" */
+#rq-chat{display:none;position:fixed;right:20px;top:64px;width:min(380px,calc(100vw - 24px));max-height:70vh;background:#fff;border:1px solid var(--tx);z-index:400;flex-direction:column}
+#rq-chat.show{display:flex}
+#rq-chat .rq-ch{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--bd);font-family:var(--serif);font-size:19px}
+#rq-chat .rq-ch button{background:none;border:0;font-size:22px;cursor:pointer;min-width:40px;min-height:40px;color:var(--mu)}
+#rq-chat .rq-cl{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.55;min-height:140px}
+#rq-chat .rq-m{padding:9px 12px;border:1px solid var(--bd);max-width:92%}
+#rq-chat .rq-m.u{align-self:flex-end;border-color:var(--ac)}
+#rq-chat .rq-cf{display:flex;gap:8px;padding:12px;border-top:1px solid var(--bd)}
+#rq-chat .rq-cf input{flex:1}
+@media(max-width:899px){.hdr button[onclick*="openPalette"],.hdr .hlogo-mark{display:none!important}.hdr{padding:0 12px!important}.hright{gap:6px!important}.hlogo{font-size:20px!important}#cbtn,#fbbtn{bottom:calc(76px + var(--safe-bottom))!important}#fbpanel{bottom:calc(130px + var(--safe-bottom))!important}#cpanel{bottom:calc(134px + var(--safe-bottom))!important}.rq-hbtn span{display:none}.rq-hbtn{padding:6px 10px;font-size:13px}#rq-chat{top:auto;bottom:76px;right:12px}}
 /* Grosse Schrift */
 html.rq-big{zoom:1.15}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -1167,6 +1214,8 @@ html.rq-big{zoom:1.15}
     <div class="hright">
       <span class="wsd" id="ws-dot" style="display:none"></span>
       <span class="huname" id="uname"></span>
+      <button class="rq-hbtn" id="rq-help" onclick="goPage('videos');if(window.rqMarkRail)rqMarkRail('videos')" title="Kurzes Hilfe-Video ansehen">? Hilfe</button>
+      <button class="rq-hbtn" id="rq-ask" onclick="rqToggleChat()" title="Frage an den Assistenten stellen"><i class="ti ti-message-circle" aria-hidden="true"></i> Frage stellen</button>
       <button onclick="openPalette()" title="Search modules (⌘K)" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu);background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:var(--sans)"><i class="ti ti-search" style="font-size:13px"></i><span style="display:none" id="hdr-cmd-label">⌘K</span></button>
       <button id="lang-toggle" onclick="toggleLang()" style="font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--mu);background:none;border:1px solid var(--bd);border-radius:4px;padding:4px 8px;cursor:pointer;font-family:var(--sans)">DE</button>
       <button onclick="openTour(0)" title="Einführung / Tour" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--mu);background:none;border:1px solid var(--bd);border-radius:50%;cursor:pointer;font-family:var(--sans)">?</button>
@@ -1915,6 +1964,7 @@ html.rq-big{zoom:1.15}
     <div id="mm-billing" onclick="openBillingPortal()" class="mm-row" style="display:none;border-top:1px solid var(--bd)">
       <i class="ti ti-credit-card"></i> <span>Abo verwalten</span>
     </div>
+    <div onclick="rqToggleBig()" class="mm-row" style="border-top:1px solid var(--bd)"><i class="ti ti-letter-case"></i> <span id="rq-big-lbl-m">Text grösser</span></div>
     <div onclick="logout()" class="mm-row" style="border-top:1px solid var(--bd)">
       <i class="ti ti-logout"></i> <span id="mm-signout">Sign out</span>
     </div>
@@ -2127,7 +2177,7 @@ function hasSuite(prefix){return enabledModules&&enabledModules.some(k=>k.starts
 let LANG=localStorage.getItem('riq-lang')||'de';
 const T={
   en:{
-    nav_home:'Home',nav_modules:'Modules',nav_brand:'Brand',nav_people:'People',nav_hist:'History',nav_more:'More',
+    nav_home:'Home',nav_modules:'Modules',nav_textarten:'Text types',nav_brand:'Brand',nav_people:'People',nav_hist:'History',nav_more:'More',
     mm_context:'Memory',mm_clients:'Clients',mm_videos:'Videos',mm_contact:'Contact',mm_signout:'Sign out',
     select_client_ph:'Select client',ob_title:'New Client Onboarding',ob_sub:'Upload all documents — AI sorts and saves them automatically',
     mn_clients_lbl:'Clients',stat_client:'Client',stat_people:'People',stat_analyses:'Analyses',
@@ -2203,7 +2253,7 @@ const T={
     clients_export:'⬇ Excel'
   },
   de:{
-    nav_home:'Start',nav_modules:'Module',nav_brand:'Marke',nav_people:'Personen',nav_hist:'Verlauf',nav_more:'Mehr',
+    nav_home:'Start',nav_modules:'Module',nav_textarten:'Textarten',nav_brand:'Marke',nav_people:'Personen',nav_hist:'Verlauf',nav_more:'Mehr',
     mm_context:'Kontext',mm_clients:'Klienten',mm_videos:'Videos',mm_contact:'Kontakt',mm_signout:'Abmelden',
     select_client_ph:'Klient auswählen',ob_title:'Neuer Klient — Onboarding',ob_sub:'Alle Dokumente hochladen — KI sortiert und speichert sie automatisch',
     mn_clients_lbl:'Klienten',stat_client:'Klient',stat_people:'Personen',stat_analyses:'Analysen',
@@ -2325,7 +2375,7 @@ function applyLang(){
   const t=T[LANG];
   const s=(id,txt)=>{const el=document.getElementById(id);if(el)el.textContent=txt;};
   const h=(id,html)=>{const el=document.getElementById(id);if(el)el.innerHTML=html;};
-  s('mn-home-l',t.nav_home);s('mn-modules-l',t.nav_modules);s('mn-more-l',t.nav_more);
+  s('mn-home-l',t.nav_home);s('mn-modules-l',isAdv?t.nav_modules:t.nav_textarten);s('mn-more-l',t.nav_more);
   s('mn-clients-lbl',t.mn_clients_lbl);s('ob-btn-title',t.ob_title);s('ob-btn-sub',t.ob_sub);
   s('stat-client-lbl',t.stat_client);s('stat-people-lbl',t.stat_people);s('stat-analyses-lbl',t.stat_analyses);
   s('client-select-ph',t.select_client_ph);
@@ -8162,6 +8212,113 @@ tryAutoLogin();
   var _sf=window.sf;window.sf=function(a,b){_sf(a,b);setTimeout(thread,30);};
   var _sc=window.switchClientTab;if(_sc)window.switchClientTab=function(t){_sc(t);setTimeout(thread,30);};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+</script>
+
+<script id="rq-shell-js">
+// ═══ Neue Seitenleiste, Hilfe, Frage stellen, Text grösser (nur additiv; alte Funktionen bleiben) ═══
+(function(){
+  var KEY='rq_big';
+  function big(){try{return localStorage.getItem(KEY)==='1';}catch(e){return false;}}
+  function applyBig(){
+    var on=big();document.documentElement.classList.toggle('rq-big',on);
+    var b=document.getElementById('rq-big-btn');if(b)b.setAttribute('aria-pressed',on?'true':'false');
+  }
+  window.rqToggleBig=function(){try{localStorage.setItem(KEY,big()?'0':'1');}catch(e){}applyBig();if(window.hideMore)hideMore();};
+  applyBig();
+
+  // Chat-Attrappe
+  window.rqToggleChat=function(){
+    var c=document.getElementById('rq-chat');
+    if(!c){
+      c=document.createElement('div');c.id='rq-chat';c.setAttribute('role','dialog');c.setAttribute('aria-label','Frage stellen');
+      c.innerHTML='<div class="rq-ch"><span>Frage stellen</span><button type="button" aria-label="Schliessen" onclick="rqToggleChat()">&times;</button></div>'+
+        '<div class="rq-cl" id="rq-cl"><div class="rq-m">Guten Tag. Ich beantworte Ihre Fragen zur Plattform, zum Beispiel «Wie lade ich ein Dokument hoch?».</div></div>'+
+        '<form class="rq-cf" onsubmit="return rqAsk(event)"><input type="text" id="rq-ci" class="fi" placeholder="Ihre Frage" autocomplete="off"><button class="runbtn" type="submit">Senden</button></form>';
+      document.body.appendChild(c);
+    }
+    c.classList.toggle('show');
+    if(c.classList.contains('show')){var i=document.getElementById('rq-ci');if(i)i.focus();}
+  };
+  window.rqAsk=function(e){
+    e.preventDefault();var i=document.getElementById('rq-ci'),q=(i.value||'').trim();if(!q)return false;
+    var l=document.getElementById('rq-cl');
+    var u=document.createElement('div');u.className='rq-m u';u.textContent=q;l.appendChild(u);
+    var a=document.createElement('div');a.className='rq-m';
+    a.textContent='Das ist eine Beispielantwort. Die Fragefunktion wird in Kürze freigeschaltet. Bis dahin hilft Ihnen das Hilfe-Video oben rechts weiter.';
+    l.appendChild(a);i.value='';l.scrollTop=l.scrollHeight;return false;
+  };
+
+  // Seitenleiste
+  function adv(){return document.body.classList.contains('adv');}
+  function items(){
+    var A=adv();
+    var g=[];
+    g.push({h:'',i:[
+      {k:'home',t:'Start',ic:'ti-home',go:function(){goHome();}}]});
+    if(A){
+      g[0].i.push({k:'onboarding',t:'Onboarding',ic:'ti-upload',go:function(){openOnboarding();}});
+      g[0].i.push({k:'clients',t:'Kunden',ic:'ti-users',go:function(){goPage('clients');loadAdvisorDashboard();}});
+      g[0].i.push({k:'usage',t:'Nutzung',ic:'ti-chart-bar',go:function(){goPage('usage');loadUsage();}});
+      g[0].i.push({k:'reviews',t:'Freigaben',ic:'ti-checks',go:function(){openReviewPanel();},cnt:true});
+    } else {
+      g[0].i.push({k:'modules',t:'Textarten',ic:'ti-layout-grid',go:function(){goPage('modules');renderModulesList();}});
+      g[0].i.push({k:'people',t:'Personen',ic:'ti-user',go:function(){goPage('people');loadPeople();}});
+    }
+    var sv=[];
+    if(A){
+      sv.push({k:'modules',t:'Textarten',ic:'ti-layout-grid',go:function(){goPage('modules');renderModulesList();}});
+      sv.push({k:'people',t:'Personen',ic:'ti-user',go:function(){goPage('people');loadPeople();}});
+      sv.push({k:'brand-voice',t:'Brand Voice',ic:'ti-wave-sine',go:function(){goPage('brand-voice');}});
+      sv.push({k:'training',t:'Trainings-Bibliothek',ic:'ti-database',go:function(){goPage('training');loadTraining();}});
+    }
+    sv.push({k:'history',t:'Verlauf',ic:'ti-history',go:function(){goPage('history');loadHistory();}});
+    if(!A)sv.push({k:'memory',t:'Gedächtnis',ic:'ti-notes',go:function(){goPage('memory');}});
+    sv.push({k:'pricing',t:'Preise',ic:'ti-tag',go:function(){goPage('pricing');}});
+    sv.push({k:'videos',t:'Videos',ic:'ti-player-play',go:function(){goPage('videos');}});
+    sv.push({k:'contact',t:'Kontakt',ic:'ti-mail',go:function(){goPage('contact');}});
+    g.push({h:'Service',i:sv});
+    return g;
+  }
+  var cur='home';
+  window.rqMarkRail=function(k){cur=k||cur;var r=document.getElementById('rq-rail');if(!r)return;
+    r.querySelectorAll('a.rq-n').forEach(function(a){a.classList.toggle('act',a.getAttribute('data-k')===cur&&a.getAttribute('data-svc')!=='x');});
+    var seen=false;r.querySelectorAll('a.rq-n').forEach(function(a){if(a.classList.contains('act')){if(seen)a.classList.remove('act');seen=true;}});};
+  window.rqBuildRail=function(){
+    var old=document.getElementById('rq-rail');if(old)old.remove();
+    var r=document.createElement('nav');r.id='rq-rail';r.setAttribute('aria-label','Hauptmenü');
+    var h='<div class="rq-logo" onclick="goHome();rqMarkRail(\'home\')">Rhetor<b>IQ</b></div>';
+    items().forEach(function(gr,gi){
+      if(gr.h)h+='<div class="rq-g">'+gr.h+'</div>';
+      gr.i.forEach(function(it,ii){h+='<a class="rq-n" data-k="'+it.k+'" data-g="'+gi+'" data-i="'+ii+'" role="link" tabindex="0"><i class="ti '+it.ic+'" aria-hidden="true"></i><span>'+it.t+'</span>'+(it.cnt?'<span class="rq-cnt" id="rq-cnt-rev" style="display:none"></span>':'')+'</a>';});
+    });
+    h+='<div class="rq-sp"></div><button type="button" class="rq-big" id="rq-big-btn" aria-pressed="false" onclick="rqToggleBig()"><i class="ti ti-letter-case" aria-hidden="true"></i> Text grösser</button>';
+    h+='<div class="rq-legal"><a onclick="goPage(\'datenschutz\');rqMarkRail(\'datenschutz\')">Datenschutz</a><a onclick="goPage(\'agb\');rqMarkRail(\'agb\')">AGB</a><a onclick="goPage(\'impressum\');rqMarkRail(\'impressum\')">Impressum</a></div>';
+    r.innerHTML=h;document.body.appendChild(r);
+    var its=items();
+    r.querySelectorAll('a.rq-n').forEach(function(a){
+      var f=function(){var it=its[+a.getAttribute('data-g')].i[+a.getAttribute('data-i')];it.go();rqMarkRail(it.k);};
+      a.addEventListener('click',f);a.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();f();}});
+    });
+    applyBig();rqMarkRail(cur);rqSyncRev();
+  };
+  window.rqSyncRev=function(){
+    var b=document.getElementById('rev-badge'),c=document.getElementById('rq-cnt-rev');if(!c)return;
+    var t=b?(b.textContent||'').trim():'';c.textContent=t;c.style.display=(t&&t!=='0')?'':'none';
+  };
+  // Bestehende Navigation um Markierung ergänzen
+  var _gp=window.goPage;window.goPage=function(n){var r=_gp.apply(this,arguments);var m={'brand-voice':'brand-voice'};rqMarkRail(m[n]||n);return r;};
+  var _gh=window.goHome;window.goHome=function(){var r=_gh.apply(this,arguments);rqMarkRail('home');return r;};
+  // Beim Anmelden Leiste aufbauen (Beobachter, damit auch die automatische Anmeldung mit gespeichertem Token greift)
+  function onShown(){
+    var ls=document.getElementById('login-screen');
+    if(!ls||!ls.classList.contains('hidden'))return;
+    document.body.classList.toggle('cli',!adv());
+    rqBuildRail();
+  }
+  var ls0=document.getElementById('login-screen');
+  if(ls0){new MutationObserver(onShown).observe(ls0,{attributes:true,attributeFilter:['class']});onShown();}
+  setInterval(rqSyncRev,3000);
 })();
 </script>
 </body>
