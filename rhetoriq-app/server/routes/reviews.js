@@ -138,7 +138,7 @@ router.post('/', auth, async (req, res) => {
         kind: 'review-request',
         to: ADVISOR_NOTIFY_EMAIL,
         subject: `RhetorIQ — Neue Freigabe-Anfrage: ${clientName}${moduleLabel ? ' (' + moduleLabel + ')' : ''}`,
-        text: `Ein Klient hat einen Text zur Prüfung eingereicht.\n\nKlient: ${clientName}\nModul: ${moduleLabel || 'Nicht angegeben'}\n${note ? '\nFeedback / Auftrag des Klienten:\n' + note + '\n' : ''}${(instruction || dueGiven) ? auftragBlock({ instruction, dueAt }) : ''}\n--- Textauszug ---\n${preview}${revisionBlock}${historyBlock}\n\nJetzt bearbeiten: https://rhetoriq.ch/?review=${rows[0].id}\n`,
+        text: `Ein Klient hat einen Text zur Prüfung eingereicht.\n\nKlient: ${clientName}\nModul: ${moduleLabel || 'Nicht angegeben'}\n${note ? '\nFeedback / Auftrag des Klienten:\n' + note + '\n' : ''}${(instruction || dueGiven) ? auftragBlock({ instruction: instruction && instruction !== (note || '').trim() ? instruction : '', dueAt }) : ''}\n--- Textauszug ---\n${preview}${revisionBlock}${historyBlock}\n\nJetzt bearbeiten: https://rhetoriq.ch/?review=${rows[0].id}\n`,
         senderName: 'RhetorIQ'
       });
     })().catch(e => console.error('[reviews] advisor notification email failed:', e.message));
