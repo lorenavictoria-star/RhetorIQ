@@ -889,6 +889,8 @@ html.rq-big{zoom:1.15}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 /* Doppelten Knopf entfernen: «Neuer Klient» steht schon auf der Kunden-Seite und im Onboarding */
 #cbar-new{display:none!important}
+/* Seite «Beispiele für den Aufbau» im Menü ausgeblendet (Code bleibt erhalten) */
+body.adv #mm-training{display:none!important}
 </style>
 </head>
 <body>
@@ -1646,18 +1648,11 @@ html.rq-big{zoom:1.15}
 
     <!-- TRAINING DATA -->
     <div class="page" id="page-training">
-      <div class="page-title" style="margin-bottom:4px">Trainingsdaten</div>
-      <div style="font-size:14px;color:var(--mu);margin-bottom:12px">Beispiel-Inputs &amp; Outputs pro Modul — werden automatisch als Qualitätsstandard bei jeder Generierung injiziert.</div>
-      <div style="font-size:13px;color:var(--mu);background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:10px 14px;margin-bottom:20px;line-height:1.6">Alle Standard-Module aus dem Einführungsdokument sind hier verfügbar. <strong style="color:var(--tx)">Individuelle Module</strong>, die du für einen Klienten erstellst, erscheinen ebenfalls automatisch in dieser Liste — du kannst sie hier sofort trainieren.</div>
-
-      <!-- Import from client -->
-      <div style="background:#f8fafc;border:1.5px solid var(--bd);border-radius:10px;padding:16px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <div style="flex:1;min-width:200px">
-          <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:3px">Klient-Daten importieren</div>
-          <div style="font-size:12px;color:var(--mu)">Alle bisherigen Analysen + Company Memory eines Klienten als Trainingsbeispiele übernehmen.</div>
-        </div>
-        <select id="tr-import-client" style="padding:9px 12px;border:1.5px solid var(--bd);background:#fff;font-family:var(--sans);font-size:13px;color:var(--tx);border-radius:8px;outline:none;min-width:180px"></select>
-        <button onclick="trImportClient()" id="tr-import-btn" style="padding:9px 18px;background:var(--tx);color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Importieren</button>
+      <div class="page-title" style="margin-bottom:4px">Beispiele für den Aufbau</div>
+      <div style="font-size:14px;color:var(--mu);margin-bottom:16px">Optional. Hier legst du Musterbeispiele ab, die den Aufbau eines Moduls vorgeben.</div>
+      <div style="border:1px solid var(--bd);padding:14px 16px;margin-bottom:22px;font-size:13.5px;line-height:1.7">
+        <div style="margin-bottom:8px"><strong>Das passiert automatisch.</strong> Jeder Daumen hoch oder runter eines Klienten, mit oder ohne Stichwort, wird im Hintergrund ausgewertet und für genau diesen Klienten und dieses Modul gemerkt. Du musst nichts tun.</div>
+        <div><strong>Das machst du nur bei Bedarf.</strong> Beispiele auf dieser Seite gelten für alle Klienten. Die KI übernimmt daraus nur den Aufbau. Den Ton bestimmt immer die Brand Voice des Klienten.</div>
       </div>
 
       <!-- Module selector -->
@@ -1669,15 +1664,19 @@ html.rq-big{zoom:1.15}
       <!-- Example count badge + filter -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
         <div id="tr-count" style="font-size:12px;color:var(--mu)"></div>
-        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mu);cursor:pointer;margin-left:auto">
-          <input type="checkbox" id="tr-hide-auto" onchange="trLoadModule()" style="cursor:pointer">
-          Nur manuelle anzeigen
+        <label style="display:none;align-items:center;gap:5px;font-size:12px;color:var(--mu);cursor:pointer;margin-left:auto">
+          <input type="checkbox" id="tr-hide-auto" checked onchange="trLoadModule()" style="cursor:pointer">
+          Automatisch gespeicherte Texte ausblenden (sie werden nie verwendet)
         </label>
       </div>
 
+      <!-- Existing examples list -->
+      <div id="tr-list" style="margin-bottom:22px"></div>
+
+      <details style="margin-bottom:14px"><summary style="cursor:pointer;font-size:14px;font-weight:600;padding:10px 0">+ Neues Beispiel hinzufügen</summary>
       <!-- Add new example form -->
-      <div style="border:1.5px solid var(--bd);border-radius:10px;background:var(--sf);padding:18px;margin-bottom:20px">
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:14px">+ Neues Beispiel</div>
+      <div style="border:1px solid var(--bd);padding:18px;margin-top:14px">
+        
         <div style="margin-bottom:12px">
           <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Modul <span style="color:#e53e3e">*</span></label>
           <select id="tr-form-module" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:var(--sans);font-size:13px;color:var(--tx);background:#fff;outline:none;box-sizing:border-box">
@@ -1701,22 +1700,25 @@ html.rq-big{zoom:1.15}
           <textarea id="tr-output" rows="7" placeholder="Idealer Output / Muster-Ergebnis…" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:6px;font-family:var(--sans);font-size:13px;color:var(--tx);background:#fff;outline:none;resize:vertical;box-sizing:border-box"></textarea>
         </div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <div>
-            <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:5px">Qualität</label>
-            <div id="tr-stars" style="display:flex;gap:4px">
-              <span onclick="trSetRating(1)" class="tr-star" data-v="1" style="font-size:22px;cursor:pointer;color:#d1d5db">★</span>
-              <span onclick="trSetRating(2)" class="tr-star" data-v="2" style="font-size:22px;cursor:pointer;color:#d1d5db">★</span>
-              <span onclick="trSetRating(3)" class="tr-star" data-v="3" style="font-size:22px;cursor:pointer;color:#f59e0b">★</span>
-              <span onclick="trSetRating(4)" class="tr-star" data-v="4" style="font-size:22px;cursor:pointer;color:#d1d5db">★</span>
-              <span onclick="trSetRating(5)" class="tr-star" data-v="5" style="font-size:22px;cursor:pointer;color:#d1d5db">★</span>
-            </div>
-          </div>
+          <div></div>
           <button onclick="trSaveExample()" style="margin-left:auto;padding:10px 22px;background:var(--tx);color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer">Beispiel speichern</button>
         </div>
       </div>
+      </details>
 
-      <!-- Existing examples list -->
-      <div id="tr-list"></div>
+      <details style="margin-bottom:24px"><summary style="cursor:pointer;font-size:14px;font-weight:600;padding:10px 0">Erweitert: Texte eines Klienten als Beispiele übernehmen</summary>
+      <div style="font-size:12.5px;color:var(--mu);margin:6px 0 8px">Achtung: Die Beispiele gelten danach für alle Klienten. Übernimm nur Texte, die du dafür freigeben möchtest, und nur mit Einverständnis des Klienten.</div>
+      <!-- Import from client -->
+      <div style="background:#f8fafc;border:1.5px solid var(--bd);border-radius:10px;padding:16px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:3px">Klient-Daten importieren</div>
+          <div style="font-size:12px;color:var(--mu)">Alle bisherigen Analysen + Company Memory eines Klienten als Trainingsbeispiele übernehmen.</div>
+        </div>
+        <select id="tr-import-client" style="padding:9px 12px;border:1.5px solid var(--bd);background:#fff;font-family:var(--sans);font-size:13px;color:var(--tx);border-radius:8px;outline:none;min-width:180px"></select>
+        <button onclick="trImportClient()" id="tr-import-btn" style="padding:9px 18px;background:var(--tx);color:#fff;border:none;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Importieren</button>
+      </div>
+      </details>
+
     </div>
 
     <div class="page" id="page-contact">
@@ -1999,7 +2001,7 @@ html.rq-big{zoom:1.15}
         <i class="ti ti-chart-bar"></i> Usage
       </div>
       <div class="ao-item mm-row" id="mm-training" onclick="goPage('training');loadTraining();setMN('more');hideMore()" style="display:none">
-        <i class="ti ti-database"></i> Trainings-Bibliothek
+        <i class="ti ti-database"></i> Beispiele für den Aufbau
       </div>
     </div>
 
@@ -3349,37 +3351,29 @@ async function trLoadModule(){
     const url=key?'/api/module-examples?moduleKey='+encodeURIComponent(key):'/api/module-examples';
     const r=await api(url);
     _trExamples=r.ok?await r.json():[];
-    const visible=hideAuto?_trExamples.filter(e=>!e.auto_generated):_trExamples;
-    const autoCount=_trExamples.filter(e=>e.auto_generated).length;
-    const manualCount=_trExamples.length-autoCount;
-    count.textContent=_trExamples.length
-      ?`${manualCount} manuell · ${autoCount} auto-gespeichert — Top 3 nach Bewertung werden injiziert`
-      :'Noch keine Beispiele — werden automatisch beim Generieren gesammelt.';
+    // Nur von dir angelegte Beispiele anzeigen. Automatisch gespeicherte Texte werden nie verwendet.
+    const visible=_trExamples.filter(e=>!e.auto_generated);
+    count.textContent=visible.length
+      ?`${visible.length} ${visible.length===1?'Beispiel':'Beispiele'}. Pro Text verwendet die Plattform bis zu drei passende.`
+      :'Noch keine Beispiele. Das ist in Ordnung: Die Plattform lernt auch ohne sie automatisch aus dem Feedback deiner Klienten.';
+    const modName=ex=>safeText((ALL_MODULES.find(x=>x.key===ex.module_key)||{}).name||ex.module_key||'');
     list.innerHTML=visible.length?visible.map(ex=>`
-      <div id="tr-ex-${ex.id}" style="border:1px solid ${ex.auto_generated?'var(--bd)':'var(--ac)'};border-radius:10px;background:${ex.auto_generated?'var(--sf)':'#fff'};padding:16px;margin-bottom:10px;opacity:${ex.auto_generated?'.85':'1'}">
+      <div id="tr-ex-${ex.id}" style="border:1px solid var(--bd);padding:16px;margin-bottom:10px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            ${ex.auto_generated?`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f3f4f6;color:var(--mu)">auto</span>`:`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0">manuell</span>`}
-            ${!key&&ex.module_key?`<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe">${safeText(ALL_MODULES.find(x=>x.key===ex.module_key)?.name||ex.module_key)}</span>`:''}
-            ${ex.label?`<span style="font-size:12px;font-weight:600;color:var(--tx)">${safeText(ex.label)}</span>`:''}
-            ${ex.industry_tag?`<span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd">${safeText(ex.industry_tag)}</span>`:''}
-          </div>
-          <div style="display:flex;align-items:center;gap:4px">
-            ${[1,2,3,4,5].map(v=>`<button onclick="trRate(${ex.id},${v})" style="font-size:15px;background:none;border:none;cursor:pointer;color:${(ex.rating||3)>=v?'#f59e0b':'#d1d5db'};padding:0;line-height:1" id="tr-star-${ex.id}-${v}">★</button>`).join('')}
-            <button onclick="trDelete(${ex.id})" style="margin-left:6px;padding:3px 10px;border:1px solid var(--bd);border-radius:6px;background:transparent;font-size:11px;color:var(--mu);cursor:pointer;font-family:var(--sans)">✕</button>
-          </div>
+          <div style="font-size:13px;font-weight:600">${!key&&ex.module_key?modName(ex)+(ex.label?' · ':''):''}${ex.label?safeText(ex.label):''}${ex.industry_tag?` <span style="font-weight:400;color:var(--mu)">(${safeText(ex.industry_tag)})</span>`:''}</div>
+          <button onclick="trDelete(${ex.id})" style="padding:6px 14px;border:1px solid var(--bd);background:transparent;font-size:12px;color:var(--mu);cursor:pointer;font-family:var(--sans)">Löschen</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div>
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:4px">Input</div>
-            <div style="font-size:11px;color:var(--tx);white-space:pre-wrap;background:#fff;border:1px solid var(--bd);border-radius:6px;padding:8px;max-height:120px;overflow-y:auto">${safeText(ex.input_text)}</div>
+            <div style="font-size:11px;color:var(--mu);margin-bottom:4px">Eingabe</div>
+            <div style="font-size:12px;white-space:pre-wrap;border:1px solid var(--bd);padding:8px;max-height:120px;overflow-y:auto">${safeText(ex.input_text)}</div>
           </div>
           <div>
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:4px">Output / Struktur</div>
-            <div style="font-size:11px;color:var(--tx);white-space:pre-wrap;background:#fff;border:1px solid var(--bd);border-radius:6px;padding:8px;max-height:120px;overflow-y:auto">${safeText(ex.output_text)}</div>
+            <div style="font-size:11px;color:var(--mu);margin-bottom:4px">Gelungener Aufbau</div>
+            <div style="font-size:12px;white-space:pre-wrap;border:1px solid var(--bd);padding:8px;max-height:120px;overflow-y:auto">${safeText(ex.output_text)}</div>
           </div>
         </div>
-      </div>`).join(''):`<div style="color:var(--mu);font-size:13px;padding:12px 0">Keine manuellen Beispiele vorhanden.</div>`;
+      </div>`).join(''):'';
   }catch(e){list.innerHTML=`<div style="color:var(--red);font-size:13px">Fehler: ${e.message}</div>`;}
 }
 
@@ -8349,7 +8343,8 @@ tryAutoLogin();
       sv.push({k:'modules',t:'Textarten',ic:'ti-layout-grid',go:function(){goPage('modules');renderModulesList();}});
       sv.push({k:'people',t:'Personen',ic:'ti-user',go:function(){goPage('people');loadPeople();}});
       sv.push({k:'brand-voice',t:'Brand Voice',ic:'ti-wave-sine',go:function(){goPage('brand-voice');}});
-      sv.push({k:'training',t:'Trainings-Bibliothek',ic:'ti-database',go:function(){goPage('training');loadTraining();}});
+      // Seite «Beispiele für den Aufbau» ausgeblendet (Feedback-Lernen läuft automatisch). Zum Einblenden diese Zeile aktivieren:
+      // sv.push({k:'training',t:'Beispiele für den Aufbau',ic:'ti-database',go:function(){goPage('training');loadTraining();}});
     }
     sv.push({k:'history',t:'Verlauf',ic:'ti-history',go:function(){goPage('history');loadHistory();}});
     if(!A)sv.push({k:'memory',t:'Gedächtnis',ic:'ti-notes',go:function(){goPage('memory');}});
