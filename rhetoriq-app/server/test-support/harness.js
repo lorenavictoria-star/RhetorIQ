@@ -6,9 +6,12 @@ process.env.APP_URL = 'https://app.test';
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const express = require('express');
-const { newDb } = require('pg-mem');
+const { newDb, DataType } = require('pg-mem');
 
 const mem = newDb();
+// Textfunktionen von echtem Postgres, die pg-mem nicht mitbringt (nur für Tests)
+mem.public.registerFunction({ name: 'left', args: [DataType.text, DataType.integer], returns: DataType.text, implementation: (t, n) => (t == null ? null : String(t).slice(0, n)) });
+mem.public.registerFunction({ name: 'length', args: [DataType.text], returns: DataType.integer, implementation: (t) => (t == null ? null : String(t).length) });
 const { Pool } = mem.adapters.createPg();
 const rawPool = new Pool();
 

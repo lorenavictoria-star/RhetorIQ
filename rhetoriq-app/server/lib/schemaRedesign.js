@@ -52,6 +52,11 @@ function ensureSchema() {
       )`);
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS instruction TEXT`);
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS due_at TIMESTAMPTZ`);
+    // Abo-Status direkt am Klienten (derselbe Befehl wie in routes/subscriptions.js), damit die Kundenliste ihn mitladen kann
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trial'`);
+    // Indizes für die häufigsten Abfragen (Kundenliste, Verlauf, Nutzung)
+    await pool.query(`CREATE INDEX IF NOT EXISTS analyses_client_created_idx ON analyses (client_id, created_at DESC)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS analyses_advisor_created_idx ON analyses (advisor_id, created_at DESC)`);
   })().catch(e => { ensured = null; throw e; });
   return ensured;
 }

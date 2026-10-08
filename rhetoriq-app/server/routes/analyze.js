@@ -2043,12 +2043,15 @@ router.get('/history', requireAuth, async (req, res) => {
       advisorId = cr[0] && cr[0].advisor_id;
     }
 
+    // ?preview=1: nur die ersten 300 Zeichen jedes Textes liefern (der volle Text kommt bei Bedarf über GET /:id).
+    // Ohne den Parameter bleibt die Antwort wie bisher.
+    const resultCol = req.query.preview === '1' ? 'LEFT(result, 300) AS result, LENGTH(result) AS result_length' : 'result';
     let query, params;
     if (clientId) {
-      query = `SELECT id, module, module_label, result, created_at FROM analyses WHERE client_id = $1 AND advisor_id = $2 ORDER BY created_at DESC LIMIT 50`;
+      query = `SELECT id, module, module_label, ${resultCol}, created_at FROM analyses WHERE client_id = $1 AND advisor_id = $2 ORDER BY created_at DESC LIMIT 50`;
       params = [clientId, advisorId];
     } else {
-      query = `SELECT id, module, module_label, result, created_at, client_id FROM analyses WHERE advisor_id = $1 ORDER BY created_at DESC LIMIT 50`;
+      query = `SELECT id, module, module_label, ${resultCol}, created_at, client_id FROM analyses WHERE advisor_id = $1 ORDER BY created_at DESC LIMIT 50`;
       params = [advisorId];
     }
 
@@ -2162,6 +2165,64 @@ router.get('/health-score', requireAuth, async (req, res) => {
     const cfg = PROMPTS['health-score'];
     const claudeResp = await callClaude(cfg.system, cfg.build({ log, period: 'Last 90 days', count: rows.length, excerpts }), MODULE_MAX_TOKENS['health-score'], resolveModel('health-score'));
     res.json({ result: claudeResp.text, count: rows.length });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/analyze/count — nur die Anzahl der Texte (statt 50 komplette Texte zu laden). Für Statistik-Kacheln.
+router.get('/count', requireAuth, async (req, res) => {
+  try {
+    const isAdvisor = req.user.role === 'advisor';
+    const clientId = isAdvisor ? (req.query.clientId || null) : req.user.clientId;
+    let advisorId = isAdvisor ? req.user.id : req.user.advisorId;
+    if (!advisorId && clientId) {
+      const { rows: cr } = await pool.query('SELECT advisor_id FROM clients WHERE id=$1', [clientId]);
+      advisorId = cr[0] && cr[0].advisor_id;
+    }
+    const { rows } = clientId
+      ? await pool.query('SELECT COUNT(*)::int AS n FROM analyses WHERE client_id=$1 AND advisor_id=$2', [clientId, advisorId])
+      : await pool.query('SELECT COUNT(*)::int AS n FROM analyses WHERE advisor_id=$1', [advisorId]);
+    res.json({ count: rows[0].n });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/analyze/module-counts — wie oft wurde welches Modul genutzt (für «Zuletzt benutzt»), ohne Texte zu laden.
+router.get('/module-counts', requireAuth, async (req, res) => {
+  try {
+    const isAdvisor = req.user.role === 'advisor';
+    const clientId = isAdvisor ? (req.query.clientId || null) : req.user.clientId;
+    let advisorId = isAdvisor ? req.user.id : req.user.advisorId;
+    if (!advisorId && clientId) {
+      const { rows: cr } = await pool.query('SELECT advisor_id FROM clients WHERE id=$1', [clientId]);
+      advisorId = cr[0] && cr[0].advisor_id;
+    }
+    const { rows } = clientId
+      ? await pool.query('SELECT module, COUNT(*)::int AS n FROM analyses WHERE client_id=$1 AND advisor_id=$2 GROUP BY module ORDER BY n DESC LIMIT 8', [clientId, advisorId])
+      : await pool.query('SELECT module, COUNT(*)::int AS n FROM analyses WHERE advisor_id=$1 GROUP BY module ORDER BY n DESC LIMIT 8', [advisorId]);
+    res.json(rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/analyze/:id — ein einzelner voller Text (für den Verlauf, wenn nur die Vorschau geladen wurde).
+// Gleiche Berechtigung wie /history: Beraterin und Klienten-Admin.
+router.get('/:id(\\d+)', requireAuth, async (req, res) => {
+  const isAdvisor = req.user.role === 'advisor';
+  const isClientAdmin = req.user.role === 'client' && req.user.clientUserRole === 'admin' && !req.user.readOnly;
+  if (!isAdvisor && !isClientAdmin) return res.status(403).json({ error: 'Nicht erlaubt' });
+  try {
+    const { rows } = isAdvisor
+      ? await pool.query('SELECT id, module, module_label, result, created_at, client_id FROM analyses WHERE id=$1 AND advisor_id=$2', [req.params.id, req.user.id])
+      : await pool.query('SELECT id, module, module_label, result, created_at, client_id FROM analyses WHERE id=$1 AND client_id=$2', [req.params.id, req.user.clientId]);
+    if (!rows[0]) return res.status(404).json({ error: 'Not found' });
+    res.json(rows[0]);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });

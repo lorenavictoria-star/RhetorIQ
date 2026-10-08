@@ -21,6 +21,7 @@ test.before(async () => {
     ['/api/reviews', require('../routes/reviews')],
     ['/api/clients', require('../routes/clients')],
     ['/api/advisor', require('../routes/viewAs')],
+    ['/api/advisor', require('../routes/advisor')],
     ['/api/clients', require('../routes/clientStats')],
     ['/api/help-chat', require('../routes/helpChat')],
     ['/api/analyze', require('../routes/analyze')]
@@ -557,4 +558,46 @@ test('Brevo-Inhalt: Anhang wird mitgeschickt, ohne Anhang unverändert', () => {
   assert.equal(ohne.to[0].email, 'a@b.ch');
   const mit = buildPayload({ to: 'a@b.ch', subject: 'S', text: 'T', senderName: 'X', attachments: [{ name: 'a.xlsx', contentBase64: 'QUJD' }] });
   assert.deepEqual(mit.attachment, [{ name: 'a.xlsx', content: 'QUJD' }]);
+});
+
+// ── Leichte Abfragen für Statistik und Verlauf ─────────────
+test('Zähler, Modul-Zähler und Verlauf-Vorschau liefern keine vollen Texte', async () => {
+  const cl = await H.addClient('Leicht AG');
+  const long = 'x'.repeat(2000);
+  await H.pool.query(`INSERT INTO analyses (client_id, advisor_id, module, module_label, result) VALUES ($1,1,'text-gen','E-Mail',$2),($1,1,'text-gen','E-Mail',$2),($1,1,'review','Review',$2)`, [cl.id, long]);
+  const adv = A();
+  const cnt = await srv.call('GET', `/api/analyze/count?clientId=${cl.id}`, { token: adv });
+  assert.equal(cnt.status, 200);
+  assert.equal(cnt.body.count, 3);
+  const mc = await srv.call('GET', `/api/analyze/module-counts?clientId=${cl.id}`, { token: adv });
+  assert.equal(mc.body[0].module, 'text-gen');
+  assert.equal(mc.body[0].n, 2);
+  const prev = await srv.call('GET', `/api/analyze/history?clientId=${cl.id}&preview=1`, { token: adv });
+  assert.equal(prev.status, 200);
+  assert.equal(prev.body.length, 3);
+  assert.equal(prev.body[0].result.length, 300);
+  assert.equal(prev.body[0].result_length, 2000);
+  const full = await srv.call('GET', `/api/analyze/history?clientId=${cl.id}`, { token: adv });
+  assert.equal(full.body[0].result.length, 2000);
+  const one = await srv.call('GET', `/api/analyze/${prev.body[0].id}`, { token: adv });
+  assert.equal(one.status, 200);
+  assert.equal(one.body.result.length, 2000);
+  assert.equal((await srv.call('GET', `/api/analyze/${prev.body[0].id}`, { token: H.clientToken(cl.id) })).status, 403);
+  assert.equal((await srv.call('GET', `/api/analyze/${prev.body[0].id}`)).status, 401);
+  // Klient ohne Verlauf-Recht darf die Anzahl der eigenen Texte sehen, aber keine Texte
+  const own = await srv.call('GET', '/api/analyze/count', { token: H.clientToken(cl.id) });
+  assert.equal(own.body.count, 3);
+});
+
+test('Kundenliste: Dashboard liefert Zugangscode und Abo-Status mit (eine Anfrage statt vieler)', async () => {
+  const cl = await H.addClient('Dashboard AG');
+  const r = await srv.call('GET', '/api/advisor/dashboard', { token: A() });
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  const c = r.body.clients.find(x => x.id === cl.id);
+  assert.ok(c, 'Klient fehlt');
+  // pg-mem füllt bei GROUP BY nur die ID; in echtem Postgres kommen auch Name und Zugangscode. Hier zählt, dass das Feld mitgeliefert wird.
+  assert.ok('token' in c);
+  assert.equal(c.subscription_status, 'trial');
+  assert.equal((await srv.call('GET', '/api/advisor/dashboard')).status, 401);
+  assert.equal((await srv.call('GET', '/api/advisor/dashboard', { token: H.clientToken(cl.id) })).status, 403);
 });

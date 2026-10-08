@@ -2,6 +2,7 @@ const express = require('express');
 const { pool } = require('../db');
 const { requireAdvisor } = require('../middleware/auth');
 const { generateText, resolveModelId } = require('../lib/aiProvider');
+const { ensureSchema } = require('../lib/schemaRedesign');
 
 const router = express.Router();
 
@@ -41,10 +42,12 @@ router.put('/sender-address', requireAdvisor, async (req, res) => {
 router.get('/dashboard', requireAdvisor, async (req, res) => {
   try {
     const advisorId = req.user.id;
+    // liefert subscription_status mit; ein Fehler hier darf die Kundenliste nicht verhindern
+    await ensureSchema().catch(e => console.error('[dashboard] schema ensure failed:', e.message));
 
     const [clientsRes, statsRes, recentRes] = await Promise.all([
       pool.query(
-        `SELECT c.id, c.name, c.industry, c.created_at,
+        `SELECT c.id, c.name, c.industry, c.created_at, c.token,
           COUNT(a.id) AS total_analyses,
           MAX(a.created_at) AS last_activity,
           COUNT(CASE WHEN a.created_at > NOW() - INTERVAL '7 days' THEN 1 END) AS analyses_7d
@@ -74,9 +77,19 @@ router.get('/dashboard', requireAdvisor, async (req, res) => {
       )
     ]);
 
+    // Abo-Status aller Klienten in einer einzigen Abfrage (statt eine Anfrage pro Klient). Fehlt die Spalte, gilt «trial».
+    let statusById = {};
+    try {
+      const { rows: st } = await pool.query('SELECT id, subscription_status FROM clients WHERE advisor_id = $1', [advisorId]);
+      statusById = Object.fromEntries(st.map(r => [String(r.id), r.subscription_status || 'trial']));
+    } catch (e) {
+      console.error('[dashboard] subscription_status unavailable:', e.message);
+    }
+    const clientsOut = clientsRes.rows.map(c => ({ ...c, subscription_status: statusById[String(c.id)] || 'trial' }));
+
     res.json({
       stats: statsRes.rows[0],
-      clients: clientsRes.rows,
+      clients: clientsOut,
       recent: recentRes.rows
     });
   } catch (e) {
