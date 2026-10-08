@@ -395,12 +395,11 @@ fetch("/api/inquiry",{method:"POST",headers:{"Content-Type":"application/json"},
     var cx=ball.l+ball.w/2,cy=ball.t+ball.h/2,E=[btn.l-14,btn.t+btn.h/2],m=W<820,X=m?10:24,P,S,yu=0;
     
     function fmt(p){return p[0].toFixed(1)+" "+p[1].toFixed(1)}
-    var wr=doc(document.querySelector(".wrap")),X=Math.min(W-8,wr.l+wr.w+(m?-2:-8)),rr=ball.w*.31;
+    var wr=doc(document.querySelector(".wrap")),X=Math.min(W-8,wr.l+wr.w+(m?4:11)),rr=ball.w*.31;
     var yEnd=btn.t+btn.h/2,Eb=[btn.l+btn.w+12,yEnd],RE=170,heroB=doc(document.querySelector(".hero")).b;
     S=[cx+rr*.4,cy+rr*.9];window.__tailDir=[.3,1];
     var dx=X-S[0],dy=Math.max(140,Math.abs(dx)*.9),B=[X,S[1]+dy];
-    anch=S;var u0=Math.max(8,rr*.17),d1=[.34,.94],n1=[.94,-.34],L1=lp(S,d1,n1,u0,1.75,-Math.PI*1.05,Math.PI*1.05,26),E1=L1[L1.length-1];
-    B=[X,E1[1]+(m?300:440)];var LP=L1.slice();LP.push([E1[0]+d1[0]*90,E1[1]+d1[1]*90+20],[E1[0]+(X-E1[0])*.62,E1[1]+(B[1]-E1[1])*.52],B);var d=smooth(LP);
+    anch=S;B=[X,S[1]+Math.max(300,Math.abs(dx)*.95)];var LP=[S,[S[0]+26,S[1]+58],[S[0]+(X-S[0])*.5,S[1]+(B[1]-S[1])*.42],B];var d=smooth(LP);
     var mid=[B];for(var y=B[1]+260;y<yEnd-RE-80;y+=260)mid.push([X+Math.sin(y/260)*(m?1.5:3),y]);mid.push([X,yEnd-RE]);
     d+=" "+smooth(mid).replace(/^M[^C]*/,"");
     var tail=" C"+fmt([X,yEnd-RE*.35])+" "+fmt([Eb[0]+(X-Eb[0])*.4,yEnd])+" "+fmt(Eb);
@@ -413,7 +412,7 @@ fetch("/api/inquiry",{method:"POST",headers:{"Content-Type":"application/json"},
   function lenAt(y){if(!TB.length||y<=TB[0][1])return 0;var lo=0,hi=TB.length-1;if(y>=TB[hi][1])return L;while(hi-lo>1){var m=(lo+hi)>>1;if(TB[m][1]<=y)lo=m;else hi=m}return TB[lo][0]}
   function upd(j){var sy=window.pageYOffset||scrollY||0,tipY=S1+sy+(sy>0?innerHeight*.55*Math.min(1,sy/300):0);var p=L>1?Math.min(1,lenAt(tipY)/L):0;tgt=p;if(j)cur=p;off()}
   function off(){path.style.strokeDashoffset=L*(1-Math.max(cur,Math.min(1,stub/L)))}
-  function bridgeUpdate(){if(!anch||!window.__ballRoot)return;var R=window.__ballRoot();if(!R)return;var S=anch,dx=S[0]-R.x,dy=S[1]-R.y,dist=Math.hypot(dx,dy),sag=Math.min(46,dist*.28),c1=[R.x+dx*.3,R.y+dy*.3+sag],c2=[R.x+dx*.7+sag*.25,R.y+dy*.7+sag*.55];
+  function bridgeUpdate(){if(!anch||!window.__ballRoot)return;var R=window.__ballRoot();if(!R)return;var S=anch,dx=S[0]-R.x,dy=S[1]-R.y,dist=Math.hypot(dx,dy),l2=Math.min(70,dist*.5+8),c1=[R.x+dx*.35,R.y+dy*.35+Math.min(30,dist*.2)],c2=[S[0]-.41*l2,S[1]-.91*l2];
     brp.setAttribute("d","M"+R.x.toFixed(1)+" "+R.y.toFixed(1)+" C"+c1[0].toFixed(1)+" "+c1[1].toFixed(1)+" "+c2[0].toFixed(1)+" "+c2[1].toFixed(1)+" "+S[0].toFixed(1)+" "+S[1].toFixed(1));
     brp.setAttribute("opacity",String(Math.max(0,Math.min(1,cur*70))*(R.z>.04?1:0)))}
   var lastTick=0;function tick(){bridgeUpdate();lastTick=Date.now();var sy=window.pageYOffset||document.documentElement.scrollTop||0;if(sy!==lastY){lastY=sy;upd(false)}cur+=(tgt-cur)*.12;off();requestAnimationFrame(tick)}var lastY=-1;
