@@ -769,3 +769,27 @@ test('Lernen aus Korrekturen: Vorschlag entsteht, zählt mit, wird übernommen o
   await send();
   assert.equal((await srv.call('GET', `/api/learning?client_id=${cl.id}`, { token: A() })).body.length, 0, 'verworfen heisst verworfen');
 });
+
+test('Bereits gelernt: ansehen, anpassen, entfernen, nur die eigene Beraterin', async () => {
+  // die Tabelle kann ein früherer Test schon angelegt haben (pg-mem kennt IF NOT EXISTS nur eingeschränkt)
+  await H.pool.query(`CREATE TABLE client_feedback_learnings (id SERIAL PRIMARY KEY, client_id INTEGER, module_key TEXT NOT NULL, category TEXT NOT NULL, summary TEXT NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(client_id, module_key, category))`).catch(() => {});
+  const cl = await H.addClient('Gelernt AG');
+  const other = await H.addClient('Fremd AG');
+  await H.pool.query(`INSERT INTO client_feedback_learnings (client_id, module_key, category, summary) VALUES ($1,'text-gen-email','TON','Warm und direkt.'),($1,'pr','STRUKTUR','Erst Fazit, dann Begründung.'),($2,'text-gen-email','TON','Fremder Eintrag.')`, [cl.id, other.id]);
+  const list = await srv.call('GET', `/api/learning/learned?client_id=${cl.id}`, { token: A() });
+  assert.equal(list.status, 200);
+  assert.equal(list.body.length, 2);
+  assert.ok(list.body.every(r => r.client_id === cl.id));
+  assert.equal((await srv.call('GET', `/api/learning/learned?client_id=${cl.id}`)).status, 401);
+  assert.equal((await srv.call('GET', `/api/learning/learned?client_id=${cl.id}`, { token: H.clientToken(cl.id) })).status, 403);
+  assert.equal((await srv.call('GET', '/api/learning/learned', { token: A() })).status, 400);
+  const id = list.body.find(r => r.module_key === 'text-gen-email').id;
+  assert.equal((await srv.call('PUT', `/api/learning/learned/${id}`, { token: A(), body: { summary: '  ' } })).status, 400);
+  assert.equal((await srv.call('PUT', `/api/learning/learned/${id}`, { token: A(), body: { summary: 'Warm, direkt und mit Dank.' } })).status, 200);
+  const { rows } = await H.pool.query('SELECT summary FROM client_feedback_learnings WHERE id=$1', [id]);
+  assert.equal(rows[0].summary, 'Warm, direkt und mit Dank.');
+  assert.equal((await srv.call('DELETE', `/api/learning/learned/${id}`, { token: H.clientToken(cl.id) })).status, 403);
+  assert.equal((await srv.call('DELETE', `/api/learning/learned/${id}`, { token: A() })).status, 200);
+  assert.equal((await srv.call('GET', `/api/learning/learned?client_id=${cl.id}`, { token: A() })).body.length, 1);
+  assert.equal((await srv.call('DELETE', `/api/learning/learned/${id}`, { token: A() })).status, 404);
+});

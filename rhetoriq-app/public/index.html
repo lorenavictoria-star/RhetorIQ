@@ -9534,15 +9534,56 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     if(host)host.remove();
     host=document.createElement('div');host.id='rq-learn';host.style.marginBottom='22px';
     body.insertBefore(host,body.firstChild);
-    var rows=[];
-    try{var r=await api('/api/learning?client_id='+cid);var d=await r.json();if(r.ok&&Array.isArray(d))rows=d;}catch(e){}
+    var rows=[],learned=[];
+    try{
+      var res=await Promise.all([api('/api/learning?client_id='+cid),api('/api/learning/learned?client_id='+cid)]);
+      var d=await res[0].json();if(res[0].ok&&Array.isArray(d))rows=d;
+      var d2=await res[1].json();if(res[1].ok&&Array.isArray(d2))learned=d2;
+    }catch(e){}
     if(!document.getElementById('rq-learn'))return;
-    if(!rows.length){host.innerHTML='<div style="font-size:12.5px;color:var(--mu)">Keine offenen Lernvorschläge. Sie entstehen, wenn du Texte vor dem Senden änderst und dieselbe Änderung wiederkehrt.</div>';return;}
-    host.innerHTML='<div style="font-size:11px;letter-spacing:.05em;color:var(--ac);text-transform:uppercase;font-weight:700;margin-bottom:4px">Lernvorschläge aus deinen Korrekturen ('+rows.length+')</div>'
-      +'<div style="font-size:12.5px;color:var(--mu);margin-bottom:10px">Die Plattform hat erkannt, was du an KI-Texten dieses Klienten immer wieder änderst. Übernimm, was stimmt: Die KI beachtet es ab dem nächsten Text.</div>'
-      +rows.map(card).join('');
+    var top=rows.length
+      ?'<div style="font-size:11px;letter-spacing:.05em;color:var(--ac);text-transform:uppercase;font-weight:700;margin-bottom:4px">Lernvorschläge aus deinen Korrekturen ('+rows.length+')</div>'
+        +'<div style="font-size:12.5px;color:var(--mu);margin-bottom:10px">Die Plattform hat erkannt, was du an KI-Texten dieses Klienten immer wieder änderst. Übernimm, was stimmt: Die KI beachtet es ab dem nächsten Text.</div>'
+        +rows.map(card).join('')
+      :'<div style="font-size:12.5px;color:var(--mu)">Keine offenen Lernvorschläge. Sie entstehen, wenn du Texte vor dem Senden änderst und dieselbe Änderung wiederkehrt.</div>';
+    host.innerHTML=top+learnedBlock(learned);
+  }
+  var TILE={email:'E-Mail',linkedin:'LinkedIn',newsletter:'Newsletter',speech:'Rede',press:'Presse',website:'Website',brief:'Brief',custom:'Frei'};
+  function modName(k){
+    if(/^text-gen-/.test(k))return 'Text Generator · '+(TILE[k.slice(9)]||k.slice(9));
+    var map={rp:'Kommunikationsanalyse',cf:'Sprache im Zeitverlauf',la:'Argument-Vorschau',rm:'Risiko-Scan',st:'Argument-Vorschau',si:'Wirkung',as:'Umsetzbarkeit',tc:'Thread',pr:'Review',rw:'Wertschätzung'};
+    return map[k]||k;
+  }
+  function learnedBlock(list){
+    if(!list.length)return '';
+    return '<details style="margin-top:14px;border-top:1px solid var(--bd);padding-top:10px"><summary style="cursor:pointer;font-size:13.5px;font-weight:600">Bereits gelernt ('+list.length+')</summary>'
+      +'<div style="font-size:12.5px;color:var(--mu);margin:6px 0 10px">Das hat die KI für diesen Klienten aus Daumen-Rückmeldungen und übernommenen Vorschlägen gelernt und beachtet es bei jedem Text dieser Art. Du kannst es anpassen oder entfernen.</div>'
+      +list.map(function(l){
+        return '<div class="rq-learned" data-lid="'+l.id+'" style="border:1px solid var(--bd);padding:12px 14px;margin-bottom:8px">'
+          +'<div style="font-size:12.5px"><b style="font-weight:600">'+E(CAT[l.category]||l.category)+'</b> · '+E(modName(l.module_key))+'</div>'
+          +'<div class="rq-learned-text" style="margin:6px 0;font-size:14px;line-height:1.55">'+E(l.summary)+'</div>'
+          +'<textarea class="rq-learned-edit" style="display:none;width:100%;min-height:70px;font-size:14px;padding:8px;border:1px solid var(--bd);box-sizing:border-box;font-family:inherit">'+E(l.summary)+'</textarea>'
+          +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="obtn" data-lact="edit">Anpassen</button><button type="button" class="runbtn" data-lact="save" style="display:none">Speichern</button><button type="button" class="obtn" data-lact="del">Entfernen</button></div></div>';
+      }).join('')+'</details>';
   }
   document.addEventListener('click',async function(e){
+    var lb=e.target.closest&&e.target.closest('#rq-learn [data-lact]');
+    if(lb){
+      var lc=lb.closest('.rq-learned'),lid=lc.getAttribute('data-lid'),la=lb.getAttribute('data-lact');
+      var lta=lc.querySelector('.rq-learned-edit'),lsave=lc.querySelector('[data-lact="save"]'),ltext=lc.querySelector('.rq-learned-text');
+      if(la==='edit'){var open=lta.style.display==='none';lta.style.display=open?'block':'none';lsave.style.display=open?'':'none';if(open)lta.focus();return;}
+      lb.disabled=true;
+      try{
+        var lr;
+        if(la==='save'){lr=await api('/api/learning/learned/'+lid,{method:'PUT',body:JSON.stringify({summary:lta.value})});}
+        else{if(!confirm('Diese gelernte Vorliebe entfernen? Die KI beachtet sie dann nicht mehr.')){lb.disabled=false;return;}lr=await api('/api/learning/learned/'+lid,{method:'DELETE'});}
+        var ld=await lr.json().catch(function(){return {};});
+        if(!lr.ok)throw new Error(ld.error||'Fehler');
+        if(la==='save'){ltext.textContent=lta.value;lta.style.display='none';lsave.style.display='none';lb.disabled=false;}
+        else lc.remove();
+      }catch(err){alert('Das hat nicht geklappt: '+err.message);lb.disabled=false;}
+      return;
+    }
     var b=e.target.closest&&e.target.closest('#rq-learn [data-act]');if(!b)return;
     var c=b.closest('.rq-learn-card');if(!c)return;
     var id=c.getAttribute('data-id'),act=b.getAttribute('data-act');

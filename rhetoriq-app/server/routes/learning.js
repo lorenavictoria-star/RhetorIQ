@@ -34,6 +34,58 @@ router.get('/', requireAdvisor, async (req, res) => {
   }
 });
 
+// Alles, was die KI für diesen Klienten schon gelernt hat (aus Daumen-Rückmeldungen der Klienten und aus
+// übernommenen Vorschlägen). Die Beraterin kann es hier ansehen, anpassen oder entfernen.
+router.get('/learned', requireAdvisor, async (req, res) => {
+  try {
+    const clientId = parseInt(req.query.client_id, 10);
+    if (!Number.isInteger(clientId)) return res.status(400).json({ error: 'client_id erforderlich' });
+    const { rows } = await pool.query(
+      `SELECT fl.id, fl.client_id, fl.module_key, fl.category, fl.summary, fl.updated_at
+       FROM client_feedback_learnings fl JOIN clients c ON c.id = fl.client_id
+       WHERE fl.client_id=$1 AND c.advisor_id=$2 ORDER BY fl.module_key, fl.category`, [clientId, req.user.id]);
+    res.json(rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+async function loadOwnLearned(req) {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isInteger(id) || id < 1) return null;
+  const { rows } = await pool.query(
+    `SELECT fl.* FROM client_feedback_learnings fl JOIN clients c ON c.id = fl.client_id WHERE fl.id=$1 AND c.advisor_id=$2`,
+    [id, req.user.id]);
+  return rows[0] || null;
+}
+
+router.put('/learned/:id', requireAdvisor, async (req, res) => {
+  try {
+    const row = await loadOwnLearned(req);
+    if (!row) return res.status(404).json({ error: 'Eintrag nicht gefunden.' });
+    const summary = typeof req.body?.summary === 'string' ? req.body.summary.trim().slice(0, 1200) : '';
+    if (!summary) return res.status(400).json({ error: 'Der Text darf nicht leer sein.' });
+    await pool.query('UPDATE client_feedback_learnings SET summary=$2, updated_at=NOW() WHERE id=$1', [row.id, summary]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.delete('/learned/:id', requireAdvisor, async (req, res) => {
+  try {
+    const row = await loadOwnLearned(req);
+    if (!row) return res.status(404).json({ error: 'Eintrag nicht gefunden.' });
+    await pool.query('DELETE FROM client_feedback_learnings WHERE id=$1', [row.id]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 async function loadOwn(req) {
   const id = parseInt(req.params.id, 10);
   if (!Number.isInteger(id) || id < 1) return null;
