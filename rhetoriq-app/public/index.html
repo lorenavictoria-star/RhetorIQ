@@ -2217,6 +2217,16 @@ html.rq-big{zoom:1.15}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script id="rq-viewas-boot">
+// Ansicht des Klienten: Zugang kommt über window.name (nicht über die Adresse) und lebt nur in diesem Tab (sessionStorage). Das Token der Beraterin bleibt unberührt.
+(function(){try{
+  if(new URLSearchParams(location.search).get('viewas')!=='1'||String(window.name).indexOf('rqviewas:')!==0)return;
+  var tok=window.name.slice(9);window.name='';
+  sessionStorage.setItem('riq-token',tok);sessionStorage.setItem('riq-tour-seen','1');window.__rqViewAs=true;
+  Object.defineProperty(window,'localStorage',{configurable:true,get:function(){return sessionStorage;}});
+  history.replaceState(null,'',location.pathname);
+}catch(e){}})();
+</script>
 <script>
 if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -7718,7 +7728,7 @@ function wsRenderAdmin(body){
       <input id="pay-link-url-${_wsClientId}" type="text" readonly style="flex:1;font-size:11px;padding:4px 6px;border:1px solid var(--br);border-radius:4px;background:var(--bg2);color:var(--tx);min-width:0">
       <button class="obtn" onclick="navigator.clipboard.writeText(document.getElementById('pay-link-url-${_wsClientId}').value)">Kopieren</button>
     </div>
-    <div style="font-size:11px;color:var(--mu);margin-top:14px">Feedback-Lernstand steht direkt im Tab "Modul-Prompts &amp; Feedback" oben, jeweils über der passenden Modul-Anweisung.</div>`;
+    <div style="font-size:11px;color:var(--mu);margin-top:14px">Feedback-Lernstand steht im Reiter Module, unter «Anweisungen und Feedback pro Modul», jeweils über der passenden Modul-Anweisung.</div>`;
 }
 async function wsDeleteClient(){
   await deleteClient(_wsClientId);
@@ -9074,6 +9084,172 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
     if(typeof _wsExpandedReviewId!=='undefined'&&_wsExpandedReviewId){var id=_wsExpandedReviewId;if(SUG[id]&&(SUG[id].text||SUG[id].loading||SUG[id].err))paint(id);else ask(id);}
     return r;
   };
+})();
+</script>
+<script id="rq-mod-js">
+// ═══ F6 Workspace Module: Sektor, Modulauswahl, eigenes Modul inline ═══
+(function(){
+  var E=rqEsc,M={cid:null,sec:'kmu',sel:null,rest:[],form:false,fields:[{label:'Briefing',type:'textarea',options:''}],msg:'',err:'',busy:false,custom:null};
+  var _orig=window.wsRenderPrompts;
+  function client(){return (typeof clients!=='undefined'?clients:[]).filter(function(c){return String(c.id)===String(_wsClientId);})[0]||{};}
+  function init(){
+    var c=client(),wc=(typeof _wsData!=='undefined'&&_wsData&&_wsData.client)||{};
+    if(String(M.cid)===String(_wsClientId)&&M.sel)return;
+    M.cid=_wsClientId;M.form=false;M.msg='';M.err='';M.custom=null;
+    M.sec=RQ_SECTORS[wc.sector||c.sector]?(wc.sector||c.sector):'kmu';
+    var em=(c.enabled_modules!==undefined?c.enabled_modules:wc.enabled_modules),known=RQ_MODS.map(function(m){return m[0];});
+    if(em===undefined||em===null){M.sel=known.slice();M.rest=[];(typeof MC_SECTIONS!=='undefined'?MC_SECTIONS:[]).forEach(function(s){s.keys.forEach(function(k){if(known.indexOf(k)<0&&M.rest.indexOf(k)<0)M.rest.push(k);});});}
+    else{M.sel=em.filter(function(k){return known.indexOf(k)>=0;});M.rest=em.filter(function(k){return known.indexOf(k)<0;});}
+    if(M.sel.indexOf('brand-voice')<0)M.sel.unshift('brand-voice');
+  }
+  async function loadCustom(){
+    try{var r=await rqJ('/api/custom-modules?clientId='+_wsClientId);M.custom=Array.isArray(r)?r:[];}catch(e){M.custom=[];}
+  }
+  function chips(){
+    var list=['brand-voice'].concat((RQ_SECMODS[M.sec]||[]));M.sel.forEach(function(k){if(list.indexOf(k)<0)list.push(k);});
+    return list.map(function(k){var fixed=k==='brand-voice',on=M.sel.indexOf(k)>=0;
+      return '<button type="button" class="rq-chip'+(on?' on':'')+(fixed?' fix':'')+'"'+(fixed?'':' data-mm="'+k+'"')+'>'+(on?'✓ ':'+ ')+E(rqModName(k))+'</button>';}).join('');
+  }
+  function builder(){
+    var nm=E(client().name||'dem Kunden');
+    return '<div class="rq-card gold"><span class="rq-eb g">Neues Modul für '+nm+'</span><span class="rq-hint">Es erscheint nur in der Modulliste dieses Klienten.</span></div>'
+     +'<div class="rq-card"><div class="rq-two"><div><label class="rq-lab" for="cmb-name">Name</label><input id="cmb-name" class="rq-in" placeholder="zum Beispiel Reklamationsbrief"></div><div><label class="rq-lab" for="cmb-icon">Kürzel</label><input id="cmb-icon" class="rq-in" maxlength="4" placeholder="RB" style="max-width:140px"></div></div>'
+     +'<div><label class="rq-lab" for="cmb-desc">Beschreibung</label><textarea id="cmb-desc" class="rq-in" style="min-height:70px" placeholder="Antwort auf eine Reklamation: zuerst die Lösung, dann die Ursache."></textarea></div>'
+     +'<div><span class="rq-lab">Eingabefelder</span><div class="rq-list" id="cmb-fields">'+M.fields.map(function(f,i){return '<div class="rq-li" style="cursor:default;grid-template-columns:minmax(0,1fr) auto auto"><div><input class="rq-in cmb-fl" data-i="'+i+'" value="'+E(f.label)+'" placeholder="Bezeichnung">'+(f.type==='select'?'<input class="rq-in cmb-fo" data-i="'+i+'" value="'+E(f.options)+'" placeholder="Optionen, mit Komma getrennt" style="margin-top:6px">':'')+'</div><select class="rq-in cmb-ft" data-i="'+i+'" style="width:auto"><option value="textarea"'+(f.type==='textarea'?' selected':'')+'>Textfeld</option><option value="text"'+(f.type==='text'?' selected':'')+'>Kurztext</option><option value="select"'+(f.type==='select'?' selected':'')+'>Auswahl</option></select>'+(M.fields.length>1?'<button type="button" class="rq-btn ghost sm" data-mm-rm="'+i+'" aria-label="Feld entfernen">&times;</button>':'<span></span>')+'</div>';}).join('')+'</div><button type="button" class="rq-btn ghost sm" data-mm-add="1" style="margin-top:10px">+ Feld hinzufügen</button></div>'
+     +'<div><label class="rq-lab" for="cmb-prompt">Anweisung an die KI</label><textarea id="cmb-prompt" class="rq-in" style="min-height:150px" placeholder="Schreibe einen Reklamationsbrief in der Brand Voice des Klienten. Nenne zuerst die Lösung, dann die Ursache. Sie-Form, höchstens 150 Wörter."></textarea></div></div>'
+     +(M.err?'<div class="rq-err">'+E(M.err)+'</div>':'')
+     +'<div class="rq-acts"><button type="button" class="rq-btn" data-mm-save="1"'+(M.busy?' disabled':'')+'>Für '+nm+' aktivieren</button><button type="button" class="rq-btn ghost" data-mm-cancel="1">Abbrechen</button></div>';
+  }
+  function keepForm(){
+    document.querySelectorAll('.cmb-fl').forEach(function(el){M.fields[+el.dataset.i].label=el.value;});
+    document.querySelectorAll('.cmb-fo').forEach(function(el){M.fields[+el.dataset.i].options=el.value;});
+    document.querySelectorAll('.cmb-ft').forEach(function(el){M.fields[+el.dataset.i].type=el.value;});
+  }
+  async function render(body){
+    init();if(M.custom===null)await loadCustom();
+    if(M.form){body.innerHTML='<div id="rq-mod-main" style="display:flex;flex-direction:column;gap:16px">'+builder()+'</div>';return;}
+    body.innerHTML='<div style="display:flex;flex-direction:column;gap:18px"><div class="rq-acts" style="justify-content:space-between"><details'+(M.secOpen?' open':'')+' data-secd><summary class="rq-hint" style="cursor:pointer;min-height:44px;display:flex;align-items:center">Sektor: '+RQ_SECTORS[M.sec]+' · ändern</summary><div class="rq-chips" style="margin:6px 0 4px">'+Object.keys(RQ_SECTORS).map(function(k){return '<button type="button" class="rq-chip'+(k===M.sec?' on':'')+'" data-msec="'+k+'">'+RQ_SECTORS[k]+'</button>';}).join('')+'</div></details><button type="button" class="rq-btn" data-mm-new="1">+ Eigenes Modul erstellen</button></div>'
+     +'<div><span class="rq-lab">Module für '+E(client().name||'')+'</span><div class="rq-chips">'+chips()+'</div><div class="rq-hint" style="margin-top:8px">Das Häkchen blendet das Modul für den Klienten ein oder aus. Brand Voice ist immer dabei.</div></div>'
+     +'<div class="rq-acts"><button type="button" class="rq-btn" data-mm-saveall="1"'+(M.busy?' disabled':'')+'>Auswahl speichern</button>'+(M.msg?'<span class="rq-ok">'+E(M.msg)+'</span>':'')+(M.err?'<span class="rq-err">'+E(M.err)+'</span>':'')+'</div>'
+     +'<div><div class="rq-qa-h" style="margin-top:4px">Eigene Module · '+M.custom.length+'</div>'+(M.custom.length?M.custom.map(function(m){return '<div class="rq-li" style="cursor:default"><i class="ti ti-puzzle"></i><div><b>'+E((m.icon&&m.icon!=='◆'?m.icon+' ':'')+m.name)+'</b><small>'+E(m.description||'von dir erstellt')+'</small></div><span class="rq-pill">aktiv</span></div>';}).join(''):'<div class="rq-empty">Noch keine eigenen Module für diesen Klienten.</div>')+'</div>'
+     +'<details><summary class="rq-hint" style="cursor:pointer;min-height:44px;display:flex;align-items:center">Anweisungen und Feedback pro Modul</summary><div id="rq-mod-prompts" style="margin-top:8px"></div></details></div>';
+    _orig(document.getElementById('rq-mod-prompts'));
+  }
+  window.wsRenderPrompts=function(body){
+    if(body&&body.id==='ws-body'){var cid=_wsClientId;M.msg='';render(body);return;}
+    return _orig.apply(this,arguments);
+  };
+  async function saveSel(body){
+    M.busy=true;M.err='';M.msg='';render(body);
+    try{
+      var list=M.rest.concat(M.sel.filter(function(k){return M.rest.indexOf(k)<0;}));
+      var d=await rqJ('/api/clients/'+_wsClientId+'/modules-config',{method:'PUT',body:JSON.stringify({modules:list})});
+      var c=client();if(c.id)c.enabled_modules=d.enabled_modules;
+      if(String(clientId)===String(_wsClientId)){enabledModules=d.enabled_modules;if(typeof renderModulesList==='function')renderModulesList();}
+      M.msg='Gespeichert. '+M.sel.length+' Module aktiv.';
+    }catch(e){M.err='Speichern nicht möglich. '+e.message;}
+    M.busy=false;render(body);
+  }
+  async function saveCustom(body){
+    keepForm();
+    var name=(document.getElementById('cmb-name').value||'').trim(),prompt=(document.getElementById('cmb-prompt').value||'').trim();
+    if(!name||!prompt){M.err='Name und Anweisung an die KI sind nötig.';return render(body);}
+    var used={},fields=M.fields.filter(function(f){return f.label.trim();}).map(function(f,i){
+      var id=f.label.toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')||('feld'+i);while(used[id])id+='_';used[id]=1;
+      var o={id:id,label:f.label.trim(),type:f.type,placeholder:f.type==='textarea'?'Inhalt hier einfügen …':''};
+      if(f.type==='select')o.options=String(f.options||'').split(',').map(function(x){return x.trim();}).filter(Boolean);return o;});
+    if(!fields.length)fields=[{id:'text',label:'Dein Text',type:'textarea',placeholder:'Inhalt hier einfügen …'}];
+    M.busy=true;M.err='';
+    try{
+      await rqJ('/api/custom-modules',{method:'POST',body:JSON.stringify({client_id:_wsClientId,name:name,description:(document.getElementById('cmb-desc').value||'').trim(),system_prompt:prompt,input_fields:fields,icon:(document.getElementById('cmb-icon').value||'').trim()||'◆'})});
+      M.form=false;M.fields=[{label:'Briefing',type:'textarea',options:''}];M.custom=null;M.msg='Modul «'+name+'» ist für '+(client().name||'den Klienten')+' aktiv.';
+      if(String(clientId)===String(_wsClientId)&&typeof loadCustomModules==='function'){await loadCustomModules();if(typeof renderModulesList==='function')renderModulesList();}
+    }catch(e){M.err='Das Modul konnte nicht gespeichert werden. '+e.message;}
+    M.busy=false;render(body);
+  }
+  document.addEventListener('click',function(e){
+    var t=e.target.closest&&e.target.closest('#ws-body [data-mm],#ws-body [data-msec],#ws-body [data-mm-new],#ws-body [data-mm-saveall],#ws-body [data-mm-add],#ws-body [data-mm-rm],#ws-body [data-mm-save],#ws-body [data-mm-cancel]');
+    if(!t||!document.getElementById('rq-mod-main')&&!document.querySelector('#ws-body [data-mm-new]'))return;
+    var body=document.getElementById('ws-body');
+    if(t.hasAttribute('data-mm')){var k=t.getAttribute('data-mm'),i=M.sel.indexOf(k);if(i>=0)M.sel.splice(i,1);else M.sel.push(k);M.msg='';return render(body);}
+    if(t.hasAttribute('data-msec')){M.sec=t.getAttribute('data-msec');M.secOpen=true;return render(body);}
+    if(t.hasAttribute('data-mm-new')){M.form=true;M.err='';M.msg='';return render(body);}
+    if(t.hasAttribute('data-mm-saveall'))return saveSel(body);
+    if(t.hasAttribute('data-mm-add')){keepForm();M.fields.push({label:'',type:'text',options:''});return render(body);}
+    if(t.hasAttribute('data-mm-rm')){keepForm();M.fields.splice(+t.getAttribute('data-mm-rm'),1);return render(body);}
+    if(t.hasAttribute('data-mm-save'))return saveCustom(body);
+    if(t.hasAttribute('data-mm-cancel')){M.form=false;M.err='';return render(body);}
+  });
+  document.addEventListener('change',function(e){if(e.target.classList&&e.target.classList.contains('cmb-ft')){keepForm();render(document.getElementById('ws-body'));}});
+  // Beim Öffnen eines anderen Klienten zurücksetzen
+  var _ow=window.openWorkspace;window.openWorkspace=function(cid){M.sel=null;M.custom=null;return _ow.apply(this,arguments);};
+})();
+</script>
+<style id="rq-viewas-css">
+#rq-vband{display:none}
+body.rq-ro #rq-vband{display:flex;position:fixed;top:0;left:0;right:0;height:48px;z-index:2000;background:var(--tx);color:#fff;align-items:center;justify-content:center;gap:12px;padding:0 16px;font-size:15px;text-align:center}
+body.rq-ro #rq-vband b{color:#E3C27A;font-weight:500}
+body.rq-ro{padding-top:48px}
+body.rq-ro #rq-rail{top:48px}
+body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,body.rq-ro .add-btn,body.rq-ro .exbtn,body.rq-ro [onclick*="save"],body.rq-ro [onclick*="Save"],body.rq-ro [onclick*="delete"],body.rq-ro [onclick*="Delete"],body.rq-ro [onclick*="send"],body.rq-ro [onclick*="Send"],body.rq-ro [onclick*="upload"],body.rq-ro [onclick*="generate"],body.rq-ro [onclick*="Password"],body.rq-ro [onclick*="logout"],body.rq-ro #rq-ask{opacity:.4;cursor:not-allowed;filter:grayscale(1)}
+@media(max-width:640px){body.rq-ro #rq-vband{height:64px;font-size:13px;line-height:1.3}body.rq-ro{padding-top:64px}body.rq-ro #rq-rail{top:64px}}
+</style>
+<script id="rq-viewas-js">
+// ═══ F7 Ansicht des Klienten (nur lesen): Knopf im Workspace, Zugriffsprotokoll, Lese-Modus im neuen Tab ═══
+(function(){
+  var E=rqEsc;
+  // — Beraterin: Knopf im Workspace-Kopf —
+  function addBtn(){
+    var h=document.getElementById('ws-title');if(!h)return;
+    var host=document.querySelector('#ws-ov .modal button[onclick*="sendWelcomeByEmail"]');if(!host||document.getElementById('ws-viewas'))return;
+    var b=document.createElement('button');b.type='button';b.id='ws-viewas';b.className='rq-btn ghost sm';b.innerHTML='<i class="ti ti-lock" aria-hidden="true"></i> Ansicht des Klienten (nur lesen)';
+    b.onclick=openView;host.parentNode.insertBefore(b,host);
+  }
+  async function openView(){
+    var cid=_wsClientId,b=document.getElementById('ws-viewas'),w=window.open('about:blank','_blank');
+    if(b)b.disabled=true;
+    try{
+      var d=await rqJ('/api/advisor/view-as/'+cid,{method:'POST',body:'{}'});
+      var tok=d&&(d.token||d.accessToken);if(!tok)throw new Error('Kein Zugang erhalten.');
+      if(!w)throw new Error('Der neue Tab wurde blockiert. Bitte Pop-ups für diese Seite erlauben.');
+      w.name='rqviewas:'+tok;w.location.href=location.origin+'/?viewas=1';
+    }catch(e){if(w)w.close();rqToast('Die Ansicht konnte nicht geöffnet werden. '+e.message);}
+    if(b)b.disabled=false;
+  }
+  var _ow=window.openWorkspace;window.openWorkspace=async function(){var r=await _ow.apply(this,arguments);addBtn();return r;};
+  // — Zugriffsprotokoll in Verwaltung —
+  var _ra=window.wsRenderAdmin;
+  window.wsRenderAdmin=function(body){
+    var r=_ra.apply(this,arguments);
+    var cid=_wsClientId,box=document.createElement('div');box.className='rq-card';box.style.marginTop='20px';
+    box.innerHTML='<span class="rq-eb">Zugriffsprotokoll · Ansicht des Klienten</span><div class="rq-hint">Lädt …</div>';body.appendChild(box);
+    rqJ('/api/advisor/view-as-log/'+cid).then(function(rows){
+      rows=Array.isArray(rows)?rows:(rows&&rows.rows)||[];
+      box.innerHTML='<span class="rq-eb">Zugriffsprotokoll · Ansicht des Klienten</span>'+(rows.length?'<div class="rq-list">'+rows.map(function(x){var t=x.created_at||x.opened_at||x.at;return '<div class="rq-li" style="cursor:default"><i class="ti ti-lock"></i><div><b>Ansicht geöffnet</b><small>'+E(x.advisor_name||x.advisor||'Beraterin')+' · '+E(rqDateTime(t))+'</small></div><span class="rq-hint">'+(x.duration_min?x.duration_min+' Min.':'')+'</span></div>';}).join('')+'</div>':'<div class="rq-hint">Noch keine Ansicht geöffnet.</div>');
+    }).catch(function(e){box.innerHTML='<span class="rq-eb">Zugriffsprotokoll · Ansicht des Klienten</span><div class="rq-err">Das Protokoll konnte nicht geladen werden. '+E(e.message)+'</div>';});
+    return r;
+  };
+  // — Lese-Modus im geöffneten Tab —
+  if(!window.__rqViewAs)return;
+  var nm='dem Klienten';
+  try{var p=JSON.parse(atob(token.split('.')[1]));nm=p.clientName||nm;}catch(e){}
+  document.body.classList.add('rq-ro');
+  var band=document.createElement('div');band.id='rq-vband';band.setAttribute('role','status');
+  band.innerHTML='<i class="ti ti-lock" aria-hidden="true"></i><span>Du siehst die Plattform von <b>'+E(nm)+'</b>. Nur lesen.</span>';
+  document.body.appendChild(band);
+  document.title='Ansicht: '+nm+' (nur lesen)';
+  var _f=window.fetch;
+  window.fetch=function(u,o){
+    var m=String((o&&o.method)||'GET').toUpperCase();
+    if(m!=='GET'&&m!=='HEAD'){rqToast('Nur lesen: Hier lässt sich nichts ändern.');return Promise.resolve(new Response(JSON.stringify({error:'Nur lesen.'}),{status:403,headers:{'Content-Type':'application/json'}}));}
+    return _f.apply(this,arguments);
+  };
+  var SEL='.runbtn,.advbtn,.lbtn,.add-btn,.exbtn,[onclick*="save"],[onclick*="Save"],[onclick*="delete"],[onclick*="Delete"],[onclick*="send"],[onclick*="Send"],[onclick*="upload"],[onclick*="generate"],[onclick*="Password"],[onclick*="logout"],#rq-ask';
+  document.addEventListener('click',function(e){
+    var t=e.target.closest&&e.target.closest(SEL);
+    if(t&&!t.closest('#rq-vband')){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();rqToast('Nur lesen: Diese Aktion ist in der Ansicht des Klienten gesperrt.');}
+  },true);
+  document.querySelectorAll('textarea,input[type=file]').forEach(function(x){});
 })();
 </script>
 </body>
