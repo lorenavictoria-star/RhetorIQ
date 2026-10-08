@@ -2030,11 +2030,18 @@ router.post('/stream', requireAuth, async (req, res) => {
 
 // GET /api/analyze/history
 router.get('/history', requireAuth, async (req, res) => {
-  // Der Verlauf ist nur für die Beraterin sichtbar, nicht für Klienten.
-  if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Advisor only' });
+  // Der Verlauf ist für die Beraterin sichtbar und für Klienten-Teammitglieder mit der Rolle «admin»
+  // (zum Beispiel den CEO). Alle anderen Klienten sehen ihn nicht. Ansichts-Tokens (readOnly) auch nicht.
+  const isAdvisor = req.user.role === 'advisor';
+  const isClientAdmin = req.user.role === 'client' && req.user.clientUserRole === 'admin' && !req.user.readOnly;
+  if (!isAdvisor && !isClientAdmin) return res.status(403).json({ error: 'Nicht erlaubt' });
   try {
-    const clientId = req.user.role === 'client' ? req.user.clientId : (req.query.clientId || null);
-    const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+    const clientId = isAdvisor ? (req.query.clientId || null) : req.user.clientId;
+    let advisorId = isAdvisor ? req.user.id : req.user.advisorId;
+    if (!advisorId && clientId) {
+      const { rows: cr } = await pool.query('SELECT advisor_id FROM clients WHERE id=$1', [clientId]);
+      advisorId = cr[0] && cr[0].advisor_id;
+    }
 
     let query, params;
     if (clientId) {

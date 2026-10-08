@@ -1024,7 +1024,7 @@ html.rq-big{zoom:1.15}
           <select id="tm-role" style="width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);font-size:13px;font-family:var(--sans)">
             <option value="editor">Editor (can generate)</option>
             <option value="viewer">Viewer (read only)</option>
-            <option value="admin">Admin (full access)</option>
+            <option value="admin">Admin / CEO (alles, auch Verlauf)</option>
           </select>
         </div>
       </div>
@@ -3628,6 +3628,7 @@ async function boot(user,role){
     const hmToggle=document.getElementById('home-more-toggle');if(hmToggle)hmToggle.style.display='none';
     const hmBox=document.getElementById('home-more');if(hmBox)hmBox.style.display='none';
   }
+  const _mh=document.getElementById('mm-history');if(_mh&&!isAdv&&canHistory())_mh.style.display='flex';
   connectWS();loadStats();renderVids();initPasteIntelligence();renderQuickAccess();
   // show ⌘K label + quick panel trigger on desktop
   if(window.innerWidth>=900){
@@ -4382,8 +4383,16 @@ function goHome(){
   document.querySelector('.content').scrollTop=0;
   renderQuickAccess();
 }
+// Verlauf sehen: die Beraterin und Klienten-Teammitglieder mit der Rolle «Admin» (zum Beispiel der CEO).
+function canHistory(){
+  if(isAdv)return true;
+  try{
+    const p=JSON.parse(atob(String(token).split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    return p.clientUserRole==='admin'&&!p.readOnly;
+  }catch{return false;}
+}
 function goPage(name){
-  if(name==='history'&&!isAdv){goHome();return;} // Verlauf nur für die Beraterin
+  if(name==='history'&&!canHistory()){goHome();return;} // Verlauf nur für Beraterin und Admin-Rolle
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
@@ -6250,7 +6259,7 @@ async function extractText(file){
 // HISTORY
 let _histRows=[];
 async function loadHistory(){
-  if(!isAdv)return;
+  if(!canHistory())return;
   const el=document.getElementById('hist-list');el.innerHTML='<div class="empty"><div class="ei">&#8987;</div><div>Loading...</div></div>';
   const sub=document.getElementById('hist-sub');
   const c=clients.find(x=>x.id==clientId);
@@ -8378,7 +8387,7 @@ tryAutoLogin();
       sv.push({k:'brand-voice',t:'Brand Voice',ic:'ti-wave-sine',go:function(){goPage('brand-voice');}});
       sv.push({k:'training',t:'Beispiele für den Aufbau',ic:'ti-database',go:function(){goPage('training');loadTraining();}});
     }
-    if(A)sv.push({k:'history',t:'Verlauf',ic:'ti-history',go:function(){goPage('history');loadHistory();}});
+    if(A||canHistory())sv.push({k:'history',t:'Verlauf',ic:'ti-history',go:function(){goPage('history');loadHistory();}});
     if(!A)sv.push({k:'memory',t:'Gedächtnis',ic:'ti-notes',go:function(){goPage('memory');}});
     sv.push({k:'pricing',t:'Preise',ic:'ti-tag',go:function(){goPage('pricing');}});
     sv.push({k:'videos',t:'Videos',ic:'ti-player-play',go:function(){goPage('videos');}});

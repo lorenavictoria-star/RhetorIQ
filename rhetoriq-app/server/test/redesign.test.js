@@ -22,7 +22,8 @@ test.before(async () => {
     ['/api/clients', require('../routes/clients')],
     ['/api/advisor', require('../routes/viewAs')],
     ['/api/clients', require('../routes/clientStats')],
-    ['/api/help-chat', require('../routes/helpChat')]
+    ['/api/help-chat', require('../routes/helpChat')],
+    ['/api/analyze', require('../routes/analyze')]
   ]);
 });
 test.after(async () => { await srv.close(); });
@@ -509,4 +510,26 @@ test('Anfrage löschen: nur Advisor, entfernt die Anfrage endgültig', async () 
   assert.equal((await srv.call('DELETE', `/api/inquiries/${id}`, { token: A() })).status, 404);
   const rest = await H.pool.query('SELECT 1 FROM inquiries WHERE id=$1', [id]);
   assert.equal(rest.rows.length, 0);
+});
+
+// ── Verlauf: Beraterin und Klienten-Admin ──────────────────
+test('Verlauf: Beraterin und Admin-Rolle ja, normale Klienten und Ansicht nein', async () => {
+  const cl = await H.addClient('Verlauf AG');
+  await H.pool.query(`INSERT INTO analyses (client_id, advisor_id, module, module_label, result) VALUES ($1,1,'text-gen','E-Mail','Hallo')`, [cl.id]);
+  const get = (token, qs = '') => srv.call('GET', '/api/analyze/history' + qs, { token });
+  assert.equal((await srv.call('GET', '/api/analyze/history')).status, 401);
+  const adv = await get(A(), `?clientId=${cl.id}`);
+  assert.equal(adv.status, 200);
+  assert.equal(adv.body.length, 1);
+  const norm = await get(H.clientToken(cl.id));
+  assert.equal(norm.status, 403, JSON.stringify(norm.body));
+  const mk = async () => (await H.pool.query(`INSERT INTO client_users (client_id) VALUES ($1) RETURNING id`, [cl.id])).rows[0].id;
+  const editorId = await mk();
+  const adminId = await mk();
+  const tok = (id, role, extra = {}) => H.clientToken(cl.id, { clientUserId: id, clientUserRole: role, ...extra });
+  assert.equal((await get(tok(editorId, 'editor'))).status, 403);
+  const admin = await get(tok(adminId, 'admin', { advisorId: null }));
+  assert.equal(admin.status, 200);
+  assert.equal(admin.body.length, 1);
+  assert.equal((await get(tok(adminId, 'admin', { readOnly: true }))).status, 403);
 });
