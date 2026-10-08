@@ -868,6 +868,22 @@ body:not(.adv) #rq-day{display:none}
 #ws-client-pick{min-width:260px;margin-bottom:8px;font-size:15px}
 #ws-rev-count{background:#fff!important;color:var(--ac)!important;border:1px solid var(--ac)}
 @media(max-width:700px){#ws-split{flex-direction:column;overflow-y:auto}#ws-split>div{min-width:0!important;border-left:0!important}#ws-ov.full-page .modal{overflow-y:auto}}
+/* ═══ Onboarding ═══ */
+#onboarding-ov>div,#nc-ov .modal{border:1px solid var(--tx)!important}
+#rq-wiz{display:none;position:fixed;inset:0;background:rgba(14,13,11,.55);z-index:450;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+#rq-wiz.show{display:flex}
+#rq-wiz .rq-wbox{background:#fff;border:1px solid var(--tx);max-width:720px;width:100%;margin:auto;padding:28px 28px 24px}
+#rq-wiz h2{font-family:var(--serif);font-size:30px;font-weight:400;margin-bottom:4px}
+.rq-steps{display:flex;gap:0;margin:18px 0 22px;border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.rq-steps button{flex:1 1 auto;min-height:44px;padding:8px 10px;background:none;border:0;border-bottom:2px solid transparent;color:var(--mu);font-family:var(--sans);font-size:14px;cursor:pointer;text-align:left}
+.rq-steps button b{font-weight:500;margin-right:6px}
+.rq-steps button.act{color:var(--ac);border-bottom-color:var(--ac)}
+.rq-steps button.done{color:var(--tx)}
+.rq-wbody{min-height:200px;font-size:15px;line-height:1.6}
+.rq-wbody p{margin-bottom:12px}
+.rq-wbody select{width:100%;margin-bottom:12px}
+.rq-wnav{display:flex;justify-content:space-between;gap:10px;margin-top:22px;border-top:1px solid var(--bd);padding-top:16px;flex-wrap:wrap}
+.rq-open{background:#fff;color:var(--mu);border:1px dashed var(--bd);padding:10px 14px;font-size:13px;margin-top:8px}
 /* Grosse Schrift */
 html.rq-big{zoom:1.15}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -2093,7 +2109,7 @@ html.rq-big{zoom:1.15}
     </div>
     <div style="font-size:12px;color:var(--mu);margin-bottom:18px">Upload all documents for this client — emails, speeches, reports, Brand Voice, PDFs, Word files, audio or video. The AI reads each one and saves it to the right place automatically.</div>
 
-    <div id="ob-drop-zone" ondragover="event.preventDefault();this.style.borderColor='var(--acc)';this.style.background='#f5f0ff'" ondragleave="this.style.borderColor='var(--bd)';this.style.background=''" ondrop="obHandleDrop(event)" onclick="document.getElementById('ob-file-input').click()" style="border:2px dashed var(--bd);border-radius:8px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:12px">
+    <div id="ob-drop-zone" ondragover="event.preventDefault();this.style.borderColor='var(--acc)';this.style.background='var(--acl)'" ondragleave="this.style.borderColor='var(--bd)';this.style.background=''" ondrop="obHandleDrop(event)" onclick="document.getElementById('ob-file-input').click()" style="border:2px dashed var(--bd);border-radius:8px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:12px">
       <div style="font-size:28px;margin-bottom:8px">&#8679;</div>
       <div style="font-size:14px;font-weight:600;margin-bottom:4px">Drop files here or click to choose</div>
       <div style="font-size:12px;color:var(--mu)">PDF · Word · TXT · MP3 · MP4 · WAV · MOV · and more — up to 30 files at once</div>
@@ -3895,7 +3911,7 @@ function ncSetLang(l){
   document.getElementById('nc-lang-en').style.border=isDE?'1.5px solid var(--bd)':'none';
   document.getElementById('nc-ov').dataset.lang=l;
 }
-const NC_MODULE_LABELS={'brand-voice':'Brand Voice','text-gen':'Text Generator','brief':'Formeller Brief','before-after':'Vorher/Nachher','profiling':'Profiling','review':'Review','recognition':'Erkennung','pre-meeting':'Pre-Meeting','risk':'Risiko-Check','actionability':'Umsetzbarkeit','thread':'Thread','sparring':'Sparring','debrief':'Debrief','vs-gen':'Varianten-Generator','vs-cal':'Varianten-Kalender'};
+const NC_MODULE_LABELS={'brand-voice':'Brand Voice','text-gen':'Text Generator','brief':'Formeller Brief','before-after':'Vorher / Nachher','profiling':'Kommunikations-Profil','review':'Feedback Writer','recognition':'Wertschätzung','pre-meeting':'Meeting-Vorbereitung','risk':'Risiko-Scan','actionability':'Klarheits-Check','thread':'Notizen zu Aufgaben','sparring':'Einwand-Training','debrief':'Debrief','vs-gen':'Varianten-Generator','vs-cal':'Situations-Variante'};
 const NC_SECTOR_MODULES={kmu:['profiling','review','brief','pre-meeting','risk','thread'],hotellerie:['profiling','review','brief','pre-meeting','risk','thread','sparring','debrief','vs-gen','vs-cal'],capital:['profiling','review','brief','vs-gen','vs-cal','sparring','pre-meeting','risk'],bildung:['profiling','text-gen','before-after','review','brief','pre-meeting'],nonprofit:['profiling','text-gen','before-after','review','brief','vs-gen','pre-meeting'],tech:['profiling','review','brief','pre-meeting','risk','thread','vs-gen','vs-cal','sparring'],beratung:['profiling','review','brief','pre-meeting','risk','thread','vs-gen','sparring','debrief']};
 const NC_ALWAYS=['brand-voice','text-gen','before-after'];
 function ncUpdateModules(){
@@ -8299,7 +8315,7 @@ tryAutoLogin();
     g.push({h:'',i:[
       {k:'home',t:'Start',ic:'ti-home',go:function(){goHome();}}]});
     if(A){
-      g[0].i.push({k:'onboarding',t:'Onboarding',ic:'ti-upload',go:function(){openOnboarding();}});
+      g[0].i.push({k:'onboarding',t:'Onboarding',ic:'ti-upload',go:function(){rqWizard();}});
       g[0].i.push({k:'clients',t:'Kunden',ic:'ti-users',go:function(){goPage('clients');loadAdvisorDashboard();}});
       g[0].i.push({k:'usage',t:'Nutzung',ic:'ti-chart-bar',go:function(){goPage('usage');loadUsage();}});
       g[0].i.push({k:'reviews',t:'Freigaben',ic:'ti-checks',go:function(){openReviewPanel();},cnt:true});
@@ -8515,6 +8531,60 @@ tryAutoLogin();
     if(pk){pk.innerHTML=(typeof clients!=='undefined'?clients:[]).map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+'</option>';}).join('');pk.value=String(cid);}
     return r;
   };
+})();
+</script>
+
+<script id="rq-wiz-js">
+// ═══ Onboarding-Ablauf: Klient, Workshop, Module, Dokumente, Prüfen (nutzt nur vorhandene Funktionen) ═══
+(function(){
+  var STEPS=['Klient','Workshop','Module','Dokumente','Prüfen'],step=0;
+  function esc(t){return (typeof safeText==='function')?safeText(t):String(t==null?'':t);}
+  function cur(){return (typeof clients!=='undefined'?clients:[]).filter(function(c){return String(c.id)===String(clientId);})[0];}
+  function box(){
+    var w=document.getElementById('rq-wiz');
+    if(!w){w=document.createElement('div');w.id='rq-wiz';w.setAttribute('role','dialog');w.setAttribute('aria-label','Onboarding');
+      w.innerHTML='<div class="rq-wbox"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h2>Onboarding</h2><div style="color:var(--mu);font-size:14px">Neuen Kunden in fünf Schritten einrichten</div></div><button type="button" class="obtn" onclick="rqWizClose()" aria-label="Schliessen">&times;</button></div><div class="rq-steps" id="rq-steps"></div><div class="rq-wbody" id="rq-wbody"></div><div class="rq-wnav"><button type="button" class="obtn" id="rq-wprev">Zurück</button><button type="button" class="lbtn" id="rq-wnext" style="width:auto">Weiter</button></div></div>';
+      document.body.appendChild(w);
+      document.getElementById('rq-wprev').onclick=function(){go(step-1);};
+      document.getElementById('rq-wnext').onclick=function(){if(step>=STEPS.length-1)rqWizClose();else go(step+1);};
+    }
+    return w;
+  }
+  window.rqWizClose=function(){var w=document.getElementById('rq-wiz');if(w)w.classList.remove('show');};
+  window.rqWizard=function(){box().classList.add('show');go(0);};
+  async function go(n){
+    step=Math.max(0,Math.min(STEPS.length-1,n));
+    document.getElementById('rq-steps').innerHTML=STEPS.map(function(t,i){return '<button type="button" class="'+(i===step?'act':(i<step?'done':''))+'" data-i="'+i+'"><b>'+(i+1)+'</b>'+t+'</button>';}).join('');
+    document.querySelectorAll('#rq-steps button').forEach(function(b){b.onclick=function(){go(parseInt(b.getAttribute('data-i'),10));};});
+    document.getElementById('rq-wprev').style.visibility=step===0?'hidden':'visible';
+    document.getElementById('rq-wnext').textContent=step===STEPS.length-1?'Fertig':'Weiter';
+    var b=document.getElementById('rq-wbody'),c=cur();
+    if(step===0){
+      var opts=(typeof clients!=='undefined'?clients:[]).map(function(x){return '<option value="'+x.id+'"'+(String(x.id)===String(clientId)?' selected':'')+'>'+esc(x.name)+'</option>';}).join('');
+      b.innerHTML='<p>Wählen Sie einen bestehenden Kunden oder legen Sie einen neuen an.</p><select id="rq-wsel" class="fi"><option value="">Kunde wählen</option>'+opts+'</select><button type="button" class="obtn" id="rq-wnew">+ Neuen Kunden anlegen</button>';
+      document.getElementById('rq-wsel').onchange=function(){if(this.value){var s=document.getElementById('client-select');if(s)s.value=this.value;switchClient(this.value);}};
+      document.getElementById('rq-wnew').onclick=function(){rqWizClose();openModal('nc-ov');};
+    } else if(step===1){
+      b.innerHTML='<p>Der Workshop klärt Ziele, Stimme und Textarten des Kunden.</p><p style="color:var(--mu)">Anfragen und die Vorab-E-Mail zum Workshop-Termin bearbeiten Sie unter Kunden, im Kasten «Neue Anfragen».</p><button type="button" class="obtn" id="rq-wgo">Zu den Anfragen</button><div class="rq-open">Workshop-Mappe automatisch erzeugen: noch nicht verfügbar.</div>';
+      document.getElementById('rq-wgo').onclick=function(){rqWizClose();goPage('clients');loadAdvisorDashboard();if(window.rqMarkRail)rqMarkRail('clients');};
+    } else if(step===2){
+      var names=(typeof NC_MODULE_LABELS!=='undefined')?Object.keys(NC_MODULE_LABELS).map(function(k){return NC_MODULE_LABELS[k];}).join(', '):'';
+      b.innerHTML='<p>Legen Sie fest, welche Module dieser Kunde nutzen darf.</p><p style="color:var(--mu);font-size:14px">'+esc(names)+'</p>'+(c?'<button type="button" class="obtn" id="rq-wmod">Module für '+esc(c.name)+' wählen</button>':'<p style="color:var(--mu)">Bitte zuerst im Schritt Klient einen Kunden wählen.</p>');
+      var mb=document.getElementById('rq-wmod');if(mb)mb.onclick=function(){openModuleConfig(c.id);};
+    } else if(step===3){
+      b.innerHTML='<p>Laden Sie alle Unterlagen des Kunden hoch. Die KI sortiert sie und legt sie ab.</p>'+(c?'<button type="button" class="obtn" id="rq-wdoc">Dokumente hochladen</button>':'<p style="color:var(--mu)">Bitte zuerst im Schritt Klient einen Kunden wählen.</p>');
+      var db=document.getElementById('rq-wdoc');if(db)db.onclick=function(){openOnboarding();};
+    } else {
+      if(!c){b.innerHTML='<p style="color:var(--mu)">Bitte zuerst im Schritt Klient einen Kunden wählen.</p>';return;}
+      b.innerHTML='<p>Lädt…</p>';
+      var mods='alle',docs='–',bv='–';
+      try{var r=await api('/api/clients/'+c.id+'/cm-status');var d=await r.json();if(Array.isArray(d.enabled_modules))mods=d.enabled_modules.length+' Module';}catch(e){}
+      try{var r2=await api('/api/memory/'+c.id);var m=await r2.json();if(Array.isArray(m)){docs=m.length+' abgelegt';bv=m.some(function(x){return /brand_voice/.test(x.memory_type||'');})?'vorhanden':'fehlt noch';}}catch(e){}
+      b.innerHTML='<p>Zusammenfassung für <b>'+esc(c.name)+'</b></p><div class="rq-li" style="cursor:default"><i class="ti ti-user"></i><div><b>Klient</b><small>'+esc(c.industry||'')+'</small></div><span></span></div><div class="rq-li" style="cursor:default"><i class="ti ti-layout-grid"></i><div><b>Module</b><small>'+esc(mods)+'</small></div><span></span></div><div class="rq-li" style="cursor:default"><i class="ti ti-file-text"></i><div><b>Dokumente</b><small>'+esc(docs)+'</small></div><span></span></div><div class="rq-li" style="cursor:default"><i class="ti ti-wave-sine"></i><div><b>Brand Voice</b><small>'+esc(bv)+'</small></div><span></span></div>';
+    }
+  }
+  // Menüpunkt "Onboarding" öffnet den Ablauf (das alte Modal bleibt über die Kopfzeile und Schritt 4 erreichbar)
+  var _bld=window.rqBuildRail;
 })();
 </script>
 </body>
