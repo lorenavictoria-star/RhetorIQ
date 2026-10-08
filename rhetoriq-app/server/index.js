@@ -97,7 +97,8 @@ wss.on('connection', (ws, req) => {
         if (!rows.length || (decoded.tokenVersion || 1) !== rows[0].token_version) {
           ws.close(4401, 'Unauthorized'); return;
         }
-        ws.userId = String(decoded.id || decoded.clientId);
+        // Schlüssel mit Rolle, damit eine Klienten-Nummer nie mit einer Berater-Nummer verwechselt wird
+        ws.userId = decoded.role === 'advisor' ? 'adv:' + decoded.id : 'cli:' + decoded.clientId;
         ws.isAuthenticated = true;
         clearTimeout(authTimeout);
         wsAddClient(ws);
@@ -141,9 +142,24 @@ wss.broadcast = (data, targetUserId = null) => {
   }
 };
 
+// Gezielte Meldungen: nur an die Beraterin bzw. nur an den betroffenen Klienten. wss.broadcast (an alle)
+// wird nicht mehr für Inhalte verwendet.
+function wsSendToKeys(pred, data) {
+  const msg = JSON.stringify(data);
+  userSockets.forEach((sockets, key) => {
+    if (!pred(key)) return;
+    sockets.forEach(ws => { if (ws.readyState === WebSocket.OPEN) ws.send(msg); });
+  });
+}
+wss.toAdvisors = (data) => wsSendToKeys(k => k.startsWith('adv:'), data);
+wss.toAdvisor = (advisorId, data) => wsSendToKeys(k => k === 'adv:' + advisorId, data);
+wss.toClient = (clientId, data) => { if (clientId != null) wsSendToKeys(k => k === 'cli:' + clientId, data); };
+
 app.locals.wss = wss;
 
 // ── Middleware ────────────────────────────────────────────────
+// Hinter dem Render-Proxy: sonst sehen alle Anfragen wie dieselbe Adresse aus, und alle Nutzer teilen sich die Anfrage-Limits.
+app.set('trust proxy', 1);
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'https://rhetoriq.ch', credentials: true }));
 // Webhook needs raw body — must be registered before express.json()
 app.use('/api/subscriptions/webhook', express.raw({ type: 'application/json' }));
@@ -170,13 +186,15 @@ app.use('/api/', rateLimit({
 }));
 
 // Analyze (Claude calls): 30 / 15 min per IP — prevents runaway costs
-app.use('/api/analyze', rateLimit({
+const analyzeGenLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Generierungslimit erreicht (30 pro 15 Min.). Bitte kurz warten.' }
-}));
+});
+// Das strenge Limit gilt nur für Aufrufe, die etwas erzeugen. Lesen (Zähler, Verlauf, Nutzung) verbraucht es nicht.
+app.use('/api/analyze', (req, res, next) => (req.method === 'GET' ? next() : analyzeGenLimit(req, res, next)));
 
 // Auth endpoints: 20 / 15 min — brute-force protection
 app.use('/auth', rateLimit({
@@ -208,7 +226,7 @@ const userAnalyzeLimit = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many requests' }
 });
-app.use('/api/analyze', userAnalyzeLimit);
+app.use('/api/analyze', (req, res, next) => (req.method === 'GET' ? next() : userAnalyzeLimit(req, res, next)));
 
 // Ansicht des Klienten: Tokens mit readOnly:true dürfen nur lesen (alle anderen Tokens unverändert).
 app.use(require('./middleware/readOnly').readOnlyGuard);

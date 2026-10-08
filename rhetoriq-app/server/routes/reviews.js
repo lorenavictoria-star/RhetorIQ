@@ -59,7 +59,9 @@ function auth(req, res, next) {
 
 // POST /api/reviews — client submits text for advisor review
 router.post('/', auth, async (req, res) => {
-  const { clientId, moduleLabel, originalText, note, moduleKey, moduleTile, reviewContext, revisionHistory } = req.body;
+  const { moduleLabel, originalText, note, moduleKey, moduleTile, reviewContext, revisionHistory } = req.body;
+  // Klienten reichen nur für sich selbst ein, egal was im Aufruf steht.
+  const clientId = req.user.role === 'client' ? req.user.clientId : req.body.clientId;
   if (!originalText) return res.status(400).json({ error: 'No text provided' });
   // Optional: freier Auftrag des Klienten und "Bis spätestens" (ISO). Ohne Frist gilt created_at + 3 Stunden.
   const instruction = typeof req.body.instruction === 'string' ? req.body.instruction.trim().slice(0, 4000) : '';
@@ -90,7 +92,7 @@ router.post('/', auth, async (req, res) => {
           `INSERT INTO review_requests (client_id, module_label, original_text, client_note, module_key, module_tile, review_context)
            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
           baseParams);
-    req.app.locals.wss.broadcast({ type: 'review_new', id: rows[0].id });
+    req.app.locals.wss.toAdvisors({ type: 'review_new', id: rows[0].id });
     res.json(rows[0]);
 
     // Notify the advisor by email so she can act even without the app open.
@@ -150,7 +152,7 @@ router.post('/', auth, async (req, res) => {
 
 // GET /api/reviews — advisor fetches all reviews still awaiting action
 // (both untouched 'pending' ones and drafts saved but not yet sent — 'edited')
-router.get('/', auth, async (req, res) => {
+router.get('/', requireAdvisor, async (req, res) => {
   try {
     await ensureSchema().catch(e => console.error('[reviews] schema ensure failed:', e.message)); // liefert instruction/due_at mit
     const { rows } = await pool.query(
@@ -182,7 +184,7 @@ router.get('/', auth, async (req, res) => {
 // Status values are constrained by review_requests_status_check to exactly
 // 'pending' | 'edited' | 'approved' | 'rejected' — using anything else
 // (e.g. the previous 'done') violates that constraint and 500s.
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', requireAdvisor, async (req, res) => {
   const { editedText, send } = req.body;
   if (!editedText) return res.status(400).json({ error: 'No text provided' });
   const shouldSend = send !== false;
@@ -195,7 +197,7 @@ router.put('/:id', auth, async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     if (shouldSend) {
-      req.app.locals.wss.broadcast({
+      req.app.locals.wss.toClient(rows[0].client_id, {
         type: 'review_done',
         id: rows[0].id,
         clientId: rows[0].client_id,
@@ -240,7 +242,7 @@ router.post('/:id/save-draft', requireAdvisor, async (req, res) => {
 });
 
 // DELETE /api/reviews/:id — advisor discards a review request entirely
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', requireAdvisor, async (req, res) => {
   try {
     const { rowCount } = await pool.query('DELETE FROM review_requests WHERE id=$1', [req.params.id]);
     if (!rowCount) return res.status(404).json({ error: 'Not found' });

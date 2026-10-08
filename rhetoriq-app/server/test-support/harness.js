@@ -93,7 +93,9 @@ async function addClient(name = 'Testfirma AG') {
 // mounts: Liste von [Pfad, Router oder Middleware]
 async function startApp(mounts) {
   const app = express();
-  app.locals.wss = { broadcast() {} };
+  // Gezielte Live-Meldungen mitschreiben, damit Tests prüfen können, wer sie bekäme
+  const wsLog = [];
+  app.locals.wss = { broadcast(d) { wsLog.push(['alle', d]); }, toAdvisors(d) { wsLog.push(['berater', d]); }, toAdvisor(id, d) { wsLog.push(['berater:' + id, d]); }, toClient(id, d) { wsLog.push(['klient:' + id, d]); }, log: wsLog };
   app.use(express.json({ limit: '15mb' }));
   for (const [p, r] of mounts) (p ? app.use(p, r) : app.use(r));
   const server = await new Promise(res => { const s = app.listen(0, '127.0.0.1', () => res(s)); });

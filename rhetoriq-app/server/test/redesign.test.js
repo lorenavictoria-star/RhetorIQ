@@ -416,7 +416,8 @@ test('S8 readOnly-Token darf nur lesen, normales Klient-Token darf weiterhin sch
   const normal = H.clientToken(cl.id);
   const body = { clientId: cl.id, originalText: 'Text zur Prüfung' };
   // lesen geht mit beiden
-  assert.equal((await srv.call('GET', '/api/reviews', { token: view })).status, 200);
+  // (Freigaben lesen darf nur noch die Beraterin, deshalb prüfen wir mit einer Abfrage, die Klienten dürfen)
+  assert.equal((await srv.call('GET', '/api/analyze/count', { token: view })).status, 200);
   assert.equal((await srv.call('GET', `/api/files?client_id=${cl.id}`, { token: view })).status, 200);
   // schreiben: Ansicht 403, normales Token wie bisher
   for (const [m, u] of [['POST', '/api/reviews'], ['PUT', '/api/reviews/1'], ['DELETE', '/api/reviews/1'], ['POST', '/api/clients']]) {
@@ -639,4 +640,36 @@ test('Gedächtnis-Zuordnung: Vorschlag, Absicherungen und Rückfall bei Fehlern'
   assert.equal(down.status, 200);
   assert.equal(down.body.type, null);
   H.ai.fail = false;
+});
+
+// ── Freigaben: Rechte und gezielte Meldungen ────────────────
+test('Freigaben: Klienten dürfen nur einreichen, nur die Beraterin liest, ändert und löscht', async () => {
+  const a = await H.addClient('Eins AG');
+  const b = await H.addClient('Zwei AG');
+  const ta = H.clientToken(a.id), tb = H.clientToken(b.id);
+  const wsLog = srv.app.locals.wss.log; wsLog.length = 0;
+  // Klient a reicht ein und gibt dabei die Nummer von Klient b an: gespeichert wird a
+  const c = await srv.call('POST', '/api/reviews', { token: ta, body: { clientId: b.id, moduleLabel: 'E-Mail', originalText: 'Text von Eins' } });
+  assert.equal(c.status, 200);
+  assert.equal(c.body.client_id, a.id);
+  assert.ok(wsLog.some(([wer, d]) => wer === 'berater' && d.type === 'review_new'), 'Meldung geht an die Beraterin');
+  assert.ok(!wsLog.some(([wer]) => wer === 'alle'), 'nichts geht an alle');
+  const id = c.body.id;
+  // Lesen, Ändern, Löschen: Klient nein, ohne Anmeldung nein, Beraterin ja
+  for (const [m, path, body] of [['GET', '/api/reviews'], ['PUT', `/api/reviews/${id}`, { editedText: 'gekapert' }], ['DELETE', `/api/reviews/${id}`]]) {
+    assert.equal((await srv.call(m, path, { token: tb, body })).status, 403, m + ' als fremder Klient');
+    assert.equal((await srv.call(m, path, { token: ta, body })).status, 403, m + ' als eigener Klient');
+    assert.equal((await srv.call(m, path, { body })).status, 401, m + ' ohne Anmeldung');
+  }
+  const list = await srv.call('GET', '/api/reviews', { token: A() });
+  assert.equal(list.status, 200);
+  assert.ok(list.body.some(r => r.id === id));
+  // Senden: nur der betroffene Klient bekommt die Meldung
+  wsLog.length = 0;
+  const put = await srv.call('PUT', `/api/reviews/${id}`, { token: A(), body: { editedText: 'Fassung der Beraterin', send: true } });
+  assert.equal(put.status, 200);
+  const done = wsLog.filter(([, d]) => d.type === 'review_done');
+  assert.equal(done.length, 1);
+  assert.equal(done[0][0], 'klient:' + a.id);
+  assert.equal((await srv.call('DELETE', `/api/reviews/${id}`, { token: A() })).status, 200);
 });

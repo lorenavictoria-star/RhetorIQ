@@ -1809,7 +1809,10 @@ router.post('/', requireAuth, async (req, res) => {
 
     // Push via WebSocket to connected clients/advisor
     if (req.app.locals.wss) {
-      req.app.locals.wss.broadcast({ type: 'analysis', analysis });
+      // Nur ein Hinweis zum Aktualisieren der Zähler, ohne den Text, und nur an Beraterin und betroffenen Klienten
+      const note = { type: 'analysis', id: analysis.id, clientId: resolvedClientId || null };
+      if (advisorId) req.app.locals.wss.toAdvisor(advisorId, note);
+      if (resolvedClientId) req.app.locals.wss.toClient(resolvedClientId, note);
     }
 
     res.json({ result, id: rows[0].id, quotaWarning });
