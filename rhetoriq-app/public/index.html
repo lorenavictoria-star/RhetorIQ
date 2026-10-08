@@ -812,6 +812,7 @@ a{color:var(--ac)}
   #rq-rail .rq-big{display:flex;align-items:center;gap:10px;margin:8px 22px;min-height:44px;padding:8px 12px;border:1px solid var(--rail-ln);color:var(--rail-tx);background:transparent;font-size:14px;cursor:pointer;font-family:var(--sans);text-align:left}
   #rq-rail .rq-big[aria-pressed=true]{border-color:var(--rail-ac);color:var(--rail-ac)}
   #fbbtn,#fbpanel{left:268px!important}
+  #ws-ov.full-page{left:248px!important}
   #rq-rail .rq-legal{display:flex;gap:12px;padding:6px 22px 0;font-size:11px}
   #rq-rail .rq-legal a{color:var(--rail-mu);cursor:pointer}
   #rq-rail .rq-legal a:hover{color:var(--rail-tx)}
@@ -853,6 +854,20 @@ body:not(.adv) #rq-day{display:none}
 .rq-li .rq-pill{border:1px solid var(--ac);color:var(--ac);padding:2px 10px;font-size:12px;white-space:nowrap}
 .rq-empty{padding:16px 4px;color:var(--mu);font-size:14px;border-top:1px solid var(--bd)}
 @media(max-width:700px){.rq-tiles{grid-template-columns:1fr}.home-h1{font-size:34px}}
+/* ═══ Kunden und Workspace ═══ */
+.adv-client-card,.cc{border:1px solid var(--bd)!important;background:#fff!important;cursor:pointer}
+.adv-client-card:hover{border-color:var(--ac)!important}
+.adv-client-name,.cn{font-family:var(--serif);font-size:21px;font-weight:400}
+.obtn[style*="background"],.obtn[style*="border-color"]{background:#fff!important;border-color:var(--bd)!important}
+.obtn{min-height:40px;padding:8px 16px;background:#fff;border:1px solid var(--bd);color:var(--tx);cursor:pointer;font-family:var(--sans);font-size:14px}
+.obtn:hover{border-color:var(--ac);color:var(--ac)}
+#ws-ov .modal{border:0}
+#ws-ov .modal h2{font-size:28px}
+#ws-ov .mlist-pill{border:0;border-bottom:2px solid transparent;background:none!important;min-height:44px;padding:8px 14px;font-size:15px;color:var(--mu)}
+#ws-ov .mlist-pill.active{color:var(--ac)!important;border-bottom-color:var(--ac)!important}
+#ws-client-pick{min-width:260px;margin-bottom:8px;font-size:15px}
+#ws-rev-count{background:#fff!important;color:var(--ac)!important;border:1px solid var(--ac)}
+@media(max-width:700px){#ws-split{flex-direction:column;overflow-y:auto}#ws-split>div{min-width:0!important;border-left:0!important}#ws-ov.full-page .modal{overflow-y:auto}}
 /* Grosse Schrift */
 html.rq-big{zoom:1.15}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -1063,13 +1078,13 @@ html.rq-big{zoom:1.15}
         <button onclick="closeModal('ws-ov')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--mu);line-height:1;padding:0 0 0 8px">×</button>
       </div>
     </div>
-    <div style="display:flex;gap:8px;padding:10px 20px 0;border-bottom:1px solid var(--bd);flex-shrink:0;flex-wrap:wrap">
+    <div id="ws-tabs" style="display:flex;gap:8px;padding:10px 20px 0;border-bottom:1px solid var(--bd);flex-shrink:0;flex-wrap:wrap">
       <button class="mlist-pill" id="ws-tab-voice" onclick="wsSwitchTab('voice')">Brand Voice</button>
       <button class="mlist-pill" id="ws-tab-prompts" onclick="wsSwitchTab('prompts')">Modul-Prompts &amp; Feedback</button>
       <button class="mlist-pill active" id="ws-tab-reviews" onclick="wsSwitchTab('reviews')">Freigaben <span id="ws-rev-count" style="display:none;background:var(--ac,#1a3d2e);color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;font-weight:700"></span></button>
       <button class="mlist-pill" id="ws-tab-admin" onclick="wsSwitchTab('admin')">Verwaltung</button>
     </div>
-    <div style="display:flex;flex:1;min-height:0">
+    <div id="ws-split" style="display:flex;flex:1;min-height:0">
       <div id="ws-body" style="overflow-y:auto;flex:2;padding:16px 20px;min-width:0"></div>
       <div style="flex:1;min-width:280px;border-left:1px solid var(--bd);display:flex;flex-direction:column">
         <div style="padding:10px 14px;border-bottom:1px solid var(--bd);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);font-weight:700">KI-Assistent — dieser Kunde</div>
@@ -8426,6 +8441,80 @@ tryAutoLogin();
   var ls=document.getElementById('login-screen');
   function after(){if(ls.classList.contains('hidden')){setTimeout(function(){renderQuickAccess();loadInq();},400);}}
   if(ls){new MutationObserver(after).observe(ls,{attributes:true,attributeFilter:['class']});after();}
+})();
+</script>
+
+<script id="rq-ws-js">
+// ═══ Kunden-Liste und Workspace im neuen Look (nichts entfernt, nur umbenannt, umgeordnet, ergänzt) ═══
+(function(){
+  // Klick auf Klienten-Karte öffnet den Workspace
+  document.addEventListener('click',function(e){
+    var card=e.target.closest&&e.target.closest('#adv-dash-content .adv-client-card');
+    if(!card||e.target.closest('button,a,input,select,textarea,.tkcode'))return;
+    var b=card.querySelector('button[onclick*="openWorkspaceTab("]');if(!b)return;
+    var m=/openWorkspaceTab\((\d+)\)/.exec(b.getAttribute('onclick'));
+    if(m)openWorkspace(parseInt(m[1],10),true);
+  });
+  // Reiter umordnen und umbenennen
+  function tabs(){
+    var wrap=document.getElementById('ws-tabs');if(!wrap||wrap.getAttribute('data-rq'))return;
+    var rv=document.getElementById('ws-tab-reviews'),vo=document.getElementById('ws-tab-voice'),pr=document.getElementById('ws-tab-prompts'),ad=document.getElementById('ws-tab-admin');
+    if(!rv||!vo||!pr||!ad)return;
+    wrap.setAttribute('data-rq','1');
+    wrap.insertBefore(rv,wrap.firstChild);
+    var lab=rv.firstChild;if(lab&&lab.nodeType===3)lab.nodeValue='Eingang / Freigaben ';
+    vo.textContent='Brand Voice';pr.textContent='Module';
+    var st=document.createElement('button');st.className='mlist-pill';st.id='ws-tab-store';st.textContent='Ablage';st.onclick=function(){wsSwitchTab('store');};
+    wrap.insertBefore(st,ad);
+  }
+  tabs();
+  function esc(t){return (typeof safeText==='function')?safeText(t):String(t==null?'':t);}
+  async function renderStore(body){
+    var cid=_wsClientId;
+    try{
+      var r=await api('/api/memory/'+cid);var rows=await r.json();
+      if(!r.ok||!Array.isArray(rows))throw new Error('Keine Daten');
+      var h='<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mu);margin-bottom:12px">Ablage: Referenzdokumente dieses Kunden</div>';
+      if(!rows.length)h+='<div class="rq-empty">Noch keine Dokumente abgelegt.</div>';
+      rows.forEach(function(m){
+        var words=(m.content||'').split(/\s+/).filter(Boolean).length;
+        var d=m.updated_at?new Date(m.updated_at).toLocaleDateString('de-CH'):'';
+        h+='<div class="rq-li" style="cursor:default"><i class="ti ti-file-text" aria-hidden="true"></i><div><b>'+esc((typeof REF_LABELS!=='undefined'&&REF_LABELS[m.memory_type])||m.memory_type)+'</b><small>'+words+' Wörter'+(d?' · '+d:'')+'</small></div><span></span></div>';
+      });
+      h+='<div style="margin-top:16px"><button class="obtn" id="ws-store-open">Dokumente verwalten und hochladen</button></div>';
+      body.innerHTML=h;
+      var ob=document.getElementById('ws-store-open');
+      if(ob)ob.onclick=function(){closeModal('ws-ov');var sel=document.getElementById('client-select');if(sel){sel.value=String(cid);}switchClient(String(cid));goPage('memory');if(window.rqMarkRail)rqMarkRail('memory');};
+    }catch(e){body.innerHTML='<div class="rq-empty">Die Ablage konnte nicht geladen werden.</div>';}
+  }
+  var _ws=window.wsSwitchTab;
+  window.wsSwitchTab=function(tab){
+    tabs();
+    var st=document.getElementById('ws-tab-store');
+    if(tab==='store'){
+      ['voice','prompts','reviews','admin'].forEach(function(t){var b=document.getElementById('ws-tab-'+t);if(b)b.classList.remove('active');});
+      if(st)st.classList.add('active');
+      var body=document.getElementById('ws-body');body.innerHTML='<div style="padding:20px;color:var(--mu);font-size:13px">Lädt…</div>';
+      return renderStore(body);
+    }
+    if(st)st.classList.remove('active');
+    return _ws.apply(this,arguments);
+  };
+  // Klientenwähler oben im Workspace
+  var _ow=window.openWorkspace;
+  window.openWorkspace=async function(cid,fullPage){
+    var r=_ow.apply(this,arguments);
+    tabs();
+    var h=document.getElementById('ws-title');
+    if(h&&!document.getElementById('ws-client-pick')){
+      var sel=document.createElement('select');sel.id='ws-client-pick';sel.setAttribute('aria-label','Kunde wählen');
+      h.parentNode.insertBefore(sel,h);
+      sel.onchange=function(){if(sel.value)openWorkspace(parseInt(sel.value,10),document.getElementById('ws-ov').classList.contains('full-page'));};
+    }
+    var pk=document.getElementById('ws-client-pick');
+    if(pk){pk.innerHTML=(typeof clients!=='undefined'?clients:[]).map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+'</option>';}).join('');pk.value=String(cid);}
+    return r;
+  };
 })();
 </script>
 </body>
