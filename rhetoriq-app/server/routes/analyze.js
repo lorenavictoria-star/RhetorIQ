@@ -2030,6 +2030,8 @@ router.post('/stream', requireAuth, async (req, res) => {
 
 // GET /api/analyze/history
 router.get('/history', requireAuth, async (req, res) => {
+  // Der Verlauf ist nur für die Beraterin sichtbar, nicht für Klienten.
+  if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Advisor only' });
   try {
     const clientId = req.user.role === 'client' ? req.user.clientId : (req.query.clientId || null);
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;

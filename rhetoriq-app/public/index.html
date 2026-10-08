@@ -1982,7 +1982,7 @@ html.rq-big{zoom:1.15}
       <div onclick="goPage('memory');setMN('more');hideMore()" class="mm-tile">
         <div class="mm-tile-l" id="mm-context">Memory</div>
       </div>
-      <div id="mm-history" onclick="goPage('history');loadHistory();setMN('more');hideMore()" class="mm-tile">
+      <div id="mm-history" onclick="goPage('history');loadHistory();setMN('more');hideMore()" class="ao-item mm-tile" style="display:none">
         <div class="mm-tile-l">History</div>
       </div>
       <div class="ao-item mm-tile" id="mm-reviews" onclick="openReviewPanel();setMN('more');hideMore()" style="display:none;position:relative">
@@ -3672,7 +3672,7 @@ function toggleDebugMode(){
 // STATS
 async function loadStats(){
   let analyses=0;
-  try{const r=await api('/api/analyze/history'+(clientId?'?clientId='+clientId:''));const d=await r.json();analyses=d.length;}catch{}
+  try{const r=await api('/api/analyze/history'+(clientId?'?clientId='+clientId:''));const d=await r.json();analyses=Array.isArray(d)?d.length:0;}catch{}
   const nc=clients.length,np=people.length;
   document.getElementById('stat-analyses').textContent=analyses;
   document.getElementById('stat-clients').textContent=nc;
@@ -4383,6 +4383,7 @@ function goHome(){
   renderQuickAccess();
 }
 function goPage(name){
+  if(name==='history'&&!isAdv){goHome();return;} // Verlauf nur für die Beraterin
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
@@ -4539,6 +4540,7 @@ async function buildMostUsed(){
   try{
     const r=await api('/api/analyze/history'+(clientId?'?clientId='+clientId:''));
     const rows=await r.json();
+    if(!Array.isArray(rows))throw new Error('no history');
     const counts={};
     rows.forEach(h=>{if(h.module&&h.module!=='pre-meeting')counts[h.module]=(counts[h.module]||0)+1;});
     extra=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([mod])=>({mod,page:MOD_PAGE[mod]||mod,label:MOD_LABELS[mod]||mod}));
@@ -6248,6 +6250,7 @@ async function extractText(file){
 // HISTORY
 let _histRows=[];
 async function loadHistory(){
+  if(!isAdv)return;
   const el=document.getElementById('hist-list');el.innerHTML='<div class="empty"><div class="ei">&#8987;</div><div>Loading...</div></div>';
   const sub=document.getElementById('hist-sub');
   const c=clients.find(x=>x.id==clientId);
@@ -8375,7 +8378,7 @@ tryAutoLogin();
       sv.push({k:'brand-voice',t:'Brand Voice',ic:'ti-wave-sine',go:function(){goPage('brand-voice');}});
       sv.push({k:'training',t:'Beispiele für den Aufbau',ic:'ti-database',go:function(){goPage('training');loadTraining();}});
     }
-    sv.push({k:'history',t:'Verlauf',ic:'ti-history',go:function(){goPage('history');loadHistory();}});
+    if(A)sv.push({k:'history',t:'Verlauf',ic:'ti-history',go:function(){goPage('history');loadHistory();}});
     if(!A)sv.push({k:'memory',t:'Gedächtnis',ic:'ti-notes',go:function(){goPage('memory');}});
     sv.push({k:'pricing',t:'Preise',ic:'ti-tag',go:function(){goPage('pricing');}});
     sv.push({k:'videos',t:'Videos',ic:'ti-player-play',go:function(){goPage('videos');}});
