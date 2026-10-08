@@ -35,6 +35,7 @@ nav{display:flex;justify-content:space-between;align-items:center;padding-block:
 .logo{font:400 24px var(--serif);letter-spacing:.01em}
 .eq{color:var(--gold);background:linear-gradient(100deg,#f6e6bd 0%,#c99a52 38%,#f0d9a0 62%,#b8935a 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .iq{color:var(--silver);background:linear-gradient(100deg,#fafaf8 0%,#9a9b9d 40%,#ececea 62%,#85878a 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.logo{position:relative}.logo .sub{display:block;font:300 9px/1.2 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--mute);margin-top:2px;white-space:nowrap}
 .btn{display:inline-flex;align-items:center;gap:10px;font:400 14px var(--sans);background:var(--cream);color:var(--ink);border:0;border-radius:99px;padding:12px 24px;cursor:pointer;text-decoration:none;transition:background .2s}
 .btn:hover{background:#fff}
 .btn.ghost{background:transparent;color:var(--cream);border:1px solid #3a3a37}
@@ -159,12 +160,12 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
 </head>
 <body>
 <div class="wrap">
-  <nav><div class="logo">Rhetor<span class="iq">IQ</span></div><span class="navr"><a class="lg" href="/login">Login</a><a class="btn ghost" href="#buchen">Gespräch buchen</a></span></nav>
+  <nav><div class="logo">Rhetor<span class="iq">IQ</span><small class="sub">&ndash; Communication Intelligence</small></div><span class="navr"><a class="lg" href="/login">Login</a><a class="btn ghost" href="#buchen">Gespräch buchen</a></span></nav>
 
   <header class="hero">
     <div>
       <h1>Rhetor<span class="iq">IQ</span> trifft <span class="eq">EQ</span>.</h1>
-      <p class="lead"><b>RhetorIQ ist die KI-Plattform, die Ihre Unternehmenssprache lernt.</b> Ich begleite Sie dabei persönlich und adjustiere Text von Hand nach: Der <span class="iq">IQ</span> schärft, mein <span class="eq">EQ</span> individualisiert Ihre Stimme. Ihr roter Faden ist mein <span class="eq">goldener</span>.</p>
+      <p class="lead"><b>RhetorIQ ist die KI-Plattform, die Ihre Unternehmenssprache lernt.</b> Ich begleite Sie persönlich und überarbeite jeden Text von Hand. Der <span class="iq">IQ</span> schärft, mein <span class="eq">EQ</span> trifft Ihre Stimme. Sie liefern den roten Faden, ich gebe ihm <span class="eq">Gold</span>: Sprache, die ankommt.</p>
       <div class="cta2"><a class="btn" href="#buchen">Gespräch buchen</a><a class="btn ghost" href="#preise">Preise ansehen</a></div>
     </div>
     <div id="ball" role="img" aria-label="Ein goldener und ein silberner Faden, zu einem Knäuel gewickelt"></div>
