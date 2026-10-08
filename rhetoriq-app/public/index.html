@@ -2228,6 +2228,117 @@ html.rq-big{zoom:1.15}
   history.replaceState(null,'',location.pathname);
 }catch(e){}})();
 </script>
+<script id="rq-i18n">
+// ── I18N: Wörterbuch-Ebene über dem bestehenden T/applyLang-System ──
+// Löst fest eingebaute Texte (HTML und dynamisch erzeugte Listen) pro Sprache auf. Nur sichtbarer Text:
+// Textknoten sowie placeholder/title/aria-label. Eingaben, Passwörter, IDs und API-Aufrufe bleiben unberührt.
+var I18N=(function(){
+  var PAIRS=/*PAIRS-BEGIN*/[["E-Mail","Email"],["Passwort","Password"],["Anmelden","Sign in"],["Klient/in?","Client?"],["Zugangs-Token eingeben","Enter your access token"],["Neue Beraterin?","New advisor?"],["Mit Einladungscode registrieren","Register with invite code"],["Name","Name"],["Einladungscode","Invite Code"],["Konto erstellen","Create Account"],["← Zurück zur Anmeldung","← Back to Sign in"],["Zugangs-Token","Access Token"],["E-Mail & Passwort","Email & Password"],["Klientenansicht öffnen","Open Client View"],["Zurück","Back"],["Bitte setzen Sie Ihr persönliches Passwort, um fortzufahren.","Please set your personal password to continue."],["Neues Passwort","New Password"],["Passwort bestätigen","Confirm Password"],["Passwort setzen","Set Password"],["Abbrechen","Cancel"],["Speichern","Save"],["Ihre@E-Mail.ch","your@email.com"],["Ihr Name","Your name"],["Mind. 8 Zeichen","Min. 8 characters"],["Token hier einfügen","Paste your token here"],["Mindestens 8 Zeichen","Minimum 8 characters"],["Passwort wiederholen","Repeat password"],["client@beispiel.ch","client@example.com"],["mind. 6 Zeichen","min. 6 characters"],["Spezifische Anweisung für dieses Modul — gilt nur für diesen Klienten. Kein neues Modul, sondern individuelle Konfiguration.","Specific instruction for this module. Applies to this client only. Not a new module, but an individual configuration."],["Spezifische Anweisung für dieses Modul","Specific instruction for this module"],["Ergänzt die Brand Voice — gilt nur für diesen Kunden und dieses Modul. Wird bei jeder Generierung automatisch angewendet.","Supplements the Brand Voice. Applies to this client and this module only. Applied automatically with every generation."],["↻ Neu generieren","↻ Regenerate"],["Firmenadresse (Absender)","Company address (sender)"],["Name, Firma, Adresse","Name, company, address"],["Wird künftig automatisch als Absender in Briefe eingefügt.","Will be inserted automatically as the sender in letters from now on."],["Team-Mitglieder","Team Members"],["Team-Mitglied hinzufügen","Add Team Member"],["Rolle","Role"],["Editor (darf generieren)","Editor (can generate)"],["Betrachter (nur lesen)","Viewer (read only)"],["Admin (voller Zugriff)","Admin (full access)"],["Schliessen","Close"],["Mitglied hinzufügen","Add Member"],["Module konfigurieren","Configure modules"],["Wähle welche Module dieser Klient sehen soll","Choose which modules this client should see"],["Monatliches Nutzungskontingent","Monthly usage quota"],["Tokens/Monat · leer lassen = unlimitiert","Tokens/month · leave empty = unlimited"],["Eigenes Modul erstellen","Create custom module"],["Beschreibung (kurz)","Description (short)"],["Prompt / Anweisung an die KI","Prompt / instruction to the AI"],["Modul speichern","Save module"],["+ Eigener Prompt","+ Custom Prompt"],["Willkommens-E-Mail erneut senden","Resend welcome email"],["Eingang / Freigaben","Inbox / Approvals"],["Module","Modules"],["Ablage","Files"],["Verwaltung","Administration"],["KI-Assistent — dieser Kunde","AI assistant: this client"],["Senden","Send"],["Audit-Protokoll","Audit Log"],["CSV herunterladen","Download CSV"],["Feedback-Lernstand","Feedback learning status"],["Aktueller Stand","Current status"],["Roh-Verlauf","Raw history"],["Kommunikations-Gesundheitswert","Communication Health Score"],["Der Wert wird erstellt…","Score is being generated…"],["🖶 Als PDF drucken","🖶 Print as PDF"],["📋 Text kopieren","📋 Copy text"],["Basiert auf den letzten 90 Tagen · Nur für die Beraterin sichtbar","Based on the last 90 days · Visible to the advisor only"],["Neuer Klient","New Client"],["Typ","Type"],["Unternehmen","Company"],["Einzelperson","Individual"],["Firmenname","Company Name"],["Anrede und Nachname","Salutation & Last Name"],["Branche","Industry"],["Finanzdienstleistungen","Financial Services"],["Industrie / Produktion","Industry / Manufacturing"],["Tech / SaaS","Tech / SaaS"],["Gesundheit","Healthcare"],["Bildung","Education"],["Öffentlicher Sektor","Public Sector"],["Andere","Other"],["Sektor","Sector"],["— Sektor wählen —","— Choose sector —"],["KMU / Allgemein","SME / General"],["Hotellerie","Hospitality"],["Kapitalmarkt","Capital Markets"],["Non-Profit","Non-profit"],["Beratung","Consulting"],["Hauptansprechperson","Primary Contact"],["Zugangsdaten für den Klienten","Login credentials for the client"],["Mit E-Mail und Passwort kann der Klient sofort einloggen. Die Willkommens-E-Mail wird automatisch versendet.","With email and password the client can sign in right away. The welcome email is sent automatically."],["Erzeugen","Generate"],["Deutsch","German"],["Englisch","English"],["Ich bestätige, dass ich den Klienten über die Datenverarbeitung durch Anthropic informiert habe. Texteingaben werden zur Generierung an die Anthropic API übermittelt und nicht für das Training verwendet.","I confirm that I have informed the client about the data processing by Anthropic. Text inputs are sent to the Anthropic API for generation and are not used for training."],["Datenschutzerklärung von Anthropic","Anthropic Privacy Policy"],["Erstellen und senden","Create & Send"],["z. B. Muster AG","e.g. Acme AG"],["Nachname","Last name"],["z. B. CEO Martin Meier","e.g. CEO Martin Meier"],["E-Mail-Adresse des Klienten","Client's email address"],["Anfangspasswort (mind. 8 Zeichen)","Initial password (min. 8 characters)"],["Person hinzufügen","Add Person"],["Fügen Sie eine Person zum Personen-Verzeichnis dieses Klienten hinzu.","Add a person to the People Directory for this client."],["Allgemein","General"],["Kommunikationsstil","Communication Style"],["Auslöser und Präferenzen","Triggers & Preferences"],["Vollständiger Name","Full name"],["Rolle / Position","Role / Position"],["Abteilung (optional)","Department (optional)"],["Notizen (optional)","Notes (optional)"],["Direkt","Direct"],["Diplomatisch","Diplomatic"],["Kurze Sätze","Short sentences"],["Ausführlich","Detailed"],["Analytisch","Analytical"],["Erzählend","Storytelling"],["Förmlich","Formal"],["Locker","Casual"],["Warm","Warm"],["Zurückhaltend","Reserved"],["Bestimmt","Assertive"],["Einfühlsam","Empathetic"],["Stärken","Strengths"],["Schwächen","Weaknesses"],["Präferenzen (was gut ankommt)","Preferences (what lands well)"],["z. B. Anna Berger","e.g. Anna Berger"],["z. B. CEO, CFO, Leiterin HR","e.g. CEO, CFO, Head of HR"],["z. B. Geschäftsleitung, Kommunikation","e.g. Executive Board, Communications"],["Allgemeiner Kontext, worauf zu achten ist …","General context, what to keep in mind…"],["Weitere Notizen …","Additional notes…"],["z. B. Vereinfacht komplexe Themen ausgezeichnet.","e.g. Excellent at simplifying complex topics."],["z. B. Neigt dazu, zu viel zu erklären.","e.g. Tends to over-explain."],["z. B. Unterbrochen werden. Fragen zum Budget.","e.g. Being interrupted. Questions about budget."],["z. B. Kurze Aufzählungen. Immer mit dem Fazit beginnen.","e.g. Short bullet points. Always lead with the bottom line."],["Modul einrichten","Set up module"],["? Hilfe","? Help"],["Frage stellen","Ask a question"],["Kein Kontext","No context"],["Wartet auf dich","Waiting for you"],["Schnellzugriff","Quick access"],["Freigabe","Approval"],["Neue Anfragen","New inquiries"],["neu","new"],["Zuletzt verwendet","Recently used"],["Statistiken und Übersicht anzeigen","Show statistics & overview"],["◆ Firmengedächtnis","◆ Company Memory"],["Wird geladen…","Loading…"],["Anzeigen ▼","Show ▼"],["Gedächtnis bearbeiten →","Edit memory →"],["Wird geladen...","Loading..."],["◆ Kommunikations-Gesundheitswert","◆ Communication Health Score"],["Basierend auf Ihrer Modulnutzung der letzten 90 Tage","Based on your last 90 days of module usage"],["/ 10","/ 10"],["Wert erstellen","Generate Score"],["Klient","Client"],["Personen","People"],["Analysen","Analyses"],["← Module","← Modules"],["Wie kommuniziert dieses Unternehmen oder diese Person? Fügen Sie beliebige Texte ein und erhalten Sie ein vollständiges Sprachprofil, das als Leitreferenz für alle anderen Module dient.","How does this company or person communicate? Paste any texts — get a complete language profile that becomes the master reference for all other modules."],["Bitte zuerst einen Klienten auswählen.","Please select a client first."],["Zu den Klienten","Go to Clients"],["Aktive Brand Voice — wird bei jeder Generierung injiziert","Active Brand Voice: injected into every generation"],["Bearbeiten","Edit"],["Referenz-Dokumente — gelten für ALLE Module dieses Klienten","Reference documents: apply to ALL modules of this client"],["Dokument hochladen","Upload document"],["— .txt, .pdf, .docx","— .txt, .pdf, .docx"],["Auswählen","Select"],["Kernwerte (optional)","Core Values (optional)"],["Zielgruppen","Target Audiences"],["Website-URL (optional, der Inhalt wird automatisch abgerufen)","Website URL (optional — content will be fetched automatically)"],["Website abrufen","Fetch Website"],["Quelltexte: Website-Texte, Berichte, E-Mails (mit --- trennen)","Source Texts — website copy, reports, emails (separate with ---)"],["Dokumente hochladen","Upload documents"],["— .txt, .pdf, .docx (von der Beraterin gespeichert, immer verfügbar)","— .txt, .pdf, .docx (saved by advisor, always available)"],["In das Gedächtnis importieren","Import to Memory"],["Brand Voice extrahieren","Extract Brand Voice"],["Brand Voice: Unternehmen","Brand Voice — Company"],["Kopieren","Copy"],["⚡ Startvorlagen für alle Module erzeugen","⚡ Generate Starter Prompts for all Modules"],["Rolle / Kontext","Role / Context"],["Referenztexte: Reden, E-Mails, LinkedIn (mit --- trennen)","Reference Texts — speeches, emails, LinkedIn (separate with ---)"],["Brand Voice: Einzelperson","Brand Voice — Individual"],["Ausführen","Run"],["Modul löschen","Delete Module"],["Personen-Verzeichnis","People Directory"],["Profile werden dauerhaft gespeichert und als Kontext in alle Module eingebunden.","Profiles are stored permanently and used as context in all modules."],["+ Person hinzufügen","+ Add person"],["Noch keine Personen. Fügen Sie CEO, Vorstand, HR-Leads hinzu…","No people yet. Add CEO, board members, HR leads…"],["Unternehmensgedächtnis","Company Memory"],["Dauerhaft gespeichert. Wird als Kontext in jede Analyse eingebunden.","Stored permanently. Included as context in every analysis."],["Referenzdokument hinzufügen","Add reference document"],["⇧ Datei hochladen","⇧ Upload file"],["Klienten","Clients"],["⬇ Excel","⬇ Excel"],["Anrede","Form of address"],["Vorab-E-Mail senden","Send preliminary email"],["Löschen","Delete"],["Analysen (30 T.)","Analyses (30d)"],["Aktiv (7 T.)","Active (7d)"],["● Test","● Trial"],["Team","Team"],["Video-Tutorials","Video Tutorials"],["Schritt-für-Schritt-Anleitungen für jedes Modul.","Step-by-step guides for every module."],["Einführung","Introduction"],["Überblick und erste Schritte","Overview & getting started"],["Hochladen","Upload"],["Brand Voice DNA","Brand Voice DNA"],["Sprachlichen Fingerabdruck extrahieren","Extract language fingerprint"],["Sofort-Krisenreaktion","Instant Crisis Response"],["Die ersten 15 Minuten","First 15 minutes"],["Textgenerator","Text Generator"],["Jedes Format, jede Stimme","Any format, any voice"],["2-Min.-Training","2-Min. Training"],["Wöchentliches Mikro-Coaching","Weekly micro-coaching"],["Nachbesprechung","Debriefing"],["Audit nach der Kommunikation","Post-communication audit"],["Alle","All"],["Basis","Basics"],["Texten","Writing"],["Schreiben","Writing"],["Prävention","Prevention"],["Effizienz","Efficiency"],["Wachstum","Growth"],["Verlauf","History"],["Nach Modul gruppiert. Einträge manuell löschen.","Grouped by module. Delete entries manually."],["Noch keine Analysen.","No analyses yet."],["Nutzung","Usage"],["API-Aufrufe pro Klient, echte Token-Kosten nach Claude-Sonnet-Preisen","API calls per client, real token costs based on Claude Sonnet pricing"],["Aufruf-Statistik","Call Statistics"],["Token-Kosten (30 T.)","Token Costs (30d)"],["Token-Kosten (90 T.)","Token Costs (90d)"],["Einladungscode: Neue Beraterin einladen","Invite Code — invite a new advisor"],["Einladungscode erzeugen","Generate Invite Code"],["Der Code ist 7 Tage gültig und kann nur einmal verwendet werden. Teile ihn direkt mit dem neuen Advisor.","The code is valid for 7 days and can be used only once. Share it directly with the new advisor."],["Entwickler: Debug-Modus","Developer — Debug mode"],["Wenn aktiv: nach jeder Generierung wird der vollständige System-Prompt angezeigt (nur für dich als Advisor sichtbar).","When active: the full system prompt is shown after every generation (visible to you as advisor only)."],["Beispiele für den Aufbau","Structure examples"],["Optional. Hier legst du Musterbeispiele ab, die den Aufbau eines Moduls vorgeben.","Optional. Store model examples here that define the structure of a module."],["Das passiert automatisch.","This happens automatically."],["Jeder Daumen hoch oder runter eines Klienten, mit oder ohne Stichwort, wird im Hintergrund ausgewertet und für genau diesen Klienten und dieses Modul gemerkt. Du musst nichts tun.","Every thumbs up or down from a client, with or without a keyword, is evaluated in the background and remembered for exactly this client and this module. You do not need to do anything."],["Das machst du nur bei Bedarf.","You only do this when needed."],["Beispiele auf dieser Seite gelten für alle Klienten. Die KI übernimmt daraus nur den Aufbau. Den Ton bestimmt immer die Brand Voice des Klienten.","Examples on this page apply to all clients. The AI takes only the structure from them. The tone is always set by the client's Brand Voice."],["Modul auswählen","Choose module"],["Automatisch gespeicherte Texte ausblenden (sie werden nie verwendet)","Hide automatically saved texts (they are never used)"],["+ Neues Beispiel hinzufügen","+ Add new example"],["Modul","Module"],["— Modul auswählen —","— Choose module —"],["Label (optional)","Label (optional)"],["Branche","Industry"],["(optional, z.B. hotel, pharma, finance, immobilien)","(optional, e.g. hotel, pharma, finance, real estate)"],["Input","Input"],["(was der Klient eingibt)","(what the client enters)"],["Output","Output"],["(idealer Output — dein Qualitätsstandard)","(ideal output: your quality standard)"],["Beispiel speichern","Save example"],["Erweitert: Texte eines Klienten als Beispiele übernehmen","Advanced: adopt a client's texts as examples"],["Achtung: Die Beispiele gelten danach für alle Klienten. Übernimm nur Texte, die du dafür freigeben möchtest, und nur mit Einverständnis des Klienten.","Caution: The examples will then apply to all clients. Adopt only texts you want to release for this purpose, and only with the client's consent."],["Klient-Daten importieren","Import client data"],["Alle bisherigen Analysen + Company Memory eines Klienten als Trainingsbeispiele übernehmen.","Adopt all previous analyses and the Company Memory of a client as training examples."],["Importieren","Import"],["Kontakt","Contact"],["Rhetorik & Führungskommunikation","Rhetoric & Leadership Communication"],["für Führungskräfte in Wirtschaft, Finanzen und Bildung.","for executives in business, finance and education."],["Telefon","Phone"],["Adresse","Address"],["Webseite","Website"],["← Start","← Home"]]/*PAIRS-END*/;
+  var D2E=new Map(),E2D=new Map(),PD=[],PE=[];
+  function norm(s){return String(s).replace(/\s+/g,' ').trim();}
+  function esc(s){return s.replace(/[.*+?^$()|[\]\\]/g,'\\$&');}
+  function mkPat(src,dst){
+    var re=esc(norm(src)).replace(/\{(\d)\}/g,'(?<g$1>[\\s\\S]+?)');
+    return {re:new RegExp('^'+re+'$'),out:dst};
+  }
+  PAIRS.forEach(function(p){
+    var de=p[0],en=p[1],one=p[2];
+    if(/\{\d\}/.test(de)||/\{\d\}/.test(en)){PD.push(mkPat(de,en));if(!one)PE.push(mkPat(en,de));return;}
+    D2E.set(norm(de),en);
+    if(!one&&!E2D.has(norm(en)))E2D.set(norm(en),de);
+  });
+  function fillPat(list,s){
+    for(var i=0;i<list.length;i++){var m=list[i].re.exec(s);if(m){var g=m.groups||{};return list[i].out.replace(/\{(\d)\}/g,function(_,n){return g['g'+n]!==undefined?lookupAny(g['g'+n]):'';});}}
+    return null;
+  }
+  function lookupAny(s){var r=find(s);return r===null?s:r;}
+  var PRE=/^([^\p{L}\p{N}"„“(]*)/u, SUF=/([\s:…\.→▼▲!?]*)$/u;
+  function core(s){
+    var a=PRE.exec(s)[1],rest=s.slice(a.length),b=SUF.exec(rest)[1];
+    return [a,rest.slice(0,rest.length-b.length),b];
+  }
+  function find(raw){
+    var s=norm(raw);if(!s)return null;
+    var en=(typeof LANG!=='undefined'&&LANG==='en');
+    var map=en?D2E:E2D,pats=en?PD:PE;
+    var r=map.get(s);if(r!==undefined)return r===s?null:r;
+    r=fillPat(pats,s);if(r!==null)return r;
+    var c=core(s);
+    if((c[0]||c[2])&&c[1]){
+      var r2=map.get(c[1]);if(r2===undefined)r2=fillPat(pats,c[1]);
+      if(r2!==undefined&&r2!==null)return c[0]+r2+c[2];
+    }
+    if(s.length<90){
+      var parts=s.split(/( · | — | \| )/),ch=false;
+      if(parts.length>1){
+        for(var i=0;i<parts.length;i+=2){var q=find1(parts[i],map,pats);if(q!==null){parts[i]=q;ch=true;}}
+        if(ch)return parts.join('');
+      }
+    }
+    return null;
+  }
+  function find1(s,map,pats){
+    s=norm(s);var r=map.get(s);if(r!==undefined)return r;r=fillPat(pats,s);if(r!==null)return r;
+    var c=core(s);if((c[0]||c[2])&&c[1]){var r2=map.get(c[1]);if(r2!==undefined)return c[0]+r2+c[2];}
+    return null;
+  }
+  var SKIP='SCRIPT,STYLE,NOSCRIPT,TEXTAREA,CODE,PRE';
+  function skipEl(el){
+    for(var e=el;e&&e.nodeType===1;e=e.parentElement){
+      if(e.hasAttribute&&e.hasAttribute('data-noi18n'))return true;
+      if(e.matches&&e.matches(SKIP))return true;
+    }
+    return false;
+  }
+  function doText(n){
+    var p=n.parentElement;if(!p||skipEl(p))return;
+    var v=n.nodeValue;if(!v||!v.trim())return;
+    var r=find(v);if(r===null)return;
+    var lead=v.match(/^\s*/)[0],trail=v.match(/\s*$/)[0];
+    var nv=lead+r+trail;if(nv!==v)n.nodeValue=nv;
+  }
+  var ATTRS=['placeholder','title','aria-label'];
+  function doAttrs(el){
+    if(el.nodeType!==1||skipEl(el))return;
+    for(var i=0;i<ATTRS.length;i++){
+      var a=ATTRS[i];if(!el.hasAttribute(a))continue;
+      var v=el.getAttribute(a),r=find(v);if(r!==null&&r!==v)el.setAttribute(a,r);
+    }
+    if(el.tagName==='INPUT'&&/^(button|submit)$/.test(el.type)&&el.value){var rv=find(el.value);if(rv!==null)el.value=rv;}
+  }
+  function sweep(root){
+    root=root||document.body;if(!root)return;
+    if(root.nodeType===3){doText(root);return;}
+    if(root.nodeType!==1)return;
+    doAttrs(root);
+    var w=document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT),n;
+    while(n=w.nextNode()){if(n.nodeType===3)doText(n);else doAttrs(n);}
+  }
+  function t(s){if(typeof s!=='string')return s;var r=find(s);return r===null?s:r;}
+  var obs=null;
+  function start(){
+    if(obs||!document.body)return;
+    obs=new MutationObserver(function(ms){
+      for(var i=0;i<ms.length;i++){
+        var m=ms[i];
+        if(m.type==='childList'){for(var j=0;j<m.addedNodes.length;j++)sweep(m.addedNodes[j]);}
+        else if(m.type==='characterData')doText(m.target);
+        else if(m.type==='attributes')doAttrs(m.target);
+      }
+    });
+    obs.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:ATTRS});
+    sweep(document.body);
+  }
+  // alert/confirm/prompt: Meldungen laufen durch dasselbe Wörterbuch
+  ['alert','confirm','prompt'].forEach(function(k){
+    var o=window[k];if(typeof o!=='function')return;
+    window[k]=function(m,d){return o.call(window,t(m),d);};
+  });
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+  return {t:t,sweep:sweep,start:start,find:find,_maps:{D2E:D2E,E2D:E2D}};
+})();
+function tr(key,fallback){var d=(typeof T!=='undefined'&&T[LANG])||{};return d[key]!==undefined?d[key]:(fallback!==undefined?fallback:key);}
+</script>
 <script>
 if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -2443,6 +2554,11 @@ const T={
 };
 function applyLang(){
   const t=T[LANG];
+  // Generische Auflösung: data-i18n (Text), data-i18n-ph (Platzhalter), data-i18n-title (title)
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const v=t[el.getAttribute('data-i18n')];if(v!==undefined)el.textContent=v;});
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{const v=t[el.getAttribute('data-i18n-ph')];if(v!==undefined)el.placeholder=v;});
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{const v=t[el.getAttribute('data-i18n-title')];if(v!==undefined)el.title=v;});
+  document.documentElement.lang=LANG;
   const s=(id,txt)=>{const el=document.getElementById(id);if(el)el.textContent=txt;};
   const h=(id,html)=>{const el=document.getElementById(id);if(el)el.innerHTML=html;};
   s('mn-home-l',t.nav_home);s('mn-modules-l',isAdv?t.nav_modules:t.nav_textarten);s('mn-more-l',t.nav_more);
@@ -2500,8 +2616,10 @@ function applyLang(){
     setTimeout(()=>{
       Object.entries(saved).forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.value=val;});
       if(window._currentTgTile)tgOpenTile(window._currentTgTile);
+      if(typeof I18N!=='undefined')I18N.sweep(document.body);
     },30);
   }
+  if(typeof I18N!=='undefined')I18N.sweep(document.body);
 }
 function toggleLang(){
   LANG=LANG==='en'?'de':'en';
