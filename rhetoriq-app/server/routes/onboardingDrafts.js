@@ -3,6 +3,9 @@ const { pool } = require('../db');
 const { requireAdvisor } = require('../middleware/auth');
 const { ensureSchema } = require('../lib/schemaRedesign');
 const { ALLE_MODULE, SEKTOR_NAME } = require('../lib/moduleCatalog');
+const { safeFetchHtml, htmlToText } = require('../lib/safeFetch');
+const { scanWebsite } = require('../lib/websiteScan');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 
 // Onboarding-Entwürfe (Zwischenspeichern des Ablaufs vor dem Workshop).
 //   POST   /api/onboarding-drafts            neuer Entwurf (optional aus inquiry_id)
@@ -196,6 +199,48 @@ router.delete('/:id', requireAdvisor, async (req, res) => {
       }
     }
     res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/onboarding-drafts/:id/scan: Webseite laden, KI-Briefing erstellen und im Entwurf speichern.
+const scanLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 30,
+  keyGenerator: (req) => ipKeyGenerator(req.ip),
+  standardHeaders: true, legacyHeaders: false,
+  message: { error: 'Zu viele Scans. Bitte später erneut versuchen.' }
+});
+
+router.post('/:id/scan', requireAdvisor, scanLimit, async (req, res) => {
+  try {
+    await ensureSchema();
+    const id = parseId(req.params.id);
+    if (!id) return res.status(400).json({ error: 'Ungültige ID.' });
+    const d = await loadDraft(id);
+    if (!d) return res.status(404).json({ error: 'Entwurf nicht gefunden.' });
+    if (!d.webseite) return res.status(400).json({ error: 'Im Entwurf ist keine Webseite eingetragen.' });
+    let page;
+    try {
+      page = await safeFetchHtml(d.webseite);
+    } catch (e) {
+      return res.status(422).json({ error: 'Die Webseite konnte nicht geladen werden: ' + e.message });
+    }
+    const text = htmlToText(page.html);
+    if (text.length < 80) return res.status(422).json({ error: 'Auf der Webseite wurde zu wenig Text gefunden.' });
+    let result;
+    try {
+      result = await scanWebsite({ text, firma: d.firma, sektor: d.sektor });
+    } catch (e) {
+      console.error('[scan] failed:', e.message);
+      return res.status(502).json({ error: e.code === 'PARSE' ? e.message : 'Die KI ist gerade nicht erreichbar. Bitte später erneut versuchen.' });
+    }
+    const json = JSON.stringify(result);
+    const { rows } = await pool.query(
+      'UPDATE onboarding_drafts SET vorschlaege=$1::jsonb, briefing=$1::jsonb, updated_at=NOW() WHERE id=$2 RETURNING *',
+      [json, id]);
+    res.json({ ok: true, quelle: page.url, vorschlaege: result, draft: rows[0] });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
