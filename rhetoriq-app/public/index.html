@@ -8611,6 +8611,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
 @keyframes rqsp{to{transform:rotate(360deg)}}
 @media(max-width:640px){.rq-two{grid-template-columns:1fr}}
 .rq-tile b,.rq-tile span{display:block}
+.advbtn,.advbtn.sent{border-color:var(--ac)!important;background:var(--acl)!important;color:var(--ac)!important;border-radius:0!important}
 @media(max-width:700px){
 .hdr .hright{gap:6px;flex-wrap:nowrap;min-width:0}
 .hdr .hlogo{flex-shrink:0}
@@ -8782,7 +8783,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
       st.innerHTML=STEPS.map(function(t,i){var n=i+1;return '<button type="button" class="'+(n===W.step?'act':(n<W.step?'done':''))+'" data-a="go" data-v="'+n+'"><b>'+n+'</b>'+t+'</button>';}).join('');}
     var b=document.getElementById('rq-wbody'),h='';
     if(W.done){
-      var c=W.done;h='<div class="rq-card gold"><span class="rq-eb g">Fertig</span><b style="font-family:var(--serif);font-weight:400;font-size:24px">'+E(d.firma)+' ist eingerichtet.</b><span>Die Einladung mit dem persönlichen Zugangslink ist an '+E(d.email||'die Ansprechperson')+' unterwegs ('+(d.anrede==='du'?'Du':'Sie')+'-Form).</span></div>'
+      var c=W.done;h='<div class="rq-card gold"><span class="rq-eb g">Fertig</span><b style="font-family:var(--serif);font-weight:400;font-size:24px">'+E(d.firma)+' ist eingerichtet.</b><span>'+(W.invited===false?'Der Klient ist angelegt. Die Einladung konnte nicht gesendet werden. Bitte im Workspace unter Verwaltung die Willkommens-E-Mail senden.':'Die Einladung mit dem persönlichen Zugangslink ist an '+E(d.email||'die Ansprechperson')+' unterwegs ('+(d.anrede==='du'?'Du':'Sie')+'-Form).')+'</span></div>'
         +'<div class="rq-acts" style="margin-top:14px">'+(c.id?'<button type="button" class="rq-btn" data-a="openws">Workspace öffnen</button>':'')+((W.assign||[]).length&&c.id?'<button type="button" class="rq-btn ghost" data-a="assign">Dokumente jetzt zuordnen</button>':'')+'<button type="button" class="rq-btn ghost" data-a="close">Schliessen</button></div>';
       b.innerHTML=h;return;
     }
@@ -8824,7 +8825,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
       h='<p class="rq-hint" style="max-width:64ch">Prüfe die Angaben. Beim Bestätigen wird '+E(d.firma)+' angelegt und die Ansprechperson eingeladen.</p>'
        +'<div class="rq-list">'+row('ti-user','Klient',E(d.firma)+(d.kontakt?' · '+E(d.kontakt):'')+(d.email?' · '+E(d.email):''))+row('ti-world','Webseite',E(d.webseite||'keine Angabe'))+row('ti-layout-grid','Module','Brand Voice'+(d.module.filter(function(k){return k!=='brand-voice';}).length?', '+d.module.filter(function(k){return k!=='brand-voice';}).map(rqModName).map(E).join(', '):''))+row('ti-file-text','Dokumente',nf?nf+(nf===1?' Datei':' Dateien'):'keine hochgeladen')+row('ti-calendar','Workshop',E(d.workshop_datum||'kein Termin eingetragen'))+'</div>'
        +'<div class="rq-card"><span class="rq-eb">Einladung mit Zugangslink an '+E(d.kontakt||d.firma)+'</span><div><span class="rq-lab">Anrede</span>'+pills('anrede',[['sie','Sie'],['du','Du']])+'</div></div>'
-       +msg()+acts(4,['finish','Bestätigen und Klienten einladen'])+'<span class="rq-hint">Beim Bestätigen geht die Einladung mit dem persönlichen Zugangslink raus.</span>';
+       +'<label class="rq-card" style="flex-direction:row;align-items:flex-start;gap:12px;cursor:pointer"><input type="checkbox" id="rqw-priv" style="width:22px;height:22px;accent-color:var(--ac);flex-shrink:0;margin-top:2px"'+(W.privacy?' checked':'')+'><span>Der Klient wurde über die Datenverarbeitung durch Anthropic informiert.</span></label>'+msg()+acts(4,['finish','Bestätigen und Klienten einladen'])+'<span class="rq-hint">Beim Bestätigen geht die Einladung mit dem persönlichen Zugangslink raus.</span>';
     }
     b.innerHTML=h;
     var f0=b.querySelector('input.rq-in');if(f0&&W.step===1&&!f0.value)f0.focus();
@@ -8878,9 +8879,12 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
       }catch(er){W.err='Die Mappe konnte nicht erstellt werden. '+er.message;}
       W.docs=false;render();return;}
     if(a==='finish'){
+      var pv=document.getElementById('rqw-priv');W.privacy=!!(pv&&pv.checked);
+      if(!W.privacy){setMsg('','Bitte bestätigen, dass der Klient über die Datenverarbeitung informiert wurde.');return;}
       W.busy=true;render();setMsg('Klient wird angelegt …');
       try{await persist({schritt:5,status:'bereit'});
-        var r2=await rqJ('/api/onboarding-drafts/'+W.d.id+'/finish',{method:'POST',body:JSON.stringify({anrede:W.d.anrede,titel:W.d.titel})});
+        var r2=await rqJ('/api/onboarding-drafts/'+W.d.id+'/finish',{method:'POST',body:JSON.stringify({anrede:W.d.anrede,titel:W.d.titel,privacyAcknowledged:true})});
+        W.invited=!(r2&&r2.inviteSent===false);
         var c=(r2&&(r2.client||{}))||{};if(!c.id)c.id=r2&&(r2.clientId||r2.client_id);
         W.done={id:c.id||null};W.busy=false;
         if(typeof loadAdvisorDashboard==='function')loadAdvisorDashboard();
