@@ -767,6 +767,19 @@ td,th{border-bottom:1px solid var(--bd)}
 .rbox,.rbox *,.rtarea,textarea,.rbody,pre{font-family:var(--sans)}
 a{color:var(--ac)}
 ::selection{background:#EBD9AE}
+/* LOGIN neu: Formular links, Knäuel rechts */
+#login-screen{padding:0;align-items:stretch;justify-content:stretch}
+#login-screen .lside{flex:1 1 46%;display:flex;align-items:center;justify-content:center;padding:32px 24px;overflow-y:auto}
+#login-screen .lhero{flex:1 1 54%;position:relative;border-left:1px solid var(--bd);overflow:hidden;display:block}
+#login-screen .lhero:not(.on){display:none}
+.ball3d{position:absolute;left:50%;top:6%;transform:translateX(-50%);width:min(72%,460px);aspect-ratio:1}
+.ball3d canvas{display:block;width:100%!important;height:100%!important}
+#login-thread{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1000}
+.llogo{font-size:40px}.llogo-iq{color:var(--ac);font-weight:500}
+.lbox{max-width:400px}
+.ltag{margin-bottom:32px;letter-spacing:.14em;text-transform:uppercase;font-size:11px}
+.lbtn{width:100%}
+@media(max-width:800px){#login-screen{flex-direction:column;overflow-y:auto}#login-screen .lside{flex:0 0 auto;min-height:70vh}#login-screen .lhero{flex:0 0 240px;border-left:0;border-top:1px solid var(--bd)}.ball3d{top:4px;width:220px}#login-thread{display:none}}
 /* Grosse Schrift */
 html.rq-big{zoom:1.15}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -776,7 +789,7 @@ html.rq-big{zoom:1.15}
 
 <!-- LOGIN -->
 <div id="login-screen">
-  <div class="lbox">
+  <div class="lside"><div class="lbox">
     <div class="llogo">Rhetor<span class="llogo-iq">IQ</span></div>
     <div class="ltag">Executive Communication by Lorena Lienhard</div>
     <div id="advisor-form">
@@ -820,7 +833,8 @@ html.rq-big{zoom:1.15}
       &nbsp;·&nbsp;
       <a onclick="showLegal('impressum')" style="color:#9ca3af;cursor:pointer;text-decoration:none">Impressum</a>
     </div>
-  </div>
+  </div></div>
+  <div class="lhero" id="lhero" aria-hidden="true"><div class="ball3d" id="ball3d" role="img" aria-label="Ein goldener und ein silberner Faden, zu einem Knäuel gewickelt"></div></div>
 </div>
 
 <!-- PASSWORD CHANGE SCREEN (shown after first login) -->
@@ -8092,6 +8106,63 @@ try{document.getElementById('adv-pw').addEventListener('keydown',e=>{if(e.key===
 try{document.getElementById('cl-token').addEventListener('keydown',e=>{if(e.key==='Enter')loginClient();});}catch(err){console.error('cl-token listener error:',err);}
 
 tryAutoLogin();
+
+// ═══ Login-Knäuel (Three.js r128, nur Zierde; ohne WebGL bleibt das Formular allein) ═══
+(function(){
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,raf=0,renderer=null,drawn=0;
+  function webgl(){try{var c=document.createElement('canvas');return !!(window.WebGLRenderingContext&&(c.getContext('webgl')||c.getContext('experimental-webgl')));}catch(e){return false;}}
+  function shade(h,t){var n=parseInt(h.slice(1),16),r=n>>16&255,g=n>>8&255,b=n&255,f=t<0?0:255,k=Math.abs(t);r=Math.round(r+(f-r)*k);g=Math.round(g+(f-g)*k);b=Math.round(b+(f-b)*k);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+  function btn(){var l=document.querySelectorAll('#login-screen .lbtn');for(var i=0;i<l.length;i++){if(l[i].offsetParent&&/Sign in|Open Client|Create/.test(l[i].textContent)&&l[i].closest('[style*="display: none"]')===null)return l[i];}return null;}
+  function thread(){
+    var old=document.getElementById('login-thread');if(old)old.remove();
+    var box=document.getElementById('ball3d'),b=btn(),scr=document.getElementById('login-screen');
+    if(!renderer||!box||!b||scr.classList.contains('hidden')||innerWidth<=800)return;
+    var br=box.getBoundingClientRect(),bt=b.getBoundingClientRect(),cx=br.left+br.width/2,cy=br.top+br.height/2,rr=br.width*.315;
+    var S0=[cx+rr*.55,cy+rr*.82],E=[bt.right+14,bt.top+bt.height/2],NS='http://www.w3.org/2000/svg';
+    var sv=document.createElementNS(NS,'svg');sv.id='login-thread';sv.setAttribute('viewBox','0 0 '+innerWidth+' '+innerHeight);
+    var ac='#97702A',id='lt'+Date.now();
+    sv.innerHTML='<defs><linearGradient id="'+id+'" gradientUnits="userSpaceOnUse" x1="'+E[0]+'" y1="0" x2="'+S0[0]+'" y2="0"><stop offset="0" stop-color="#D9B26A"/><stop offset="1" stop-color="#8F9298"/></linearGradient></defs>';
+    var dy=Math.max(110,(E[1]-S0[1])*.55);
+    var d='M'+S0[0]+' '+S0[1]+' C'+(S0[0]+34)+' '+(S0[1]+dy*.7)+' '+(E[0]+(S0[0]-E[0])*.55)+' '+(E[1]+10)+' '+E[0]+' '+E[1];
+    var th=document.createElementNS(NS,'path');th.setAttribute('d',d);th.setAttribute('fill','none');th.setAttribute('stroke','url(#'+id+')');th.setAttribute('stroke-width','2.4');th.setAttribute('stroke-linecap','round');
+    sv.appendChild(th);scr.appendChild(sv);
+    var Ln=th.getTotalLength();th.style.strokeDasharray=Ln+' '+Ln;th.style.strokeDashoffset=(reduce||drawn)?0:Ln;
+    if(!reduce&&!drawn){var t0=performance.now();var step=function(now){var u=Math.min(1,(now-t0)/2400),e=1-Math.pow(1-u,3);th.style.strokeDashoffset=Ln*(1-e);if(u<1&&sv.isConnected)requestAnimationFrame(step);};requestAnimationFrame(step);}
+    drawn=1;
+  }
+  function mount(){
+    var box=document.getElementById('ball3d'),hero=document.getElementById('lhero');
+    if(!box||!window.THREE||renderer||!webgl())return;
+    try{
+      var T=THREE,gold=new T.Color('#C9A24E'),sil=new T.Color('#8f9298');
+      renderer=new T.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));box.appendChild(renderer.domElement);
+      var sc=new T.Scene(),cam=new T.PerspectiveCamera(35,1,.1,100);cam.position.set(0,0,4.5);
+      sc.add(new T.AmbientLight(0xffffff,.65));var k=new T.DirectionalLight(0xfff2dc,1.6);k.position.set(3,4,5);sc.add(k);
+      var f=new T.DirectionalLight(0xffffff,.45);f.position.set(-4,-2,3);sc.add(f);
+      var mat=function(c,m,ro){return new T.MeshStandardMaterial({color:c,metalness:m,roughness:ro});},mg=mat(gold,.6,.36),ms=mat(sil,.85,.3),g=new T.Group();
+      var seed=7,rnd=function(a,b){seed=(seed*16807)%2147483647;return a+(seed/2147483647)*(b-a);};
+      for(var i=0;i<14;i++){
+        var a=new T.Vector3(rnd(-1,1),rnd(-1,1),rnd(-1,1)).normalize(),b=new T.Vector3(rnd(-1,1),rnd(-1,1),rnd(-1,1)).cross(a).normalize();
+        var ph=rnd(0,6.28),pts=[],R=1+rnd(-.04,.04),n=70;
+        for(var j=0;j<n;j++){var t=j/n*6.2832,p=a.clone().multiplyScalar(Math.cos(t+ph)).add(b.clone().multiplyScalar(Math.sin(t+ph)));p.multiplyScalar(R+.05*Math.sin(t*3+i));pts.push(p);}
+        g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts,true),120,.011,8,true),i%3===1?ms:mg));
+      }
+      g.scale.setScalar(.9);sc.add(g);
+      var w=box.clientWidth||300;renderer.setSize(w,w,false);cam.aspect=1;cam.updateProjectionMatrix();
+      var loop=function(){if(!reduce)g.rotation.z-=.004;g.rotation.x=.25;renderer.render(sc,cam);if(!reduce&&document.getElementById('login-screen')&&!document.getElementById('login-screen').classList.contains('hidden'))raf=requestAnimationFrame(loop);};
+      loop();hero.classList.add('on');setTimeout(thread,60);
+    }catch(e){renderer=null;hero.classList.remove('on');}
+  }
+  function boot(){
+    if(!webgl())return;
+    if(window.THREE){mount();return;}
+    var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.async=true;s.onload=mount;s.onerror=function(){};document.head.appendChild(s);
+  }
+  var rz=0;addEventListener('resize',function(){clearTimeout(rz);rz=setTimeout(thread,200);});
+  var _sf=window.sf;window.sf=function(a,b){_sf(a,b);setTimeout(thread,30);};
+  var _sc=window.switchClientTab;if(_sc)window.switchClientTab=function(t){_sc(t);setTimeout(thread,30);};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
 </script>
 </body>
 </html>
