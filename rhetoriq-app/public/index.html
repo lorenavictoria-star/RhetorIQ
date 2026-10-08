@@ -9504,5 +9504,61 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
   refresh();
 })();
 </script>
+<script id="rq-learn-js">
+// ═══ Lernvorschläge aus deinen Korrekturen (Workspace, Reiter Brand Voice) ═══
+// Wenn du einen Text vor dem Senden änderst, erkennt die Plattform wiederkehrende Muster und schlägt vor,
+// sie für diesen Klienten zu merken. Übernommen wird erst, wenn du es bestätigst.
+(function(){
+  var CAT={TON:'Ton',STRUKTUR:'Struktur',FAKTEN:'Fakten',FORMAT:'Format',SONSTIGES:'Sonstiges'};
+  function E(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  var orig=window.wsRenderVoice;
+  if(typeof orig!=='function')return;
+  window.wsRenderVoice=function(body){
+    orig.apply(this,arguments);
+    try{renderLearn(body);}catch(e){}
+  };
+  function card(r){
+    var times=r.occurrences>1?'<span style="color:var(--ac);font-weight:600;font-size:12.5px">'+r.occurrences+' Mal so geändert</span>':'<span style="color:var(--mu);font-size:12.5px">1 Mal geändert</span>';
+    var ex=(r.example_before||r.example_after)?'<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--mu);font-size:12.5px">Beispiel ansehen</summary><div style="margin-top:6px;font-size:13px;line-height:1.6"><div><span style="color:var(--mu)">Vorher:</span> '+E(r.example_before||'–')+'</div><div><span style="color:var(--mu)">Nachher:</span> '+E(r.example_after||'–')+'</div></div></details>':'';
+    return '<div class="rq-learn-card" data-id="'+r.id+'" style="border:1px solid var(--bd);padding:14px 16px;margin-bottom:10px">'
+      +'<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline"><span style="font-size:12.5px"><b style="font-weight:600">'+E(CAT[r.category]||r.category)+'</b> · '+E(r.module_label||r.module_key)+'</span>'+times+'</div>'
+      +'<div class="rq-learn-text" style="margin:8px 0;font-size:15px;line-height:1.55">'+E(r.observation)+'</div>'
+      +'<textarea class="rq-learn-edit" style="display:none;width:100%;min-height:60px;font-size:14px;padding:8px;border:1px solid var(--bd);box-sizing:border-box;font-family:inherit">'+E(r.observation)+'</textarea>'
+      +ex
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button type="button" class="runbtn" data-act="accept">Übernehmen</button><button type="button" class="obtn" data-act="edit">Anpassen</button><button type="button" class="obtn" data-act="reject">Verwerfen</button></div>'
+      +'</div>';
+  }
+  async function renderLearn(body){
+    var cid=(typeof _wsClientId!=='undefined')?_wsClientId:null;if(!cid||!body)return;
+    var host=document.getElementById('rq-learn');
+    if(host)host.remove();
+    host=document.createElement('div');host.id='rq-learn';host.style.marginBottom='22px';
+    body.insertBefore(host,body.firstChild);
+    var rows=[];
+    try{var r=await api('/api/learning?client_id='+cid);var d=await r.json();if(r.ok&&Array.isArray(d))rows=d;}catch(e){}
+    if(!document.getElementById('rq-learn'))return;
+    if(!rows.length){host.innerHTML='<div style="font-size:12.5px;color:var(--mu)">Keine offenen Lernvorschläge. Sie entstehen, wenn du Texte vor dem Senden änderst und dieselbe Änderung wiederkehrt.</div>';return;}
+    host.innerHTML='<div style="font-size:11px;letter-spacing:.05em;color:var(--ac);text-transform:uppercase;font-weight:700;margin-bottom:4px">Lernvorschläge aus deinen Korrekturen ('+rows.length+')</div>'
+      +'<div style="font-size:12.5px;color:var(--mu);margin-bottom:10px">Die Plattform hat erkannt, was du an KI-Texten dieses Klienten immer wieder änderst. Übernimm, was stimmt: Die KI beachtet es ab dem nächsten Text.</div>'
+      +rows.map(card).join('');
+  }
+  document.addEventListener('click',async function(e){
+    var b=e.target.closest&&e.target.closest('#rq-learn [data-act]');if(!b)return;
+    var c=b.closest('.rq-learn-card');if(!c)return;
+    var id=c.getAttribute('data-id'),act=b.getAttribute('data-act');
+    if(act==='edit'){var ta=c.querySelector('.rq-learn-edit');ta.style.display=ta.style.display==='none'?'block':'none';if(ta.style.display==='block')ta.focus();return;}
+    b.disabled=true;
+    try{
+      var opts={method:'POST'};
+      if(act==='accept'){var ta2=c.querySelector('.rq-learn-edit');if(ta2&&ta2.style.display!=='none')opts.body=JSON.stringify({observation:ta2.value});}
+      var r=await api('/api/learning/'+id+'/'+act,opts);
+      var d=await r.json().catch(function(){return {};});
+      if(!r.ok)throw new Error(d.error||'Fehler');
+      c.innerHTML='<div style="font-size:13px;color:var(--ac);padding:4px 0">'+(act==='accept'?'✓ Übernommen. Die KI beachtet das ab dem nächsten Text für diesen Klienten.':'Verworfen. Dieser Vorschlag kommt nicht wieder.')+'</div>';
+      setTimeout(function(){if(c.parentNode)c.remove();},2500);
+    }catch(err){alert('Das hat nicht geklappt: '+err.message);b.disabled=false;}
+  });
+})();
+</script>
 </body>
 </html>
