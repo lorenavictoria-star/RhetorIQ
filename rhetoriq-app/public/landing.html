@@ -195,8 +195,8 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     <div class="steps4">
       <div class="step"><div class="sn">01</div><h3>Der Workshop</h3><p>Ich lese Ihre Texte und beobachte Ihr Team. Ich zeige, wo Haltung und Wirkung auseinanderlaufen, und halte Ihre Stimme als Brand Voice fest.</p></div>
       <div class="step"><div class="sn">02</div><h3>Module nach Mass</h3><p>E-Mails, Pitches, Reden, Vorträge, Interviews und Präsentationen. Sie wählen die Textarten, die Ihr Team wirklich braucht.</p></div>
-      <div class="step"><div class="sn">03</div><h3>Jede Person erhält die eigene Stimme</h3><p>Neben der Stimme des Unternehmens schreibt jede Person in der eigenen. Jeder Text bleibt erkennbar von einem Menschen.</p></div>
-      <div class="step"><div class="sn">04</div><h3>Feinschliff von Hand</h3><p>Ich lese Ihre Texte nach und übernehme den Feinschliff von Hand, in unter drei Stunden.</p></div>
+      <div class="step"><div class="sn">03</div><h3>Jede Person erhält die eigene Stimme</h3><p>Neben der Stimme des Unternehmens schreibt jede Person in der eigenen. Jeder Text bleibt Ihrer.</p></div>
+      <div class="step"><div class="sn">04</div><h3>Feinschliff von Hand</h3><p>Ich überarbeite Ihre Texte und übernehme den Feinschliff von Hand, in unter drei Stunden.</p></div>
     </div>
     <p class="vert">Vertraulich von Anfang an. Ihre Unternehmensdaten bleiben Ihre. Welche Daten RhetorIQ nutzt und wie sie geschützt werden, halte ich vor dem Start schriftlich fest.</p>
   </section>
@@ -207,7 +207,7 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
       <div>
         <p class="eyebrow">Die Person hinter RhetorIQ</p>
         <h2>Ich bin erreichbar. Für die volle Wirkung.</h2>
-        <p class="p">So schnell die KI auch schreibt: Wenn es wirklich zählt, wünschen Sie sich einen Menschen am anderen Ende. Ich, Lorena Lienhard, bin in jeder Subscription persönlich innert drei Stunden für Sie da, an sieben Tagen die Woche. Sie schreiben mir, und ich melde mich selbst.</p>
+        <p class="p">So schnell die KI auch schreibt: Wenn es wirklich zählt, wünschen Sie sich einen Menschen am anderen Ende. Ich bin in jeder Subscription persönlich innert drei Stunden für Sie da, an sieben Tagen die Woche. Ein Klick genügt, und ich melde mich persönlich bei Ihnen.</p>
       </div>
     </div>
   </section>
@@ -218,7 +218,7 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     <h2>Zahlen, die für sich sprechen.</h2>
     <div class="focus" id="fz" aria-live="off"></div>
     <div class="fdots" id="fd" role="group" aria-label="Zahl wählen"></div>
-    <p class="p" style="margin-top:34px">Darum ist die menschliche Hand neben der KI ein Muss. Ich lese jeden Text als Expertin für Sprache, bevor er Ihr Haus verlässt.</p>
+    <p class="p" style="margin-top:34px">Darum braucht jede KI eine menschliche Hand. Ich lese jeden Text als Expertin für Sprache, bevor er Ihr Haus verlässt.</p>
   </section>
 
   <section id="preise">
@@ -238,7 +238,7 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
     <h2>Kurz beantwortet.</h2>
     <div class="faq">
       <div><h3>Was ist der Unterschied zu allgemeinen KI-Chatbots?</h3><p>Ich lege Ihre Unternehmenssprache als Basis unter die KI und adjustiere von Hand nach.</p></div>
-      <div><h3>Was geschieht mit meinen Texten?</h3><p>Ihre Inhalte trainieren keine KI-Modelle, und jeder Arbeitsbereich ist isoliert. Ich arbeite nach Schweizer DSG und EU-DSGVO.</p></div>
+      <div><h3>Was geschieht mit meinen Texten?</h3><p>Ihre Inhalte trainieren keine KI-Modelle, und jeder Arbeitsbereich ist isoliert. Welche Dienstleister Daten verarbeiten und wo, steht in der Datenschutzerklärung.</p></div>
       <div><h3>Kann ich kündigen?</h3><p>Monatlich, in jeder Subscription.</p></div>
     </div>
   </section>
@@ -282,7 +282,7 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
       document.getElementById("vflat").setAttribute("stroke",i===0?"#8a8780":"#3a3a37");document.getElementById("vflat").setAttribute("stroke-dasharray",i===0?"":"2 5");
       document.getElementById("vvo").setAttribute("opacity",i===1?1:(i===2?.6:0));
       document.getElementById("vfin").setAttribute("opacity",i===2?1:0);document.getElementById("var").setAttribute("opacity",i===2?1:0);dots.setAttribute("opacity",i===2?1:0);lbs.style.opacity=i===2?1:0}
-    function arm(){clearInterval(timer);timer=null;if(reduceM||!vis)return;timer=setInterval(function(){sh((cur+1)%3)},3000)}
+    function arm(){clearInterval(timer);timer=null;if(reduceM||!vis)return;timer=setInterval(function(){sh((cur+1)%3)},5000)}
     stp.onclick=function(e){var b=e.target.closest("button");if(b){sh([].indexOf.call(stp.children,b));arm()}};
     sh(0);
     var reduceM=matchMedia("(prefers-reduced-motion: reduce)").matches,vis=false;
