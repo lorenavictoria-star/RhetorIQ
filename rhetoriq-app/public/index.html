@@ -1536,7 +1536,7 @@ html.rq-big{zoom:1.15}
       <button class="back" onclick="goPage('modules')">&#8592; Modules</button>
       <div class="mtitle" id="mod-title"></div>
       <div class="mdesc" id="mod-desc"></div>
-      <label id="thorough-wrap" style="display:none;align-items:center;gap:8px;font-size:13px;color:var(--mu);margin:0 0 14px;cursor:pointer"><input type="checkbox" id="thorough-chk"> Gründlich prüfen lassen <span style="color:var(--dm)">(dauert länger und kostet etwa doppelt so viel)</span></label>
+      <label id="thorough-wrap" style="display:none;align-items:center;gap:8px;font-size:13px;color:var(--mu);margin:0 0 14px;cursor:pointer"><input type="checkbox" id="thorough-chk" checked> Gründlich prüfen lassen <span style="color:var(--dm)">(Standard. Ausschalten ist schneller und kostet etwa halb so viel.)</span></label>
       <div id="mod-form"></div>
     </div>
 
@@ -5133,7 +5133,7 @@ function goModule(name,prefill){
   // panel, command palette) silently does nothing.
   if(name==='vs-gen'||name==='vs-cal')name='text-gen';
   window._currentModule=name;window._currentTgTile=null;
-  { const tw=document.getElementById('thorough-wrap'),tc=document.getElementById('thorough-chk'); if(tc)tc.checked=false; if(tw)tw.style.display=(name==='text-gen'||name==='presentation')?'flex':'none'; }
+  { const tw=document.getElementById('thorough-wrap'),tc=document.getElementById('thorough-chk'); if(tc)tc.checked=true; if(tw)tw.style.display=(name==='text-gen'||name==='presentation')?'flex':'none'; }
   const def=getMdefLang(name,MDEFS[name]);if(!def)return;
   trackModuleUse(name,def.title||name);
   const isTg=def.special==='textgen';

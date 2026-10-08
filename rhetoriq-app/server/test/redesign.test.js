@@ -676,15 +676,15 @@ test('Freigaben: Klienten dürfen nur einreichen, nur die Beraterin liest, ände
 });
 
 // ── Zweiter Durchgang nur bei Bedarf ───────────────────────
-test('Zweiter Durchgang: Text Generator und Präsentation nur auf Wunsch, Brand Voice immer', () => {
+test('Zweiter Durchgang: Standard an, bei Text Generator und Präsentation abschaltbar, Brand Voice immer', () => {
   const { useTwoPass } = require('../routes/analyze');
-  assert.equal(useTwoPass('text-gen', {}), false);
-  assert.equal(useTwoPass('text-gen', undefined), false);
-  assert.equal(useTwoPass('text-gen', { thorough: false }), false);
-  assert.equal(useTwoPass('text-gen', { thorough: 'true' }), false, 'nur der echte Wert true zählt');
+  assert.equal(useTwoPass('text-gen', {}), true, 'Standard ist an, auch ohne Angabe');
+  assert.equal(useTwoPass('text-gen', undefined), true);
   assert.equal(useTwoPass('text-gen', { thorough: true }), true);
-  assert.equal(useTwoPass('presentation', { thorough: true }), true);
-  assert.equal(useTwoPass('presentation', {}), false);
+  assert.equal(useTwoPass('text-gen', { thorough: 'false' }), true, 'nur der echte Wert false schaltet ab');
+  assert.equal(useTwoPass('text-gen', { thorough: false }), false);
+  assert.equal(useTwoPass('presentation', { thorough: false }), false);
+  assert.equal(useTwoPass('presentation', {}), true);
   assert.equal(useTwoPass('brand-voice-co', {}), true);
   assert.equal(useTwoPass('brand-voice-ind', { thorough: false }), true);
   assert.equal(useTwoPass('review', { thorough: true }), false, 'andere Module hatten nie einen zweiten Durchgang');

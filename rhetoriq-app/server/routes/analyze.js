@@ -1442,13 +1442,15 @@ const DEFAULT_MAX_TOKENS = 2000;
 // is worth the extra latency/cost: draft, then have the model critique its own
 // draft against the brand voice and style rules, then output a revised final.
 const TWO_PASS_MODULES = new Set(['text-gen', 'presentation', 'brand-voice-co', 'brand-voice-ind']);
-// Der zweite Durchgang verdoppelt die Kosten eines Textes. Bei der Brand-Voice-Analyse (selten, sehr wichtig)
-// bleibt er immer an. Bei Text Generator und Präsentation läuft er nur, wenn die Person «Gründlich prüfen» wählt.
+// Der zweite Durchgang (Entwurf, dann Prüfung gegen die Brand Voice) ist ein Qualitätsmerkmal der Plattform und
+// bleibt Standard. Bei der Brand-Voice-Analyse ist er immer an. Bei Text Generator und Präsentation lässt er sich
+// über den Haken «Gründlich prüfen» ausdrücklich abschalten (thorough: false), um Kosten zu sparen.
+// Fehlt der Wert (zum Beispiel bei einer älteren, noch geöffneten Seite), gilt wie bisher: an.
 const ALWAYS_TWO_PASS = new Set(['brand-voice-co', 'brand-voice-ind']);
 function useTwoPass(module, body) {
   if (!TWO_PASS_MODULES.has(module)) return false;
   if (ALWAYS_TWO_PASS.has(module)) return true;
-  return !!(body && body.thorough === true);
+  return !(body && body.thorough === false);
 }
 // A very common real-world pattern: the client already has a near-final
 // document (a full speech, an existing letter) and just wants it revised
