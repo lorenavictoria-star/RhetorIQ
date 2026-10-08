@@ -673,3 +673,18 @@ test('Freigaben: Klienten dürfen nur einreichen, nur die Beraterin liest, ände
   assert.equal(done[0][0], 'klient:' + a.id);
   assert.equal((await srv.call('DELETE', `/api/reviews/${id}`, { token: A() })).status, 200);
 });
+
+// ── Zweiter Durchgang nur bei Bedarf ───────────────────────
+test('Zweiter Durchgang: Text Generator und Präsentation nur auf Wunsch, Brand Voice immer', () => {
+  const { useTwoPass } = require('../routes/analyze');
+  assert.equal(useTwoPass('text-gen', {}), false);
+  assert.equal(useTwoPass('text-gen', undefined), false);
+  assert.equal(useTwoPass('text-gen', { thorough: false }), false);
+  assert.equal(useTwoPass('text-gen', { thorough: 'true' }), false, 'nur der echte Wert true zählt');
+  assert.equal(useTwoPass('text-gen', { thorough: true }), true);
+  assert.equal(useTwoPass('presentation', { thorough: true }), true);
+  assert.equal(useTwoPass('presentation', {}), false);
+  assert.equal(useTwoPass('brand-voice-co', {}), true);
+  assert.equal(useTwoPass('brand-voice-ind', { thorough: false }), true);
+  assert.equal(useTwoPass('review', { thorough: true }), false, 'andere Module hatten nie einen zweiten Durchgang');
+});

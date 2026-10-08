@@ -1442,6 +1442,14 @@ const DEFAULT_MAX_TOKENS = 2000;
 // is worth the extra latency/cost: draft, then have the model critique its own
 // draft against the brand voice and style rules, then output a revised final.
 const TWO_PASS_MODULES = new Set(['text-gen', 'presentation', 'brand-voice-co', 'brand-voice-ind']);
+// Der zweite Durchgang verdoppelt die Kosten eines Textes. Bei der Brand-Voice-Analyse (selten, sehr wichtig)
+// bleibt er immer an. Bei Text Generator und Präsentation läuft er nur, wenn die Person «Gründlich prüfen» wählt.
+const ALWAYS_TWO_PASS = new Set(['brand-voice-co', 'brand-voice-ind']);
+function useTwoPass(module, body) {
+  if (!TWO_PASS_MODULES.has(module)) return false;
+  if (ALWAYS_TWO_PASS.has(module)) return true;
+  return !!(body && body.thorough === true);
+}
 // A very common real-world pattern: the client already has a near-final
 // document (a full speech, an existing letter) and just wants it revised
 // against a briefing — but they don't always use the dedicated "existing
@@ -1762,7 +1770,7 @@ router.post('/', requireAuth, async (req, res) => {
     // a from-scratch draft — running a second full pass on top just doubles
     // latency (painfully so for long documents like a full speech) without
     // improving quality, and risks over-editing an already-finished text.
-    if (TWO_PASS_MODULES.has(module) && !(followUp && followUp.note) && !hasLargeInput(data)) {
+    if (useTwoPass(module, req.body) && !(followUp && followUp.note) && !hasLargeInput(data)) {
       const revisionResp = await callClaude(systemBlocks, buildRevisionPrompt(userMsg, claudeResp.text, module), MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
       if (revisionResp.text) result = revisionResp.text;
       totalInputTokens += revisionResp.inputTokens;
@@ -1956,7 +1964,7 @@ router.post('/stream', requireAuth, async (req, res) => {
     // connection alive during this), then stream only the revised final pass.
     let streamUserMsg = userMsg;
     let draftInputTokens = 0, draftOutputTokens = 0;
-    if (TWO_PASS_MODULES.has(module) && !aborted && !(followUp && followUp.note) && !hasLargeInput(data)) {
+    if (useTwoPass(module, req.body) && !aborted && !(followUp && followUp.note) && !hasLargeInput(data)) {
       console.log(`[trace] ${module} starting draft pass, maxTokens=${maxTokens}`);
       const draftResp = await callClaude(streamSystemBlocks, userMsg, maxTokens, resolveModel(module));
       console.log(`[trace] ${module} draft pass done, chars=${(draftResp.text || '').length}`);
@@ -2506,3 +2514,4 @@ router.post('/:id/rate', requireAuth, async (req, res) => {
 router._internal = { sanitizeForPrompt, capText, PROMPTS, MODULE_MAX_TOKENS, HAIKU_MODULES, GLOBAL_STYLE_RULES, checkQuota };
 
 module.exports = router;
+module.exports.useTwoPass = useTwoPass;

@@ -1536,6 +1536,7 @@ html.rq-big{zoom:1.15}
       <button class="back" onclick="goPage('modules')">&#8592; Modules</button>
       <div class="mtitle" id="mod-title"></div>
       <div class="mdesc" id="mod-desc"></div>
+      <label id="thorough-wrap" style="display:none;align-items:center;gap:8px;font-size:13px;color:var(--mu);margin:0 0 14px;cursor:pointer"><input type="checkbox" id="thorough-chk"> Gründlich prüfen lassen <span style="color:var(--dm)">(dauert länger und kostet etwa doppelt so viel)</span></label>
       <div id="mod-form"></div>
     </div>
 
@@ -4422,9 +4423,29 @@ async function deleteMemory(type){
     await loadMemory();renderMemory();
   }catch{alert('Error.');}
 }
-function getMemoryContext(){
+// Was aus dem Gedächtnis zu einem Auftrag mitgeschickt wird.
+// - Brand Voice und Struktur-Referenz ergänzt der Server selbst (früher kamen sie doppelt und wurden doppelt bezahlt).
+// - Beispiele zu einem Format (E-Mail, LinkedIn …) nur beim passenden Format, nicht bei jedem Auftrag.
+// - Echte Beispieltexte des Klienten (Quellmaterial) bleiben dabei, denn sie sind das stärkste Stilsignal.
+// - Die Länge ist nur als Notbremse begrenzt, damit ein riesiges Dokument nicht jeden Auftrag aufbläht.
+//   Die Brand Voice selbst und das gelernte Feedback kürzt hier nichts (sie kommen vom Server).
+function getMemoryContext(tile){
   if(!memory.length)return '';
-  return '\n\n---\nCOMPANY MEMORY — BRAND VOICE REFERENCE ONLY (use exclusively for tone, vocabulary, rhythm and stylistic patterns; never state any fact, history, date, or background detail from this section in the output unless the briefing/draft above explicitly asks for that specific information):\n'+memory.map(m=>'['+m.memory_type.toUpperCase()+']\n'+m.content).join('\n\n');
+  const CAP=15000,TOTAL=40000,CAP_SOURCE=8000;
+  let total=0;const parts=[];
+  for(const m of memory){
+    const t=m.memory_type;
+    if(!m.content||/^(brand_voice|structural_reference)/.test(t))continue;
+    if(/^ref_tg_/.test(t)&&t!=='ref_tg_'+tile)continue;
+    let c=m.content;
+    const cap=t==='ref_brand_voice_source'?CAP_SOURCE:CAP;
+    if(c.length>cap)c=c.slice(0,cap)+'\n[…gekürzt]';
+    if(total+c.length>TOTAL)break;
+    total+=c.length;
+    parts.push('['+t.toUpperCase()+']\n'+c);
+  }
+  if(!parts.length)return '';
+  return '\n\n---\nCOMPANY MEMORY — BRAND VOICE REFERENCE ONLY (use exclusively for tone, vocabulary, rhythm and stylistic patterns; never state any fact, history, date, or background detail from this section in the output unless the briefing/draft above explicitly asks for that specific information):\n'+parts.join('\n\n');
 }
 function getPeopleContext(selectedIds){
   if(!selectedIds||!selectedIds.length)return '';
@@ -5112,6 +5133,7 @@ function goModule(name,prefill){
   // panel, command palette) silently does nothing.
   if(name==='vs-gen'||name==='vs-cal')name='text-gen';
   window._currentModule=name;window._currentTgTile=null;
+  { const tw=document.getElementById('thorough-wrap'),tc=document.getElementById('thorough-chk'); if(tc)tc.checked=false; if(tw)tw.style.display=(name==='text-gen'||name==='presentation')?'flex':'none'; }
   const def=getMdefLang(name,MDEFS[name]);if(!def)return;
   trackModuleUse(name,def.title||name);
   const isTg=def.special==='textgen';
@@ -5896,7 +5918,7 @@ function startThinkingIndicator(body,twoPass){
   },3200);
 }
 async function runMod(name){
-  const memCtx=getMemoryContext();
+  const memCtx=getMemoryContext(name==='text-gen'?(arguments[1]||'custom'):null);
   const selectedPeople=getSelectedPeople();
   const peopleCtx=getPeopleContext(selectedPeople);
   const context=memCtx+peopleCtx;
@@ -6106,7 +6128,8 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
   if(followUp&&followUp.note)priorHistory.push({note:followUp.note,textBefore:followUp.previousResult});
   box._req={module,data,rid,bid,instructionsKey,history:priorHistory};
   const largeInput=!!(data&&(((data.existingDraft||'').length+(data.text||'').length)>4000));
-  let thinkingInterval=startThinkingIndicator(body,!followUp&&TWO_PASS_MODULES_FE.has(module)&&!largeInput);
+  const _thorough=!!(document.getElementById('thorough-chk')&&document.getElementById('thorough-chk').checked);
+  let thinkingInterval=startThinkingIndicator(body,!followUp&&TWO_PASS_MODULES_FE.has(module)&&!largeInput&&(_thorough||module==='brand-voice-co'||module==='brand-voice-ind'));
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
   // Browser fetch() has NO built-in timeout — if the connection (or an
   // intermediary proxy) silently dies mid-request without a clean close,
@@ -6123,7 +6146,7 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
       method:'POST',
       signal:streamAbort.signal,
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({module,clientId,data,debug:debugMode&&isAdv,instructionsKey,followUp})
+      body:JSON.stringify({module,clientId,data,debug:debugMode&&isAdv,instructionsKey,followUp,thorough:!!(document.getElementById('thorough-chk')&&document.getElementById('thorough-chk').checked)})
     });
     if(!resp.ok){
       const d=await resp.json();
