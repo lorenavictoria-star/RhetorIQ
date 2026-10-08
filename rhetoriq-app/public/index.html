@@ -770,11 +770,11 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
       <div class="lsw"><a onclick="sf('advisor-form','client-form')">Back</a></div>
     </div>
     <div style="margin-top:20px;text-align:center;font-size:11px;color:#9ca3af;line-height:2">
-      <a onclick="goPage('agb');document.getElementById('login-screen').classList.add('hidden')" style="color:#9ca3af;cursor:pointer;text-decoration:none">AGB</a>
+      <a onclick="showLegal('agb')" style="color:#9ca3af;cursor:pointer;text-decoration:none">AGB</a>
       &nbsp;·&nbsp;
-      <a onclick="goPage('datenschutz');document.getElementById('login-screen').classList.add('hidden')" style="color:#9ca3af;cursor:pointer;text-decoration:none">Datenschutz</a>
+      <a onclick="showLegal('datenschutz')" style="color:#9ca3af;cursor:pointer;text-decoration:none">Datenschutz</a>
       &nbsp;·&nbsp;
-      <a onclick="goPage('impressum');document.getElementById('login-screen').classList.add('hidden')" style="color:#9ca3af;cursor:pointer;text-decoration:none">Impressum</a>
+      <a onclick="showLegal('impressum')" style="color:#9ca3af;cursor:pointer;text-decoration:none">Impressum</a>
     </div>
   </div>
 </div>
@@ -1668,36 +1668,9 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
     </div>
 
     <!-- DATA SECURITY PAGE -->
-    <div class="page" id="page-datasec">
-      <button class="back" onclick="goPage('modules')">&#8592; Modules</button>
-      <div class="page-title" id="datasec-page-title" style="margin-bottom:6px">Data Security &amp; Privacy</div>
-      <div style="font-size:12px;color:var(--mu);margin-bottom:28px;text-transform:uppercase;letter-spacing:.08em;font-weight:600">How RhetorIQ handles your data</div>
-      <div style="display:flex;flex-direction:column;gap:20px;max-width:620px">
-        <div class="dsec-block">
-          <div class="dsec-title">Storage &amp; Processing</div>
-          <div class="dsec-body">Your content (Brand Voice, reference documents, generated texts) is stored exclusively in RhetorIQ's own isolated database in the EU (Frankfurt) — never with a third party. To generate text, content is sent to the Anthropic API, one of the most rigorously audited AI infrastructures available. Anthropic does not use this data to train its models and does not sell it to third parties.</div>
-        </div>
-        <div class="dsec-block">
-          <div class="dsec-title">Session Isolation</div>
-          <div class="dsec-body">Each session is isolated: data entered in one client workspace is never accessible to another. Your inputs are processed in real time and treated as strictly confidential.</div>
-        </div>
-        <div class="dsec-block">
-          <div class="dsec-title">Legal Compliance</div>
-          <div class="dsec-body">Lorena Lienhard operates RhetorIQ in strict compliance with Swiss data protection law (DSG) and the European General Data Protection Regulation (GDPR).</div>
-        </div>
-        <div class="dsec-block">
-          <div class="dsec-title">Confidentiality Standard</div>
-          <div class="dsec-body">Sensitive communications — merger announcements, performance reviews, internal strategy documents — are treated with the same confidentiality as a privileged advisory relationship. What you enter stays between you, RhetorIQ, and Lorena Lienhard.</div>
-        </div>
-        <div style="border-top:1px solid var(--bd);padding-top:20px;font-size:12px;color:var(--mu);line-height:1.7">
-          Questions about data handling? <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a>
-        </div>
-      </div>
-    </div>
-
     <!-- IMPRESSUM -->
     <div class="page" id="page-impressum">
-      <button class="back" onclick="goPage('home')">&#8592; Zurück</button>
+      <button class="back" onclick="legalBack()">&#8592; Zurück</button>
       <div class="page-title">Impressum</div>
       <div style="max-width:620px;padding-bottom:40px">
 
@@ -1732,75 +1705,40 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
 
     <!-- DATENSCHUTZERKLARUNG -->
     <div class="page" id="page-datenschutz">
-      <button class="back" onclick="goPage('home')">&#8592; Zurück</button>
+      <button class="back" onclick="legalBack()">&#8592; Zurück</button>
       <div class="page-title">Datenschutzerklärung</div>
-      <div style="max-width:620px;padding-bottom:40px">
-
-        <p style="font-size:14px;line-height:1.7;color:var(--mu);margin:4px 0 20px">Gültig ab 1. September 2023 · Konform mit Schweizer DSG 2023 und EU-DSGVO</p>
-
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Verantwortliche Stelle</div>
-        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
-          Lorena Lienhard, Einzelunternehmen, Schweiz<br>
-          E-Mail: <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a>
-        </p>
-
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Welche Daten wir verarbeiten</div>
-        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">Wir verarbeiten nur die Daten, die zur Bereitstellung des Dienstes notwendig sind:</p>
-        <ul style="font-size:14px;line-height:1.9;color:var(--tx);margin:8px 0 0;padding-left:20px">
-          <li>Name und E-Mail-Adresse (für Konto und Kommunikation)</li>
-          <li>Kommunikationstexte, die Sie im Rahmen des Coachings eingeben</li>
-          <li>Nutzungsdaten zur Abrechnung (Plan, Abo-Status)</li>
-        </ul>
-        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:8px 0 0">
-          Ihre eingegebenen Inhalte werden <strong>nicht</strong> zum Training von KI-Modellen verwendet. Dies ist ein bewusstes Merkmal der Plattform.
-        </p>
-
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Dienstleister und Datenübermittlung</div>
-        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">Wir setzen folgende Dienstleister ein:</p>
-        <ul style="font-size:14px;line-height:1.9;color:var(--tx);margin:8px 0 0;padding-left:20px">
-          <li><strong>Render.com</strong> – Hosting der Plattform (USA/EU, SOC 2 zertifiziert)</li>
-          <li><strong>Anthropic API</strong> – KI-Verarbeitung Ihrer Eingaben (USA; keine Nutzung für KI-Training)</li>
-          <li><strong>Brevo</strong> – Versand transaktionaler E-Mails der Plattform selbst, z.B. Zugangs-Links, Benachrichtigungen (EU/Frankreich)</li>
-        </ul>
-        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:8px 0 0">
-          Bei Übermittlungen in Drittländer stellen wir durch Standardvertragsklauseln oder gleichwertige Massnahmen ein angemessenes Schutzniveau sicher.
-        </p>
-        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:8px 0 0">
-          Optional: Klientinnen und Klienten können in einzelnen Modulen freiwillig ihr eigenes Klaviyo-Konto mit eigenem API-Schlüssel verbinden, um eigene Newsletter an ihre eigenen Kundinnen und Kunden zu versenden. Dabei handelt es sich um eine eigene, von RhetorIQ unabhängige Verarbeitung unter der Verantwortung der jeweiligen Klientin bzw. des jeweiligen Klienten.
-        </p>
-
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Ihre Rechte</div>
-        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">Sie haben jederzeit das Recht auf:</p>
-        <ul style="font-size:14px;line-height:1.9;color:var(--tx);margin:8px 0 0;padding-left:20px">
-          <li><strong>Auskunft</strong> – welche Daten wir über Sie gespeichert haben</li>
-          <li><strong>Berichtigung</strong> – Korrektur unrichtiger Daten</li>
-          <li><strong>Löschung</strong> – Entfernung Ihrer Daten auf Anfrage</li>
-          <li><strong>Datenübertragbarkeit</strong> – Herausgabe Ihrer Daten in einem gängigen Format</li>
-          <li><strong>Widerspruch</strong> – gegen bestimmte Verarbeitungen</li>
-        </ul>
-        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:8px 0 0">
-          Anfragen richten Sie bitte an: <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a>
-        </p>
-
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Cookies und Tracking</div>
-        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
-          RhetorIQ verwendet ausschliesslich technisch notwendige Cookies (Authentifizierungs-Token im lokalen Speicher des Browsers). Es werden keine Werbe- oder Analyse-Cookies eingesetzt.
-        </p>
-
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:20px 0 8px">Aufbewahrung</div>
-        <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">
-          Kontodaten werden für die Dauer des Vertragsverhältnisses plus 10 Jahre (gesetzliche Aufbewahrungspflicht) gespeichert. Kommunikationsinhalte werden auf Anfrage nach Kündigung unverzüglich gelöscht.
-        </p>
-
-        <div style="border-top:1px solid var(--bd);padding-top:20px;margin-top:24px;font-size:12px;color:var(--mu);line-height:1.7">
-          Fragen zum Datenschutz? <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a>
-        </div>
+      <div style="max-width:660px;padding-bottom:40px">
+      <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:4px 0 8px">Stand: 8. Oktober 2026. RhetorIQ richtet die Datenverarbeitung nach dem Schweizer Datenschutzgesetz (DSG) und, soweit anwendbar, nach der EU-Datenschutz-Grundverordnung (DSGVO) aus.</p>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:22px 0 8px">Verantwortliche Stelle</div>
+      <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">Lorena Lienhard, Einzelunternehmen, Schweiz<br>E-Mail: <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a></p>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:22px 0 8px">Welche Daten wir verarbeiten</div>
+      <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">Wir verarbeiten die Daten, die zur Bereitstellung des Dienstes nötig sind:</p>
+      <ul style="font-size:14px;line-height:1.9;color:var(--tx);margin:8px 0 0;padding-left:20px"><li>Name, E-Mail-Adresse und Passwort (das Passwort speichern wir verschlüsselt)</li><li>Texte, Dokumente und Angaben, die Sie eingeben oder hochladen: Entwürfe, Brand Voice, Referenzdokumente, Firmengedächtnis, Personenprofile</li><li>Audio- und Videodateien, die Sie zur Transkription hochladen</li><li>Nutzungs- und Abrechnungsdaten (Plan, Abo-Status, Nutzung der Module) sowie technische Fehlerprotokolle</li><li>Inhalte von E-Mails, die die Plattform in Ihrem Auftrag versendet (Zugangs-Links, Benachrichtigungen, Rückmeldungen der Beraterin)</li></ul>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:22px 0 8px">Wo Ihre Daten liegen</div>
+      <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">Wir speichern Ihre Inhalte in einer Datenbank bei unserem Hosting-Anbieter Render in der Region Frankfurt (EU). Betreiberin ist Render Inc. (USA). Jeder Klientenbereich ist getrennt: Daten eines Bereichs sind für andere Klientinnen und Klienten nicht einsehbar. Zugriff haben Sie und Lorena Lienhard als Beraterin.</p>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:22px 0 8px">Dienstleister und Datenübermittlung</div>
+      <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">Wir setzen folgende Dienstleister ein:</p>
+      <ul style="font-size:14px;line-height:1.9;color:var(--tx);margin:8px 0 0;padding-left:20px"><li><strong>Render</strong> – Hosting und Datenbank (Region Frankfurt, Betreiberin in den USA)</li><li><strong>Anthropic</strong> – KI-Verarbeitung Ihrer Eingaben (USA). Nach den API-Bedingungen von Anthropic werden Eingaben nicht zum Training von Modellen verwendet.</li><li><strong>AssemblyAI</strong> – Transkription hochgeladener Audio- und Videodateien (USA)</li><li><strong>Brevo</strong> – Versand von E-Mails der Plattform (EU/Frankreich)</li><li><strong>Stripe</strong> – Abwicklung von Zahlungen und Abonnementen</li><li><strong>Sentry</strong> – Überwachung technischer Fehler</li></ul>
+      <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:8px 0 0">Mehrere dieser Anbieter verarbeiten Daten ausserhalb der Schweiz und der EU, insbesondere in den USA. Für diese Übermittlungen nutzen wir die Verträge zur Auftragsverarbeitung mit Standardvertragsklauseln der Anbieter.</p>
+      <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:8px 0 0">Optional: Klientinnen und Klienten können in einzelnen Modulen ihr eigenes Klaviyo-Konto mit eigenem API-Schlüssel verbinden, um Newsletter an ihre eigenen Kundinnen und Kunden zu versenden. Der Schlüssel liegt im Browser der jeweiligen Person. Diese Verarbeitung liegt in der Verantwortung der Klientin bzw. des Klienten und läuft unabhängig von RhetorIQ.</p>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:22px 0 8px">Rechtsgrundlagen und Rollen</div>
+      <ul style="font-size:14px;line-height:1.9;color:var(--tx);margin:8px 0 0;padding-left:20px"><li>Vertragserfüllung: Konto, Plattform und Beratung</li><li>Berechtigtes Interesse: sicherer Betrieb, Fehleranalyse, Missbrauchsschutz</li><li>Einwilligung: der Hinweis auf die KI-Verarbeitung, den Sie beim Anlegen eines Klientenbereichs bestätigen</li></ul>
+      <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:8px 0 0">Geben Sie Personendaten Dritter ein, zum Beispiel von Kundinnen oder Mitarbeitenden, sind Sie dafür verantwortlich. RhetorIQ bearbeitet diese Daten in Ihrem Auftrag. Einen Vertrag zur Auftragsbearbeitung stellen wir auf Anfrage zur Verfügung.</p>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:22px 0 8px">Ihre Rechte</div>
+      <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">Sie haben jederzeit das Recht auf:</p>
+      <ul style="font-size:14px;line-height:1.9;color:var(--tx);margin:8px 0 0;padding-left:20px"><li><strong>Auskunft</strong> – welche Daten wir über Sie gespeichert haben</li><li><strong>Berichtigung</strong> – Korrektur unrichtiger Daten</li><li><strong>Löschung</strong> – Entfernung Ihrer Daten</li><li><strong>Datenherausgabe</strong> – Ihre Daten in einem gängigen Format</li><li><strong>Widerspruch</strong> – gegen bestimmte Verarbeitungen</li></ul>
+      <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:8px 0 0">Anfragen richten Sie an <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a>. Wir beantworten sie innert 30 Tagen. Sie können sich ausserdem beim Eidgenössischen Datenschutz- und Öffentlichkeitsbeauftragten (EDÖB, www.edoeb.admin.ch) beschweren.</p>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:22px 0 8px">Cookies, lokaler Speicher und Schriften</div>
+      <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">RhetorIQ setzt keine Analyse- und Werbe-Cookies ein. Für die Anmeldung speichert Ihr Browser ein Token im lokalen Speicher, ebenso Entwürfe und Einstellungen. Schriftarten (Google Fonts) und Programmbibliotheken laden wir von Google, jsDelivr und Cloudflare. Dabei wird Ihre IP-Adresse an diese Anbieter übermittelt.</p>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:22px 0 8px">Aufbewahrung</div>
+      <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">Kontodaten bewahren wir für die Dauer des Vertragsverhältnisses plus 10 Jahre auf (gesetzliche Aufbewahrungspflicht). Kommunikationsinhalte löschen wir nach der Kündigung auf Ihre Anfrage unverzüglich. Sie können einzelne Analysen, Personenprofile und Dokumente jederzeit selbst in der Plattform löschen.</p>
+      <div style="border-top:1px solid var(--bd);padding-top:20px;margin-top:24px;font-size:12px;color:var(--mu);line-height:1.7">Fragen zum Datenschutz? <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a></div>
       </div>
     </div>
 
     <!-- AGB -->
     <div class="page" id="page-agb">
-      <button class="back" onclick="goPage('home')">&#8592; Zurück</button>
+      <button class="back" onclick="legalBack()">&#8592; Zurück</button>
       <div class="page-title">Allgemeine Geschäftsbedingungen</div>
       <div style="max-width:620px;padding-bottom:40px">
 
@@ -1904,7 +1842,6 @@ input[type=text]:focus{border-color:var(--ac);background:#fff}
         <div onclick="goPage('videos');hideMore()" class="mm-row"><i class="ti ti-player-play"></i> <span id="mm-videos">Videos</span></div>
         <div onclick="goPage('pricing');setMN('');hideMore()" class="mm-row"><i class="ti ti-tag"></i> Preise</div>
         <div onclick="goPage('contact');setMN('');hideMore()" class="mm-row"><i class="ti ti-mail"></i> <span id="mm-contact">Contact</span></div>
-        <div onclick="goPage('datasec');setMN('');hideMore()" class="mm-row"><i class="ti ti-shield"></i> <span id="mm-datasec">Data Security</span></div>
         <div onclick="goPage('datenschutz');setMN('');hideMore()" class="mm-row"><i class="ti ti-file-description"></i> Datenschutz</div>
         <div onclick="goPage('agb');setMN('');hideMore()" class="mm-row"><i class="ti ti-license"></i> AGB</div>
         <div onclick="goPage('impressum');setMN('');hideMore()" class="mm-row"><i class="ti ti-info-circle"></i> Impressum</div>
@@ -2130,7 +2067,7 @@ let LANG=localStorage.getItem('riq-lang')||'de';
 const T={
   en:{
     nav_home:'Home',nav_modules:'Modules',nav_brand:'Brand',nav_people:'People',nav_hist:'History',nav_more:'More',
-    mm_context:'Memory',mm_clients:'Clients',mm_videos:'Videos',mm_contact:'Contact',mm_datasec:'Data Security',mm_signout:'Sign out',
+    mm_context:'Memory',mm_clients:'Clients',mm_videos:'Videos',mm_contact:'Contact',mm_signout:'Sign out',
     select_client_ph:'Select client',ob_title:'New Client Onboarding',ob_sub:'Upload all documents — AI sorts and saves them automatically',
     mn_clients_lbl:'Clients',stat_client:'Client',stat_people:'People',stat_analyses:'Analyses',
     router_title:'What would you like to do?',
@@ -2160,7 +2097,6 @@ const T={
     review_save:'Save & send to client',review_editing:'Editing…',review_save_only:'Save only',review_delete:'Delete',
     chat_greeting:'Hello — I am the RhetorIQ assistant. What can I help you with?',
     chat_ph:'Ask anything…',chat_send:'Send',
-    datasec_title:'Data Security & Privacy',
     // Pages
     people_title:'People Directory',people_sub:'Profiles are saved permanently and used as context in all modules.',people_add:'+ Add Person',people_empty:'No people yet. Add the CEO, board members, HR leads…',
     memory_title:'Company Memory',memory_sub:'Saved permanently. Injected as context into every analysis.',
@@ -2207,7 +2143,7 @@ const T={
   },
   de:{
     nav_home:'Start',nav_modules:'Module',nav_brand:'Marke',nav_people:'Personen',nav_hist:'Verlauf',nav_more:'Mehr',
-    mm_context:'Kontext',mm_clients:'Klienten',mm_videos:'Videos',mm_contact:'Kontakt',mm_datasec:'Datenschutz',mm_signout:'Abmelden',
+    mm_context:'Kontext',mm_clients:'Klienten',mm_videos:'Videos',mm_contact:'Kontakt',mm_signout:'Abmelden',
     select_client_ph:'Klient auswählen',ob_title:'Neuer Klient — Onboarding',ob_sub:'Alle Dokumente hochladen — KI sortiert und speichert sie automatisch',
     mn_clients_lbl:'Klienten',stat_client:'Klient',stat_people:'Personen',stat_analyses:'Analysen',
     router_title:'Was möchten Sie tun?',
@@ -2237,7 +2173,6 @@ const T={
     review_save:'Speichern & an Klient senden',review_editing:'Wird bearbeitet…',review_save_only:'Nur speichern',review_delete:'Löschen',
     chat_greeting:'Hallo — ich bin der RhetorIQ-Assistent. Wie kann ich Ihnen helfen?',
     chat_ph:'Stellen Sie eine Frage…',chat_send:'Senden',
-    datasec_title:'Datenschutz & Datensicherheit',
     // Pages
     people_title:'Personen-Verzeichnis',people_sub:'Profile werden dauerhaft gespeichert und als Kontext in alle Module eingebunden.',people_add:'+ Person hinzufügen',people_empty:'Noch keine Personen. Fügen Sie CEO, Vorstand, HR-Leads hinzu…',
     memory_title:'Unternehmensgedächtnis',memory_sub:'Dauerhaft gespeichert. Wird als Kontext in jede Analyse eingebunden.',
@@ -2334,7 +2269,7 @@ function applyLang(){
   s('stat-client-lbl',t.stat_client);s('stat-people-lbl',t.stat_people);s('stat-analyses-lbl',t.stat_analyses);
   s('client-select-ph',t.select_client_ph);
   s('mm-context',t.mm_context);s('mm-clients',t.mm_clients);s('mm-videos',t.mm_videos);
-  s('mm-contact',t.mm_contact);s('mm-datasec',t.mm_datasec);s('mm-signout',t.mm_signout);
+  s('mm-contact',t.mm_contact);s('mm-signout',t.mm_signout);
   s('router-title',t.router_title);s('router-sub',t.router_sub);s('rbtn-txt',t.router_go);
   const ri=document.getElementById('router-input');if(ri)ri.placeholder=t.router_ph;
   const hmt=document.getElementById('home-more-toggle-label');
@@ -2345,7 +2280,6 @@ function applyLang(){
   s('cbar-lbl',t.cbar_lbl);s('cbar-new',t.cbar_new);
   s('hdr-signout',t.hdr_signout);
   s('qa-heading',t.qa_heading);
-  s('datasec-page-title',t.datasec_title);
   const ci=document.getElementById('chat-input');if(ci)ci.placeholder=t.chat_ph;
   s('chat-send-btn',t.chat_send);
   document.querySelectorAll('.cpbtn').forEach(b=>b.textContent=t.btn_copy);
@@ -7936,6 +7870,21 @@ async function saveModPrompt(){
 // PRIVACY BADGE HTML
 function privBadge(){return '<div class="priv-badge">&#128274; Data not stored for AI training</div>';}
 
+function showLegal(name){
+  document.getElementById('login-screen')?.classList.add('hidden');
+  const app=document.getElementById('app'); if(app) app.style.display='flex';
+  goPage(name);
+}
+function legalBack(){
+  let tok=null; try{tok=localStorage.getItem('riq-token')}catch(e){}
+  if(!tok){location.href='/';return;}
+  goPage('home');
+}
+// Direktlink für die Datenschutzerklärung: https://rhetoriq.ch/?p=datenschutz
+(function(){
+  if(new URLSearchParams(window.location.search).get('p')!=='datenschutz')return;
+  showLegal('datenschutz');
+})();
 // ── SECURE ONBOARDING SETUP PAGE ─────────────────────────────
 // Shown when URL contains ?t=<token> — client sets their own password
 (async function checkSetupToken(){
