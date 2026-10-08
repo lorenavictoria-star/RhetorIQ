@@ -216,6 +216,7 @@ app.use(require('./middleware/readOnly').readOnlyGuard);
 // ── API Routes ────────────────────────────────────────────────
 app.use('/auth', require('./routes/auth'));
 app.use('/api/clients', require('./routes/clients'));
+app.use('/api/clients', require('./routes/clientStats'));
 app.use('/api/analyze', require('./routes/analyze'));
 app.use('/api/people', require('./routes/people'));
 app.use('/api/memory', require('./routes/memory'));
@@ -237,6 +238,7 @@ app.use('/api/inquiry', inquiries.publicRouter);
 app.use('/api/inquiries', inquiries.advisorRouter);
 app.use('/api/onboarding-drafts', require('./routes/onboardingDrafts'));
 app.use('/api/files', require('./routes/files'));
+app.use('/api/help-chat', require('./routes/helpChat'));
 
 // Manual report trigger (advisor only)
 const { requireAdvisor } = require('./middleware/auth');

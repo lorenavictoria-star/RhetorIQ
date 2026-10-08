@@ -20,7 +20,9 @@ test.before(async () => {
     ['/api/files', require('../routes/files')],
     ['/api/reviews', require('../routes/reviews')],
     ['/api/clients', require('../routes/clients')],
-    ['/api/advisor', require('../routes/viewAs')]
+    ['/api/advisor', require('../routes/viewAs')],
+    ['/api/clients', require('../routes/clientStats')],
+    ['/api/help-chat', require('../routes/helpChat')]
   ]);
 });
 test.after(async () => { await srv.close(); });
@@ -431,4 +433,66 @@ test('S8 Lese-Token läuft nach Passwortwechsel (tokenVersion) wie jedes Klient-
   const view = (await srv.call('POST', `/api/advisor/view-as/${cl.id}`, { token: A() })).body.token;
   await H.pool.query('UPDATE clients SET token_version = token_version + 1 WHERE id=$1', [cl.id]);
   assert.equal((await srv.call('GET', `/api/files?client_id=${cl.id}`, { token: view })).status, 401);
+});
+
+// ── S9 Hilfe-Chat ──────────────────────────────────────────
+test('S9 Hilfe-Chat: Antwort, rollenabhängiger Prompt, Frage nicht gespeichert, Rechte und Limits', async () => {
+  const cl = await H.addClient('Hilfe AG');
+  const post = (token, body) => srv.call('POST', '/api/help-chat', { token, body });
+  assert.equal((await post(null, { question: 'Hallo?' })).status, 401);
+  H.ai.reply = 'Klicken Sie auf "An Beraterin senden".';
+  H.ai.calls.length = 0;
+  const c = await post(H.clientToken(cl.id), { question: 'Wie sende ich einen Text?' });
+  assert.equal(c.status, 200);
+  assert.equal(c.body.answer, 'Klicken Sie auf "An Beraterin senden".');
+  assert.match(H.ai.calls[0].system, /Klientin oder Klient/);
+  assert.match(H.ai.calls[0].system, /Brand Voice/);
+  assert.equal(H.ai.calls[0].model, 'test-haiku');
+  const a = await post(A(), { question: 'Wo finde ich die Ablage?' });
+  assert.equal(a.status, 200);
+  assert.match(H.ai.calls[1].system, /Die Person ist die Beraterin/);
+  assert.equal((await post(A(), { question: '' })).status, 400);
+  assert.equal((await post(A(), { question: 'x'.repeat(601) })).status, 400);
+  assert.equal((await post(A(), { question: 'x'.repeat(600) })).status, 200);
+  // keine Speicherung: keine Tabelle mit der Frage
+  const tables = await H.pool.query(`SELECT table_name FROM information_schema.tables WHERE table_schema='public'`);
+  assert.ok(!tables.rows.some(t => /help|chat/i.test(t.table_name)));
+  H.ai.fail = true;
+  assert.equal((await post(A(), { question: 'Noch eine Frage' })).status, 502);
+  H.ai.fail = false;
+});
+
+test('S9 Hilfe-Chat: Rate-Limit 10 pro Minute und Nutzer', async () => {
+  const cl = await H.addClient('Limit AG');
+  const T = H.clientToken(cl.id);
+  H.ai.reply = 'ok';
+  let last;
+  for (let i = 0; i < 10; i++) last = await srv.call('POST', '/api/help-chat', { token: T, body: { question: 'Frage ' + i } });
+  assert.equal(last.status, 200);
+  assert.equal((await srv.call('POST', '/api/help-chat', { token: T, body: { question: 'elfte' } })).status, 429);
+  // anderer Nutzer ist nicht betroffen
+  assert.equal((await srv.call('POST', '/api/help-chat', { token: H.clientToken(cl.id + 1000), body: { question: 'x' } })).status, 401);
+});
+
+// ── S10 Häufigste Textarten ────────────────────────────────
+test('S10 top-modules: Top 3 der letzten 30 Tage, Rechte', async () => {
+  const cl = await H.addClient('Top AG');
+  const other = await H.addClient('Andere AG');
+  const ins = (cid, module, key, days) => H.pool.query(
+    `INSERT INTO analyses (client_id, module, feedback_key, created_at) VALUES ($1,$2,$3,$4)`,
+    [cid, module, key, new Date(Date.now() - days * 86400000)]);
+  for (let i = 0; i < 4; i++) await ins(cl.id, 'text-gen', 'text-gen-email', 2);
+  for (let i = 0; i < 3; i++) await ins(cl.id, 'review', null, 5);
+  for (let i = 0; i < 2; i++) await ins(cl.id, 'risk', null, 29);
+  await ins(cl.id, 'debrief', null, 1);
+  for (let i = 0; i < 9; i++) await ins(cl.id, 'sparring', null, 45); // zu alt
+  for (let i = 0; i < 9; i++) await ins(other.id, 'thread', null, 1);  // fremder Klient
+  const r = await srv.call('GET', `/api/clients/${cl.id}/top-modules`, { token: H.clientToken(cl.id) });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.body, [{ module: 'text-gen-email', count: 4 }, { module: 'review', count: 3 }, { module: 'risk', count: 2 }]);
+  assert.deepEqual((await srv.call('GET', `/api/clients/${cl.id}/top-modules`, { token: A() })).body, r.body);
+  assert.equal((await srv.call('GET', `/api/clients/${other.id}/top-modules`, { token: H.clientToken(cl.id) })).status, 403);
+  assert.equal((await srv.call('GET', `/api/clients/${cl.id}/top-modules`)).status, 401);
+  assert.equal((await srv.call('GET', '/api/clients/99999/top-modules', { token: A() })).status, 404);
+  assert.deepEqual((await srv.call('GET', `/api/clients/${H.clientToken ? (await H.addClient('Leer AG')).id : 0}/top-modules`, { token: A() })).body, []);
 });
