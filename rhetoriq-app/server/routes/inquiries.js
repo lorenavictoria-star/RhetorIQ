@@ -168,4 +168,19 @@ advisorRouter.post('/:id/archive', requireAdvisor, async (req, res) => {
   }
 });
 
+// Anfrage endgültig löschen (Name, E-Mail und Nachricht werden entfernt).
+advisorRouter.delete('/:id', requireAdvisor, async (req, res) => {
+  try {
+    await ensureTable();
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'Ungültige ID.' });
+    const r = await pool.query('DELETE FROM inquiries WHERE id=$1', [id]);
+    if (!r.rowCount) return res.status(404).json({ error: 'Anfrage nicht gefunden.' });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = { publicRouter, advisorRouter, ensureTable };

@@ -887,6 +887,8 @@ body:not(.adv) #rq-day{display:none}
 /* Grosse Schrift */
 html.rq-big{zoom:1.15}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* Doppelten Knopf entfernen: «Neuer Klient» steht schon auf der Kunden-Seite und im Onboarding */
+#cbar-new{display:none!important}
 </style>
 </head>
 <body>
@@ -6566,13 +6568,13 @@ async function loadInquiries(){
           <div><div class="cn">${safeText(q.company||q.name)}${q.company?' · '+safeText(q.name):''}</div>
           <div class="cm">${safeText(q.email)} · ${when}${q.ack_sent_at?' · Eingangsbestätigung gesendet':''}</div>
           ${q.message?`<div class="cm" style="margin-top:6px;max-width:640px">${safeText(q.message)}</div>`:''}</div>
-          ${done?`<div class="cm">Vorab-E-Mail gesendet (${q.anrede==='du'?'Du':'Sie'}, Termin ${safeText(q.workshop_date||'')})</div>`:`
+          ${done?`<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div class="cm">Vorab-E-Mail gesendet (${q.anrede==='du'?'Du':'Sie'}, Termin ${safeText(q.workshop_date||'')})</div><button class="add-btn" style="background:#f5f5f5;color:var(--tx);border:1.5px solid var(--bd)" onclick="deleteInquiry(${q.id})">Löschen</button></div>`:`
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <select class="inq-anrede" style="padding:8px;border:1.5px solid var(--bd);border-radius:8px"><option value="sie">Sie</option><option value="du">Du</option></select>
             <select class="inq-titel" style="padding:8px;border:1.5px solid var(--bd);border-radius:8px"><option value="">Anrede</option><option>Frau</option><option>Herr</option></select>
             <input class="inq-datum" placeholder="Termin, z. B. 14. Oktober 2026" style="padding:8px;border:1.5px solid var(--bd);border-radius:8px;min-width:200px">
             <button class="add-btn" onclick="sendVorab(${q.id},this)">Vorab-E-Mail senden</button>
-            <button class="add-btn" style="background:#f5f5f5;color:var(--tx);border:1.5px solid var(--bd)" onclick="archiveInquiry(${q.id})">Ablegen</button>
+            <button class="add-btn" style="background:#f5f5f5;color:var(--tx);border:1.5px solid var(--bd)" onclick="deleteInquiry(${q.id})">Löschen</button>
           </div>`}
         </div></div>`;
     }).join('');
@@ -6589,6 +6591,14 @@ async function sendVorab(id,btn){
     if(!r.ok)throw new Error(d.error||'Fehler');
     loadInquiries();
   }catch(e){alert('Senden nicht möglich: '+e.message);btn.disabled=false;}
+}
+async function deleteInquiry(id){
+  if(!confirm('Anfrage endgültig löschen? Name, E-Mail-Adresse und Nachricht werden entfernt.'))return;
+  try{
+    const r=await api('/api/inquiries/'+id,{method:'DELETE'});
+    if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error||'Fehler');}
+  }catch(e){return alert('Löschen nicht möglich: '+e.message);}
+  loadInquiries();
 }
 async function archiveInquiry(id){
   if(!confirm('Anfrage ablegen?'))return;

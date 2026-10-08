@@ -496,3 +496,17 @@ test('S10 top-modules: Top 3 der letzten 30 Tage, Rechte', async () => {
   assert.equal((await srv.call('GET', '/api/clients/99999/top-modules', { token: A() })).status, 404);
   assert.deepEqual((await srv.call('GET', `/api/clients/${H.clientToken ? (await H.addClient('Leer AG')).id : 0}/top-modules`, { token: A() })).body, []);
 });
+
+
+// ── Anfragen löschen ───────────────────────────────────────
+test('Anfrage löschen: nur Advisor, entfernt die Anfrage endgültig', async () => {
+  await require('../routes/inquiries').ensureTable();
+  const { rows } = await H.pool.query(`INSERT INTO inquiries (name, email) VALUES ('Zu Löschen','weg@test.ch') RETURNING id`);
+  const id = rows[0].id;
+  assert.equal((await srv.call('DELETE', `/api/inquiries/${id}`)).status, 401);
+  assert.equal((await srv.call('DELETE', `/api/inquiries/${id}`, { token: H.clientToken(1) })).status, 403);
+  assert.equal((await srv.call('DELETE', `/api/inquiries/${id}`, { token: A() })).status, 200);
+  assert.equal((await srv.call('DELETE', `/api/inquiries/${id}`, { token: A() })).status, 404);
+  const rest = await H.pool.query('SELECT 1 FROM inquiries WHERE id=$1', [id]);
+  assert.equal(rest.rows.length, 0);
+});
