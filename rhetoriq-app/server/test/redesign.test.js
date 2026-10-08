@@ -14,11 +14,13 @@ const A = () => H.advisorToken();
 test.before(async () => {
   await H.setupBase();
   srv = await H.startApp([
+    [null, require('../middleware/readOnly').readOnlyGuard],
     ['/api/inquiries', require('../routes/inquiries').advisorRouter],
     ['/api/onboarding-drafts', require('../routes/onboardingDrafts')],
     ['/api/files', require('../routes/files')],
     ['/api/reviews', require('../routes/reviews')],
-    ['/api/clients', require('../routes/clients')]
+    ['/api/clients', require('../routes/clients')],
+    ['/api/advisor', require('../routes/viewAs')]
   ]);
 });
 test.after(async () => { await srv.close(); });
@@ -374,4 +376,59 @@ test('S7 Regression: bestehendes POST /api/clients unverändert (Antwort, Willko
   assert.match(H.brevoMails[0].text, /48 Stunden gültig/);
   assert.equal((await srv.call('POST', '/api/clients', { token: A(), body: { name: 'X' } })).status, 400);
   assert.equal((await srv.call('POST', '/api/clients', { body: { name: 'X', privacyAcknowledged: true } })).status, 401);
+});
+
+// ── S8 Ansicht des Klienten (nur lesend) ───────────────────
+test('S8 view-as: Beraterin erhält 30-Min-Token mit viewAs/readOnly, Protokolleintrag', async () => {
+  const jwt = require('jsonwebtoken');
+  const cl = await H.addClient('Ansicht AG');
+  const url = `/api/advisor/view-as/${cl.id}`;
+  assert.equal((await srv.call('POST', url)).status, 401);
+  assert.equal((await srv.call('POST', url, { token: H.clientToken(cl.id) })).status, 403);
+  assert.equal((await srv.call('POST', '/api/advisor/view-as/99999', { token: A() })).status, 404);
+  const r = await srv.call('POST', url, { token: A() });
+  assert.equal(r.status, 200);
+  const p = jwt.verify(r.body.token, process.env.JWT_SECRET);
+  assert.equal(p.role, 'client');
+  assert.equal(p.clientId, cl.id);
+  assert.equal(p.viewAs, true);
+  assert.equal(p.readOnly, true);
+  assert.equal(p.exp - p.iat, 1800);
+  const log = await srv.call('GET', `/api/advisor/view-as-log/${cl.id}`, { token: A() });
+  assert.equal(log.status, 200);
+  assert.equal(log.body.length, 1);
+  assert.equal(log.body[0].advisor_id, 1);
+  assert.equal(log.body[0].client_id, cl.id);
+  assert.equal((await srv.call('GET', `/api/advisor/view-as-log/${cl.id}`)).status, 401);
+  assert.equal((await srv.call('GET', `/api/advisor/view-as-log/${cl.id}`, { token: H.clientToken(cl.id) })).status, 403);
+  // Das Lese-Token ist kein Beraterzugang
+  assert.equal((await srv.call('GET', `/api/advisor/view-as-log/${cl.id}`, { token: r.body.token })).status, 403);
+});
+
+test('S8 readOnly-Token darf nur lesen, normales Klient-Token darf weiterhin schreiben', async () => {
+  const cl = await H.addClient('Lesen AG');
+  const view = (await srv.call('POST', `/api/advisor/view-as/${cl.id}`, { token: A() })).body.token;
+  const normal = H.clientToken(cl.id);
+  const body = { clientId: cl.id, originalText: 'Text zur Prüfung' };
+  // lesen geht mit beiden
+  assert.equal((await srv.call('GET', '/api/reviews', { token: view })).status, 200);
+  assert.equal((await srv.call('GET', `/api/files?client_id=${cl.id}`, { token: view })).status, 200);
+  // schreiben: Ansicht 403, normales Token wie bisher
+  for (const [m, u] of [['POST', '/api/reviews'], ['PUT', '/api/reviews/1'], ['DELETE', '/api/reviews/1'], ['POST', '/api/clients']]) {
+    const r = await srv.call(m, u, { token: view, body });
+    assert.equal(r.status, 403, m + ' ' + u);
+    assert.equal(r.body.error, 'Nur Ansicht');
+  }
+  assert.equal((await srv.call('POST', '/api/reviews', { token: normal, body })).status, 200);
+  // Beraterin-Token bleibt unberührt (z. B. POST mit Advisor-Token)
+  assert.equal((await srv.call('POST', '/api/reviews', { token: A(), body })).status, 200);
+  // ungültiges Token wird nicht vom Wächter, sondern wie bisher von den Routen abgelehnt
+  assert.equal((await srv.call('POST', '/api/clients', { token: 'kaputt', body: { name: 'X' } })).status, 401);
+});
+
+test('S8 Lese-Token läuft nach Passwortwechsel (tokenVersion) wie jedes Klient-Token ab', async () => {
+  const cl = await H.addClient('Version AG');
+  const view = (await srv.call('POST', `/api/advisor/view-as/${cl.id}`, { token: A() })).body.token;
+  await H.pool.query('UPDATE clients SET token_version = token_version + 1 WHERE id=$1', [cl.id]);
+  assert.equal((await srv.call('GET', `/api/files?client_id=${cl.id}`, { token: view })).status, 401);
 });

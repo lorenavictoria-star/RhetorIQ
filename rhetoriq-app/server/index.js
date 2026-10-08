@@ -210,6 +210,9 @@ const userAnalyzeLimit = rateLimit({
 });
 app.use('/api/analyze', userAnalyzeLimit);
 
+// Ansicht des Klienten: Tokens mit readOnly:true dürfen nur lesen (alle anderen Tokens unverändert).
+app.use(require('./middleware/readOnly').readOnlyGuard);
+
 // ── API Routes ────────────────────────────────────────────────
 app.use('/auth', require('./routes/auth'));
 app.use('/api/clients', require('./routes/clients'));
@@ -221,6 +224,7 @@ app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/klaviyo', require('./routes/klaviyo'));
 app.use('/api/advisor', require('./routes/advisor'));
+app.use('/api/advisor', require('./routes/viewAs'));
 app.use('/api/fetch-website', require('./routes/fetchWebsite'));
 app.use('/api/transcribe', require('./routes/transcribe'));
 app.use('/api/onboard', require('./routes/onboard'));
