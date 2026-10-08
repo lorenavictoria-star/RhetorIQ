@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
+if (!process.env.DATABASE_URL) { console.error('DATABASE_URL fehlt. Aufruf: DATABASE_URL=... node '+__filename.split('/').pop()); process.exit(1); }
 const pool = new Pool({
-  connectionString: 'postgresql://rhetoriq_db_user:qXv6yidawqN18C7HuE7pb7ajhygnkJHQ@dpg-d91rg19kh4rs73arevpg-a.oregon-postgres.render.com/rhetoriq_db',
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 const ADVISOR_ID = 1;
