@@ -16,7 +16,8 @@ test.before(async () => {
   srv = await H.startApp([
     ['/api/inquiries', require('../routes/inquiries').advisorRouter],
     ['/api/onboarding-drafts', require('../routes/onboardingDrafts')],
-    ['/api/files', require('../routes/files')]
+    ['/api/files', require('../routes/files')],
+    ['/api/reviews', require('../routes/reviews')]
   ]);
 });
 test.after(async () => { await srv.close(); });
@@ -210,4 +211,39 @@ test('S4 Ablage: Grenzen und Rechte', async () => {
   assert.equal((await srv.call('DELETE', `/api/files/${mine.body.id}`, { token: CT })).status, 403);
   assert.equal((await srv.call('GET', '/api/files')).status, 401);
   assert.equal((await srv.call('GET', '/api/files', { token: A() })).status, 400);
+});
+
+// ── S5 Entwurf sichern, Kopie in gesendet ──────────────────
+test('S5 save-draft: speichert Datei im Ordner entwuerfe, Rechte', async () => {
+  const cl = await H.addClient('Entwurf AG');
+  const rv = await H.pool.query(`INSERT INTO review_requests (client_id, module_label, original_text) VALUES ($1,'Text Generator','Original') RETURNING id`, [cl.id]);
+  const url = `/api/reviews/${rv.rows[0].id}/save-draft`;
+  assert.equal((await srv.call('POST', url, { body: { text: 'x' } })).status, 401);
+  assert.equal((await srv.call('POST', url, { token: H.clientToken(cl.id), body: { text: 'x' } })).status, 403);
+  assert.equal((await srv.call('POST', url, { token: A(), body: { text: '  ' } })).status, 400);
+  assert.equal((await srv.call('POST', '/api/reviews/9999/save-draft', { token: A(), body: { text: 'x' } })).status, 404);
+  const r = await srv.call('POST', url, { token: A(), body: { text: 'Mein Entwurf' } });
+  assert.equal(r.status, 201);
+  assert.equal(r.body.folder, 'entwuerfe');
+  assert.equal(r.body.client_id, cl.id);
+  assert.match(r.body.name, /^Text Generator · \d{2}\.\d{2}\.\d{4}\.txt$/);
+  const dl = await srv.call('GET', `/api/files/${r.body.id}/download`, { token: A(), raw: true });
+  assert.equal(await dl.text(), 'Mein Entwurf');
+});
+
+test('S5 Senden an Klienten legt Kopie in gesendet ab, Altverhalten bleibt', async () => {
+  const cl = await H.addClient('Gesendet AG');
+  const rv = await H.pool.query(`INSERT INTO review_requests (client_id, module_label, original_text) VALUES ($1,'Feedback Writer','Original') RETURNING id`, [cl.id]);
+  const id = rv.rows[0].id;
+  const entwurf = await srv.call('PUT', `/api/reviews/${id}`, { token: A(), body: { editedText: 'Nur Entwurf', send: false } });
+  assert.equal(entwurf.body.status, 'edited');
+  assert.equal((await H.pool.query(`SELECT 1 FROM client_files WHERE client_id=$1 AND folder='gesendet'`, [cl.id])).rows.length, 0);
+  const sent = await srv.call('PUT', `/api/reviews/${id}`, { token: A(), body: { editedText: 'Finaler Text' } });
+  assert.equal(sent.status, 200);
+  assert.equal(sent.body.status, 'approved');
+  await new Promise(r => setTimeout(r, 100));
+  const f = await H.pool.query(`SELECT name, data FROM client_files WHERE client_id=$1 AND folder='gesendet'`, [cl.id]);
+  assert.equal(f.rows.length, 1);
+  assert.equal(f.rows[0].data.toString(), 'Finaler Text');
+  assert.ok(H.mails.some(m => m.kind === 'review-response'));
 });

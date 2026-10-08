@@ -3,6 +3,26 @@ const router = express.Router();
 const { pool } = require('../db');
 const jwt = require('jsonwebtoken');
 const { queueEmail } = require('../lib/emailOutbox');
+const { requireAdvisor } = require('../middleware/auth');
+const { ensureSchema } = require('../lib/schemaRedesign');
+const { saveFile } = require('../lib/fileStore');
+const { entwurfName } = require('../lib/onboardingMails');
+
+const heute = () => new Date().toLocaleDateString('de-CH', { timeZone: 'Europe/Zurich', day: '2-digit', month: '2-digit', year: 'numeric' });
+
+// Legt den an den Klienten gesendeten Text zusätzlich im Ordner 'gesendet' ab. Fehler werden nur geloggt.
+async function storeSentCopy(review, text) {
+  try {
+    if (!review.client_id) return;
+    await ensureSchema();
+    await saveFile({
+      clientId: review.client_id, folder: 'gesendet', mime: 'text/plain; charset=utf-8',
+      name: entwurfName(review.module_label, heute()), buffer: Buffer.from(String(text), 'utf8')
+    });
+  } catch (e) {
+    console.error('[reviews] storing sent copy failed:', e.message);
+  }
+}
 
 // The advisor now finishes reviews from inside the per-client Workspace
 // (rather than always jumping into the client's own module UI), so "An
@@ -166,8 +186,35 @@ router.put('/:id', auth, async (req, res) => {
       });
       notifyClientOfReviewedText(rows[0].client_id, rows[0].module_label, editedText)
         .catch(e => console.error('[reviews] notify failed:', e.message));
+      storeSentCopy(rows[0], editedText);
     }
     res.json(rows[0]);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/reviews/:id/save-draft — advisor stores the given text as a file in the
+// client's 'entwuerfe' folder ("<Modul> · <Datum>.txt"). Does not change the review itself.
+router.post('/:id/save-draft', requireAdvisor, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'Ungültige ID.' });
+    const text = typeof req.body?.text === 'string' ? req.body.text : '';
+    if (!text.trim()) return res.status(400).json({ error: 'Kein Text übergeben.' });
+    if (text.length > 200000) return res.status(400).json({ error: 'Text ist zu lang.' });
+    const { rows } = await pool.query('SELECT id, client_id, module_label FROM review_requests WHERE id=$1', [id]);
+    const rv = rows[0];
+    if (!rv) return res.status(404).json({ error: 'Not found' });
+    if (!rv.client_id) return res.status(400).json({ error: 'Diese Anfrage gehört zu keinem Klienten.' });
+    await ensureSchema();
+    const label = String(req.body.moduleLabel || rv.module_label || '').trim().slice(0, 80);
+    const file = await saveFile({
+      clientId: rv.client_id, folder: 'entwuerfe', mime: 'text/plain; charset=utf-8',
+      name: entwurfName(label, heute()), buffer: Buffer.from(text, 'utf8')
+    });
+    res.status(201).json(file);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
