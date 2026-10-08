@@ -88,8 +88,27 @@ Antworte NUR mit gültigem JSON: [{"category":"TON|STRUKTUR|FAKTEN|FORMAT|SONSTI
   return parseObservations(resp && resp.text);
 }
 
+// Ergebnis der letzten Auswertungen (zehn Minuten), damit die Oberfläche nach dem Senden nachfragen kann
+const results = new Map();
+function rememberResult(reviewId, r) {
+  results.set(Number(reviewId), { ...r, at: Date.now() });
+  for (const [k, v] of results) if (Date.now() - v.at > 10 * 60 * 1000) results.delete(k);
+}
+function getResult(reviewId) { return results.get(Number(reviewId)) || null; }
+
 // Wertet eine gesendete Freigabe aus (höchstens einmal je Freigabe).
 async function learnFromReview(reviewId) {
+  try {
+    const r = await learnFromReviewInner(reviewId);
+    rememberResult(reviewId, { done: true, created: (r && r.created) || 0, merged: (r && r.merged) || 0 });
+    return r;
+  } catch (e) {
+    rememberResult(reviewId, { done: true, created: 0, merged: 0, failed: true });
+    throw e;
+  }
+}
+
+async function learnFromReviewInner(reviewId) {
   await ensureSchema();
   const { rows } = await pool.query('SELECT * FROM review_requests WHERE id=$1', [reviewId]);
   const rv = rows[0];
@@ -130,4 +149,4 @@ async function learnFromReview(reviewId) {
   return { created, merged };
 }
 
-module.exports = { learnFromReview, learnKeyFor, changedShare, similar, parseObservations, CATEGORIES };
+module.exports = { learnFromReview, getResult, learnKeyFor, changedShare, similar, parseObservations, CATEGORIES };

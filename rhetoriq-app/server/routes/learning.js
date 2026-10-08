@@ -2,7 +2,7 @@ const express = require('express');
 const { pool } = require('../db');
 const { requireAdvisor } = require('../middleware/auth');
 const { ensureSchema } = require('../lib/schemaRedesign');
-const { CATEGORIES } = require('../lib/learnFromCorrections');
+const { CATEGORIES, getResult } = require('../lib/learnFromCorrections');
 
 // Lernvorschläge aus den Korrekturen der Beraterin.
 //   GET  /api/learning?client_id=&status=offen   Liste (nach Häufigkeit)
@@ -28,6 +28,26 @@ router.get('/', requireAdvisor, async (req, res) => {
        FROM learning_suggestions ls JOIN clients c ON c.id = ls.client_id
        WHERE ${where} ORDER BY ls.occurrences DESC, ls.updated_at DESC LIMIT 100`, params);
     res.json(rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Nach dem Senden einer Freigabe fragt die Oberfläche hier nach, ob die Auswertung fertig ist und etwas erkannt hat.
+router.get('/result/:reviewId', requireAdvisor, async (req, res) => {
+  try {
+    await ensureSchema();
+    const id = parseInt(req.params.reviewId, 10);
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'Ungültige ID.' });
+    const { rows } = await pool.query(
+      `SELECT rr.client_id, rr.learned_at FROM review_requests rr JOIN clients c ON c.id = rr.client_id WHERE rr.id=$1 AND c.advisor_id=$2`,
+      [id, req.user.id]);
+    if (!rows[0]) return res.status(404).json({ error: 'Freigabe nicht gefunden.' });
+    const mem = getResult(id);
+    const done = !!(mem && mem.done) || !!rows[0].learned_at;
+    const { rows: open } = await pool.query(`SELECT COUNT(*)::int AS n FROM learning_suggestions WHERE client_id=$1 AND status='offen'`, [rows[0].client_id]);
+    res.json({ done, created: mem ? mem.created : 0, merged: mem ? mem.merged : 0, open: open[0].n, client_id: rows[0].client_id });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });

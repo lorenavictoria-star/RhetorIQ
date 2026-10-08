@@ -728,7 +728,16 @@ test('Lernen aus Korrekturen: Vorschlag entsteht, zählt mit, wird übernommen o
     }
     return c.body.id;
   };
-  await send();
+  const rid1 = await send();
+  // Die Oberfläche fragt nach: fertig, ein neuer Vorschlag
+  const res1 = await srv.call('GET', `/api/learning/result/${rid1}`, { token: A() });
+  assert.equal(res1.status, 200);
+  assert.equal(res1.body.done, true);
+  assert.equal(res1.body.created, 1);
+  assert.equal(res1.body.open, 1);
+  assert.equal(res1.body.client_id, cl.id);
+  assert.equal((await srv.call('GET', `/api/learning/result/${rid1}`, { token: T })).status, 403);
+  assert.equal((await srv.call('GET', '/api/learning/result/99999', { token: A() })).status, 404);
   const list1 = await srv.call('GET', `/api/learning?client_id=${cl.id}`, { token: A() });
   assert.equal(list1.status, 200);
   assert.equal(list1.body.length, 1);

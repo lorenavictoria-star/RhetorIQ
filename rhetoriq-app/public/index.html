@@ -9601,5 +9601,68 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
   });
 })();
 </script>
+<script id="rq-learn-nudge-js">
+// ═══ Nach dem Senden einer Freigabe: Hinweis auf neue Lernvorschläge, direkt zum Bestätigen ═══
+// Die Plattform wertet deine Korrektur im Hintergrund aus. Sobald sie fertig ist und etwas erkannt hat,
+// erscheint oben ein Hinweis mit «Jetzt prüfen», der dich in den Workspace des Klienten, Reiter Brand Voice, führt.
+(function(){
+  var origApi=window.api;
+  if(typeof origApi!=='function')return;
+  function reviewClientId(id){
+    var lists=[typeof _wsReviews!=='undefined'?_wsReviews:[],window._advisorReviews||[]];
+    for(var i=0;i<lists.length;i++){var r=(lists[i]||[]).filter(function(x){return x.id==id;})[0];if(r&&r.client_id)return r.client_id;}
+    return null;
+  }
+  window.api=async function(path,o){
+    var rid=null,cid=null;
+    try{
+      var m=/^\/api\/reviews\/(\d+)$/.exec(path);
+      if(m&&o&&o.method==='PUT'&&JSON.parse(o.body||'{}').send===true){rid=m[1];cid=reviewClientId(rid);}
+    }catch(e){}
+    var res=await origApi.apply(this,arguments);
+    if(rid&&res&&res.ok)watch(rid,cid);
+    return res;
+  };
+  async function watch(rid,cid){
+    for(var i=0;i<12;i++){
+      await new Promise(function(r){setTimeout(r,2000);});
+      try{
+        var r=await origApi('/api/learning/result/'+rid);
+        if(!r.ok)return;
+        var d=await r.json();
+        if(!d.done)continue;
+        if((d.created||0)+(d.merged||0)>0)banner(d,cid||d.client_id);
+        return;
+      }catch(e){return;}
+    }
+  }
+  function banner(d,cid){
+    var old=document.getElementById('rq-nudge');if(old)old.remove();
+    var name=((typeof clients!=='undefined'?clients:[]).filter(function(c){return c.id==cid;})[0]||{}).name||'diesem Klienten';
+    var text=d.created>0
+      ?'Die KI hat in deiner Korrektur '+(d.created===1?'ein neues Muster':d.created+' neue Muster')+' für '+name+' erkannt.'
+      :'Eine Änderung, die du schon früher gemacht hast, hat sich bei '+name+' bestätigt.';
+    var b=document.createElement('div');b.id='rq-nudge';
+    b.setAttribute('role','status');
+    b.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:20000;background:#fff;border:1px solid var(--ac);padding:12px 16px;max-width:min(560px,calc(100vw - 24px));display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:14px;line-height:1.5';
+    b.innerHTML='<span><b style="font-weight:600;color:var(--ac)">✓ Gesendet.</b> '+text+'</span>'
+      +'<span style="display:flex;gap:8px"><button type="button" class="runbtn" id="rq-nudge-go">Jetzt prüfen</button><button type="button" class="obtn" id="rq-nudge-x">Später</button></span>';
+    document.body.appendChild(b);
+    document.getElementById('rq-nudge-x').onclick=function(){b.remove();};
+    document.getElementById('rq-nudge-go').onclick=function(){b.remove();goVoice(cid);};
+    setTimeout(function(){if(b.parentNode)b.remove();},60000);
+  }
+  async function goVoice(cid){
+    try{
+      var ov=document.getElementById('ws-ov');
+      var visible=ov&&getComputedStyle(ov).display!=='none'&&ov.classList.contains('show');
+      var same=(typeof _wsClientId!=='undefined')&&_wsClientId==cid;
+      if(!(visible&&same))await openWorkspace(cid,true);
+      wsSwitchTab('voice');
+      setTimeout(function(){var el=document.getElementById('rq-learn');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});},700);
+    }catch(e){}
+  }
+})();
+</script>
 </body>
 </html>
