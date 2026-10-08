@@ -832,3 +832,26 @@ test('Zweiter Durchgang: Zwischenspeicher-Markierungen im erlaubten Rahmen, Prom
   delete process.env.DRAFT_MODEL;
   assert.ok(String(std).includes('sonnet') && String(gunstig).includes('haiku'));
 });
+
+// ── Gelerntes Feedback erreicht den Auftrag (Schlüssel je Textart) ─────────
+test('Gelerntes Feedback: Textart-Schlüssel wird gelesen, das Genauere gewinnt, andere Textarten bleiben draussen', async () => {
+  await H.pool.query(`CREATE TABLE client_feedback_learnings (id SERIAL PRIMARY KEY, client_id INTEGER, module_key TEXT NOT NULL, category TEXT NOT NULL, summary TEXT NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(client_id, module_key, category))`).catch(() => {});
+  const { getFeedbackLearningsBlock } = require('../routes/analyze')._internal;
+  const cl = await H.addClient('Schluessel AG');
+  await H.pool.query(`INSERT INTO client_feedback_learnings (client_id, module_key, category, summary) VALUES
+    ($1,'text-gen','TON','ALLGEMEIN warm'),
+    ($1,'text-gen-email','TON','EMAIL knapp und direkt'),
+    ($1,'text-gen-email','FORMAT','EMAIL ohne Aufzählung'),
+    ($1,'text-gen-linkedin','TON','LINKEDIN locker')`, [cl.id]);
+  const email = await getFeedbackLearningsBlock(cl.id, ['text-gen', 'text-gen-email']);
+  assert.ok(email.includes('EMAIL knapp und direkt'), 'die Vorliebe der Textart kommt an');
+  assert.ok(email.includes('EMAIL ohne Aufzählung'));
+  assert.ok(!email.includes('ALLGEMEIN warm'), 'bei gleicher Kategorie gewinnt die genauere Angabe');
+  assert.ok(!email.includes('LINKEDIN'), 'andere Textarten bleiben draussen');
+  const nurAllgemein = await getFeedbackLearningsBlock(cl.id, ['text-gen']);
+  assert.ok(nurAllgemein.includes('ALLGEMEIN warm') && !nurAllgemein.includes('EMAIL'));
+  const andere = await getFeedbackLearningsBlock(cl.id, 'text-gen-linkedin');
+  assert.ok(andere.includes('LINKEDIN locker'));
+  assert.equal(await getFeedbackLearningsBlock(cl.id, ['rp']), '');
+  assert.equal(await getFeedbackLearningsBlock(cl.id, []), '');
+});

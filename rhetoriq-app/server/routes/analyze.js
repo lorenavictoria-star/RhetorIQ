@@ -1562,11 +1562,19 @@ async function consolidateFeedback(clientId, moduleKey, rating, note) {
     [clientId, moduleKey, category, rating, note]
   );
 }
-async function getFeedbackLearningsBlock(clientId, moduleKey) {
-  const { rows } = await pool.query(
-    'SELECT category, summary FROM client_feedback_learnings WHERE client_id=$1 AND module_key=$2 ORDER BY category',
-    [clientId, moduleKey]
+// Gelerntes Feedback wird je Textart gespeichert (zum Beispiel «text-gen-email», siehe consolidateFeedback), beim Lesen
+// muss derselbe Schlüssel verwendet werden. moduleKeys: ein Schlüssel oder eine Liste vom Allgemeinen zum Genauen
+// (zum Beispiel ['text-gen', 'text-gen-email']). Wo mehrere etwas zur selben Kategorie sagen, gewinnt der genauere.
+async function getFeedbackLearningsBlock(clientId, moduleKeys) {
+  const keys = (Array.isArray(moduleKeys) ? moduleKeys : [moduleKeys]).filter(Boolean);
+  if (!keys.length) return '';
+  const { rows: all } = await pool.query(
+    'SELECT module_key, category, summary FROM client_feedback_learnings WHERE client_id=$1 AND module_key = ANY($2)',
+    [clientId, keys]
   );
+  const byCat = new Map();
+  keys.forEach(k => all.filter(r => r.module_key === k).forEach(r => byCat.set(r.category, r)));
+  const rows = [...byCat.values()].sort((a, b) => String(a.category).localeCompare(String(b.category)));
   if (!rows.length) return '';
   return '\n\nGELERNTE PRÄFERENZEN DIESES KLIENTEN FÜR DIESES MODUL (aus früherem Feedback, kategorisiert und laufend verfeinert):\n'
     + rows.map(r => `- ${r.category}: ${r.summary}`).join('\n');
@@ -1690,7 +1698,7 @@ router.post('/', requireAuth, async (req, res) => {
       if (combined) {
         restDynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(combined);
       }
-      restDynamicSystem += await getFeedbackLearningsBlock(resolvedClientId, module);
+      restDynamicSystem += await getFeedbackLearningsBlock(resolvedClientId, instructionsKey && instructionsKey !== module ? [module, instructionsKey] : [module]);
     }
 
     // Resolve advisor + industry early (needed for both brand voice and examples)
@@ -1916,7 +1924,7 @@ router.post('/stream', requireAuth, async (req, res) => {
       const combined = customRows.map(r => r.instructions).filter(Boolean).join('\n');
       if (combined)
         restDynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(combined);
-      restDynamicSystem += await getFeedbackLearningsBlock(resolvedClientId, module);
+      restDynamicSystem += await getFeedbackLearningsBlock(resolvedClientId, instructionsKey && instructionsKey !== module ? [module, instructionsKey] : [module]);
     }
     let clientIndustry = null;
     let hasBrandVoice = false;
@@ -2552,7 +2560,7 @@ router.post('/:id/rate', requireAuth, async (req, res) => {
 
 // Exposed for tests only — doesn't change Express behavior, since routers are
 // callable objects and consumers only ever use `require(...)` as the router.
-router._internal = { sanitizeForPrompt, capText, PROMPTS, MODULE_MAX_TOKENS, HAIKU_MODULES, GLOBAL_STYLE_RULES, checkQuota, tuneCache, draftUserContent, revisionUserContent, buildRevisionPrompt, draftModelFor };
+router._internal = { sanitizeForPrompt, capText, PROMPTS, MODULE_MAX_TOKENS, HAIKU_MODULES, GLOBAL_STYLE_RULES, checkQuota, getFeedbackLearningsBlock, tuneCache, draftUserContent, revisionUserContent, buildRevisionPrompt, draftModelFor };
 
 module.exports = router;
 module.exports.useTwoPass = useTwoPass;
