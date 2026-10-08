@@ -889,6 +889,12 @@ html.rq-big{zoom:1.15}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 /* Doppelten Knopf entfernen: «Neuer Klient» steht schon auf der Kunden-Seite und im Onboarding */
 #cbar-new{display:none!important}
+
+/* Zurück-Knopf */
+.rq-backbar{position:sticky;top:0;z-index:6;background:var(--bg);padding:10px 28px 0;max-width:1400px;margin:0 auto}
+.rq-backbar button{background:none;border:none;color:var(--ac);font-size:14px;font-weight:600;cursor:pointer;min-height:44px;padding:0 4px;font-family:var(--sans)}
+.rq-backbar button:hover{text-decoration:underline}
+@media(max-width:700px){.rq-backbar{padding:8px 16px 0}}
 </style>
 </head>
 <body>
@@ -1560,8 +1566,9 @@ html.rq-big{zoom:1.15}
           <input type="file" id="mem-upload-file" accept=".txt,.pdf,.docx" multiple style="display:none" onchange="handleMemUpload(this)">
           <button type="button" class="obtn" onclick="document.getElementById('mem-upload-file').click()">⇧ Datei hochladen</button>
         </div>
-        <div style="font-size:11px;color:var(--mu);margin-top:6px">Wird zum gewählten Referenz-Typ hinzugefügt — jederzeit nutzbar, nicht nur beim Onboarding.</div>
+        <div style="font-size:11px;color:var(--mu);margin-top:6px">Mit «Automatisch erkennen» schlägt die KI vor, wohin die Datei gehört. Du bestätigst, bevor etwas gespeichert wird. Du kannst auch selbst einen Typ wählen.</div>
         <div id="mem-upload-status" style="font-size:11px;color:var(--dm);margin-top:4px"></div>
+        <div id="mem-upload-confirm" style="margin-top:12px"></div>
       </div>
       <div id="memory-list"><div class="empty"><div class="ei">&#129504;</div><div id="memory-empty">No memory saved yet.</div></div></div>
     </div>
@@ -4134,32 +4141,88 @@ const MEM_REF_TYPES=[
 function renderMemUploadTypes(){
   const sel=document.getElementById('mem-upload-type');
   if(!sel)return;
-  sel.innerHTML=MEM_REF_TYPES.map(r=>`<option value="${r.type}">${r.label}</option>`).join('');
+  sel.innerHTML='<option value="">Automatisch erkennen (empfohlen)</option>'+MEM_REF_TYPES.map(r=>`<option value="${r.type}">${r.label}</option>`).join('');
 }
+let _memPending=[];
 async function handleMemUpload(input){
   if(!clientId){alert('Bitte zuerst einen Klienten auswählen.');return;}
   const type=document.getElementById('mem-upload-type')?.value;
   const status=document.getElementById('mem-upload-status');
   if(status)status.textContent='Lese Dateien…';
-  let combined='';
+  const items=[];
   for(const file of Array.from(input.files)){
     try{
       const text=await extractText(file);
-      combined+=(combined?'\n---\n':'')+text;
+      if(text&&text.trim())items.push({name:file.name,text});
     }catch(e){alert('Konnte '+file.name+' nicht lesen: '+e.message);}
   }
   input.value='';
-  if(!combined){if(status)status.textContent='';return;}
+  if(!items.length){if(status)status.textContent='';return;}
+  if(type){
+    // Typ selbst gewählt: wie bisher direkt ablegen
+    await memSaveItems(items.map(i=>({...i,type})));
+    return;
+  }
+  // Automatisch: die KI schlägt je Datei einen Typ vor, die Person bestätigt.
+  if(status)status.textContent='Die KI prüft, wohin die Dateien gehören …';
+  for(const it of items){
+    try{
+      const r=await api('/api/memory-suggest',{method:'POST',body:JSON.stringify({filename:it.name,text:it.text})});
+      const d=await r.json();
+      it.type=(r.ok&&d.type)?d.type:'';
+      it.summary=d.summary||'';
+      it.confidence=Number(d.confidence)||0;
+    }catch{it.type='';it.summary='';it.confidence=0;}
+  }
+  _memPending=items;
+  if(status)status.textContent='';
+  memRenderConfirm();
+}
+function memRenderConfirm(){
+  const box=document.getElementById('mem-upload-confirm');
+  if(!box)return;
+  if(!_memPending.length){box.innerHTML='';return;}
+  const opts=sel=>(sel?'':'<option value="">Bitte wählen …</option>')+MEM_REF_TYPES.map(r=>`<option value="${r.type}"${r.type===sel?' selected':''}>${r.label}</option>`).join('');
+  box.innerHTML=`<div style="border:1px solid var(--ac);padding:14px">
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px">Bitte bestätigen: Wohin gehören diese Dateien?</div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:10px">Die KI hat einen Vorschlag gemacht. Ändere ihn, falls er nicht stimmt. Gespeichert wird erst nach deiner Bestätigung.</div>
+    ${_memPending.map((it,i)=>`<div style="padding:10px 0;border-top:1px solid var(--bd)">
+      <div style="font-size:13px"><b style="font-weight:600">${safeText(it.name)}</b>${it.summary?' · '+safeText(it.summary):''}</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px">
+        <span style="font-size:12px;color:var(--mu)">${it.type?(it.confidence<0.6?'Die KI ist unsicher, sie meint:':'Die KI meint:'):'Die KI konnte es nicht zuordnen. Bitte wählen:'}</span>
+        <select onchange="_memPending[${i}].type=this.value" style="flex:1;min-width:200px">${opts(it.type)}</select>
+        <button type="button" class="obtn" onclick="memDropPending(${i})">Verwerfen</button>
+      </div></div>`).join('')}
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button type="button" class="runbtn" onclick="memConfirmUpload()">Bestätigen und ablegen</button>
+      <button type="button" class="obtn" onclick="memCancelUpload()">Alles abbrechen</button>
+    </div></div>`;
+}
+function memDropPending(i){_memPending.splice(i,1);memRenderConfirm();}
+function memCancelUpload(){_memPending=[];memRenderConfirm();}
+async function memConfirmUpload(){
+  if(_memPending.some(it=>!it.type)){alert('Bitte für jede Datei einen Typ wählen oder die Datei verwerfen.');return;}
+  const items=_memPending.slice();
+  _memPending=[];memRenderConfirm();
+  await memSaveItems(items);
+}
+// Legt Dateien bei ihrem Typ ab. Mehrere Dateien desselben Typs werden zusammengefasst und hängen
+// an den bestehenden Inhalt an (ein zweites Dokument soll das erste nicht überschreiben).
+async function memSaveItems(items){
+  const status=document.getElementById('mem-upload-status');
+  const byType={};
+  items.forEach(it=>{(byType[it.type]=byType[it.type]||[]).push(it.text);});
   try{
-    // Append to any existing content under this reference type rather than
-    // overwriting it — uploading a second document later shouldn't erase
-    // the first one.
-    const existing=memory.find(m=>m.memory_type===type);
-    const merged=existing&&existing.content?existing.content+'\n---\n'+combined:combined;
-    await api('/api/memory/'+clientId+'/'+type,{method:'PUT',body:JSON.stringify({content:merged})});
+    for(const [type,texts] of Object.entries(byType)){
+      const combined=texts.join('\n---\n');
+      const existing=memory.find(m=>m.memory_type===type);
+      const merged=existing&&existing.content?existing.content+'\n---\n'+combined:combined;
+      const r=await api('/api/memory/'+clientId+'/'+type,{method:'PUT',body:JSON.stringify({content:merged})});
+      if(!r.ok)throw new Error('save');
+    }
     await loadMemory();renderMemory();
-    if(status)status.textContent='✓ Gespeichert.';
-    setTimeout(()=>{if(status)status.textContent='';},2500);
+    if(status)status.textContent='✓ '+items.length+(items.length===1?' Datei':' Dateien')+' abgelegt.';
+    setTimeout(()=>{if(status)status.textContent='';},3500);
   }catch(e){if(status)status.textContent='Fehler beim Speichern.';}
 }
 function renderMemory(){
@@ -9349,6 +9412,73 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     if(t&&!t.closest('#rq-vband')){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();rqToast('Nur lesen: Diese Aktion ist in der Ansicht des Klienten gesperrt.');}
   },true);
   document.querySelectorAll('textarea,input[type=file]').forEach(function(x){});
+})();
+</script>
+<script id="rq-back-js">
+// ═══ Zurück-Knopf auf allen Seiten ═══
+// Merkt sich die zuletzt besuchten Seiten. «Zurück» geht eine Seite zurück. Die Zurück-Taste des Browsers
+// und die Wischgeste am Handy tun dasselbe, statt die Plattform zu verlassen.
+(function(){
+  var stack=[],going=false;
+  function cur(){var p=document.querySelector('.page.active');return p?p.id.replace(/^page-/,''):null;}
+  function label(){return (typeof LANG!=='undefined'&&LANG==='en')?'Back':'Zurück';}
+  function bar(){
+    var b=document.getElementById('rq-backbar');
+    if(b)return b;
+    var content=document.querySelector('.content');if(!content)return null;
+    b=document.createElement('div');b.id='rq-backbar';b.className='rq-backbar';
+    b.innerHTML='<button type="button" id="rq-back" aria-label="Zurück"></button>';
+    content.insertBefore(b,content.firstChild);
+    b.querySelector('button').onclick=function(){
+      // Über den Browserverlauf gehen, damit Taste und Knopf gleich bleiben. Ohne unseren Eintrag direkt zurück.
+      if(history.state&&history.state.rq)history.back();else goBack();
+    };
+    return b;
+  }
+  function refresh(){
+    var b=bar();if(!b)return;
+    var show=stack.length>0&&cur()&&cur()!=='home';
+    b.style.display=show?'':'none';
+    var btn=b.querySelector('button');if(btn)btn.textContent='← '+label();
+  }
+  function open(name){
+    if(name==='home'){goHome();return;}
+    goPage(name);
+    // Seiten, deren Inhalt beim Öffnen geladen wird (wie im Menü)
+    var load={clients:function(){loadAdvisorDashboard();},usage:function(){loadUsage();},history:function(){loadHistory();},
+      training:function(){loadTraining();},modules:function(){renderModulesList();},people:function(){loadPeople();}}[name];
+    if(load&&typeof load==='function')try{load();}catch(e){}
+  }
+  function goBack(){
+    var here=cur(),target=null;
+    while(stack.length){var t=stack.pop();if(t&&t!==here){target=t;break;}}
+    if(!target){refresh();return;}
+    going=true;try{open(target);}finally{going=false;}
+    refresh();
+  }
+  function wrap(name){
+    var orig=window[name];
+    window[name]=function(){
+      var from=cur();
+      var r=orig.apply(this,arguments);
+      var to=cur();
+      if(!going&&from&&to&&from!==to){
+        if(stack[stack.length-1]!==from)stack.push(from);
+        if(stack.length>25)stack.shift();
+        try{history.pushState({rq:1},'',location.href);}catch(e){}
+      }
+      refresh();
+      return r;
+    };
+  }
+  wrap('goPage');wrap('goHome');
+  window.addEventListener('popstate',function(){if(stack.length)goBack();});
+  // Nach dem Abmelden und Anmelden bei null beginnen
+  var _lo=window.logout;
+  if(typeof _lo==='function')window.logout=function(){stack=[];refresh();return _lo.apply(this,arguments);};
+  window.rqBack=goBack;
+  document.addEventListener('DOMContentLoaded',refresh);
+  refresh();
 })();
 </script>
 </body>
