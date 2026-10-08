@@ -93,7 +93,7 @@ body.adv .adv-only{display:block!important}
 .mcat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
 .mcat-card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:14px;cursor:pointer;text-align:left}
 .mcat-card:hover{border-color:var(--tx)}
-.mcat-card-icon{font-size:20px;line-height:1}
+.mcat-card-icon{font-size:26px;line-height:1;color:var(--ac);margin-bottom:6px}
 .mcat-card-name{font-size:14px;font-weight:600;margin-top:8px}
 .mcat-card-count{font-size:12px;color:var(--mu);margin-top:2px}
 .mfav-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:4px}
@@ -7021,12 +7021,12 @@ const ALL_MODULES=[
 let modsCatFilter='all',modsSearch='';
 function getCatMeta(){
   return {
-    foundation:{icon:'◆',label:LANG==='de'?'Basis':'Foundation'},
-    'text-gen':{icon:'✎',label:LANG==='de'?'Texten':'Texting'},
-    creation:{icon:'✒',label:LANG==='de'?'Schreiben & Antworten':'Writing & Replies'},
-    prevention:{icon:'⛨',label:LANG==='de'?'Krisen & Prävention':'Crisis & Prevention'},
-    efficiency:{icon:'⚡',label:LANG==='de'?'Effizienz':'Efficiency'},
-    growth:{icon:'↗',label:LANG==='de'?'Wachstum':'Growth'},
+    foundation:{icon:'<i class="ti ti-stack-2" aria-hidden="true"></i>',label:LANG==='de'?'Basis':'Foundation'},
+    'text-gen':{icon:'<i class="ti ti-writing" aria-hidden="true"></i>',label:LANG==='de'?'Texten':'Texting'},
+    creation:{icon:'<i class="ti ti-message-2" aria-hidden="true"></i>',label:LANG==='de'?'Schreiben & Antworten':'Writing & Replies'},
+    prevention:{icon:'<i class="ti ti-shield-check" aria-hidden="true"></i>',label:LANG==='de'?'Krisen & Prävention':'Crisis & Prevention'},
+    efficiency:{icon:'<i class="ti ti-bolt" aria-hidden="true"></i>',label:LANG==='de'?'Effizienz':'Efficiency'},
+    growth:{icon:'<i class="ti ti-trending-up" aria-hidden="true"></i>',label:LANG==='de'?'Wachstum':'Growth'},
   };
 }
 function renderModulesList(){
@@ -7106,8 +7106,8 @@ function renderModulesList(){
         <div class="mcat-card-count">${catCounts[c]} ${LANG==='de'?'Module':'modules'}</div>
       </div>`).join('');
     const suiteCards=[];
-    if(hasSuite('cm-')&&cmFiltered.length)suiteCards.push(`<div class="mcat-card" onclick="filterModsCat('capital-markets',document.getElementById('pill-capital-markets'))"><div class="mcat-card-icon">▲</div><div class="mcat-card-name">Capital Markets</div><div class="mcat-card-count">${cmFiltered.length} ${LANG==='de'?'Module':'modules'}</div></div>`);
-    if(hasSuite('ht-')&&htFiltered.length)suiteCards.push(`<div class="mcat-card" onclick="filterModsCat('hotel',document.getElementById('pill-hotel'))"><div class="mcat-card-icon">🏨</div><div class="mcat-card-name">Hotel Suite</div><div class="mcat-card-count">${htFiltered.length} ${LANG==='de'?'Module':'modules'}</div></div>`);
+    if(hasSuite('cm-')&&cmFiltered.length)suiteCards.push(`<div class="mcat-card" onclick="filterModsCat('capital-markets',document.getElementById('pill-capital-markets'))"><div class="mcat-card-icon"><i class="ti ti-chart-candle" aria-hidden="true"></i></div><div class="mcat-card-name">Capital Markets</div><div class="mcat-card-count">${cmFiltered.length} ${LANG==='de'?'Module':'modules'}</div></div>`);
+    if(hasSuite('ht-')&&htFiltered.length)suiteCards.push(`<div class="mcat-card" onclick="filterModsCat('hotel',document.getElementById('pill-hotel'))"><div class="mcat-card-icon"><i class="ti ti-building" aria-hidden="true"></i></div><div class="mcat-card-name">Hotel Suite</div><div class="mcat-card-count">${htFiltered.length} ${LANG==='de'?'Module':'modules'}</div></div>`);
     if(catBox)catBox.innerHTML=`
       ${customHtml}
       <div class="mcat-eyebrow">${LANG==='de'?'Kategorien':'Categories'}</div>
