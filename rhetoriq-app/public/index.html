@@ -827,6 +827,32 @@ a{color:var(--ac)}
 #rq-chat .rq-cf{display:flex;gap:8px;padding:12px;border-top:1px solid var(--bd)}
 #rq-chat .rq-cf input{flex:1}
 @media(max-width:899px){.hdr button[onclick*="openPalette"],.hdr .hlogo-mark{display:none!important}.hdr{padding:0 12px!important}.hright{gap:6px!important}.hlogo{font-size:20px!important}#cbtn,#fbbtn{bottom:calc(76px + var(--safe-bottom))!important}#fbpanel{bottom:calc(130px + var(--safe-bottom))!important}#cpanel{bottom:calc(134px + var(--safe-bottom))!important}.rq-hbtn span{display:none}.rq-hbtn{padding:6px 10px;font-size:13px}#rq-chat{top:auto;bottom:76px;right:12px}}
+/* ═══ Start ═══ */
+body.cli .home-sub,body.cli .home-eyebrow,body.cli #home-more-toggle,body.cli #home-more,body.cli .mu-row,body.cli #rstat{display:none!important}
+body.adv #onboarding-home-btn{display:none!important}
+body.adv #qa-heading,body.adv #qa-section{display:none!important}
+body:not(.adv) #rq-day{display:none}
+.home-hero{border-bottom:none;padding-bottom:8px;margin-bottom:8px}
+.home-h1{font-size:44px;font-weight:400;line-height:1.1}
+.rtarea{min-height:96px;font-size:16px;line-height:1.5;border:1px solid var(--bd)}
+.rq-qa-h{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mu);margin:22px 0 10px;display:flex;align-items:center;gap:12px}
+.rq-qa-h:after{content:"";flex:1;height:1px;background:var(--bd)}
+.rq-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.rq-tile{display:flex;flex-direction:column;gap:12px;min-height:116px;padding:16px;border:1px solid var(--bd);background:#fff;cursor:pointer;text-align:left;font-family:var(--sans);color:var(--tx)}
+.rq-tile i{font-size:24px;color:var(--ac)}
+.rq-tile b{font-family:var(--serif);font-weight:400;font-size:22px}
+.rq-tile span{font-size:13px;color:var(--mu)}
+.rq-tile:hover{border-color:var(--ac)}
+.rq-more{display:inline-block;margin-top:14px;color:var(--ac);font-size:15px;cursor:pointer;text-decoration:underline;text-underline-offset:4px;background:none;border:0;min-height:44px;font-family:var(--sans)}
+.rq-li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px 16px;align-items:center;padding:14px 4px;border-bottom:1px solid var(--bd);cursor:pointer;min-height:56px}
+.rq-li:first-of-type{border-top:1px solid var(--bd)}
+.rq-li:hover{background:var(--acl)}
+.rq-li i{font-size:20px;color:var(--ac)}
+.rq-li b{font-weight:500;display:block}
+.rq-li small{display:block;color:var(--mu);font-size:13px}
+.rq-li .rq-pill{border:1px solid var(--ac);color:var(--ac);padding:2px 10px;font-size:12px;white-space:nowrap}
+.rq-empty{padding:16px 4px;color:var(--mu);font-size:14px;border-top:1px solid var(--bd)}
+@media(max-width:700px){.rq-tiles{grid-template-columns:1fr}.home-h1{font-size:34px}}
 /* Grosse Schrift */
 html.rq-big{zoom:1.15}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -1269,6 +1295,7 @@ html.rq-big{zoom:1.15}
           <!-- Quick Access -->
           <div class="qa-heading" id="qa-heading" style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mu);margin-bottom:10px">Quick Access</div>
           <div id="qa-section" class="qa-section"></div>
+          <div id="rq-day"></div>
 
           <!-- Most Used Row (hidden, kept for JS compat) -->
           <div class="mu-row" id="mu-row">
@@ -8319,6 +8346,86 @@ tryAutoLogin();
   var ls0=document.getElementById('login-screen');
   if(ls0){new MutationObserver(onShown).observe(ls0,{attributes:true,attributeFilter:['class']});onShown();}
   setInterval(rqSyncRev,3000);
+})();
+</script>
+
+<script id="rq-home-js">
+// ═══ Start: Klient minimalistisch, Advisor mit Tagesübersicht ═══
+(function(){
+  var FALL=[['text-gen-email','E-Mail'],['text-gen-speech','Rede'],['text-gen-linkedin','LinkedIn']];
+  function ukey(){return 'rq-uses-'+((typeof clientId!=='undefined'&&clientId)||'global');}
+  function uses(){try{return JSON.parse(localStorage.getItem(ukey())||'{}');}catch(e){return {};}}
+  function bump(k){if(!k||k==='text-gen')return;try{var u=uses();u[k]=(u[k]||0)+1;localStorage.setItem(ukey(),JSON.stringify(u));}catch(e){}}
+  // Nutzung zählen (bestehende Funktionen bleiben, werden nur umhüllt)
+  var _tm=window.trackModuleUse;window.trackModuleUse=function(key,name){bump(key);return _tm.apply(this,arguments);};
+  var _gt=window.goTextGenTile;window.goTextGenTile=function(t){bump('text-gen-'+t);return _gt.apply(this,arguments);};
+  function meta(key){return (typeof ALL_MODULES!=='undefined'?ALL_MODULES:[]).filter(function(m){return m.key===key;})[0];}
+  function open(m){
+    if(m.tile)goTextGenTile(m.tile);else if(m.key==='brand-voice')goPage('brand-voice');else goModule(m.key);
+  }
+  function top3(){
+    var u=uses(),keys=Object.keys(u).filter(function(k){return meta(k);}).sort(function(a,b){return u[b]-u[a];}).slice(0,3);
+    var out=keys.map(function(k){return {key:k,n:u[k]};});
+    FALL.forEach(function(f){if(out.length<3&&!out.some(function(o){return o.key===f[0];}))out.push({key:f[0],n:0});});
+    return out.slice(0,3);
+  }
+  function renderClient(){
+    var el=document.getElementById('qa-section');if(!el||(typeof isAdv!=='undefined'&&isAdv))return;
+    var h=document.getElementById('qa-heading');if(h){h.className='rq-qa-h';h.removeAttribute('style');h.textContent='Ihre häufigsten Textarten';}
+    el.className='';el.innerHTML='<div class="rq-tiles"></div><button type="button" class="rq-more">Alle Textarten ansehen</button>';
+    var box=el.firstChild;
+    top3().forEach(function(o){
+      var m=meta(o.key);if(!m)return;
+      var b=document.createElement('button');b.type='button';b.className='rq-tile';
+      b.innerHTML='<i class="ti '+(m.icon||'ti-file-text')+'" aria-hidden="true"></i><div><b></b><span></span></div>';
+      b.querySelector('b').textContent=m.name;b.querySelector('span').textContent=o.n?(o.n+(o.n===1?' Mal verwendet':' Mal verwendet')):(m.desc||'');
+      b.onclick=function(){open(m);};box.appendChild(b);
+    });
+    el.querySelector('.rq-more').onclick=function(){goPage('modules');if(window.setMN)setMN('modules');renderModulesList();if(window.rqMarkRail)rqMarkRail('modules');};
+  }
+  window.renderQuickAccess=function(){
+    if(typeof isAdv!=='undefined'&&isAdv){renderDay();return;}
+    renderClient();
+  };
+  // Advisor: Tagesübersicht
+  var inq=[];
+  function esc(t){return (typeof safeText==='function')?safeText(t):String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function renderDay(){
+    var el=document.getElementById('rq-day');if(!el)return;
+    var pend=(window._advisorReviews||[]).filter(function(r){return r.status==='pending';});
+    var h='<div class="rq-qa-h">Wartet auf dich</div>';
+    if(!pend.length)h+='<div class="rq-empty">Keine offenen Freigaben.</div>';
+    pend.slice(0,6).forEach(function(r){
+      var c=((typeof clients!=='undefined'?clients:[]).filter(function(x){return x.id===r.client_id;})[0]||{}).name||'Klient';
+      var when=new Date(r.created_at).toLocaleString('de-CH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      h+='<div class="rq-li" data-rev="'+r.id+'"><i class="ti ti-checks" aria-hidden="true"></i><div><b>'+esc(c)+' · '+esc(r.module_label||'Text')+'</b><small>'+esc(when)+'</small></div><span class="rq-pill">Freigabe</span></div>';
+    });
+    if(pend.length>6)h+='<div class="rq-empty">und '+(pend.length-6)+' weitere</div>';
+    h+='<div class="rq-qa-h">Neue Anfragen</div>';
+    var open_=inq.filter(function(q){return q.status!=='vorab_gesendet'&&q.status!=='archived';});
+    if(!open_.length)h+='<div class="rq-empty">Keine neuen Anfragen.</div>';
+    open_.slice(0,6).forEach(function(q){
+      var when=new Date(q.created_at).toLocaleString('de-CH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      h+='<div class="rq-li" data-inq="1"><i class="ti ti-mail" aria-hidden="true"></i><div><b>'+esc(q.company||q.name)+(q.company?' · '+esc(q.name):'')+'</b><small>'+esc(when)+(q.message?' · '+esc(String(q.message).slice(0,70)):'')+'</small></div><span class="rq-pill">neu</span></div>';
+    });
+    el.innerHTML=h;
+    el.querySelectorAll('[data-rev]').forEach(function(n){n.onclick=function(){var id=parseInt(n.getAttribute('data-rev'),10);var r=(window._advisorReviews||[]).filter(function(x){return x.id===id;})[0];
+      if(r&&r.module_key&&r.review_context&&window.openReviewInModule)openReviewInModule(id);else openReviewPanel();};});
+    el.querySelectorAll('[data-inq]').forEach(function(n){n.onclick=function(){goPage('clients');loadAdvisorDashboard();if(window.rqMarkRail)rqMarkRail('clients');};});
+  }
+  async function loadInq(){
+    if(typeof isAdv==='undefined'||!isAdv)return;
+    try{var r=await api('/api/inquiries');var d=await r.json();inq=(r.ok&&Array.isArray(d))?d:[];}catch(e){inq=[];}
+    renderDay();
+  }
+  window.rqRenderDay=renderDay;
+  var _lr=window.loadAdvisorReviews;window.loadAdvisorReviews=async function(){var r=await _lr.apply(this,arguments);renderDay();return r;};
+  var _gh2=window.goHome;window.goHome=function(){var r=_gh2.apply(this,arguments);if(typeof isAdv!=='undefined'&&isAdv)loadInq();return r;};
+  var _li=window.loadInquiries;window.loadInquiries=async function(){var r=await _li.apply(this,arguments);loadInq();return r;};
+  // Start nach der Anmeldung einmal füllen
+  var ls=document.getElementById('login-screen');
+  function after(){if(ls.classList.contains('hidden')){setTimeout(function(){renderQuickAccess();loadInq();},400);}}
+  if(ls){new MutationObserver(after).observe(ls,{attributes:true,attributeFilter:['class']});after();}
 })();
 </script>
 </body>
