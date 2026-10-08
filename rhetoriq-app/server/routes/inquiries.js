@@ -77,9 +77,9 @@ publicRouter.post('/', inquiryLimit, async (req, res) => {
     if (!name || !EMAIL_RE.test(email)) return res.status(400).json({ error: 'Name und gültige E-Mail erforderlich.' });
 
     await ensureTable();
-    // Doppelte Absendungen derselben Adresse innert 10 Minuten zusammenfassen.
+    // Nur eine identische Nachricht derselben Adresse innert 10 Minuten gilt als Doppelklick.
     const dup = await pool.query(
-      `SELECT id FROM inquiries WHERE email=$1 AND created_at > NOW() - INTERVAL '10 minutes' LIMIT 1`, [email]);
+      `SELECT id FROM inquiries WHERE email=$1 AND COALESCE(message,'')=$2 AND created_at > NOW() - INTERVAL '10 minutes' LIMIT 1`, [email, message]);
     if (dup.rows.length) return res.json({ ok: true });
 
     const flood = await pool.query(`SELECT COUNT(*)::int AS n FROM inquiries WHERE created_at > NOW() - INTERVAL '1 hour'`);
