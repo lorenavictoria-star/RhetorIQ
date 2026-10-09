@@ -3,6 +3,7 @@ const { pool } = require('../db');
 const { requireAdvisor } = require('../middleware/auth');
 const { ensureSchema } = require('../lib/schemaRedesign');
 const { CATEGORIES, getResult } = require('../lib/learnFromCorrections');
+const { preserveDates, ensureMeta, listSentences, noteSentence, forgetSentence } = require('../lib/learnedMeta');
 
 // Lernvorschläge aus den Korrekturen der Beraterin.
 //   GET  /api/learning?client_id=&status=offen   Liste (nach Häufigkeit)
@@ -24,9 +25,9 @@ router.get('/', requireAdvisor, async (req, res) => {
     if (req.query.client_id) { params.push(parseInt(req.query.client_id, 10)); where += ` AND ls.client_id=$3`; }
     const { rows } = await pool.query(
       `SELECT ls.id, ls.client_id, ls.module_key, ls.module_label, ls.category, ls.observation, ls.example_before, ls.example_after,
-              ls.occurrences, ls.status, ls.created_at, ls.updated_at
+              ls.occurrences, ls.status, ls.created_at, ls.updated_at, ls.source, ls.weight
        FROM learning_suggestions ls JOIN clients c ON c.id = ls.client_id
-       WHERE ${where} ORDER BY ls.occurrences DESC, ls.updated_at DESC LIMIT 100`, params);
+       WHERE ${where} ORDER BY (ls.weight='hoch') DESC, ls.occurrences DESC, ls.updated_at DESC LIMIT 100`, params);
     res.json(rows);
   } catch (e) {
     console.error(e);
@@ -60,11 +61,13 @@ router.get('/learned', requireAdvisor, async (req, res) => {
   try {
     const clientId = parseInt(req.query.client_id, 10);
     if (!Number.isInteger(clientId)) return res.status(400).json({ error: 'client_id erforderlich' });
+    await ensureMeta();
     const { rows } = await pool.query(
-      `SELECT fl.id, fl.client_id, fl.module_key, fl.category, fl.summary, fl.updated_at
+      `SELECT fl.id, fl.client_id, fl.module_key, fl.category, fl.summary, fl.updated_at, fl.satz_meta
        FROM client_feedback_learnings fl JOIN clients c ON c.id = fl.client_id
        WHERE fl.client_id=$1 AND c.advisor_id=$2 ORDER BY fl.module_key, fl.category`, [clientId, req.user.id]);
-    res.json(rows);
+    // je Satz mit Datum und Zähler (bei älteren Lernständen: Änderungsdatum der Zeile, Zähler 1)
+    res.json(rows.map(r => { const saetze = listSentences(r); delete r.satz_meta; return { ...r, saetze }; }));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
@@ -88,6 +91,23 @@ router.put('/learned/:id', requireAdvisor, async (req, res) => {
     if (!summary) return res.status(400).json({ error: 'Der Text darf nicht leer sein.' });
     await pool.query('UPDATE client_feedback_learnings SET summary=$2, updated_at=NOW() WHERE id=$1', [row.id, summary]);
     res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Einen einzelnen gelernten Satz vergessen (die übrigen Sätze der Zeile bleiben).
+router.post('/learned/:id/forget', requireAdvisor, async (req, res) => {
+  try {
+    await ensureMeta();
+    const row = await loadOwnLearned(req);
+    if (!row) return res.status(404).json({ error: 'Eintrag nicht gefunden.' });
+    const text = typeof req.body?.text === 'string' ? req.body.text.trim() : '';
+    if (!text) return res.status(400).json({ error: 'Satz erforderlich.' });
+    const r = await forgetSentence(row, text);
+    if (!r.found) return res.status(404).json({ error: 'Satz nicht gefunden.' });
+    res.json({ ok: true, deleted: r.deleted });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
@@ -130,11 +150,13 @@ router.post('/:id/accept', requireAdvisor, async (req, res) => {
     const list = sentences(cur[0] && cur[0].summary);
     if (!list.some(s => s.toLowerCase() === text.toLowerCase())) list.push(text);
     const summary = list.slice(-MAX_SENTENCES).join(' ');
+    await preserveDates(ls.client_id, ls.module_key, category).catch(() => {});
     await pool.query(
       `INSERT INTO client_feedback_learnings (client_id, module_key, category, summary, updated_at)
        VALUES ($1,$2,$3,$4,NOW())
        ON CONFLICT (client_id, module_key, category) DO UPDATE SET summary=$4, updated_at=NOW()`,
       [ls.client_id, ls.module_key, category, summary]);
+    await noteSentence(ls.client_id, ls.module_key, category, text, ls.occurrences).catch(() => {});
     // Spur im Protokoll des gelernten Feedbacks, falls die Tabelle da ist
     await pool.query(
       'INSERT INTO client_feedback_history (client_id, module_key, category, rating, note) VALUES ($1,$2,$3,$4,$5)',

@@ -69,6 +69,8 @@ function ensureSchema() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
+    await pool.query(`ALTER TABLE learning_suggestions ADD COLUMN IF NOT EXISTS source TEXT`);
+    await pool.query(`ALTER TABLE learning_suggestions ADD COLUMN IF NOT EXISTS weight TEXT DEFAULT 'normal'`);
     await pool.query(`CREATE INDEX IF NOT EXISTS learning_suggestions_client_idx ON learning_suggestions (client_id, status)`);
     // Goldtexte: gesendete, von der Beraterin korrigierte Fassungen als Stilvorbild (je Klient und Textart)
     await pool.query(`

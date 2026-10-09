@@ -1497,6 +1497,7 @@ function buildGeoBlock(data) {
 // client_feedback_history, just never injected into generation prompts.
 const FEEDBACK_CATEGORIES = ['TON', 'STRUKTUR', 'FAKTEN', 'FORMAT', 'SONSTIGES'];
 const { getGoldBlock, queryTextOf } = require('../lib/goldtexte');
+const { proposeFromFollowUp, addSuggestion } = require('../lib/followupLearning');
 async function consolidateFeedback(clientId, moduleKey, rating, note) {
   const { rows: existing } = await pool.query(
     'SELECT category, summary FROM client_feedback_learnings WHERE client_id=$1 AND module_key=$2',
@@ -1521,6 +1522,15 @@ async function consolidateFeedback(clientId, moduleKey, rating, note) {
   if (!FEEDBACK_CATEGORIES.includes(category)) category = 'SONSTIGES';
   const summary = (sumMatch?.[1] || note).trim();
 
+  // Fehllernschutz: Fakten (Einzelfälle, Namen, Daten, Zahlen) werden nie automatisch gelernt, nur vorgeschlagen.
+  if (category === 'FAKTEN') {
+    await addSuggestion({ clientId, moduleKey, category, observation: note, source: 'daumen' });
+    await pool.query(
+      'INSERT INTO client_feedback_history (client_id, module_key, category, rating, note) VALUES ($1,$2,$3,$4,$5)',
+      [clientId, moduleKey, category, rating, note]
+    );
+    return;
+  }
   await pool.query(
     `INSERT INTO client_feedback_learnings (client_id, module_key, category, summary, updated_at)
      VALUES ($1,$2,$3,$4,NOW())
@@ -2514,7 +2524,10 @@ router.post('/:id/rate', requireAuth, async (req, res) => {
     // tiles — otherwise feedback from completely different formats gets
     // pooled into one meaningless, misleadingly-high occurrence count.
     if (note && note.trim() && analysis.client_id) {
-      consolidateFeedback(analysis.client_id, analysis.feedback_key || analysis.module, rating, note.trim())
+      // Nachfragen («Anpassen») sind oft einmalige Bitten: sie werden nur als Lernvorschlag abgelegt, nicht sofort gelernt.
+      (req.body.source === 'nachfrage' && Number(rating) === -1
+        ? proposeFromFollowUp(analysis.client_id, analysis.feedback_key || analysis.module, note.trim())
+        : consolidateFeedback(analysis.client_id, analysis.feedback_key || analysis.module, rating, note.trim()))
         .catch(e => console.error('[rate] feedback consolidation failed:', e.message));
     }
 
