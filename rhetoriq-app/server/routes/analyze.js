@@ -1437,14 +1437,14 @@ function hasLargeInput(data) {
   return len > LARGE_INPUT_CHARS;
 }
 // Entwurf und Prüfanweisung des zweiten Durchgangs (alles hinter dem Auftrag)
-function revisionTail(draft, module) {
+function revisionTail(draft, module, lintAuftrag = '') {
   const depthCheck = module === 'presentation'
     ? ' Prüfe zusätzlich explizit auf Oberflächlichkeit: Steht irgendeine zentrale Behauptung ohne Beleg oder ausformulierte Implikation da? Gibt es Folien, die nichts Eigenständiges zur Argumentation beitragen? Ist der Einsatz (was bei Nichtstun verloren geht bzw. bei Handeln gewonnen wird) tatsächlich beziffert, wo das Briefing es hergibt? Ist der Schluss wirklich ein konkreter, unmissverständlicher Ask? Wo die Antwort nein ist, vertiefe die betroffene Stelle in der Überarbeitung spürbar, statt sie nur stilistisch zu glätten.'
     : '';
-  return `\n\nENTWURF (erster Versuch):\n${draft}\n\nPrüfe diesen Entwurf kritisch gegen die Brand Voice und alle Regeln oben: wirkt er an irgendeiner Stelle generisch statt wie dieses Unternehmen, redundant, floskelhaft, oder strukturell schwach gemessen am Auftrag?${depthCheck} Liefere eine überarbeitete, finale Fassung. Gib NUR den finalen Text aus, ohne Erklärung deiner Änderungen oder Meta-Kommentar.`;
+  return `\n\nENTWURF (erster Versuch):\n${draft}\n\nPrüfe diesen Entwurf kritisch gegen die Brand Voice und alle Regeln oben: wirkt er an irgendeiner Stelle generisch statt wie dieses Unternehmen, redundant, floskelhaft, oder strukturell schwach gemessen am Auftrag?${depthCheck} ${lintAuftrag || ''} Liefere eine überarbeitete, finale Fassung. Gib NUR den finalen Text aus, ohne Erklärung deiner Änderungen oder Meta-Kommentar.`;
 }
-function buildRevisionPrompt(originalUserMsg, draft, module) {
-  return `URSPRÜNGLICHER AUFTRAG:\n${originalUserMsg}${revisionTail(draft, module)}`;
+function buildRevisionPrompt(originalUserMsg, draft, module, lintAuftrag) {
+  return `URSPRÜNGLICHER AUFTRAG:\n${originalUserMsg}${revisionTail(draft, module, lintAuftrag)}`;
 }
 
 // ── Zwischenspeicher für den zweiten Durchgang ────────────────────────────────
@@ -1464,10 +1464,10 @@ function draftUserContent(userMsg) {
   return [{ type: 'text', text: userMsg, cache_control: { type: 'ephemeral' } }];
 }
 // Zweiter Durchgang: derselbe Auftragsblock (aus dem Zwischenspeicher), dahinter Entwurf und Prüfanweisung
-function revisionUserContent(userMsg, draft, module) {
+function revisionUserContent(userMsg, draft, module, lintAuftrag) {
   return [
     { type: 'text', text: userMsg, cache_control: { type: 'ephemeral' } },
-    { type: 'text', text: '\n\n(Der Text oberhalb ist der URSPRÜNGLICHE AUFTRAG.)' + revisionTail(draft, module) }
+    { type: 'text', text: '\n\n(Der Text oberhalb ist der URSPRÜNGLICHE AUFTRAG.)' + revisionTail(draft, module, lintAuftrag) }
   ];
 }
 // Optional: den stillen Entwurf mit dem günstigen Modell schreiben (Umgebungsvariable DRAFT_MODEL=haiku).
@@ -1573,6 +1573,7 @@ function buildFollowUpPrompt(originalUserMsg, previousResult, note) {
 // Regelwerk jedes Auftrags (Rangfolge-Block plus Stilregeln) steht in lib/promptRules.js, als letzter Systemblock angehängt.
 const { GLOBAL_STYLE_RULES, BRAND_VOICE_HEAD, BRAND_VOICE_TAIL } = require('../lib/promptRules');
 const { heuteBlock } = require('../lib/heute');
+const { lintFuerDurchgang, lintErgebnis } = require('../lib/lint');
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
 const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'suggest-title', 'consolidate-feedback', 'presentation-preflight', 'chat', 'vs-cal', 'vs-gen', 'tc', 'before-after', 'rh-translate']);
@@ -1777,7 +1778,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     // latency (painfully so for long documents like a full speech) without
     // improving quality, and risks over-editing an already-finished text.
     if (willTwoPass) {
-      const revisionResp = await callClaude(systemBlocks, cheapDraft ? buildRevisionPrompt(userMsg, claudeResp.text, module) : revisionUserContent(userMsg, claudeResp.text, module), MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
+      const revisionResp = await callClaude(systemBlocks, cheapDraft ? buildRevisionPrompt(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module)) : revisionUserContent(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module)),MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
       if (revisionResp.text) result = revisionResp.text;
       totalInputTokens += revisionResp.inputTokens;
       totalOutputTokens += revisionResp.outputTokens;
@@ -1826,7 +1827,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
       if (resolvedClientId) req.app.locals.wss.toClient(resolvedClientId, note);
     }
 
-    res.json({ result, id: rows[0].id, quotaWarning });
+    res.json({ result, id: rows[0].id, quotaWarning, lint: lintErgebnis(result, data, module) });
   } catch (e) {
     console.error(e);
     logGenerationError(req, e);
@@ -1978,7 +1979,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       console.log(`[trace] ${module} starting draft pass, maxTokens=${maxTokens}`);
       const draftResp = await callClaude(streamSystemBlocks, cheapDraftS ? userMsg : draftUserContent(userMsg), maxTokens, draftModelFor(module));
       console.log(`[trace] ${module} draft pass done, chars=${(draftResp.text || '').length}`);
-      if (draftResp.text) streamUserMsg = cheapDraftS ? buildRevisionPrompt(userMsg, draftResp.text, module) : revisionUserContent(userMsg, draftResp.text, module);
+      if (draftResp.text) streamUserMsg = cheapDraftS ? buildRevisionPrompt(userMsg, draftResp.text, module, lintFuerDurchgang(draftResp.text, data, module)) : revisionUserContent(userMsg, draftResp.text, module, lintFuerDurchgang(draftResp.text, data, module));
       draftInputTokens = draftResp.inputTokens;
       draftOutputTokens = draftResp.outputTokens;
       draftText = draftResp.text || null;
@@ -2035,7 +2036,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       ).catch(() => {});
     }
 
-    const donePayload = { id: rows[0].id, hasBrandVoice, quotaWarning };
+    const donePayload = { id: rows[0].id, hasBrandVoice, quotaWarning, lint: lintErgebnis(fullText, data, module) };
     // Nur für die Beraterin: Text wurde mit dem Reservekonto erstellt (lib/aiProvider.js)
     if (req.user.role === 'advisor' && require('../lib/meter').context().reserve) donePayload.reserve = true;
     if (isDebug) donePayload.systemPrompt = baseSystem + (brandVoiceBlock ? '\n\n[BRAND VOICE CACHED]\n' + brandVoiceBlock : '') + (restDynamicSystem ? '\n\n--- DYNAMIC ---\n' + restDynamicSystem : '');
