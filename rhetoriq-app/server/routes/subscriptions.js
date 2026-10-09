@@ -1,11 +1,15 @@
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth, requireAdvisor } = require('../middleware/auth');
+const { ownClient } = require('../middleware/ownership');
+const yearly = require('../lib/yearlyPlan');
 
 const router = express.Router();
 
 // ── Stripe helpers ────────────────────────────────────────────
+let stripeOverride = null; // Tests setzen hier eine Attrappe
 function getStripe() {
+  if (stripeOverride) return stripeOverride;
   if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY not set');
   return require('stripe')(process.env.STRIPE_SECRET_KEY);
 }
@@ -129,7 +133,9 @@ const LEGACY_PRICE_LIMITS = { 29000: 300000, 99000: 1500000 };
 const PRICE_TIER_TOKEN_LIMITS = { ...LEGACY_PRICE_LIMITS, ...Object.fromEntries(TIERS.map(t => [t.amountCents, t.tokens])) };
 function resolveTokenLimit(amountInCents, currency) {
   if (!amountInCents || (currency || '').toLowerCase() !== 'chf') return undefined;
-  return PRICE_TIER_TOKEN_LIMITS.hasOwnProperty(amountInCents) ? PRICE_TIER_TOKEN_LIMITS[amountInCents] : undefined;
+  if (PRICE_TIER_TOKEN_LIMITS.hasOwnProperty(amountInCents)) return PRICE_TIER_TOKEN_LIMITS[amountInCents];
+  // Jahrespreise (10 % Rabatt) setzen dasselbe Monatskontingent
+  return yearly.resolveYearlyLimit(amountInCents, currency);
 }
 
 // One-time self-serve top-up, offered to a client the moment they hit their
@@ -236,6 +242,23 @@ router.post('/upgrade-link/:clientId', requireAuth, async (req, res) => {
     res.json({ url: link.url, tier: nextTier.name, amountCents: nextTier.amountCents });
   } catch (e) {
     console.error('[stripe] upgrade-link error:', e.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── POST /api/subscriptions/yearly-link/:clientId ───────────────
+// Jahresabo mit 10 % Rabatt (Business: zwei Monate gratis). Das Paket ergibt sich aus dem Monatskontingent.
+// Klient nur für sich selbst, Beraterin für ihre Klienten.
+router.post('/yearly-link/:clientId', requireAuth, ownClient('clientId'), async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { rows } = await pool.query('SELECT id, name, monthly_token_limit FROM clients WHERE id=$1', [clientId]);
+    if (!rows.length) return res.status(404).json({ error: 'Client not found' });
+    const offer = yearly.yearlyOfferFor(rows[0].monthly_token_limit);
+    if (!offer) return res.status(400).json({ error: 'Für Ihr Paket gibt es keine Jahreszahlung im Selbstbedienungsweg. Bitte melden Sie sich bei Lorena.' });
+    res.json(await yearly.createYearlyLink(getStripe(), rows[0], offer));
+  } catch (e) {
+    console.error('[stripe] yearly-link error:', e.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -465,3 +488,5 @@ router.post('/mark-sent', requireAuth, async (req, res) => {
 });
 
 module.exports = router;
+module.exports.resolveTokenLimit = resolveTokenLimit;
+module.exports._setStripe = (s) => { stripeOverride = s; };
