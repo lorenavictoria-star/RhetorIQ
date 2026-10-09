@@ -66,7 +66,7 @@ async function statusSeite() {
 
 async function mail(subject, text) {
   const { queueEmail } = require('../lib/emailOutbox');
-  await queueEmail({ kind: 'ki-waechter', to: NOTIFY(), subject, text, senderName: 'RhetorIQ Wächter' });
+  for (const to of require('../lib/notify').advisorEmails()) await queueEmail({ kind: 'ki-waechter', to, subject, text, senderName: 'RhetorIQ Wächter' });
 }
 
 // cheap, ping, status: austauschbar für Tests. now: Uhrzeit für Tests.

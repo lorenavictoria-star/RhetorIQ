@@ -115,6 +115,14 @@ async function runWeeklyReport() {
       clientRows.forEach(c => lines.push(`  - ${c.name}: ${c.analyses} Analysen`));
     }
 
+    // KI-Fehler der Woche (Tabelle generation_errors, geschrieben von logGenerationError)
+    try {
+      const { rows: errRows } = await pool.query(`SELECT COALESCE(module,'unbekannt') AS module, COUNT(*)::int AS n FROM generation_errors WHERE created_at > NOW() - INTERVAL '7 days' GROUP BY module ORDER BY n DESC`);
+      const errTotal = errRows.reduce((a, r) => a + r.n, 0);
+      lines.push('', `KI-FEHLER DIESE WOCHE: ${errTotal}`);
+      if (errTotal) errRows.slice(0, 5).forEach(r => lines.push(`  - ${r.module}: ${r.n}`));
+    } catch (e) { console.error('[weekly-report] KI-Fehler:', e.message); }
+
     // Übernahmequote: Anteil der Texte, die unverändert gesendet wurden
     try {
       const ue = require('../lib/uebernahme');
@@ -191,14 +199,16 @@ async function runWeeklyReport() {
 
     const reportText = lines.join('\n');
 
-    await queueEmail({
-      kind: 'weekly-report',
-      to: ADVISOR_EMAIL,
-      subject: `RhetorIQ Wochenbericht — ${week}`,
-      text: reportText,
-      senderName: 'RhetorIQ Reports',
-      attachments
-    });
+    for (const to of require('../lib/notify').advisorEmails()) {
+      await queueEmail({
+        kind: 'weekly-report',
+        to,
+        subject: `RhetorIQ Wochenbericht — ${week}`,
+        text: reportText,
+        senderName: 'RhetorIQ Reports',
+        attachments
+      });
+    }
 
     console.log(`[weekly-report] Queued for ${ADVISOR_EMAIL}`);
   } catch (e) {

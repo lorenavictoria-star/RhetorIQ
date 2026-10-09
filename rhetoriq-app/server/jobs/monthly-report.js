@@ -161,11 +161,13 @@ async function runMonthlyReport() {
 
     const reportText = lines.join('\n');
 
-    await brevoSend({
-      to: ADVISOR_EMAIL,
-      subject: `RhetorIQ Monatsbericht — ${month}`,
-      text: reportText
-    });
+    for (const to of require('../lib/notify').advisorEmails()) {
+      await brevoSend({
+        to,
+        subject: `RhetorIQ Monatsbericht — ${month}`,
+        text: reportText
+      });
+    }
 
     console.log(`[monthly-report] Sent to ${ADVISOR_EMAIL}`);
   } catch (e) {

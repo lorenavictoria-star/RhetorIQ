@@ -314,10 +314,30 @@ function markReserve() {
 }
 const meterModel = (model, reserve) => (reserve ? 'reserve:' + model : model);
 
+// Zentrale Meldung an Sentry (Befund F-19): jeder gescheiterte KI-Aufruf wird gemeldet, sonst bleibt ein Ausfall unbemerkt.
+// Ohne SENTRY_DSN ist captureException wirkungslos; der Aufrufer sieht den Fehler weiterhin unverändert.
+function reportAiError(e, where, opts) {
+  try {
+    const Sentry = require('@sentry/node');
+    Sentry.withScope((scope) => {
+      scope.setTag('ki_aufruf', where);
+      scope.setTag('ki_modell', String((opts && opts.model) || '?'));
+      scope.setTag('ki_status', String((e && e.status) || 'ohne'));
+      Sentry.captureException(e);
+    });
+  } catch { /* Meldung darf nie selbst einen Fehler auslösen */ }
+}
+
 // generateText({ system, messages, maxTokens, model, temperature })
 //   -> { text, inputTokens, outputTokens, reserve? }
 async function generateText(opts) {
-  const r = await activeProvider().generate(opts);
+  let r;
+  try {
+    r = await activeProvider().generate(opts);
+  } catch (e) {
+    reportAiError(e, 'generate', opts);
+    throw e;
+  }
   if (r.reserve) markReserve();
   // Jeder Aufruf wird mit Tokens, Modell und Kosten protokolliert (lib/meter.js)
   require('./meter').record({ ...r, model: meterModel(r.model || opts.model, r.reserve), meter: opts.meter });
@@ -341,6 +361,9 @@ function streamText(opts) {
         }
         yield evt;
       }
+    } catch (e) {
+      if (!(opts && opts.signal && opts.signal.aborted)) reportAiError(e, 'stream', opts);   // Abbruch durch die Nutzerin ist kein Fehler
+      throw e;
     } finally {
       // Auch bei Abbruch oder Fehler: was die API bereits berechnet hat, wird erfasst
       require('./meter').record({ ...u, model: meterModel(opts.model, reserve), meter: opts.meter });
@@ -348,4 +371,4 @@ function streamText(opts) {
   })();
 }
 
-module.exports = { generateText, streamText, resolveModelId, resetReserveCache, keyOrder, _cfg: cfg };
+module.exports = { generateText, streamText, resolveModelId, resetReserveCache, keyOrder, reportAiError, _cfg: cfg };

@@ -134,9 +134,9 @@ router.post('/', auth, requireRole('editor'), async (req, res) => {
           + revisionHistory.map((h, i) => `${i + 1}. Auftrag: ${h.note || '—'}\n   Stand davor: ${(h.textBefore || '').trim() || '—'}`).join('\n\n');
       }
 
-      await queueEmail({
+      for (const adv of require('../lib/notify').advisorEmails()) await queueEmail({
         kind: 'review-request',
-        to: ADVISOR_NOTIFY_EMAIL,
+        to: adv,
         subject: `RhetorIQ — Neue Freigabe-Anfrage: ${clientName}${moduleLabel ? ' (' + moduleLabel + ')' : ''}`,
         text: `Ein Klient hat einen Text zur Prüfung eingereicht.\n\nKlient: ${clientName}\nModul: ${moduleLabel || 'Nicht angegeben'}\n${note ? '\nFeedback / Auftrag des Klienten:\n' + note + '\n' : ''}${(instruction || dueGiven) ? auftragBlock({ instruction: instruction && instruction !== (note || '').trim() ? instruction : '', dueAt }) : ''}\n--- Textauszug ---\n${preview}${revisionBlock}${historyBlock}\n\nJetzt bearbeiten: https://rhetoriq.ch/?review=${rows[0].id}\n`,
         senderName: 'RhetorIQ'

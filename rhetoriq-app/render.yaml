@@ -22,6 +22,8 @@ services:
         sync: false
       - key: ADVISOR_PASSWORD
         sync: false
+      - key: ADVISOR_NOTIFY_EMAIL_2
+        sync: false   # optional: zweite Adresse für Warnungen und Berichte
       - key: ADVISOR_NAME
         value: Lorena Lienhard
       - key: NODE_VERSION
