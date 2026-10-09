@@ -76,3 +76,30 @@ test('Stimmprofil als Word: nur Beraterin, enthält Firma und Übereinstimmung',
   assert.equal((await srv.call('GET', `/api/comm-profile/${c.id}/report.docx`, { token: H.clientToken(c.id) })).status, 403);
 });
 
+test('Stimmen-Check als Word: Inhalt, Zugriffsschutz', async () => {
+  const c = await H.addClient('Check AG'), other = await H.addClient('Fremd AG');
+  await srv.call('POST', `/api/comm-profile/${c.id}/baseline`, { token: H.advisorToken(), body: { texts: LONG } });
+  await srv.call('PUT', `/api/comm-profile/${c.id}/target`, { token: H.advisorToken(), body: { scores: { klarheit: 80, waerme: 70, direktheit: 70, verstaendlichkeit: 80, kuerze: 70, verbindlichkeit: 75 } } });
+  for (let i = 0; i < 3; i++) await pool.query(`INSERT INTO analyses (client_id, advisor_id, module, result) VALUES ($1,1,'text-gen',$2)`, [c.id, LONG]);
+  H.ai.reply = JSON.stringify({ scores: { ...SCORES, klarheit: 75, waerme: 60 }, findings: [{ title: 'Sätze kürzer', detail: 'Besser lesbar.' }] });
+  assert.equal((await srv.call('POST', `/api/comm-profile/${c.id}/snapshot`, { token: H.advisorToken() })).status, 200);
+  const { buildCheck, compare, meaning } = require('../lib/stimmCheck');
+  const r = await buildCheck(c.id);
+  const z = await require('jszip').loadAsync(r.buffer);
+  const xml = await z.file('word/document.xml').async('string');
+  assert.ok(xml.includes('Stimmen-Check') && xml.includes('Check AG'));
+  assert.ok(xml.includes('Sätze kürzer'), 'Befund der letzten Messung');
+  assert.ok(xml.includes('Ausgangslage') && xml.includes('Veränderung'));
+  const cmp = compare(await require('../lib/commProfile').getProfile(c.id));
+  assert.ok(cmp.mNow > cmp.mBase, 'Übereinstimmung gestiegen');
+  assert.match(meaning(cmp), /näher|Prozentpunkte/);
+  const url = `/api/comm-profile/${c.id}/check.docx`;
+  assert.equal((await srv.call('GET', url, { token: H.advisorToken() })).status, 200);
+  assert.equal((await srv.call('GET', url, { token: H.clientToken(c.id) })).status, 200);
+  const uid = async () => (await pool.query('INSERT INTO client_users (client_id) VALUES ($1) RETURNING id', [c.id])).rows[0].id;
+  assert.equal((await srv.call('GET', url, { token: H.clientToken(c.id, { clientUserId: await uid(), clientUserRole: 'admin' }) })).status, 200);
+  assert.equal((await srv.call('GET', url, { token: H.clientToken(c.id, { clientUserId: await uid(), clientUserRole: 'viewer' }) })).status, 403);
+  assert.equal((await srv.call('GET', url, { token: H.clientToken(other.id) })).status, 403);
+  assert.equal((await srv.call('GET', url)).status, 401);
+});
+

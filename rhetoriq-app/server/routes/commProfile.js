@@ -24,6 +24,21 @@ router.get('/:clientId/report.docx', requireAdvisor, ownClient('clientId'), asyn
   } catch (e) { console.error('[stimm-report]', e.message); res.status(400).json({ error: e.message }); }
 });
 
+// GET /api/comm-profile/:clientId/check.docx  (Stimmen-Check als Word: Beraterin, Hauptzugang und Rolle admin des Klienten)
+router.get('/:clientId/check.docx', requireAuth, ownClient('clientId'), async (req, res) => {
+  const u = req.user;
+  if (u.role === 'client' && u.clientUserId && u.clientUserRole !== 'admin') return res.status(403).json({ error: 'Der Stimmen-Check ist für die Rolle Admin und den Hauptzugang vorgesehen.' });
+  try {
+    const r = await require('../lib/stimmCheck').buildCheck(Number(req.params.clientId));
+    const safe = String(r.name).replace(/[^A-Za-z0-9ÄÖÜäöüéèàç _-]/g, '').trim().replace(/\s+/g, '_') || 'Klient';
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'Content-Disposition': `attachment; filename="Stimmen-Check_${encodeURIComponent(safe)}.docx"`
+    });
+    res.send(r.buffer);
+  } catch (e) { console.error('[stimm-check]', e.message); res.status(400).json({ error: e.message }); }
+});
+
 // POST /api/comm-profile/:clientId/baseline  { texts: "Text 1\n---\nText 2" } oder [..]
 router.post('/:clientId/baseline', requireAdvisor, ownClient('clientId'), async (req, res) => {
   try {
