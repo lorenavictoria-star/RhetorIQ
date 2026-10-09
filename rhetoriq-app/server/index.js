@@ -283,6 +283,7 @@ app.use('/api/messung', require('./routes/messung'));
 app.use('/api/pruefsatz', require('./routes/pruefsatz'));
 app.use('/api/client-plan', require('./routes/clientPlan'));
 app.use('/api/review-time', require('./routes/reviewTime'));
+app.use('/api/finanzen', require('./routes/finanzen'));
 app.use('/api/themenplan', require('./routes/themenplan'));
 app.use('/api/archive', require('./routes/archive'));
 app.use('/api/quartalsreview', require('./routes/quartalsreview'));

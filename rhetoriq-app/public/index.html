@@ -1654,6 +1654,12 @@ html[lang="en"] .legal-en-note{display:block}
     </div>
 
     <!-- HISTORY -->
+    <div class="page" id="page-finanzen">
+      <div class="page-title" style="margin-bottom:6px">Finanzen</div>
+      <p class="rq-hint" style="margin-bottom:16px">Was kam rein, was ging raus, was bleibt. Alle Beträge in Franken, nur für dich sichtbar.</p>
+      <div id="fin-root"></div>
+    </div>
+
     <div class="page" id="page-history">
       <div class="page-title" id="hist-title" style="margin-bottom:6px">History</div>
       <p id="hist-sub" style="font-size:12px;color:var(--mu);margin-bottom:10px">Grouped by module. Delete entries manually.</p>
@@ -2369,6 +2375,10 @@ window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([
 <script id="rq-xpairs-assistent">
 // DE/EN-Paare für den Assistenten der Beraterin; rq-i18n fügt window.RQ_EXTRA_PAIRS zu PAIRS hinzu.
 window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Assistent","Assistant"],["Sprich oder schreibe, was du öffnen möchtest. Der Assistent antwortet nur als Text. Der Verlauf bleibt nur in dieser Sitzung.","Speak or type what you would like to open. The assistant replies in text only. The conversation stays in this session only."],["Zum Beispiel: Öffne die Freigaben","For example: Open the reviews"],["Beispiele","Examples"],["Was ist heute los?","What is going on today?"],["Öffne die Freigaben","Open the reviews"],["Zeig mir die Kunden","Show me the clients"],["Öffne die Nutzung","Open usage"],["Starte ein Onboarding","Start an onboarding"],["Wie lade ich ein Dokument hoch?","How do I upload a document?"],["Aufnahme starten","Start recording"],["Aufnahme beenden","Stop recording"],["Befehl","Command"],["Unterhaltung","Conversation"],["Gedrückt halten oder klicken zum Sprechen (höchstens 30 Sekunden)","Hold or click to speak (30 seconds at most)"]]);
+</script>
+<script id="rq-xpairs-finanzen">
+// DE/EN-Paare für die Finanzaufstellung der Beraterin; rq-i18n fügt window.RQ_EXTRA_PAIRS zu PAIRS hinzu.
+window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Finanzen","Finances"],["Monat","Month"],["Neu laden","Reload"],["Export CSV","Export CSV"],["Export Word","Export Word"],["Die Zahlen werden geladen.","Loading the figures."],["Einnahmen","Income"],["Kosten","Costs"],["Ergebnis","Result"],["Kosten und Ergebnis","Costs and result"],["Kennzahlen","Key figures"],["Ergebnis je Klient","Result per client"],["Fixkosten und weitere Kosten","Fixed and other costs"],["Einstellungen","Settings"],["Was gerechnet wurde","How it was calculated"],["Anzahl","Count"],["Betrag","Amount"],["Bezahlte Abos","Paid subscriptions"],["Zusatzmodule","Add-on modules"],["Zusatzkäufe","Extra purchases"],["Einmalige Leistungen","One-off services"],["Zusätzliche Beratung","Additional consulting"],["Nicht zugeordnet","Unassigned"],["Rückerstattungen","Refunds"],["Summe Einnahmen","Total income"],["Summe Kosten","Total costs"],["Ergebnis des Monats","Result of the month"],["KI-Kosten (Anthropic)","AI costs (Anthropic)"],["Stripe-Gebühren","Stripe fees"],["Weitere variable Kosten","Other variable costs"],["Fixkosten","Fixed costs"],["Marge","Margin"],["KI-Kosten in Prozent des Umsatzes","AI costs as a percentage of revenue"],["Zahlende Klienten","Paying clients"],["Wiederkehrender Monatsumsatz (MRR)","Monthly recurring revenue (MRR)"],["Jahreswert (ARR)","Annual value (ARR)"],["KI-Kosten","AI costs"],["Bezeichnung","Name"],["Betrag in CHF","Amount in CHF"],["Art","Type"],["Fix","Fixed"],["Variabel","Variable"],["Rhythmus","Frequency"],["Jeden Monat","Every month"],["Einmalig","One-off"],["Gültig ab","Valid from"],["Gültig bis","Valid until"],["Posten hinzufügen","Add item"],["Änderung speichern","Save change"],["Bearbeiten","Edit"],["Löschen","Delete"],["Abbrechen","Cancel"],["Noch keine Posten erfasst.","No items yet."],["Mehrwertsteuerpflichtig","Subject to VAT"],["Satz in Prozent","Rate in percent"],["Beträge zeigen","Show amounts"],["Netto (ohne MwSt)","Net (excl. VAT)"],["Brutto (mit MwSt)","Gross (incl. VAT)"],["Wechselkurs (US-Dollar für 1 Franken)","Exchange rate (US dollars per franc)"],["Rückstellung Steuern und Sozialversicherung in Prozent","Provision for taxes and social security in percent"],["Einstellungen speichern","Save settings"],["Tatsächliche Rechnung Anthropic im Monat (CHF)","Actual Anthropic invoice for the month (CHF)"],["Speichern","Save"],["Diesen Posten löschen?","Delete this item?"],["Schätzung, nicht aus Stripe.","Estimate, not from Stripe."],["Die fünf grössten Klienten:","The five largest clients:"]]);
 </script>
 <script id="rq-i18n">
 // ── I18N: Wörterbuch-Ebene über dem bestehenden T/applyLang-System ──
@@ -8823,6 +8833,7 @@ tryAutoLogin();
       g[0].i.push({k:'onboarding',t:'Onboarding',ic:'ti-upload',go:function(){rqWizard();}});
       g[0].i.push({k:'clients',t:'Kunden',ic:'ti-users',go:function(){goPage('clients');loadAdvisorDashboard();}});
       g[0].i.push({k:'usage',t:'Nutzung',ic:'ti-chart-bar',go:function(){goPage('usage');loadUsage();}});
+      g[0].i.push({k:'finanzen',t:'Finanzen',ic:'ti-coins',go:function(){goPage('finanzen');if(window.rqFinanzen)rqFinanzen.load();}});
       g[0].i.push({k:'reviews',t:'Freigaben',ic:'ti-checks',go:function(){openReviewPanel();},cnt:true});
     } else {
       g[0].i.push({k:'modules',t:'Textarten',ic:'ti-layout-grid',go:function(){goPage('modules');renderModulesList();}});
@@ -12289,6 +12300,203 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     if(isA()&&!opened){opened=true;setTimeout(function(){if(isA())rqAssistentOpen();},500);}
   }
   if(ls){new MutationObserver(after).observe(ls,{attributes:true,attributeFilter:['class']});after();}
+})();
+</script>
+<script id="rq-finanzen-js">
+// ═══ Finanzen (nur Beraterin): Einnahmen, Kosten und Ergebnis je Monat, Vergleich zum Vormonat, Export ═══
+(function(){
+  var E=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');};
+  function isA(){try{return !!isAdv;}catch(e){return false;}}
+  function chf(n){var v=Math.round(Number(n||0)*100)/100,neg=v<0,s=Math.abs(v).toFixed(2).split('.');return 'CHF '+(neg?'-':'')+s[0].replace(/\B(?=(\d{3})+(?!\d))/g,"'")+'.'+s[1];}
+  function pct(n){return n==null?'offen':String(n).replace('.',',')+' %';}
+  function monthNow(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);}
+  function monthLabel(m){var p=m.split('-');return new Date(+p[0],+p[1]-1,1).toLocaleDateString('de-CH',{month:'long',year:'numeric'});}
+  var st={month:monthNow(),data:null,busy:false,edit:null};
+  function root(){return document.getElementById('fin-root');}
+  var CARD='border:1px solid var(--bd);background:#fff;padding:20px 24px;margin:0 0 20px';
+  var TD='padding:6px 10px 6px 0;vertical-align:top',TR='padding:6px 0;text-align:right;white-space:nowrap;vertical-align:top';
+  var H='font-family:var(--serif);font-size:22px;margin:0 0 10px';
+  var BTN='padding:8px 16px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)';
+  var BTNP='padding:8px 16px;border:1.5px solid var(--ac);border-radius:8px;background:var(--ac);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)';
+  var INP='padding:8px 10px;border:1.5px solid var(--bd);border-radius:6px;font-size:14px;font-family:var(--sans);background:#fff;color:var(--tx)';
+  var LBL='display:block;font-size:12px;color:var(--mu);margin:0 0 3px';
+
+  function diff(v){
+    if(!v)return '';
+    var d=v.differenzChf;
+    return 'Vormonat '+chf(v.vormonat)+' ('+(d>0?'+':'')+(v.prozent==null?'neu':String(v.prozent).replace('.',',')+' %')+')';
+  }
+  function big(label,val,cmp,strong){
+    return '<div style="flex:1 1 200px;border:1px solid var(--bd);background:#fff;padding:16px 20px;'+(strong?'border-color:var(--ac);':'')+'">'
+      +'<div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)">'+E(label)+'</div>'
+      +'<div style="font-family:var(--serif);font-size:30px;line-height:1.2;margin:4px 0">'+E(chf(val))+'</div>'
+      +'<div style="font-size:12px;color:var(--mu)">'+E(cmp)+'</div></div>';
+  }
+  function tr(label,val,o){
+    o=o||{};
+    return '<tr'+(o.top?' style="border-top:1px solid var(--tx)"':'')+'><td style="'+TD+(o.ind?'padding-left:16px;':'')+(o.bold?'font-weight:600;':'')+'">'+E(label)+(o.sub?'<div style="font-size:11.5px;color:var(--mu);font-weight:400">'+E(o.sub)+'</div>':'')+'</td>'
+      +'<td style="'+TR+'">'+(o.n!=null?E(o.n):'')+'</td><td style="'+TR+(o.bold?'font-weight:600;':'')+'">'+(val===null?'':E(chf(val)))+'</td></tr>';
+  }
+  function einnahmenTable(d){
+    var h='<table style="width:100%;font-size:14px;border-collapse:collapse"><tr style="font-size:11.5px;color:var(--mu)"><td></td><td style="'+TR+'">Anzahl</td><td style="'+TR+'">Betrag</td></tr>';
+    d.einnahmen.gruppen.forEach(function(g){
+      h+=tr(g.label,null,{bold:true});
+      g.zeilen.forEach(function(z){h+=tr(z.label,z.betragChf,{ind:true,n:z.anzahl+(z.klienten?' ('+z.klienten+' Kl.)':'')});});
+      h+=tr('Summe '+g.label,g.summeChf,{bold:true});
+    });
+    if(d.einnahmen.rueckerstattungenChf!==0)h+=tr('Rückerstattungen',d.einnahmen.rueckerstattungenChf);
+    h+=tr('Summe Einnahmen',d.einnahmen.summeChf,{bold:true,top:true});
+    return h+'</table>';
+  }
+  function kostenTable(d){
+    var k=d.kosten,ki=k.ki,h='<table style="width:100%;font-size:14px;border-collapse:collapse">';
+    h+=tr('KI-Kosten (Anthropic)',ki.verwendetChf,{sub:ki.mitGebuchtemWert?'Gebuchte Rechnung. Berechnet aus dem Nutzungsprotokoll: '+chf(ki.berechnetChf)+' ('+ki.berechnetUsd.toFixed(2)+' US-Dollar zum Kurs '+ki.wechselkurs+')':'Berechnet aus dem Nutzungsprotokoll: '+ki.berechnetUsd.toFixed(2)+' US-Dollar zum Kurs '+ki.wechselkurs+' US-Dollar für 1 Franken'});
+    h+=tr('Stripe-Gebühren',k.stripeGebuehren.betragChf,{sub:k.stripeGebuehren.geschaetzt?'Schätzung (2,9 % plus CHF 0.30 je Zahlung), wo Stripe keine echte Gebühr meldet':'Echte Gebühren laut Stripe'});
+    if(k.variable.posten.length){h+=tr('Weitere variable Kosten',null,{bold:true});k.variable.posten.forEach(function(p){h+=tr(p.name,p.betragChf,{ind:true});});}
+    if(k.fix.posten.length){h+=tr('Fixkosten',null,{bold:true});k.fix.posten.forEach(function(p){h+=tr(p.name,p.betragChf,{ind:true});});}
+    h+=tr('Summe Kosten',k.summeChf,{bold:true,top:true});
+    h+=tr('Ergebnis des Monats',d.ergebnisChf,{bold:true,top:true});
+    if(d.rueckstellung.prozent>0)h+=tr('Information: Rückstellung Steuern und Sozialversicherung ('+String(d.rueckstellung.prozent).replace('.',',')+' %)',d.rueckstellung.betragChf,{sub:'Nach der Rückstellung bleiben '+chf(d.rueckstellung.nachRueckstellungChf)+'. Diese Zeile ist eine Information und fliesst nicht ins Ergebnis ein.'});
+    return h+'</table>';
+  }
+  function kennzahlen(d){
+    var k=d.kennzahlen;
+    var top=k.top5.length?k.top5.map(function(t){return E(t.name)+' '+E(String(t.anteilProzent).replace('.',','))+' %';}).join(' · '):'noch keine Einnahmen';
+    var klump=k.klumpenrisiko.length?'<div style="color:var(--red);margin-top:6px">Klumpenrisiko: '+k.klumpenrisiko.map(function(x){return E(x.name)+' mit '+E(String(x.anteilProzent).replace('.',','))+' %';}).join(', ')+'. Richtwert: kein Klient über '+E(k.limitProzent)+' %.</div>':'<div style="color:var(--mu);margin-top:6px">Kein Klient liegt über dem Richtwert von '+E(k.limitProzent)+' %.</div>';
+    var rows=[['Marge',pct(d.margeProzent)],['KI-Kosten in Prozent des Umsatzes',pct(d.kiProzentVomUmsatz)],['Zahlende Klienten',k.zahlendeKlienten],['Wiederkehrender Monatsumsatz (MRR)',chf(k.mrrChf)],['Jahreswert (ARR)',chf(k.arrChf)]];
+    return '<table style="width:100%;font-size:14px;border-collapse:collapse">'+rows.map(function(r){return '<tr><td style="'+TD+'">'+E(r[0])+'</td><td style="'+TR+'">'+E(r[1])+'</td></tr>';}).join('')+'</table>'
+      +'<div style="margin-top:10px;font-size:13px"><b style="font-weight:600">Die fünf grössten Klienten:</b> '+top+'</div>'+klump;
+  }
+  function klienten(d){
+    if(!d.klienten.length)return '<div style="color:var(--mu);font-size:14px">In diesem Monat gibt es keine Einnahmen und keine KI-Kosten je Klient.</div>';
+    var h='<table style="width:100%;font-size:14px;border-collapse:collapse"><tr style="font-size:11.5px;color:var(--mu)"><td></td><td style="'+TR+'">Einnahmen</td><td style="'+TR+'">KI-Kosten</td><td style="'+TR+'">Ergebnis</td></tr>';
+    d.klienten.forEach(function(k){
+      var mod=k.module.length?'<div style="font-size:12.5px;color:var(--mu);margin:4px 0 2px">'+k.module.map(function(m){return E(m.module)+' '+E(chf(m.chf));}).join('<br>')+'</div>':'';
+      h+='<tr style="border-top:1px solid var(--bd)"><td style="'+TD+'"><details><summary style="cursor:pointer">'+E(k.name)+'</summary>'+(mod||'<div style="font-size:12.5px;color:var(--mu);margin:4px 0 2px">Keine KI-Kosten in diesem Monat</div>')+'</details></td>'
+        +'<td style="'+TR+'">'+E(chf(k.einnahmenChf))+'</td><td style="'+TR+'">'+E(chf(k.kiKostenChf))+'</td><td style="'+TR+(k.ergebnisChf<0?'color:var(--red);':'')+'">'+E(chf(k.ergebnisChf))+'</td></tr>';
+    });
+    return h+'</table>';
+  }
+  function fixkosten(d){
+    var list=d.fixkostenListe||[];
+    var h='<div style="font-size:13px;color:var(--mu);margin-bottom:10px">Trage hier nur Bezeichnung und Betrag ein, keine Zugangsdaten. «Variabel» ist für Posten wie Spracherkennung (AssemblyAI) oder E-Mail-Versand (Brevo), die das Nutzungsprotokoll nicht zählt.</div>';
+    if(list.length){
+      h+='<table style="width:100%;font-size:14px;border-collapse:collapse">';
+      list.forEach(function(f){
+        var zeit=f.wiederkehrend===false?'einmalig '+(f.gueltig_ab||''):'monatlich'+(f.gueltig_ab?' ab '+f.gueltig_ab:'')+(f.gueltig_bis?' bis '+f.gueltig_bis:'');
+        h+='<tr style="border-top:1px solid var(--bd)"><td style="'+TD+'">'+E(f.name)+'<div style="font-size:11.5px;color:var(--mu)">'+E(f.art==='variabel'?'Variabel':'Fix')+', '+E(zeit)+'</div></td><td style="'+TR+'">'+E(chf(f.betrag_chf))+'</td>'
+          +'<td style="'+TR+'"><button type="button" style="'+BTN+'" data-fe="'+f.id+'">Bearbeiten</button> <button type="button" style="'+BTN+'" data-fd="'+f.id+'">Löschen</button></td></tr>';
+      });
+      h+='</table>';
+    } else h+='<div style="font-size:14px;color:var(--mu);margin-bottom:6px">Noch keine Posten erfasst.</div>';
+    var e=st.edit,v=e||{name:'',betrag_chf:'',art:'fix',wiederkehrend:true,gueltig_ab:'',gueltig_bis:''};
+    h+='<form id="fin-fx" style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">'
+      +'<div><label style="'+LBL+'" for="fx-name">Bezeichnung</label><input id="fx-name" style="'+INP+';width:190px" maxlength="80" value="'+E(v.name)+'"></div>'
+      +'<div><label style="'+LBL+'" for="fx-betrag">Betrag in CHF</label><input id="fx-betrag" inputmode="decimal" style="'+INP+';width:110px" value="'+E(v.betrag_chf)+'"></div>'
+      +'<div><label style="'+LBL+'" for="fx-art">Art</label><select id="fx-art" style="'+INP+'"><option value="fix"'+(v.art==='fix'?' selected':'')+'>Fix</option><option value="variabel"'+(v.art==='variabel'?' selected':'')+'>Variabel</option></select></div>'
+      +'<div><label style="'+LBL+'" for="fx-wk">Rhythmus</label><select id="fx-wk" style="'+INP+'"><option value="1"'+(v.wiederkehrend!==false?' selected':'')+'>Jeden Monat</option><option value="0"'+(v.wiederkehrend===false?' selected':'')+'>Einmalig</option></select></div>'
+      +'<div><label style="'+LBL+'" for="fx-ab">Gültig ab</label><input id="fx-ab" type="month" style="'+INP+'" value="'+E(v.gueltig_ab||'')+'"></div>'
+      +'<div><label style="'+LBL+'" for="fx-bis">Gültig bis</label><input id="fx-bis" type="month" style="'+INP+'" value="'+E(v.gueltig_bis||'')+'"></div>'
+      +'<div><button type="submit" style="'+BTNP+'">'+(e?'Änderung speichern':'Posten hinzufügen')+'</button>'+(e?' <button type="button" id="fx-cancel" style="'+BTN+'">Abbrechen</button>':'')+'</div></form>';
+    return h;
+  }
+  function einstellungen(d){
+    var e=d.einstellungen;
+    return '<form id="fin-set" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">'
+      +'<div><label style="'+LBL+'" for="fs-mw">Mehrwertsteuerpflichtig</label><select id="fs-mw" style="'+INP+'"><option value="0"'+(!e.mwst_pflichtig?' selected':'')+'>Nein</option><option value="1"'+(e.mwst_pflichtig?' selected':'')+'>Ja</option></select></div>'
+      +'<div><label style="'+LBL+'" for="fs-satz">Satz in Prozent</label><input id="fs-satz" inputmode="decimal" style="'+INP+';width:90px" value="'+E(e.mwst_satz)+'"></div>'
+      +'<div><label style="'+LBL+'" for="fs-an">Beträge zeigen</label><select id="fs-an" style="'+INP+'"><option value="netto"'+(e.mwst_anzeige==='netto'?' selected':'')+'>Netto (ohne MwSt)</option><option value="brutto"'+(e.mwst_anzeige==='brutto'?' selected':'')+'>Brutto (mit MwSt)</option></select></div>'
+      +'<div><label style="'+LBL+'" for="fs-kurs">Wechselkurs (US-Dollar für 1 Franken)</label><input id="fs-kurs" inputmode="decimal" style="'+INP+';width:110px" placeholder="Standard '+E(d.kosten.ki.wechselkurs)+'" value="'+E(e.wechselkurs==null?'':e.wechselkurs)+'"></div>'
+      +'<div><label style="'+LBL+'" for="fs-rs">Rückstellung Steuern und Sozialversicherung in Prozent</label><input id="fs-rs" inputmode="decimal" style="'+INP+';width:90px" value="'+E(e.rueckstellung_prozent)+'"></div>'
+      +'<div><button type="submit" style="'+BTNP+'">Einstellungen speichern</button></div></form>'
+      +'<div style="font-size:12.5px;color:var(--mu);margin-top:10px">'+E(d.einnahmen.mwst.text)+'</div>';
+  }
+  function render(){
+    var r=root();if(!r)return;
+    var d=st.data;
+    var head='<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:16px">'
+      +'<div><label style="'+LBL+'" for="fin-month">Monat</label><input id="fin-month" type="month" style="'+INP+'" value="'+E(st.month)+'"></div>'
+      +'<button type="button" style="'+BTN+'" id="fin-reload">Neu laden</button>'
+      +'<button type="button" style="'+BTN+'" id="fin-csv">Export CSV</button>'
+      +'<button type="button" style="'+BTN+'" id="fin-docx">Export Word</button></div>';
+    if(!d){r.innerHTML=head+'<div id="fin-msg" style="font-size:14px;color:var(--mu)">'+(st.busy?'Die Zahlen werden geladen.':'')+'</div>';bind();return;}
+    var warn='';
+    if(d.schaetzung)warn='<div role="alert" style="border:1.5px solid var(--red);background:#FDF3F2;padding:12px 16px;margin-bottom:16px;font-size:14px"><b style="font-weight:600">Schätzung, nicht aus Stripe.</b> '+E(d.stripeHinweis||'')+' Die Einnahmen stammen aus der Datenbank (Klienten mit bezahltem Abo, aktive Zusätze, gekaufte Karten). Einmalige Käufe fehlen.</div>';
+    var hin=d.hinweise.filter(function(h){return !/^Schätzung, nicht aus Stripe/.test(h);});
+    var hinH=hin.length?'<div style="border-left:2px solid var(--ac);padding:8px 14px;margin-bottom:16px;font-size:13px;background:rgba(138,106,42,.06)">'+hin.map(E).join('<br>')+'</div>':'';
+    var vg=d.vergleich;
+    var gross='<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px">'+big('Einnahmen',d.einnahmen.summeChf,diff(vg.einnahmen))+big('Kosten',d.kosten.summeChf,diff(vg.kosten))+big('Ergebnis',d.ergebnisChf,diff(vg.ergebnis),true)+'</div>';
+    var ki='<div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end"><div><label style="'+LBL+'" for="fin-ant">Tatsächliche Rechnung Anthropic im Monat (CHF)</label><input id="fin-ant" inputmode="decimal" style="'+INP+';width:150px" placeholder="leer = berechnet" value="'+E(d.anthropicGebuchtChf==null?'':d.anthropicGebuchtChf)+'"></div><button type="button" style="'+BTN+'" id="fin-ant-save">Speichern</button><span style="font-size:12.5px;color:var(--mu)">Berechnet: '+E(chf(d.kosten.ki.berechnetChf))+(d.kosten.ki.mitGebuchtemWert?'. Gebucht: '+E(chf(d.kosten.ki.gebuchtChf))+'. Die Aufstellung rechnet mit dem gebuchten Wert.':'. Ohne Eintrag rechnet die Aufstellung mit dem berechneten Wert.')+'</span></div>';
+    var regeln='<ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.6;color:var(--mu)">'+d.regeln.map(function(t){return '<li>'+E(t)+'</li>';}).join('')+'<li>'+E(d.einnahmen.mwst.text)+'</li></ul>';
+    r.innerHTML=head+warn+hinH+gross
+      +'<div style="'+CARD+'"><h2 style="'+H+'">Aufstellung für '+E(monthLabel(d.month))+'</h2>'
+      +'<div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin:6px 0">Einnahmen</div>'+einnahmenTable(d)
+      +'<div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin:18px 0 6px">Kosten und Ergebnis</div>'+kostenTable(d)+ki+'</div>'
+      +'<div style="'+CARD+'"><h2 style="'+H+'">Kennzahlen</h2>'+kennzahlen(d)+'</div>'
+      +'<div style="'+CARD+'"><h2 style="'+H+'">Ergebnis je Klient</h2>'+klienten(d)+'</div>'
+      +'<div style="'+CARD+'"><h2 style="'+H+'">Fixkosten und weitere Kosten</h2>'+fixkosten(d)+'</div>'
+      +'<div style="'+CARD+'"><h2 style="'+H+'">Einstellungen</h2>'+einstellungen(d)+'</div>'
+      +'<div style="'+CARD+'"><h2 style="'+H+'">Was gerechnet wurde</h2>'+regeln+'</div>';
+    bind();
+  }
+  function msg(t,bad){var m=document.getElementById('fin-msg');if(!m){var r=root();if(!r)return;m=document.createElement('div');m.id='fin-msg';r.insertBefore(m,r.firstChild);}m.setAttribute('role',bad?'alert':'status');m.style.cssText='font-size:14px;margin:0 0 12px;color:'+(bad?'var(--red)':'var(--mu)');m.textContent=t;}
+  async function call(path,method,body){
+    var o={method:method||'GET'};if(body!==undefined)o.body=JSON.stringify(body);
+    var r=await api(path,o);var j=null;try{j=await r.json();}catch(e){}
+    if(!r.ok)throw new Error((j&&j.error)||'Das hat nicht geklappt. Bitte versuche es erneut.');
+    return j;
+  }
+  async function load(refresh){
+    if(!isA())return;
+    st.busy=true;if(!st.data)render();else msg('Die Zahlen werden geladen.');
+    try{st.data=await call('/api/finanzen?month='+encodeURIComponent(st.month)+(refresh?'&refresh=1':''));st.busy=false;render();}
+    catch(e){st.busy=false;render();msg(e.message,true);}
+  }
+  async function download(kind){
+    try{
+      var r=await api('/api/finanzen/export.'+kind+'?month='+encodeURIComponent(st.month));
+      if(!r.ok){var j=await r.json().catch(function(){return null;});throw new Error((j&&j.error)||'Der Export hat nicht geklappt.');}
+      var b=await r.blob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Finanzaufstellung-'+st.month+'.'+kind;document.body.appendChild(a);a.click();a.remove();
+    }catch(e){msg(e.message,true);}
+  }
+  function num(id){var el=document.getElementById(id);return el?el.value.trim():'';}
+  function bind(){
+    var $=function(id){return document.getElementById(id);};
+    if($('fin-month'))$('fin-month').addEventListener('change',function(){if(/^\d{4}-\d{2}$/.test(this.value)){st.month=this.value;st.data=null;load();}});
+    if($('fin-reload'))$('fin-reload').addEventListener('click',function(){load(true);});
+    if($('fin-csv'))$('fin-csv').addEventListener('click',function(){download('csv');});
+    if($('fin-docx'))$('fin-docx').addEventListener('click',function(){download('docx');});
+    if($('fin-ant-save'))$('fin-ant-save').addEventListener('click',async function(){
+      try{await call('/api/finanzen/anthropic','PUT',{month:st.month,betragChf:num('fin-ant')});await load();}catch(e){msg(e.message,true);}
+    });
+    var fx=$('fin-fx');
+    if(fx)fx.addEventListener('submit',async function(ev){
+      ev.preventDefault();
+      var body={name:num('fx-name'),betrag_chf:num('fx-betrag'),art:num('fx-art'),wiederkehrend:num('fx-wk')==='1',gueltig_ab:num('fx-ab')||null,gueltig_bis:num('fx-bis')||null};
+      try{
+        if(st.edit)await call('/api/finanzen/fixkosten/'+st.edit.id,'PUT',body);else await call('/api/finanzen/fixkosten','POST',body);
+        st.edit=null;await load();
+      }catch(e){msg(e.message,true);}
+    });
+    if($('fx-cancel'))$('fx-cancel').addEventListener('click',function(){st.edit=null;render();});
+    document.querySelectorAll('#fin-root [data-fe]').forEach(function(b){b.addEventListener('click',function(){
+      var id=+b.getAttribute('data-fe');st.edit=(st.data.fixkostenListe||[]).filter(function(f){return f.id===id;})[0]||null;render();var n=$('fx-name');if(n)n.focus();
+    });});
+    document.querySelectorAll('#fin-root [data-fd]').forEach(function(b){b.addEventListener('click',async function(){
+      var id=+b.getAttribute('data-fd');
+      if(!confirm('Diesen Posten löschen?'))return;
+      try{await call('/api/finanzen/fixkosten/'+id,'DELETE');if(st.edit&&st.edit.id===id)st.edit=null;await load();}catch(e){msg(e.message,true);}
+    });});
+    var fs=$('fin-set');
+    if(fs)fs.addEventListener('submit',async function(ev){
+      ev.preventDefault();
+      try{
+        await call('/api/finanzen/einstellungen','PUT',{mwst_pflichtig:num('fs-mw')==='1',mwst_satz:num('fs-satz'),mwst_anzeige:num('fs-an'),wechselkurs:num('fs-kurs')||null,rueckstellung_prozent:num('fs-rs')||0});
+        await load();
+      }catch(e){msg(e.message,true);}
+    });
+  }
+  window.rqFinanzen={load:load,state:st};
 })();
 </script>
 <script id="rq-lernkurve-js">

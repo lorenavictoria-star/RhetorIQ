@@ -262,6 +262,35 @@ function ensureSchema() {
         kampagne_id TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
+    // Finanzaufstellung der Beraterin (lib/finanzen.js): Fixkosten, Einstellungen, tatsächliche Anthropic-Rechnung je Monat
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS finanz_fixkosten (
+        id SERIAL PRIMARY KEY,
+        advisor_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        betrag_chf NUMERIC(12,2) NOT NULL DEFAULT 0,
+        art TEXT NOT NULL DEFAULT 'fix',
+        wiederkehrend BOOLEAN NOT NULL DEFAULT TRUE,
+        gueltig_ab TEXT,
+        gueltig_bis TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS finanz_einstellungen (
+        advisor_id INTEGER PRIMARY KEY,
+        mwst_pflichtig BOOLEAN NOT NULL DEFAULT FALSE,
+        mwst_satz NUMERIC(5,2) NOT NULL DEFAULT 8.1,
+        mwst_anzeige TEXT NOT NULL DEFAULT 'netto',
+        wechselkurs NUMERIC(8,4),
+        rueckstellung_prozent NUMERIC(5,2) NOT NULL DEFAULT 0
+      )`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS finanz_monat (
+        advisor_id INTEGER NOT NULL,
+        monat TEXT NOT NULL,
+        anthropic_chf NUMERIC(12,2),
+        PRIMARY KEY (advisor_id, monat)
+      )`);
     // Indizes für die häufigsten Abfragen (Kundenliste, Verlauf, Nutzung)
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_client_created_idx ON analyses (client_id, created_at DESC)`);
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_advisor_created_idx ON analyses (advisor_id, created_at DESC)`);
