@@ -117,6 +117,11 @@ const INVENTAR = {
     }, menge: 3, mengeAnnahme: '3 von 10 Klienten haben das Zusatzprodukt (Schätzung), ein Lauf je Monat',
     cache: 'Brand Voice im zweiten Aufruf gelesen', haeufigkeit: 'am 1. des Monats je Klient; Obergrenze 0.50 US-Dollar je Lauf'
   },
+  'quartalsreview': {
+    label: 'Quartalsauswertung', funktion: 'Zusammenfassung und Empfehlungen aus den Kennzahlen des Quartals (ohne Textinhalte)', ausloeser: 'zeitplan', modell: 'Haiku',
+    calls: () => [{ model: HAIKU, inputTokens: 900, outputTokens: 700 }], menge: 4, mengeAnnahme: '4 von 10 Klienten (Business, Enterprise, Zusatz), ein Lauf je Quartal',
+    cache: 'keiner', haeufigkeit: 'am 2. Tag nach Quartalsende, je Klient; Obergrenze 0.20 US-Dollar je Lauf'
+  },
   'schnelltest': {
     label: 'Stimm-Schnelltest (Landingpage)', funktion: '3 Befunde zu einer Webseite', ausloeser: 'besucher', modell: 'Haiku',
     calls: () => [{ model: HAIKU, inputTokens: 250 + tok(6000), outputTokens: 250 }], menge: 30, mengeAnnahme: '30 Tests je Monat (Obergrenze 150 je Tag)',

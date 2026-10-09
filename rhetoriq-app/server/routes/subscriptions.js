@@ -84,11 +84,12 @@ router.post('/create-payment-link/:clientId', requireAdvisor, ownClient('clientI
     if (ang) {
       const meta = { clientId: String(clientId), clientName: rows[0].name, angebot: String(angebot) };
       if (ang.einrichtung) meta.type = 'einrichtung';
+      if (ang.zusatz) meta.type = ang.zusatz;
       const p2 = {
-        line_items: [{ price_data: { currency: 'chf', unit_amount: ang.amountCents, ...(ang.recurring ? { recurring: { interval: 'month' } } : {}), product_data: { name: `RhetorIQ ${ang.name} — ${rows[0].name}` } }, quantity: 1 }],
+        line_items: [{ price_data: { currency: 'chf', unit_amount: ang.amountCents, ...(ang.recurring ? { recurring: { interval: 'month', ...(ang.intervalCount ? { interval_count: ang.intervalCount } : {}) } } : {}), product_data: { name: `RhetorIQ ${ang.name} — ${rows[0].name}` } }, quantity: 1 }],
         metadata: meta
       };
-      if (ang.recurring) p2.subscription_data = { metadata: { clientId: String(clientId), clientName: rows[0].name } };
+      if (ang.recurring) p2.subscription_data = { metadata: { clientId: String(clientId), clientName: rows[0].name, ...(ang.zusatz ? { type: ang.zusatz } : {}) } };
       const l2 = await stripe.paymentLinks.create(p2);
       return res.json({ url: l2.url, angebot: String(angebot), amountCents: ang.amountCents });
     }
@@ -297,6 +298,49 @@ router.post('/upgrade-link/:clientId', requireAuth, requireRole('admin'), async 
     res.json({ url: link.url, tier: nextTier.name, amountCents: nextTier.amountCents });
   } catch (e) {
     console.error('[stripe] upgrade-link error:', e.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── Zusatz «Quartalsreview» (CHF 290 alle 3 Monate, Abo mit Intervall 3 Monate) ─────────────
+// Nur für die Pakete Stimme und Team. Business und Enterprise haben das Gespräch im Paket.
+// Gekündigt wird über das Kundenportal (portal-link). Der Webhook setzt und entfernt clients.quartalsreview_aktiv.
+async function quartalsOffer(clientId) {
+  await ensureSchema();
+  const { rows } = await pool.query('SELECT id, name, monthly_token_limit, recommended_plan, quartalsreview_aktiv FROM clients WHERE id=$1', [clientId]);
+  if (!rows.length) return null;
+  const plan = require('../lib/userLimit').baseFor(rows[0]).plan;
+  return { client: rows[0], plan, available: plan === 'stimme' || plan === 'team', aktiv: rows[0].quartalsreview_aktiv === true };
+}
+
+// GET /api/subscriptions/quartalsreview-offer/:clientId  (Wird der Zusatz angeboten, ist er schon gebucht? Preis zur Anzeige)
+router.get('/quartalsreview-offer/:clientId', requireAuth, requireRole('admin'), ownClient('clientId'), async (req, res) => {
+  try {
+    const o = await quartalsOffer(req.params.clientId);
+    if (!o) return res.status(404).json({ error: 'Client not found' });
+    const a = require('../lib/angebote').ANGEBOTE.quartalsreview;
+    res.json({ available: o.available, aktiv: o.aktiv, plan: o.plan, amountCents: a.amountCents, intervalMonths: a.intervalCount });
+  } catch (e) { res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// POST /api/subscriptions/quartalsreview-link/:clientId
+router.post('/quartalsreview-link/:clientId', requireAuth, requireRole('admin'), ownClient('clientId'), async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const o = await quartalsOffer(clientId);
+    if (!o) return res.status(404).json({ error: 'Client not found' });
+    if (!o.available) return res.status(400).json({ error: 'Das Quartalsreview ist bei Business und Enterprise im Paket enthalten. Als Zusatz gibt es es für die Pakete Stimme und Team.' });
+    if (o.aktiv) return res.status(400).json({ error: 'Der Zusatz Quartalsreview ist bereits gebucht. Verwalten und kündigen können Sie ihn über das Kundenportal.' });
+    const a = require('../lib/angebote').ANGEBOTE.quartalsreview;
+    const meta = { clientId: String(clientId), clientName: o.client.name, type: a.zusatz };
+    const link = await getStripe().paymentLinks.create({
+      line_items: [{ price_data: { currency: 'chf', unit_amount: a.amountCents, recurring: { interval: 'month', interval_count: a.intervalCount }, product_data: { name: `RhetorIQ ${a.name}, ${o.client.name}` } }, quantity: 1 }],
+      metadata: meta,
+      subscription_data: { metadata: { ...meta } }
+    });
+    res.json({ url: link.url, amountCents: a.amountCents, intervalMonths: a.intervalCount });
+  } catch (e) {
+    console.error('[stripe] quartalsreview-link error:', e.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -556,7 +600,51 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   try {
     await ensureColumn();
 
-    if (event.type === 'checkout.session.completed' || event.type === 'invoice.paid') {
+    // Zusatz «Quartalsreview»: Typ und Klient stehen am Abo (subscription_data.metadata). Bei Rechnungen liegen sie in subscription_details.
+    const qrMeta = o => {
+      const m = [o && o.metadata, o && o.subscription_details && o.subscription_details.metadata, o && o.lines && o.lines.data && o.lines.data[0] && o.lines.data[0].metadata].find(x => x && x.type === 'quartalsreview');
+      return m || null;
+    };
+    const setQuartalsFlag = async (clientId, an) => {
+      await ensureSchema();
+      await pool.query('UPDATE clients SET quartalsreview_aktiv=$2 WHERE id=$1', [clientId, an]);
+      console.log(`[stripe] client ${clientId} → Zusatz Quartalsreview ${an ? 'aktiv' : 'beendet'} (${event.type})`);
+    };
+    const qrClient = async o => {
+      const m = qrMeta(o);
+      if (!m) return null;
+      if (m.clientId) return m.clientId;
+      if (o.customer) {
+        const f = await pool.query('SELECT id FROM clients WHERE stripe_customer_id=$1', [String(o.customer)]);
+        if (f.rows.length === 1) return f.rows[0].id;
+      }
+      return null;
+    };
+
+    if ((event.type === 'checkout.session.completed' || event.type === 'invoice.paid') && qrMeta(event.data.object)) {
+      // Zusatz Quartalsreview bezahlt: nur das Flag setzen, Paket, Status und Kontingent bleiben unverändert
+      const obj = event.data.object;
+      const clientId = await qrClient(obj);
+      if (clientId) {
+        if (obj.customer) await pool.query('UPDATE clients SET stripe_customer_id=COALESCE(stripe_customer_id,$2) WHERE id=$1', [clientId, obj.customer]);
+        await setQuartalsFlag(clientId, true);
+      } else console.error(`[stripe] Zusatz Quartalsreview ${event.id || ''} konnte keinem Klienten zugeordnet werden`);
+    } else if (event.type === 'invoice.payment_failed' && qrMeta(event.data.object)) {
+      // Zahlungsausfall: Flag zurücknehmen (eine spätere erfolgreiche Zahlung setzt es über invoice.paid wieder)
+      const clientId = await qrClient(event.data.object);
+      if (clientId) await setQuartalsFlag(clientId, false);
+    } else if (event.type === 'customer.subscription.updated' && qrMeta(event.data.object)) {
+      const st = event.data.object.status;
+      if (['past_due', 'unpaid', 'canceled', 'incomplete_expired'].includes(st)) {
+        const clientId = await qrClient(event.data.object);
+        if (clientId) await setQuartalsFlag(clientId, false);
+      }
+    } else if (event.type === 'customer.subscription.deleted' && qrMeta(event.data.object)) {
+      // Kündigung des Zusatzes: Flag zurücknehmen, das Paket des Klienten bleibt (subscription_status wird nicht angefasst)
+      const clientId = await qrClient(event.data.object);
+      if (clientId) await setQuartalsFlag(clientId, false);
+      else console.error(`[stripe] Kündigung Quartalsreview ${event.id || ''} konnte keinem Klienten zugeordnet werden`);
+    } else if (event.type === 'checkout.session.completed' || event.type === 'invoice.paid') {
       const obj = event.data.object;
       // clientId stored in metadata at payment-link creation time
       const clientId = obj.metadata?.clientId;

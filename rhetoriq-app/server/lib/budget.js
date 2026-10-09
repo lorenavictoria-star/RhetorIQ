@@ -13,6 +13,7 @@ const FUNKTIONEN = {
   waechter: { usd: 0.10, label: 'KI-Wächter', module: ['waechter'] },
   messungen: { usd: 1.00, label: 'Kommunikationsprofil-Messungen', module: ['comm-profile'] },
   themenplan: { usd: 5.00, label: 'Themenplan und Newsletter-Entwurf', module: ['themenplan'] },
+  quartalsreview: { usd: 1.00, label: 'Quartalsauswertung', module: ['quartalsreview'] },
   schnelltest: { usd: 2.00, label: 'Stimm-Schnelltest', module: ['schnelltest'] },
   lernvorschlaege: { usd: 2.00, label: 'Lernvorschläge', module: ['lernen-korrektur', 'lernen-nachfrage', 'lernen-daumen'] },
   'hilfe-chat': { usd: 2.00, label: 'Hilfe-Chat', module: ['hilfe-chat'] },

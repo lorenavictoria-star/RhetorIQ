@@ -183,6 +183,24 @@ function ensureSchema() {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS themenplan_laeufe_client_monat_idx ON themenplan_laeufe (client_id, monat)`);
+    // Quartalsauswertung (Business und Enterprise im Paket, Stimme und Team als Zusatz für CHF 290 pro Quartal)
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS quartalsreview_aktiv BOOLEAN NOT NULL DEFAULT FALSE`);
+    await pool.query(`ALTER TABLE quartalsreviews ADD COLUMN IF NOT EXISTS versendet_am TIMESTAMPTZ`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS quartalsreview_laeufe (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        quartal TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'laeuft',
+        kosten_usd NUMERIC(10,4) NOT NULL DEFAULT 0,
+        ki_json TEXT,
+        mail_beraterin_am TIMESTAMPTZ,
+        mail_klient_am TIMESTAMPTZ,
+        grund TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS quartalsreview_laeufe_client_q_idx ON quartalsreview_laeufe (client_id, quartal)`);
     // Indizes für die häufigsten Abfragen (Kundenliste, Verlauf, Nutzung)
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_client_created_idx ON analyses (client_id, created_at DESC)`);
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_advisor_created_idx ON analyses (advisor_id, created_at DESC)`);

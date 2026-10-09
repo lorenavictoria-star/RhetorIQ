@@ -382,6 +382,8 @@ const PORT = process.env.PORT || 3001;
   cron.schedule('30 9 1,15 * *', () => require('./jobs/comm-profile').runCommProfileJob().catch(e => console.error('[comm-profile] job failed:', e.message)), { timezone: 'Europe/Zurich' });
   // Themenplan und Newsletter-Entwurf: am 1. jedes Monats um 06:00 (abschaltbar mit THEMENPLAN=aus)
   cron.schedule('0 6 1 * *', () => require('./jobs/themenplan').runThemenplanJob().catch(e => console.error('[themenplan] job failed:', e.message)), { timezone: 'Europe/Zurich' });
+  // Quartalsauswertung: am 2. Januar, April, Juli und Oktober um 07:00 (abschaltbar mit QUARTALSAUSWERTUNG=aus)
+  cron.schedule('0 7 2 1,4,7,10 *', () => require('./jobs/quartalsauswertung').runQuartalsauswertungJob().catch(e => console.error('[quartalsreview] job failed:', e.message)), { timezone: 'Europe/Zurich' });
   console.log('[cron] Weekly report: every Sunday 08:00 Zurich');
   console.log('[cron] Monthly report: 1st of month 08:07 Zurich');
 

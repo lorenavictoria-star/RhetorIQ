@@ -10,7 +10,7 @@ const DELETE_TABLES = [
   'client_module_prompts', 'client_feedback_learnings', 'client_feedback_history', 'client_users',
   'onboarding_tokens', 'usage_topups', 'learning_suggestions', 'custom_modules', 'client_files',
   'onboarding_drafts', 'access_log', 'feedback_notes', 'goldtexte', 'communication_profiles',
-  'quartalsreviews', 'ueberarbeitungskarten', 'monatsabschluss', 'themenplan_laeufe', 'durchgang_vergleich',
+  'quartalsreviews', 'quartalsreview_laeufe', 'ueberarbeitungskarten', 'monatsabschluss', 'themenplan_laeufe', 'durchgang_vergleich',
   'stimmnaehe', 'pruefsatz_laeufe', 'people'
 ];
 // Nur Zahlen ohne Inhalt: der Klientenbezug fällt weg, die Kostensummen bleiben

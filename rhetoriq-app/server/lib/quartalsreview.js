@@ -10,7 +10,7 @@ const rt = require('./reviewTime');
 const { summarize } = require('./stimmReport');
 
 const BUSINESS_TOKENS = 2000000;
-const STATUS = ['geplant', 'erledigt'];
+const STATUS = ['geplant', 'versendet', 'erledigt'];
 
 function quartalOf(d = new Date()) {
   const dt = new Date(d);
@@ -48,7 +48,7 @@ async function getOne(clientId, quartal) {
 async function save(clientId, quartal, { termin, notizen, status }) {
   await ensureSchema();
   if (!validQuartal(quartal)) throw new Error('Ungültiges Quartal. Erwartet wird zum Beispiel 2026-Q4.');
-  if (status !== undefined && !STATUS.includes(status)) throw new Error('Status muss geplant oder erledigt sein.');
+  if (status !== undefined && !STATUS.includes(status)) throw new Error('Status muss geplant, versendet oder erledigt sein.');
   const cur = await getOne(clientId, quartal);
   const next = {
     termin: termin !== undefined ? String(termin || '').slice(0, 200) : (cur ? cur.termin : ''),
@@ -165,4 +165,4 @@ async function buildVorlage(clientId, quartal = quartalOf()) {
   return { buffer: await Packer.toBuffer(doc), name: cr[0].name, quartal };
 }
 
-module.exports = { quartalOf, validQuartal, isBusiness, dueList, getOne, save, weeklyLines, buildVorlage, QUESTIONS };
+module.exports = { docHelpers: { FONT, p, h1, bullet, cell }, quartalOf, validQuartal, isBusiness, dueList, getOne, save, weeklyLines, buildVorlage, QUESTIONS };
