@@ -19,8 +19,7 @@ const sent = new Set();
 function once(key) { if (sent.has(key)) return false; sent.add(key); if (sent.size > 2000) sent.clear(); return true; }
 
 async function mail(subject, text) {
-  const { brevoSend } = require('./brevo');
-  await brevoSend({ to: NOTIFY, subject, text, senderName: 'RhetorIQ' });
+  await require('./notify').mailAdvisor(subject, text); // Hauptadresse und optional ADVISOR_NOTIFY_EMAIL_2
 }
 
 async function costOf(whereSql, params) {

@@ -97,10 +97,23 @@ function sanitizeForPrompt(text) {
 // prompt, brand voice block, and few-shot examples. The user's own briefing
 // is always prepended before auto-injected context in the frontend, so
 // truncating from the end preserves what the user actually typed.
-const MAX_TEXT_CHARS = 600000;
+// Obergrenze je Textfeld (Befund F-07): 60000 Zeichen, per Umgebungsvariable MAX_FIELD_CHARS änderbar.
+const MAX_TEXT_CHARS = parseInt(process.env.MAX_FIELD_CHARS, 10) || 60000;
 function capText(text) {
   if (typeof text !== 'string' || text.length <= MAX_TEXT_CHARS) return text;
   return text.slice(0, MAX_TEXT_CHARS) + '\n\n[... additional background context truncated due to length ...]';
+}
+
+// Alle Textfelder von data (auch eine Ebene tiefer) auf die Obergrenze kürzen
+function capFields(data) {
+  if (!data || typeof data !== 'object') return data;
+  for (const k of Object.keys(data)) {
+    const v = data[k];
+    if (typeof v === 'string') data[k] = capText(v);
+    else if (v && typeof v === 'object' && !Array.isArray(v)) { for (const k2 of Object.keys(v)) if (typeof v[k2] === 'string') v[k2] = capText(v[k2]); }
+    else if (Array.isArray(v)) data[k] = v.map(x => (typeof x === 'string' ? capText(x) : x));
+  }
+  return data;
 }
 
 // Format-specific structural guidance for the Text Generator module, based on
@@ -1618,7 +1631,7 @@ function logGenerationError(req, e) {
 router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
   try {
     const { module, clientId, data, instructionsKey, followUp } = req.body;
-    if (data && typeof data.text === 'string') data.text = capText(data.text);
+    capFields(data);
     const cfg = PROMPTS[module];
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
 
@@ -1639,6 +1652,11 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     else if (clientId) {
       if (!(await canAccessClient(req, clientId))) return res.status(403).json({ error: 'Kein Zugriff auf diesen Klienten.' });
       resolvedClientId = clientId;
+    }
+    {
+      // Harte Tagesgrenze (F-07): Plattform und je Klient; die Beraterin ist ausgenommen
+      const cap = await require('../lib/costBrake').checkDailyCap(req.user, req.user.role === 'client' ? req.user.clientId : null);
+      if (!cap.ok) return res.status(429).json({ error: cap.error, dailyCapReached: true, scope: cap.scope });
     }
     let quotaWarning = null;
     if (resolvedClientId) {
@@ -1839,7 +1857,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
 router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
   try {
     const { module, clientId, data, debug, instructionsKey, followUp } = req.body;
-    if (data && typeof data.text === 'string') data.text = capText(data.text);
+    capFields(data);
     const isDebug = debug === true && req.user.role === 'advisor';
     const cfg = PROMPTS[module];
     if (!cfg) return res.status(400).json({ error: 'Unknown module' });
@@ -1859,6 +1877,11 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     }
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
 
+    {
+      // Harte Tagesgrenze (F-07): Plattform und je Klient; die Beraterin ist ausgenommen
+      const cap = await require('../lib/costBrake').checkDailyCap(req.user, req.user.role === 'client' ? req.user.clientId : null);
+      if (!cap.ok) return res.status(429).json({ error: cap.error, dailyCapReached: true, scope: cap.scope });
+    }
     let quotaWarning = null;
     if (resolvedClientId) {
       const quota = await checkQuota(resolvedClientId);
@@ -2554,7 +2577,7 @@ router.post('/:id/rate', requireAuth, requireRole('editor'), async (req, res) =>
 
 // Exposed for tests only — doesn't change Express behavior, since routers are
 // callable objects and consumers only ever use `require(...)` as the router.
-router._internal = { sanitizeForPrompt, capText, PROMPTS, MODULE_MAX_TOKENS, HAIKU_MODULES, GLOBAL_STYLE_RULES, checkQuota, getFeedbackLearningsBlock, tuneCache, draftUserContent, revisionUserContent, buildRevisionPrompt, draftModelFor };
+router._internal = { sanitizeForPrompt, capText, capFields, PROMPTS, MODULE_MAX_TOKENS, HAIKU_MODULES, GLOBAL_STYLE_RULES, checkQuota, getFeedbackLearningsBlock, tuneCache, draftUserContent, revisionUserContent, buildRevisionPrompt, draftModelFor };
 
 module.exports = router;
 module.exports.useTwoPass = useTwoPass;

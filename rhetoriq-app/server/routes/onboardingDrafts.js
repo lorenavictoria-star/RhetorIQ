@@ -346,7 +346,8 @@ router.post('/:id/finish', requireAdvisor, async (req, res) => {
       clientType,
       salutation: d.titel === 'Herr' ? 'Herr' : 'Frau',
       lastName: clip(req.body.lastName, 120) || (kontaktTeile.length ? kontaktTeile[kontaktTeile.length - 1] : ''),
-      enabledModules: toEnabledModules(d.module)
+      enabledModules: toEnabledModules(d.module),
+      paket: d.paket
     });
     claimed = null;
     if (['stimme', 'team', 'business', 'enterprise'].includes(d.paket)) {

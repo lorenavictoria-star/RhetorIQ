@@ -10,6 +10,8 @@ const BY_PLAN = { stimme: 1, team: 5, business: 15, enterprise: null };
 
 // Liefert { plan, base } mit base = erlaubte Personen ohne Zusatznutzer (null = unbegrenzt, auch wenn noch kein Paket gesetzt ist)
 function baseFor(c) {
+  // Das Standardkontingent neuer Klienten (200000) soll ein bewusst gesetztes Paket nicht überstimmen
+  if (Number(c.monthly_token_limit) === 200000 && c.recommended_plan && Object.prototype.hasOwnProperty.call(BY_PLAN, c.recommended_plan)) return { plan: c.recommended_plan, base: BY_PLAN[c.recommended_plan] };
   if (c.monthly_token_limit && BY_TOKENS[Number(c.monthly_token_limit)]) {
     const [plan, base] = BY_TOKENS[Number(c.monthly_token_limit)];
     return { plan, base };
