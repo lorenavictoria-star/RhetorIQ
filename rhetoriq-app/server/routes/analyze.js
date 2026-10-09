@@ -1472,6 +1472,32 @@ function tuneCache(blocks) {
   while (marked.length > 3) { const first = marked.shift(); delete first.cache_control; }
   return blocks;
 }
+// Setzt die Systemblöcke eines Auftrags zusammen (Route POST / und /stream). Reihenfolge, von stabil zu wechselnd:
+//   1 Modul-Prompt (markiert), 2 Brand Voice (markiert), 3 Referenz-Dokument (markiert),
+//   4 GEO-Zusatz (wechselt je Auftrag), 5 wechselnder Teil (Kundenanweisungen, gelernte Vorlieben, Goldtexte, Strukturvorlagen,
+//   Stilkarte, heutiges Datum), 6 Datenregel, 7 Regelwerk (beide zuletzt, wie vom Prompt-Aufbau vorgesehen).
+// Vor einer Markierung steht nur Stabiles, ausser bei der letzten Markierung des zweiten Durchgangs (tuneCache): sie schliesst
+// das ganze System ein, weil Durchgang 2 dasselbe System erneut liest. Der Test test/zwischenspeicher.test.js prüft die Reihenfolge.
+function assembleSystemBlocks({ baseSystem, brandVoiceBlock, structuralRefBlock, geoBlock, restDynamicSystem, tune }) {
+  const blocks = [];
+  const mark = (text) => ({ type: 'text', text, cache_control: { type: 'ephemeral' } });
+  if (baseSystem) blocks.push(mark(baseSystem));
+  if (brandVoiceBlock) blocks.push(mark(brandVoiceBlock));
+  if (structuralRefBlock) blocks.push(mark(structuralRefBlock));
+  if (geoBlock) blocks.push({ type: 'text', text: geoBlock });
+  if (restDynamicSystem) blocks.push({ type: 'text', text: restDynamicSystem });
+  if (!blocks.length) blocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
+  blocks.push({ type: 'text', text: DATEN_REGEL });
+  blocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
+  if (tune) tuneCache(blocks);
+  return blocks;
+}
+// Die Markierung am Ende des Systems lohnt sich nur, wenn jemand das System erneut liest: der zweite Durchgang oder eine
+// Nachfrage kurz nach dem Text. Ohne zweiten Durchgang (Haken «Gründlich prüfen» aus, grosse Eingabe) würde sie nur den
+// Schreibzuschlag von 25 Prozent kosten. Der Zwischenspeicher gilt je Modell, deshalb entfällt er beim Entwurf mit Haiku.
+function shouldTuneCache(module, willTwoPass, cheapDraft, followUp) {
+  return TWO_PASS_MODULES.has(module) && !cheapDraft && (willTwoPass || !!(followUp && followUp.note));
+}
 // Erster Durchgang: der Auftrag als markierter Block
 function draftUserContent(userMsg) {
   return [{ type: 'text', text: userMsg, cache_control: { type: 'ephemeral' } }];
@@ -1789,19 +1815,10 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     // Block 1: static module prompt → cached (same across all clients for this module)
     // Block 2: brand voice → cached (same for this client across many calls, rarely changes)
     // Block 3: custom instructions + training examples → not cached (dynamic per call)
-    const systemBlocks = [];
-    if (baseSystem) systemBlocks.push({ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } });
-    if (brandVoiceBlock) systemBlocks.push({ type: 'text', text: brandVoiceBlock, cache_control: { type: 'ephemeral' } });
-    if (structuralRefBlock) systemBlocks.push({ type: 'text', text: structuralRefBlock, cache_control: { type: 'ephemeral' } });
-    const geoBlock = buildGeoBlock(data);
-    if (geoBlock) systemBlocks.push({ type: 'text', text: geoBlock });
-    if (restDynamicSystem) systemBlocks.push({ type: 'text', text: restDynamicSystem });
-    if (!systemBlocks.length) systemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
-    systemBlocks.push({ type: 'text', text: DATEN_REGEL });
-    systemBlocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
     const willTwoPass = useTwoPass(module, req.body) && !(followUp && followUp.note) && !hasLargeInput(data);
     const cheapDraft = willTwoPass && draftModelFor(module) !== resolveModel(module);
-    if (TWO_PASS_MODULES.has(module) && !cheapDraft) tuneCache(systemBlocks);   // Zwischenspeicher (siehe tuneCache)
+    const systemBlocks = assembleSystemBlocks({ baseSystem, brandVoiceBlock, structuralRefBlock, geoBlock: buildGeoBlock(data), restDynamicSystem,
+      tune: shouldTuneCache(module, willTwoPass, cheapDraft, followUp) });
     const claudeResp = await callClaude(systemBlocks, willTwoPass && !cheapDraft ? draftUserContent(userMsg) : userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, willTwoPass ? draftModelFor(module) : resolveModel(module), temperaturFor(module));
     let result = claudeResp.text;
     let totalInputTokens = claudeResp.inputTokens, totalOutputTokens = claudeResp.outputTokens;
@@ -2003,19 +2020,10 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     req.on('close', () => { console.log(`[trace] ${module} client closed connection`); aborted = true; abortController.abort(); clearInterval(keepAlive); });
 
     const maxTokens = MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS;
-    const streamSystemBlocks = [];
-    if (baseSystem) streamSystemBlocks.push({ type: 'text', text: baseSystem, cache_control: { type: 'ephemeral' } });
-    if (brandVoiceBlock) streamSystemBlocks.push({ type: 'text', text: brandVoiceBlock, cache_control: { type: 'ephemeral' } });
-    if (structuralRefBlock) streamSystemBlocks.push({ type: 'text', text: structuralRefBlock, cache_control: { type: 'ephemeral' } });
-    const geoBlock = buildGeoBlock(data);
-    if (geoBlock) streamSystemBlocks.push({ type: 'text', text: geoBlock });
-    if (restDynamicSystem) streamSystemBlocks.push({ type: 'text', text: restDynamicSystem });
-    if (!streamSystemBlocks.length) streamSystemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
-    streamSystemBlocks.push({ type: 'text', text: DATEN_REGEL });
-    streamSystemBlocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
     const willTwoPassS = useTwoPass(module, req.body) && !(followUp && followUp.note) && !hasLargeInput(data);
     const cheapDraftS = willTwoPassS && draftModelFor(module) !== resolveModel(module);
-    if (TWO_PASS_MODULES.has(module) && !cheapDraftS) tuneCache(streamSystemBlocks);   // Zwischenspeicher (siehe tuneCache)
+    const streamSystemBlocks = assembleSystemBlocks({ baseSystem, brandVoiceBlock, structuralRefBlock, geoBlock: buildGeoBlock(data), restDynamicSystem,
+      tune: shouldTuneCache(module, willTwoPassS, cheapDraftS, followUp) });
 
     // Two-pass modules: draft silently first (keepalive pings keep the SSE
     // connection alive during this), then stream only the revised final pass.
@@ -2602,7 +2610,7 @@ router.post('/:id/rate', requireAuth, requireRole('editor'), async (req, res) =>
 
 // Exposed for tests only — doesn't change Express behavior, since routers are
 // callable objects and consumers only ever use `require(...)` as the router.
-router._internal = { sanitizeForPrompt, capText, capFields, PROMPTS, MODULE_MAX_TOKENS, HAIKU_MODULES, GLOBAL_STYLE_RULES, checkQuota, getFeedbackLearningsBlock, tuneCache, draftUserContent, revisionUserContent, buildRevisionPrompt, draftModelFor };
+router._internal = { sanitizeForPrompt, capText, capFields, PROMPTS, MODULE_MAX_TOKENS, HAIKU_MODULES, GLOBAL_STYLE_RULES, checkQuota, getFeedbackLearningsBlock, tuneCache, assembleSystemBlocks, shouldTuneCache, draftUserContent, revisionUserContent, buildRevisionPrompt, draftModelFor };
 
 module.exports = router;
 module.exports.useTwoPass = useTwoPass;
