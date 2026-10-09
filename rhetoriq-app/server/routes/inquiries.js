@@ -32,7 +32,6 @@ async function ensureTable() {
       vorab_sent_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`);
-  await pool.query(`ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS partner_code TEXT`);
   tableEnsured = true;
 }
 
@@ -90,8 +89,8 @@ publicRouter.post('/', inquiryLimit, async (req, res) => {
               (SELECT COUNT(*) FROM inquiries WHERE ack_sent_at > NOW() - INTERVAL '1 hour')::int AS hour`, [email]);
     const sendAck = ackRecent.rows[0].same === 0 && ackRecent.rows[0].hour < 30;
     const { rows } = await pool.query(
-      `INSERT INTO inquiries (name, company, email, message, partner_code) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
-      [name, company, email, message, String(req.body.ref || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 24) || null]);
+      `INSERT INTO inquiries (name, company, email, message) VALUES ($1,$2,$3,$4) RETURNING id`,
+      [name, company, email, message]);
     const id = rows[0].id;
 
     // Eingangsbestätigung an die Anfragende Person (Sie-Form, weil noch nichts geklärt ist).

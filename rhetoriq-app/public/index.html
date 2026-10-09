@@ -11320,63 +11320,6 @@ body.rq-stoerung #rq-rail{top:44px}
   if(typeof gp==='function')window.goPage=function(name){var r=gp.apply(this,arguments);if(name==='usage'&&typeof isAdv!=='undefined'&&isAdv)setTimeout(card,250);return r;};
 })();
 </script>
-<script id="rq-partner-js">
-(function(){
-  var E=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');};
-  function months(){var o=[],d=new Date();for(var i=0;i<14;i++){o.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));d.setMonth(d.getMonth()-1);}return o;}
-  async function render(box){
-    var r=await api('/api/partners'),d=await r.json();
-    if(!r.ok)throw new Error(d.error||'Fehler');
-    var base=(d.baseUrl||'https://rhetoriq.ch').replace(/\/$/,'');
-    var rows=(d.partners||[]).map(function(p){
-      var link=base+'/?ref='+p.code;
-      return '<tr style="border-top:1px solid #eee"><td style="padding:6px 10px 6px 0">'+E(p.name)+(p.aktiv?'':' <span class="rq-hint">(abgeschaltet)</span>')+'</td><td style="padding:6px 10px">'+E(p.clients)+' Klienten</td>'
-        +'<td style="padding:6px 10px"><button type="button" class="obtn" data-copy="'+E(link)+'">Link kopieren</button></td>'
-        +'<td style="padding:6px 0"><button type="button" class="obtn" data-prov="'+p.id+'" data-name="'+E(p.code)+'">Monatsliste herunterladen</button> <button type="button" class="obtn" data-act="'+p.id+'" data-on="'+(p.aktiv?'0':'1')+'">'+(p.aktiv?'Abschalten':'Einschalten')+'</button></td></tr>';
-    }).join('');
-    box.innerHTML='<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Partner</div>'
-      +'<div class="rq-hint" style="margin-bottom:10px">Partner (Treuhand, PR-Agenturen, Verbände) erhalten 10 Prozent der Monatsgebühr der vermittelten Klienten in den ersten 12 Monaten. Der Link enthält den Code des Partners; er wird mit der Anfrage gespeichert.</div>'
-      +(rows?'<table style="width:100%;font-size:14px;border-collapse:collapse;margin-bottom:10px">'+rows+'</table>':'<div class="rq-hint" style="margin-bottom:10px">Noch keine Partner.</div>')
-      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="rqpt-n" placeholder="Name des Partners" style="min-width:180px"><input id="rqpt-e" placeholder="Kontakt-E-Mail" style="min-width:180px"><button type="button" class="obtn" id="rqpt-add">Partner anlegen</button>'
-      +'<select id="rqpt-m">'+months().map(function(m){return '<option value="'+m+'">'+m+'</option>';}).join('')+'</select></div><div class="rq-hint" id="rqpt-msg" style="margin-top:6px"></div>';
-    var msg=box.querySelector('#rqpt-msg');
-    box.querySelector('#rqpt-add').onclick=async function(){
-      msg.textContent='';
-      var rr=await api('/api/partners',{method:'POST',body:JSON.stringify({name:box.querySelector('#rqpt-n').value,kontaktEmail:box.querySelector('#rqpt-e').value})});
-      var dd=await rr.json().catch(function(){return {};});
-      if(!rr.ok){msg.textContent=dd.error||'Das hat nicht geklappt.';return;}
-      render(box);
-    };
-    box.querySelectorAll('[data-copy]').forEach(function(b){b.onclick=function(){
-      var t=b.getAttribute('data-copy');
-      (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){msg.textContent='Link kopiert: '+t;}).catch(function(){msg.textContent=t;});
-    };});
-    box.querySelectorAll('[data-act]').forEach(function(b){b.onclick=async function(){
-      await api('/api/partners/'+b.getAttribute('data-act'),{method:'PUT',body:JSON.stringify({aktiv:b.getAttribute('data-on')==='1'})});render(box);
-    };});
-    box.querySelectorAll('[data-prov]').forEach(function(b){b.onclick=async function(){
-      var m=box.querySelector('#rqpt-m').value;msg.textContent='Wird erstellt …';
-      try{
-        var rr=await api('/api/partners/'+b.getAttribute('data-prov')+'/provision?month='+m+'&format=csv');if(!rr.ok)throw new Error('Fehler');
-        var bl=await rr.blob(),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='Provision_'+b.getAttribute('data-name')+'_'+m+'.csv';document.body.appendChild(a);a.click();a.remove();msg.textContent='Heruntergeladen.';
-      }catch(e){msg.textContent='Das hat nicht geklappt.';}
-    };});
-  }
-  function mount(){
-    try{
-      if(typeof isAdv==='undefined'||!isAdv)return;
-      var pg=document.getElementById('page-usage');if(!pg)return;
-      var old=document.getElementById('rq-partner');if(old)old.remove();
-      var d=document.createElement('div');d.id='rq-partner';d.style.cssText='padding:0 16px;margin:0 0 18px;max-width:900px';
-      var box=document.createElement('div');box.style.cssText='border:1px solid var(--bd);background:#fff;padding:14px 16px';d.appendChild(box);
-      pg.appendChild(d);
-      render(box).catch(function(){d.remove();});
-    }catch(e){console.error(e);}
-  }
-  var gp=window.goPage;
-  if(typeof gp==='function')window.goPage=function(name){var r=gp.apply(this,arguments);if(name==='usage')setTimeout(mount,250);return r;};
-})();
-</script>
 <style id="rq-a11y-css">
 /* Barrierefreiheit: Fokus, Sprunglink, Zielgrössen, Bewegung */
 .rq-sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}

@@ -143,16 +143,6 @@ function ensureSchema() {
         value JSONB,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
-    // Empfehlungsprogramm: Partner und Zuordnung der vermittelten Klienten
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS partner (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        kontakt_email TEXT,
-        code TEXT UNIQUE NOT NULL,
-        aktiv BOOLEAN NOT NULL DEFAULT TRUE
-      )`);
-    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS partner_id INTEGER`);
     // 10er-Karte Überarbeitungen (300 Minuten persönliche Bearbeitung, verfallen nicht) und Monatsabschluss
     await pool.query(`
       CREATE TABLE IF NOT EXISTS ueberarbeitungskarten (

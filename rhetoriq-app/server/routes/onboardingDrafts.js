@@ -357,12 +357,6 @@ router.post('/:id/finish', requireAdvisor, async (req, res) => {
     if (d.inquiry_id) {
       await require('./inquiries').ensureTable();
       await pool.query(`UPDATE inquiries SET status='klient' WHERE id=$1`, [d.inquiry_id]);
-      // Empfehlungsprogramm: vermittelt ein Partner die Anfrage, wird er am Klienten vermerkt
-      try {
-        const iq = await pool.query('SELECT partner_code FROM inquiries WHERE id=$1', [d.inquiry_id]);
-        const partner = await require('../lib/partners').byCode(iq.rows[0] && iq.rows[0].partner_code);
-        if (partner) await pool.query('UPDATE clients SET partner_id=$1 WHERE id=$2', [partner.id, client.id]);
-      } catch (e) { console.error('[onboarding] Partner:', e.message); }
     }
 
     // Einladung: der bestehende Ablauf (onboarding_tokens, /setup?t=...) mit 7 Tagen Gültigkeit.
