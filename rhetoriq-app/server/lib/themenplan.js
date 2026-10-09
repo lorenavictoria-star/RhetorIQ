@@ -68,12 +68,13 @@ async function kontext(clientId) {
 
 function systemBlocks(k, y, month) {
   const blocks = [];
-  if (k.voice.length) blocks.push({ type: 'text', text: BRAND_VOICE_HEAD + k.voice.map(m => `${m.memory_type.toUpperCase()}:\n${clean(m.content, 6000)}\n\n`).join('') + BRAND_VOICE_TAIL, cache_control: { type: 'ephemeral' } });
+  if (k.voice.length) blocks.push({ type: 'text', text: BRAND_VOICE_HEAD + k.voice.map(m => `${m.memory_type.toUpperCase()}:\n${require('./dataFence').fence(m.memory_type, clean(m.content, 6000))}\n\n`).join('') + BRAND_VOICE_TAIL, cache_control: { type: 'ephemeral' } });
   let dyn = '';
   if (k.facts.length) dyn += '\n\nHINTERLEGTE FIRMENDATEN:\n' + k.facts.map(m => `- ${m.memory_type}: ${clean(m.content, 800)}`).join('\n');
   if (k.learned.length) dyn += '\n\nGELERNTE PRÄFERENZEN DIESES KLIENTEN (aus früherem Feedback):\n' + k.learned.map(r => `- ${r.category}: ${clean(r.summary, 300)}`).join('\n');
   dyn += '\n\n' + kalenderBlock(y, month) + heuteBlock();
   blocks.push({ type: 'text', text: dyn.trim() });
+  blocks.push({ type: 'text', text: require('./dataFence').DATEN_REGEL });
   blocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
   return blocks;
 }

@@ -1588,6 +1588,7 @@ function buildFollowUpPrompt(originalUserMsg, previousResult, note) {
 
 // Regelwerk jedes Auftrags (Rangfolge-Block plus Stilregeln) steht in lib/promptRules.js, als letzter Systemblock angehängt.
 const { GLOBAL_STYLE_RULES, BRAND_VOICE_HEAD, BRAND_VOICE_TAIL } = require('../lib/promptRules');
+const { fence, DATEN_REGEL } = require('../lib/dataFence');
 const { heuteBlock } = require('../lib/heute');
 const { temperaturFor } = require('../lib/temperaturen');
 const lernquellen = require('../lib/lernquellen');
@@ -1719,7 +1720,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
         hasBrandVoice = true;
         brandVoiceBlock += BRAND_VOICE_HEAD;
         memRows.forEach(m => {
-          brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${sanitizeForPrompt(m.content)}\n\n`;
+          brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${fence(m.memory_type, sanitizeForPrompt(m.content))}\n\n`;
         });
         brandVoiceBlock += BRAND_VOICE_TAIL;
       }
@@ -1740,7 +1741,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
           + 'REFERENZ-DOKUMENT DIESES KLIENTEN — gilt für dieses und alle anderen Module\n'
           + '════════════════════════════════════════\n'
           + 'Die folgende Referenz wurde vom Berater hinterlegt, um Struktur, Aufbau oder Vorgehen für JEDE Textgenerierung dieses Klienten zu prägen, unabhängig vom aktuellen Modul. Wende sie sinngemäss an, so wie es für das aktuelle Format passt — übernimm die Struktur/Prinzipien, nicht zwingend jedes Detail wortwörtlich, wenn das Format eindeutig ein anderes ist.\n\n'
-          + sanitizeForPrompt(refRows[0].content)
+          + fence('referenz', sanitizeForPrompt(refRows[0].content))
           + '\n\n════════════════════════════════════════\nENDE REFERENZ-DOKUMENT\n════════════════════════════════════════';
       }
     }
@@ -1771,7 +1772,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
             : 'passe Sprache und Stil an den Klienten an.')
           + '\n\n';
         examples.forEach((ex, i) => {
-          restDynamicSystem += `BEISPIEL ${i + 1}${ex.industry_tag ? ` [${ex.industry_tag}]` : ''}:\nINPUT: ${sanitizeForPrompt(ex.input_text)}\nAUFBAU: ${sanitizeForPrompt(ex.output_text)}\n\n`;
+          restDynamicSystem += `BEISPIEL ${i + 1}${ex.industry_tag ? ` [${ex.industry_tag}]` : ''}:\n${fence('beispiel', 'INPUT: ' + sanitizeForPrompt(ex.input_text) + '\nAUFBAU: ' + sanitizeForPrompt(ex.output_text))}\n\n`;
         });
         restDynamicSystem += '--- ENDE STRUKTURVORLAGEN ---';
       }
@@ -1791,6 +1792,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     if (geoBlock) systemBlocks.push({ type: 'text', text: geoBlock });
     if (restDynamicSystem) systemBlocks.push({ type: 'text', text: restDynamicSystem });
     if (!systemBlocks.length) systemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
+    systemBlocks.push({ type: 'text', text: DATEN_REGEL });
     systemBlocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
     const willTwoPass = useTwoPass(module, req.body) && !(followUp && followUp.note) && !hasLargeInput(data);
     const cheapDraft = willTwoPass && draftModelFor(module) !== resolveModel(module);
@@ -1941,7 +1943,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       if (memRows.length) {
         hasBrandVoice = true;
         brandVoiceBlock += BRAND_VOICE_HEAD;
-        memRows.forEach(m => { brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${sanitizeForPrompt(m.content)}\n\n`; });
+        memRows.forEach(m => { brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${fence(m.memory_type, sanitizeForPrompt(m.content))}\n\n`; });
         brandVoiceBlock += BRAND_VOICE_TAIL;
       }
       const { rows: refRows } = await pool.query(
@@ -1953,7 +1955,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
           + 'REFERENZ-DOKUMENT DIESES KLIENTEN — gilt für dieses und alle anderen Module\n'
           + '════════════════════════════════════════\n'
           + 'Die folgende Referenz wurde vom Berater hinterlegt, um Struktur, Aufbau oder Vorgehen für JEDE Textgenerierung dieses Klienten zu prägen, unabhängig vom aktuellen Modul. Wende sie sinngemäss an, so wie es für das aktuelle Format passt — übernimm die Struktur/Prinzipien, nicht zwingend jedes Detail wortwörtlich, wenn das Format eindeutig ein anderes ist.\n\n'
-          + sanitizeForPrompt(refRows[0].content)
+          + fence('referenz', sanitizeForPrompt(refRows[0].content))
           + '\n\n════════════════════════════════════════\nENDE REFERENZ-DOKUMENT\n════════════════════════════════════════';
       }
     }
@@ -1972,7 +1974,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
           + (hasBrandVoice ? 'Nur Struktur übernehmen, Brand Voice bestimmt Ton.' : 'Passe Stil an den Klienten an.')
           + '\n\n';
         examples.forEach((ex, i) => {
-          restDynamicSystem += `BEISPIEL ${i + 1}:\nINPUT: ${sanitizeForPrompt(ex.input_text)}\nAUFBAU: ${sanitizeForPrompt(ex.output_text)}\n\n`;
+          restDynamicSystem += `BEISPIEL ${i + 1}:\n${fence('beispiel', 'INPUT: ' + sanitizeForPrompt(ex.input_text) + '\nAUFBAU: ' + sanitizeForPrompt(ex.output_text))}\n\n`;
         });
         restDynamicSystem += '--- ENDE STRUKTURVORLAGEN ---';
       }
@@ -2004,6 +2006,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     if (geoBlock) streamSystemBlocks.push({ type: 'text', text: geoBlock });
     if (restDynamicSystem) streamSystemBlocks.push({ type: 'text', text: restDynamicSystem });
     if (!streamSystemBlocks.length) streamSystemBlocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
+    streamSystemBlocks.push({ type: 'text', text: DATEN_REGEL });
     streamSystemBlocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
     const willTwoPassS = useTwoPass(module, req.body) && !(followUp && followUp.note) && !hasLargeInput(data);
     const cheapDraftS = willTwoPassS && draftModelFor(module) !== resolveModel(module);
