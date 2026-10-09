@@ -89,7 +89,7 @@ function validateFields(body, { partial }) {
   }
   if (has('paket')) {
     const p = String(b.paket || '').toLowerCase();
-    if (p && !['starter', 'wachstum', 'team', 'enterprise'].includes(p)) return { error: 'Unbekanntes Paket.' };
+    if (p && !['stimme', 'team', 'business', 'enterprise'].includes(p)) return { error: 'Unbekanntes Paket.' };
     f.paket = p;
   }
   if (has('groesse')) {
@@ -340,7 +340,7 @@ router.post('/:id/finish', requireAdvisor, async (req, res) => {
       enabledModules: toEnabledModules(d.module)
     });
     claimed = null;
-    if (['starter', 'wachstum', 'team', 'enterprise'].includes(d.paket)) {
+    if (['stimme', 'team', 'business', 'enterprise'].includes(d.paket)) {
       await pool.query('UPDATE clients SET recommended_plan=$1 WHERE id=$2', [d.paket, client.id]).catch(e => console.error('[onboarding] Paket:', e.message));
     }
     await pool.query('UPDATE onboarding_drafts SET client_id=$1, updated_at=NOW() WHERE id=$2', [client.id, id]);

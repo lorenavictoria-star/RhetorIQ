@@ -5,9 +5,9 @@ const { planPriceChf } = require('./costAlerts');
 
 const RATE_CHF = parseFloat(process.env.HOURLY_RATE_CHF) || 180;
 const STEP = 15;
-// Inbegriffene Minuten je Monat: Überarbeitungen mal 15 Minuten (Starter 2, Wachstum 6, Team 15), Enterprise 5 Stunden
-const PLAN_MINUTES = { starter: 30, wachstum: 90, team: 225, enterprise: 300 };
-const DEFAULT_PLAN = 'wachstum';
+// Inbegriffene Minuten je Monat: Überarbeitungen mal 15 Minuten (Stimme 2, Team 6, Business 15), Enterprise 5 Stunden
+const PLAN_MINUTES = { stimme: 30, team: 90, business: 225, enterprise: 300 };
+const DEFAULT_PLAN = 'team';
 
 function monthRange(month) {
   const m = /^(\d{4})-(\d{2})$/.test(String(month || '')) ? String(month) : new Date().toISOString().slice(0, 7);

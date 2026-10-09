@@ -119,12 +119,14 @@ router.post('/mark-active/:clientId', requireAdvisor, async (req, res) => {
 // ~5'000 tokens per text as a buffer (covers longer formats like
 // presentations, not just short emails).
 const TIERS = [
-  { name: 'Starter', amountCents: 29000, tokens: 300000 },     // 60 Texte/Monat
-  { name: 'Wachstum', amountCents: 59000, tokens: 750000 },    // 150 Texte/Monat
-  { name: 'Team', amountCents: 99000, tokens: 1500000 },       // 300 Texte/Monat
-  { name: 'Enterprise', amountCents: 249000, tokens: null },   // unbegrenzt
+  { name: 'Stimme', amountCents: 19000, tokens: 200000 },      // 40 Texte/Monat
+  { name: 'Team', amountCents: 59000, tokens: 750000 },        // 150 Texte/Monat
+  { name: 'Business', amountCents: 149000, tokens: 2000000 },  // 400 Texte/Monat
+  { name: 'Enterprise', amountCents: 249000, tokens: null },   // unbegrenzt, auf Anfrage
 ];
-const PRICE_TIER_TOKEN_LIMITS = Object.fromEntries(TIERS.map(t => [t.amountCents, t.tokens]));
+// Frühere Abos (Starter CHF 290, Team CHF 990) laufen mit ihrem bisherigen Kontingent weiter.
+const LEGACY_PRICE_LIMITS = { 29000: 300000, 99000: 1500000 };
+const PRICE_TIER_TOKEN_LIMITS = { ...LEGACY_PRICE_LIMITS, ...Object.fromEntries(TIERS.map(t => [t.amountCents, t.tokens])) };
 function resolveTokenLimit(amountInCents, currency) {
   if (!amountInCents || (currency || '').toLowerCase() !== 'chf') return undefined;
   return PRICE_TIER_TOKEN_LIMITS.hasOwnProperty(amountInCents) ? PRICE_TIER_TOKEN_LIMITS[amountInCents] : undefined;
@@ -212,8 +214,8 @@ router.post('/upgrade-link/:clientId', requireAuth, async (req, res) => {
     // a real, non-null tier value here so an unassigned client correctly
     // gets offered Starter as the next tier, instead of being treated as
     // already on Enterprise and blocked from upgrading at all.
-    const currentIdx = TIERS.findIndex(t => t.tokens !== null && t.tokens === currentLimit);
-    const nextTier = TIERS[currentIdx + 1];
+    // Nächste Stufe = die erste mit grösserem Kontingent (so greift es auch für frühere Abos)
+    const nextTier = currentLimit ? TIERS.find(t => t.tokens === null || t.tokens > currentLimit) : TIERS[0];
     if (!nextTier) {
       return res.status(400).json({ error: 'Bereits auf der höchsten Stufe — bitte direkt bei der Beraterin melden.' });
     }

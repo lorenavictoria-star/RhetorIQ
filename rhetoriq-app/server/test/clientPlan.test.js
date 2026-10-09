@@ -12,9 +12,9 @@ test.after(async () => { await srv.close(); });
 
 test('Empfohlenes Paket: Beraterin setzt, Klient liest nur das eigene', async () => {
   assert.equal((await srv.call('GET', `/api/client-plan/${a.id}`, { token: H.clientToken(a.id) })).body.plan, null);
-  assert.equal((await srv.call('PUT', `/api/client-plan/${a.id}`, { token: H.advisorToken(), body: { plan: 'Team' } })).body.plan, 'team');
-  assert.equal((await srv.call('GET', `/api/client-plan/${a.id}`, { token: H.clientToken(a.id) })).body.plan, 'team');
+  assert.equal((await srv.call('PUT', `/api/client-plan/${a.id}`, { token: H.advisorToken(), body: { plan: 'Business' } })).body.plan, 'business');
+  assert.equal((await srv.call('GET', `/api/client-plan/${a.id}`, { token: H.clientToken(a.id) })).body.plan, 'business');
   assert.equal((await srv.call('GET', `/api/client-plan/${a.id}`, { token: H.clientToken(b.id) })).status, 403);
-  assert.equal((await srv.call('PUT', `/api/client-plan/${a.id}`, { token: H.clientToken(a.id), body: { plan: 'starter' } })).status, 403);
+  assert.equal((await srv.call('PUT', `/api/client-plan/${a.id}`, { token: H.clientToken(a.id), body: { plan: 'stimme' } })).status, 403);
   assert.equal((await srv.call('PUT', `/api/client-plan/${a.id}`, { token: H.advisorToken(), body: { plan: 'gratis' } })).status, 400);
 });

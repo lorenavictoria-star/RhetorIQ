@@ -5,7 +5,7 @@ const { ownClient } = require('../middleware/ownership');
 const { ensureSchema } = require('../lib/schemaRedesign');
 
 const router = express.Router();
-const PLANS = ['starter', 'wachstum', 'team', 'enterprise'];
+const PLANS = ['stimme', 'team', 'business', 'enterprise'];
 
 // GET /api/client-plan/:clientId  (Beraterin und der Klient selbst)
 router.get('/:clientId', requireAuth, ownClient('clientId'), async (req, res) => {

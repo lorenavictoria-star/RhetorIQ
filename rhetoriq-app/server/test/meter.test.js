@@ -52,8 +52,11 @@ test('recordApi übernimmt das usage-Objekt der Anthropic-Antwort', async () => 
 
 test('Abopreis je Kontingent für die Monatswarnung', () => {
   const { planPriceChf } = require('../lib/costAlerts');
-  assert.equal(planPriceChf(300000), 290);
-  assert.equal(planPriceChf(1500000), 990);
+  assert.equal(planPriceChf(200000), 190);
+  assert.equal(planPriceChf(750000), 590);
+  assert.equal(planPriceChf(2000000), 1490);
+  assert.equal(planPriceChf(300000), 290, 'frühere Abos');
+  assert.equal(planPriceChf(1500000), 990, 'frühere Abos');
   assert.equal(planPriceChf(null), 2490);
   assert.equal(planPriceChf(12345), null);
 });

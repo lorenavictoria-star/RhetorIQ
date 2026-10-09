@@ -161,6 +161,13 @@ router.get('/', requireAdvisor, async (req, res) => {
     );
     // So the advisor sees what this client has liked/disliked before, not just
     // the text currently up for review — small N here, pending reviews are few.
+    // Antwortzeit je Paket: Stimme 1 Werktag (24 Stunden), alle anderen 3 Stunden
+    try {
+      const ids = [...new Set(rows.map(r => r.client_id).filter(Boolean))];
+      const plans = ids.length ? (await pool.query('SELECT id, recommended_plan FROM clients WHERE id = ANY($1)', [ids])).rows : [];
+      const byId = new Map(plans.map(p => [p.id, p.recommended_plan]));
+      rows.forEach(rv => { rv.sla_hours = byId.get(rv.client_id) === 'stimme' ? 24 : 3; });
+    } catch (e) { rows.forEach(rv => { rv.sla_hours = 3; }); }
     await Promise.all(rows.map(async rv => {
       if (!rv.client_id || !rv.module_label) { rv.pastRatings = []; return; }
       const { rows: past } = await pool.query(

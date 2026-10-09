@@ -28,7 +28,7 @@ test('Minuten erfassen, Monatsübersicht, eigenes Kontingent', async () => {
   assert.equal((await srv.call('PUT', `/api/review-time/review/${r2}`, { token: H.advisorToken(), body: { minutes: 9999 } })).status, 400);
   const s = await srv.call('GET', `/api/review-time/client/${a.id}`, { token: H.advisorToken() });
   assert.equal(s.body.usedMinutes, 100);
-  assert.equal(s.body.includedMinutes, 90, 'Standard Wachstum: 6 mal 15 Minuten');
+  assert.equal(s.body.includedMinutes, 90, 'Standard Team: 6 mal 15 Minuten');
   assert.equal(s.body.extraChf, 45);
   const t = await srv.call('PUT', `/api/review-time/client/${a.id}/included`, { token: H.advisorToken(), body: { minutes: 225 } });
   assert.equal(t.body.includedMinutes, 225);
