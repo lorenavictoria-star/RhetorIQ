@@ -5514,7 +5514,7 @@ function buildTextGen(prefill,form){
           <div id="klv-tpl-preview-${t.id}" style="font-size:11px;color:var(--mu);margin-top:4px;max-height:60px;overflow:hidden"></div>
         </div>
       </div>`:''}
-      <div class="tone-cal-box">
+      <div class="tone-cal-box" style="${['linkedin','speech','press','website'].includes(t.id)?'':'display:none'}">
         <div class="tone-cal-hdr" onclick="toggleVorbild('${t.id}')">
           <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)">Vorbild-Accounts</span>
           <span id="vorbild-arrow-${t.id}" style="font-size:16px;color:var(--mu);line-height:1">+</span>
