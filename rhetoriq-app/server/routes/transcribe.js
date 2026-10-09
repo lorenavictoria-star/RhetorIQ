@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const https = require('https');
 const { requireAuth } = require('../middleware/auth');
+const { requireRole } = require('../middleware/roles');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 200 * 1024 * 1024 } });
 const router = express.Router();
@@ -30,7 +31,7 @@ function assemblyRequest(method, path, payload, buffer) {
 }
 
 // POST /api/transcribe — upload file, kick off job, return jobId
-router.post('/', requireAuth, upload.single('file'), async (req, res) => {
+router.post('/', requireAuth, requireRole('editor'), upload.single('file'), async (req, res) => {
   try {
     if (!process.env.ASSEMBLYAI_API_KEY) return res.status(503).json({ error: 'ASSEMBLYAI_API_KEY not set' });
     const uploaded = await assemblyRequest('POST', '/v2/upload', null, req.file.buffer);

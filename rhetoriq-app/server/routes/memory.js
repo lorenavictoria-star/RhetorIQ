@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { requireRole } = require('../middleware/roles');
 
 const router = express.Router();
 
@@ -53,7 +54,7 @@ router.get('/:clientId/:type/history', requireAuth, async (req, res) => {
 });
 
 // POST /api/memory/:clientId/:type/rollback/:historyId — Task 10
-router.post('/:clientId/:type/rollback/:historyId', requireAuth, async (req, res) => {
+router.post('/:clientId/:type/rollback/:historyId', requireAuth, requireRole('editor'), async (req, res) => {
   try {
     if (!await checkOwnership(req, res, req.params.clientId)) return;
     const { rows: histRows } = await pool.query(
@@ -90,7 +91,7 @@ router.post('/:clientId/:type/rollback/:historyId', requireAuth, async (req, res
 });
 
 // PUT /api/memory/:clientId/:type — archives old version before saving
-router.put('/:clientId/:type', requireAuth, async (req, res) => {
+router.put('/:clientId/:type', requireAuth, requireRole('editor'), async (req, res) => {
   try {
     if (!await checkOwnership(req, res, req.params.clientId)) return;
     if (!/^[A-Za-z0-9_-]{1,64}$/.test(req.params.type)) return res.status(400).json({ error: 'Ungültiger Gedächtnis-Typ.' });
@@ -124,7 +125,7 @@ router.put('/:clientId/:type', requireAuth, async (req, res) => {
 });
 
 // DELETE /api/memory/:clientId — called when client data is wiped
-router.delete('/:clientId', requireAuth, async (req, res) => {
+router.delete('/:clientId', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     if (!await checkOwnership(req, res, req.params.clientId)) return;
     const { rowCount } = await pool.query(

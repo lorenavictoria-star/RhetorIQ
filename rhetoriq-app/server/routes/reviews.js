@@ -3,7 +3,8 @@ const router = express.Router();
 const { pool } = require('../db');
 const jwt = require('jsonwebtoken');
 const { queueEmail } = require('../lib/emailOutbox');
-const { requireAdvisor } = require('../middleware/auth');
+const { requireAdvisor, requireAuth } = require('../middleware/auth');
+const { requireRole } = require('../middleware/roles');
 const { ensureSchema } = require('../lib/schemaRedesign');
 const { saveFile } = require('../lib/fileStore');
 const { entwurfName, auftragBlock } = require('../lib/onboardingMails');
@@ -50,17 +51,11 @@ async function notifyClientOfReviewedText(clientId, moduleLabel, editedText) {
 
 const ADVISOR_NOTIFY_EMAIL = process.env.ADVISOR_EMAIL || 'contact@lorenalienhard.ch';
 
-function auth(req, res, next) {
-  const h = req.headers.authorization;
-  if (!h) return res.status(401).json({ error: 'No token' });
-  try {
-    req.user = jwt.verify(h.split(' ')[1], process.env.JWT_SECRET);
-    next();
-  } catch { res.status(401).json({ error: 'Invalid token' }); }
-}
+// Anmeldung mit Widerrufsprüfung (token_version), wie überall sonst
+const auth = requireAuth;
 
 // POST /api/reviews — client submits text for advisor review
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, requireRole('editor'), async (req, res) => {
   const { moduleLabel, originalText, note, moduleKey, moduleTile, reviewContext, revisionHistory } = req.body;
   // Klienten reichen nur für sich selbst ein, egal was im Aufruf steht.
   const clientId = req.user.role === 'client' ? req.user.clientId : req.body.clientId;

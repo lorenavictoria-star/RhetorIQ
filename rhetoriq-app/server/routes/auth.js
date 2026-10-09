@@ -137,8 +137,18 @@ router.post('/client-user-login', async (req, res) => {
 router.post('/client-change-password', requireAuth, async (req, res) => {
   try {
     if (req.user.role !== 'client') return res.status(403).json({ error: 'Forbidden' });
-    const { newPassword } = req.body;
+    // Das Hauptpasswort ändert nur der Hauptzugang, kein Teammitglied (diese ändern ihr eigenes Passwort über /client-user/profile).
+    if (req.user.clientUserId) return res.status(403).json({ error: 'Das Hauptpasswort ändert nur der Hauptzugang.' });
+    const { newPassword, currentPassword } = req.body;
     if (!newPassword || newPassword.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    // Bisheriges Passwort verlangen, ausser beim erzwungenen ersten Wechsel (must_change_password) oder wenn noch keines gesetzt ist.
+    const { rows: cur } = await pool.query('SELECT password_hash, must_change_password FROM clients WHERE id = $1', [req.user.clientId]);
+    if (!cur[0]) return res.status(404).json({ error: 'Not found' });
+    if (cur[0].password_hash && !cur[0].must_change_password) {
+      if (!currentPassword || !(await bcrypt.compare(String(currentPassword), cur[0].password_hash))) {
+        return res.status(401).json({ error: 'Das bisherige Passwort fehlt oder stimmt nicht.' });
+      }
+    }
 
     const hash = await bcrypt.hash(newPassword, 12);
     // Bump token_version so any other outstanding session for this client is

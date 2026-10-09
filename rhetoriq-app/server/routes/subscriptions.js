@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth, requireAdvisor } = require('../middleware/auth');
+const { requireRole } = require('../middleware/roles');
 const { ownClient } = require('../middleware/ownership');
 const yearly = require('../lib/yearlyPlan');
 
@@ -149,7 +150,7 @@ const TOPUP = { amountCents: 4900, tokens: 100000, label: 'Zusatzpaket +20 Texte
 // right away. Marks them explicitly as pending-plan so generation is
 // gated until they pick one — distinct from 'trial', which existing/
 // advisor-managed clients keep and which is never gated.
-router.post('/skip-plan/:clientId', requireAuth, async (req, res) => {
+router.post('/skip-plan/:clientId', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     await ensureColumn();
     const { clientId } = req.params;
@@ -168,7 +169,7 @@ router.post('/skip-plan/:clientId', requireAuth, async (req, res) => {
 // Self-serve: client hit their monthly quota and wants to buy a one-time
 // top-up right now, without waiting on the advisor. No pre-created Stripe
 // Price needed — price_data builds it inline.
-router.post('/topup-link/:clientId', requireAuth, async (req, res) => {
+router.post('/topup-link/:clientId', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const { clientId } = req.params;
     if (req.user.role === 'client' && String(req.user.clientId) !== String(clientId)) {
@@ -205,7 +206,7 @@ router.post('/topup-link/:clientId', requireAuth, async (req, res) => {
 // NOTE: this does not cancel the client's existing subscription in Stripe —
 // check for and cancel the old one manually after an upgrade goes through,
 // until a full Customer Portal / proration flow is wired up.
-router.post('/upgrade-link/:clientId', requireAuth, async (req, res) => {
+router.post('/upgrade-link/:clientId', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const { clientId } = req.params;
     if (req.user.role === 'client' && String(req.user.clientId) !== String(clientId)) {
@@ -259,7 +260,7 @@ router.get('/yearly-offer/:clientId', requireAuth, ownClient('clientId'), async 
 // ── POST /api/subscriptions/yearly-link/:clientId ───────────────
 // Jahresabo mit einheitlich 10 % Rabatt. Das Paket ergibt sich aus dem Monatskontingent.
 // Klient nur für sich selbst, Beraterin für ihre Klienten.
-router.post('/yearly-link/:clientId', requireAuth, ownClient('clientId'), async (req, res) => {
+router.post('/yearly-link/:clientId', requireAuth, requireRole('admin'), ownClient('clientId'), async (req, res) => {
   try {
     const { clientId } = req.params;
     const { rows } = await pool.query('SELECT id, name, monthly_token_limit FROM clients WHERE id=$1', [clientId]);
@@ -277,7 +278,7 @@ router.post('/yearly-link/:clientId', requireAuth, ownClient('clientId'), async 
 // Self-serve: client picks a plan on the setup page (right after setting
 // their password) and pays for it themselves. Any of the four tiers can be
 // chosen directly, unlike upgrade-link which only offers the next one up.
-router.post('/choose-plan/:clientId', requireAuth, async (req, res) => {
+router.post('/choose-plan/:clientId', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const { clientId } = req.params;
     if (req.user.role === 'client' && String(req.user.clientId) !== String(clientId)) {
@@ -316,7 +317,7 @@ router.post('/choose-plan/:clientId', requireAuth, async (req, res) => {
 // where the client can cancel or view their subscription themselves without
 // the advisor doing it manually in Stripe. Requires stripe_customer_id to
 // already be on file, which the webhook captures at first payment.
-router.post('/portal-link/:clientId', requireAuth, async (req, res) => {
+router.post('/portal-link/:clientId', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     await ensureColumn();
     const { clientId } = req.params;
@@ -441,7 +442,7 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // POST /api/subscriptions  — upsert a subscription
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
   try {
     const { clientId, format, frequency, topicHint, enabled } = req.body;
     if (!clientId || !format) return res.status(400).json({ error: 'clientId and format required' });
@@ -483,7 +484,7 @@ router.get('/due', requireAuth, async (req, res) => {
 });
 
 // POST /api/subscriptions/mark-sent  — update last_sent_at
-router.post('/mark-sent', requireAuth, async (req, res) => {
+router.post('/mark-sent', requireAuth, requireRole('editor'), async (req, res) => {
   try {
     const { clientId, format } = req.body;
     await pool.query(

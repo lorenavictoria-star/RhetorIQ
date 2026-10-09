@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { requireRole } = require('../middleware/roles');
 const { allowedClientId, ownPerson } = require('../middleware/ownership');
 
 const router = express.Router();
@@ -29,7 +30,7 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // POST /api/people
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
   try {
     const { name, role, department, notes } = req.body;
     if (!name) return res.status(400).json({ error: 'Name required' });
@@ -48,7 +49,7 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // PUT /api/people/:id
-router.put('/:id', requireAuth, ownPerson('id'), async (req, res) => {
+router.put('/:id', requireAuth, requireRole('editor'), ownPerson('id'), async (req, res) => {
   try {
     const { name, role, department, notes } = req.body;
     const { rows } = await pool.query(
@@ -64,7 +65,7 @@ router.put('/:id', requireAuth, ownPerson('id'), async (req, res) => {
 });
 
 // DELETE /api/people/:id
-router.delete('/:id', requireAuth, ownPerson('id'), async (req, res) => {
+router.delete('/:id', requireAuth, requireRole('editor'), ownPerson('id'), async (req, res) => {
   try {
     await pool.query('DELETE FROM people WHERE id=$1', [req.params.id]);
     res.json({ ok: true });
@@ -75,7 +76,7 @@ router.delete('/:id', requireAuth, ownPerson('id'), async (req, res) => {
 });
 
 // POST /api/people/:id/profile — save/update a profile for a person
-router.post('/:id/profile', requireAuth, ownPerson('id'), async (req, res) => {
+router.post('/:id/profile', requireAuth, requireRole('editor'), ownPerson('id'), async (req, res) => {
   try {
     const { profile_type, content } = req.body;
     const { rows } = await pool.query(
@@ -94,7 +95,7 @@ router.post('/:id/profile', requireAuth, ownPerson('id'), async (req, res) => {
 });
 
 // DELETE /api/people/:id/profile/:type
-router.delete('/:id/profile/:type', requireAuth, ownPerson('id'), async (req, res) => {
+router.delete('/:id/profile/:type', requireAuth, requireRole('editor'), ownPerson('id'), async (req, res) => {
   try {
     await pool.query(
       'DELETE FROM people_profiles WHERE person_id=$1 AND profile_type=$2',

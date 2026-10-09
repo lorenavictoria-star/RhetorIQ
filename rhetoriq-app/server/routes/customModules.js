@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { requireRole } = require('../middleware/roles');
 const meterLib = require('../lib/meter');
 const { canAccessClient, allowedClientId } = require('../middleware/ownership');
 
@@ -45,7 +46,7 @@ async function callClaude(system, user) {
 }
 
 // POST /api/custom-modules/generate — advisor only, generates module suggestions from discovery notes
-router.post('/generate', requireAuth, async (req, res) => {
+router.post('/generate', requireAuth, requireRole('editor'), async (req, res) => {
   if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Advisor only' });
   const { notes, clientName, language } = req.body;
   if (!notes) return res.status(400).json({ error: 'notes required' });
@@ -108,7 +109,7 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // POST /api/custom-modules — save a module
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
   if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Advisor only' });
   const { client_id, name, description, system_prompt, input_fields, icon } = req.body;
   if (!client_id || !name || !system_prompt) return res.status(400).json({ error: 'client_id, name, system_prompt required' });
@@ -127,7 +128,7 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // PUT /api/custom-modules/:id — update
-router.put('/:id', requireAuth, async (req, res) => {
+router.put('/:id', requireAuth, requireRole('editor'), async (req, res) => {
   if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Advisor only' });
   const { name, description, system_prompt, input_fields, icon } = req.body;
   try {
@@ -145,7 +146,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 });
 
 // DELETE /api/custom-modules/:id
-router.delete('/:id', requireAuth, async (req, res) => {
+router.delete('/:id', requireAuth, requireRole('editor'), async (req, res) => {
   if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Advisor only' });
   try {
     await pool.query('DELETE FROM custom_modules WHERE id=$1 AND advisor_id=$2', [req.params.id, req.user.id]);
@@ -157,7 +158,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
 });
 
 // POST /api/custom-modules/:id/run — run a custom module
-router.post('/:id/run', requireAuth, async (req, res) => {
+router.post('/:id/run', requireAuth, requireRole('editor'), async (req, res) => {
   const { inputs } = req.body;
   try {
     const { rows } = await pool.query('SELECT * FROM custom_modules WHERE id=$1', [req.params.id]);

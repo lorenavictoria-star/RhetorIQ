@@ -2,6 +2,7 @@ const { scopeSql } = require('../lib/exampleScope');
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { requireRole } = require('../middleware/roles');
 const meterLib = require('../lib/meter');
 
 const router = express.Router();
@@ -18,7 +19,7 @@ router.get('/:clientId/:moduleKey', requireAuth, async (req, res) => {
 });
 
 // POST /api/module-prompts/:clientId/:moduleKey
-router.post('/:clientId/:moduleKey', requireAuth, async (req, res) => {
+router.post('/:clientId/:moduleKey', requireAuth, requireRole('editor'), async (req, res) => {
   if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Forbidden' });
   const { clientId, moduleKey } = req.params;
   const { instructions } = req.body;

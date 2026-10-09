@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { requireRole } = require('../middleware/roles');
 const { canAccessClient } = require('../middleware/ownership');
 const { brevoSend } = require('../lib/brevo');
 const { COST_SQL } = require('../lib/meter');
@@ -1613,7 +1614,7 @@ function logGenerationError(req, e) {
 }
 
 // POST /api/analyze
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
   try {
     const { module, clientId, data, instructionsKey, followUp } = req.body;
     if (data && typeof data.text === 'string') data.text = capText(data.text);
@@ -1833,7 +1834,7 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // POST /api/analyze/stream — SSE streaming version of the main analyze endpoint
-router.post('/stream', requireAuth, async (req, res) => {
+router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
   try {
     const { module, clientId, data, debug, instructionsKey, followUp } = req.body;
     if (data && typeof data.text === 'string') data.text = capText(data.text);
@@ -2079,7 +2080,7 @@ router.get('/history', requireAuth, async (req, res) => {
 });
 
 // POST /api/analyze/chat — stateless chat for the help chatbot
-router.post('/chat', requireAuth, async (req, res) => {
+router.post('/chat', requireAuth, requireRole('editor'), async (req, res) => {
   try {
     const { message, history = [] } = req.body;
     const cfg = PROMPTS['chat'];
@@ -2494,7 +2495,7 @@ router.post('/export-docx', requireAuth, async (req, res) => {
 });
 
 // POST /api/analyze/:id/rate — Task 16: thumbs up/down; Task 18: propagate to training examples
-router.post('/:id/rate', requireAuth, async (req, res) => {
+router.post('/:id/rate', requireAuth, requireRole('editor'), async (req, res) => {
   try {
     const { rating, note } = req.body; // rating: 1 = thumbs up, -1 = thumbs down; note: optional free-text keywords
     if (![1, -1].includes(Number(rating))) return res.status(400).json({ error: 'rating must be 1 or -1' });
