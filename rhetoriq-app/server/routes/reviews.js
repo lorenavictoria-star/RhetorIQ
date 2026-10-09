@@ -216,6 +216,7 @@ router.put('/:id', requireAdvisor, async (req, res) => {
       notifyClientOfReviewedText(rows[0].client_id, rows[0].module_label, editedText)
         .catch(e => console.error('[reviews] notify failed:', e.message));
       storeSentCopy(rows[0], editedText);
+      require('../lib/stimmnaehe').fuerFreigabe(rows[0]);   // lokale Messung der gesendeten Fassung, ohne KI, wirft nie
       // Aus den Korrekturen lernen: im Hintergrund, höchstens ein günstiger Aufruf, nur bei echter Änderung
       saveGoldFromReview(rows[0].id).catch(e => console.error('[gold] failed:', e.message));
       learnFromReview(rows[0].id).catch(e => console.error('[learning] failed:', e.message));

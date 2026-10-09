@@ -1795,6 +1795,7 @@ router.post('/', requireAuth, async (req, res) => {
     );
 
     const analysis = { id: rows[0].id, module, label: cfg.label, result, createdAt: rows[0].created_at, clientId: resolvedClientId };
+    require('../lib/stimmnaehe').fuerAnalyse(rows[0].id, resolvedClientId, module, result);   // lokale Messung, ohne KI, wirft nie
 
     // Auto-save as structural training example (fire-and-forget)
     // Only saves when output is substantive (>200 chars) to avoid polluting with short/error outputs.
@@ -2015,6 +2016,7 @@ router.post('/stream', requireAuth, async (req, res) => {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id, created_at`,
       [resolvedClientId, advisorId, module, cfg.label, data, fullText, generatedBy, hasBrandVoice, instructionsKey || module]
     );
+    require('../lib/stimmnaehe').fuerAnalyse(rows[0].id, resolvedClientId, module, fullText);   // lokale Messung, ohne KI, wirft nie
     // Fix 11: Log usage for client analyses too
     if (advisorId && fullText.length > 200) {
       const inputText = Object.entries(data || {})

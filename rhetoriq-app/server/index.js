@@ -263,6 +263,7 @@ app.use('/api/memory-suggest', require('./routes/memorySuggest'));
 app.use('/api/learning', require('./routes/learning'));
 app.use('/api/comm-profile', require('./routes/commProfile'));
 app.use('/api/lernkurve', require('./routes/lernkurve'));
+app.use('/api/stimmnaehe', require('./routes/stimmnaehe'));
 app.use('/api/client-plan', require('./routes/clientPlan'));
 app.use('/api/review-time', require('./routes/reviewTime'));
 app.use('/api/archive', require('./routes/archive'));
