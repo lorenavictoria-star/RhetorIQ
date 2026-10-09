@@ -48,7 +48,7 @@ async function loadCards(clientId) {
 async function clientSummary(clientId, month) {
   await ensureSchema();
   const r = monthRange(month);
-  const { rows: c } = await pool.query('SELECT id, name, recommended_plan, included_minutes, monthly_token_limit FROM clients WHERE id=$1', [clientId]);
+  const { rows: c } = await pool.query('SELECT id, name, recommended_plan, included_minutes, monthly_token_limit, subscription_status FROM clients WHERE id=$1', [clientId]);
   if (!c[0]) return null;
   const poolMin = c[0].included_minutes != null ? Number(c[0].included_minutes) : (PLAN_MINUTES[c[0].recommended_plan] ?? PLAN_MINUTES[DEFAULT_PLAN]);
   const { rows } = await pool.query(
@@ -57,7 +57,9 @@ async function clientSummary(clientId, month) {
     [clientId, r.from, r.to]);
   const used = rows.reduce((s, x) => s + Number(x.minutes || 0), 0);
   // Monatsabo laut gebuchtem Kontingent (wie in den Kostenwarnungen), der Mehraufwand kommt oben drauf
-  const aboChf = planPriceChf(c[0].monthly_token_limit);
+  // Nur ein bezahltes Abo zählt als Umsatz. Ohne Zahlung (Test, ausstehend, gekündigt) gibt es keinen Abopreis, sonst stünde ohne Kontingent fälschlich Enterprise zu CHF 2490.
+  const bezahlt = /^(active|past_due)$/i.test(String(c[0].subscription_status || ''));
+  const aboChf = bezahlt ? planPriceChf(c[0].monthly_token_limit) : null;
   const ex0 = extraFor(used, poolMin);
   const cards = await loadCards(clientId);
   const { rows: closed } = await pool.query('SELECT karten_minuten, abgeschlossen_am FROM monatsabschluss WHERE client_id=$1 AND monat=$2', [clientId, r.month]);

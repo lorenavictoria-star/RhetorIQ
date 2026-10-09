@@ -8,6 +8,7 @@ let srv, a, b;
 test.before(async () => {
   await H.setupBase();
   await pool.query('ALTER TABLE clients ADD COLUMN monthly_token_limit INTEGER').catch(() => {});
+  await pool.query("ALTER TABLE clients ADD COLUMN subscription_status TEXT DEFAULT 'trial'").catch(() => {});
   a = await H.addClient('Alpha AG'); b = await H.addClient('Beta AG');
   srv = await H.startApp([['/api/review-time', require('../routes/reviewTime')]]);
 });
@@ -42,7 +43,7 @@ test('CSV-Liste für die Rechnung', async () => {
 });
 
 test('Klient sieht seine Übersicht mit Monatsabo und Mehraufwand obendrauf, andere Rollen nicht', async () => {
-  await pool.query('UPDATE clients SET monthly_token_limit=$1 WHERE id=$2', [750000, b.id]);
+  await pool.query("UPDATE clients SET monthly_token_limit=$1, subscription_status='active' WHERE id=$2", [750000, b.id]);
   const r = await pool.query(`INSERT INTO review_requests (client_id, module_label, original_text) VALUES ($1,'Brief','x') RETURNING id`, [b.id]);
   await srv.call('PUT', `/api/review-time/review/${r.rows[0].id}`, { token: H.advisorToken(), body: { minutes: 105 } });
   const m = await srv.call('GET', '/api/review-time/mine', { token: H.clientToken(b.id) });

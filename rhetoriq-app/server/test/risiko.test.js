@@ -86,6 +86,8 @@ test('Umsatzanteil: Rechnung und Flag über 40 Prozent', () => {
 
 test('GET /api/advisor/revenue-share: nur Beraterin, Abo plus Mehraufwand, Enterprise bei 2490', async () => {
   await pool.query('UPDATE clients SET monthly_token_limit=$1 WHERE id=$2', [750000, a.id]); // 590
+  // Nur bezahlte Abos zählen als Umsatz
+  await pool.query("UPDATE clients SET subscription_status='active' WHERE id IN ($1,$2)", [a.id, b.id]);
   // b ohne Kontingent = Enterprise 2490
   const noAuth = await srv.call('GET', '/api/advisor/revenue-share', { token: H.clientToken(a.id) });
   assert.equal(noAuth.status, 403);
@@ -97,4 +99,16 @@ test('GET /api/advisor/revenue-share: nur Beraterin, Abo plus Mehraufwand, Enter
   assert.equal(byName['Beta AG'].zu_hoch, true);
   assert.equal(byName['Alpha AG'].zu_hoch, false);
   assert.equal(r.body.limitProzent, 40);
+});
+
+test('Umsatz: ohne bezahltes Abo kein Abopreis, auch ohne Kontingent kein Enterprise zu 2490', async () => {
+  await pool.query("UPDATE clients SET subscription_status='trial', monthly_token_limit=NULL WHERE id=$1", [b.id]);
+  const r = await srv.call('GET', '/api/advisor/revenue-share', { token: H.advisorToken() });
+  const byName = Object.fromEntries(r.body.klienten.map(k => [k.name, k]));
+  assert.equal(byName['Beta AG'].aboChf, null);
+  assert.equal(byName['Beta AG'].umsatzChf, 0);
+  const own = await pool.query("UPDATE clients SET subscription_status='active' WHERE id=$1 RETURNING id", [b.id]);
+  assert.equal(own.rows.length, 1);
+  const r2 = await srv.call('GET', '/api/advisor/revenue-share', { token: H.advisorToken() });
+  assert.equal(Object.fromEntries(r2.body.klienten.map(k => [k.name, k]))['Beta AG'].aboChf, 2490);
 });
