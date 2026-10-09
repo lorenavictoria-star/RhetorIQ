@@ -35,6 +35,14 @@ async function ensureTable() {
   tableEnsured = true;
 }
 
+let lastDigest = 0;
+let lastFloodWarn = 0;
+// Empfänger der Hinweise: Standardadresse und optional ADVISOR_NOTIFY_EMAIL_2
+function notifyTargets() {
+  const main = process.env.ADVISOR_NOTIFY_EMAIL || process.env.SMTP_FROM || 'contact@lorenalienhard.ch';
+  return [...new Set([main, (process.env.ADVISOR_NOTIFY_EMAIL_2 || '').trim()].filter(Boolean))];
+}
+
 const ALLOWED_ORIGINS = ['https://rhetoriq.ch', 'https://www.rhetoriq.ch'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const clip = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
@@ -83,7 +91,18 @@ publicRouter.post('/', inquiryLimit, async (req, res) => {
     if (dup.rows.length) return res.json({ ok: true });
 
     const flood = await pool.query(`SELECT COUNT(*)::int AS n FROM inquiries WHERE created_at > NOW() - INTERVAL '1 hour'`);
-    if (flood.rows[0].n >= 60) return res.json({ ok: true });
+    if (flood.rows[0].n >= 60) {
+      // Nicht still verwerfen: Lorena einmal pro Stunde warnen (Befund F-09)
+      if (Date.now() - lastFloodWarn > 60 * 60 * 1000) {
+        lastFloodWarn = Date.now();
+        for (const to of notifyTargets()) {
+          queueEmail({ kind: 'inquiry_flood', to, subject: 'Anfrageformular: Grenze erreicht', text: 'Das Anfrageformular hat in der letzten Stunde 60 Anfragen erhalten. Weitere Anfragen werden vorübergehend nicht mehr gespeichert. Das sieht nach Missbrauch aus. Prüfe die Liste unter Anfragen in der Plattform.' })
+            .catch(e => console.error('[inquiry] flood warning failed:', e.message));
+        }
+      }
+      return res.json({ ok: true });
+    }
+    const recent15 = await pool.query(`SELECT COUNT(*)::int AS n FROM inquiries WHERE created_at > NOW() - INTERVAL '15 minutes'`);
     const ackRecent = await pool.query(
       `SELECT (SELECT COUNT(*) FROM inquiries WHERE email=$1 AND ack_sent_at > NOW() - INTERVAL '24 hours')::int AS same,
               (SELECT COUNT(*) FROM inquiries WHERE ack_sent_at > NOW() - INTERVAL '1 hour')::int AS hour`, [email]);
@@ -100,10 +119,20 @@ publicRouter.post('/', inquiryLimit, async (req, res) => {
       .catch(e => console.error('[inquiry] ack failed:', e.message));
 
     // Hinweis an die Beraterin.
-    const notifyTo = process.env.ADVISOR_NOTIFY_EMAIL || process.env.SMTP_FROM || 'contact@lorenalienhard.ch';
-    const note = notifyText({ name, company, email, message });
-    queueEmail({ kind: 'inquiry_notify', to: notifyTo, subject: `Neue Anfrage: ${company || name}`, text: note })
-      .catch(e => console.error('[inquiry] notify failed:', e.message));
+    // Bis zu 5 Anfragen in 15 Minuten: eine Mail je Anfrage. Darüber eine einzige Sammelmeldung je 15 Minuten.
+    if (recent15.rows[0].n < 5) {
+      const note = notifyText({ name, company, email, message });
+      for (const to of notifyTargets()) {
+        queueEmail({ kind: 'inquiry_notify', to, subject: `Neue Anfrage: ${company || name}`, text: note })
+          .catch(e => console.error('[inquiry] notify failed:', e.message));
+      }
+    } else if (Date.now() - lastDigest > 15 * 60 * 1000) {
+      lastDigest = Date.now();
+      for (const to of notifyTargets()) {
+        queueEmail({ kind: 'inquiry_digest', to, subject: 'Sammelmeldung: viele Anfragen in kurzer Zeit', text: `In den letzten 15 Minuten sind mehr als 5 Anfragen über das Formular eingegangen. Einzelne Hinweise werden bis zur nächsten ruhigen Viertelstunde nicht mehr verschickt. Alle Anfragen stehen unter Anfragen in der Plattform. Bei vielen unbekannten Absendern kann es sich um Missbrauch handeln.` })
+          .catch(e => console.error('[inquiry] digest failed:', e.message));
+      }
+    }
 
     res.json({ ok: true });
   } catch (e) {
