@@ -2268,6 +2268,10 @@ html[lang="en"] .legal-en-note{display:block}
   history.replaceState(null,'',location.pathname);
 }catch(e){}})();
 </script>
+<script id="rq-xpairs">
+// Zusätzliche DE/EN-Paare (Sicherheitsfunktionen); rq-i18n fügt sie zu PAIRS hinzu.
+window.RQ_EXTRA_PAIRS=[["Zugang und Sitzungen", "Access and sessions"], ["Zugang entziehen beendet alle Sitzungen des Klienten und seines Teams und erzeugt einen neuen Zugangscode. Der alte Code ist danach ungültig. Alle Geräte abmelden beendet die Sitzungen, der Zugangscode bleibt gleich.", "Revoking access ends all sessions of the client and their team and creates a new access code. The old code is invalid afterwards. Signing out all devices ends the sessions and the access code stays the same."], ["Zugang entziehen", "Revoke access"], ["Alle Geräte abmelden", "Sign out all devices"], ["Alle Geräte dieses Klienten und seines Teams abmelden?", "Sign out all devices of this client and their team?"], ["Alle Geräte sind abgemeldet.", "All devices are signed out."], ["Zugang wirklich entziehen? Alle Sitzungen enden und der bisherige Zugangscode wird ungültig.", "Really revoke access? All sessions end and the previous access code becomes invalid."], ["Soll zusätzlich das Passwort des Hauptzugangs gelöscht werden?\n\nOK: Passwort löschen. Abbrechen: Passwort behalten.", "Should the password of the main account be deleted as well?\n\nOK: delete password. Cancel: keep password."], ["Der Zugang ist entzogen. Neuer Zugangscode: ", "Access revoked. New access code: "], [". Der neue Code lässt sich auf der Kundenkarte per E-Mail an den Klienten senden.", ". The new code can be emailed to the client from the client card."], ["Das hat nicht geklappt. ", "That did not work. "]];
+</script>
 <script id="rq-i18n">
 // ── I18N: Wörterbuch-Ebene über dem bestehenden T/applyLang-System ──
 // Löst fest eingebaute Texte (HTML und dynamisch erzeugte Listen) pro Sprache auf. Nur sichtbarer Text:
@@ -2281,6 +2285,7 @@ var I18N=(function(){
     var re=esc(norm(src)).replace(/\{(\d)\}/g,'(?<g$1>(?:(?! · )[\\s\\S])+?)');
     return {re:new RegExp('^'+re+'$'),out:dst};
   }
+  PAIRS=PAIRS.concat(window.RQ_EXTRA_PAIRS||[]);
   PAIRS.forEach(function(p){
     var de=p[0],en=p[1],one=p[2];
     if(one===2){var g=p[3];D2E.set(norm(de),en);D2E.set(norm(g),en);E2D.set(norm(de),g);E2D.set(norm(en),g);return;}
@@ -9112,6 +9117,48 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
   };
   window.RQ_SECTORS={kmu:'KMU / Allgemein',hotellerie:'Hotellerie / Tourismus',capital:'Capital / Finance',bildung:'Bildung / Public Sector',nonprofit:'Non-Profit / NGO',tech:'Tech / Startup',beratung:'Beratung / Coaching'};
   window.RQ_SECMODS={kmu:['text-gen','profiling','review','recognition','pre-meeting','risk','actionability','thread'],hotellerie:['text-gen','vs-gen','vs-cal','profiling','review','recognition','pre-meeting','sparring','debrief'],capital:['text-gen','vs-gen','vs-cal','profiling','review','pre-meeting','risk','sparring'],bildung:['text-gen','profiling','review','recognition','pre-meeting','actionability'],nonprofit:['text-gen','vs-gen','profiling','review','recognition','pre-meeting'],tech:['text-gen','vs-gen','vs-cal','profiling','review','pre-meeting','risk','actionability','thread','sparring'],beratung:['text-gen','vs-gen','profiling','review','recognition','pre-meeting','risk','sparring','debrief','thread']};
+})();
+</script>
+<script id="rq-sec-js">
+// ═══ Sicherheit in der Verwaltung: Zugang entziehen, Geräte abmelden (Klient) ═══
+(function(){
+  var E=rqEsc;
+  var _ra=window.wsRenderAdmin;
+  if(typeof _ra!=='function')return;
+  window.wsRenderAdmin=function(body){
+    var r=_ra.apply(this,arguments);
+    try{
+      var cid=_wsClientId;if(!cid)return r;
+      var box=document.createElement('div');box.className='rq-card';box.id='rq-sec-box';box.style.marginTop='20px';
+      box.innerHTML='<span class="rq-eb">Zugang und Sitzungen</span>'
+        +'<span class="rq-hint">Zugang entziehen beendet alle Sitzungen des Klienten und seines Teams und erzeugt einen neuen Zugangscode. Der alte Code ist danach ungültig. Alle Geräte abmelden beendet die Sitzungen, der Zugangscode bleibt gleich.</span>'
+        +'<div class="rq-acts"><button type="button" class="rq-btn ghost sm" id="rq-sec-revoke" style="color:#b91c1c;border-color:#fecaca">Zugang entziehen</button>'
+        +'<button type="button" class="rq-btn ghost sm" id="rq-sec-logout">Alle Geräte abmelden</button></div>'
+        +'<div id="rq-sec-msg" class="rq-hint" role="status"></div>';
+      body.appendChild(box);
+      var msg=box.querySelector('#rq-sec-msg');
+      function busy(b,on){b.disabled=on;}
+      box.querySelector('#rq-sec-logout').onclick=async function(){
+        var b=this;if(!confirm('Alle Geräte dieses Klienten und seines Teams abmelden?'))return;
+        busy(b,true);msg.textContent='';
+        try{await rqJ('/api/clients/'+cid+'/logout-all-devices',{method:'POST',body:'{}'});msg.textContent='Alle Geräte sind abgemeldet.';}
+        catch(e){msg.textContent='Das hat nicht geklappt. '+e.message;}
+        busy(b,false);
+      };
+      box.querySelector('#rq-sec-revoke').onclick=async function(){
+        var b=this;if(!confirm('Zugang wirklich entziehen? Alle Sitzungen enden und der bisherige Zugangscode wird ungültig.'))return;
+        var reset=confirm('Soll zusätzlich das Passwort des Hauptzugangs gelöscht werden?\n\nOK: Passwort löschen. Abbrechen: Passwort behalten.');
+        busy(b,true);msg.textContent='';
+        try{
+          var d=await rqJ('/api/clients/'+cid+'/revoke-access',{method:'POST',body:JSON.stringify({resetPassword:reset})});
+          var c=(typeof clients!=='undefined'?clients:[]).filter(function(x){return String(x.id)===String(cid);})[0];if(c&&d.token)c.token=d.token;
+          msg.innerHTML='Der Zugang ist entzogen. Neuer Zugangscode: <b style="user-select:all">'+E(d.token||'')+'</b>. Der neue Code lässt sich auf der Kundenkarte per E-Mail an den Klienten senden.';
+        }catch(e){msg.textContent='Das hat nicht geklappt. '+e.message;}
+        busy(b,false);
+      };
+    }catch(e){console.error(e);}
+    return r;
+  };
 })();
 </script>
 <script id="rq-wiz-js">

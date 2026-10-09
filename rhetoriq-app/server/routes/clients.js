@@ -218,7 +218,7 @@ router.post('/:id/set-password', requireAdvisor, async (req, res) => {
     if (!password || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
     const hash = await bcrypt.hash(password, 12);
     const updates = [hash, req.params.id, req.user.id];
-    let q = 'UPDATE clients SET password_hash=$1, must_change_password=false';
+    let q = 'UPDATE clients SET password_hash=$1, must_change_password=false, token_version=token_version+1';
     if (email) { q += ', email=$4'; updates.push(email); }
     q += ' WHERE id=$2 AND advisor_id=$3';
     await pool.query(q, updates);
@@ -229,18 +229,26 @@ router.post('/:id/set-password', requireAdvisor, async (req, res) => {
   }
 });
 
-// POST /api/clients/:id/revoke-access — instantly invalidate every JWT
-// currently held by this client and all of its team members (client_users),
-// without waiting for natural expiry. Use for off-boarding or a suspected leak.
+// POST /api/clients/:id/revoke-access — Zugang entziehen: beendet sofort alle Sitzungen des Klienten und seiner
+// Teammitglieder UND erzeugt einen neuen Zugangscode (der alte Code funktioniert nicht mehr). Mit
+// { resetPassword: true } wird zusätzlich das Passwort des Hauptzugangs gelöscht.
 router.post('/:id/revoke-access', requireAdvisor, async (req, res) => {
   try {
-    const { rows } = await pool.query(
-      'UPDATE clients SET token_version = token_version + 1 WHERE id=$1 AND advisor_id=$2 RETURNING id',
-      [req.params.id, req.user.id]
-    );
-    if (!rows.length) return res.status(404).json({ error: 'Client not found' });
-    await pool.query('UPDATE client_users SET token_version = token_version + 1 WHERE client_id=$1', [req.params.id]);
-    res.json({ ok: true, message: 'All active sessions for this client have been revoked.' });
+    const r = await require('../lib/accessControl').revokeClientAccess(req.params.id, req.user.id, { resetPassword: !!(req.body && req.body.resetPassword) });
+    if (!r) return res.status(404).json({ error: 'Client not found' });
+    res.json({ ok: true, token: r.token, message: 'Der Zugang wurde entzogen. Alle Sitzungen sind beendet, der alte Zugangscode ist ungültig.' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/clients/:id/logout-all-devices — alle Geräte des Klienten und seiner Teammitglieder abmelden (Zugangscode bleibt)
+router.post('/:id/logout-all-devices', requireAdvisor, async (req, res) => {
+  try {
+    const r = await require('../lib/accessControl').logoutClientDevices(req.params.id, req.user.id);
+    if (!r) return res.status(404).json({ error: 'Client not found' });
+    res.json({ ok: true, message: 'Alle Geräte sind abgemeldet.' });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
@@ -287,7 +295,9 @@ router.post('/:id/users', requireAdvisor, async (req, res) => {
   try {
     const { rows: clientRows } = await pool.query('SELECT id FROM clients WHERE id=$1 AND advisor_id=$2', [req.params.id, req.user.id]);
     if (!clientRows[0]) return res.status(404).json({ error: 'Not found' });
-    const { email, name, password, role = 'editor' } = req.body;
+    const { email, name, password } = req.body;
+    const role = req.body.role === undefined || req.body.role === '' ? 'editor' : req.body.role;
+    if (!require('../lib/accessControl').TEAM_ROLES.includes(role)) return res.status(400).json({ error: 'Rolle muss admin, editor oder viewer sein.' });
     if (!email || !name || !password) return res.status(400).json({ error: 'Email, name and password required' });
     // Nutzerlimit je Paket (ein bereits vorhandenes Mitglied mit derselben E-Mail zählt nicht neu)
     const ul = require('../lib/userLimit');
@@ -299,7 +309,7 @@ router.post('/:id/users', requireAdvisor, async (req, res) => {
     if (!password || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
     const hash = await bcrypt.hash(password, 12);
     const { rows } = await pool.query(
-      'INSERT INTO client_users (client_id, email, name, password_hash, role) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (client_id, email) DO UPDATE SET name=$3, password_hash=$4, role=$5 RETURNING id, email, name, role, created_at',
+      'INSERT INTO client_users (client_id, email, name, password_hash, role) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (client_id, email) DO UPDATE SET name=$3, password_hash=$4, role=$5, token_version=client_users.token_version+1 RETURNING id, email, name, role, created_at',
       [req.params.id, email.toLowerCase(), name, hash, role]
     );
 

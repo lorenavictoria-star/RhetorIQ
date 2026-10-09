@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { CLIENT_SESSION } = require('../lib/accessControl');
 
 const router = express.Router();
 
@@ -48,7 +49,7 @@ router.post('/client-login', async (req, res) => {
     const jwtToken = jwt.sign(
       { clientId: client.id, clientName: client.name, role: 'client', advisorId: client.advisor_id, tokenVersion: client.token_version },
       process.env.JWT_SECRET,
-      { expiresIn: '90d' }
+      { expiresIn: CLIENT_SESSION }
     );
 
     res.json({
@@ -80,7 +81,7 @@ router.post('/client-password-login', async (req, res) => {
     const jwtToken = jwt.sign(
       { clientId: client.id, clientName: client.name, role: 'client', advisorId: client.advisor_id, mustChangePassword: !!client.must_change_password, tokenVersion: client.token_version },
       process.env.JWT_SECRET,
-      { expiresIn: '90d' }
+      { expiresIn: CLIENT_SESSION }
     );
 
     res.json({
@@ -118,7 +119,7 @@ router.post('/client-user-login', async (req, res) => {
       { clientId: cu.client_id, clientName: cu.client_name, role: 'client', advisorId: null,
         clientUserId: cu.id, clientUserName: cu.name, clientUserEmail: cu.email, clientUserRole: cu.role, tokenVersion: cu.token_version },
       process.env.JWT_SECRET,
-      { expiresIn: '90d' }
+      { expiresIn: CLIENT_SESSION }
     );
 
     res.json({
@@ -155,7 +156,7 @@ router.post('/client-change-password', requireAuth, async (req, res) => {
     const newToken = jwt.sign(
       { clientId: client.id, clientName: client.name, role: 'client', advisorId: client.advisor_id, mustChangePassword: false, tokenVersion: client.token_version },
       process.env.JWT_SECRET,
-      { expiresIn: '90d' }
+      { expiresIn: CLIENT_SESSION }
     );
 
     res.json({ token: newToken, client: { id: client.id, name: client.name, industry: client.industry, advisorName: client.advisor_name } });
@@ -208,7 +209,7 @@ router.put('/client-user/profile', requireAuth, async (req, res) => {
       { clientId: u.client_id, clientName: c?.client_name, role: 'client', advisorId: null,
         clientUserId: u.id, clientUserName: u.name, clientUserEmail: u.email, clientUserRole: u.role, tokenVersion: u.token_version },
       process.env.JWT_SECRET,
-      { expiresIn: '90d' }
+      { expiresIn: CLIENT_SESSION }
     );
 
     res.json({
