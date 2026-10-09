@@ -9875,6 +9875,13 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
 #page-module[data-rqstep] .fg2>div[style*="font-size:11px"],#page-module[data-rqstep] .fg2 .rq-hint{font-size:13px!important;color:var(--mu)}
 #page-module[data-rqstep] .fl2{font-size:14px;letter-spacing:0;text-transform:none;font-weight:500;color:var(--tx)}
 #page-module[data-rqstep] .rq-col{display:flex!important;flex-direction:column;gap:6px}
+.rq-quick{order:0;margin:2px 0 12px}
+.rq-quick .lbl{font-size:12px;color:var(--mu);margin-bottom:6px}
+.rq-quick button,.rq-fine button{border:1px solid var(--ac);background:#faf6ec;color:var(--ac);padding:7px 13px;margin:0 6px 6px 0;cursor:pointer;font-family:var(--sans);font-size:13px;min-height:36px}
+.rq-quick button:hover,.rq-fine button:hover{background:var(--ac);color:#fff}
+.rq-fine{margin:10px 0 2px}
+.rq-fine .lbl{font-size:12px;color:var(--mu);margin-bottom:6px}
+.rq-quick .msg{font-size:12px;color:#a33;margin-top:4px}
 .rq-pick{display:flex;gap:12px;margin:4px 0 22px;flex-wrap:wrap}
 .rq-pick button{flex:1 1 220px;text-align:left;padding:14px 16px;border:1px solid var(--bd);background:#fff;color:var(--tx);cursor:pointer;font-family:var(--sans);font-size:14px;min-height:64px}
 .rq-pick button b{display:block;font-weight:500;font-size:15px;margin-bottom:2px}
@@ -9969,7 +9976,9 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     var reply=document.getElementById('tg-reply-email'),replyWrap=reply&&reply.closest('.fg2'),draft=document.getElementById('tg-draft-'+tile),draftLab=draft&&draft.closest('.fg2')&&draft.closest('.fg2').querySelector('label');
     var two=replyWrap&&replyWrap.parentNode;if(two)two.classList.add('rq-col');
     function hintOf(el,t){if(!el)return;el.textContent=t;el.classList.add('rq-hint');}
+    var quickBox=null;
     function choose(k){
+      if(quickBox)quickBox.style.display=(k==='reply')?'':'none';
       host.querySelectorAll('button').forEach(function(b){var on=b.getAttribute('data-k')===k;b.classList.toggle('on',on);b.setAttribute('aria-checked',on?'true':'false');});
       if(typeof tgSetMode==='function')tgSetMode(tile,k==='revise'?'revise':'new');
       if(replyWrap)replyWrap.style.display=(k==='reply')?'':'none';
@@ -9987,8 +9996,32 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
         if(ta){ta.placeholder=EX[tile]||EX.custom;if(ta.closest('.fg2'))ta.closest('.fg2').style.order=0;}
       }
     }
+    if(tile==='email'&&replyWrap){
+      var qk=document.createElement('div');qk.className='rq-quick';qk.setAttribute('data-s','1');qk.setAttribute('data-rqmade','1');qk.innerHTML='<div class="lbl">Oder mit einem Klick antworten:</div><span class="qb"></span><div class="msg" style="display:none">Fügen Sie zuerst die erhaltene E-Mail ein.</div>';
+      var qs=[['Termin bestätigen','Den in der E-Mail genannten Termin bestätigen.'],['Rückfrage stellen','Eine klärende Rückfrage zu den offenen Punkten stellen.'],['Zusagen','Der Anfrage zusagen und das weitere Vorgehen nennen.'],['Höflich absagen','Der Anfrage höflich absagen und eine Alternative anbieten, falls sinnvoll.'],['Später antworten','Den Eingang bestätigen und eine ausführliche Antwort bis Ende der Woche ankündigen.']];
+      qs.forEach(function(q){var b=document.createElement('button');b.type='button';b.textContent=q[0];b.addEventListener('click',function(){
+        var m=qk.querySelector('.msg');if(!reply||!reply.value.trim()){m.style.display='';reply&&reply.focus();return;}
+        m.style.display='none';if(ta)ta.value=q[1];
+        if(typeof runMod==='function')runMod('text-gen',tile);
+      });qk.querySelector('.qb').appendChild(b);});
+      replyWrap.after(qk);
+      quickBox=qk;
+    }
     var dw=document.getElementById('tg-draft-wrap-'+tile);
     choose(dw&&dw.style.display==='block'?'revise':'new');
+  }
+  function fineTune(box){
+    var fta=box.querySelector('textarea');if(!fta||box.previousElementSibling&&box.previousElementSibling.classList.contains('rq-fine'))return;
+    var bid=fta.id.replace(/^fu-/,'');
+    var f=document.createElement('div');f.className='rq-fine';f.setAttribute('data-s','3');f.setAttribute('data-rqmade','1');
+    f.innerHTML='<div class="lbl">Mit einem Klick anpassen:</div>';
+    [['Kürzer','Den Text deutlich kürzen, Kernaussagen behalten.'],['Persönlicher','Den Ton persönlicher und wärmer machen.'],['Formeller','Den Ton formeller und zurückhaltender machen.'],['Klarer','Klarer und direkter formulieren, Füllwörter streichen.']].forEach(function(c){
+      var b=document.createElement('button');b.type='button';b.textContent=c[0];b.addEventListener('click',function(){fta.value=c[1];if(typeof sendFollowUp==='function')sendFollowUp(bid);});f.appendChild(b);});
+    box.parentNode.insertBefore(f,box);
+    if(typeof toggleVoiceFor==='function'){
+      var mic=document.createElement('button');mic.type='button';mic.className='vbtn-sm';mic.id='fu-voice-'+bid;mic.title='Änderungswunsch sprechen';mic.setAttribute('aria-label','Änderungswunsch sprechen');mic.innerHTML='<i class="ti ti-microphone"></i>';mic.style.margin='0 6px 6px 0';
+      mic.addEventListener('click',function(){toggleVoiceFor(fta.id,mic.id);});f.appendChild(mic);
+    }
   }
   function stepify(){
     clearOld();
@@ -10035,8 +10068,9 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     // neue Bewertungs-/Rückfragezeilen gehören zum Gespräch
     obs=new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(n){
       if(n.nodeType===1&&n.classList&&(n.classList.contains('gen-rating-bar')||n.classList.contains('gen-followup-box')||n.classList.contains('pres-qa-box')||n.classList.contains('rbox')))n.setAttribute('data-s','3');
+      if(n.nodeType===1&&n.classList&&n.classList.contains('gen-followup-box'))try{fineTune(n);}catch(e){console.error(e);}
     });});});
-    obs.observe(root,{childList:true});
+    obs.observe(page,{childList:true,subtree:true});
     // Ergebnis erscheint: automatisch ins Gespräch
     rbObs=new MutationObserver(function(ms){ms.forEach(function(m){
       var t=m.target;if(t.classList&&t.classList.contains('rbox')&&t.classList.contains('show')&&page.getAttribute('data-rqstep')!=='3')setStep(3);
