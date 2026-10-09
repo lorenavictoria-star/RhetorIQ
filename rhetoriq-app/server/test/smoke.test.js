@@ -83,8 +83,8 @@ test('every HAIKU_MODULES entry that is a real module exists in PROMPTS', () => 
 });
 
 test('GLOBAL_STYLE_RULES bans the em dash and en dash characters in its own text sample instructions', () => {
-  assert.ok(GLOBAL_STYLE_RULES.includes('em dash'), 'the em-dash ban should still be present');
-  assert.ok(GLOBAL_STYLE_RULES.includes('umlaut'), 'the umlaut rule should still be present');
+  assert.ok(GLOBAL_STYLE_RULES.includes('Gedankenstriche'), 'the dash ban should still be present');
+  assert.ok(GLOBAL_STYLE_RULES.includes('Umlaute'), 'the umlaut rule should still be present');
 });
 
 test('PROMPTS.presentation builds a structured slide request', () => {
