@@ -9260,13 +9260,16 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
        +'<span class="rq-hint">Nach dem Workshop wählst du die Module aus.</span>';
     } else if(W.step===3){
       var rec=(d.vorschlaege||[]).map(function(r){return r.module;});
-      var base=rec.length?rec:rqWizKeys(RQ_SECMODS[d.sektor]||[]);
-      var others=RQ_WLIST.filter(function(k){return k!=='brand-voice'&&base.indexOf(k)<0;});
+      var ZUS=[['bundle-hotel','CHF 190 pro Monat'],['bundle-capital','CHF 490 pro Monat']],ZK=ZUS.map(function(z){return z[0];});
+      var base=(rec.length?rec:rqWizKeys(RQ_SECMODS[d.sektor]||[])).filter(function(k){return ZK.indexOf(k)<0;});
+      var others=RQ_WLIST.filter(function(k){return k!=='brand-voice'&&base.indexOf(k)<0&&ZK.indexOf(k)<0;});
+      var zchip=function(z){var on=d.module.indexOf(z[0])>=0;return '<button type="button" class="rq-chip'+(on?' on':'')+'" data-a="mod" data-v="'+z[0]+'">'+(on?'✓ ':'+ ')+E(rqModName(z[0]))+' · '+z[1]+'</button>';};
       var chip=function(k){var on=d.module.indexOf(k)>=0,r=(d.vorschlaege||[]).filter(function(x){return x.module===k;})[0];return '<button type="button" class="rq-chip'+(on?' on':'')+'" data-a="mod" data-v="'+k+'"'+(r&&r.grund?' title="'+E(r.grund)+'"':'')+'>'+(on?'✓ ':'+ ')+E(rqModName(k))+'</button>';};
       h='<p class="rq-hint" style="max-width:62ch">Was im Workshop besprochen wurde, wählst du hier aus. '+(rec.length?'Die Empfehlungen der KI sind schon markiert.':'Die Vorauswahl richtet sich nach dem Sektor.')+'</p>'
        +'<details'+(W.secOpen?' open':'')+' data-sec><summary class="rq-hint" style="cursor:pointer;min-height:40px;display:flex;align-items:center">Sektor: '+RQ_SECTORS[d.sektor]+' · ändern</summary><div class="rq-chips" style="margin:8px 0 14px">'+Object.keys(RQ_SECTORS).map(function(k){return '<button type="button" class="rq-chip'+(k===d.sektor?' on':'')+'" data-a="sec" data-v="'+k+'">'+RQ_SECTORS[k]+'</button>';}).join('')+'</div></details>'
        +'<div><span class="rq-eb">'+(rec.length?'Empfohlen für '+E(d.firma):'Passend zum Sektor')+'</span><div class="rq-chips" style="margin-top:8px"><span class="rq-chip on fix">✓ Brand Voice</span>'+base.map(chip).join('')+'</div></div>'
        +(others.length?'<div><span class="rq-eb">Weitere Module</span><div class="rq-chips" style="margin-top:8px">'+others.map(chip).join('')+'</div></div>':'')
+       +'<div class="rq-card"><span class="rq-eb">Zusatzmodule gegen Aufpreis</span><span class="rq-hint">Branchenpakete kommen zusätzlich zum gewählten Paket dazu. Einmalige Einrichtung je CHF 1\'500. Sie erscheinen beim Klienten erst, wenn sie hier gewählt sind.</span><div class="rq-chips" style="margin-top:8px">'+ZUS.map(zchip).join('')+'</div></div>'
        +'<span class="rq-hint">Brand Voice ist immer dabei.</span>'+pkgCard()+msg()+acts(2,['next3','Weiter']);
     } else if(W.step===4){
       h='<label class="rq-card" for="rqw-files" style="align-items:center;text-align:center;padding:32px 20px;border-style:dashed;cursor:pointer" id="rqw-drop"><i class="ti ti-upload" style="font-size:30px;color:var(--ac)"></i><b style="font-weight:500">Alle vorhandenen Dokumente hierher ziehen</b><span class="rq-hint">PDF, Word oder Text. Alles zusammen, die KI sortiert nach dem Anlegen.</span><span class="rq-btn ghost sm">Dateien auswählen</span></label><input id="rqw-files" type="file" multiple style="display:none">'
