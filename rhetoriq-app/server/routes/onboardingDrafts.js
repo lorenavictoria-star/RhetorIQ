@@ -87,6 +87,15 @@ function validateFields(body, { partial }) {
     if (!o) return { error: 'briefing muss ein Objekt (max. 300 KB) sein.' };
     f.briefing = o;
   }
+  if (has('paket')) {
+    const p = String(b.paket || '').toLowerCase();
+    if (p && !['starter', 'wachstum', 'team', 'enterprise'].includes(p)) return { error: 'Unbekanntes Paket.' };
+    f.paket = p;
+  }
+  if (has('groesse')) {
+    const g = b.groesse && typeof b.groesse === 'object' ? b.groesse : {};
+    f.groesse = JSON.stringify({ mitarbeitende: clip(g.mitarbeitende, 20), texte: clip(g.texte, 20), ferien: g.ferien === true });
+  }
   if (has('status')) {
     if (!STATUS.includes(b.status)) return { error: 'Ungültiger Status.' };
     f.status = b.status;
@@ -94,7 +103,7 @@ function validateFields(body, { partial }) {
   return { fields: f };
 }
 
-const JSON_COLS = new Set(['module', 'vorschlaege', 'briefing']);
+const JSON_COLS = new Set(['module', 'vorschlaege', 'briefing', 'groesse']);
 
 async function loadDraft(id) {
   const { rows } = await pool.query('SELECT * FROM onboarding_drafts WHERE id=$1', [id]);
@@ -331,6 +340,9 @@ router.post('/:id/finish', requireAdvisor, async (req, res) => {
       enabledModules: toEnabledModules(d.module)
     });
     claimed = null;
+    if (['starter', 'wachstum', 'team', 'enterprise'].includes(d.paket)) {
+      await pool.query('UPDATE clients SET recommended_plan=$1 WHERE id=$2', [d.paket, client.id]).catch(e => console.error('[onboarding] Paket:', e.message));
+    }
     await pool.query('UPDATE onboarding_drafts SET client_id=$1, updated_at=NOW() WHERE id=$2', [client.id, id]);
     await pool.query('UPDATE client_files SET client_id=$1 WHERE draft_id=$2 AND client_id IS NULL', [client.id, id]);
     if (d.inquiry_id) {

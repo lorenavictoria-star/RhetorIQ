@@ -71,6 +71,8 @@ function ensureSchema() {
       )`);
     await pool.query(`CREATE INDEX IF NOT EXISTS learning_suggestions_client_idx ON learning_suggestions (client_id, status)`);
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS recommended_plan TEXT`);
+    await pool.query(`ALTER TABLE onboarding_drafts ADD COLUMN IF NOT EXISTS paket TEXT`);
+    await pool.query(`ALTER TABLE onboarding_drafts ADD COLUMN IF NOT EXISTS groesse JSONB`);
     // Kommunikationsprofil: Ausgangslage, Ziel und laufende Messungen je Klient
     await pool.query(`
       CREATE TABLE IF NOT EXISTS communication_profiles (

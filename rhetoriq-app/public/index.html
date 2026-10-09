@@ -9073,13 +9073,14 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
   }
   function absorb(d){
     if(!d)return;var x=W.d;
-    ['id','firma','kontakt','email','webseite','sektor','anrede','titel','workshop_datum','schritt','status','client_id'].forEach(function(k){if(d[k]!==undefined&&d[k]!==null)x[k]=d[k];});
+    ['id','firma','kontakt','email','webseite','sektor','anrede','titel','workshop_datum','schritt','status','client_id','paket'].forEach(function(k){if(d[k]!==undefined&&d[k]!==null)x[k]=d[k];});
+    if(d.groesse){var gg=d.groesse;if(typeof gg==='string'){try{gg=JSON.parse(gg);}catch(e){gg=null;}}if(gg)x.groesse=gg;}
     if(d.workshop_datum===null)x.workshop_datum='';
     if(d.module!==undefined)x.module=normMods(d.module);
     if(d.vorschlaege!==undefined){var r=normRecs(d.vorschlaege);x.vorschlaege=r&&r.length?r:null;}
     x.sektor=RQ_SECTORS[x.sektor]?x.sektor:'kmu';x.anrede=x.anrede==='du'?'du':'sie';
   }
-  function body(){var d=W.d;return {firma:d.firma,kontakt:d.kontakt,email:d.email,webseite:d.webseite,sektor:d.sektor,anrede:d.anrede,titel:d.titel,workshop_datum:d.workshop_datum,schritt:d.schritt,module:d.module.map(rqModName),status:d.status};}
+  function body(){var d=W.d;return {paket:d.paket||'',groesse:d.groesse||{},firma:d.firma,kontakt:d.kontakt,email:d.email,webseite:d.webseite,sektor:d.sektor,anrede:d.anrede,titel:d.titel,workshop_datum:d.workshop_datum,schritt:d.schritt,module:d.module.map(rqModName),status:d.status};}
   function val(id){var el=document.getElementById(id);return el?el.value.trim():null;}
   function collect(){
     var m={firma:'rqw-firma',kontakt:'rqw-kontakt',email:'rqw-email',webseite:'rqw-web',workshop_datum:'rqw-datum'};
@@ -9139,6 +9140,28 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
   function pills(a,vals){return '<div class="rq-chips">'+vals.map(function(v){return '<button type="button" class="rq-chip'+(W.d[a]===v[0]?' on':'')+'" data-a="set" data-k="'+a+'" data-v="'+v[0]+'">'+v[1]+'</button>';}).join('')+'</div>';}
   function msg(){return '<div id="rqw-msg">'+(W.err?'<div class="rq-err">'+E(W.err)+'</div>':'')+(W.msg?'<div class="rq-hint">'+W.msg+'</div>':'')+'</div>';}
   function acts(back,next,extra){return '<div class="rq-acts" style="margin-top:6px">'+(back?'<button type="button" class="rq-btn ghost" data-a="go" data-v="'+back+'"'+(W.busy?' disabled':'')+'>Zurück</button>':'')+(extra||'')+(next?'<button type="button" class="rq-btn" data-a="'+next[0]+'"'+(W.busy?' disabled':'')+'>'+next[1]+'</button>':'')+'</div>';}
+  var PKG=[['starter','Starter','CHF 290'],['wachstum','Wachstum','CHF 590'],['team','Team','CHF 990'],['enterprise','Enterprise','CHF 2\'490']];
+  var STAFF=[['1-4','1 bis 4'],['5-19','5 bis 19'],['20-99','20 bis 99'],['100+','100 und mehr']];
+  var TEXTS=[['60','bis 60'],['150','bis 150'],['300','bis 300'],['300+','über 300']];
+  function pkgSuggest(g){
+    var ord=['starter','wachstum','team','enterprise'];
+    var s={'1-4':0,'5-19':1,'20-99':2,'100+':3}[g&&g.mitarbeitende],t={'60':0,'150':1,'300':2,'300+':3}[g&&g.texte];
+    if(s===undefined&&t===undefined&&!(g&&g.ferien))return {plan:'',why:''};
+    var lvl=Math.max(s===undefined?0:s,t===undefined?0:t),why=[];
+    if(s!==undefined)why.push(STAFF[s][1]+' Mitarbeitende');if(t!==undefined)why.push(TEXTS[t][1]+' Texte im Monat');
+    if(g&&g.ferien){lvl=3;why.push('Erreichbarkeit auch in den Ferien');}
+    return {plan:ord[lvl],why:why.join(', ')};
+  }
+  function pkgCard(){
+    var d=W.d,g=d.groesse||{},sg=pkgSuggest(g);
+    function row(k,vals,label){return '<div><span class="rq-lab">'+label+'</span><div class="rq-chips">'+vals.map(function(v){return '<button type="button" class="rq-chip'+(g[k]===v[0]?' on':'')+'" data-a="grp" data-k="'+k+'" data-v="'+v[0]+'">'+v[1]+'</button>';}).join('')+'</div></div>';}
+    var cur=d.paket||sg.plan;
+    return '<div class="rq-card"><span class="rq-eb">Passendes Paket</span><span class="rq-hint">Drei kurze Angaben aus dem Gespräch. Die Plattform schlägt ein Paket vor, und du bestätigst es. Es wird auf der Seite «Preise» für diesen Klienten hervorgehoben.</span>'
+      +row('mitarbeitende',STAFF,'Mitarbeitende')+row('texte',TEXTS,'Erwartete Texte pro Monat')
+      +'<div><span class="rq-lab">Erreichbarkeit</span><div class="rq-chips"><button type="button" class="rq-chip'+(g.ferien?' on':'')+'" data-a="grp" data-k="ferien" data-v="1">Auch in den Ferien und am Wochenende</button></div></div>'
+      +(sg.plan?'<div class="rq-hint" style="margin-top:6px">Vorschlag: <b>'+E((PKG.filter(function(p){return p[0]===sg.plan;})[0]||[])[1]||'')+'</b> ('+E(sg.why)+').</div>':'')
+      +'<div><span class="rq-lab">Empfohlenes Paket bestätigen</span><div class="rq-chips">'+PKG.map(function(p){return '<button type="button" class="rq-chip'+(cur===p[0]?' on':'')+'" data-a="pkg" data-v="'+p[0]+'">'+p[1]+' · '+p[2]+'</button>';}).join('')+'</div></div></div>';
+  }
   function render(){
     var w=box(),d=W.d;
     document.getElementById('rqw-sub').textContent=d.firma?('Neuen Klienten einrichten: '+d.firma):'Neuen Klienten einrichten';
@@ -9178,7 +9201,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
        +'<details'+(W.secOpen?' open':'')+' data-sec><summary class="rq-hint" style="cursor:pointer;min-height:40px;display:flex;align-items:center">Sektor: '+RQ_SECTORS[d.sektor]+' · ändern</summary><div class="rq-chips" style="margin:8px 0 14px">'+Object.keys(RQ_SECTORS).map(function(k){return '<button type="button" class="rq-chip'+(k===d.sektor?' on':'')+'" data-a="sec" data-v="'+k+'">'+RQ_SECTORS[k]+'</button>';}).join('')+'</div></details>'
        +'<div><span class="rq-eb">'+(rec.length?'Empfohlen für '+E(d.firma):'Passend zum Sektor')+'</span><div class="rq-chips" style="margin-top:8px"><span class="rq-chip on fix">✓ Brand Voice</span>'+base.map(chip).join('')+'</div></div>'
        +(others.length?'<div><span class="rq-eb">Weitere Module</span><div class="rq-chips" style="margin-top:8px">'+others.map(chip).join('')+'</div></div>':'')
-       +'<span class="rq-hint">Brand Voice ist immer dabei.</span>'+msg()+acts(2,['next3','Weiter']);
+       +'<span class="rq-hint">Brand Voice ist immer dabei.</span>'+pkgCard()+msg()+acts(2,['next3','Weiter']);
     } else if(W.step===4){
       h='<label class="rq-card" for="rqw-files" style="align-items:center;text-align:center;padding:32px 20px;border-style:dashed;cursor:pointer" id="rqw-drop"><i class="ti ti-upload" style="font-size:30px;color:var(--ac)"></i><b style="font-weight:500">Alle vorhandenen Dokumente hierher ziehen</b><span class="rq-hint">PDF, Word oder Text. Alles zusammen, die KI sortiert nach dem Anlegen.</span><span class="rq-btn ghost sm">Dateien auswählen</span></label><input id="rqw-files" type="file" multiple style="display:none">'
        +((W.files.length||W.upFiles.length)?'<div class="rq-list">'+W.upFiles.map(function(f){return '<div class="rq-li" style="cursor:default"><i class="ti ti-file-text"></i><div><b>'+E(fname(f))+'</b><small>'+(f.size?rqSize(f.size)+' · ':'')+'hochgeladen</small></div><span class="rq-pill">bereit</span></div>';}).join('')+W.files.map(function(f,i){return '<div class="rq-li" style="cursor:default"><i class="ti ti-file-text"></i><div><b>'+E(f.name)+'</b><small>'+rqSize(f.size)+'</small></div><button type="button" class="rq-btn ghost sm" data-a="rmfile" data-v="'+i+'">Entfernen</button></div>';}).join('')+'</div>':'<span class="rq-hint">Dieser Schritt lässt sich auch überspringen. Unterlagen kannst du später unter Ablage hochladen.</span>')
@@ -9221,6 +9244,8 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
       }catch(er){W.busy=false;render();setMsg('','Das Hochladen hat nicht geklappt: '+er.message);}
       return;}
     if(a==='set'){collect();var k=t.getAttribute('data-k');W.d[k]=(W.d[k]===v&&k==='titel')?'':v;return render();}
+    if(a==='grp'){var gk=t.getAttribute('data-k');W.d.groesse=W.d.groesse||{};if(gk==='ferien')W.d.groesse.ferien=!W.d.groesse.ferien;else W.d.groesse[gk]=v;W.d.paket=pkgSuggest(W.d.groesse).plan;return render();}
+    if(a==='pkg'){W.d.paket=v;return render();}
     if(a==='mod'){var ix=W.d.module.indexOf(v);if(ix>=0)W.d.module.splice(ix,1);else W.d.module.push(v);return render();}
     if(a==='sec'){W.d.sektor=v;W.secOpen=true;if(!W.d.vorschlaege)W.d.module=(RQ_SECMODS[v]||[]).slice();return render();}
     if(a==='rmfile'){W.files.splice(parseInt(v,10),1);return render();}

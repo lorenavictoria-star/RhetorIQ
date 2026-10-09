@@ -855,3 +855,15 @@ test('Gelerntes Feedback: Textart-Schlüssel wird gelesen, das Genauere gewinnt,
   assert.equal(await getFeedbackLearningsBlock(cl.id, ['rp']), '');
   assert.equal(await getFeedbackLearningsBlock(cl.id, []), '');
 });
+
+test('S7 Paket: gewählte Grösse und Paket werden gespeichert und beim Anlegen am Klienten gesetzt', async () => {
+  const d = await readyDraft({});
+  const u = await srv.call('PUT', `/api/onboarding-drafts/${d.id}`, { token: A(), body: { paket: 'team', groesse: { mitarbeitende: '20-99', texte: '300', ferien: false } } });
+  assert.equal(u.status, 200);
+  assert.equal(u.body.paket, 'team');
+  assert.equal((await srv.call('PUT', `/api/onboarding-drafts/${d.id}`, { token: A(), body: { paket: 'gratis' } })).status, 400);
+  const r = await srv.call('POST', `/api/onboarding-drafts/${d.id}/finish`, { token: A(), body: { privacyAcknowledged: true } });
+  assert.equal(r.status, 201);
+  const cl = await H.pool.query('SELECT recommended_plan FROM clients WHERE id=$1', [r.body.client.id]);
+  assert.equal(cl.rows[0].recommended_plan, 'team');
+});
