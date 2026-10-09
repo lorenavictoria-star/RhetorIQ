@@ -7087,7 +7087,7 @@ async function sendPaymentLink(clientId, btn) {
   let priceId;
   if (prices.length || angebote.length) {
     const ov = document.createElement('div');
-    ov.className = 'ov';
+    ov.className = 'ov show';
     ov.id = 'price-pick-ov';
     const angOpts = angebote.length ? '<optgroup label="Pakete und Einrichtung (ohne Vorbereitung in Stripe)">' + angebote.map(a => `<option value="angebot:${a.key}">${safeText(a.name)} — CHF ${(a.amountCents / 100).toFixed(0)}${a.recurring ? ' / Monat' : ' einmalig'}</option>`).join('') + '</optgroup>' : '';
     const options = angOpts + prices.map(p => {
