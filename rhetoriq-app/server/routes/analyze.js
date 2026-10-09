@@ -1799,6 +1799,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
 
     const analysis = { id: rows[0].id, module, label: cfg.label, result, createdAt: rows[0].created_at, clientId: resolvedClientId };
     require('../lib/stimmnaehe').fuerAnalyse(rows[0].id, resolvedClientId, module, result);   // lokale Messung, ohne KI, wirft nie
+    if (willTwoPass) require('../lib/durchgang').speichern({ analysisId: rows[0].id, clientId: resolvedClientId, advisorId, module, entwurf: claudeResp.text, endtext: result });   // Entwurf gegen Endtext, ohne KI
 
     // Auto-save as structural training example (fire-and-forget)
     // Only saves when output is substantive (>200 chars) to avoid polluting with short/error outputs.
@@ -1972,7 +1973,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     // Two-pass modules: draft silently first (keepalive pings keep the SSE
     // connection alive during this), then stream only the revised final pass.
     let streamUserMsg = userMsg;
-    let draftInputTokens = 0, draftOutputTokens = 0;
+    let draftInputTokens = 0, draftOutputTokens = 0, draftText = null;
     if (willTwoPassS && !aborted) {
       console.log(`[trace] ${module} starting draft pass, maxTokens=${maxTokens}`);
       const draftResp = await callClaude(streamSystemBlocks, cheapDraftS ? userMsg : draftUserContent(userMsg), maxTokens, draftModelFor(module));
@@ -1980,6 +1981,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       if (draftResp.text) streamUserMsg = cheapDraftS ? buildRevisionPrompt(userMsg, draftResp.text, module) : revisionUserContent(userMsg, draftResp.text, module);
       draftInputTokens = draftResp.inputTokens;
       draftOutputTokens = draftResp.outputTokens;
+      draftText = draftResp.text || null;
     }
     if (aborted) { clearInterval(keepAlive); return; }
 
@@ -2021,6 +2023,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       [resolvedClientId, advisorId, module, cfg.label, data, fullText, generatedBy, hasBrandVoice, instructionsKey || module]
     );
     require('../lib/stimmnaehe').fuerAnalyse(rows[0].id, resolvedClientId, module, fullText);   // lokale Messung, ohne KI, wirft nie
+    if (draftText) require('../lib/durchgang').speichern({ analysisId: rows[0].id, clientId: resolvedClientId, advisorId, module, entwurf: draftText, endtext: fullText });   // Entwurf gegen Endtext, ohne KI
     // Fix 11: Log usage for client analyses too
     if (advisorId && fullText.length > 200) {
       const inputText = Object.entries(data || {})
