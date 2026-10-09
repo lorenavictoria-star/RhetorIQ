@@ -2272,7 +2272,7 @@ html[lang="en"] .legal-en-note{display:block}
 </script>
 <script id="rq-xpairs">
 // Zusätzliche DE/EN-Paare (Sicherheitsfunktionen); rq-i18n fügt sie zu PAIRS hinzu.
-window.RQ_EXTRA_PAIRS=[["Zugang und Sitzungen", "Access and sessions"], ["Zugang entziehen beendet alle Sitzungen des Klienten und seines Teams und erzeugt einen neuen Zugangscode. Der alte Code ist danach ungültig. Alle Geräte abmelden beendet die Sitzungen, der Zugangscode bleibt gleich.", "Revoking access ends all sessions of the client and their team and creates a new access code. The old code is invalid afterwards. Signing out all devices ends the sessions and the access code stays the same."], ["Zugang entziehen", "Revoke access"], ["Alle Geräte abmelden", "Sign out all devices"], ["Alle Geräte dieses Klienten und seines Teams abmelden?", "Sign out all devices of this client and their team?"], ["Alle Geräte sind abgemeldet.", "All devices are signed out."], ["Zugang wirklich entziehen? Alle Sitzungen enden und der bisherige Zugangscode wird ungültig.", "Really revoke access? All sessions end and the previous access code becomes invalid."], ["Soll zusätzlich das Passwort des Hauptzugangs gelöscht werden?\n\nOK: Passwort löschen. Abbrechen: Passwort behalten.", "Should the password of the main account be deleted as well?\n\nOK: delete password. Cancel: keep password."], ["Der Zugang ist entzogen. Neuer Zugangscode: ", "Access revoked. New access code: "], [". Der neue Code lässt sich auf der Kundenkarte per E-Mail an den Klienten senden.", ". The new code can be emailed to the client from the client card."], ["Das hat nicht geklappt. ", "That did not work. "]];
+window.RQ_EXTRA_PAIRS=[["Zugang und Sitzungen", "Access and sessions"], ["Zugang entziehen", "Revoke access"], ["Alle Geräte abmelden", "Sign out all devices"], ["Alle Geräte dieses Klienten und seines Teams abmelden?", "Sign out all devices of this client and their team?"], ["Alle Geräte sind abgemeldet.", "All devices are signed out."], ["Zugang wirklich entziehen? Alle Sitzungen enden und der bisherige Zugangscode wird ungültig.", "Really revoke access? All sessions end and the previous access code becomes invalid."], ["Soll zusätzlich das Passwort des Hauptzugangs gelöscht werden?\n\nOK: Passwort löschen. Abbrechen: Passwort behalten.", "Should the password of the main account be deleted as well?\n\nOK: delete password. Cancel: keep password."], ["Der Zugang ist entzogen. Neuer Zugangscode: ", "Access revoked. New access code: "], [". Der neue Code lässt sich auf der Kundenkarte per E-Mail an den Klienten senden.", ". The new code can be emailed to the client from the client card."], ["Das hat nicht geklappt. ", "That did not work. "], ["Klientendaten exportieren", "Export client data"], ["Klient vollständig löschen", "Delete client completely"], ["Der Datenauszug wird erstellt …", "Creating the data export …"], ["Der Datenauszug wurde geladen.", "The data export has been downloaded."], ["Zugang entziehen beendet alle Sitzungen des Klienten und seines Teams und erzeugt einen neuen Zugangscode. Der alte Code ist danach ungültig. Alle Geräte abmelden beendet die Sitzungen, der Zugangscode bleibt gleich. Der Datenauszug enthält alle Daten des Klienten als ZIP. Vollständig löschen entfernt den Klienten mit allen Daten.", "Revoking access ends all sessions of the client and their team and creates a new access code. The old code is invalid afterwards. Signing out all devices ends the sessions and the access code stays the same. The data export contains all data of the client as a ZIP. Deleting completely removes the client with all data."]];
 </script>
 <script id="rq-i18n">
 // ── I18N: Wörterbuch-Ebene über dem bestehenden T/applyLang-System ──
@@ -4127,9 +4127,10 @@ async function saveModuleConfig(){
 async function deleteClient(cid){
   const c=clients.find(x=>x.id==cid);
   const name=c?.name||'this client';
-  if(!confirm('Delete client "'+name+'" and ALL their data?\n\nThis cannot be undone.'))return;
+  if(!confirm('Klient «'+name+'» mit ALLEN Daten vollständig löschen?\n\nTexte, Gedächtnis, Dateien, Personen, Freigaben, Team, E-Mail-Verlauf und Trainingsbeispiele werden entfernt. Das lässt sich nicht rückgängig machen.\n\nTipp: Vorher unter Verwaltung den Datenauszug laden.'))return;
+  if(!confirm('Letzte Rückfrage: «'+name+'» jetzt endgültig löschen?'))return;
   try{
-    const r=await api('/api/clients/'+cid,{method:'DELETE'});
+    const r=await api('/api/clients/'+cid+'?confirm=ja',{method:'DELETE'});
     if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error||'Error deleting client.');}
     clients=clients.filter(c=>c.id!==cid);
     if(clientId===cid){clientId=null;people=[];memory=[];}
@@ -9136,9 +9137,11 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
       var cid=_wsClientId;if(!cid)return r;
       var box=document.createElement('div');box.className='rq-card';box.id='rq-sec-box';box.style.marginTop='20px';
       box.innerHTML='<span class="rq-eb">Zugang und Sitzungen</span>'
-        +'<span class="rq-hint">Zugang entziehen beendet alle Sitzungen des Klienten und seines Teams und erzeugt einen neuen Zugangscode. Der alte Code ist danach ungültig. Alle Geräte abmelden beendet die Sitzungen, der Zugangscode bleibt gleich.</span>'
+        +'<span class="rq-hint">Zugang entziehen beendet alle Sitzungen des Klienten und seines Teams und erzeugt einen neuen Zugangscode. Der alte Code ist danach ungültig. Alle Geräte abmelden beendet die Sitzungen, der Zugangscode bleibt gleich. Der Datenauszug enthält alle Daten des Klienten als ZIP. Vollständig löschen entfernt den Klienten mit allen Daten.</span>'
         +'<div class="rq-acts"><button type="button" class="rq-btn ghost sm" id="rq-sec-revoke" style="color:#b91c1c;border-color:#fecaca">Zugang entziehen</button>'
-        +'<button type="button" class="rq-btn ghost sm" id="rq-sec-logout">Alle Geräte abmelden</button></div>'
+        +'<button type="button" class="rq-btn ghost sm" id="rq-sec-logout">Alle Geräte abmelden</button>'
+        +'<button type="button" class="rq-btn ghost sm" id="rq-sec-export">Klientendaten exportieren</button>'
+        +'<button type="button" class="rq-btn ghost sm" id="rq-sec-delete" style="color:#b91c1c;border-color:#fecaca">Klient vollständig löschen</button></div>'
         +'<div id="rq-sec-msg" class="rq-hint" role="status"></div>';
       body.appendChild(box);
       var msg=box.querySelector('#rq-sec-msg');
@@ -9149,6 +9152,16 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
         try{await rqJ('/api/clients/'+cid+'/logout-all-devices',{method:'POST',body:'{}'});msg.textContent='Alle Geräte sind abgemeldet.';}
         catch(e){msg.textContent='Das hat nicht geklappt. '+e.message;}
         busy(b,false);
+      };
+      box.querySelector('#rq-sec-export').onclick=async function(){
+        var b=this;busy(b,true);msg.textContent='Der Datenauszug wird erstellt …';
+        try{await rqDl('/api/clients/'+cid+'/export-data','Datenauszug.zip');msg.textContent='Der Datenauszug wurde geladen.';}
+        catch(e){msg.textContent='Das hat nicht geklappt. '+e.message;}
+        busy(b,false);
+      };
+      box.querySelector('#rq-sec-delete').onclick=function(){
+        var c=(typeof clients!=='undefined'?clients:[]).filter(function(x){return String(x.id)===String(cid);})[0]||{};
+        if(typeof wsDeleteClient==='function')wsDeleteClient();
       };
       box.querySelector('#rq-sec-revoke').onclick=async function(){
         var b=this;if(!confirm('Zugang wirklich entziehen? Alle Sitzungen enden und der bisherige Zugangscode wird ungültig.'))return;

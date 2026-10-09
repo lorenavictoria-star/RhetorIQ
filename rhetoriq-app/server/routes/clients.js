@@ -488,20 +488,33 @@ router.get('/:id/token-usage', requireAuth, async (req, res) => {
   }
 });
 
+// DELETE /api/clients/:id — Klient vollständig löschen (alle Tabellen, eine Transaktion, siehe lib/clientData.js).
+// Die Rückfrage im Frontend ist Pflicht; der Server verlangt zusätzlich ?confirm=ja.
 router.delete('/:id', requireAdvisor, async (req, res) => {
   try {
-    const { rowCount } = await pool.query(
-      'DELETE FROM clients WHERE id = $1 AND advisor_id = $2',
-      [req.params.id, req.user.id]
-    );
-    if (!rowCount) return res.status(404).json({ error: 'Client not found (or belongs to a different advisor account)' });
-    res.json({ ok: true });
+    if (req.query.confirm !== 'ja') return res.status(400).json({ error: 'Löschen bitte mit Bestätigung (confirm=ja) aufrufen.' });
+    const r = await require('../lib/clientData').deleteClientCompletely(parseInt(req.params.id, 10), req.user.id);
+    if (!r) return res.status(404).json({ error: 'Client not found (or belongs to a different advisor account)' });
+    res.json({ ok: true, deleted: r.counts });
   } catch (e) {
-    // Surface the real Postgres error (e.g. a foreign-key constraint on a
-    // table that isn't cascade-deleted yet) instead of a generic message —
-    // this was previously swallowed, making delete failures undiagnosable.
     console.error('[clients] delete failed:', e.message);
-    res.status(500).json({ error: e.message || 'Server error' });
+    res.status(500).json({ error: 'Das Löschen hat nicht geklappt. Es wurde nichts verändert.' });
+  }
+});
+
+// GET /api/clients/:id/export-data — alle Daten des Klienten als ZIP (JSON je Tabelle, Dateien, Word mit den Texten)
+router.get('/:id/export-data', requireAdvisor, async (req, res) => {
+  try {
+    const r = await require('../lib/clientData').exportClientData(parseInt(req.params.id, 10), req.user.id);
+    if (!r) return res.status(404).json({ error: 'Client not found' });
+    const safe = String(r.name).replace(/[^A-Za-z0-9_-]+/g, '_').slice(0, 40) || 'Klient';
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="Datenauszug_${safe}.zip"`);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.send(r.buffer);
+  } catch (e) {
+    console.error('[clients] export failed:', e.message);
+    res.status(500).json({ error: 'Der Datenauszug hat nicht geklappt.' });
   }
 });
 
