@@ -70,6 +70,7 @@ router.get('/mein/:clientId', requireAuth, ownClient('clientId'), async (req, re
     const m = wahl.erlaubteMonate();
     const out = { aktiv, monate: m };
     if (!aktiv) return res.json(out);
+    out.newsletterErlaubt = await require('../lib/moduleAccess').textartFuerKlient(id, 'newsletter');
     out.eingabe = { aktuell: { monat: m.aktuell, ...(await wahl.leseEingabe(id, m.aktuell)) }, naechster: { monat: m.naechster, ...(await wahl.leseEingabe(id, m.naechster)) } };
     const tag = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Zurich', day: 'numeric' }).format(new Date()));
     out.erinnerung = tag >= 20 && !out.eingabe.naechster.text;
@@ -109,6 +110,8 @@ router.post('/auswahl/:clientId', requireAuth, requireRole('editor'), nichtNurLe
     if (req.user.role !== 'client') return res.status(403).json({ error: 'Die Themen wählt der Klient.' });
     await ensureSchema();
     if (!(await aktivVon(id))) return res.status(403).json({ error: 'Das Zusatzmodul «Automatisch Themen und Ideen senden» ist nicht aktiv.' });
+    // Der Newsletter-Entwurf ist nur möglich, wenn die Textart Newsletter für den Klienten freigeschaltet ist (vor allen Kosten)
+    if (!(await require('../lib/moduleAccess').textartFuerKlient(id, 'newsletter'))) return res.status(403).json({ error: 'Die Textart Newsletter ist für Ihr Konto nicht freigeschaltet. Bitte wenden Sie sich an Ihre Beraterin.', modulGesperrt: true });
     const monat = String((req.body && req.body.monat) || '');
     const roh = req.body && req.body.auswahl;
     if (!Array.isArray(roh) || roh.length < 1 || roh.length > wahl.MAX_WAHL) return res.status(400).json({ error: `Bitte wählen Sie ein bis drei Themen.` });

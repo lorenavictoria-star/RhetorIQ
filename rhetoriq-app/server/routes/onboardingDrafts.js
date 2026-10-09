@@ -20,6 +20,7 @@ const { einladungMail, FRIST_TAGE } = require('../lib/onboardingMails');
 //   GET    /api/onboarding-drafts/:id        ein Entwurf
 //   PUT    /api/onboarding-drafts/:id        Teilupdate
 //   DELETE /api/onboarding-drafts/:id        löschen
+const { TEXTARTEN } = require('../lib/moduleAccess');
 const router = express.Router();
 
 const clip = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
@@ -77,6 +78,12 @@ function validateFields(body, { partial }) {
     if (!m) return { error: 'module muss eine Liste sein.' };
     f.module = JSON.stringify(m);
   }
+  if (has('textarten')) {
+    // null = alle Textarten; sonst Liste der erlaubten Textarten des Text Generators
+    if (b.textarten === null) f.textarten = 'null';
+    else if (Array.isArray(b.textarten)) f.textarten = JSON.stringify(b.textarten.filter(t => TEXTARTEN.includes(t)).filter((t, i, a) => a.indexOf(t) === i));
+    else return { error: 'textarten muss eine Liste oder null sein.' };
+  }
   if (has('vorschlaege')) {
     const o = cleanObject(b.vorschlaege);
     if (!o) return { error: 'vorschlaege muss ein Objekt (max. 300 KB) sein.' };
@@ -104,7 +111,7 @@ function validateFields(body, { partial }) {
   return { fields: f };
 }
 
-const JSON_COLS = new Set(['module', 'vorschlaege', 'briefing', 'groesse']);
+const JSON_COLS = new Set(['module', 'textarten', 'vorschlaege', 'briefing', 'groesse']);
 
 async function loadDraft(id) {
   const { rows } = await pool.query('SELECT * FROM onboarding_drafts WHERE id=$1', [id]);
@@ -353,6 +360,14 @@ router.post('/:id/finish', requireAdvisor, async (req, res) => {
     claimed = null;
     if (['stimme', 'team', 'business', 'enterprise'].includes(d.paket)) {
       await pool.query('UPDATE clients SET recommended_plan=$1 WHERE id=$2', [d.paket, client.id]).catch(e => console.error('[onboarding] Paket:', e.message));
+    }
+    {
+      // Standard «alle». Nur das Bündel «Rede und Auftritt» ohne Text Generator schaltet allein die Textart Rede frei.
+      const namen = Array.isArray(d.module) ? d.module : [];
+      let arten = null;
+      if (Array.isArray(d.textarten)) arten = d.textarten.filter(t => TEXTARTEN.includes(t));
+      else if (namen.includes('Rede und Auftritt') && !namen.includes('Text Generator')) arten = ['speech'];
+      if (arten) await pool.query('UPDATE clients SET enabled_textarten=$1 WHERE id=$2', [arten, client.id]).catch(e => console.error('[onboarding] Textarten:', e.message));
     }
     if (d.themenplan === true) await pool.query('UPDATE clients SET themenplan_aktiv=TRUE WHERE id=$1', [client.id]).catch(e => console.error('[onboarding] Themenplan:', e.message));
     await pool.query('UPDATE onboarding_drafts SET client_id=$1, updated_at=NOW() WHERE id=$2', [client.id, id]);

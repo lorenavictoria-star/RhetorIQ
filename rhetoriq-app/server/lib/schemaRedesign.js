@@ -172,6 +172,9 @@ function ensureSchema() {
     // Themenplan und Newsletter-Entwurf (Zusatzprodukt): Schalter je Klient, Wahl im Onboarding, Läufe einmal pro Monat
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS themenplan_aktiv BOOLEAN NOT NULL DEFAULT FALSE`);
     await pool.query(`ALTER TABLE onboarding_drafts ADD COLUMN IF NOT EXISTS themenplan BOOLEAN`);
+    // Textarten des Text Generators pro Klient (NULL = alle Textarten)
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS enabled_textarten TEXT[]`);
+    await pool.query(`ALTER TABLE onboarding_drafts ADD COLUMN IF NOT EXISTS textarten JSONB`);
     await pool.query(`
       CREATE TABLE IF NOT EXISTS themenplan_laeufe (
         id SERIAL PRIMARY KEY,

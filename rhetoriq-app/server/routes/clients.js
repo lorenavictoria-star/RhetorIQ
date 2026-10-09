@@ -8,6 +8,8 @@ const { brevoSend: brevoSendShared } = require('../lib/brevo');
 
 const brevoSend = (opts) => brevoSendShared({ senderName: 'Lorena Lienhard', ...opts });
 
+const { ensureSchema } = require('../lib/schemaRedesign');
+const { TEXTARTEN } = require('../lib/moduleAccess');
 const { guessClientType, guessLastName, createClientRecord } = require('../lib/clientCreate');
 
 // Generate a secure 48-hour setup link and send it instead of a plaintext password.
@@ -72,8 +74,9 @@ const router = express.Router();
 router.get('/', requireAdvisor, async (req, res) => {
   try {
     await ensureClientAddressColumn();
+    await ensureSchema();
     const { rows } = await pool.query(
-      'SELECT id, name, industry, contact, slug, token, capital_markets_enabled, hotel_enabled, enabled_modules, address, created_at, email, client_type, salutation, last_name FROM clients WHERE advisor_id = $1 AND geloescht_am IS NULL ORDER BY created_at DESC',
+      'SELECT id, name, industry, contact, slug, token, capital_markets_enabled, hotel_enabled, enabled_modules, enabled_textarten, address, created_at, email, client_type, salutation, last_name FROM clients WHERE advisor_id = $1 AND geloescht_am IS NULL ORDER BY created_at DESC',
       [req.user.id]
     );
     res.json(rows);
@@ -393,15 +396,17 @@ router.get('/:id/cm-status', requireAuth, async (req, res) => {
       );
       if (!ownerCheck[0]) return res.status(403).json({ error: 'Forbidden' });
     }
+    await ensureSchema();
     const { rows } = await pool.query(
-      'SELECT capital_markets_enabled, hotel_enabled, enabled_modules FROM clients WHERE id = $1',
+      'SELECT capital_markets_enabled, hotel_enabled, enabled_modules, enabled_textarten FROM clients WHERE id = $1',
       [req.params.id]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });
     res.json({
       capital_markets_enabled: rows[0].capital_markets_enabled,
       hotel_enabled: rows[0].hotel_enabled,
-      enabled_modules: rows[0].enabled_modules || null
+      enabled_modules: rows[0].enabled_modules || null,
+      enabled_textarten: rows[0].enabled_textarten || null
     });
   } catch (e) {
     console.error(e);
@@ -409,17 +414,26 @@ router.get('/:id/cm-status', requireAuth, async (req, res) => {
   }
 });
 
-// PUT /api/clients/:id/modules-config
+// PUT /api/clients/:id/modules-config  { modules: [...], textarten?: [...] | null }
+// textarten: Liste der erlaubten Textarten des Text Generators; null = alle; fehlt das Feld, bleibt der Stand unverändert.
 router.put('/:id/modules-config', requireAdvisor, async (req, res) => {
   try {
     const { modules } = req.body;
     if (!Array.isArray(modules)) return res.status(400).json({ error: 'modules must be an array' });
-    const { rows } = await pool.query(
-      'UPDATE clients SET enabled_modules = $1 WHERE id = $2 AND advisor_id = $3 RETURNING enabled_modules',
-      [modules, req.params.id, req.user.id]
-    );
+    const hasArten = Object.prototype.hasOwnProperty.call(req.body, 'textarten');
+    let arten = null;
+    if (hasArten && req.body.textarten !== null) {
+      if (!Array.isArray(req.body.textarten)) return res.status(400).json({ error: 'textarten muss eine Liste oder null sein.' });
+      const bad = req.body.textarten.find(t => !TEXTARTEN.includes(t));
+      if (bad !== undefined) return res.status(400).json({ error: 'Unbekannte Textart: ' + String(bad).slice(0, 40) });
+      arten = [...new Set(req.body.textarten)];
+    }
+    await ensureSchema();
+    const { rows } = hasArten
+      ? await pool.query('UPDATE clients SET enabled_modules = $1, enabled_textarten = $4 WHERE id = $2 AND advisor_id = $3 RETURNING enabled_modules, enabled_textarten', [modules, req.params.id, req.user.id, arten])
+      : await pool.query('UPDATE clients SET enabled_modules = $1 WHERE id = $2 AND advisor_id = $3 RETURNING enabled_modules, enabled_textarten', [modules, req.params.id, req.user.id]);
     if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
-    res.json({ enabled_modules: rows[0].enabled_modules });
+    res.json({ enabled_modules: rows[0].enabled_modules, enabled_textarten: rows[0].enabled_textarten || null });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });

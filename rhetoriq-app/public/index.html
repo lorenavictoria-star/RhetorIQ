@@ -2335,6 +2335,14 @@ window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([
 ["Der Klient trägt das selbst ein. Du kannst es hier ergänzen.","The client enters this themselves. You can add to it here."]
 ]);
 </script>
+<script id="rq-xpairs-textarten">
+// DE/EN-Paare für Module und Textarten pro Klient; rq-i18n fügt window.RQ_EXTRA_PAIRS zu PAIRS hinzu.
+window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([
+["Dieses Modul ist für Ihr Konto nicht freigeschaltet. Bitte wenden Sie sich an Ihre Beraterin.","This module is not enabled for your account. Please contact your advisor."],
+["Diese Textart ist für Ihr Konto nicht freigeschaltet. Bitte wenden Sie sich an Ihre Beraterin.","This text type is not enabled for your account. Please contact your advisor."],
+["Die Textart Newsletter ist für Ihr Konto nicht freigeschaltet. Bitte wenden Sie sich an Ihre Beraterin.","The text type newsletter is not enabled for your account. Please contact your advisor."]
+]);
+</script>
 <script id="rq-i18n">
 // ── I18N: Wörterbuch-Ebene über dem bestehenden T/applyLang-System ──
 // Löst fest eingebaute Texte (HTML und dynamisch erzeugte Listen) pro Sprache auf. Nur sichtbarer Text:
@@ -2516,13 +2524,14 @@ if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https:/
 
 // Live (rhetoriq.ch) und Dateiansicht nutzen den Live-Server. Jeder andere Aufrufort (Test-Dienst, localhost) nutzt den eigenen Server.
 const API=(location.protocol==='file:'||/(^|\.)rhetoriq\.ch$/.test(location.hostname))?'https://rhetoriq.ch':'';
-let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null,clientUserId=null,clientUserName=null,clientUserEmail=null;
+let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null,enabledTextarten=null,clientUserId=null,clientUserName=null,clientUserEmail=null;
 let debugMode=localStorage.getItem('riq-debug')==='1';
 const DEFAULT_MODULES=['profiling','brand-voice','text-gen','review','pre-meeting','arg-reaction','crisis','risk','thread','rh-translate','sparring','debrief','presentation','customer-review'];
 // Fixed Anrede/Ton presets for Email & Brief — replaces the free-form Ton-Kalibrator
 // sliders for these two formats. Each label must match a key in the backend's
 // TONE_PRESETS map (server/routes/analyze.js) verbatim.
 const TONE_PRESETS=['Geschäftlich · Sie','Geschäftlich · Du','Intern · Sie','Intern · Du','Presse / Behörden · Sie','Kundenservice · Sie','Kundenservice · Du','Akquise / Erstkontakt · Sie','Reklamation / Beschwerde · Sie','Lieferant / Partner · Sie','Team-Update von Führungskraft · Du'];
+function taOk(t){return !Array.isArray(enabledTextarten)||enabledTextarten.includes(t);}
 function modEnabled(key){if(enabledModules===null)return DEFAULT_MODULES.includes(key);return enabledModules.includes(key);}
 function hasSuite(prefix){return enabledModules&&enabledModules.some(k=>k.startsWith(prefix));}
 
@@ -3277,7 +3286,7 @@ function renderQuickAccess(){
   const storKey='riq-recent-'+(clientId||'global');
   const recent=JSON.parse(localStorage.getItem(storKey)||'[]');
   const isNewUser=recent.length<3;
-  const items=isNewUser?QA_DEFAULTS:recent.slice(0,4);
+  const items=(isNewUser?QA_DEFAULTS:recent.slice(0,4)).filter(i=>!(typeof rqModBlocked==='function'&&rqModBlocked(i.key)));
   const favs=getFavs();
   const pinnedCustom=(customModules||[]).filter(m=>favs.has('cm-'+m.id)).slice(0,2);
   const allItems=[
@@ -3843,7 +3852,7 @@ async function boot(user,role){
   } else {
     clientId=user.id||null;
     if(clientId){
-      try{const r=await fetch(API+'/api/clients/'+clientId+'/cm-status');const d=await r.json();enabledModules=d.enabled_modules||null;}catch{}
+      try{const r=await fetch(API+'/api/clients/'+clientId+'/cm-status');const d=await r.json();enabledModules=d.enabled_modules||null;enabledTextarten=d.enabled_textarten||null;}catch{}
       await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);
     }
   }
@@ -3959,7 +3968,7 @@ async function switchClient(id){
   const s2=document.getElementById('home-client-select');if(s2&&s2.value!==v)s2.value=v;
   // update capital markets flag from clients array
   const selectedClient=clients.find(c=>String(c.id)===String(id));
-  enabledModules=selectedClient?.enabled_modules||null;
+  enabledModules=selectedClient?.enabled_modules||null;enabledTextarten=selectedClient?.enabled_textarten||null;
   if(clientId){
     await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);
     // Silent background import of past analyses as training examples (idempotent — skips if already done)
@@ -4016,7 +4025,7 @@ function _mcModuleName(key){
   const def=MDEFS[key];return def?.title||key;
 }
 function _mcUpdateCount(){
-  const checked=document.querySelectorAll('#mc-body input[type=checkbox]:checked').length;
+  const checked=document.querySelectorAll('#mc-body input[data-key]:checked').length;
   const el=document.getElementById('mc-count');
   if(el)el.textContent=checked+' Module ausgewählt';
 }
@@ -4124,14 +4133,14 @@ async function saveMcCustomPrompt(){
 }
 async function saveModuleConfig(){
   if(!_mcClientId)return;
-  const checked=[...document.querySelectorAll('#mc-body input[type=checkbox]:checked')].map(el=>el.dataset.key);
+  const checked=[...document.querySelectorAll('#mc-body input[data-key]:checked')].map(el=>el.dataset.key);
   const btn=document.getElementById('mc-save-btn');
   btn.textContent='Speichern…';btn.disabled=true;
   try{
-    const r=await api('/api/clients/'+_mcClientId+'/modules-config',{method:'PUT',body:JSON.stringify({modules:checked})});
+    const r=await api('/api/clients/'+_mcClientId+'/modules-config',{method:'PUT',body:JSON.stringify({modules:checked,textarten:(typeof rqTaDlgPayload==='function'?rqTaDlgPayload():undefined)})});
     const d=await r.json();if(!r.ok)throw new Error(d.error);
-    const c=clients.find(x=>x.id==_mcClientId);if(c)c.enabled_modules=d.enabled_modules;
-    if(String(clientId)===String(_mcClientId)){enabledModules=d.enabled_modules;if(typeof renderModulesList==='function')renderModulesList();}
+    const c=clients.find(x=>x.id==_mcClientId);if(c){c.enabled_modules=d.enabled_modules;c.enabled_textarten=d.enabled_textarten||null;}
+    if(String(clientId)===String(_mcClientId)){enabledModules=d.enabled_modules;enabledTextarten=d.enabled_textarten||null;if(typeof renderModulesList==='function')renderModulesList();}
     closeModal('mc-ov');
   }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
   finally{btn.textContent='Speichern';btn.disabled=false;}
@@ -4883,7 +4892,8 @@ async function buildMostUsed(){
     rows.forEach(h=>{if(h.module&&h.module!=='pre-meeting')counts[h.module]=Number(h.n)||0;});
     extra=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([mod])=>({mod,page:MOD_PAGE[mod]||mod,label:MOD_LABELS[mod]||mod}));
   }catch{}
-  pills.innerHTML=`<button class="mu-pill featured" onclick="goModule('pre-meeting')">Pre-Meeting Brief</button>`
+  extra=extra.filter(m=>!(typeof rqModBlocked==='function'&&rqModBlocked(m.page)));
+  pills.innerHTML=(typeof rqModBlocked==='function'&&rqModBlocked('pre-meeting')?'':`<button class="mu-pill featured" onclick="goModule('pre-meeting')">Pre-Meeting Brief</button>`)
     +extra.map(m=>`<button class="mu-pill" onclick="${m.page==='brand-voice'?"goPage('brand-voice')":`goModule('${m.page}')`}">${m.label}</button>`).join('');
 }
 
@@ -5460,7 +5470,7 @@ function buildTextGen(prefill,form){
     {id:'brief',abbr:'BR',label:'Brief',sub:'Privatbrief · Geschäftsbrief · Amtliches Schreiben',fmtLabel:'Briefart',fmtOpts:['Privatbrief — persönlich, an Einzelperson','Geschäftsbrief — formal, an Unternehmen/Partner','Behördenbrief / Amtliches Schreiben — sehr formal, rechtlich/behördlich'],hasSubscription:false},
     {id:'custom',abbr:'EF',label:'Custom',sub:'Proposal · Announcement · Other',fmtLabel:'Format',fmtOpts:['Talking Points','B2B Proposal','Internal Announcement','Other / Custom'],hasSubscription:false},
   ];
-  const tilesHtml=tileData.map(t=>`
+  const tilesHtml=tileData.filter(t=>taOk(t.id)).map(t=>`
     <div class="tg-tile" id="tg-tile-${t.id}" onclick="tgOpenTile('${t.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div class="tg-tile-abbr">${t.abbr}</div>
@@ -7428,10 +7438,10 @@ const BUNDLES={
 // Einträge der Liste für gebündelte Module (Schlüssel bundle-xyz, isBundle)
 const BUNDLE_MODULES=Object.keys(BUNDLES).map(id=>({key:'bundle-'+id,bundleId:id,isBundle:true,name:BUNDLES[id].name,cat:BUNDLES[id].cat,tag:BUNDLES[id].pkg?'Branchenpaket':BUNDLES[id].name,desc:BUNDLES[id].desc,icon:BUNDLES[id].icon,
   kw:BUNDLES[id].cards.map(c=>(c.name||'')+' '+(c.key||'')).join(' ')+' '+(id==='gespraech'?'meeting vorbereitung argument reaktion einwand training sparring nachbesprechung debrief':id==='rede'?'rede präsentation vortrag keynote':id==='bewertungen'?'rezension review kundenrezension':'')}));
-function bundleCardEnabled(c){return modEnabled(c.enableKey||c.key);}
+function bundleCardEnabled(c){return modEnabled(c.enableKey||c.key)&&(!c.tile||taOk(c.tile));}
 function modShown(m){
   if(m.isBundle)return BUNDLES[m.bundleId].cards.some(bundleCardEnabled);
-  return modEnabled(m.enableKey||m.key);
+  return modEnabled(m.enableKey||m.key)&&(!m.tile||taOk(m.tile));
 }
 // Einstiegspunkte der Modulliste: keine Einzelmodule aus Bündeln, keine Branchenmodule einzeln
 function listModules(){return ALL_MODULES.filter(m=>!m.bundle&&m.cat!=='capital-markets'&&m.cat!=='hotel').concat(BUNDLE_MODULES);}
@@ -8849,7 +8859,7 @@ tryAutoLogin();
 <script id="rq-home-js">
 // ═══ Start: Klient minimalistisch, Advisor mit Tagesübersicht ═══
 (function(){
-  var FALL=[['text-gen-email','E-Mail'],['text-gen-speech','Rede'],['text-gen-linkedin','LinkedIn']];
+  var FALL=[['text-gen-email','E-Mail'],['text-gen-speech','Rede'],['text-gen-linkedin','LinkedIn'],['text-gen-newsletter','Newsletter'],['text-gen-press','Medienmitteilung'],['text-gen-website','Website'],['text-gen-brief','Brief'],['text-gen-custom','Freie Textart']];
   function ukey(){return 'rq-uses-'+((typeof clientId!=='undefined'&&clientId)||'global');}
   function uses(){try{return JSON.parse(localStorage.getItem(ukey())||'{}');}catch(e){return {};}}
   function bump(k){if(!k||k==='text-gen')return;try{var u=uses();u[k]=(u[k]||0)+1;localStorage.setItem(ukey(),JSON.stringify(u));}catch(e){}}
@@ -8857,6 +8867,8 @@ tryAutoLogin();
   var _tm=window.trackModuleUse;window.trackModuleUse=function(key,name){bump(key);return _tm.apply(this,arguments);};
   var _gt=window.goTextGenTile;window.goTextGenTile=function(t){bump('text-gen-'+t);return _gt.apply(this,arguments);};
   function meta(key){return (typeof ALL_MODULES!=='undefined'?ALL_MODULES:[]).filter(function(m){return m.key===key;})[0];}
+  // Nur Module und Textarten, die für diesen Klienten freigeschaltet sind
+  function allowed(k){var m=meta(k);return !!m&&(typeof modShown!=='function'||modShown(m));}
   function open(m){
     if(m.tile)goTextGenTile(m.tile);else if(m.key==='brand-voice')goPage('brand-voice');else goModule(m.key);
   }
@@ -8864,14 +8876,14 @@ tryAutoLogin();
     if(window._rqTopServer&&window._rqTopServer.length){
       var sv=[];window._rqTopServer.forEach(function(r){
         var k=String(r.module||''),m=meta(k)||meta('text-gen-'+k)||(typeof MDEFS!=='undefined'?Object.keys(MDEFS).filter(function(x){return MDEFS[x].api===k&&meta(x);}).map(meta)[0]:null)||(typeof ALL_MODULES!=='undefined'?ALL_MODULES:[]).filter(function(x){return x.enableKey===k&&!x.tile;})[0];
-        if(m&&!sv.some(function(o){return o.key===m.key;}))sv.push({key:m.key,n:+r.count||0});
+        if(m&&allowed(m.key)&&!sv.some(function(o){return o.key===m.key;}))sv.push({key:m.key,n:+r.count||0});
       });
-      FALL.forEach(function(f){if(sv.length<3&&!sv.some(function(o){return o.key===f[0];}))sv.push({key:f[0],n:0});});
+      FALL.forEach(function(f){if(sv.length<3&&allowed(f[0])&&!sv.some(function(o){return o.key===f[0];}))sv.push({key:f[0],n:0});});
       if(sv.length)return sv.slice(0,3);
     }
-    var u=uses(),keys=Object.keys(u).filter(function(k){return meta(k);}).sort(function(a,b){return u[b]-u[a];}).slice(0,3);
+    var u=uses(),keys=Object.keys(u).filter(function(k){return allowed(k);}).sort(function(a,b){return u[b]-u[a];}).slice(0,3);
     var out=keys.map(function(k){return {key:k,n:u[k]};});
-    FALL.forEach(function(f){if(out.length<3&&!out.some(function(o){return o.key===f[0];}))out.push({key:f[0],n:0});});
+    FALL.forEach(function(f){if(out.length<3&&allowed(f[0])&&!out.some(function(o){return o.key===f[0];}))out.push({key:f[0],n:0});});
     return out.slice(0,3);
   }
   function renderClient(){
@@ -9280,14 +9292,14 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
   }
   function absorb(d){
     if(!d)return;var x=W.d;
-    ['id','firma','kontakt','email','webseite','sektor','anrede','titel','workshop_datum','schritt','status','client_id','paket','themenplan'].forEach(function(k){if(d[k]!==undefined&&d[k]!==null)x[k]=d[k];});
+    ['id','firma','kontakt','email','webseite','sektor','anrede','titel','workshop_datum','schritt','status','client_id','paket','themenplan','textarten'].forEach(function(k){if(d[k]!==undefined&&d[k]!==null)x[k]=d[k];});
     if(d.groesse){var gg=d.groesse;if(typeof gg==='string'){try{gg=JSON.parse(gg);}catch(e){gg=null;}}if(gg)x.groesse=gg;}
     if(d.workshop_datum===null)x.workshop_datum='';
     if(d.module!==undefined)x.module=normMods(d.module);
     if(d.vorschlaege!==undefined){var r=normRecs(d.vorschlaege);x.vorschlaege=r&&r.length?r:null;}
     x.sektor=RQ_SECTORS[x.sektor]?x.sektor:'kmu';x.anrede=x.anrede==='du'?'du':'sie';
   }
-  function body(){var d=W.d;return {paket:d.paket||'',groesse:d.groesse||{},firma:d.firma,kontakt:d.kontakt,email:d.email,webseite:d.webseite,sektor:d.sektor,anrede:d.anrede,titel:d.titel,workshop_datum:d.workshop_datum,schritt:d.schritt,module:d.module.map(rqModName),themenplan:d.themenplan===true,status:d.status};}
+  function body(){var d=W.d;return {paket:d.paket||'',groesse:d.groesse||{},firma:d.firma,kontakt:d.kontakt,email:d.email,webseite:d.webseite,sektor:d.sektor,anrede:d.anrede,titel:d.titel,workshop_datum:d.workshop_datum,schritt:d.schritt,module:d.module.map(rqModName),themenplan:d.themenplan===true,textarten:d.textarten,status:d.status};}
   function val(id){var el=document.getElementById(id);return el?el.value.trim():null;}
   function collect(){
     var m={firma:'rqw-firma',kontakt:'rqw-kontakt',email:'rqw-email',webseite:'rqw-web',workshop_datum:'rqw-datum'};
@@ -9409,6 +9421,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
       h='<p class="rq-hint" style="max-width:62ch">Was im Workshop besprochen wurde, wählst du hier aus. '+(rec.length?'Die Empfehlungen der KI sind schon markiert.':'Die Vorauswahl richtet sich nach dem Sektor.')+'</p>'
        +'<details'+(W.secOpen?' open':'')+' data-sec><summary class="rq-hint" style="cursor:pointer;min-height:40px;display:flex;align-items:center">Sektor: '+RQ_SECTORS[d.sektor]+' · ändern</summary><div class="rq-chips" style="margin:8px 0 14px">'+Object.keys(RQ_SECTORS).map(function(k){return '<button type="button" class="rq-chip'+(k===d.sektor?' on':'')+'" data-a="sec" data-v="'+k+'">'+RQ_SECTORS[k]+'</button>';}).join('')+'</div></details>'
        +'<div><span class="rq-eb">'+(rec.length?'Empfohlen für '+E(d.firma):'Passend zum Sektor')+'</span><div class="rq-chips" style="margin-top:8px"><span class="rq-chip on fix">✓ Brand Voice</span>'+base.map(chip).join('')+'</div></div>'
+       +(window.rqTaWizHtml?rqTaWizHtml(d):'')
        +(others.length?'<div><span class="rq-eb">Weitere Module</span><div class="rq-chips" style="margin-top:8px">'+others.map(chip).join('')+'</div></div>':'')
        +'<div class="rq-card"><span class="rq-eb">Zusatzmodule gegen Aufpreis</span><span class="rq-hint">Zusatzmodule kommen zusätzlich zum gewählten Paket dazu. Einmalige Einrichtung je Branchenpaket CHF 1\'500. Sie erscheinen beim Klienten erst, wenn sie hier gewählt sind.</span><div class="rq-chips" style="margin-top:8px">'+ZUS.map(zchip).join('')+'<button type="button" class="rq-chip'+(d.themenplan?' on':'')+'" data-a="tp">'+(d.themenplan?'✓ ':'+ ')+'Automatisch Themen und Ideen senden · CHF 150 pro Monat</button></div>'+(d.themenplan?'<span class="rq-hint" style="margin-top:8px">Am 1. jedes Monats um 06:00 Uhr entstehen ein Themenplan mit 8 bis 10 Themen und ein Newsletter-Entwurf. Beides erscheint bei den Freigaben.</span>':'')+'</div>'
        +'<span class="rq-hint">Brand Voice ist immer dabei.</span>'+pkgCard()+msg()+acts(2,['next3','Weiter']);
@@ -9457,6 +9470,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
     if(a==='grp'){var gk=t.getAttribute('data-k');W.d.groesse=W.d.groesse||{};if(gk==='ferien')W.d.groesse.ferien=!W.d.groesse.ferien;else W.d.groesse[gk]=v;W.d.paket=pkgSuggest(W.d.groesse).plan;return render();}
     if(a==='pkg'){W.d.paket=v;return render();}
     if(a==='tp'){W.d.themenplan=!W.d.themenplan;return render();}
+    if(a==='ta'){W.d.textarten=rqTaToggle(W.d.textarten,v);return render();}
     if(a==='mod'){var ix=W.d.module.indexOf(v);if(ix>=0)W.d.module.splice(ix,1);else W.d.module.push(v);return render();}
     if(a==='sec'){W.d.sektor=v;W.secOpen=true;if(!W.d.vorschlaege)W.d.module=rqWizKeys(RQ_SECMODS[v]||[]);return render();}
     if(a==='rmfile'){W.files.splice(parseInt(v,10),1);return render();}
@@ -9744,6 +9758,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
     if(em===undefined||em===null){M.sel=known.slice();M.rest=[];(typeof MC_SECTIONS!=='undefined'?MC_SECTIONS:[]).forEach(function(s){s.keys.forEach(function(k){if(known.indexOf(k)<0&&M.rest.indexOf(k)<0)M.rest.push(k);});});}
     else{M.sel=em.filter(function(k){return known.indexOf(k)>=0;});M.rest=em.filter(function(k){return known.indexOf(k)<0;});}
     if(M.sel.indexOf('brand-voice')<0)M.sel.unshift('brand-voice');
+    if(window.rqTaWsInit)rqTaWsInit(_wsClientId,c.enabled_textarten!==undefined?c.enabled_textarten:wc.enabled_textarten);
   }
   async function loadCustom(){
     try{var r=await rqJ('/api/custom-modules?clientId='+_wsClientId);M.custom=Array.isArray(r)?r:[];}catch(e){M.custom=[];}
@@ -9773,6 +9788,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
     if(M.form){body.innerHTML='<div id="rq-mod-main" style="display:flex;flex-direction:column;gap:16px">'+builder()+'</div>';return;}
     body.innerHTML='<div style="display:flex;flex-direction:column;gap:18px"><div class="rq-acts" style="justify-content:space-between"><details'+(M.secOpen?' open':'')+' data-secd><summary class="rq-hint" style="cursor:pointer;min-height:44px;display:flex;align-items:center">Sektor: '+RQ_SECTORS[M.sec]+' · ändern</summary><div class="rq-chips" style="margin:6px 0 4px">'+Object.keys(RQ_SECTORS).map(function(k){return '<button type="button" class="rq-chip'+(k===M.sec?' on':'')+'" data-msec="'+k+'">'+RQ_SECTORS[k]+'</button>';}).join('')+'</div></details><button type="button" class="rq-btn" data-mm-new="1">+ Eigenes Modul erstellen</button></div>'
      +'<div><span class="rq-lab">Module für '+E(client().name||'')+'</span><div class="rq-chips">'+chips()+'</div><div class="rq-hint" style="margin-top:8px">Das Häkchen blendet das Modul für den Klienten ein oder aus. Brand Voice ist immer dabei.</div></div>'
+     +(window.rqTaWsHtml?rqTaWsHtml(M.sel.indexOf('text-gen')>=0):'')
      +'<div class="rq-acts"><button type="button" class="rq-btn" data-mm-saveall="1"'+(M.busy?' disabled':'')+'>Auswahl speichern</button>'+(M.msg?'<span class="rq-ok">'+E(M.msg)+'</span>':'')+(M.err?'<span class="rq-err">'+E(M.err)+'</span>':'')+'</div>'
      +'<div><div class="rq-qa-h" style="margin-top:4px">Eigene Module · '+M.custom.length+'</div>'+(M.custom.length?M.custom.map(function(m){return '<div class="rq-li" style="cursor:default"><i class="ti ti-puzzle"></i><div><b>'+E((m.icon&&m.icon!=='◆'?m.icon+' ':'')+m.name)+'</b><small>'+E(m.description||'von dir erstellt')+'</small></div><span class="rq-pill">aktiv</span></div>';}).join(''):'<div class="rq-empty">Noch keine eigenen Module für diesen Klienten.</div>')+'</div>'
      +'<details><summary class="rq-hint" style="cursor:pointer;min-height:44px;display:flex;align-items:center">Anweisungen und Feedback pro Modul</summary><div id="rq-mod-prompts" style="margin-top:8px"></div></details></div>';
@@ -9786,9 +9802,9 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
     M.busy=true;M.err='';M.msg='';render(body);
     try{
       var list=M.rest.concat(M.sel.filter(function(k){return M.rest.indexOf(k)<0;}));
-      var d=await rqJ('/api/clients/'+_wsClientId+'/modules-config',{method:'PUT',body:JSON.stringify({modules:list})});
-      var c=client();if(c.id)c.enabled_modules=d.enabled_modules;
-      if(String(clientId)===String(_wsClientId)){enabledModules=d.enabled_modules;if(typeof renderModulesList==='function')renderModulesList();}
+      var d=await rqJ('/api/clients/'+_wsClientId+'/modules-config',{method:'PUT',body:JSON.stringify({modules:list,textarten:(window.rqTaWsPayload?rqTaWsPayload():undefined)})});
+      var c=client();if(c.id){c.enabled_modules=d.enabled_modules;c.enabled_textarten=d.enabled_textarten||null;}
+      if(String(clientId)===String(_wsClientId)){enabledModules=d.enabled_modules;enabledTextarten=d.enabled_textarten||null;if(typeof renderModulesList==='function')renderModulesList();}
       M.msg='Gespeichert. '+M.sel.length+' Module aktiv.';
     }catch(e){M.err='Speichern nicht möglich. '+e.message;}
     M.busy=false;render(body);
@@ -9825,7 +9841,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
   });
   document.addEventListener('change',function(e){if(e.target.classList&&e.target.classList.contains('cmb-ft')){keepForm();render(document.getElementById('ws-body'));}});
   // Beim Öffnen eines anderen Klienten zurücksetzen
-  var _ow=window.openWorkspace;window.openWorkspace=function(cid){M.sel=null;M.custom=null;return _ow.apply(this,arguments);};
+  var _ow=window.openWorkspace;window.openWorkspace=function(cid){M.sel=null;M.custom=null;if(window.rqTaWsReset)rqTaWsReset();return _ow.apply(this,arguments);};
 })();
 </script>
 <style id="rq-viewas-css">
@@ -11527,7 +11543,7 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
   function cardPlan(d){
     if(d.planWartet)return '<div class="rq-card"><span class="rq-eb">Themenplan</span><div style="font-size:15px;line-height:1.5">Der Themenplan wird von Lorena geprüft. Sie sehen ihn hier, sobald er freigegeben ist.</div></div>';
     if(!d.plan)return '<div class="rq-card"><span class="rq-eb">Themenplan</span><div style="font-size:15px;line-height:1.5">Der Themenplan erscheint zu Beginn des Monats.</div></div>';
-    var ok=darf(),prev={};(d.auswahl||[]).forEach(function(a){prev[a.titel]=a;});
+    var nlOk=d.newsletterErlaubt!==false,ok=darf()&&nlOk,prev={};(d.auswahl||[]).forEach(function(a){prev[a.titel]=a;});
     var rows=d.plan.themen.map(function(t){
       var p=prev[t.titel],i=t.idx;
       return '<div style="border:1px solid var(--bd);padding:12px 14px;background:#fff">'
@@ -11542,6 +11558,7 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     return '<div class="rq-card"><span class="rq-eb">Themenplan</span>'
       +'<div style="font-family:var(--serif);font-size:22px;line-height:1.2">Ihr Themenplan für '+E(mn(d.plan.monat))+'</div>'
       +'<div class="rq-hint">Wählen Sie ein bis drei Themen. Daraus entsteht ein Newsletter-Entwurf, den Lorena vor dem Versand an Sie prüft.</div>'
+      +(nlOk?'':'<div class="rq-hint">Die Textart Newsletter ist für Ihr Konto nicht freigeschaltet. Bitte wenden Sie sich an Ihre Beraterin.</div>')
       +'<div id="rqtw-themen" style="display:flex;flex-direction:column;gap:8px">'+rows+'</div>'
       +'<div class="rq-acts" style="align-items:center"><button type="button" class="rq-btn" id="rqtw-go" disabled>Newsletter erstellen</button><span class="rq-hint" id="rqtw-cnt">0 von 3 gewählt</span></div>'
       +'<div class="rq-hint" id="rqtw-gmsg" role="status"></div></div>';
@@ -12089,6 +12106,98 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     Array.prototype.forEach.call(document.querySelectorAll('#more-menu .mm-tile'),function(t){var o=t.getAttribute('onclick')||'';if(o.indexOf("goPage('people')")>=0)t.style.display='none';});
   }
   mob();setTimeout(mob,1500);setTimeout(mob,5000);document.addEventListener('DOMContentLoaded',mob);
+})();
+</script>
+<script id="rq-textarten-js">
+// ═══ Module und Textarten pro Klient: Auswahl in «Module anpassen» und im Onboarding, Sperre im Frontend des Klienten ═══
+(function(){
+  var E=typeof rqEsc==='function'?rqEsc:function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var LIST=[['linkedin','LinkedIn'],['newsletter','Newsletter'],['email','E-Mail'],['speech','Rede'],['press','Medienmitteilung'],['website','Website'],['brief','Brief'],['custom','Freie Textart']];
+  var IDS=LIST.map(function(x){return x[0];});
+  window.RQ_TEXTARTEN=LIST;
+  function norm(arr){return Array.isArray(arr)?IDS.filter(function(i){return arr.indexOf(i)>=0;}):IDS.slice();}
+  function payload(sel){return sel.length===IDS.length?null:sel.slice();}
+  window.rqTaToggle=function(cur,id){var s=norm(cur),i=s.indexOf(id);if(i>=0)s.splice(i,1);else s.push(id);return payload(s);};
+
+  // — Workspace «Module anpassen» (Chips) —
+  var S={cid:null,sel:null};
+  window.rqTaWsReset=function(){S.cid=null;S.sel=null;};
+  window.rqTaWsInit=function(cid,arr){if(String(S.cid)===String(cid)&&S.sel)return;S.cid=cid;S.sel=norm(arr);};
+  window.rqTaWsPayload=function(){return S.sel?payload(S.sel):undefined;};
+  function wsChip(id,label,on,dis){return '<button type="button" class="rq-chip'+(on?' on':'')+'" data-ta="'+id+'"'+(dis?' disabled':'')+'>'+(on?'✓ ':'+ ')+E(label)+'</button>';}
+  window.rqTaWsHtml=function(textGenOn){
+    if(!S.sel)return '';
+    return '<div><span class="rq-lab">Textarten im Text Generator</span><div class="rq-chips" id="rq-ta-ws">'
+      +LIST.map(function(x){return wsChip(x[0],x[1],S.sel.indexOf(x[0])>=0,!textGenOn);}).join('')
+      +'</div><div class="rq-hint" style="margin-top:8px">'+(textGenOn?'Der Klient sieht und nutzt nur die gewählten Textarten.':'Nur aktiv, wenn der Text Generator gewählt ist.')+'</div></div>';
+  };
+  document.addEventListener('click',function(e){
+    var t=e.target.closest&&e.target.closest('#ws-body [data-ta]');if(!t||t.disabled||!S.sel)return;
+    var id=t.getAttribute('data-ta'),i=S.sel.indexOf(id);if(i>=0)S.sel.splice(i,1);else S.sel.push(id);
+    var on=i<0,lab=(LIST.filter(function(x){return x[0]===id;})[0]||[])[1]||id;
+    t.className='rq-chip'+(on?' on':'');t.textContent=(on?'✓ ':'+ ')+lab;
+  });
+
+  // — Dialog openModuleConfig (Kontrollkästchen) —
+  function dlgSync(){
+    var tg=document.querySelector('#mc-body input[data-key="text-gen"]'),box=document.getElementById('rq-ta-dlg');if(!tg||!box)return;
+    box.querySelectorAll('input').forEach(function(i){i.disabled=!tg.checked;});box.style.opacity=tg.checked?'1':'.5';
+  }
+  var _omc=window.openModuleConfig;
+  if(typeof _omc==='function')window.openModuleConfig=function(cid){
+    var r=_omc.apply(this,arguments);
+    try{
+      var tg=document.querySelector('#mc-body input[data-key="text-gen"]');if(!tg)return r;
+      var c=(typeof clients!=='undefined'?clients:[]).filter(function(x){return String(x.id)===String(cid);})[0]||{};
+      var sel=norm(c.enabled_textarten);
+      var box=document.createElement('div');box.id='rq-ta-dlg';box.style.cssText='padding:2px 20px 8px 53px';
+      box.innerHTML='<div style="font-size:11px;color:var(--mu);margin-bottom:4px">Textarten im Text Generator</div>'
+        +LIST.map(function(x){return '<label style="display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer;font-size:12px"><input type="checkbox" data-textart="'+x[0]+'"'+(sel.indexOf(x[0])>=0?' checked':'')+' style="width:14px;height:14px;accent-color:var(--ac)">'+E(x[1])+'</label>';}).join('');
+      var lab=tg.closest('label');lab.parentNode.insertBefore(box,lab.nextSibling);
+      tg.addEventListener('change',dlgSync);dlgSync();
+    }catch(e){console.error(e);}
+    return r;
+  };
+  window.rqTaDlgPayload=function(){
+    var boxes=document.querySelectorAll('#mc-body input[data-textart]');if(!boxes.length)return undefined;
+    var sel=[];boxes.forEach(function(b){if(b.checked)sel.push(b.getAttribute('data-textart'));});return payload(sel);
+  };
+
+  // — Onboarding (Schritt Module) —
+  window.rqTaWizHtml=function(d){
+    if(!d||!Array.isArray(d.module)||d.module.indexOf('text-gen')<0)return '';
+    var sel=norm(d.textarten);
+    return '<div class="rq-card"><span class="rq-eb">Textarten im Text Generator</span><span class="rq-hint">Standard sind alle Textarten. Nimm weg, was der Klient nach dem Workshop nicht braucht.</span><div class="rq-chips" style="margin-top:8px">'
+      +LIST.map(function(x){var on=sel.indexOf(x[0])>=0;return '<button type="button" class="rq-chip'+(on?' on':'')+'" data-a="ta" data-v="'+x[0]+'">'+(on?'✓ ':'+ ')+E(x[1])+'</button>';}).join('')+'</div></div>';
+  };
+
+  // — Frontend des Klienten: gesperrte Module und Textarten —
+  var ALIAS={stress:'arg-reaction',impact:'arg-reaction',language:'arg-reaction','crisis-toolkit':'crisis','competitive-check':'risk','vs-gen':'text-gen','vs-cal':'text-gen','before-after':'actionability'};
+  var ALT={brief:['brief','text-gen'],recognition:['recognition','review']};
+  function managed(){
+    var m={'arg-reaction':1};
+    (typeof MC_SECTIONS!=='undefined'?MC_SECTIONS:[]).forEach(function(s){s.keys.forEach(function(k){m[k]=1;});});
+    (typeof MC_SUITES!=='undefined'?MC_SUITES:[]).forEach(function(s){s.keys.forEach(function(k){m[k]=1;});});
+    return m;
+  }
+  window.rqModBlocked=function(name){
+    if(typeof isAdv!=='undefined'&&isAdv)return false;
+    if(!Array.isArray(enabledModules))return false;
+    var k=ALIAS[name]||name;if(k==='brand-voice'||!managed()[k])return false;
+    var ok=(ALT[k]||[k]).some(function(x){return enabledModules.indexOf(x)>=0;});
+    return !ok;
+  };
+  function toast(msg){if(typeof rqToast==='function')rqToast(msg);else alert(msg);}
+  var _gm=window.goModule;
+  if(typeof _gm==='function')window.goModule=function(name){
+    if(typeof name==='string'&&window.rqModBlocked(name)){toast('Dieses Modul ist für Ihr Konto nicht freigeschaltet. Bitte wenden Sie sich an Ihre Beraterin.');return;}
+    return _gm.apply(this,arguments);
+  };
+  var _tt=window.tgOpenTile;
+  if(typeof _tt==='function')window.tgOpenTile=function(id){
+    if(!(typeof isAdv!=='undefined'&&isAdv)&&typeof taOk==='function'&&!taOk(id)){toast('Diese Textart ist für Ihr Konto nicht freigeschaltet. Bitte wenden Sie sich an Ihre Beraterin.');return;}
+    return _tt.apply(this,arguments);
+  };
 })();
 </script>
 <script id="rq-lernkurve-js">

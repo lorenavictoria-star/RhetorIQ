@@ -1692,6 +1692,8 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
       if (!(await canAccessClient(req, clientId))) return res.status(403).json({ error: 'Kein Zugriff auf diesen Klienten.' });
       resolvedClientId = clientId;
     }
+    // Modul und Textart müssen für diesen Klienten freigeschaltet sein (Beraterin und Prüfsatz ausgenommen)
+    if (await require('../lib/moduleAccess').sperrt(req, res, module, instructionsKey)) return;
     {
       // Harte Tagesgrenze (F-07): Plattform und je Klient; die Beraterin ist ausgenommen
       const cap = await require('../lib/costBrake').checkDailyCap(req.user, req.user.role === 'client' ? req.user.clientId : null);
@@ -1895,6 +1897,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       if (!(await canAccessClient(req, clientId))) return res.status(403).json({ error: 'Kein Zugriff auf diesen Klienten.' });
       resolvedClientId = clientId;
     }
+    if (await require('../lib/moduleAccess').sperrt(req, res, module, instructionsKey)) return;
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
 
     {
