@@ -2470,14 +2470,14 @@ const T={
     brand_co:'Company',brand_ind:'Individual',
     bv_extract:'Extract Brand Voice',bv_save_mem:'Save to Memory',bv_save_ref:'📌 Save as Reference',
     // Form builder
-    form_upload:'Upload document',form_upload_sub:'.txt, .pdf, .docx (optional)',
+    form_upload:'Add background documents',form_upload_sub:'e.g. reports, fact sheets or notes (.txt, .pdf, .docx, optional)',
     form_text:'Text',form_run:'Run Analysis',form_result:'Result',
     form_upload_docs:'Upload documents',form_upload_docs_sub:'.txt, .pdf, .docx (saved by advisor, always available)',
     // Text Generator panels
     tg_back:'← Back',tg_template_lbl:'Template / Reference (optional)',tg_upload_tpl:'Upload template',
     tg_tpl_sub:'Your own examples — so the output matches your exact style',
     tg_tpl_ph:'Paste examples — separate with ---.',tg_save_ref:'Save as Reference',
-    tg_source_upload:'Upload source document',
+    tg_source_upload:'Add background documents',tg_source_sub:'e.g. fact sheets, notes, reports or slides. The AI uses them as a basis. (.txt, .pdf, .docx)',
     tg_briefing:'Briefing / Content',tg_briefing_ph:'What should be created, or content to rewrite.',
     tg_audience:'Target Audience',tg_tone:'Tone',tg_language:'Language',
     tg_length:'Length (optional)',tg_length_ph:'e.g. 200 words',
@@ -2546,14 +2546,14 @@ const T={
     brand_co:'Unternehmen',brand_ind:'Individual',
     bv_extract:'Markenstimme extrahieren',bv_save_mem:'In Speicher sichern',bv_save_ref:'📌 Als Referenz speichern',
     // Form builder
-    form_upload:'Dokument hochladen',form_upload_sub:'.txt, .pdf, .docx (optional)',
+    form_upload:'Hintergrundunterlagen hinzufügen',form_upload_sub:'z. B. Berichte, Merkblätter oder Notizen (.txt, .pdf, .docx, optional)',
     form_text:'Text',form_run:'Analyse starten',form_result:'Ergebnis',
     form_upload_docs:'Dokumente hochladen',form_upload_docs_sub:'.txt, .pdf, .docx (vom Berater gespeichert, immer verfügbar)',
     // Text Generator panels
     tg_back:'← Zurück',tg_template_lbl:'Vorlage / Referenz (optional)',tg_upload_tpl:'Vorlage hochladen',
     tg_tpl_sub:'Eigene Beispiele — damit der Output exakt Ihrem Stil entspricht',
     tg_tpl_ph:'Beispiele einfügen — mit --- trennen.',tg_save_ref:'Als Referenz speichern',
-    tg_source_upload:'Quelldokument hochladen',
+    tg_source_upload:'Hintergrundunterlagen hinzufügen',tg_source_sub:'z. B. Merkblätter, Notizen, Berichte oder Folien. Die KI nutzt sie als Grundlage. (.txt, .pdf, .docx)',
     tg_briefing:'Briefing / Inhalt',tg_briefing_ph:'Was soll erstellt werden, oder Inhalt zum Umschreiben.',
     tg_audience:'Zielgruppe',tg_tone:'Ton',tg_language:'Sprache',
     tg_length:'Länge (optional)',tg_length_ph:'z.B. 200 Wörter',
@@ -5472,7 +5472,7 @@ function buildTextGen(prefill,form){
         <button type="button" class="tg-mode-btn" id="tg-mode-new-${t.id}" onclick="tgSetMode('${t.id}','new')" style="flex:1;padding:9px;border:none;cursor:pointer;font-size:12px;font-weight:600">Neu schreiben</button>
         <button type="button" class="tg-mode-btn" id="tg-mode-revise-${t.id}" onclick="tgSetMode('${t.id}','revise')" style="flex:1;padding:9px;border:none;cursor:pointer;font-size:12px;font-weight:600">Vorhandenes überarbeiten</button>
       </div>
-      <div id="tg-newmode-upload-${t.id}" class="upzone" onclick="document.getElementById('tg-tf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.tg_source_upload}</strong></div><input type="file" id="tg-tf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task-${t.id}','tg-tt-${t.id}')"></div>
+      <div id="tg-newmode-upload-${t.id}" class="upzone" onclick="document.getElementById('tg-tf-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>${tl.tg_source_upload}</strong> &mdash; ${tl.tg_source_sub}</div><input type="file" id="tg-tf-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-task-${t.id}','tg-tt-${t.id}')"></div>
       <div class="ftags" id="tg-tt-${t.id}"></div>
       <div id="tg-revisemode-upload-${t.id}" class="upzone" style="display:none" onclick="document.getElementById('tg-df-${t.id}').click()"><span class="upi">&#8679;</span><div class="upt"><strong>Vorhandenen Text/Datei hochladen</strong></div><input type="file" id="tg-df-${t.id}" accept=".txt,.pdf,.docx" multiple onchange="handleFiles(this,'tg-draft-${t.id}','tg-dt-${t.id}')"></div>
       <div class="ftags" id="tg-dt-${t.id}"></div>
