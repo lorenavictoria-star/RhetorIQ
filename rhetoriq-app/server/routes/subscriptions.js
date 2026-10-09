@@ -133,7 +133,8 @@ function resolveTokenLimit(amountInCents, currency) {
 // One-time self-serve top-up, offered to a client the moment they hit their
 // monthly quota — covers the current month only (see usage_topups table),
 // doesn't change their recurring plan.
-const TOPUP = { amountCents: 9900, tokens: 100000, label: 'Kontingent-Zusatzpaket (+100\'000 Tokens)' };
+// +20 Texte für CHF 49 (20 Texte zu 5'000 Tokens, wie das Kontingent der Pakete gerechnet ist)
+const TOPUP = { amountCents: 4900, tokens: 100000, label: 'Zusatzpaket +20 Texte' };
 
 // ── POST /api/subscriptions/skip-plan/:clientId ─────────────────
 // Client chose "Später entscheiden" on the setup page instead of paying
