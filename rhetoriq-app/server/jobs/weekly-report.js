@@ -123,6 +123,13 @@ async function runWeeklyReport() {
       lines.push('  → Bitte unter Einstellungen > Trainingsbeispiele kuratieren (Rating anpassen oder löschen).');
     }
 
+    try {
+      const qLines = await require('../lib/quartalsreview').weeklyLines();
+      if (qLines.length) lines.push('', 'QUARTALSREVIEW:', ...qLines.map(l => `  - ${l}`));
+    } catch (e) {
+      console.error('[weekly-report] Quartalsreview lines failed:', e.message);
+    }
+
     if (lowRated.length > 0) {
       lines.push('', 'NEGATIV BEWERTET — BITTE PRÜFEN:');
       lowRated.forEach(r => {

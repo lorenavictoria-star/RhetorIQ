@@ -104,6 +104,20 @@ function ensureSchema() {
       )`);
     await pool.query(`CREATE INDEX IF NOT EXISTS schnelltests_created_idx ON schnelltests (created_at DESC)`);
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS learned_at TIMESTAMPTZ`);
+    // Quartalsreview (Business: ein Gespräch pro Quartal)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS quartalsreviews (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        quartal TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'geplant',
+        termin TEXT,
+        notizen TEXT,
+        erledigt_am TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS quartalsreviews_client_q_idx ON quartalsreviews (client_id, quartal)`);
     // Abo-Status direkt am Klienten (derselbe Befehl wie in routes/subscriptions.js), damit die Kundenliste ihn mitladen kann
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trial'`);
     // Indizes für die häufigsten Abfragen (Kundenliste, Verlauf, Nutzung)
