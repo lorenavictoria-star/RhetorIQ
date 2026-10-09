@@ -174,7 +174,15 @@ app.use(morgan(':date[iso] :method :url :status :res[content-length]b :response-
 // script-src-attr 'none') silently blocks all of that, breaking the entire
 // app including login. The other helmet protections (X-Frame-Options,
 // X-Content-Type-Options, HSTS, etc.) still apply.
-app.use(require('helmet')({ contentSecurityPolicy: false }));
+// Content-Security-Policy zunächst nur als Report-Only (F-12): Verstösse werden an /api/csp-report gemeldet, nichts wird blockiert.
+// Scharf schalten erst nach Auswertung der Meldungen und nach dem Auslagern der Inline-Skripte.
+app.use(require('helmet')({
+  contentSecurityPolicy: {
+    useDefaults: false,
+    reportOnly: true,
+    directives: require('./lib/cspReport').DIRECTIVES
+  }
+}));
 
 // ── Rate Limiting ─────────────────────────────────────────────
 // General API: 200 requests / 15 min per IP
@@ -233,6 +241,7 @@ app.use('/api/analyze', (req, res, next) => (req.method === 'GET' ? next() : use
 app.use(require('./middleware/readOnly').readOnlyGuard);
 
 // ── API Routes ────────────────────────────────────────────────
+app.use('/api/csp-report', require('./lib/cspReport').router);
 app.use('/auth', require('./routes/auth'));
 app.use('/api/clients', require('./routes/clients'));
 app.use('/api/clients', require('./routes/clientStats'));
