@@ -1497,6 +1497,7 @@ function buildGeoBlock(data) {
 // client_feedback_history, just never injected into generation prompts.
 const FEEDBACK_CATEGORIES = ['TON', 'STRUKTUR', 'FAKTEN', 'FORMAT', 'SONSTIGES'];
 const { getGoldBlock, queryTextOf } = require('../lib/goldtexte');
+const { scopeSql } = require('../lib/exampleScope');
 const { proposeFromFollowUp, addSuggestion } = require('../lib/followupLearning');
 async function consolidateFeedback(clientId, moduleKey, rating, note) {
   const { rows: existing } = await pool.query(
@@ -1722,12 +1723,13 @@ router.post('/', requireAuth, async (req, res) => {
         `SELECT input_text, output_text, industry_tag FROM module_examples
          WHERE advisor_id=$1 AND module_key=$2
            AND auto_generated = false AND rating >= 3
+           AND ${scopeSql(4)}
            AND (industry_tag IS NULL OR $3::text IS NULL OR lower(industry_tag)=lower($3))
          ORDER BY
            CASE WHEN $3::text IS NOT NULL AND lower(industry_tag)=lower($3) THEN 0 ELSE 1 END,
            rating DESC, created_at DESC
          LIMIT 3`,
-        [advisorId, module, clientIndustry]
+        [advisorId, module, clientIndustry, resolvedClientId || null]
       );
 
       if (examples.length) {
@@ -1807,9 +1809,9 @@ router.post('/', requireAuth, async (req, res) => {
         .join('\n');
       if (inputText) {
         pool.query(
-          `INSERT INTO module_examples (advisor_id, module_key, industry_tag, input_text, output_text, rating, auto_generated)
-           VALUES ($1,$2,$3,$4,$5,2,true)`,
-          [advisorId, module, clientIndustry || null, inputText, result]
+          `INSERT INTO module_examples (advisor_id, module_key, industry_tag, input_text, output_text, rating, auto_generated, source_client_id, is_cross_client_shareable)
+           VALUES ($1,$2,$3,$4,$5,2,true,$6,false)`,
+          [advisorId, module, clientIndustry || null, inputText, result, resolvedClientId || null]
         ).catch(() => {});
       }
     }
@@ -1919,10 +1921,11 @@ router.post('/stream', requireAuth, async (req, res) => {
       const { rows: examples } = await pool.query(
         `SELECT input_text, output_text, industry_tag FROM module_examples
          WHERE advisor_id=$1 AND module_key=$2 AND auto_generated=false AND rating>=3
+           AND ${scopeSql(4)}
            AND (industry_tag IS NULL OR $3::text IS NULL OR lower(industry_tag)=lower($3))
          ORDER BY CASE WHEN $3::text IS NOT NULL AND lower(industry_tag)=lower($3) THEN 0 ELSE 1 END,
            rating DESC, created_at DESC LIMIT 3`,
-        [advisorId, module, clientIndustry]
+        [advisorId, module, clientIndustry, resolvedClientId || null]
       );
       if (examples.length) {
         restDynamicSystem += '\n\n--- STRUKTURVORLAGEN ---\n'
@@ -2023,8 +2026,8 @@ router.post('/stream', requireAuth, async (req, res) => {
         .filter(([k, v]) => v && typeof v === 'string' && v.length > 2)
         .map(([k, v]) => `${k}: ${v}`).join('\n');
       if (inputText) pool.query(
-        `INSERT INTO module_examples (advisor_id, module_key, industry_tag, input_text, output_text, rating, auto_generated) VALUES ($1,$2,$3,$4,$5,2,true)`,
-        [advisorId, module, clientIndustry || null, inputText, fullText]
+        `INSERT INTO module_examples (advisor_id, module_key, industry_tag, input_text, output_text, rating, auto_generated, source_client_id, is_cross_client_shareable) VALUES ($1,$2,$3,$4,$5,2,true,$6,false)`,
+        [advisorId, module, clientIndustry || null, inputText, fullText, resolvedClientId || null]
       ).catch(() => {});
     }
 
@@ -2510,11 +2513,13 @@ router.post('/:id/rate', requireAuth, async (req, res) => {
     const analysis = rows[0];
 
     // Task 18: propagate rating signal to structural training examples for this module
-    if (analysis.advisor_id) {
+    // Nur Vorlagen, die aus Texten dieses Klienten stammen, werden durch seine Bewertung verschoben. Bewertungen eines
+    // Klienten ändern die Rangfolge der Vorlagen für andere Klienten nicht.
+    if (analysis.advisor_id && analysis.client_id) {
       pool.query(
         `UPDATE module_examples SET rating = ${rating === 1 ? 'LEAST(5, rating + 1)' : 'GREATEST(1, rating - 1)'}
-         WHERE advisor_id=$1 AND module_key=$2 AND auto_generated=false`,
-        [analysis.advisor_id, analysis.module]
+         WHERE advisor_id=$1 AND module_key=$2 AND auto_generated=false AND source_client_id=$3`,
+        [analysis.advisor_id, analysis.module, analysis.client_id]
       ).catch(() => {});
     }
 

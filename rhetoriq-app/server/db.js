@@ -293,6 +293,8 @@ async function init() {
     -- FIX 5: DSGVO — source client tracking on module_examples
     ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS source_client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL;
     ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS is_cross_client_shareable BOOLEAN DEFAULT TRUE;
+    -- Automatisch aus Texten von Klienten entstandene Vorlagen gelten nie klientenübergreifend (siehe lib/exampleScope.js)
+    UPDATE module_examples SET is_cross_client_shareable = FALSE WHERE auto_generated = TRUE AND is_cross_client_shareable IS TRUE;
 
     -- Secure onboarding: time-limited setup tokens (48h) instead of plaintext passwords in email
     CREATE TABLE IF NOT EXISTS onboarding_tokens (

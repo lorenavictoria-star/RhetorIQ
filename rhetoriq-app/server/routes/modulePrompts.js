@@ -1,3 +1,4 @@
+const { scopeSql } = require('../lib/exampleScope');
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
@@ -53,9 +54,9 @@ router.post('/suggest', requireAuth, async (req, res) => {
   const industry = client?.industry?.toLowerCase().trim() || null;
   const { rows: examples } = await pool.query(
     `SELECT input_text, output_text FROM module_examples
-     WHERE advisor_id=$1 AND module_key=$2 AND auto_generated=false
+     WHERE advisor_id=$1 AND module_key=$2 AND auto_generated=false AND ${scopeSql(3)}
      ORDER BY rating DESC, created_at DESC LIMIT 2`,
-    [advisorId, moduleKey]
+    [advisorId, moduleKey, parseInt(clientId, 10) || null]
   );
 
   if (!brandVoice && !examples.length) {

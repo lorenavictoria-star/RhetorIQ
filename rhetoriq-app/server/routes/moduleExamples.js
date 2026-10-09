@@ -37,9 +37,18 @@ router.post('/', requireAdvisor, async (req, res) => {
     const { module_key, label, industry_tag, input_text, output_text, rating = 3 } = req.body;
     if (!module_key || !input_text || !output_text)
       return res.status(400).json({ error: 'module_key, input_text and output_text required' });
+    // Stammt die Vorlage aus den Texten eines Klienten (source_client_id), gilt sie nur für diesen Klienten,
+    // ausser is_cross_client_shareable ist ausdrücklich true. Ohne Klientenbezug ist es eine Vorlage der Beraterin.
+    let sourceClientId = null;
+    if (req.body.source_client_id != null) {
+      sourceClientId = parseInt(req.body.source_client_id, 10);
+      const { rows: own } = await pool.query('SELECT id FROM clients WHERE id=$1 AND advisor_id=$2', [sourceClientId, req.user.id]);
+      if (!own[0]) return res.status(404).json({ error: 'Client not found' });
+    }
+    const shareable = sourceClientId ? req.body.is_cross_client_shareable === true : req.body.is_cross_client_shareable !== false;
     const { rows } = await pool.query(
-      'INSERT INTO module_examples (advisor_id,module_key,label,industry_tag,input_text,output_text,rating) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
-      [req.user.id, module_key, label || null, industry_tag || null, input_text, output_text, rating]
+      'INSERT INTO module_examples (advisor_id,module_key,label,industry_tag,input_text,output_text,rating,source_client_id,is_cross_client_shareable) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',
+      [req.user.id, module_key, label || null, industry_tag || null, input_text, output_text, rating, sourceClientId, shareable]
     );
     res.status(201).json(rows[0]);
   } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
@@ -73,9 +82,9 @@ router.post('/auto-import/:clientId', requireAdvisor, async (req, res) => {
         .map(([k, v]) => `${k}: ${v.trim()}`).join('\n');
       if (!inputText || !a.result) continue;
       await pool.query(
-        `INSERT INTO module_examples (advisor_id, module_key, label, industry_tag, input_text, output_text, rating, auto_generated)
-         VALUES ($1,$2,$3,$4,$5,$6,3,true)`,
-        [req.user.id, a.module, client.name, industryTag, inputText, a.result]
+        `INSERT INTO module_examples (advisor_id, module_key, label, industry_tag, input_text, output_text, rating, auto_generated, source_client_id, is_cross_client_shareable)
+         VALUES ($1,$2,$3,$4,$5,$6,3,true,$7,false)`,
+        [req.user.id, a.module, client.name, industryTag, inputText, a.result, clientId]
       );
       imported++;
     }
@@ -131,9 +140,9 @@ router.post('/import-client', requireAdvisor, async (req, res) => {
 
       await pool.query(
         `INSERT INTO module_examples
-         (advisor_id, module_key, label, industry_tag, input_text, output_text, rating, auto_generated)
-         VALUES ($1,$2,$3,$4,$5,$6,3,true)`,
-        [req.user.id, a.module, client.name, industryTag, inputText, a.result]
+         (advisor_id, module_key, label, industry_tag, input_text, output_text, rating, auto_generated, source_client_id, is_cross_client_shareable)
+         VALUES ($1,$2,$3,$4,$5,$6,3,true,$7,false)`,
+        [req.user.id, a.module, client.name, industryTag, inputText, a.result, client.id]
       );
       imported++;
     }
@@ -143,10 +152,10 @@ router.post('/import-client', requireAdvisor, async (req, res) => {
       if (!m.content?.trim()) continue;
       await pool.query(
         `INSERT INTO module_examples
-         (advisor_id, module_key, label, industry_tag, input_text, output_text, rating, auto_generated)
-         VALUES ($1,'_context',$2,$3,$4,$5,4,true)`,
+         (advisor_id, module_key, label, industry_tag, input_text, output_text, rating, auto_generated, source_client_id, is_cross_client_shareable)
+         VALUES ($1,'_context',$2,$3,$4,$5,4,true,$6,false)`,
         [req.user.id, client.name, industryTag,
-          `[${m.memory_type}] ${client.name}`, m.content]
+          `[${m.memory_type}] ${client.name}`, m.content, client.id]
       );
       imported++;
     }
