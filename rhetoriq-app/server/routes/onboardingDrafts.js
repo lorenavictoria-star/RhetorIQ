@@ -110,6 +110,15 @@ async function loadDraft(id) {
   return rows[0] || null;
 }
 
+// Alle Routen mit :id: der Entwurf muss zur eingeloggten Beraterin gehören
+router.use('/:id', requireAdvisor, async (req, res, next) => {
+  try {
+    await ensureSchema();
+    if (await require('../lib/advisorScope').canAccessDraft(req, req.params.id)) return next();
+    return res.status(404).json({ error: 'Entwurf nicht gefunden.' });
+  } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
+});
+
 router.post('/', requireAdvisor, async (req, res) => {
   try {
     await ensureSchema();
@@ -132,8 +141,8 @@ router.post('/', requireAdvisor, async (req, res) => {
       if (f.workshop_datum === undefined && q.workshop_date) f.workshop_datum = clip(q.workshop_date, 80);
     }
     if (!f.firma && !f.kontakt) return res.status(400).json({ error: 'Firma oder Ansprechperson erforderlich.' });
-    const cols = ['inquiry_id', ...Object.keys(f)];
-    const vals = [inquiryId, ...Object.values(f)];
+    const cols = ['inquiry_id', 'advisor_id', ...Object.keys(f)];
+    const vals = [inquiryId, req.user.id, ...Object.values(f)];
     const ph = cols.map((c, i) => JSON_COLS.has(c) ? `$${i + 1}::jsonb` : `$${i + 1}`);
     const { rows } = await pool.query(
       `INSERT INTO onboarding_drafts (${cols.join(',')}) VALUES (${ph.join(',')}) RETURNING *`, vals);
@@ -153,7 +162,7 @@ router.get('/', requireAdvisor, async (req, res) => {
     const { rows } = await pool.query(
       `SELECT id, inquiry_id, firma, kontakt, email, webseite, sektor, anrede, titel, workshop_datum,
               schritt, module, status, client_id, created_at, updated_at
-       FROM onboarding_drafts ORDER BY updated_at DESC LIMIT 200`);
+       FROM onboarding_drafts WHERE advisor_id IS NULL OR advisor_id = $1 ORDER BY updated_at DESC LIMIT 200`, [req.user.id]);
     res.json(rows);
   } catch (e) {
     console.error(e);

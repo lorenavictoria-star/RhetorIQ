@@ -69,4 +69,10 @@ function ownClientBody(field = 'clientId') {
   };
 }
 
-module.exports = { ownClientBody, canAccessClient, ownClient, allowedClientId, canAccessPerson, ownPerson };
+// SQL-Bedingung: Zeile gehört zu einem Klienten dieser Beraterin (oder zu keinem Klienten, oder zu einem Klienten ohne
+// eingetragene Beraterin wie ältere Daten). col = Spalte mit der Klienten-Nummer, n = Nummer des Parameters mit der Beraterin-ID.
+function advisorScopeSql(col, n) {
+  return `(${col} IS NULL OR ${col} IN (SELECT id FROM clients WHERE advisor_id = $${n} OR advisor_id IS NULL))`;
+}
+
+module.exports = { advisorScopeSql, ownClientBody, canAccessClient, ownClient, allowedClientId, canAccessPerson, ownPerson };

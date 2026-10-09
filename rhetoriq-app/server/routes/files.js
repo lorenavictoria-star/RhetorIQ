@@ -3,6 +3,8 @@ const multer = require('multer');
 const JSZip = require('jszip');
 const { pool } = require('../db');
 const { requireAuth, requireAdvisor } = require('../middleware/auth');
+const { canAccessClient } = require('../middleware/ownership');
+const { canAccessDraft, canAccessFileRow } = require('../lib/advisorScope');
 const { ensureSchema } = require('../lib/schemaRedesign');
 const { saveFile, cleanName, FOLDERS, MAX_FILE_BYTES } = require('../lib/fileStore');
 
@@ -45,6 +47,7 @@ function scopeFor(req) {
 router.get('/', requireAuth, async (req, res) => {
   try {
     await ensureSchema();
+    if (isAdvisor(req) && ((req.query.client_id && !(await canAccessClient(req, req.query.client_id))) || (req.query.draft_id && !(await canAccessDraft(req, req.query.draft_id))))) return res.status(403).json({ error: 'Kein Zugriff.' });
     const sc = scopeFor(req);
     if (sc.error) return res.status(sc.status).json({ error: sc.error });
     const { rows } = await pool.query(`SELECT ${LIST_COLS} FROM client_files WHERE ${sc.where} ORDER BY created_at DESC, id DESC LIMIT 500`, sc.params);
@@ -58,6 +61,7 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/zip', requireAuth, async (req, res) => {
   try {
     await ensureSchema();
+    if (isAdvisor(req) && ((req.query.client_id && !(await canAccessClient(req, req.query.client_id))) || (req.query.draft_id && !(await canAccessDraft(req, req.query.draft_id))))) return res.status(403).json({ error: 'Kein Zugriff.' });
     const sc = scopeFor(req);
     if (sc.error) return res.status(sc.status).json({ error: sc.error });
     const { rows } = await pool.query(
@@ -89,6 +93,7 @@ router.get('/:id/download', requireAuth, async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM client_files WHERE id=$1', [id]);
     const f = rows[0];
     if (!f) return res.status(404).json({ error: 'Datei nicht gefunden.' });
+    if (isAdvisor(req) && !(await canAccessFileRow(req, f))) return res.status(404).json({ error: 'Datei nicht gefunden.' });
     if (!isAdvisor(req)) {
       const own = req.user.role === 'client' && req.user.clientId;
       // Fremde oder nicht freigegebene Dateien werden wie nicht vorhanden behandelt.
@@ -144,7 +149,7 @@ router.post('/', requireAdvisor, runUpload, async (req, res) => {
     }
     if (draftId) {
       const d = await pool.query('SELECT id FROM onboarding_drafts WHERE id=$1', [draftId]);
-      if (!d.rows.length) return res.status(404).json({ error: 'Entwurf nicht gefunden.' });
+      if (!d.rows.length || !(await canAccessDraft(req, draftId))) return res.status(404).json({ error: 'Entwurf nicht gefunden.' });
     }
     const file = await saveFile({ clientId, draftId, folder, name, mime, buffer, note: b.note });
     res.status(201).json(file);
@@ -159,6 +164,8 @@ router.delete('/:id', requireAdvisor, async (req, res) => {
     await ensureSchema();
     const id = parseId(req.params.id);
     if (!id) return res.status(400).json({ error: 'Ungültige ID.' });
+    const own = await pool.query('SELECT client_id, draft_id FROM client_files WHERE id=$1', [id]);
+    if (own.rows[0] && !(await canAccessFileRow(req, own.rows[0]))) return res.status(404).json({ error: 'Datei nicht gefunden.' });
     const r = await pool.query('DELETE FROM client_files WHERE id=$1', [id]);
     if (!r.rowCount) return res.status(404).json({ error: 'Datei nicht gefunden.' });
     res.json({ ok: true });

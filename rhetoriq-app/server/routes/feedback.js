@@ -75,7 +75,7 @@ router.post('/', requireAuth, async (req, res) => {
 router.get('/', requireAuth, async (req, res) => {
   if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Advisor only' });
   try {
-    const { rows } = await pool.query('SELECT * FROM feedback_notes ORDER BY created_at DESC LIMIT 200');
+    const { rows } = await pool.query('SELECT * FROM feedback_notes WHERE advisor_id IS NULL OR advisor_id = $1 ORDER BY created_at DESC LIMIT 200', [req.user.id]);
     res.json(rows);
   } catch (e) {
     console.error(e);

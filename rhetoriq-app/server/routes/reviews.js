@@ -4,6 +4,7 @@ const { pool } = require('../db');
 const jwt = require('jsonwebtoken');
 const { queueEmail } = require('../lib/emailOutbox');
 const { requireAdvisor, requireAuth } = require('../middleware/auth');
+const { advisorScopeSql } = require('../middleware/ownership');
 const { requireRole } = require('../middleware/roles');
 const { ensureSchema } = require('../lib/schemaRedesign');
 const { saveFile } = require('../lib/fileStore');
@@ -153,7 +154,8 @@ router.get('/', requireAdvisor, async (req, res) => {
   try {
     await ensureSchema().catch(e => console.error('[reviews] schema ensure failed:', e.message)); // liefert instruction/due_at mit
     const { rows } = await pool.query(
-      `SELECT * FROM review_requests WHERE status IN ('pending', 'edited') ORDER BY created_at DESC`
+      `SELECT * FROM review_requests WHERE status IN ('pending', 'edited') AND ${advisorScopeSql('client_id', 1)} ORDER BY created_at DESC`,
+      [req.user.id]
     );
     // So the advisor sees what this client has liked/disliked before, not just
     // the text currently up for review — small N here, pending reviews are few.
@@ -196,8 +198,8 @@ router.put('/:id', requireAdvisor, async (req, res) => {
     const { rows } = await pool.query(
       `UPDATE review_requests
        SET edited_text = $1, status = $3, updated_at = NOW()
-       WHERE id = $2 RETURNING *`,
-      [editedText, req.params.id, shouldSend ? 'approved' : 'edited']
+       WHERE id = $2 AND ${advisorScopeSql('client_id', 4)} RETURNING *`,
+      [editedText, req.params.id, shouldSend ? 'approved' : 'edited', req.user.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     if (shouldSend) {
@@ -232,7 +234,7 @@ router.post('/:id/save-draft', requireAdvisor, async (req, res) => {
     const text = typeof req.body?.text === 'string' ? req.body.text : '';
     if (!text.trim()) return res.status(400).json({ error: 'Kein Text übergeben.' });
     if (text.length > 200000) return res.status(400).json({ error: 'Text ist zu lang.' });
-    const { rows } = await pool.query('SELECT id, client_id, module_label FROM review_requests WHERE id=$1', [id]);
+    const { rows } = await pool.query(`SELECT id, client_id, module_label FROM review_requests WHERE id=$1 AND ${advisorScopeSql('client_id', 2)}`, [id, req.user.id]);
     const rv = rows[0];
     if (!rv) return res.status(404).json({ error: 'Not found' });
     if (!rv.client_id) return res.status(400).json({ error: 'Diese Anfrage gehört zu keinem Klienten.' });
@@ -252,7 +254,7 @@ router.post('/:id/save-draft', requireAdvisor, async (req, res) => {
 // DELETE /api/reviews/:id — advisor discards a review request entirely
 router.delete('/:id', requireAdvisor, async (req, res) => {
   try {
-    const { rowCount } = await pool.query('DELETE FROM review_requests WHERE id=$1', [req.params.id]);
+    const { rowCount } = await pool.query(`DELETE FROM review_requests WHERE id=$1 AND ${advisorScopeSql('client_id', 2)}`, [req.params.id, req.user.id]);
     if (!rowCount) return res.status(404).json({ error: 'Not found' });
     res.json({ ok: true });
   } catch (e) {

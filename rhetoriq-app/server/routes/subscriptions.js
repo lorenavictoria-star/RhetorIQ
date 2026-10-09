@@ -2,7 +2,7 @@ const express = require('express');
 const { pool } = require('../db');
 const { requireAuth, requireAdvisor } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
-const { ownClient } = require('../middleware/ownership');
+const { ownClient, ownClientBody } = require('../middleware/ownership');
 const yearly = require('../lib/yearlyPlan');
 
 const router = express.Router();
@@ -56,7 +56,7 @@ router.get('/prices', requireAdvisor, async (req, res) => {
 
 // ── POST /api/subscriptions/create-payment-link/:clientId ─────
 // Advisor creates a Stripe Payment Link for a client.
-router.post('/create-payment-link/:clientId', requireAdvisor, async (req, res) => {
+router.post('/create-payment-link/:clientId', requireAdvisor, ownClient('clientId'), async (req, res) => {
   try {
     await ensureColumn();
     const { clientId } = req.params;
@@ -84,7 +84,7 @@ router.post('/create-payment-link/:clientId', requireAdvisor, async (req, res) =
 });
 
 // ── GET /api/subscriptions/status/:clientId ───────────────────
-router.get('/status/:clientId', requireAdvisor, async (req, res) => {
+router.get('/status/:clientId', requireAdvisor, ownClient('clientId'), async (req, res) => {
   try {
     await ensureColumn();
     const { clientId } = req.params;
@@ -102,7 +102,7 @@ router.get('/status/:clientId', requireAdvisor, async (req, res) => {
 
 // ── POST /api/subscriptions/mark-active/:clientId ────────────
 // Advisor manually marks a client as active (paid).
-router.post('/mark-active/:clientId', requireAdvisor, async (req, res) => {
+router.post('/mark-active/:clientId', requireAdvisor, ownClient('clientId'), async (req, res) => {
   try {
     await ensureColumn();
     const { clientId } = req.params;
@@ -426,7 +426,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 // ── Existing content-subscriptions routes (unchanged) ─────────
 
 // GET /api/subscriptions?clientId=X  — load all for a client
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, ownClientBody('clientId'), async (req, res) => {
   try {
     const { clientId } = req.query;
     if (!clientId) return res.status(400).json({ error: 'clientId required' });
@@ -442,7 +442,7 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // POST /api/subscriptions  — upsert a subscription
-router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
+router.post('/', requireAuth, requireRole('editor'), ownClientBody('clientId'), async (req, res) => {
   try {
     const { clientId, format, frequency, topicHint, enabled } = req.body;
     if (!clientId || !format) return res.status(400).json({ error: 'clientId and format required' });
@@ -462,7 +462,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
 });
 
 // GET /api/subscriptions/due?clientId=X  — return formats that are due now
-router.get('/due', requireAuth, async (req, res) => {
+router.get('/due', requireAuth, ownClientBody('clientId'), async (req, res) => {
   try {
     const { clientId } = req.query;
     if (!clientId) return res.status(400).json({ error: 'clientId required' });
@@ -484,7 +484,7 @@ router.get('/due', requireAuth, async (req, res) => {
 });
 
 // POST /api/subscriptions/mark-sent  — update last_sent_at
-router.post('/mark-sent', requireAuth, requireRole('editor'), async (req, res) => {
+router.post('/mark-sent', requireAuth, requireRole('editor'), ownClientBody('clientId'), async (req, res) => {
   try {
     const { clientId, format } = req.body;
     await pool.query(
