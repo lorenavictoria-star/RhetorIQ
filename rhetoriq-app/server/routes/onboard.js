@@ -7,7 +7,7 @@ const { requireRole } = require('../middleware/roles');
 const { generateText, resolveModelId } = require('../lib/aiProvider');
 const { allowedClientId } = require('../middleware/ownership');
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 200 * 1024 * 1024 } });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 5 } });
 const router = express.Router();
 
 const CATEGORIES = {
@@ -72,7 +72,7 @@ async function appendToMemory(clientId, advisorId, type, content) {
 }
 
 // POST /api/onboard — accepts multipart files + clientId
-router.post('/', requireAuth, requireRole('editor'), upload.array('files', 30), async (req, res) => {
+router.post('/', requireAuth, requireRole('editor'), upload.array('files', 5), async (req, res) => {
   const clientId = await allowedClientId(req, req.body.clientId);
   if (!clientId) return res.status(req.body.clientId ? 403 : 400).json({ error: req.body.clientId ? 'Kein Zugriff auf diesen Klienten.' : 'clientId required' });
   const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;

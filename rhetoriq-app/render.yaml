@@ -4,6 +4,7 @@ services:
     runtime: node
     region: frankfurt
     nodeVersion: 20
+    healthCheckPath: /health
     plan: starter   # must not be free — free tier spins down after 15min idle, causing 50s+ cold-start failures for real customers
     rootDir: server
     buildCommand: npm install
@@ -35,6 +36,10 @@ services:
         value: https://rhetoriq.ch
       - key: APP_URL
         value: https://rhetoriq.ch
+      - key: COST_BRAKE_PLATFORM_DAILY_USD
+        value: "40"   # harte Tagesgrenze für die ganze Plattform (Beraterin ausgenommen)
+      - key: COST_BRAKE_CLIENT_DAILY_USD
+        value: "10"   # harte Tagesgrenze je Klient
       - key: COST_ALERT_THRESHOLD_USD
         value: "5"   # advisor gets an email if a single client crosses this in API costs on one day
 

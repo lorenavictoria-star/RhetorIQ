@@ -17,6 +17,7 @@ if (missingRecommended.length) {
 }
 
 const Sentry = require('@sentry/node');
+require('./lib/asyncErrors'); // vor dem Laden der Routen: Fehler in async-Routen landen im Fehlerbehandler
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
@@ -53,7 +54,7 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:3001',
 ]);
 
-const wss = new WebSocket.Server({ server, path: '/ws', noServer: false });
+const wss = new WebSocket.Server({ server, path: '/ws', noServer: false, maxPayload: 4096 });
 
 // Map of userId → Set of ws connections (for targeted sends)
 const userSockets = new Map();
@@ -316,7 +317,8 @@ app.get('/health', async (_, res) => {
     await pool.query('SELECT 1');
     res.json({ ok: true, db: 'connected' });
   } catch (e) {
-    res.status(503).json({ ok: false, db: 'disconnected', error: e.message });
+    console.error('[health] Datenbank nicht erreichbar:', e.message);
+    res.status(503).json({ ok: false, db: 'disconnected' });
   }
 });
 
@@ -326,10 +328,7 @@ if (process.env.SENTRY_DSN) {
 }
 
 // ── Generic error handler ─────────────────────────────────────
-app.use((err, req, res, _next) => {
-  console.error(`[error] ${req.method} ${req.url} —`, err.message);
-  res.status(500).json({ error: 'Internal server error' });
-});
+app.use(require('./lib/errorHandler').errorHandler);
 
 // ── Serve Frontend ────────────────────────────────────────────
 const FRONTEND = path.join(__dirname, '..', 'public');
@@ -403,6 +402,19 @@ const PORT = process.env.PORT || 3001;
     console.log('[cron] KI-Wächter: every 5 minutes');
   }
 })();
+
+// Unbehandelte Fehler protokollieren und an Sentry melden. Eine abgelehnte Zusage beendet den Prozess nicht;
+// nach einem uncaughtException ist der Zustand unsicher, deshalb endet der Prozess geordnet und Render startet ihn neu.
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason && reason.stack ? reason.stack : reason);
+  try { Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason))); } catch {}
+});
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err && err.stack ? err.stack : err);
+  try { Sentry.captureException(err); } catch {}
+  try { Sentry.flush(2000).finally(() => process.exit(1)); } catch { process.exit(1); }
+  setTimeout(() => process.exit(1), 3000).unref();
+});
 
 function gracefulShutdown(signal) {
   console.log(`${signal} received — shutting down gracefully`);

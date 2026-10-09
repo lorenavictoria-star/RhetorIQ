@@ -1,6 +1,12 @@
 const { Pool } = require('pg');
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// statement_timeout: eine hängende Abfrage blockiert höchstens 30 Sekunden (Befund F-08)
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, statement_timeout: 30000, idle_in_transaction_session_timeout: 60000 });
+// Ein Verbindungsabbruch einer ruhenden Verbindung (Datenbank-Neustart, Wartung) darf den Prozess nicht beenden
+pool.on('error', (err) => {
+  console.error('[db] Fehler einer ruhenden Verbindung:', err.message);
+  try { require('@sentry/node').captureException(err); } catch {}
+});
 
 async function init() {
   await pool.query(`

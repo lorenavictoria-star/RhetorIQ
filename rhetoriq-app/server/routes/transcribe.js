@@ -4,7 +4,7 @@ const https = require('https');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 200 * 1024 * 1024 } });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024, files: 1 } });
 const router = express.Router();
 
 function assemblyRequest(method, path, payload, buffer) {
