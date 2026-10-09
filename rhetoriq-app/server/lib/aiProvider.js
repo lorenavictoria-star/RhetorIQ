@@ -97,7 +97,10 @@ async function keyOrder() {
 }
 
 // Führt fn(key) mit Wiederholung und Schlüsselwechsel aus. Gibt { value, reserve } zurück.
-async function withKeys(fn, signal) {
+// Kosten: HTTP-Fehler (429, 5xx, 529) und Kontofehler liefern keine Tokens und werden nicht berechnet, Wiederholungen
+// kosten dort nichts. Ein Netzwerkfehler nach dem Senden könnte dagegen schon berechnet worden sein: er wird je Schlüssel
+// höchstens einmal wiederholt (networkRetries), damit ein Text nie dreifach berechnet wird.
+async function withKeys(fn, signal, networkRetries = Infinity) {
   const keys = await keyOrder();
   let lastErr;
   for (const k of keys) {
@@ -110,6 +113,7 @@ async function withKeys(fn, signal) {
         if (signal && signal.aborted) throw e;
         if (isAccountError(e)) break;                    // anderes Konto versuchen
         if (!isRetriable(e)) throw e;                    // z. B. 400 Anfrage fehlerhaft: Wiederholung hilft nicht
+        if (e.network === true && attempt >= networkRetries) break;   // Netzwerkfehler: höchstens eine Wiederholung je Schlüssel
         if (attempt < cfg.waits.length) {
           console.warn(`[ai] ${e.status || 'Netzwerkfehler'}, Wiederholung ${attempt + 1} von ${cfg.waits.length}`);
           await sleep(cfg.waits[attempt]);
@@ -179,7 +183,7 @@ async function anthropicGenerateOnce(opts, key) {
 }
 
 async function anthropicGenerate(opts) {
-  const { value, reserve } = await withKeys((key) => anthropicGenerateOnce(opts, key));
+  const { value, reserve } = await withKeys((key) => anthropicGenerateOnce(opts, key), undefined, 1);
   if (reserve) value.reserve = true;
   return value;
 }
@@ -349,7 +353,7 @@ async function generateText(opts) {
 function streamText(opts) {
   return (async function* () {
     const u = { inputTokens: 0, outputTokens: 0, cacheCreationTokens: 0, cacheReadTokens: 0 };
-    let reserve = false;
+    let reserve = false, chars = 0;
     try {
       for await (const evt of activeProvider().stream(opts)) {
         if (evt.type === 'meta') { if (evt.reserve) { reserve = true; markReserve(); } continue; }
@@ -359,13 +363,17 @@ function streamText(opts) {
           if (evt.cacheCreationTokens !== undefined) u.cacheCreationTokens = evt.cacheCreationTokens;
           if (evt.cacheReadTokens !== undefined) u.cacheReadTokens = evt.cacheReadTokens;
         }
+        if (evt.type === 'text') chars += (evt.text || '').length;
         yield evt;
       }
     } catch (e) {
       if (!(opts && opts.signal && opts.signal.aborted)) reportAiError(e, 'stream', opts);   // Abbruch durch die Nutzerin ist kein Fehler
       throw e;
     } finally {
-      // Auch bei Abbruch oder Fehler: was die API bereits berechnet hat, wird erfasst
+      // Auch bei Abbruch oder Fehler: was die API bereits berechnet hat, wird erfasst, genau einmal je Stream.
+      // Bricht die Verbindung ab, bevor die API die Ausgabe-Token meldet (sie kommen erst am Ende), wird die Ausgabe aus der
+      // Zeichenzahl geschätzt (3.5 Zeichen je Token), damit das Nutzungsprotokoll und die Tagesbremse den Abbruch nicht übersehen.
+      if (!u.outputTokens && chars) u.outputTokens = Math.ceil(chars / 3.5);
       require('./meter').record({ ...u, model: meterModel(opts.model, reserve), meter: opts.meter });
     }
   })();

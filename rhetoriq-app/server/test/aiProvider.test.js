@@ -151,3 +151,37 @@ test('Stream: Wiederholung vor dem ersten Token, dann Reservekonto', async () =>
   assert.equal(ctx.reserve, true);
   assert.equal(recorded[recorded.length - 1].model, 'reserve:claude-sonnet-4-6');
 });
+
+// ── Kosten: Wiederholungen und abgebrochene Streams ────────────────────────
+test('Netzwerkfehler wird je Schlüssel höchstens einmal wiederholt (kein dreifacher Aufruf)', async () => {
+  reset();
+  const netz = () => Object.assign(new Error('socket hang up'), { network: true });
+  script = [{ throw: netz() }, { throw: netz() }, okJson('nie')];
+  await assert.rejects(ask(), /socket hang up/);
+  assert.equal(log.length, 2, 'ein Aufruf und eine Wiederholung, dann Schluss');
+  assert.equal(recorded.length, 0, 'ohne Antwort kein Protokolleintrag');
+  // HTTP-Überlastung dagegen liefert keine Tokens und darf zweimal wiederholt werden (nur der Erfolg wird berechnet)
+  reset();
+  script = [err(529, 'Overloaded'), err(529, 'Overloaded'), okJson('da')];
+  assert.equal((await ask()).text, 'da');
+  assert.equal(log.length, 3);
+  assert.equal(recorded.length, 1, 'genau ein Protokolleintrag für drei Anfragen');
+});
+
+test('Abgebrochener Stream: genau ein Protokolleintrag, Ausgabe aus der Zeichenzahl geschätzt, Wiederholung nur vor dem ersten Token', async () => {
+  reset();
+  script = [err(503, 'x'), { status: 200, sse: sse('a'.repeat(70)) + sse('b'.repeat(70)) }];
+  const it = ai.streamText({ system: 'S', messages: [{ role: 'user', content: 'x' }], maxTokens: 50, model: 'claude-sonnet-4-6' });
+  for await (const e of it) { if (e.type === 'text') break; }   // Nutzerin bricht nach dem ersten Stück ab
+  assert.equal(log.length, 2, 'eine Wiederholung vor dem ersten Token, danach keine mehr');
+  assert.equal(recorded.length, 1, 'der Abbruch wird genau einmal erfasst');
+  assert.equal(recorded[0].outputTokens, Math.ceil(70 / 3.5));
+  assert.equal(recorded[0].model, 'claude-sonnet-4-6');
+  // Mit gemeldeten Ausgabe-Token gilt die gemeldete Zahl, nicht die Schätzung
+  reset();
+  const usage = 'data: ' + JSON.stringify({ type: 'message_delta', usage: { output_tokens: 7 } }) + '\n\n';
+  script = [{ status: 200, sse: sse('c'.repeat(700)) + usage }];
+  await collect({ system: 'S', messages: [{ role: 'user', content: 'x' }], maxTokens: 50, model: 'claude-sonnet-4-6' });
+  assert.equal(recorded.length, 1);
+  assert.equal(recorded[0].outputTokens, 7);
+});

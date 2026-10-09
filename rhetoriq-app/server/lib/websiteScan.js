@@ -65,7 +65,27 @@ function normalizeScan(raw) {
   return filled ? out : null;
 }
 
+// Dieselbe Webseite mit denselben Angaben, kurz hintereinander gescannt (zum Beispiel doppelter Klick oder erneutes Laden
+// des Entwurfs): das Ergebnis aus dem Speicher des Servers statt eines zweiten Aufrufs (Sonnet, rund 5 Cent).
+// Änderungen an Firma, Sektor oder Seitentext ergeben einen anderen Schlüssel und damit einen neuen Scan.
+const crypto = require('crypto');
+const scanCache = new Map();
+const SCAN_TTL_MS = 30 * 60 * 1000;
+function scanKey(text, firma, sektor) {
+  return crypto.createHash('sha256').update([firma, sektor, text].map(x => String(x || '')).join('\u0001')).digest('hex');
+}
+
 async function scanWebsite({ text, firma, sektor }) {
+  const key = scanKey(text, firma, sektor);
+  const hit = scanCache.get(key);
+  if (hit && Date.now() - hit.at < SCAN_TTL_MS) return JSON.parse(hit.json);
+  const result = await scanWebsiteUncached({ text, firma, sektor });
+  scanCache.set(key, { at: Date.now(), json: JSON.stringify(result) });
+  for (const [k, v] of scanCache) if (Date.now() - v.at >= SCAN_TTL_MS || scanCache.size > 30) scanCache.delete(k);
+  return result;
+}
+
+async function scanWebsiteUncached({ text, firma, sektor }) {
   const user = `Unternehmen: ${clip(firma, 160) || 'unbekannt'}\n\n<webseite>\n${text}\n</webseite>`;
   const resp = await generateText({
     system: scanSystemPrompt(sektor),

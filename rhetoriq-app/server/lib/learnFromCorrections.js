@@ -98,7 +98,12 @@ function rememberResult(reviewId, r) {
 function getResult(reviewId) { return results.get(Number(reviewId)) || null; }
 
 // Wertet eine gesendete Freigabe aus (höchstens einmal je Freigabe).
+// Läuft die Auswertung derselben Freigabe schon (zweimal kurz hintereinander gesendet), gibt es keinen zweiten KI-Aufruf.
+const running = new Set();
 async function learnFromReview(reviewId) {
+  const rid = Number(reviewId);
+  if (running.has(rid)) return { skipped: 'läuft bereits' };
+  running.add(rid);
   try {
     const r = await learnFromReviewInner(reviewId);
     rememberResult(reviewId, { done: true, created: (r && r.created) || 0, merged: (r && r.merged) || 0 });
@@ -106,6 +111,8 @@ async function learnFromReview(reviewId) {
   } catch (e) {
     rememberResult(reviewId, { done: true, created: 0, merged: 0, failed: true });
     throw e;
+  } finally {
+    running.delete(rid);
   }
 }
 
