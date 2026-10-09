@@ -4,6 +4,7 @@ const { ownClient } = require('../middleware/ownership');
 const q = require('../lib/quartalsreview');
 const qa = require('../lib/quartalsauswertung');
 const { pool } = require('../db');
+const { ensureSchema } = require('../lib/schemaRedesign');
 
 const router = express.Router();
 
@@ -74,6 +75,25 @@ router.get('/:clientId/vorlage.docx', requireAdvisor, ownClient('clientId'), asy
 });
 
 // GET /api/quartalsreview/:clientId/:quartal  (Status, Termin, Notizen)
+// GET/PUT /api/quartalsreview/:clientId/zusatz  (Zusatz ohne Zahlung von Hand schalten, nur Beraterin)
+router.get('/:clientId/zusatz', requireAdvisor, ownClient('clientId'), async (req, res) => {
+  try {
+    await ensureSchema();
+    const c = (await pool.query('SELECT quartalsreview_aktiv FROM clients WHERE id=$1', [Number(req.params.clientId)])).rows[0];
+    if (!c) return res.status(404).json({ error: 'Klient nicht gefunden.' });
+    res.json({ aktiv: c.quartalsreview_aktiv === true });
+  } catch (e) { console.error('[quartalsreview]', e.message); res.status(500).json({ error: 'Internal server error' }); }
+});
+router.put('/:clientId/zusatz', requireAdvisor, ownClient('clientId'), async (req, res) => {
+  try {
+    await ensureSchema();
+    const aktiv = req.body && req.body.aktiv === true;
+    const r = await pool.query('UPDATE clients SET quartalsreview_aktiv=$1 WHERE id=$2 RETURNING id', [aktiv, Number(req.params.clientId)]);
+    if (!r.rows.length) return res.status(404).json({ error: 'Klient nicht gefunden.' });
+    res.json({ aktiv });
+  } catch (e) { console.error('[quartalsreview]', e.message); res.status(500).json({ error: 'Internal server error' }); }
+});
+
 router.get('/:clientId/:quartal', requireAdvisor, ownClient('clientId'), async (req, res) => {
   try {
     if (!q.validQuartal(req.params.quartal)) return res.status(400).json({ error: 'Ungültiges Quartal.' });

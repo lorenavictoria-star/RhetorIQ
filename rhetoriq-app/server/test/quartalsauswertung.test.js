@@ -294,3 +294,15 @@ test('Beraterin-Zahlungslink für den Zusatz trägt dieselben Metadaten', async 
   assert.equal(links[0].subscription_data.metadata.type, 'quartalsreview');
   assert.equal(links[0].line_items[0].price_data.recurring.interval_count, 3);
 });
+
+test('Zusatz Quartalsreview ohne Zahlung: Beraterin schaltet, Klient und Fremde nicht, Lauf nimmt den Klienten auf', async () => {
+  const id = plain.id;
+  assert.equal((await srv.call('GET', `/api/quartalsreview/${id}/zusatz`, { token: H.advisorToken() })).body.aktiv, false);
+  assert.equal((await srv.call('PUT', `/api/quartalsreview/${id}/zusatz`, { token: H.clientToken(id), body: { aktiv: true } })).status, 403);
+  assert.equal((await srv.call('PUT', `/api/quartalsreview/${id}/zusatz`, { body: { aktiv: true } })).status, 401);
+  const on = await srv.call('PUT', `/api/quartalsreview/${id}/zusatz`, { token: H.advisorToken(), body: { aktiv: true } });
+  assert.equal(on.status, 200);
+  assert.equal(on.body.aktiv, true);
+  assert.equal((await srv.call('GET', `/api/quartalsreview/${id}/zusatz`, { token: H.advisorToken() })).body.aktiv, true);
+  assert.equal((await srv.call('PUT', `/api/quartalsreview/${id}/zusatz`, { token: H.advisorToken(), body: { aktiv: false } })).body.aktiv, false);
+});
