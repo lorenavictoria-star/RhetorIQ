@@ -57,3 +57,22 @@ test('Messung braucht neue verwendete Texte', async () => {
   assert.equal(ok.body.snapshots.length, 1);
   assert.equal(ok.body.latest.text_count, 3);
 });
+
+test('Stimmprofil als Word: nur Beraterin, enthält Firma und Übereinstimmung', async () => {
+  const c = await H.addClient('Wort AG');
+  assert.equal((await srv.call('GET', `/api/comm-profile/${c.id}/report.docx`, { token: H.advisorToken() })).status, 400, 'ohne Ausgangslage');
+  await srv.call('POST', `/api/comm-profile/${c.id}/baseline`, { token: H.advisorToken(), body: { texts: LONG } });
+  await srv.call('PUT', `/api/comm-profile/${c.id}/target`, { token: H.advisorToken(), body: { scores: { klarheit: 80, waerme: 70, direktheit: 70, verstaendlichkeit: 80, kuerze: 70, verbindlichkeit: 75 } } });
+  const { buildReport } = require('../lib/stimmReport');
+  const r = await buildReport(c.id);
+  assert.ok(r.buffer.length > 5000);
+  const JSZip = require('jszip');
+  const z = await JSZip.loadAsync(r.buffer);
+  const xml = await z.file('word/document.xml').async('string');
+  assert.ok(xml.includes('Wort AG'));
+  assert.ok(xml.includes('Klingt wie ich'));
+  assert.ok(xml.includes('Lange Sätze'), 'Befund aus der Auswertung');
+  assert.equal(typeof r.match, 'number');
+  assert.equal((await srv.call('GET', `/api/comm-profile/${c.id}/report.docx`, { token: H.clientToken(c.id) })).status, 403);
+});
+

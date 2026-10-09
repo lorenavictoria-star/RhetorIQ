@@ -10206,7 +10206,7 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
       +'<div style="font-size:12.5px;color:var(--mu);margin:8px 0">Fügen Sie zwei bis drei eigene Texte des Klienten ein (E-Mails, Beiträge, Reden), unverändert. Mehrere Texte trennen Sie mit einer Zeile <b>---</b>.</div>'
       +'<textarea id="rqp-texts" style="width:100%;min-height:180px;font-size:14px;padding:12px;border:1px solid var(--bd);box-sizing:border-box;font-family:inherit"></textarea>'
       +'<div style="margin-top:8px"><button type="button" class="runbtn" id="rqp-base">Auswerten und als Ausgangslage speichern</button> <span id="rqp-msg" style="font-size:12.5px;color:var(--mu)"></span></div></details>';
-    var tools=has?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button type="button" class="obtn" id="rqp-snap">Jetzt messen</button><button type="button" class="obtn" id="rqp-tgt">Ziel aus Brand Voice neu ableiten</button></div>'
+    var tools=has?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button type="button" class="obtn" id="rqp-snap">Jetzt messen</button><button type="button" class="obtn" id="rqp-tgt">Ziel aus Brand Voice neu ableiten</button><button type="button" class="obtn" id="rqp-doc">Stimmprofil als Word herunterladen</button></div>'
       +'<details style="margin-top:10px"><summary style="cursor:pointer;font-size:13px;color:var(--mu)">Ziel von Hand anpassen</summary><div style="margin-top:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">'
       +p.dims.map(function(d){var v=(p.target&&p.target.scores&&p.target.scores[d.key]);return '<label style="font-size:12.5px">'+E(d.label)+'<input type="number" min="0" max="100" data-k="'+d.key+'" value="'+(v==null?'':v)+'" style="width:100%;margin-top:3px"></label>';}).join('')
       +'</div><button type="button" class="obtn" id="rqp-tsave" style="margin-top:8px">Ziel speichern</button></details>':'';
@@ -10219,6 +10219,15 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     var b=host.querySelector('#rqp-base');if(b)b.onclick=function(){call(b,'/api/comm-profile/'+cid+'/baseline','POST',{texts:host.querySelector('#rqp-texts').value});};
     var s=host.querySelector('#rqp-snap');if(s)s.onclick=function(){call(s,'/api/comm-profile/'+cid+'/snapshot','POST');};
     var t=host.querySelector('#rqp-tgt');if(t)t.onclick=function(){call(t,'/api/comm-profile/'+cid+'/target/derive','POST');};
+    var dc=host.querySelector('#rqp-doc');if(dc)dc.onclick=async function(){
+      var m=host.querySelector('#rqp-msg'),old=dc.textContent;dc.disabled=true;dc.textContent='Wird erstellt …';
+      try{
+        var r=await api('/api/comm-profile/'+cid+'/report.docx');
+        if(!r.ok){var er=await r.json().catch(function(){return {};});throw new Error(er.error||'Fehler');}
+        var b=await r.blob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Stimmprofil.docx';document.body.appendChild(a);a.click();a.remove();
+      }catch(e){if(m)m.textContent='Nicht erstellt. '+e.message;}
+      dc.disabled=false;dc.textContent=old;
+    };
     var ts=host.querySelector('#rqp-tsave');if(ts)ts.onclick=function(){var sc={};host.querySelectorAll('input[data-k]').forEach(function(i){sc[i.dataset.k]=Number(i.value)||0;});call(ts,'/api/comm-profile/'+cid+'/target','PUT',{scores:sc});};
   }
   var orig=window.wsRenderVoice;

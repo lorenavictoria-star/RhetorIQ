@@ -11,6 +11,19 @@ router.get('/:clientId', requireAuth, ownClient('clientId'), async (req, res) =>
   catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
+// GET /api/comm-profile/:clientId/report.docx  (Stimmprofil als Word, nur Beraterin)
+router.get('/:clientId/report.docx', requireAdvisor, ownClient('clientId'), async (req, res) => {
+  try {
+    const r = await require('../lib/stimmReport').buildReport(Number(req.params.clientId));
+    const safe = String(r.name).replace(/[^A-Za-z0-9ÄÖÜäöüéèàç _-]/g, '').trim().replace(/\s+/g, '_') || 'Klient';
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'Content-Disposition': `attachment; filename="Stimmprofil_${encodeURIComponent(safe)}.docx"`
+    });
+    res.send(r.buffer);
+  } catch (e) { console.error('[stimm-report]', e.message); res.status(400).json({ error: e.message }); }
+});
+
 // POST /api/comm-profile/:clientId/baseline  { texts: "Text 1\n---\nText 2" } oder [..]
 router.post('/:clientId/baseline', requireAdvisor, ownClient('clientId'), async (req, res) => {
   try {
