@@ -20,11 +20,11 @@ test.before(async () => {
 test.after(async () => { await srv.close(); });
 
 test('Jahrespreise und Zuordnung', () => {
-  assert.deepEqual(y.YEARLY.map(t => t.yearlyCents), [205200, 637200, 1490000]);
+  assert.deepEqual(y.YEARLY.map(t => t.yearlyCents), [205200, 637200, 1609200]);
   assert.equal(y.resolveYearlyLimit(205200, 'chf'), 200000);
   assert.equal(y.resolveYearlyLimit(637200, 'CHF'), 750000);
-  assert.equal(y.resolveYearlyLimit(1490000, 'chf'), 2000000);
-  assert.equal(y.resolveYearlyLimit(1490000, 'eur'), undefined);
+  assert.equal(y.resolveYearlyLimit(1609200, 'chf'), 2000000);
+  assert.equal(y.resolveYearlyLimit(1609200, 'eur'), undefined);
   assert.equal(y.resolveYearlyLimit(123, 'chf'), undefined);
   assert.equal(y.yearlyOfferFor(300000), null);
   assert.equal(y.yearlyOfferFor(1500000), null);
@@ -60,7 +60,7 @@ test('Webhook setzt Monatskontingent bei Jahreszahlung', async () => {
   app.use('/api/subscriptions', require('../routes/subscriptions'));
   const s = await new Promise(r => { const x = app.listen(0, '127.0.0.1', () => r(x)); });
   delete process.env.STRIPE_WEBHOOK_SECRET;
-  const ev = { type: 'checkout.session.completed', data: { object: { metadata: { clientId: String(c.id) }, amount_total: 1490000, currency: 'chf', customer: 'cus_1' } } };
+  const ev = { type: 'checkout.session.completed', data: { object: { metadata: { clientId: String(c.id) }, amount_total: 1609200, currency: 'chf', customer: 'cus_1' } } };
   const r = await fetch(`http://127.0.0.1:${s.address().port}/api/subscriptions/webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ev) });
   assert.equal(r.status, 200);
   const { rows } = await pool.query('SELECT monthly_token_limit, subscription_status FROM clients WHERE id=$1', [c.id]);

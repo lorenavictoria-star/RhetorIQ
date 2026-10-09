@@ -257,7 +257,7 @@ router.get('/yearly-offer/:clientId', requireAuth, ownClient('clientId'), async 
 });
 
 // ── POST /api/subscriptions/yearly-link/:clientId ───────────────
-// Jahresabo mit 10 % Rabatt (Business: zwei Monate gratis). Das Paket ergibt sich aus dem Monatskontingent.
+// Jahresabo mit einheitlich 10 % Rabatt. Das Paket ergibt sich aus dem Monatskontingent.
 // Klient nur für sich selbst, Beraterin für ihre Klienten.
 router.post('/yearly-link/:clientId', requireAuth, ownClient('clientId'), async (req, res) => {
   try {
