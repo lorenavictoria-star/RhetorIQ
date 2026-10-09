@@ -15,7 +15,7 @@ test.before(async () => {
   await pool.query('CREATE TABLE usage_topups (id SERIAL PRIMARY KEY, client_id INTEGER, tokens INTEGER)').catch(() => {});
   c = await H.addClient('Karten AG'); other = await H.addClient('Fremd AG');
   const subs = require('../routes/subscriptions');
-  subs._setStripe({ paymentLinks: { create: async (o) => { calls.push(o); return { url: 'https://pay.test/k' }; } } });
+  subs._setStripe({ webhooks: { constructEvent: (body, sig, secret) => { if (sig !== 'sig-ok' || secret !== 'whsec_test') throw new Error('bad signature'); return JSON.parse(body.toString()); } }, paymentLinks: { create: async (o) => { calls.push(o); return { url: 'https://pay.test/k' }; } } });
   srv = await H.startApp([['/api/subscriptions', subs], ['/api/review-time', require('../routes/reviewTime')]]);
 });
 test.after(async () => { await srv.close(); });
@@ -56,14 +56,14 @@ async function hook(ev) {
   const app = express();
   app.use('/api/subscriptions', require('../routes/subscriptions'));
   const s = await new Promise(r => { const x = app.listen(0, '127.0.0.1', () => r(x)); });
-  delete process.env.STRIPE_WEBHOOK_SECRET;
-  const r = await fetch(`http://127.0.0.1:${s.address().port}/api/subscriptions/webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ev) });
+  process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test';
+  const r = await fetch(`http://127.0.0.1:${s.address().port}/api/subscriptions/webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'stripe-signature': 'sig-ok' }, body: JSON.stringify(ev) });
   s.close();
   return r.status;
 }
 
 test('Webhook legt eine Karte an, doppelte Zustellung keine zweite', async () => {
-  const ev = { type: 'checkout.session.completed', data: { object: { id: 'cs_1', metadata: { clientId: String(c.id), type: 'karte' }, amount_total: 69000, currency: 'chf' } } };
+  const ev = { id: 'evt_karte_1', type: 'checkout.session.completed', data: { object: { id: 'cs_1', metadata: { clientId: String(c.id), type: 'karte' }, amount_total: 69000, currency: 'chf' } } };
   assert.equal(await hook(ev), 200);
   assert.equal(await hook(ev), 200);
   const { rows } = await pool.query('SELECT * FROM ueberarbeitungskarten WHERE client_id=$1', [c.id]);

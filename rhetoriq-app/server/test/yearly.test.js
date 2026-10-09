@@ -14,7 +14,7 @@ test.before(async () => {
   await pool.query('CREATE TABLE usage_topups (id SERIAL PRIMARY KEY, client_id INTEGER, tokens INTEGER)').catch(() => {});
   c = await H.addClient('Jahres AG');
   const subs = require('../routes/subscriptions');
-  subs._setStripe({ paymentLinks: { create: async (o) => { calls.push(o); return { url: 'https://pay.test/x' }; } } });
+  subs._setStripe({ webhooks: { constructEvent: (body, sig, secret) => { if (sig !== 'sig-ok' || secret !== 'whsec_test') throw new Error('bad signature'); return JSON.parse(body.toString()); } }, paymentLinks: { create: async (o) => { calls.push(o); return { url: 'https://pay.test/x' }; } } });
   srv = await H.startApp([['/api/subscriptions', subs]]);
 });
 test.after(async () => { await srv.close(); });
@@ -59,9 +59,9 @@ test('Webhook setzt Monatskontingent bei Jahreszahlung', async () => {
   const app = express();
   app.use('/api/subscriptions', require('../routes/subscriptions'));
   const s = await new Promise(r => { const x = app.listen(0, '127.0.0.1', () => r(x)); });
-  delete process.env.STRIPE_WEBHOOK_SECRET;
-  const ev = { type: 'checkout.session.completed', data: { object: { metadata: { clientId: String(c.id) }, amount_total: 1609200, currency: 'chf', customer: 'cus_1' } } };
-  const r = await fetch(`http://127.0.0.1:${s.address().port}/api/subscriptions/webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ev) });
+  process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test';
+  const ev = { id: 'evt_year_1', type: 'checkout.session.completed', data: { object: { metadata: { clientId: String(c.id) }, amount_total: 1609200, currency: 'chf', customer: 'cus_1' } } };
+  const r = await fetch(`http://127.0.0.1:${s.address().port}/api/subscriptions/webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'stripe-signature': 'sig-ok' }, body: JSON.stringify(ev) });
   assert.equal(r.status, 200);
   const { rows } = await pool.query('SELECT monthly_token_limit, subscription_status FROM clients WHERE id=$1', [c.id]);
   assert.equal(rows[0].monthly_token_limit, 2000000);

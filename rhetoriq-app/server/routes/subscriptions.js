@@ -75,10 +75,16 @@ router.post('/create-payment-link/:clientId', requireAdvisor, ownClient('clientI
     const { priceId } = req.body;
     if (!priceId) return res.status(400).json({ error: 'priceId required in request body' });
 
-    const link = await stripe.paymentLinks.create({
+    const params = {
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: { clientId: String(clientId), clientName: rows[0].name },
-    });
+    };
+    // Bei wiederkehrenden Preisen die Klientennummer auch am Abo hinterlegen, damit eine Kündigung zuordenbar bleibt
+    try {
+      const price = stripe.prices && stripe.prices.retrieve ? await stripe.prices.retrieve(priceId) : null;
+      if (price && price.recurring) params.subscription_data = { metadata: { clientId: String(clientId), clientName: rows[0].name } };
+    } catch (e) { console.error('[stripe] Preis konnte nicht geprüft werden:', e.message); }
+    const link = await stripe.paymentLinks.create(params);
 
     res.json({ url: link.url });
   } catch (e) {
@@ -262,6 +268,7 @@ router.post('/upgrade-link/:clientId', requireAuth, requireRole('admin'), async 
         quantity: 1,
       }],
       metadata: { clientId: String(clientId), clientName: rows[0].name, type: 'upgrade', targetTier: nextTier.name },
+      subscription_data: { metadata: { clientId: String(clientId), clientName: rows[0].name } },
     });
     res.json({ url: link.url, tier: nextTier.name, amountCents: nextTier.amountCents });
   } catch (e) {
@@ -327,6 +334,7 @@ router.post('/choose-plan/:clientId', requireAuth, requireRole('admin'), async (
       }],
       after_completion: { type: 'redirect', redirect: { url: 'https://rhetoriq.ch/?welcome=1' } },
       metadata: { clientId: String(clientId), clientName: rows[0].name, type: 'choose-plan', targetTier: chosen.name },
+      subscription_data: { metadata: { clientId: String(clientId), clientName: rows[0].name } },
     });
     res.json({ url: link.url, tier: chosen.name, amountCents: chosen.amountCents });
   } catch (e) {
@@ -370,18 +378,38 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+  // Ohne STRIPE_WEBHOOK_SECRET wird nichts angenommen (kein "Dev mode" mehr, Befund F-15)
+  if (!webhookSecret) {
+    console.error('[stripe] webhook abgelehnt: STRIPE_WEBHOOK_SECRET ist nicht gesetzt');
+    return res.status(400).json({ error: 'Webhook nicht konfiguriert.' });
+  }
   let event;
   try {
     const stripe = getStripe();
-    if (webhookSecret) {
-      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    } else {
-      // Dev mode: parse body directly (no signature verification)
-      event = JSON.parse(req.body.toString());
-    }
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (e) {
     console.error('[stripe] webhook signature error:', e.message);
-    return res.status(400).json({ error: `Webhook error: ${e.message}` });
+    return res.status(400).json({ error: 'Ungültige Signatur.' });
+  }
+
+  // Wiederholungsschutz: jede Ereignis-Nummer wird höchstens einmal verarbeitet
+  let claimedEventId = null;
+  try {
+    if (event.id) {
+      await ensureSchema();
+      try {
+        await pool.query('INSERT INTO stripe_events (event_id, type) VALUES ($1,$2)', [String(event.id), String(event.type || '')]);
+      } catch (e) {
+        if (e && e.code === '23505') {
+          console.log(`[stripe] Ereignis ${event.id} bereits verarbeitet, übersprungen`);
+          return res.json({ received: true, duplicate: true });
+        }
+        throw e;
+      }
+      claimedEventId = String(event.id);
+    }
+  } catch (e) {
+    console.error('[stripe] Wiederholungsschutz nicht verfügbar:', e.message);
   }
 
   try {
@@ -445,19 +473,30 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       }
     } else if (event.type === 'customer.subscription.deleted') {
       const obj = event.data.object;
-      const clientId = obj.metadata?.clientId;
+      let clientId = obj.metadata?.clientId;
+      // Payment Links geben die Metadaten nicht immer ans Abo weiter: dann über die gespeicherte Stripe-Kunden-Nummer zuordnen
+      if (!clientId && obj.customer) {
+        const found = await pool.query('SELECT id FROM clients WHERE stripe_customer_id=$1', [String(obj.customer)]);
+        if (found.rows.length === 1) clientId = found.rows[0].id;
+        else if (found.rows.length > 1) console.error(`[stripe] Kündigung für Kunde ${obj.customer}: mehrere Klienten gefunden, keine Änderung`);
+      }
       if (clientId) {
         await pool.query(
           `UPDATE clients SET subscription_status='cancelled' WHERE id=$1`,
           [clientId]
         );
         console.log(`[stripe] client ${clientId} → cancelled`);
+      } else {
+        console.error(`[stripe] Kündigung ${event.id || ''} konnte keinem Klienten zugeordnet werden`);
+        try { require('@sentry/node').captureMessage('Stripe-Kündigung ohne Klientenzuordnung'); } catch {}
       }
     }
 
     res.json({ received: true });
   } catch (e) {
     console.error('[stripe] webhook handler error:', e.message);
+    if (claimedEventId) await pool.query('DELETE FROM stripe_events WHERE event_id=$1', [claimedEventId]).catch(() => {});
+    try { require('@sentry/node').captureException(e); } catch {}
     res.status(500).json({ error: 'Internal server error' });
   }
 });

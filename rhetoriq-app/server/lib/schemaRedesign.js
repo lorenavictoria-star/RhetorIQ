@@ -51,6 +51,7 @@ function ensureSchema() {
         started_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
     await pool.query(`ALTER TABLE onboarding_drafts ADD COLUMN IF NOT EXISTS advisor_id INTEGER`);
+    await pool.query(`CREATE TABLE IF NOT EXISTS stripe_events (event_id TEXT PRIMARY KEY, type TEXT, received_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS instruction TEXT`);
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS due_at TIMESTAMPTZ`);
     // Lernvorschläge aus den Korrekturen der Beraterin (Vergleich KI-Text und gesendete Fassung)
