@@ -10,8 +10,8 @@ async function canAccessClient(req, clientId) {
   if (req.user.role === 'client') return Number(req.user.clientId) === id;
   if (req.user.role === 'advisor') {
     // Klienten ohne eingetragene Beraterin (ältere Daten) bleiben für die Beraterin erreichbar
-    const { rows } = await pool.query('SELECT advisor_id FROM clients WHERE id=$1', [id]);
-    return rows.length > 0 && (rows[0].advisor_id == null || Number(rows[0].advisor_id) === Number(req.user.id));
+    const { rows } = await pool.query('SELECT advisor_id, geloescht_am FROM clients WHERE id=$1', [id]);
+    return rows.length > 0 && !rows[0].geloescht_am && (rows[0].advisor_id == null || Number(rows[0].advisor_id) === Number(req.user.id));
   }
   return false;
 }
@@ -72,7 +72,7 @@ function ownClientBody(field = 'clientId') {
 // SQL-Bedingung: Zeile gehört zu einem Klienten dieser Beraterin (oder zu keinem Klienten, oder zu einem Klienten ohne
 // eingetragene Beraterin wie ältere Daten). col = Spalte mit der Klienten-Nummer, n = Nummer des Parameters mit der Beraterin-ID.
 function advisorScopeSql(col, n) {
-  return `(${col} IS NULL OR ${col} IN (SELECT id FROM clients WHERE advisor_id = $${n} OR advisor_id IS NULL))`;
+  return `(${col} IS NULL OR ${col} IN (SELECT id FROM clients WHERE (advisor_id = $${n} OR advisor_id IS NULL) AND geloescht_am IS NULL))`;
 }
 
 module.exports = { advisorScopeSql, ownClientBody, canAccessClient, ownClient, allowedClientId, canAccessPerson, ownPerson };

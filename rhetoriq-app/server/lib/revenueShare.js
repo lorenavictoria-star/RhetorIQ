@@ -19,7 +19,7 @@ function shares(list, limit = LIMIT_PERCENT) {
 async function revenueShare(advisorId, month) {
   const m = monthRange(month).month;
   const { rows: cl } = await pool.query(
-    `SELECT id, name, subscription_status FROM clients WHERE (advisor_id=$1 OR advisor_id IS NULL) ORDER BY name`, [advisorId]);
+    `SELECT id, name, subscription_status FROM clients WHERE (advisor_id=$1 OR advisor_id IS NULL) AND geloescht_am IS NULL ORDER BY name`, [advisorId]);
   const list = [];
   for (const c of cl) {
     if (/^cancel+ed$/i.test(String(c.subscription_status || ''))) continue;

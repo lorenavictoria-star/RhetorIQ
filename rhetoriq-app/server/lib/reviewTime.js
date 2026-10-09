@@ -112,7 +112,7 @@ async function closeMonth(clientId, month) {
 
 async function exportCsv(advisorId, month) {
   await ensureSchema();
-  const { rows: cl } = await pool.query('SELECT id FROM clients WHERE advisor_id=$1 ORDER BY name', [advisorId]);
+  const { rows: cl } = await pool.query('SELECT id FROM clients WHERE advisor_id=$1 AND geloescht_am IS NULL ORDER BY name', [advisorId]);
   const lines = ['Klient;Monat;Freigaben mit Zeit;Minuten verbraucht;Minuten inbegriffen;Mehraufwand Minuten;Verrechnet Minuten;Karte abgezogen Minuten;Mehraufwand CHF;Monatsabo CHF;Total CHF'];
   let total = 0;
   for (const c of cl) {

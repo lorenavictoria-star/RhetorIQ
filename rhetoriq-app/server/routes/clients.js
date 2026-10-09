@@ -73,7 +73,7 @@ router.get('/', requireAdvisor, async (req, res) => {
   try {
     await ensureClientAddressColumn();
     const { rows } = await pool.query(
-      'SELECT id, name, industry, contact, slug, token, capital_markets_enabled, hotel_enabled, enabled_modules, address, created_at, email, client_type, salutation, last_name FROM clients WHERE advisor_id = $1 ORDER BY created_at DESC',
+      'SELECT id, name, industry, contact, slug, token, capital_markets_enabled, hotel_enabled, enabled_modules, address, created_at, email, client_type, salutation, last_name FROM clients WHERE advisor_id = $1 AND geloescht_am IS NULL ORDER BY created_at DESC',
       [req.user.id]
     );
     res.json(rows);
@@ -126,7 +126,7 @@ router.post('/', requireAdvisor, async (req, res) => {
 router.get('/export', requireAdvisor, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT name, industry, contact, token, created_at FROM clients WHERE advisor_id = $1 ORDER BY created_at DESC',
+      'SELECT name, industry, contact, token, created_at FROM clients WHERE advisor_id = $1 AND geloescht_am IS NULL ORDER BY created_at DESC',
       [req.user.id]
     );
     const esc = v => `"${(v || '').replace(/"/g, '""')}"`;
@@ -489,11 +489,18 @@ router.get('/:id/token-usage', requireAuth, async (req, res) => {
   }
 });
 
-// DELETE /api/clients/:id — Klient vollständig löschen (alle Tabellen, eine Transaktion, siehe lib/clientData.js).
+// DELETE /api/clients/:id — Klient in den Papierkorb legen (clients.geloescht_am, siehe lib/papierkorb.js). Nach 30 Tagen
+// löscht ein Job endgültig. Mit &endgueltig=ja wird sofort vollständig gelöscht (alle Tabellen, eine Transaktion,
+// siehe lib/clientData.js), zum Beispiel auf Wunsch der betroffenen Person.
 // Die Rückfrage im Frontend ist Pflicht; der Server verlangt zusätzlich ?confirm=ja.
 router.delete('/:id', requireAdvisor, async (req, res) => {
   try {
     if (req.query.confirm !== 'ja') return res.status(400).json({ error: 'Löschen bitte mit Bestätigung (confirm=ja) aufrufen.' });
+    if (req.query.endgueltig !== 'ja') {
+      const k = await require('../lib/papierkorb').inPapierkorb(parseInt(req.params.id, 10), req.user.id);
+      if (!k) return res.status(404).json({ error: 'Client not found (or belongs to a different advisor account)' });
+      return res.json({ ok: true, papierkorb: true, tage: require('../lib/papierkorb').FRIST_TAGE });
+    }
     const r = await require('../lib/clientData').deleteClientCompletely(parseInt(req.params.id, 10), req.user.id);
     if (!r) return res.status(404).json({ error: 'Client not found (or belongs to a different advisor account)' });
     res.json({ ok: true, deleted: r.counts });

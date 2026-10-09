@@ -11,11 +11,11 @@ async function currentTokenVersion(payload) {
     return rows[0]?.token_version;
   }
   if (payload.role === 'client' && payload.clientUserId) {
-    const { rows } = await pool.query('SELECT token_version FROM client_users WHERE id=$1', [payload.clientUserId]);
+    const { rows } = await pool.query('SELECT cu.token_version FROM client_users cu JOIN clients c ON c.id = cu.client_id WHERE cu.id=$1 AND c.geloescht_am IS NULL', [payload.clientUserId]);
     return rows[0]?.token_version;
   }
   if (payload.role === 'client') {
-    const { rows } = await pool.query('SELECT token_version FROM clients WHERE id=$1', [payload.clientId]);
+    const { rows } = await pool.query('SELECT token_version FROM clients WHERE id=$1 AND geloescht_am IS NULL', [payload.clientId]);
     return rows[0]?.token_version;
   }
   return undefined;

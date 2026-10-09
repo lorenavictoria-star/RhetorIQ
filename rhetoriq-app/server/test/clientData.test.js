@@ -64,7 +64,7 @@ test('F-10 Löschen: braucht Bestätigung, fremde Beraterin gesperrt', async () 
 });
 
 test('F-10 Löschen: alle Tabellen leer, andere Klienten unberührt', async () => {
-  const r = await srv.call('DELETE', `/api/clients/${a.id}?confirm=ja`, { token: H.advisorToken() });
+  const r = await srv.call('DELETE', `/api/clients/${a.id}?confirm=ja&endgueltig=ja`, { token: H.advisorToken() });
   assert.equal(r.status, 200);
   for (const t of ['analyses', 'company_memory', 'people', 'client_files', 'client_users']) assert.equal(await count(t, 'client_id', a.id), 0, t);
   assert.equal((await pool.query('SELECT COUNT(*)::int AS n FROM people_profiles')).rows[0].n, 1, 'nur das Profil des anderen Klienten bleibt');
@@ -76,5 +76,5 @@ test('F-10 Löschen: alle Tabellen leer, andere Klienten unberührt', async () =
   assert.equal((await pool.query('SELECT COUNT(*)::int AS n FROM schnelltests')).rows[0].n, 1);
   assert.equal((await pool.query('SELECT COUNT(*)::int AS n FROM clients WHERE id=$1', [a.id])).rows[0].n, 0);
   for (const t of ['analyses', 'company_memory', 'people', 'client_files', 'client_users']) assert.equal(await count(t, 'client_id', b.id), 1, 'Beta ' + t);
-  assert.equal((await srv.call('DELETE', `/api/clients/${a.id}?confirm=ja`, { token: H.advisorToken() })).status, 404);
+  assert.equal((await srv.call('DELETE', `/api/clients/${a.id}?confirm=ja&endgueltig=ja`, { token: H.advisorToken() })).status, 404);
 });

@@ -67,7 +67,7 @@ async function setupBase() {
     id SERIAL PRIMARY KEY, advisor_id INTEGER, name TEXT NOT NULL, industry TEXT, contact TEXT, slug TEXT UNIQUE NOT NULL,
     token TEXT UNIQUE NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW(), email TEXT, client_type TEXT, salutation TEXT, last_name TEXT,
     password_hash TEXT, must_change_password BOOLEAN DEFAULT FALSE, token_version INTEGER NOT NULL DEFAULT 1,
-    enabled_modules TEXT[], privacy_acknowledged_at TIMESTAMPTZ)`);
+    enabled_modules TEXT[], privacy_acknowledged_at TIMESTAMPTZ, geloescht_am TIMESTAMPTZ)`);
   await pool.query(`CREATE TABLE client_users (id SERIAL PRIMARY KEY, client_id INTEGER, token_version INTEGER NOT NULL DEFAULT 1)`);
   await pool.query(`CREATE TABLE analyses (id SERIAL PRIMARY KEY, client_id INTEGER, advisor_id INTEGER, module TEXT NOT NULL, module_label TEXT, input_data JSONB, result TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), user_rating SMALLINT, feedback_note TEXT, feedback_key TEXT)`);
   await pool.query(`CREATE TABLE review_requests (

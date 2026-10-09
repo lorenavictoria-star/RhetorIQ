@@ -41,6 +41,8 @@ async function init() {
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS salutation TEXT;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_name TEXT;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS password_hash TEXT;
+    -- Papierkorb: gelöschte Klienten bleiben 30 Tage erhalten (lib/papierkorb.js), danach löscht ein Job endgültig
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS geloescht_am TIMESTAMPTZ;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT FALSE;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 1;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 1;

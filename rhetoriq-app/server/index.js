@@ -287,6 +287,8 @@ app.use('/api/quartalsreview', require('./routes/quartalsreview'));
 app.use('/api/status', require('./routes/status'));
 app.use('/api/stimmenmappe', require('./routes/stimmenmappe'));
 app.use('/api/notfallkarte', require('./routes/notfallkarte'));
+app.use('/api/papierkorb', require('./routes/papierkorb'));
+app.use('/api/backup', require('./routes/backup'));
 
 // Manual report trigger (advisor only)
 const { requireAdvisor } = require('./middleware/auth');
@@ -406,6 +408,9 @@ const PORT = process.env.PORT || 3001;
 
   // Monatserinnerung an den Export der Stimmenmappen: am 1. um 09:00, nur eine Mail ohne Anhang
   cron.schedule('0 9 1 * *', () => require('./jobs/stimmenmappe-erinnerung').runErinnerung().catch(e => console.error('[stimmenmappe] Erinnerung failed:', e.message)), { timezone: 'Europe/Zurich' });
+
+  // Papierkorb: täglich um 03:40 Klienten endgültig löschen, die seit 30 Tagen im Papierkorb liegen
+  cron.schedule('40 3 * * *', () => require('./jobs/papierkorb').runPapierkorb().catch(e => console.error('[papierkorb] job failed:', e.message)), { timezone: 'Europe/Zurich' });
 
   // KI-Wächter: alle 5 Minuten eine winzige Anfrage (haiku, 5 Token), sichtbar im Nutzungsprotokoll unter «waechter».
   // Abschaltbar mit KI_WAECHTER=aus.

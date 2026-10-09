@@ -64,7 +64,7 @@ router.get('/dashboard', requireAdvisor, async (req, res) => {
           COUNT(CASE WHEN a.created_at > NOW() - INTERVAL '7 days' THEN 1 END) AS analyses_7d
          FROM clients c
          LEFT JOIN analyses a ON a.client_id = c.id AND a.advisor_id = $1
-         WHERE c.advisor_id = $1
+         WHERE c.advisor_id = $1 AND c.geloescht_am IS NULL
          GROUP BY c.id ORDER BY last_activity DESC NULLS LAST`,
         [advisorId]
       ),
@@ -75,14 +75,14 @@ router.get('/dashboard', requireAdvisor, async (req, res) => {
           COUNT(DISTINCT a.client_id) FILTER (WHERE a.created_at > NOW() - INTERVAL '7 days') AS active_clients_7d
          FROM clients c
          LEFT JOIN analyses a ON a.client_id = c.id AND a.advisor_id = $1
-         WHERE c.advisor_id = $1`,
+         WHERE c.advisor_id = $1 AND c.geloescht_am IS NULL`,
         [advisorId]
       ),
       pool.query(
         `SELECT a.id, a.module, a.module_label, a.created_at, c.name AS client_name
          FROM analyses a
          JOIN clients c ON c.id = a.client_id
-         WHERE a.advisor_id = $1
+         WHERE a.advisor_id = $1 AND c.geloescht_am IS NULL
          ORDER BY a.created_at DESC LIMIT 20`,
         [advisorId]
       )
@@ -91,7 +91,7 @@ router.get('/dashboard', requireAdvisor, async (req, res) => {
     // Abo-Status aller Klienten in einer einzigen Abfrage (statt eine Anfrage pro Klient). Fehlt die Spalte, gilt «trial».
     let statusById = {};
     try {
-      const { rows: st } = await pool.query('SELECT id, subscription_status FROM clients WHERE advisor_id = $1', [advisorId]);
+      const { rows: st } = await pool.query('SELECT id, subscription_status FROM clients WHERE advisor_id = $1 AND geloescht_am IS NULL', [advisorId]);
       statusById = Object.fromEntries(st.map(r => [String(r.id), r.subscription_status || 'trial']));
     } catch (e) {
       console.error('[dashboard] subscription_status unavailable:', e.message);

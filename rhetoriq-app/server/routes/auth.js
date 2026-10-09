@@ -45,7 +45,7 @@ router.post('/client-login', async (req, res) => {
     if (!clientToken) return res.status(400).json({ error: 'Token required' });
 
     const { rows } = await pool.query(
-      'SELECT c.*, u.name as advisor_name FROM clients c JOIN users u ON c.advisor_id = u.id WHERE c.token = $1',
+      'SELECT c.*, u.name as advisor_name FROM clients c JOIN users u ON c.advisor_id = u.id WHERE c.token = $1 AND c.geloescht_am IS NULL',
       [clientToken]
     );
     const client = rows[0];
@@ -74,7 +74,7 @@ router.post('/client-password-login', async (req, res) => {
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
     const { rows } = await pool.query(
-      'SELECT c.*, u.name as advisor_name FROM clients c JOIN users u ON c.advisor_id = u.id WHERE LOWER(c.email) = $1',
+      'SELECT c.*, u.name as advisor_name FROM clients c JOIN users u ON c.advisor_id = u.id WHERE LOWER(c.email) = $1 AND c.geloescht_am IS NULL',
       [email.toLowerCase()]
     );
     const client = rows[0];
@@ -114,7 +114,7 @@ router.post('/client-user-login', async (req, res) => {
        FROM client_users cu
        JOIN clients c ON cu.client_id = c.id
        JOIN users u ON c.advisor_id = u.id
-       WHERE LOWER(cu.email) = $1`,
+       WHERE LOWER(cu.email) = $1 AND c.geloescht_am IS NULL`,
       [email.toLowerCase()]
     );
     const cu = rows[0];

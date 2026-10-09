@@ -137,6 +137,8 @@ function ensureSchema() {
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trial'`);
     // Hinweis auf KI-Unterstützung unter exportierten Texten (Standard: aus)
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS ki_hinweis BOOLEAN NOT NULL DEFAULT FALSE`);
+    // Papierkorb für gelöschte Klienten (zusätzlich zu db.js, falls dort noch nicht ausgeführt)
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS geloescht_am TIMESTAMPTZ`);
     // Betriebszustand (KI-Wächter, Hinweis von Hand, Reservekonto-Schalter)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS system_status (

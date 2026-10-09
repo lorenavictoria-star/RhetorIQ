@@ -7,7 +7,7 @@ const tp = require('../lib/themenplan');
 async function runThemenplanJob(opts = {}) {
   if (String(process.env.THEMENPLAN || '').toLowerCase() === 'aus') { console.log('[themenplan] abgeschaltet (THEMENPLAN=aus)'); return []; }
   await ensureSchema();
-  const { rows } = await pool.query('SELECT id FROM clients WHERE themenplan_aktiv = TRUE ORDER BY id');
+  const { rows } = await pool.query('SELECT id FROM clients WHERE themenplan_aktiv = TRUE AND geloescht_am IS NULL ORDER BY id');
   const out = [];
   for (const c of rows) {
     try { out.push({ clientId: c.id, ...(await tp.runForClient(c.id, opts)) }); }

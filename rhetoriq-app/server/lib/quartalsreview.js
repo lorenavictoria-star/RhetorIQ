@@ -26,7 +26,7 @@ async function dueList(advisorId, now = new Date()) {
   await ensureSchema();
   const quartal = quartalOf(now);
   const { rows: cl } = await pool.query(
-    `SELECT id, name, monthly_token_limit, recommended_plan FROM clients WHERE (advisor_id=$1 OR advisor_id IS NULL) ORDER BY name`, [advisorId]);
+    `SELECT id, name, monthly_token_limit, recommended_plan FROM clients WHERE (advisor_id=$1 OR advisor_id IS NULL) AND geloescht_am IS NULL ORDER BY name`, [advisorId]);
   const { rows: qr } = await pool.query(`SELECT client_id, status, termin, notizen, erledigt_am FROM quartalsreviews WHERE quartal=$1`, [quartal]);
   const byClient = new Map(qr.map(r => [Number(r.client_id), r]));
   return {
@@ -70,7 +70,7 @@ async function save(clientId, quartal, { termin, notizen, status }) {
 async function weeklyLines(now = new Date()) {
   await ensureSchema();
   const quartal = quartalOf(now);
-  const { rows: cl } = await pool.query(`SELECT id, name, monthly_token_limit, recommended_plan FROM clients ORDER BY name`);
+  const { rows: cl } = await pool.query(`SELECT id, name, monthly_token_limit, recommended_plan FROM clients WHERE geloescht_am IS NULL ORDER BY name`);
   const { rows: done } = await pool.query(`SELECT client_id FROM quartalsreviews WHERE quartal=$1 AND status='erledigt'`, [quartal]);
   const ok = new Set(done.map(r => Number(r.client_id)));
   return cl.filter(c => isBusiness(c) && !ok.has(Number(c.id))).map(c => `Quartalsreview offen: ${c.name} (${quartal})`);

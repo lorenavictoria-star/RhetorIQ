@@ -279,7 +279,7 @@ async function buildHandbuch(clientId) {
 const safeName = s => String(s || 'Klient').replace(/[^\p{L}\p{N}_-]+/gu, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'Klient';
 
 async function buildZip(advisorId) {
-  const { rows } = await pool.query('SELECT id, name FROM clients WHERE advisor_id=$1 OR advisor_id IS NULL ORDER BY name', [advisorId]);
+  const { rows } = await pool.query('SELECT id, name FROM clients WHERE (advisor_id=$1 OR advisor_id IS NULL) AND geloescht_am IS NULL ORDER BY name', [advisorId]);
   const zip = new JSZip();
   const used = new Set();
   for (const r of rows) {
