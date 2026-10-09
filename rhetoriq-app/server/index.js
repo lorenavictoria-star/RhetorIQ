@@ -259,6 +259,7 @@ app.use('/api/files', require('./routes/files'));
 app.use('/api/help-chat', require('./routes/helpChat'));
 app.use('/api/memory-suggest', require('./routes/memorySuggest'));
 app.use('/api/learning', require('./routes/learning'));
+app.use('/api/comm-profile', require('./routes/commProfile'));
 
 // Manual report trigger (advisor only)
 const { requireAdvisor } = require('./middleware/auth');
@@ -361,6 +362,8 @@ const PORT = process.env.PORT || 3001;
   // Monthly: 1st of each month at 08:07
   cron.schedule('7 8 1 * *', () => runMonthlyReport(), { timezone: 'Europe/Zurich' });
 
+  // Kommunikationsprofil: am 1. und 15. jedes Monats um 09:30
+  cron.schedule('30 9 1,15 * *', () => require('./jobs/comm-profile').runCommProfileJob().catch(e => console.error('[comm-profile] job failed:', e.message)), { timezone: 'Europe/Zurich' });
   console.log('[cron] Weekly report: every Sunday 08:00 Zurich');
   console.log('[cron] Monthly report: 1st of month 08:07 Zurich');
 

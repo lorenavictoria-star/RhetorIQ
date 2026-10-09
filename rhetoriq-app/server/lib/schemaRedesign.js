@@ -70,6 +70,19 @@ function ensureSchema() {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
     await pool.query(`CREATE INDEX IF NOT EXISTS learning_suggestions_client_idx ON learning_suggestions (client_id, status)`);
+    // Kommunikationsprofil: Ausgangslage, Ziel und laufende Messungen je Klient
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS communication_profiles (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        kind TEXT NOT NULL,
+        scores JSONB,
+        metrics JSONB,
+        findings JSONB,
+        text_count INTEGER DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS communication_profiles_client_idx ON communication_profiles (client_id, kind, created_at DESC)`);
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS learned_at TIMESTAMPTZ`);
     // Abo-Status direkt am Klienten (derselbe Befehl wie in routes/subscriptions.js), damit die Kundenliste ihn mitladen kann
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trial'`);
