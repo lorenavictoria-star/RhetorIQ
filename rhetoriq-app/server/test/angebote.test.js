@@ -54,5 +54,8 @@ test('Webhook: Stimm-Audit schaltet 30 Tage mit 40 Texten frei, Workshop ändert
   r = await pool.query('SELECT monthly_token_limit, subscription_status FROM clients WHERE id=$1', [c.id]);
   assert.equal(r.rows[0].monthly_token_limit, 200000);
   assert.equal(r.rows[0].subscription_status, 'active');
+  const z = await pool.query(`SELECT zugang_bis FROM clients WHERE id=$1`, [c.id]);
+  const tage = (new Date(z.rows[0].zugang_bis) - Date.now()) / 86400000;
+  assert.ok(tage > 29 && tage < 31, 'Zugang endet nach 30 Tagen');
   s.close();
 });

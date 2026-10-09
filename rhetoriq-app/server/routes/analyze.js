@@ -44,15 +44,13 @@ function toneGuidance(toneLabel) {
 // tier — NULL/0 means unlimited). This runs BEFORE the AI call so an
 // over-quota request never reaches the API and never costs anything.
 const QUOTA_WARNING_THRESHOLD = 0.85;
-async function checkQuota(clientId) {
+async function checkQuota(clientId, opts = {}) {
   if (!clientId) return { ok: true };
-  const { rows: cRows } = await pool.query('SELECT name, monthly_token_limit, subscription_status FROM clients WHERE id=$1', [clientId]);
-  if (cRows[0]?.subscription_status === 'cancelled') {
-    return { ok: false, cancelled: true, used: 0, limit: 0 };
-  }
-  if (cRows[0]?.subscription_status === 'pending_plan') {
-    return { ok: false, pendingPlan: true, used: 0, limit: 0 };
-  }
+  await require('../lib/schemaRedesign').ensureSchema();
+  const { rows: cRows } = await pool.query('SELECT name, monthly_token_limit, subscription_status, zugang_bis, created_at FROM clients WHERE id=$1', [clientId]);
+  // Ein einziger Abo-Check vor jeder Textgenerierung (lib/abo.js); die Beraterin ist von den neuen Regeln ausgenommen
+  const zg = require('../lib/abo').zugang(cRows[0], { advisor: !!opts.advisor });
+  if (!zg.ok) return { ok: false, abo: zg, used: 0, limit: 0 };
   const baseLimit = cRows[0]?.monthly_token_limit;
   if (!baseLimit) return { ok: true }; // no limit set = unlimited
   const { rows: topupRows } = await pool.query(
@@ -1703,15 +1701,10 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     // Prüfsatz (lib/pruefsatz.js) ruft diese Route intern auf: req.pruefsatz ist nur dort gesetzt, nie aus der Anfrage
     const dry = req.pruefsatz === true;
     if (resolvedClientId) {
-      const quota = dry ? { ok: true } : await checkQuota(resolvedClientId);
+      const quota = dry ? { ok: true } : await checkQuota(resolvedClientId, { advisor: req.user.role === 'advisor' });
       if (!quota.ok) {
-        return res.status(429).json(quota.cancelled ? {
-          error: 'Ihr Abo ist nicht mehr aktiv.',
-          subscriptionCancelled: true, clientId: resolvedClientId
-        } : quota.pendingPlan ? {
-          error: 'Bitte wählen Sie zuerst einen Plan.',
-          pendingPlan: true, clientId: resolvedClientId
-        } : {
+        if (quota.abo) return res.status(402).json(require('../lib/abo').antwort402(quota.abo, resolvedClientId));
+        return res.status(429).json({
           error: 'Monatliches Nutzungskontingent erreicht. Bitte kontaktieren Sie Ihre Beraterin für eine Erweiterung.',
           quotaExceeded: true, used: quota.used, limit: quota.limit, clientId: resolvedClientId
         });
@@ -1922,16 +1915,11 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     }
     let quotaWarning = null;
     if (resolvedClientId) {
-      const quota = await checkQuota(resolvedClientId);
+      const quota = await checkQuota(resolvedClientId, { advisor: req.user.role === 'advisor' });
       quotaWarning = quota.warning || null;
       if (!quota.ok) {
-        return res.status(429).json(quota.cancelled ? {
-          error: 'Ihr Abo ist nicht mehr aktiv.',
-          subscriptionCancelled: true, clientId: resolvedClientId
-        } : quota.pendingPlan ? {
-          error: 'Bitte wählen Sie zuerst einen Plan.',
-          pendingPlan: true, clientId: resolvedClientId
-        } : {
+        if (quota.abo) return res.status(402).json(require('../lib/abo').antwort402(quota.abo, resolvedClientId));
+        return res.status(429).json({
           error: 'Monatliches Nutzungskontingent erreicht. Bitte kontaktieren Sie Ihre Beraterin für eine Erweiterung.',
           quotaExceeded: true, used: quota.used, limit: quota.limit, clientId: resolvedClientId
         });

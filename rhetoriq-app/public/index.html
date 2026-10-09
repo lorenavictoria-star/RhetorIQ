@@ -2062,7 +2062,7 @@ html[lang="en"] .legal-en-note{display:block}
     <div id="mm-myprofile" onclick="openMyProfile()" class="mm-row" style="display:none;border-top:1px solid var(--bd)">
       <i class="ti ti-user-circle"></i> <span>Mein Profil</span>
     </div>
-    <div id="mm-billing" onclick="openBillingPortal()" class="mm-row" style="display:none;border-top:1px solid var(--bd)">
+    <div id="mm-billing" onclick="rqAboOpen()" class="mm-row" style="display:none;border-top:1px solid var(--bd)">
       <i class="ti ti-credit-card"></i> <span>Abo verwalten</span>
     </div>
     <div onclick="rqToggleBig()" class="mm-row" style="border-top:1px solid var(--bd)"><i class="ti ti-letter-case"></i> <span id="rq-big-lbl-m">Text grösser</span></div>
@@ -2272,7 +2272,7 @@ html[lang="en"] .legal-en-note{display:block}
 </script>
 <script id="rq-xpairs">
 // Zusätzliche DE/EN-Paare (Sicherheitsfunktionen); rq-i18n fügt sie zu PAIRS hinzu.
-window.RQ_EXTRA_PAIRS=[["Zugang und Sitzungen", "Access and sessions"], ["Zugang entziehen", "Revoke access"], ["Alle Geräte abmelden", "Sign out all devices"], ["Alle Geräte dieses Klienten und seines Teams abmelden?", "Sign out all devices of this client and their team?"], ["Alle Geräte sind abgemeldet.", "All devices are signed out."], ["Zugang wirklich entziehen? Alle Sitzungen enden und der bisherige Zugangscode wird ungültig.", "Really revoke access? All sessions end and the previous access code becomes invalid."], ["Soll zusätzlich das Passwort des Hauptzugangs gelöscht werden?\n\nOK: Passwort löschen. Abbrechen: Passwort behalten.", "Should the password of the main account be deleted as well?\n\nOK: delete password. Cancel: keep password."], ["Der Zugang ist entzogen. Neuer Zugangscode: ", "Access revoked. New access code: "], [". Der neue Code lässt sich auf der Kundenkarte per E-Mail an den Klienten senden.", ". The new code can be emailed to the client from the client card."], ["Das hat nicht geklappt. ", "That did not work. "], ["Klientendaten exportieren", "Export client data"], ["Klient vollständig löschen", "Delete client completely"], ["Der Datenauszug wird erstellt …", "Creating the data export …"], ["Der Datenauszug wurde geladen.", "The data export has been downloaded."], ["Zugang entziehen beendet alle Sitzungen des Klienten und seines Teams und erzeugt einen neuen Zugangscode. Der alte Code ist danach ungültig. Alle Geräte abmelden beendet die Sitzungen, der Zugangscode bleibt gleich. Der Datenauszug enthält alle Daten des Klienten als ZIP. Vollständig löschen entfernt den Klienten mit allen Daten.", "Revoking access ends all sessions of the client and their team and creates a new access code. The old code is invalid afterwards. Signing out all devices ends the sessions and the access code stays the same. The data export contains all data of the client as a ZIP. Deleting completely removes the client with all data."], ["Alle Geräte abmelden? Du musst dich danach überall neu anmelden.", "Sign out all devices? You will have to sign in again everywhere."], ["Initiales Passwort (mind. 12 Zeichen)", "Initial password (min. 12 characters)"], ["Mindestens 12 Zeichen", "Minimum 12 characters"], ["mind. 12 Zeichen", "min. 12 characters"], ["Neues Passwort muss mind. 12 Zeichen haben.", "New password must be at least 12 characters."], ["Passwort muss mind. 12 Zeichen haben.", "Password must be at least 12 characters."], ["Passwort muss mindestens 12 Zeichen haben. Am besten ein Satz oder mehrere Wörter.", "Password must be at least 12 characters. Ideally a sentence or several words."], ["Bitte mindestens 12 Zeichen wählen, am besten ein Satz oder mehrere Wörter.", "Please choose at least 12 characters, ideally a sentence or several words."], ["Zu viele Fehlversuche für dieses Konto. Bitte in {1} Minuten erneut versuchen.", "Too many failed attempts for this account. Please try again in {1} minutes."]];
+window.RQ_EXTRA_PAIRS=[["Zugang und Sitzungen", "Access and sessions"], ["Zugang entziehen", "Revoke access"], ["Alle Geräte abmelden", "Sign out all devices"], ["Alle Geräte dieses Klienten und seines Teams abmelden?", "Sign out all devices of this client and their team?"], ["Alle Geräte sind abgemeldet.", "All devices are signed out."], ["Zugang wirklich entziehen? Alle Sitzungen enden und der bisherige Zugangscode wird ungültig.", "Really revoke access? All sessions end and the previous access code becomes invalid."], ["Soll zusätzlich das Passwort des Hauptzugangs gelöscht werden?\n\nOK: Passwort löschen. Abbrechen: Passwort behalten.", "Should the password of the main account be deleted as well?\n\nOK: delete password. Cancel: keep password."], ["Der Zugang ist entzogen. Neuer Zugangscode: ", "Access revoked. New access code: "], [". Der neue Code lässt sich auf der Kundenkarte per E-Mail an den Klienten senden.", ". The new code can be emailed to the client from the client card."], ["Das hat nicht geklappt. ", "That did not work. "], ["Klientendaten exportieren", "Export client data"], ["Klient vollständig löschen", "Delete client completely"], ["Der Datenauszug wird erstellt …", "Creating the data export …"], ["Der Datenauszug wurde geladen.", "The data export has been downloaded."], ["Zugang entziehen beendet alle Sitzungen des Klienten und seines Teams und erzeugt einen neuen Zugangscode. Der alte Code ist danach ungültig. Alle Geräte abmelden beendet die Sitzungen, der Zugangscode bleibt gleich. Der Datenauszug enthält alle Daten des Klienten als ZIP. Vollständig löschen entfernt den Klienten mit allen Daten.", "Revoking access ends all sessions of the client and their team and creates a new access code. The old code is invalid afterwards. Signing out all devices ends the sessions and the access code stays the same. The data export contains all data of the client as a ZIP. Deleting completely removes the client with all data."], ["Alle Geräte abmelden? Du musst dich danach überall neu anmelden.", "Sign out all devices? You will have to sign in again everywhere."], ["Initiales Passwort (mind. 12 Zeichen)", "Initial password (min. 12 characters)"], ["Mindestens 12 Zeichen", "Minimum 12 characters"], ["mind. 12 Zeichen", "min. 12 characters"], ["Neues Passwort muss mind. 12 Zeichen haben.", "New password must be at least 12 characters."], ["Passwort muss mind. 12 Zeichen haben.", "Password must be at least 12 characters."], ["Passwort muss mindestens 12 Zeichen haben. Am besten ein Satz oder mehrere Wörter.", "Password must be at least 12 characters. Ideally a sentence or several words."], ["Bitte mindestens 12 Zeichen wählen, am besten ein Satz oder mehrere Wörter.", "Please choose at least 12 characters, ideally a sentence or several words."], ["Zu viele Fehlversuche für dieses Konto. Bitte in {1} Minuten erneut versuchen.", "Too many failed attempts for this account. Please try again in {1} minutes."],["Abo verwalten", "Manage subscription"], ["Nutzung in diesem Monat", "Usage this month"], ["{1} von {2} Texten verbraucht", "{1} of {2} texts used"], ["{1} verbleibend", "{1} remaining"], ["{1} Texte in diesem Monat erstellt (ohne Obergrenze)", "{1} texts created this month (no upper limit)"], ["Darin enthalten: {1} Zusatztexte dieses Monats", "Included: {1} extra texts this month"], ["Paket wählen", "Choose a plan"], ["Zahlungsweise", "Billing"], ["Monatlich", "Monthly"], ["Jährlich (10 % Rabatt)", "Yearly (10 % discount)"], ["{1} pro Jahr", "{1} per year"], ["{1} pro Monat", "{1} per month"], ["{1} Texte pro Monat", "{1} texts per month"], ["Bis {1} Nutzer", "Up to {1} users"], ["Jetzt buchen", "Book now"], ["Auf Anfrage", "On request"], ["Unbegrenzte Texte, eigene Vereinbarung", "Unlimited texts, individual agreement"], ["Beratung durch Lorena", "Advice from Lorena"], ["Anfrage an Lorena", "Contact Lorena"], ["Ihr Abo", "Your subscription"], ["Auf höheres Paket wechseln", "Switch to a higher plan"], ["Auf Jahresabo wechseln ({1} pro Jahr, 10 % Rabatt)", "Switch to yearly plan ({1} per year, 10 % discount)"], ["{1} Zusatztexte kaufen ({2}, einmalig)", "Buy {1} extra texts ({2}, one-off)"], ["10er-Karte Überarbeitungen kaufen ({1})", "Buy 10-session revision card ({1})"], ["Kundenportal: Kündigung und Zahlungsmethode", "Customer portal: cancellation and payment method"], ["Noch kein Abo", "No subscription yet"], ["Stimm-Audit-Zeitraum", "Voice audit period"], ["Zu «Abo verwalten»", "Go to «Manage subscription»"], ["Bitte schliessen Sie zuerst ein Abo ab.", "Please take out a subscription first."], ["Ihr Stimm-Audit-Zeitraum ist abgelaufen. Bitte schliessen Sie ein Abo ab.", "Your voice audit period has ended. Please take out a subscription."], ["Ihr Abo ist nicht mehr aktiv. Bitte schliessen Sie ein neues Abo ab.", "Your subscription is no longer active. Please take out a new subscription."], ["Unter «Abo verwalten» wählen und bezahlen Sie Ihr Paket.", "Choose and pay for your plan under «Manage subscription»."], ["Bitte wenden Sie sich an die Admin-Person Ihres Unternehmens.", "Please contact the admin of your company."], ["Vielen Dank. Ihr Abo ist aktiv.", "Thank you. Your subscription is active."], ["Vielen Dank. Ihre Zahlung wird verbucht …", "Thank you. Your payment is being processed …"], ["Ihre Zahlung wird verbucht. Das kann einen Moment dauern.", "Your payment is being processed. This may take a moment."], ["Lädt …", "Loading …"], ["Das hat nicht geklappt. Bitte versuchen Sie es kurz später erneut.", "That did not work. Please try again shortly."], ["Die letzte Zahlung ist fehlgeschlagen. Bitte prüfen Sie Ihre Zahlungsmethode im Kundenportal.", "The last payment failed. Please check your payment method in the customer portal."], ["Ihr Kontingent für diesen Monat ist aufgebraucht. Ein Zusatzpaket oder ein höheres Paket bringt Sie sofort weiter.", "Your quota for this month is used up. An extra pack or a higher plan gets you going again right away."], ["Ihr Kontingent ist zu {1} Prozent verbraucht. Es bleiben {2} Texte in diesem Monat.", "Your quota is {1} percent used. {2} texts remain this month."], ["Ihr Stimm-Audit-Zeitraum endet in {1} Tagen. Schliessen Sie jetzt Ihr Abo ab, damit Sie ohne Unterbruch weiterarbeiten.", "Your voice audit period ends in {1} days. Take out your subscription now to keep working without interruption."], ["Paket {1} · aktiv", "Plan {1} · active"], ["Paket {1} · Zahlung offen", "Plan {1} · payment due"]];
 </script>
 <script id="rq-i18n">
 // ── I18N: Wörterbuch-Ebene über dem bestehenden T/applyLang-System ──
@@ -3826,7 +3826,7 @@ async function boot(user,role){
   document.getElementById('uname').textContent=displayName;
   renderHomeGreeting(displayName,!isAdv&&!!clientUserName);
   const mpRow=document.getElementById('mm-myprofile');if(mpRow)mpRow.style.display=(!isAdv&&clientUserId)?'flex':'none';
-  const billRow=document.getElementById('mm-billing');if(billRow)billRow.style.display=isAdv?'none':'flex';
+  const billRow=document.getElementById('mm-billing');if(billRow)billRow.style.display=(isAdv||!(window.rqAboCan&&window.rqAboCan()))?'none':'flex';
   if(isAdv){
     document.body.classList.add('adv');
     const mnCl=document.getElementById('mn-clients');if(mnCl)mnCl.style.display='flex';
@@ -6287,7 +6287,6 @@ const RIQ_TIERS=[
   {name:'Stimme',price:190,texts:'40'},
   {name:'Team',price:590,texts:'150'},
   {name:'Business',price:1490,texts:'400'},
-  {name:'Enterprise',price:2490,texts:'unbegrenzt'},
 ];
 function renderPlanCards(containerId,clientId,onPicked){
   const el=document.getElementById(containerId);
@@ -6387,10 +6386,11 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
     });
     if(!resp.ok){
       const d=await resp.json();
-      if(d.quotaExceeded||d.subscriptionCancelled||d.pendingPlan){
+      if(d.quotaExceeded||d.subscriptionCancelled||d.pendingPlan||d.aboRequired){
+        if(d.aboRequired)window.rqAboMsg=d.error;
         if(thinkingInterval){clearInterval(thinkingInterval);thinkingInterval=null;}
         if(stallTimer){clearTimeout(stallTimer);stallTimer=null;}
-        renderQuotaExceeded(body,bid,d.clientId,rid,module,data,instructionsKey,!!d.subscriptionCancelled,!!d.pendingPlan);
+        renderQuotaExceeded(body,bid,d.clientId,rid,module,data,instructionsKey,!!d.subscriptionCancelled,!!(d.pendingPlan||d.aboRequired));
         return;
       }
       throw new Error(d.error||'Server error');
@@ -8791,6 +8791,7 @@ tryAutoLogin();
     if(A||canHistory())sv.push({k:'history',t:'Verlauf',ic:'ti-history',go:function(){goPage('history');loadHistory();}});
     if(!A)sv.push({k:'memory',t:'Gedächtnis',ic:'ti-notes',go:function(){goPage('memory');}});
     sv.push({k:'pricing',t:'Preise',ic:'ti-tag',go:function(){goPage('pricing');}});
+    if(!A&&window.rqAboCan&&window.rqAboCan())sv.push({k:'abo',t:'Abo verwalten',ic:'ti-credit-card',go:function(){goPage('abo');}});
     sv.push({k:'videos',t:'Videos',ic:'ti-player-play',go:function(){goPage('videos');}});
     sv.push({k:'contact',t:'Kontakt',ic:'ti-mail',go:function(){goPage('contact');}});
     if(A)sv.push({k:'notfall',t:'Notfallkarte',ic:'ti-alert-triangle',go:function(){goPage('notfall');}});
@@ -11097,6 +11098,178 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
   if(typeof gp==='function')window.goPage=function(name){var r=gp.apply(this,arguments);if(name==='usage'&&typeof isAdv!=='undefined'&&isAdv)setTimeout(show,300);return r;};
 })();
 </script>
+<script id="rq-abo-js">
+(function(){
+  // «Abo verwalten»: Paket wählen und bezahlen, Jahresabo, Wechsel, Zusatzpaket, 10er-Karte, Kundenportal. Nur für die Rolle Admin des Klienten.
+  var E=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');};
+  function chf(c){var n=Math.round(c/100);return 'CHF '+String(n).replace(/\B(?=(\d{3})+(?!\d))/g,"'");}
+  function payload(){try{return JSON.parse(atob(String(token).split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));}catch(e){return {};}}
+  function can(){
+    if(typeof isAdv!=='undefined'&&isAdv)return false;
+    if(typeof clientId==='undefined'||!clientId)return false;
+    var q=payload();return !q.clientUserId||q.clientUserRole==='admin';
+  }
+  function ro(){return !!payload().readOnly;}
+  window.rqAboCan=can;
+  var jahr=false,last=null,SEL='border-color:var(--ac);background:var(--acl);color:var(--ac);font-weight:600';
+
+  function ensurePage(){
+    var pg=document.getElementById('page-abo');if(pg)return pg;
+    var ref=document.getElementById('page-pricing');if(!ref||!ref.parentNode)return null;
+    pg=document.createElement('div');pg.className='page';pg.id='page-abo';
+    ref.parentNode.insertBefore(pg,ref.nextSibling);return pg;
+  }
+  async function load(){
+    var r=await api('/api/subscriptions/abo/'+clientId),d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Fehler');
+    last=d;return d;
+  }
+  function bar(n){
+    if(n.unbegrenzt)return '<div style="font-size:14px;margin:8px 0 4px">'+E(n.verbraucht)+' Texte in diesem Monat erstellt (ohne Obergrenze)</div>';
+    var col=n.prozent>=100?'#a33':n.prozent>=80?'#b9770e':'var(--ac)';
+    return '<div style="font-size:14px;margin:8px 0 6px"><strong>'+E(n.verbraucht)+' von '+E(n.kontingent)+' Texten verbraucht</strong> · '+E(n.verbleibend)+' verbleibend</div>'
+      +'<div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+E(n.prozent)+'" aria-label="Verbrauchtes Kontingent" style="height:10px;background:var(--bd);max-width:420px"><div style="height:100%;width:'+E(n.prozent)+'%;background:'+col+'"></div></div>'
+      +(n.zusatzTexte?'<div class="rq-hint" style="margin-top:6px">Darin enthalten: '+E(n.zusatzTexte)+' Zusatztexte dieses Monats</div>':'');
+  }
+  function hinweisHtml(h){
+    return h.map(function(x){
+      var stop=x.stufe==='stop';
+      return '<div role="status" style="margin:0 0 10px;padding:12px 16px;border-left:3px solid '+(stop?'#a33':'#b9770e')+';background:'+(stop?'rgba(170,51,51,.07)':'rgba(185,119,14,.08)')+';font-size:14px;line-height:1.5">'+E(x.text)+'</div>';
+    }).join('');
+  }
+  function paketKarten(d){
+    var head='<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--mu);margin:22px 0 10px">Paket wählen</div>'
+      +'<div role="group" aria-label="Zahlungsweise" style="display:flex;gap:8px;margin-bottom:14px"><button type="button" class="obtn" data-j="0" aria-pressed="'+(!jahr)+'" style="'+(!jahr?SEL:'')+'">Monatlich</button><button type="button" class="obtn" data-j="1" aria-pressed="'+jahr+'" style="'+(jahr?SEL:'')+'">Jährlich (10 % Rabatt)</button></div>';
+    var cards=d.pakete.map(function(p){
+      var preis=jahr?chf(p.jahrCents)+' pro Jahr':chf(p.amountCents)+' pro Monat';
+      return '<div style="border:1px solid var(--bd);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:6px;background:#fff">'
+        +'<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mu)">'+E(p.name)+'</div>'
+        +'<div style="font-family:var(--serif);font-size:26px;line-height:1.1">'+E(preis)+'</div>'
+        +'<div style="font-size:13px">'+E(p.texte)+' Texte pro Monat</div>'
+        +'<div style="font-size:13px;color:var(--mu)">'+(p.nutzer===1?'1 Nutzer':'Bis '+E(p.nutzer)+' Nutzer')+'</div>'
+        +'<button type="button" class="rq-btn" style="margin-top:10px" data-buche="'+E(p.key)+'">Jetzt buchen</button></div>';
+    }).join('');
+    var ent='<div style="border:1px solid var(--bd);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:6px;background:#fff">'
+      +'<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mu)">Enterprise</div>'
+      +'<div style="font-family:var(--serif);font-size:26px;line-height:1.1">Auf Anfrage</div>'
+      +'<div style="font-size:13px">Unbegrenzte Texte, eigene Vereinbarung</div><div style="font-size:13px;color:var(--mu)">Beratung durch Lorena</div>'
+      +'<button type="button" class="rq-btn ghost" style="margin-top:10px" id="rq-abo-ent">Anfrage an Lorena</button></div>';
+    return head+'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;max-width:1100px">'+cards+ent+'</div>';
+  }
+  function verwaltung(d){
+    var h='<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--mu);margin:26px 0 10px">Ihr Abo</div><div style="display:flex;flex-direction:column;gap:10px;max-width:520px">';
+    if(d.paket&&d.paket.key!=='business')h+='<div><button type="button" class="rq-btn" data-akt="upgrade">Auf höheres Paket wechseln</button></div>';
+    if(d.jahresabo&&d.jahresabo.verfuegbar)h+='<div><button type="button" class="rq-btn ghost" data-akt="jahr">Auf Jahresabo wechseln ('+E(chf(d.jahresabo.jahrCents))+' pro Jahr, 10 % Rabatt)</button></div>';
+    h+='<div><button type="button" class="rq-btn ghost" data-akt="topup">'+E(d.zusatz.texte)+' Zusatztexte kaufen ('+E(chf(d.zusatz.amountCents))+', einmalig)</button></div>';
+    h+='<div><button type="button" class="rq-btn ghost" data-akt="karte">10er-Karte Überarbeitungen kaufen ('+E(chf(d.karte.amountCents))+')</button></div>';
+    h+='<div><button type="button" class="rq-btn ghost" data-akt="portal">Kundenportal: Kündigung und Zahlungsmethode</button></div>';
+    return h+'</div>';
+  }
+  function zeichne(d){
+    var pg=ensurePage();if(!pg)return;
+    var st=d.hatAbo?('Paket '+(d.paket?d.paket.name:'')+(d.status==='past_due'?' · Zahlung offen':' · aktiv')):(d.zugangBis&&d.aktiv?'Stimm-Audit-Zeitraum':'Noch kein Abo');
+    pg.innerHTML='<button class="back" onclick="goHome()">&#8592; Home</button><div class="page-title" style="margin-bottom:4px">Abo verwalten</div>'
+      +'<div style="font-size:12px;color:var(--mu);margin-bottom:18px;text-transform:uppercase;letter-spacing:.08em;font-weight:600">'+E(st)+'</div>'
+      +hinweisHtml(d.hinweise||[])
+      +'<div style="max-width:620px;padding:16px 18px;border:1px solid var(--bd);background:#fff"><div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--mu)">Nutzung in diesem Monat</div>'+bar(d.nutzung)+'</div>'
+      +(d.hatAbo?'':paketKarten(d))
+      +((ro()||!d.hatAbo)?'':verwaltung(d))
+      +'<div id="rq-abo-msg" class="rq-hint" role="status" style="margin-top:14px"></div>';
+    if(ro()){pg.querySelectorAll('button[data-buche],button[data-akt]').forEach(function(b){b.disabled=true;});}
+    pg.querySelectorAll('button[data-j]').forEach(function(b){b.onclick=function(){jahr=b.dataset.j==='1';zeichne(last);};});
+    pg.querySelectorAll('button[data-buche]').forEach(function(b){b.onclick=function(){buche(b.dataset.buche);};});
+    var ent=pg.querySelector('#rq-abo-ent');if(ent)ent.onclick=function(){goPage('contact');};
+    pg.querySelectorAll('button[data-akt]').forEach(function(b){b.onclick=function(){aktion(b.dataset.akt);};});
+  }
+  function msg(t){var m=document.getElementById('rq-abo-msg');if(m)m.textContent=t;}
+  async function post(url,body){
+    msg('Lädt …');
+    try{
+      var r=await api(url,{method:'POST',body:JSON.stringify(body||{})}),d=await r.json();
+      if(!r.ok)throw new Error(d.error||'Fehler');
+      window.location.href=d.url;
+    }catch(e){msg(e.message||'Das hat nicht geklappt. Bitte versuchen Sie es kurz später erneut.');}
+  }
+  function buche(k){post('/api/subscriptions/selbst-buchen/'+clientId,{paket:k,jahr:jahr});}
+  function aktion(a){
+    var u={upgrade:'upgrade-link',jahr:'yearly-link',topup:'topup-link',karte:'karte-link',portal:'portal-link'}[a];
+    if(u)post('/api/subscriptions/'+u+'/'+clientId,{});
+  }
+  async function zeige(){
+    var pg=ensurePage();if(!pg)return;
+    if(!can()){goHome();return;}
+    try{zeichne(await load());}catch(e){pg.innerHTML='<button class="back" onclick="goHome()">&#8592; Home</button><div class="page-title">Abo verwalten</div><div class="rq-hint">'+E(e.message)+'</div>';}
+  }
+  window.rqAboOpen=function(){if(window.hideMore)hideMore();goPage('abo');};
+
+  // Hinweisband oben im Konto (Kontingent bei 80 und 100 Prozent, kein Abo, Zahlung fehlgeschlagen)
+  var banner=null,zeit=0;
+  function band(h){
+    if(!banner){
+      var c=document.querySelector('.content');if(!c)return;
+      banner=document.createElement('div');banner.id='rq-abo-banner';banner.style.cssText='margin:0 0 14px';c.insertBefore(banner,c.firstChild);
+    }
+    if(!h||!h.length){banner.innerHTML='';banner.style.display='none';return;}
+    var x=h.find(function(i){return i.stufe==='stop';})||h[0],stop=x.stufe==='stop';
+    banner.style.display='block';
+    banner.innerHTML='<div role="status" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 16px;border-left:3px solid '+(stop?'#a33':'#b9770e')+';background:'+(stop?'rgba(170,51,51,.07)':'rgba(185,119,14,.08)')+';font-size:14px;line-height:1.5"><span>'+E(x.text)+'</span><button type="button" class="obtn" id="rq-abo-go">Abo verwalten</button></div>';
+    banner.querySelector('#rq-abo-go').onclick=function(){goPage('abo');};
+  }
+  async function pruefe(force){
+    try{
+      if(!can())return;
+      if(!force&&Date.now()-zeit<60000)return;
+      zeit=Date.now();
+      var d=await load();band(d.hinweise);
+      var pg=document.getElementById('page-abo');if(pg&&pg.classList.contains('active'))zeichne(d);
+      return d;
+    }catch(e){/* Hinweis ist ein Zusatz */}
+  }
+  window.rqAboRefresh=function(){return pruefe(true);};
+
+  var gp=window.goPage;
+  if(typeof gp==='function')window.goPage=function(name){
+    var r=gp.apply(this,arguments);
+    if(name==='abo')zeige();else pruefe(false);
+    return r;
+  };
+
+  // Meldung bei gesperrter Textgenerierung (HTTP 402): Hinweis mit direktem Weg zu «Abo verwalten»
+  var rq=window.renderQuotaExceeded;
+  if(typeof rq==='function')window.renderQuotaExceeded=function(body,bid,cid,rid,module,data,key,cancelled,pending){
+    if(!(cancelled||pending))return rq.apply(this,arguments);
+    var m=window.rqAboMsg||'Bitte schliessen Sie zuerst ein Abo ab.';
+    var admin=can();
+    body.innerHTML='<div role="alert" style="padding:16px 18px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;font-size:13px;color:var(--tx);line-height:1.5">'
+      +'<div style="font-weight:600;margin-bottom:6px">'+E(m)+'</div>'
+      +(admin?'<div style="color:var(--mu);margin-bottom:12px">Unter «Abo verwalten» wählen und bezahlen Sie Ihr Paket.</div><button type="button" class="rq-btn" id="rq-abo-fix">Zu «Abo verwalten»</button>'
+        :'<div style="color:var(--mu)">Bitte wenden Sie sich an die Admin-Person Ihres Unternehmens.</div>')+'</div>';
+    var b=body.querySelector('#rq-abo-fix');if(b)b.onclick=function(){goPage('abo');};
+  };
+
+  // Rückkehr von der Zahlungsseite: Verbuchung abwarten
+  function zurueck(){
+    try{
+      if(!/[?&]abo=ok/.test(location.search)||!can())return;
+      if(history.replaceState)history.replaceState(null,'',location.pathname);
+      goPage('abo');
+      var n=0,t=setInterval(async function(){
+        n++;var d=await pruefe(true);
+        if((d&&d.hatAbo)||n>=8){clearInterval(t);msg(d&&d.hatAbo?'Vielen Dank. Ihr Abo ist aktiv.':'Ihre Zahlung wird verbucht. Das kann einen Moment dauern.');}
+      },3000);
+      msg('Vielen Dank. Ihre Zahlung wird verbucht …');
+    }catch(e){}
+  }
+  setTimeout(function(){
+    if(!can())return;
+    ensurePage();
+    var br=document.getElementById('mm-billing');if(br)br.style.display='flex';
+    if(window.rqBuildRail&&!document.querySelector('#rq-rail [data-k="abo"]'))window.rqBuildRail();
+    pruefe(true);zurueck();
+  },2400);
+})();
+</script>
+
 <script id="rq-lernkurve-js">
 (function(){
   var E=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');};

@@ -135,8 +135,9 @@ router.post('/mark-active/:clientId', requireAdvisor, ownClient('clientId'), asy
   try {
     await ensureColumn();
     const { clientId } = req.params;
+    await ensureSchema();
     await pool.query(
-      `UPDATE clients SET subscription_status='active' WHERE id=$1`,
+      `UPDATE clients SET subscription_status='active', zugang_bis=NULL WHERE id=$1`,
       [clientId]
     );
     res.json({ ok: true, subscription_status: 'active' });
@@ -274,6 +275,7 @@ router.post('/upgrade-link/:clientId', requireAuth, requireRole('admin'), async 
     if (!nextTier) {
       return res.status(400).json({ error: 'Bereits auf der höchsten Stufe — bitte direkt bei der Beraterin melden.' });
     }
+    if (nextTier.tokens === null) return res.status(400).json({ error: 'Enterprise gibt es auf Anfrage. Bitte melden Sie sich bei Lorena.' });
 
     const stripe = getStripe();
     const link = await stripe.paymentLinks.create({
@@ -336,6 +338,7 @@ router.post('/choose-plan/:clientId', requireAuth, requireRole('admin'), async (
     const { tier } = req.body;
     const chosen = TIERS.find(t => t.name === tier);
     if (!chosen) return res.status(400).json({ error: 'Unbekannter Plan' });
+    if (chosen.tokens === null) return res.status(400).json({ error: 'Enterprise gibt es auf Anfrage. Bitte melden Sie sich bei Lorena.' });
 
     const { rows } = await pool.query('SELECT id, name FROM clients WHERE id=$1', [clientId]);
     if (!rows.length) return res.status(404).json({ error: 'Client not found' });
@@ -358,6 +361,97 @@ router.post('/choose-plan/:clientId', requireAuth, requireRole('admin'), async (
     res.json({ url: link.url, tier: chosen.name, amountCents: chosen.amountCents });
   } catch (e) {
     console.error('[stripe] choose-plan error:', e.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── Selbstbuchung und Abo-Übersicht (Bereich «Abo verwalten») ────────────
+// Nur die Rolle Admin des Klienten (Hauptzugang oder Team-Admin), nur für den eigenen Klienten.
+const SELBST_PAKETE = ['stimme', 'team', 'business'];
+function nurKlientenAdmin(req, res, next) {
+  const { effectiveRank, RANK } = require('../middleware/roles');
+  if (!req.user || req.user.role !== 'client' || effectiveRank(req.user) < RANK.admin) {
+    return res.status(403).json({ error: 'Das Abo verwaltet die Rolle Admin Ihres Unternehmens.' });
+  }
+  next();
+}
+function nichtNurLesend(req, res, next) {
+  if (req.user && req.user.readOnly) return res.status(403).json({ error: 'In dieser Ansicht lässt sich nichts buchen.' });
+  next();
+}
+
+// GET /api/subscriptions/abo/:clientId: Stand, Nutzung, Hinweise und Angebote für «Abo verwalten»
+router.get('/abo/:clientId', requireAuth, nurKlientenAdmin, ownClient('clientId'), async (req, res) => {
+  try {
+    await ensureColumn();
+    const abo = require('../lib/abo');
+    const row = await abo.clientRow(req.params.clientId);
+    if (!row) return res.status(404).json({ error: 'Client not found' });
+    const v = await abo.verbrauch(row.id, row.monthly_token_limit);
+    const { baseFor, NAMES } = require('../lib/userLimit');
+    const { plan } = baseFor({ monthly_token_limit: row.monthly_token_limit, recommended_plan: null });
+    const z = abo.zugang(row);
+    const hatAbo = (row.subscription_status === 'active' || row.subscription_status === 'past_due') && !row.zugang_bis;
+    const o = yearly.yearlyOfferFor(row.monthly_token_limit);
+    res.json({
+      status: row.subscription_status || 'trial',
+      aktiv: z.ok,
+      hatAbo,
+      paket: hatAbo && plan ? { key: plan, name: NAMES[plan] } : null,
+      zugangBis: row.zugang_bis || null,
+      nutzung: {
+        unbegrenzt: v.unbegrenzt,
+        verbraucht: abo.texte(v.used),
+        kontingent: v.unbegrenzt ? null : abo.texte(v.limit),
+        verbleibend: v.unbegrenzt ? null : Math.max(0, abo.texte(v.limit) - abo.texte(v.used)),
+        prozent: v.prozent,
+        zusatzTexte: abo.texte(v.topup)
+      },
+      hinweise: abo.hinweise(row, v),
+      pakete: SELBST_PAKETE.map(k => {
+        const t = TIERS.find(x => x.name.toLowerCase() === k);
+        return { key: k, name: t.name, amountCents: t.amountCents, texte: t.tokens / abo.TOKENS_PRO_TEXT, nutzer: { stimme: 1, team: 5, business: 15 }[k], jahrCents: yearly.YEARLY.find(y => y.name === t.name).yearlyCents };
+      }),
+      enterprise: { aufAnfrage: true },
+      jahresabo: o ? { verfuegbar: true, paket: o.name, jahrCents: o.yearlyCents, monatCents: o.monthlyCents } : { verfuegbar: false },
+      zusatz: { texte: TOPUP.tokens / abo.TOKENS_PRO_TEXT, amountCents: TOPUP.amountCents },
+      karte: { amountCents: KARTE.amountCents, minuten: KARTE.minutes },
+      portal: !!row.stripe_customer_id
+    });
+  } catch (e) {
+    console.error('[abo] Übersicht:', e.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/subscriptions/selbst-buchen/:clientId  { paket: 'stimme'|'team'|'business', jahr?: boolean }
+router.post('/selbst-buchen/:clientId', requireAuth, nurKlientenAdmin, nichtNurLesend, ownClient('clientId'), async (req, res) => {
+  try {
+    await ensureColumn();
+    const paket = String((req.body && req.body.paket) || '').toLowerCase();
+    if (paket === 'enterprise') return res.status(400).json({ error: 'Enterprise gibt es auf Anfrage. Bitte melden Sie sich bei Lorena.' });
+    if (!SELBST_PAKETE.includes(paket)) return res.status(400).json({ error: 'Dieses Angebot lässt sich nicht selbst buchen. Bitte melden Sie sich bei Lorena.' });
+    const abo = require('../lib/abo');
+    const row = await abo.clientRow(req.params.clientId);
+    if (!row) return res.status(404).json({ error: 'Client not found' });
+    const hatAbo = (row.subscription_status === 'active' || row.subscription_status === 'past_due') && !row.zugang_bis;
+    if (hatAbo) return res.status(409).json({ error: 'Sie haben bereits ein Abo. Für einen Wechsel nutzen Sie «Auf höheres Paket wechseln» oder das Kundenportal.' });
+    const ang = require('../lib/angebote').ANGEBOTE[paket];
+    const stripe = getStripe();
+    if (req.body && req.body.jahr) {
+      const offer = yearly.YEARLY.find(y => y.name.toLowerCase() === paket);
+      return res.json({ ...(await yearly.createYearlyLink(stripe, row, offer)), paket, jahr: true });
+    }
+    const meta = { clientId: String(row.id), clientName: row.name, type: 'selbstbuchung', angebot: paket };
+    const link = await stripe.paymentLinks.create({
+      line_items: [{ price_data: { currency: 'chf', unit_amount: ang.amountCents, recurring: { interval: 'month' }, product_data: { name: `RhetorIQ ${ang.name}, ${row.name}` } }, quantity: 1 }],
+      after_completion: { type: 'redirect', redirect: { url: 'https://rhetoriq.ch/?abo=ok' } },
+      metadata: meta,
+      subscription_data: { metadata: { clientId: String(row.id), clientName: row.name } }
+    });
+    res.json({ url: link.url, paket, amountCents: ang.amountCents, jahr: false });
+  } catch (e) {
+    console.error('[stripe] selbst-buchen error:', e.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -465,7 +559,8 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         // Einrichtung (Stimm-Audit, Workshop): einmalige Zahlung. Das Stimm-Audit schaltet 30 Tage Zugang mit 40 Texten frei,
         // das Abo Stimme folgt danach mit eigenem Link. Workshops ändern nichts am Abo.
         if (event.type === 'checkout.session.completed' && obj.metadata.angebot === 'stimm-audit') {
-          await pool.query(`UPDATE clients SET subscription_status='active', monthly_token_limit=200000 WHERE id=$1`, [clientId]);
+          await ensureSchema();
+          await pool.query(`UPDATE clients SET subscription_status='active', monthly_token_limit=200000, zugang_bis=NOW() + INTERVAL '30 days' WHERE id=$1`, [clientId]);
           console.log(`[stripe] client ${clientId} → Stimm-Audit bezahlt, 30 Tage mit 40 Texten`);
         } else {
           console.log(`[stripe] client ${clientId} → Einrichtung bezahlt (${obj.metadata.angebot || 'unbekannt'}), Abo unverändert`);
@@ -487,17 +582,29 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         const tokenLimit = resolveTokenLimit(amount, obj.currency);
         if (tokenLimit !== undefined) {
           await pool.query(
-            `UPDATE clients SET subscription_status='active', monthly_token_limit=$2 WHERE id=$1`,
+            `UPDATE clients SET subscription_status='active', monthly_token_limit=$2, zugang_bis=NULL WHERE id=$1`,
             [clientId, tokenLimit]
           );
           console.log(`[stripe] client ${clientId} → active, monthly_token_limit=${tokenLimit} (${event.type}, ${amount} ${obj.currency})`);
         } else {
           await pool.query(
-            `UPDATE clients SET subscription_status='active' WHERE id=$1`,
+            `UPDATE clients SET subscription_status='active', zugang_bis=NULL WHERE id=$1`,
             [clientId]
           );
           console.log(`[stripe] client ${clientId} → active, amount ${amount} ${obj.currency} matched no known tier — token limit left unchanged (${event.type})`);
         }
+      }
+    } else if (event.type === 'invoice.payment_failed') {
+      // Zahlung fehlgeschlagen: Stripe versucht es erneut. Der Zugang bleibt, die Admin-Person sieht einen Hinweis (invoice.paid setzt wieder auf active).
+      const obj = event.data.object;
+      let clientId = obj.metadata?.clientId || obj.subscription_details?.metadata?.clientId;
+      if (!clientId && obj.customer) {
+        const found = await pool.query('SELECT id FROM clients WHERE stripe_customer_id=$1', [String(obj.customer)]);
+        if (found.rows.length === 1) clientId = found.rows[0].id;
+      }
+      if (clientId) {
+        await pool.query(`UPDATE clients SET subscription_status='past_due' WHERE id=$1 AND subscription_status='active'`, [clientId]);
+        console.log(`[stripe] client ${clientId} → past_due (Zahlung fehlgeschlagen)`);
       }
     } else if (event.type === 'customer.subscription.deleted') {
       const obj = event.data.object;

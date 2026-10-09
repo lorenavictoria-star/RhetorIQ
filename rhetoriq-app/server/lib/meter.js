@@ -43,6 +43,7 @@ async function record(entry) {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [advisorId || null, clientId || null, String(module).slice(0, 80), u.inputTokens, u.outputTokens, u.model || null, u.cacheCreationTokens, u.cacheReadTokens, cost]);
     if (clientId) require('./costAlerts').check(clientId, advisorId).catch(() => {});
+    if (clientId) require('./abo').pruefeSchwellen(clientId).catch(() => {});
     return cost;
   } catch (e) {
     console.error('[meter] Protokoll fehlgeschlagen:', e.message);

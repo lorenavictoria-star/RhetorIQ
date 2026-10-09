@@ -135,6 +135,9 @@ function ensureSchema() {
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS quartalsreviews_client_q_idx ON quartalsreviews (client_id, quartal)`);
     // Abo-Status direkt am Klienten (derselbe Befehl wie in routes/subscriptions.js), damit die Kundenliste ihn mitladen kann
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trial'`);
+    // Selbst verwaltetes Abo: Ende des Stimm-Audit-Zeitraums und Merker für bereits versendete Kontingent-Mails (lib/abo.js)
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS zugang_bis TIMESTAMPTZ`);
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS abo_mail_log TEXT`);
     // Hinweis auf KI-Unterstützung unter exportierten Texten (Standard: aus)
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS ki_hinweis BOOLEAN NOT NULL DEFAULT FALSE`);
     // Papierkorb für gelöschte Klienten (zusätzlich zu db.js, falls dort noch nicht ausgeführt)
