@@ -1603,6 +1603,29 @@ html[lang="en"] .legal-en-note{display:block}
       <div id="adv-dash-content"><div class="empty"><div class="ei">&#9711;</div><div>Loading&#8230;</div></div></div>
     </div>
 
+    <!-- ASSISTENT (nur Beraterin) -->
+    <div class="page" id="page-assistent">
+      <div class="page-title" style="margin-bottom:6px">Assistent</div>
+      <p class="rq-hint" style="margin-bottom:16px">Sprich oder schreibe, was du öffnen möchtest. Der Assistent antwortet nur als Text. Der Verlauf bleibt nur in dieser Sitzung.</p>
+      <div class="rq-card" style="gap:14px">
+        <div class="as-log" id="as-log" role="log" aria-live="polite" aria-label="Unterhaltung"></div>
+        <button type="button" class="as-mic" id="as-mic" aria-label="Aufnahme starten" aria-pressed="false" title="Gedrückt halten oder klicken zum Sprechen (höchstens 30 Sekunden)"><i class="ti ti-microphone" aria-hidden="true"></i></button>
+        <div class="as-st" id="as-st" role="status" aria-live="polite"></div>
+        <form class="as-row" onsubmit="return rqAssistentSubmit(event)">
+          <input type="text" class="rq-in" id="as-in" maxlength="400" placeholder="Zum Beispiel: Öffne die Freigaben" autocomplete="off" aria-label="Befehl">
+          <button type="submit" class="rq-btn">Senden</button>
+        </form>
+        <div id="as-ex"><div class="rq-eb" style="margin-bottom:8px">Beispiele</div><div class="rq-chips">
+          <button type="button" class="rq-chip" data-ex="Was ist heute los?">Was ist heute los?</button>
+          <button type="button" class="rq-chip" data-ex="Öffne die Freigaben">Öffne die Freigaben</button>
+          <button type="button" class="rq-chip" data-ex="Zeig mir die Kunden">Zeig mir die Kunden</button>
+          <button type="button" class="rq-chip" data-ex="Öffne die Nutzung">Öffne die Nutzung</button>
+          <button type="button" class="rq-chip" data-ex="Starte ein Onboarding">Starte ein Onboarding</button>
+          <button type="button" class="rq-chip" data-ex="Wie lade ich ein Dokument hoch?">Wie lade ich ein Dokument hoch?</button>
+        </div></div>
+      </div>
+    </div>
+
     <!-- VIDEOS -->
     <div class="page" id="page-videos">
       <div class="page-title" id="videos-title" style="margin-bottom:6px">Video Tutorials</div>
@@ -2342,6 +2365,10 @@ window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([
 ["Diese Textart ist für Ihr Konto nicht freigeschaltet. Bitte wenden Sie sich an Ihre Beraterin.","This text type is not enabled for your account. Please contact your advisor."],
 ["Die Textart Newsletter ist für Ihr Konto nicht freigeschaltet. Bitte wenden Sie sich an Ihre Beraterin.","The text type newsletter is not enabled for your account. Please contact your advisor."]
 ]);
+</script>
+<script id="rq-xpairs-assistent">
+// DE/EN-Paare für den Assistenten der Beraterin; rq-i18n fügt window.RQ_EXTRA_PAIRS zu PAIRS hinzu.
+window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Assistent","Assistant"],["Sprich oder schreibe, was du öffnen möchtest. Der Assistent antwortet nur als Text. Der Verlauf bleibt nur in dieser Sitzung.","Speak or type what you would like to open. The assistant replies in text only. The conversation stays in this session only."],["Zum Beispiel: Öffne die Freigaben","For example: Open the reviews"],["Beispiele","Examples"],["Was ist heute los?","What is going on today?"],["Öffne die Freigaben","Open the reviews"],["Zeig mir die Kunden","Show me the clients"],["Öffne die Nutzung","Open usage"],["Starte ein Onboarding","Start an onboarding"],["Wie lade ich ein Dokument hoch?","How do I upload a document?"],["Aufnahme starten","Start recording"],["Aufnahme beenden","Stop recording"],["Befehl","Command"],["Unterhaltung","Conversation"],["Gedrückt halten oder klicken zum Sprechen (höchstens 30 Sekunden)","Hold or click to speak (30 seconds at most)"]]);
 </script>
 <script id="rq-i18n">
 // ── I18N: Wörterbuch-Ebene über dem bestehenden T/applyLang-System ──
@@ -8791,7 +8818,7 @@ tryAutoLogin();
     var A=adv();
     var g=[];
     g.push({h:'',i:[
-      {k:'home',t:'Start',ic:'ti-home',go:function(){goHome();}}]});
+      {k:'home',t:A?'Assistent':'Start',ic:A?'ti-microphone':'ti-home',go:function(){goHome();}}]});
     if(A){
       g[0].i.push({k:'onboarding',t:'Onboarding',ic:'ti-upload',go:function(){rqWizard();}});
       g[0].i.push({k:'clients',t:'Kunden',ic:'ti-users',go:function(){goPage('clients');loadAdvisorDashboard();}});
@@ -12077,6 +12104,191 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     if(!(typeof isAdv!=='undefined'&&isAdv)&&typeof taOk==='function'&&!taOk(id)){toast('Diese Textart ist für Ihr Konto nicht freigeschaltet. Bitte wenden Sie sich an Ihre Beraterin.');return;}
     return _tt.apply(this,arguments);
   };
+})();
+</script>
+<style id="rq-assistent-css">
+#page-assistent{max-width:860px}
+.as-log{display:flex;flex-direction:column;gap:10px;min-height:220px;max-height:46vh;overflow-y:auto;padding:4px 2px 8px}
+.as-m{padding:11px 14px;border:1px solid var(--bd);background:#fff;max-width:88%;line-height:1.55;font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere}
+.as-m.u{align-self:flex-end;border-color:var(--ac);background:var(--acl)}
+.as-m.err{border-color:#e3b8b1;color:#a8392c}
+.as-mic{width:104px;height:104px;border-radius:50%;border:2px solid var(--ac);background:var(--acl);color:var(--ac);font-size:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;margin:0 auto}
+.as-mic:focus-visible{outline:3px solid var(--ac);outline-offset:3px}
+.as-mic.rec{background:#a8392c;border-color:#a8392c;color:#fff;animation:asp 1.2s ease-in-out infinite}
+.as-mic:disabled{opacity:.5;cursor:not-allowed}
+@keyframes asp{50%{box-shadow:0 0 0 12px rgba(168,57,44,.18)}}
+.as-st{text-align:center;min-height:22px;font-size:14px;color:var(--mu)}
+.as-row{display:flex;gap:10px}
+.as-row .rq-in{flex:1}
+@media(max-width:640px){.as-m{max-width:96%}.as-row{flex-direction:column}}
+</style>
+<script id="rq-assistent-js">
+// ═══ Assistent der Beraterin: Sprache oder Text, Antworten nur als Text, Verlauf nur in dieser Sitzung ═══
+(function(){
+  var TABMAP={'freigaben':'reviews','brand-voice':'voice','personen':'people','module':'prompts','ablage':'store','verwaltung':'admin'};
+  var MAXSEC=30,lastSummary=0,busy=false,rec=null;
+  function isA(){try{return !!isAdv;}catch(e){return false;}}
+  function $(id){return document.getElementById(id);}
+  function log(){return $('as-log');}
+  function add(text,cls){
+    var l=log();if(!l)return null;
+    var d=document.createElement('div');d.className='as-m'+(cls?' '+cls:'');d.textContent=text;l.appendChild(d);l.scrollTop=l.scrollHeight;return d;
+  }
+  function status(t){var s=$('as-st');if(s)s.textContent=t||'';}
+  async function jsonCall(path,opt){
+    var r=await api(path,opt||{}),d=null;
+    try{d=await r.json();}catch(e){}
+    if(!r.ok){var e=new Error((d&&d.error)||('Fehler '+r.status));e.status=r.status;throw e;}
+    return d;
+  }
+  async function summary(){
+    var m=add('Ich stelle die Übersicht zusammen …');
+    try{var d=await jsonCall('/api/assistent/tag');if(m)m.textContent='Guten Tag. '+d.text;lastSummary=Date.now();}
+    catch(e){if(m){m.textContent='Die Übersicht konnte nicht geladen werden. '+e.message;m.classList.add('err');}}
+  }
+  window.rqAssistentOpen=function(){
+    goPage('assistent');if(window.setMN)setMN('home');if(window.rqMarkRail)rqMarkRail('home');
+    var l=log();
+    if(l&&(!l.children.length||Date.now()-lastSummary>30*60*1000))summary();
+    var i=$('as-in');if(i&&!/Mobi|Android/i.test(navigator.userAgent))i.focus();
+  };
+  async function ensureClients(){
+    if(typeof clients!=='undefined'&&clients.length)return;
+    try{await loadClients();}catch(e){}
+  }
+  async function run(a){
+    if(!a||!a.type)return;
+    switch(a.type){
+      case 'open_client_workspace':
+        await ensureClients();
+        await openWorkspace(a.clientId,true);
+        if(a.tab&&TABMAP[a.tab]&&TABMAP[a.tab]!=='reviews')wsSwitchTab(TABMAP[a.tab]);
+        break;
+      case 'open_reviews':openReviewPanel();if(window.rqMarkRail)rqMarkRail('reviews');break;
+      case 'open_clients':goPage('clients');loadAdvisorDashboard();if(window.rqMarkRail)rqMarkRail('clients');break;
+      case 'open_usage':goPage('usage');loadUsage();if(window.rqMarkRail)rqMarkRail('usage');break;
+      case 'start_onboarding':rqWizard();break;
+      case 'open_notfall':goPage('notfall');if(window.rqMarkRail)rqMarkRail('notfall');break;
+      case 'open_history':goPage('history');loadHistory();if(window.rqMarkRail)rqMarkRail('history');break;
+      case 'open_beispiele':goPage('training');loadTraining();if(window.rqMarkRail)rqMarkRail('training');break;
+      case 'summary_today':await summary();break;
+      default:break;
+    }
+  }
+  async function command(text){
+    text=String(text||'').replace(/\s+/g,' ').trim();
+    if(!text||busy)return;
+    busy=true;add(text,'u');var inp=$('as-in');if(inp)inp.value='';
+    var w=add('…');status('Der Assistent denkt nach …');
+    try{
+      var d=await jsonCall('/api/assistent/befehl',{method:'POST',body:JSON.stringify({text:text})});
+      if(w)w.textContent=d.antwort||'Erledigt.';
+      await run(d.aktion);
+    }catch(e){
+      if(w){w.textContent=e.message||'Das hat nicht geklappt.';w.classList.add('err');}
+    }finally{busy=false;status('');var l=log();if(l)l.scrollTop=l.scrollHeight;}
+  }
+  window.rqAssistentRun=command;
+  window.rqAssistentSubmit=function(e){if(e&&e.preventDefault)e.preventDefault();var i=$('as-in');command(i&&i.value);return false;};
+
+  // Sprachaufnahme (MediaRecorder), höchstens 30 Sekunden. Gedrückt halten oder klicken: Start, erneut klicken: Stopp.
+  function mime(){
+    if(typeof MediaRecorder==='undefined'||!MediaRecorder.isTypeSupported)return '';
+    var c=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'];
+    for(var i=0;i<c.length;i++){if(MediaRecorder.isTypeSupported(c[i]))return c[i];}
+    return '';
+  }
+  function micError(e){
+    var n=e&&e.name;
+    if(n==='NotAllowedError'||n==='SecurityError')return 'Kein Zugriff auf das Mikrofon. Erlaube das Mikrofon in der Adressleiste deines Browsers oder tippe den Befehl.';
+    if(n==='NotFoundError'||n==='OverconstrainedError')return 'Es wurde kein Mikrofon gefunden. Tippe den Befehl oder schliesse ein Mikrofon an.';
+    if(n==='NotReadableError')return 'Das Mikrofon wird gerade von einer anderen Anwendung benutzt. Tippe den Befehl.';
+    return 'Die Aufnahme ist nicht möglich. Tippe den Befehl.';
+  }
+  function setMic(on){
+    var b=$('as-mic');if(!b)return;b.classList.toggle('rec',on);b.setAttribute('aria-pressed',on?'true':'false');
+    b.setAttribute('aria-label',on?'Aufnahme beenden':'Aufnahme starten');
+  }
+  async function start(viaPointer){
+    if(rec||busy)return;
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||typeof MediaRecorder==='undefined'){
+      add('Dein Browser unterstützt die Sprachaufnahme nicht. Tippe den Befehl.','err');return;
+    }
+    var stream;
+    try{stream=await navigator.mediaDevices.getUserMedia({audio:true});}
+    catch(e){add(micError(e),'err');return;}
+    var chunks=[],mt=mime(),mr;
+    try{mr=mt?new MediaRecorder(stream,{mimeType:mt}):new MediaRecorder(stream);}
+    catch(e){stream.getTracks().forEach(function(t){t.stop();});add('Die Aufnahme ist nicht möglich. Tippe den Befehl.','err');return;}
+    rec={mr:mr,stream:stream,t0:Date.now(),pointer:!!viaPointer,timer:null,tick:null};
+    var cur=rec;
+    mr.ondataavailable=function(ev){if(ev.data&&ev.data.size)chunks.push(ev.data);};
+    mr.onerror=function(){status('');};
+    mr.onstop=function(){
+      clearTimeout(cur.timer);clearInterval(cur.tick);
+      stream.getTracks().forEach(function(t){t.stop();});
+      if(rec===cur)rec=null;
+      setMic(false);
+      var blob=new Blob(chunks,{type:mr.mimeType||mt||'audio/webm'});
+      if(Date.now()-cur.t0<500||blob.size<200){status('');add('Die Aufnahme war zu kurz. Halte den Knopf gedrückt, solange du sprichst.','err');return;}
+      send(blob);
+    };
+    mr.start();setMic(true);
+    var left=MAXSEC;status('Ich höre zu … noch '+left+' Sekunden');
+    cur.tick=setInterval(function(){left--;if(left>=0)status('Ich höre zu … noch '+left+' Sekunden');},1000);
+    cur.timer=setTimeout(function(){stop();},MAXSEC*1000);
+  }
+  function stop(){if(rec&&rec.mr&&rec.mr.state!=='inactive'){try{rec.mr.stop();}catch(e){}}}
+  async function send(blob){
+    busy=true;status('Ich schreibe auf, was du gesagt hast …');
+    var text='';
+    try{
+      var fd=new FormData();
+      fd.append('audio',blob,'aufnahme.'+(/mp4/.test(blob.type)?'m4a':/ogg/.test(blob.type)?'ogg':'webm'));
+      var r,d=null;
+      try{r=await fetch(API+'/api/assistent/sprache',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});}
+      catch(e){throw new Error('Die Spracherkennung ist gerade nicht erreichbar. Prüfe die Verbindung oder tippe den Befehl.');}
+      try{d=await r.json();}catch(e){}
+      if(!r.ok)throw new Error((d&&d.error)||'Die Spracherkennung hat nicht geklappt. Tippe den Befehl.');
+      text=d.text||'';
+      var inp=$('as-in');if(inp)inp.value=text;
+    }catch(e){add(e.message,'err');}
+    finally{busy=false;status('');}
+    if(text)await command(text);
+  }
+  function wire(){
+    var b=$('as-mic');if(!b||b.getAttribute('data-w'))return;b.setAttribute('data-w','1');
+    b.addEventListener('pointerdown',function(ev){
+      if(ev.button&&ev.button!==0)return;ev.preventDefault();
+      if(rec){stop();return;}
+      start(true);
+    });
+    b.addEventListener('pointerup',function(){if(rec&&rec.pointer&&Date.now()-rec.t0>700)stop();});
+    b.addEventListener('pointercancel',function(){if(rec&&rec.pointer&&Date.now()-rec.t0>700)stop();});
+    b.addEventListener('contextmenu',function(ev){ev.preventDefault();});
+    b.addEventListener('keydown',function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();if(rec)stop();else start(false);}});
+    document.querySelectorAll('#as-ex [data-ex]').forEach(function(x){x.onclick=function(){command(x.getAttribute('data-ex'));};});
+    var inp=$('as-in');if(inp)inp.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();rqAssistentSubmit();}});
+  }
+  wire();
+
+  // Für die Beraterin ersetzt der Assistent die Startseite und «Frage stellen»
+  var _gh=window.goHome;
+  window.goHome=function(){
+    if(isA()){rqAssistentOpen();return;}
+    return _gh.apply(this,arguments);
+  };
+  var _tc=window.rqToggleChat;
+  window.rqToggleChat=function(){
+    if(isA()){rqAssistentOpen();return;}
+    return _tc.apply(this,arguments);
+  };
+  var ls=document.getElementById('login-screen'),opened=false;
+  function after(){
+    if(!ls||!ls.classList.contains('hidden')){opened=false;return;}
+    if(isA()&&!opened){opened=true;setTimeout(function(){if(isA())rqAssistentOpen();},500);}
+  }
+  if(ls){new MutationObserver(after).observe(ls,{attributes:true,attributeFilter:['class']});after();}
 })();
 </script>
 <script id="rq-lernkurve-js">

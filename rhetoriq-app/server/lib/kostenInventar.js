@@ -147,6 +147,11 @@ const INVENTAR = {
     calls: () => [{ model: HAIKU, inputTokens: 860 + 200, outputTokens: 250 }], menge: 100, mengeAnnahme: '100 Fragen je Monat',
     cache: 'keiner (Haiku braucht 4096 Tokens für den Zwischenspeicher)', haeufigkeit: 'je Frage, höchstens 10 je Minute'
   },
+  'assistent': {
+    label: 'Assistent der Beraterin (Befehle per Sprache oder Text)', funktion: 'ordnet einen Satz einer festen Aktion zu', ausloeser: 'klick', modell: 'Haiku',
+    calls: () => [{ model: HAIKU, inputTokens: 900 + 120, outputTokens: 60 }], menge: 300, mengeAnnahme: '300 Befehle je Monat',
+    cache: 'keiner (Haiku braucht 4096 Tokens für den Zwischenspeicher)', haeufigkeit: 'je Befehl, höchstens 20 je Minute; Tagesbudget BUDGET_ASSISTENT_USD'
+  },
   'assistent-chat': {
     label: 'Assistent-Chat (Seitenleiste)', funktion: 'allgemeiner Chat mit Verlauf', ausloeser: 'klick', modell: 'Sonnet',
     calls: () => [{ model: SONNET, inputTokens: 1600 + 1500 + 100, outputTokens: 300 }], menge: 20, mengeAnnahme: '20 Nachrichten je Monat',

@@ -19,6 +19,7 @@ const FUNKTIONEN = {
   lernvorschlaege: { usd: 2.00, label: 'Lernvorschläge', module: ['lernen-korrektur', 'lernen-nachfrage', 'lernen-daumen'] },
   'hilfe-chat': { usd: 2.00, label: 'Hilfe-Chat', module: ['hilfe-chat'] },
   'memory-vorschlag': { usd: 1.00, label: 'Dokumenttyp-Vorschläge im Gedächtnis', module: ['memory-vorschlag'] },
+  assistent: { usd: 1.00, label: 'Assistent der Beraterin', module: ['assistent'] },
   feedback: { usd: 0.50, label: 'Lösungsvorschläge zu Feedback-Notizen', module: ['feedback-vorschlag'] }
 };
 

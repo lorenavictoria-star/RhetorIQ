@@ -58,3 +58,4 @@ router.post('/', requireAuth, limiter, async (req, res) => {
 
 module.exports = router;
 module.exports.BASIS = BASIS;
+module.exports.ROLLE = ROLLE;

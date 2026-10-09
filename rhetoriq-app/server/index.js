@@ -272,6 +272,7 @@ app.use('/api/schnelltest', require('./routes/schnelltest'));
 app.use('/api/onboarding-drafts', require('./routes/onboardingDrafts'));
 app.use('/api/files', require('./routes/files'));
 app.use('/api/help-chat', require('./routes/helpChat'));
+app.use('/api/assistent', require('./routes/assistent'));
 app.use('/api/memory-suggest', require('./routes/memorySuggest'));
 app.use('/api/learning', require('./routes/learning'));
 app.use('/api/comm-profile', require('./routes/commProfile'));
