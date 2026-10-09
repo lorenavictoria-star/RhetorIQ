@@ -3,6 +3,7 @@ const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { canAccessClient } = require('../middleware/ownership');
 const { brevoSend } = require('../lib/brevo');
+const { COST_SQL } = require('../lib/meter');
 const { generateText, streamText, resolveModelId } = require('../lib/aiProvider');
 
 const router = express.Router();
@@ -33,41 +34,8 @@ function toneGuidance(toneLabel) {
 }
 
 // ── Cost alerting ────────────────────────────────────────────────
-// Claude Sonnet 4.6 pricing — keep in sync with routes/advisor.js PRICE_INPUT/OUTPUT
-const COST_PRICE_INPUT = 3 / 1_000_000;
-const COST_PRICE_OUTPUT = 15 / 1_000_000;
-const COST_ALERT_THRESHOLD_USD = parseFloat(process.env.COST_ALERT_THRESHOLD_USD) || 5;
-const ADVISOR_NOTIFY_EMAIL = process.env.ADVISOR_EMAIL || 'contact@lorenalienhard.ch';
-// In-memory "already alerted today" guard, keyed by `${clientId}:${YYYY-MM-DD}`.
-// Resets on server restart — acceptable for a first version: worst case is one
-// duplicate alert email after a redeploy, never silence.
-const _costAlerted = new Set();
-async function checkCostAlert(clientId, advisorId) {
-  if (!clientId) return;
-  try {
-    const today = new Date().toISOString().slice(0, 10);
-    const alertKey = `${clientId}:${today}`;
-    if (_costAlerted.has(alertKey)) return;
-    const { rows } = await pool.query(
-      `SELECT COALESCE(SUM(input_tokens),0) AS in_tok, COALESCE(SUM(output_tokens),0) AS out_tok
-       FROM usage_log WHERE client_id=$1 AND created_at::date = CURRENT_DATE`,
-      [clientId]
-    );
-    const costToday = rows[0].in_tok * COST_PRICE_INPUT + rows[0].out_tok * COST_PRICE_OUTPUT;
-    if (costToday < COST_ALERT_THRESHOLD_USD) return;
-    _costAlerted.add(alertKey);
-    const { rows: cRows } = await pool.query('SELECT name FROM clients WHERE id=$1', [clientId]);
-    const clientName = cRows[0]?.name || `Klient #${clientId}`;
-    await brevoSend({
-      to: ADVISOR_NOTIFY_EMAIL,
-      subject: `RhetorIQ — Kostenwarnung: ${clientName} über $${COST_ALERT_THRESHOLD_USD} heute`,
-      text: `${clientName} hat heute bereits $${costToday.toFixed(2)} an API-Kosten verursacht (Schwelle: $${COST_ALERT_THRESHOLD_USD}).\n\nDetails: https://rhetoriq.ch/login (Advisor Dashboard -> Kosten)\n`,
-      senderName: 'RhetorIQ'
-    });
-  } catch (e) {
-    console.error('[cost-alert] failed:', e.message);
-  }
-}
+// Die Kosten werden zentral in lib/meter.js erfasst (jeder KI-Aufruf, mit Zwischenspeicher und Modell).
+// Warnungen (Tag je Klient, Monat gegen Abopreis, Plattform pro Tag) stehen in lib/costAlerts.js.
 
 // ── Monthly token quota ─────────────────────────────────────────────
 // Hard stop once a client's usage_log tokens for the current calendar month
@@ -1831,12 +1799,7 @@ router.post('/', requireAuth, async (req, res) => {
     }
 
     // Log token usage (fire-and-forget) — Fix 11: also log for client-only analyses
-    if (advisorId || resolvedClientId) {
-      pool.query(
-        'INSERT INTO usage_log (advisor_id, client_id, module, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)',
-        [advisorId || null, resolvedClientId || null, module, totalInputTokens, totalOutputTokens]
-      ).then(() => checkCostAlert(resolvedClientId, advisorId)).catch(() => {});
-    }
+    // Das Nutzungsprotokoll schreibt jeder KI-Aufruf selbst (lib/meter.js), hier ist nichts mehr nötig.
 
     // Persist analysis
     const generatedBy = req.user.role === 'advisor'
@@ -2074,10 +2037,6 @@ router.post('/stream', requireAuth, async (req, res) => {
       [resolvedClientId, advisorId, module, cfg.label, data, fullText, generatedBy, hasBrandVoice, instructionsKey || module]
     );
     // Fix 11: Log usage for client analyses too
-    if (advisorId || resolvedClientId) {
-      pool.query('INSERT INTO usage_log (advisor_id, client_id, module, input_tokens, output_tokens) VALUES ($1,$2,$3,$4,$5)',
-        [advisorId || null, resolvedClientId || null, module, inputTokens + draftInputTokens, outputTokens + draftOutputTokens]).then(() => checkCostAlert(resolvedClientId, advisorId)).catch(() => {});
-    }
     if (advisorId && fullText.length > 200) {
       const inputText = Object.entries(data || {})
         .filter(([k, v]) => v && typeof v === 'string' && v.length > 2)
@@ -2350,12 +2309,15 @@ router.get('/usage', requireAuth, async (req, res) => {
       SELECT
         COALESCE(SUM(input_tokens), 0)::bigint AS total_input,
         COALESCE(SUM(output_tokens), 0)::bigint AS total_output,
+        COALESCE(SUM(cache_creation_tokens + cache_read_tokens), 0)::bigint AS total_cached,
+        COALESCE(SUM(${COST_SQL}), 0)::float AS cost_all,
         COALESCE(SUM(CASE WHEN date_trunc('month', created_at)=date_trunc('month', NOW()) THEN input_tokens ELSE 0 END), 0)::bigint AS month_input,
-        COALESCE(SUM(CASE WHEN date_trunc('month', created_at)=date_trunc('month', NOW()) THEN output_tokens ELSE 0 END), 0)::bigint AS month_output
+        COALESCE(SUM(CASE WHEN date_trunc('month', created_at)=date_trunc('month', NOW()) THEN output_tokens ELSE 0 END), 0)::bigint AS month_output,
+        COALESCE(SUM(CASE WHEN date_trunc('month', created_at)=date_trunc('month', NOW()) THEN ${COST_SQL} ELSE 0 END), 0)::float AS cost_month
       FROM usage_log WHERE advisor_id=$1`, [advisorId]);
     const t = tokenRows[0];
-    const costAllTime = (Number(t.total_input) * 3 / 1e6) + (Number(t.total_output) * 15 / 1e6);
-    const costThisMonth = (Number(t.month_input) * 3 / 1e6) + (Number(t.month_output) * 15 / 1e6);
+    const costAllTime = Number(t.cost_all);
+    const costThisMonth = Number(t.cost_month);
 
     res.json({ rows, totalThisMonth, totalAllTime, costAllTime, costThisMonth, tokens: t });
   } catch (e) {

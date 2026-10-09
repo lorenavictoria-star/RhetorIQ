@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { pool } = require('../db');
+const meter = require('../lib/meter');
 
 // Look up the current token_version for whoever this payload represents, so
 // a stolen/old token can be revoked server-side before its natural expiry
@@ -32,7 +33,7 @@ async function requireAdvisor(req, res, next) {
       return res.status(401).json({ error: 'Session revoked — please log in again.' });
     }
     req.user = payload;
-    next();
+    meter.run(meter.contextFromRequest(req, payload), next);
   } catch {
     res.status(401).json({ error: 'Invalid token' });
   }
@@ -49,7 +50,7 @@ async function requireAuth(req, res, next) {
       return res.status(401).json({ error: 'Session revoked — please log in again.' });
     }
     req.user = payload;
-    next();
+    meter.run(meter.contextFromRequest(req, payload), next);
   } catch {
     res.status(401).json({ error: 'Invalid token' });
   }

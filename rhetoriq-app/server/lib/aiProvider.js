@@ -82,7 +82,10 @@ async function anthropicGenerate({ system, messages, maxTokens, model, temperatu
   return {
     text: data.content?.[0]?.text || '',
     inputTokens: data.usage?.input_tokens || 0,
-    outputTokens: data.usage?.output_tokens || 0
+    outputTokens: data.usage?.output_tokens || 0,
+    cacheCreationTokens: data.usage?.cache_creation_input_tokens || 0,
+    cacheReadTokens: data.usage?.cache_read_input_tokens || 0,
+    model
   };
 }
 
@@ -190,7 +193,7 @@ async function* anthropicStream({ system, messages, maxTokens, model, temperatur
         yield { type: 'text', text: evt.delta.text || '' };
       }
       if (evt.type === 'message_start' && evt.message?.usage) {
-        yield { type: 'usage', inputTokens: evt.message.usage.input_tokens || 0, outputTokens: 0 };
+        yield { type: 'usage', inputTokens: evt.message.usage.input_tokens || 0, outputTokens: 0, cacheCreationTokens: evt.message.usage.cache_creation_input_tokens || 0, cacheReadTokens: evt.message.usage.cache_read_input_tokens || 0 };
       }
       if (evt.type === 'message_delta' && evt.usage) {
         yield { type: 'usage', inputTokens: undefined, outputTokens: evt.usage.output_tokens || 0 };
@@ -213,13 +216,32 @@ function activeProvider() {
 // generateText({ system, messages, maxTokens, model, temperature })
 //   -> { text, inputTokens, outputTokens }
 async function generateText(opts) {
-  return activeProvider().generate(opts);
+  const r = await activeProvider().generate(opts);
+  // Jeder Aufruf wird mit Tokens, Modell und Kosten protokolliert (lib/meter.js)
+  require('./meter').record({ ...r, model: r.model || opts.model, meter: opts.meter });
+  return r;
 }
 
 // streamText({ system, messages, maxTokens, model, temperature, signal })
 //   -> async generator yielding { type: 'text', text } | { type: 'usage', inputTokens?, outputTokens? }
 function streamText(opts) {
-  return activeProvider().stream(opts);
+  return (async function* () {
+    const u = { inputTokens: 0, outputTokens: 0, cacheCreationTokens: 0, cacheReadTokens: 0 };
+    try {
+      for await (const evt of activeProvider().stream(opts)) {
+        if (evt.type === 'usage') {
+          if (evt.inputTokens !== undefined) u.inputTokens = evt.inputTokens;
+          if (evt.outputTokens !== undefined && evt.outputTokens) u.outputTokens = evt.outputTokens;
+          if (evt.cacheCreationTokens !== undefined) u.cacheCreationTokens = evt.cacheCreationTokens;
+          if (evt.cacheReadTokens !== undefined) u.cacheReadTokens = evt.cacheReadTokens;
+        }
+        yield evt;
+      }
+    } finally {
+      // Auch bei Abbruch oder Fehler: was die API bereits berechnet hat, wird erfasst
+      require('./meter').record({ ...u, model: opts.model, meter: opts.meter });
+    }
+  })();
 }
 
 module.exports = { generateText, streamText, resolveModelId };

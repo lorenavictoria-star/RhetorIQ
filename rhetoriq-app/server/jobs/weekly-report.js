@@ -27,16 +27,14 @@ async function runWeeklyReport() {
       SELECT
         SUM(input_tokens)::bigint  AS total_input,
         SUM(output_tokens)::bigint AS total_output,
+        COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS cost_usd,
         COUNT(*)::int              AS total_calls
       FROM usage_log
       WHERE created_at > NOW() - INTERVAL '7 days'
     `);
     const tokens = tokenRows[0] || {};
     // Approximate cost: Sonnet 4.6 = $3/MTok input, $15/MTok output
-    const costEst = (
-      ((tokens.total_input  || 0) / 1_000_000) * 3 +
-      ((tokens.total_output || 0) / 1_000_000) * 15
-    ).toFixed(2);
+    const costEst = Number(tokens.cost_usd || 0).toFixed(2);
 
     // 3. Active clients this week
     const { rows: clientRows } = await pool.query(`
@@ -93,7 +91,7 @@ async function runWeeklyReport() {
       `  Analysen gesamt:   ${tokens.total_calls || 0}`,
       `  Input-Tokens:      ${(tokens.total_input  || 0).toLocaleString('de-CH')}`,
       `  Output-Tokens:     ${(tokens.total_output || 0).toLocaleString('de-CH')}`,
-      `  Geschätzte Kosten: USD ${costEst}`,
+      `  KI-Kosten (exakt): USD ${costEst}`,
       `  Brand Voice-Rate:  ${bvRate}% der Analysen`,
       '',
       'MODULE-RANKING (diese Woche):',

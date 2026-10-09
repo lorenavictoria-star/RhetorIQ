@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const meterLib = require('../lib/meter');
 const { canAccessClient, allowedClientId } = require('../middleware/ownership');
 
 const router = express.Router();
@@ -39,6 +40,7 @@ async function callClaude(system, user) {
   });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
+  meterLib.recordApi('claude-sonnet-4-6', data.usage, { module: 'custom-module' });
   return data.content?.[0]?.text || '';
 }
 

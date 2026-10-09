@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const meterLib = require('../lib/meter');
 
 const router = express.Router();
 
@@ -96,6 +97,7 @@ Nur die Anweisung selbst, kein Intro, kein Outro. Auf Deutsch.`;
     });
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
+    meterLib.recordApi('claude-haiku-4-5-20251001', data.usage, { module: 'modul-prompt' });
     res.json({ suggestion: data.content?.[0]?.text?.trim() || '' });
   } catch (e) {
     console.error(e);
@@ -144,6 +146,7 @@ Nur die Ergänzung selbst, kein Intro, kein Outro. Auf Deutsch.`;
     });
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
+    meterLib.recordApi('claude-haiku-4-5-20251001', data.usage, { module: 'modul-prompt' });
     res.json({ suggestion: data.content?.[0]?.text?.trim() || '', existingInstructions });
   } catch (e) {
     console.error(e);
@@ -199,6 +202,7 @@ Return ONLY valid JSON array, no other text.`;
 
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
+    meterLib.recordApi('claude-haiku-4-5-20251001', data.usage, { module: 'modul-prompt' });
 
     let results;
     try {

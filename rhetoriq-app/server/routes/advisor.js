@@ -124,7 +124,7 @@ router.get('/costs', requireAdvisor, async (req, res) => {
   try {
     const days = parseInt(req.query.days) || 30;
     if (days < 1 || days > 365) return res.status(400).json({ error: 'days must be 1–365' });
-
+    // Exakte Kosten je Aufruf (inklusive Zwischenspeicher und Modell), ältere Zeilen ohne Kosten werden nach Sonnet-Preis gerechnet
     const { rows } = await pool.query(`
       SELECT
         COALESCE(c.name, 'Ohne Klient') AS client_name,
@@ -132,19 +132,16 @@ router.get('/costs', requireAdvisor, async (req, res) => {
         COUNT(*)::int                          AS calls,
         SUM(ul.input_tokens)::bigint           AS input_tokens,
         SUM(ul.output_tokens)::bigint          AS output_tokens,
-        ROUND(
-          (SUM(ul.input_tokens) * $2 + SUM(ul.output_tokens) * $3)::numeric, 4
-        )                                      AS cost_usd
+        SUM(ul.cache_creation_tokens + ul.cache_read_tokens)::bigint AS cached_tokens,
+        ROUND(SUM(COALESCE(ul.cost_usd, (ul.input_tokens * 3.0 + ul.output_tokens * 15.0) / 1000000.0))::numeric, 4) AS cost_usd
       FROM usage_log ul
       LEFT JOIN clients c ON c.id = ul.client_id
       WHERE ul.advisor_id = $1
-        AND ul.created_at > NOW() - ($4 || ' days')::interval
+        AND ul.created_at > NOW() - ($2 || ' days')::interval
       GROUP BY ul.client_id, c.name
       ORDER BY cost_usd DESC
-    `, [req.user.id, PRICE_INPUT, PRICE_OUTPUT, days]);
-
+    `, [req.user.id, days]);
     const total = rows.reduce((sum, r) => sum + parseFloat(r.cost_usd || 0), 0);
-
     res.json({ days, rows, total_usd: total.toFixed(4) });
   } catch (e) {
     console.error(e);
@@ -291,6 +288,8 @@ router.get('/client-usage/:clientId', requireAdvisor, async (req, res) => {
     const { rows } = await pool.query(
       `SELECT COALESCE(SUM(input_tokens),0)::bigint AS input_tokens,
               COALESCE(SUM(output_tokens),0)::bigint AS output_tokens,
+              COALESCE(SUM(cache_creation_tokens + cache_read_tokens),0)::bigint AS cached_tokens,
+              COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS cost_usd,
               COUNT(*)::int AS calls
        FROM usage_log WHERE client_id=$1 AND created_at >= $2`,
       [clientId, since]
@@ -303,6 +302,8 @@ router.get('/client-usage/:clientId', requireAdvisor, async (req, res) => {
       calls: usage.calls,
       inputTokens: Number(usage.input_tokens),
       outputTokens: Number(usage.output_tokens),
+      cachedTokens: Number(usage.cached_tokens),
+      costUsd: Math.round(Number(usage.cost_usd) * 10000) / 10000,
       totalTokens,
       monthlyLimit: cRows[0].monthly_token_limit
     });

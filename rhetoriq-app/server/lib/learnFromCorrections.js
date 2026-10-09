@@ -68,7 +68,7 @@ function parseObservations(raw) {
   })).filter(o => o.observation.length > 12).slice(0, MAX_PER_REVIEW);
 }
 
-async function extract({ before, after, instruction, moduleLabel, known }) {
+async function extract({ before, after, instruction, moduleLabel, known, clientId }) {
   const system = `Du vergleichst einen KI-Text mit der Fassung, die eine Kommunikationsberaterin daraus gemacht hat. Leite daraus höchstens ${MAX_PER_REVIEW} konkrete, verallgemeinerbare Vorlieben dieses Klienten ab, die für künftige Texte gelten.
 Regeln:
 - Nur Muster zu Ton, Struktur, Format oder Wortwahl. Keine einmaligen Sachänderungen (Namen, Daten, Zahlen, Termine).
@@ -83,7 +83,8 @@ Antworte NUR mit gültigem JSON: [{"category":"TON|STRUKTUR|FAKTEN|FORMAT|SONSTI
     messages: [{ role: 'user', content: user }],
     maxTokens: 500,
     model: resolveModelId('haiku'),
-    temperature: 0
+    temperature: 0,
+    meter: { clientId, module: 'lernen-korrektur' }
   });
   return parseObservations(resp && resp.text);
 }
@@ -122,7 +123,7 @@ async function learnFromReviewInner(reviewId) {
   const key = learnKeyFor(rv);
   const { rows: learned } = await pool.query('SELECT category, summary FROM client_feedback_learnings WHERE client_id=$1 AND module_key=$2', [rv.client_id, key]).catch(() => ({ rows: [] }));
   const known = learned.map(l => `${l.category}: ${l.summary}`).join('\n').slice(0, 1200);
-  const obs = await extract({ before, after, instruction: rv.instruction || rv.client_note, moduleLabel: rv.module_label, known });
+  const obs = await extract({ before, after, instruction: rv.instruction || rv.client_note, moduleLabel: rv.module_label, known, clientId: rv.client_id });
 
   let created = 0, merged = 0;
   for (const o of obs) {

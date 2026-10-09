@@ -17,7 +17,8 @@ async function runMonthlyReport() {
     const { rows: curr } = await pool.query(`
       SELECT COUNT(*)::int AS calls,
              SUM(ul.input_tokens)::bigint  AS input_tokens,
-             SUM(ul.output_tokens)::bigint AS output_tokens
+             SUM(ul.output_tokens)::bigint AS output_tokens,
+             COALESCE(SUM(COALESCE(ul.cost_usd, (ul.input_tokens * 3.0 + ul.output_tokens * 15.0) / 1000000.0)),0)::float AS cost_usd
       FROM usage_log ul
       WHERE ul.created_at > NOW() - INTERVAL '30 days'
     `);
@@ -30,10 +31,7 @@ async function runMonthlyReport() {
     const prevCalls = prev[0]?.calls || 0;
     const callDelta = currData.calls - prevCalls;
     const callTrend = callDelta > 0 ? `+${callDelta}` : `${callDelta}`;
-    const costEst = (
-      ((currData.input_tokens  || 0) / 1_000_000) * 3 +
-      ((currData.output_tokens || 0) / 1_000_000) * 15
-    ).toFixed(2);
+    const costEst = Number(currData.cost_usd || 0).toFixed(2);
 
     // 2. Client overview
     const { rows: clients } = await pool.query(`
@@ -99,7 +97,7 @@ async function runMonthlyReport() {
       `  Analysen gesamt:    ${currData.calls || 0} (Vormonat: ${prevCalls}, Trend: ${callTrend})`,
       `  Input-Tokens:       ${(currData.input_tokens  || 0).toLocaleString('de-CH')}`,
       `  Output-Tokens:      ${(currData.output_tokens || 0).toLocaleString('de-CH')}`,
-      `  Geschätzte Kosten:  USD ${costEst}`,
+      `  KI-Kosten (exakt):  USD ${costEst}`,
       `  Aktive Klienten:    ${clients.filter(c => c.total_analyses > 0).length} / ${totalClients}`,
       `  Brand Voice-Abdeckung: ${bvClients} / ${totalClients} Klienten`,
       '',

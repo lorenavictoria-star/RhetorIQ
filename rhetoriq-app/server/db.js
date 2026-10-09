@@ -228,6 +228,10 @@ async function init() {
       output_tokens INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+    ALTER TABLE usage_log ADD COLUMN IF NOT EXISTS model TEXT;
+    ALTER TABLE usage_log ADD COLUMN IF NOT EXISTS cache_creation_tokens BIGINT NOT NULL DEFAULT 0;
+    ALTER TABLE usage_log ADD COLUMN IF NOT EXISTS cache_read_tokens BIGINT NOT NULL DEFAULT 0;
+    ALTER TABLE usage_log ADD COLUMN IF NOT EXISTS cost_usd NUMERIC(14,6);
     CREATE INDEX IF NOT EXISTS usage_log_advisor_idx ON usage_log(advisor_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS usage_log_client_idx ON usage_log(client_id, created_at DESC);
 
