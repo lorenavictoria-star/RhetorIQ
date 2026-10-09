@@ -269,6 +269,7 @@ app.use('/api/messung', require('./routes/messung'));
 app.use('/api/pruefsatz', require('./routes/pruefsatz'));
 app.use('/api/client-plan', require('./routes/clientPlan'));
 app.use('/api/review-time', require('./routes/reviewTime'));
+app.use('/api/themenplan', require('./routes/themenplan'));
 app.use('/api/archive', require('./routes/archive'));
 app.use('/api/quartalsreview', require('./routes/quartalsreview'));
 app.use('/api/status', require('./routes/status'));
@@ -375,6 +376,8 @@ const PORT = process.env.PORT || 3001;
 
   // Kommunikationsprofil: am 1. und 15. jedes Monats um 09:30
   cron.schedule('30 9 1,15 * *', () => require('./jobs/comm-profile').runCommProfileJob().catch(e => console.error('[comm-profile] job failed:', e.message)), { timezone: 'Europe/Zurich' });
+  // Themenplan und Newsletter-Entwurf: am 1. jedes Monats um 06:00 (abschaltbar mit THEMENPLAN=aus)
+  cron.schedule('0 6 1 * *', () => require('./jobs/themenplan').runThemenplanJob().catch(e => console.error('[themenplan] job failed:', e.message)), { timezone: 'Europe/Zurich' });
   console.log('[cron] Weekly report: every Sunday 08:00 Zurich');
   console.log('[cron] Monthly report: 1st of month 08:07 Zurich');
 

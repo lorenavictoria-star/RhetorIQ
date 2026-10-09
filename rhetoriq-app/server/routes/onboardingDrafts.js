@@ -92,6 +92,7 @@ function validateFields(body, { partial }) {
     if (p && !['stimme', 'team', 'business', 'enterprise'].includes(p)) return { error: 'Unbekanntes Paket.' };
     f.paket = p;
   }
+  if (has('themenplan')) f.themenplan = b.themenplan === true;
   if (has('groesse')) {
     const g = b.groesse && typeof b.groesse === 'object' ? b.groesse : {};
     f.groesse = JSON.stringify({ mitarbeitende: clip(g.mitarbeitende, 20), texte: clip(g.texte, 20), ferien: g.ferien === true });
@@ -353,6 +354,7 @@ router.post('/:id/finish', requireAdvisor, async (req, res) => {
     if (['stimme', 'team', 'business', 'enterprise'].includes(d.paket)) {
       await pool.query('UPDATE clients SET recommended_plan=$1 WHERE id=$2', [d.paket, client.id]).catch(e => console.error('[onboarding] Paket:', e.message));
     }
+    if (d.themenplan === true) await pool.query('UPDATE clients SET themenplan_aktiv=TRUE WHERE id=$1', [client.id]).catch(e => console.error('[onboarding] Themenplan:', e.message));
     await pool.query('UPDATE onboarding_drafts SET client_id=$1, updated_at=NOW() WHERE id=$2', [client.id, id]);
     await pool.query('UPDATE client_files SET client_id=$1 WHERE draft_id=$2 AND client_id IS NULL', [client.id, id]);
     if (d.inquiry_id) {

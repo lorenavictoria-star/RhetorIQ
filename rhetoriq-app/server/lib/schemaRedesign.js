@@ -163,6 +163,20 @@ function ensureSchema() {
         abgeschlossen_am TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS monatsabschluss_client_monat_idx ON monatsabschluss (client_id, monat)`);
+    // Themenplan und Newsletter-Entwurf (Zusatzprodukt): Schalter je Klient, Wahl im Onboarding, Läufe einmal pro Monat
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS themenplan_aktiv BOOLEAN NOT NULL DEFAULT FALSE`);
+    await pool.query(`ALTER TABLE onboarding_drafts ADD COLUMN IF NOT EXISTS themenplan BOOLEAN`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS themenplan_laeufe (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        monat TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'laeuft',
+        kosten_usd NUMERIC(10,4) NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS themenplan_laeufe_client_monat_idx ON themenplan_laeufe (client_id, monat)`);
     // Indizes für die häufigsten Abfragen (Kundenliste, Verlauf, Nutzung)
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_client_created_idx ON analyses (client_id, created_at DESC)`);
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_advisor_created_idx ON analyses (advisor_id, created_at DESC)`);
