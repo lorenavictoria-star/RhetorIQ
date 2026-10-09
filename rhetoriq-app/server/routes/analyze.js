@@ -1591,6 +1591,7 @@ const { GLOBAL_STYLE_RULES, BRAND_VOICE_HEAD, BRAND_VOICE_TAIL } = require('../l
 const { heuteBlock } = require('../lib/heute');
 const { temperaturFor } = require('../lib/temperaturen');
 const lernquellen = require('../lib/lernquellen');
+const { stilkarteBlock } = require('../lib/stilkarte');
 const { lintFuerDurchgang, lintErgebnis } = require('../lib/lint');
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
@@ -1776,6 +1777,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
       }
     }
 
+    restDynamicSystem += await stilkarteBlock(resolvedClientId, module);   // Stilkarte des Klienten (drei Zeilen, höchstens 400 Zeichen)
     restDynamicSystem += heuteBlock();   // heutiges Datum im dynamischen Teil (nicht im gecachten)
     // Build system array: 3 tiers of caching
     // Block 1: static module prompt → cached (same across all clients for this module)
@@ -1976,6 +1978,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       }
     }
 
+    restDynamicSystem += await stilkarteBlock(resolvedClientId, module);   // Stilkarte des Klienten (drei Zeilen, höchstens 400 Zeichen)
     restDynamicSystem += heuteBlock();   // heutiges Datum im dynamischen Teil (nicht im gecachten)
     // Set up SSE
     res.setHeader('Content-Type', 'text/event-stream');

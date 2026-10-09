@@ -178,4 +178,4 @@ function lintErgebnis(text, data, module) {
   return lintZusammenfassung(lintText(text, lintOptionenAusDaten(data)));
 }
 
-module.exports = { lintFuerDurchgang, lintErgebnis, LINT_SKIP, lintText, lintOptionenAusDaten, pruefAuftragAusTreffern, lintZusammenfassung, ART_LABEL, anredeAusTon };
+module.exports = { anredeTreffer, lintFuerDurchgang, lintErgebnis, LINT_SKIP, lintText, lintOptionenAusDaten, pruefAuftragAusTreffern, lintZusammenfassung, ART_LABEL, anredeAusTon };

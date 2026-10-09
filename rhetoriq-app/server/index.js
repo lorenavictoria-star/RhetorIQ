@@ -275,6 +275,7 @@ app.use('/api/memory-suggest', require('./routes/memorySuggest'));
 app.use('/api/learning', require('./routes/learning'));
 app.use('/api/comm-profile', require('./routes/commProfile'));
 app.use('/api/lernkurve', require('./routes/lernkurve'));
+app.use('/api/stilkarte', require('./routes/stilkarte'));
 app.use('/api/stimmnaehe', require('./routes/stimmnaehe'));
 app.use('/api/messung', require('./routes/messung'));
 app.use('/api/pruefsatz', require('./routes/pruefsatz'));
