@@ -9,6 +9,9 @@ const { ensureSchema } = require('../lib/schemaRedesign');
 // 10er-Karte Überarbeitungen: 10 mal 30 Minuten, CHF 690, verfällt nicht
 const KARTE = { amountCents: 69000, minutes: 300, label: '10er-Karte Überarbeitungen (10 mal 30 Minuten)' };
 
+// Zusatzmodul «Automatisch Themen und Ideen senden» (Themenplan und Newsletter-Entwurf), CHF 150 pro Monat
+const THEMENPLAN = { amountCents: 15000, label: 'Automatisch Themen und Ideen senden (Themenplan und Newsletter)' };
+
 const router = express.Router();
 
 // ── Stripe helpers ────────────────────────────────────────────
@@ -416,6 +419,7 @@ router.get('/abo/:clientId', requireAuth, nurKlientenAdmin, ownClient('clientId'
       jahresabo: o ? { verfuegbar: true, paket: o.name, jahrCents: o.yearlyCents, monatCents: o.monthlyCents } : { verfuegbar: false },
       zusatz: { texte: TOPUP.tokens / abo.TOKENS_PRO_TEXT, amountCents: TOPUP.amountCents },
       karte: { amountCents: KARTE.amountCents, minuten: KARTE.minutes },
+      themenplan: { aktiv: !!(await pool.query('SELECT themenplan_aktiv FROM clients WHERE id=$1', [row.id])).rows[0]?.themenplan_aktiv, amountCents: THEMENPLAN.amountCents },
       portal: !!row.stripe_customer_id
     });
   } catch (e) {
@@ -452,6 +456,30 @@ router.post('/selbst-buchen/:clientId', requireAuth, nurKlientenAdmin, nichtNurL
     res.json({ url: link.url, paket, amountCents: ang.amountCents, jahr: false });
   } catch (e) {
     console.error('[stripe] selbst-buchen error:', e.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/subscriptions/themenplan-link/:clientId
+// Zusatzmodul «Automatisch Themen und Ideen senden»: wiederkehrend monatlich, kündbar im Kundenportal.
+// Nur die Rolle Admin des eigenen Klienten. Aktiviert wird erst nach der Zahlung (Webhook).
+router.post('/themenplan-link/:clientId', requireAuth, nurKlientenAdmin, nichtNurLesend, ownClient('clientId'), async (req, res) => {
+  try {
+    await ensureColumn();
+    await ensureSchema();
+    const { rows } = await pool.query('SELECT id, name, themenplan_aktiv FROM clients WHERE id=$1', [req.params.clientId]);
+    if (!rows.length) return res.status(404).json({ error: 'Client not found' });
+    if (rows[0].themenplan_aktiv) return res.status(409).json({ error: 'Dieses Zusatzmodul ist bereits aktiv. Kündigen können Sie es im Kundenportal.' });
+    const meta = { clientId: String(rows[0].id), clientName: rows[0].name, type: 'themenplan' };
+    const link = await getStripe().paymentLinks.create({
+      line_items: [{ price_data: { currency: 'chf', unit_amount: THEMENPLAN.amountCents, recurring: { interval: 'month' }, product_data: { name: `RhetorIQ ${THEMENPLAN.label}, ${rows[0].name}` } }, quantity: 1 }],
+      after_completion: { type: 'redirect', redirect: { url: 'https://rhetoriq.ch/?abo=ok' } },
+      metadata: meta,
+      subscription_data: { metadata: meta }
+    });
+    res.json({ url: link.url, amountCents: THEMENPLAN.amountCents });
+  } catch (e) {
+    console.error('[stripe] themenplan-link error:', e.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -537,10 +565,19 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       // Save the Stripe Customer ID the first time we see it, so the client
       // can later open the Customer Portal to manage/cancel their own
       // subscription (portal sessions are keyed by Customer ID, not by ours).
-      if (clientId && obj.customer) {
+      if (clientId && obj.customer && obj.metadata?.type !== 'themenplan') {
         await pool.query('UPDATE clients SET stripe_customer_id=$2 WHERE id=$1', [clientId, obj.customer]);
       }
-      if (clientId && isKarte) {
+      // Zusatzmodul Themenplan: schaltet nur den Schalter, nie das Paket oder das Kontingent
+      const tpMeta = { ...(obj.subscription_details?.metadata || {}), ...(obj.metadata || {}) };
+      if (tpMeta.type === 'themenplan') {
+        if (tpMeta.clientId) {
+          await ensureSchema();
+          await pool.query('UPDATE clients SET themenplan_aktiv=TRUE WHERE id=$1', [tpMeta.clientId]);
+          if (obj.customer) await pool.query('UPDATE clients SET stripe_customer_id=COALESCE(stripe_customer_id,$2) WHERE id=$1', [tpMeta.clientId, obj.customer]);
+          console.log(`[stripe] client ${tpMeta.clientId} → Themenplan aktiv (${event.type})`);
+        }
+      } else if (clientId && isKarte) {
         // 10er-Karte: nur beim abgeschlossenen Checkout, jede Stripe-Sitzung legt höchstens eine Karte an
         if (event.type === 'checkout.session.completed') {
           await ensureSchema();
@@ -597,6 +634,10 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     } else if (event.type === 'invoice.payment_failed') {
       // Zahlung fehlgeschlagen: Stripe versucht es erneut. Der Zugang bleibt, die Admin-Person sieht einen Hinweis (invoice.paid setzt wieder auf active).
       const obj = event.data.object;
+      if ((obj.subscription_details?.metadata?.type || obj.metadata?.type) === 'themenplan') {
+        console.log('[stripe] Zahlung für das Zusatzmodul Themenplan fehlgeschlagen, Stripe versucht es erneut');
+        return res.json({ received: true });
+      }
       let clientId = obj.metadata?.clientId || obj.subscription_details?.metadata?.clientId;
       if (!clientId && obj.customer) {
         const found = await pool.query('SELECT id FROM clients WHERE stripe_customer_id=$1', [String(obj.customer)]);
@@ -605,6 +646,22 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       if (clientId) {
         await pool.query(`UPDATE clients SET subscription_status='past_due' WHERE id=$1 AND subscription_status='active'`, [clientId]);
         console.log(`[stripe] client ${clientId} → past_due (Zahlung fehlgeschlagen)`);
+      }
+    } else if (event.type === 'customer.subscription.updated' && event.data.object.metadata?.type === 'themenplan') {
+      // Zahlungsausfall am Ende der Mahnfrist: das Zusatzmodul wird zurückgenommen
+      const obj = event.data.object;
+      if (['unpaid', 'canceled', 'incomplete_expired'].includes(obj.status) && obj.metadata.clientId) {
+        await ensureSchema();
+        await pool.query('UPDATE clients SET themenplan_aktiv=FALSE WHERE id=$1', [obj.metadata.clientId]);
+        console.log(`[stripe] client ${obj.metadata.clientId} → Themenplan aus (Status ${obj.status})`);
+      }
+    } else if (event.type === 'customer.subscription.deleted' && event.data.object.metadata?.type === 'themenplan') {
+      // Kündigung des Zusatzmoduls: das Paket bleibt unberührt
+      const obj = event.data.object;
+      if (obj.metadata.clientId) {
+        await ensureSchema();
+        await pool.query('UPDATE clients SET themenplan_aktiv=FALSE WHERE id=$1', [obj.metadata.clientId]);
+        console.log(`[stripe] client ${obj.metadata.clientId} → Themenplan gekündigt`);
       }
     } else if (event.type === 'customer.subscription.deleted') {
       const obj = event.data.object;
