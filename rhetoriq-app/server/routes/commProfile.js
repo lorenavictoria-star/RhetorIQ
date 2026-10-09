@@ -11,6 +11,12 @@ router.get('/:clientId', requireAuth, ownClient('clientId'), async (req, res) =>
   catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
+// GET /api/comm-profile/:clientId/uebernahme?period=week|month  (Übernahmequote, Beraterin und Klient)
+router.get('/:clientId/uebernahme', requireAuth, ownClient('clientId'), async (req, res) => {
+  try { res.json(await require('../lib/uebernahme').forClient(Number(req.params.clientId), req.query.period === 'month' ? 'month' : 'week')); }
+  catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
 // GET /api/comm-profile/:clientId/report.docx  (Stimmprofil als Word, nur Beraterin)
 router.get('/:clientId/report.docx', requireAdvisor, ownClient('clientId'), async (req, res) => {
   try {

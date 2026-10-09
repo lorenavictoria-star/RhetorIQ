@@ -113,6 +113,12 @@ async function runMonthlyReport() {
       lines.push(`    Analysen: ${c.total_analyses} | Letzter Einsatz: ${lastSeen} | ${bv}`);
     });
 
+    try {
+      const ue = require('../lib/uebernahme');
+      lines.push('', 'ÜBERNAHMEQUOTE (Anteil der KI-Texte, die unverändert gesendet wurden, Kalendermonat):');
+      lines.push(...ue.reportLines(await ue.forAllClients('month'), 'Vormonat'));
+    } catch (e) { console.error('[monthly-report] Übernahmequote:', e.message); }
+
     lines.push('', 'MODULE-PERFORMANCE:');
     if (modulePerf.length === 0) {
       lines.push('  Keine Daten.');

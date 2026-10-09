@@ -115,6 +115,13 @@ async function runWeeklyReport() {
       clientRows.forEach(c => lines.push(`  - ${c.name}: ${c.analyses} Analysen`));
     }
 
+    // Übernahmequote: Anteil der Texte, die unverändert gesendet wurden
+    try {
+      const ue = require('../lib/uebernahme');
+      lines.push('', 'ÜBERNAHMEQUOTE (Anteil der KI-Texte, die unverändert gesendet wurden):');
+      lines.push(...ue.reportLines(await ue.forAllClients('week'), 'Vorwoche'));
+    } catch (e) { console.error('[weekly-report] Übernahmequote:', e.message); }
+
     lines.push('', 'NEU AUTO-GENERIERTE TRAININGSBEISPIELE (zur Kuration):');
     if (autoEx.length === 0) {
       lines.push('  Keine neuen Auto-Beispiele.');
