@@ -1560,6 +1560,7 @@ function buildFollowUpPrompt(originalUserMsg, previousResult, note) {
 
 // Regelwerk jedes Auftrags (Rangfolge-Block plus Stilregeln) steht in lib/promptRules.js, als letzter Systemblock angehängt.
 const { GLOBAL_STYLE_RULES, BRAND_VOICE_HEAD, BRAND_VOICE_TAIL } = require('../lib/promptRules');
+const { heuteBlock } = require('../lib/heute');
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
 const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'suggest-title', 'consolidate-feedback', 'presentation-preflight', 'chat', 'vs-cal', 'vs-gen', 'tc', 'before-after', 'rh-translate']);
@@ -1733,6 +1734,7 @@ router.post('/', requireAuth, async (req, res) => {
       }
     }
 
+    restDynamicSystem += heuteBlock();   // heutiges Datum im dynamischen Teil (nicht im gecachten)
     // Build system array: 3 tiers of caching
     // Block 1: static module prompt → cached (same across all clients for this module)
     // Block 2: brand voice → cached (same for this client across many calls, rarely changes)
@@ -1922,6 +1924,7 @@ router.post('/stream', requireAuth, async (req, res) => {
       }
     }
 
+    restDynamicSystem += heuteBlock();   // heutiges Datum im dynamischen Teil (nicht im gecachten)
     // Set up SSE
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
