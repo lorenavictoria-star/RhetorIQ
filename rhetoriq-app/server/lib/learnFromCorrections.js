@@ -25,6 +25,8 @@ const FRONT_TO_SERVER = {
 function learnKeyFor(review) {
   const key = review.module_key || '';
   if (key === 'text-gen' && review.module_tile) return 'text-gen-' + review.module_tile;
+  // Newsletter-Entwürfe aus dem Themenplan lernen mit den Newslettern des Text-Generators
+  if (key === 'themenplan' && /newsletter/i.test(review.module_label || '')) return 'text-gen-newsletter';
   return FRONT_TO_SERVER[key] || key || 'text-gen';
 }
 

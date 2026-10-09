@@ -8,6 +8,9 @@ const meter = require('./meter');
 const { ensureSchema } = require('./schemaRedesign');
 const { GLOBAL_STYLE_RULES, BRAND_VOICE_HEAD, BRAND_VOICE_TAIL } = require('./promptRules');
 const { heuteBlock, datumZuerich } = require('./heute');
+const wahl = require('./themenwahl');
+const nlp = require('./newsletterProfil');
+const { fence } = require('./dataFence');
 
 const CAP_USD = parseFloat(process.env.THEMENPLAN_CAP_USD) || 0.50;   // Obergrenze je Klient und Lauf
 const PLAN_LABEL = 'Themenplan';
@@ -55,7 +58,7 @@ function kalenderBlock(y, month) {
 }
 
 // Sammelt, was die Plattform über den Klienten weiss
-async function kontext(clientId) {
+async function kontext(clientId, monat) {
   const q = async (sql, p) => (await pool.query(sql, p).catch(() => ({ rows: [] }))).rows;
   const [c] = await q('SELECT id, name, industry, contact, salutation FROM clients WHERE id=$1', [clientId]);
   if (!c) return null;
@@ -63,7 +66,11 @@ async function kontext(clientId) {
   const facts = await q(`SELECT memory_type, content FROM company_memory WHERE client_id=$1 AND memory_type NOT LIKE 'brand_voice%' AND memory_type<>'structural_reference' ORDER BY updated_at DESC LIMIT 6`, [clientId]);
   const learned = await q('SELECT category, summary FROM client_feedback_learnings WHERE client_id=$1 ORDER BY category LIMIT 20', [clientId]);
   const texts = await q(`SELECT module_label, result FROM analyses WHERE client_id=$1 AND result IS NOT NULL ORDER BY created_at DESC LIMIT 8`, [clientId]);
-  return { c, voice, facts, learned, texts };
+  // Stilprofil, Angaben des Klienten zum Monat und bisherige Themenwahl: Fehler hier dürfen den Lauf nicht verhindern
+  const profil = await nlp.profil(clientId).catch(e => { console.error('[themenplan] Stilprofil:', e.message); return null; });
+  const eingabe = monat ? await wahl.leseEingabe(clientId, monat).catch(() => ({ text: '' })) : { text: '' };
+  const muster = await wahl.muster(clientId).catch(() => null);
+  return { c, voice, facts, learned, texts, profil, eingabe: eingabe.text || '', muster };
 }
 
 function systemBlocks(k, y, month) {
@@ -85,7 +92,14 @@ function planPrompt(k, y, month) {
 Liefere 8 bis 10 Themen für Beiträge und Mitteilungen dieses Monats. Das wichtigste Thema steht an erster Stelle. Jedes Thema hat:
 titel (kurz und konkret), anlass (warum jetzt: Jahreszeit, Feiertag, Branchenrhythmus oder Bezug zu bisherigen Texten), kernaussage (genau ein Satz), textart (eine von: LinkedIn-Beitrag, Newsletter, E-Mail, Medienmitteilung, Rede, Webseitentext), termin (Vorschlag als Datum im Format TT.MM.JJJJ, kein Feiertag und kein Wochenende).
 Wiederhole kein Thema aus den letzten Texten. Erfinde keine Zahlen, Namen oder Ereignisse des Klienten, setze bei Bedarf eine Lücke in eckigen Klammern.
+Stützt sich ein Thema auf die Angaben des Klienten zum Monat, nenne das im Anlass. Für Newsletter gilt das Stilprofil weiter unten (Länge und Aufbau).
 Antworte ausschliesslich mit gültigem JSON ohne weiteren Text im Format {"themen":[{"titel":"","anlass":"","kernaussage":"","textart":"","termin":""}]}.
+
+${wahl.eingabeBlock(k.eingabe)}
+
+${wahl.musterBlock(k.muster)}
+
+${nlp.profilBlock(k.profil, { mitBeispielen: false })}
 
 LETZTE TEXTE DES KLIENTEN:
 ${recent}`;
@@ -111,14 +125,88 @@ function planToText(themen, y, month, rohtext) {
     `${i + 1}. ${t.titel}\nAnlass: ${t.anlass}\nKernaussage: ${t.kernaussage}\nTextart: ${t.textart}\nTermin: ${t.termin}`).join('\n\n');
 }
 
-async function callWith(k, y, month, user, maxTokens, client, advisorId) {
+async function callWith(k, y, month, user, maxTokens, client, advisorId, modul = 'themenplan') {
   const resp = await aiProvider.generateText({
     system: systemBlocks(k, y, month), messages: [{ role: 'user', content: user }], maxTokens, model: aiProvider.resolveModelId('sonnet'), temperature: 0.7,
-    meter: { module: 'themenplan', clientId: client.id, advisorId: advisorId || null }
+    meter: { module: modul, clientId: client.id, advisorId: advisorId || null }
   });
   const cost = meter.costUsd({ model: resp.model || aiProvider.resolveModelId('sonnet'), inputTokens: resp.inputTokens || 0, outputTokens: resp.outputTokens || 0,
     cacheCreationTokens: resp.cacheCreationTokens || 0, cacheReadTokens: resp.cacheReadTokens || 0 });
   return { text: resp.text, cost };
+}
+
+// Prompt für einen Newsletter-Entwurf aus einem oder mehreren Themen. Längen und Betreffzeile kommen aus dem Stilprofil (lib/newsletterProfil.js).
+// themen: [{ titel, anlass, kernaussage, wunsch? }]. Wünsche des Klienten sind Freitext und gehen als Datenblock hinein.
+function newsletterPrompt(k, y, month, themen, opts = {}) {
+  const v = (k.profil && k.profil.vorgabe) || nlp.laengenVorgabe(null);
+  const mehrere = themen.length > 1;
+  const themenText = themen.length
+    ? themen.map((t, i) => `${mehrere ? `Thema ${i + 1}: ` : 'Thema: '}${t.titel}\nAnlass: ${t.anlass || ''}\nKernaussage: ${t.kernaussage || ''}${t.wunsch ? `\nWunsch des Klienten zu diesem Thema:\n${fence('wunsch-thema-' + (i + 1), t.wunsch)}` : ''}`).join('\n\n')
+    : `Thema: wähle das wichtigste Thema aus diesem Themenplan:\n${String(opts.planText || '').slice(0, 3000)}`;
+  return `Schreibe einen Newsletter-Entwurf für ${clean(k.c.name, 120)} zum Monat ${MONATE[month - 1]} ${y}.
+${themenText}
+
+${nlp.profilBlock(k.profil, { mitBeispielen: true })}
+
+${wahl.eingabeBlock(k.eingabe)}
+
+Aufbau: Betreffzeile (eine Zeile, nach dem Wort BETREFF:), Vorschautext in einem Satz (nach VORSCHAU:), dann der Text. ${mehrere ? 'Gib jedem Thema einen eigenen Abschnitt und schliesse mit einem gemeinsamen, klaren nächsten Schritt für die Leserin.' : 'Der Text hat eine kurze Einleitung, zwei bis drei Abschnitte und einen klaren Schluss mit einem nächsten Schritt für die Leserin.'}
+Länge: ${v.woerterVon} bis ${v.woerterBis} Wörter für den Text, Betreffzeile ${v.betreffVon} bis ${v.betreffBis} Zeichen. Halte Anrede, Schlussformel und Aufbau des Stilprofils ein, soweit es eines gibt. Erfinde keine Zahlen, Namen oder Ereignisse, setze bei Bedarf eine Lücke in eckigen Klammern.`;
+}
+
+// Zweiter Prüfdurchgang: der Entwurf wird gegen Stilprofil und Brand Voice geprüft. Die Länge ist per Programm gezählt.
+function pruefPrompt(entwurf, k) {
+  const v = (k.profil && k.profil.vorgabe) || nlp.laengenVorgabe(null);
+  const z = require('./newsletterHtml').zerlege(entwurf);
+  const w = (z.body.match(/\S+/g) || []).length;
+  const bz = z.betreff.length;
+  const lang = w > v.woerterBis ? `Der Text ist mit ${w} Wörtern zu lang, kürze auf ${v.woerterVon} bis ${v.woerterBis} Wörter.` : w < v.woerterVon ? `Der Text ist mit ${w} Wörtern zu kurz, erweitere auf ${v.woerterVon} bis ${v.woerterBis} Wörter.` : `Die Länge von ${w} Wörtern passt.`;
+  const bet = !z.betreff ? 'Es fehlt die Betreffzeile nach BETREFF:, ergänze sie.' : (bz > v.betreffBis || bz < v.betreffVon) ? `Die Betreffzeile hat ${bz} Zeichen, Vorgabe ${v.betreffVon} bis ${v.betreffBis}.` : `Die Betreffzeile mit ${bz} Zeichen passt.`;
+  return `Prüfe diesen Newsletter-Entwurf gegen die Brand Voice und das Stilprofil und überarbeite ihn, wo etwas abweicht. ${lang} ${bet} Erfinde nichts dazu, streiche Erfundenes. Gib ausschliesslich den fertigen Newsletter im Format BETREFF:, VORSCHAU:, Text zurück.
+
+${nlp.profilBlock(k.profil, { mitBeispielen: false })}
+
+ENTWURF:
+${fence('entwurf', entwurf)}`;
+}
+
+// Newsletter-Entwurf aus den vom Klienten gewählten Themen: Entwurf, zweiter Prüfdurchgang, dann Freigabe bei der Beraterin.
+// plan: { monat, themen }, auswahl: [{ idx, wunsch }]. Die Prüfung von Abo, Kontingent und Tagesbudget macht die aufrufende Route.
+async function newsletterAusAuswahl(clientId, { plan, auswahl, advisorId = null, capUsd }) {
+  await ensureSchema();
+  const cap = capUsd || CAP_USD;
+  const [y, month] = plan.monat.split('-').map(Number);
+  const k = await kontext(clientId, plan.monat);
+  if (!k) return { status: 'fehler', grund: 'Klient nicht gefunden.' };
+  const gewaehlt = auswahl.map(a => ({ ...plan.themen[a.idx], wunsch: wahl.clean(a.wunsch, wahl.MAX_WUNSCH) }));
+  const user1 = newsletterPrompt(k, y, month, gewaehlt);
+  const maxTok = Math.min(4000, Math.max(1500, Math.ceil(((k.profil && k.profil.vorgabe) || nlp.laengenVorgabe(null)).woerterBis * 2.2) + 300));
+  const estIn = (user1.length + k.voice.reduce((s, vv) => s + clean(vv.content, 6000).length, 0)) / 3.5;
+  const model = aiProvider.resolveModelId('sonnet');
+  if (meter.costUsd({ model, inputTokens: estIn * 2.2, outputTokens: maxTok * 2 }) > cap) return { status: 'abgebrochen', grund: 'Geschätzte Kosten über der Obergrenze.' };
+  let kosten = 0;
+  try {
+    const p1 = await callWith(k, y, month, user1, maxTok, k.c, advisorId, 'themenwahl');
+    kosten += p1.cost;
+    let text = schweiz(clean(p1.text, 12000));
+    if (!text) return { status: 'fehler', grund: 'Die KI hat keinen Text geliefert.', kosten };
+    // Zweiter Prüfdurchgang (Standard), nur wenn die Obergrenze noch Platz lässt
+    if (kosten + meter.costUsd({ model, inputTokens: estIn * 1.2, outputTokens: maxTok }) <= cap) {
+      const p2 = await callWith(k, y, month, pruefPrompt(text, k), maxTok, k.c, advisorId, 'themenwahl');
+      kosten += p2.cost;
+      const t2 = schweiz(clean(p2.text, 12000));
+      if (t2 && t2.length > 80) text = t2;
+    }
+    const ins = `INSERT INTO review_requests (client_id, module_label, module_key, original_text, status, instruction, review_context) VALUES ($1,$2,'themenplan',$3,'pending',$4,$5) RETURNING id`;
+    const instr = `Newsletter aus der Themenwahl des Klienten (${MONATE[month - 1]} ${y}): ${gewaehlt.map(g => g.titel).join('; ')}`.slice(0, 1000);
+    const ctx = JSON.stringify({ themenwahl: { monat: plan.monat, themen: gewaehlt.map(g => ({ titel: g.titel, wunsch: g.wunsch || '' })) } });
+    const reviewId = (await pool.query(ins, [clientId, NEWSLETTER_LABEL, text, instr, ctx])).rows[0].id;
+    await wahl.speichereAuswahl(clientId, plan.monat, plan.themen, gewaehlt.map(g => ({ titel: g.titel, wunsch: g.wunsch })), reviewId);
+    return { status: 'fertig', reviewId, kosten, themen: gewaehlt.length };
+  } catch (e) {
+    console.error('[themenwahl] Klient', clientId, require('./scrub').scrubText(e.message));
+    return { status: 'fehler', grund: 'Der Newsletter konnte nicht erstellt werden. Bitte versuchen Sie es später erneut.', kosten };
+  }
 }
 
 // Ein Lauf für einen Klienten. Gibt { status, ... } zurück. status: fertig | uebersprungen | abgebrochen | fehler
@@ -128,7 +216,7 @@ async function runForClient(clientId, opts = {}) {
   const now = opts.now || new Date();
   const { y, m: month } = datumZuerich(now);
   const monat = `${y}-${String(month).padStart(2, '0')}`;
-  const k = await kontext(clientId);
+  const k = await kontext(clientId, monat);
   if (!k) return { status: 'fehler', grund: 'Klient nicht gefunden.' };
   // Einmal pro Klient und Monat: der eindeutige Index reserviert den Lauf. Nur Fehler und Abbrüche dürfen wiederholt werden.
   const prev = (await pool.query('SELECT id, status FROM themenplan_laeufe WHERE client_id=$1 AND monat=$2', [clientId, monat])).rows[0];
@@ -159,12 +247,11 @@ async function runForClient(clientId, opts = {}) {
     const planText = planToText(themen, y, month, p1.text);
     // Newsletter-Entwurf zum wichtigsten (ersten) Thema, nur wenn die Obergrenze noch Platz lässt
     const top = themen ? themen[0] : null;
-    const user2 = `Schreibe einen Newsletter-Entwurf für ${clean(k.c.name, 120)} zum wichtigsten Thema des Monats ${MONATE[month - 1]} ${y}.
-${top ? `Thema: ${top.titel}\nAnlass: ${top.anlass}\nKernaussage: ${top.kernaussage}` : `Thema: wähle das wichtigste Thema aus diesem Themenplan:\n${planText.slice(0, 3000)}`}
-Aufbau: Betreffzeile (eine Zeile, nach dem Wort BETREFF:), Vorschautext in einem Satz (nach VORSCHAU:), dann der Text mit kurzer Einleitung, zwei bis drei Abschnitten und einem klaren Schluss mit einem nächsten Schritt für die Leserin. Länge etwa 250 bis 350 Wörter. Erfinde keine Zahlen, Namen oder Ereignisse, setze bei Bedarf eine Lücke in eckigen Klammern.`;
+    const user2 = newsletterPrompt(k, y, month, top ? [top] : [], { planText: top ? '' : planText });
     let nlText = null;
+    const nlMaxTok = Math.min(4000, Math.max(1500, Math.ceil(((k.profil && k.profil.vorgabe) || nlp.laengenVorgabe(null)).woerterBis * 2.2) + 300));
     if (kosten + meter.costUsd({ model: aiProvider.resolveModelId('sonnet'), inputTokens: 4000, outputTokens: 1500 }) <= cap) {
-      const p2 = await callWith(k, y, month, user2, 1500, k.c, advisorId);
+      const p2 = await callWith(k, y, month, user2, nlMaxTok, k.c, advisorId);
       kosten += p2.cost;
       if (kosten > cap) return await finish('abgebrochen', kosten, { grund: 'Kostenobergrenze überschritten.' });
       nlText = schweiz(clean(p2.text, 12000));
@@ -172,6 +259,8 @@ Aufbau: Betreffzeile (eine Zeile, nach dem Wort BETREFF:), Vorschautext in einem
     const ins = `INSERT INTO review_requests (client_id, module_label, module_key, original_text, status, instruction) VALUES ($1,$2,'themenplan',$3,'pending',$4) RETURNING id`;
     const planRv = (await pool.query(ins, [clientId, PLAN_LABEL, planText, INSTRUCTION])).rows[0].id;
     const nlRv = nlText ? (await pool.query(ins, [clientId, NEWSLETTER_LABEL, nlText, INSTRUCTION_NL])).rows[0].id : null;
+    // Der Plan als Struktur, damit der Klient nach der Freigabe Themen wählen kann (lib/themenwahl.js)
+    if (themen) await wahl.speicherePlan(clientId, monat, themen, planRv).catch(e => console.error('[themenplan] Plan speichern:', e.message));
     return await finish('fertig', kosten, { reviewIds: [planRv, nlRv].filter(Boolean), themen: themen ? themen.length : 0 });
   } catch (e) {
     console.error('[themenplan] Klient', clientId, e.message);
@@ -179,4 +268,4 @@ Aufbau: Betreffzeile (eine Zeile, nach dem Wort BETREFF:), Vorschautext in einem
   }
 }
 
-module.exports = { runForClient, feiertage, kalenderBlock, jahreszeit, easter, parsePlan, schweiz, CAP_USD, INSTRUCTION, PLAN_LABEL, NEWSLETTER_LABEL };
+module.exports = { runForClient, newsletterAusAuswahl, newsletterPrompt, pruefPrompt, planPrompt, kontext, feiertage, kalenderBlock, jahreszeit, easter, parsePlan, schweiz, CAP_USD, INSTRUCTION, PLAN_LABEL, NEWSLETTER_LABEL };

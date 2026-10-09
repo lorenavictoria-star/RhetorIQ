@@ -10,7 +10,7 @@ if (missing.length) {
 
 // Optional but strongly recommended — warn (don't crash) if unset, since
 // payments/monitoring degrade gracefully but silently without them.
-const RECOMMENDED_ENV = ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'SENTRY_DSN'];
+const RECOMMENDED_ENV = ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'SENTRY_DSN', 'SECRETS_ENCRYPTION_KEY'];
 const missingRecommended = RECOMMENDED_ENV.filter(k => !process.env[k]);
 if (missingRecommended.length) {
   console.warn('WARNING: Missing recommended environment variables (feature will be disabled):', missingRecommended.join(', '));
@@ -44,6 +44,7 @@ if (process.env.SENTRY_DSN) {
     dsn: process.env.SENTRY_DSN,
     environment: process.env.NODE_ENV || 'production',
     tracesSampleRate: 0.1,
+    beforeSend: require('./lib/scrub').sentryBeforeSend,   // keine Anfragekörper, keine Schlüssel
   });
   console.log('[sentry] Error tracking active');
 }

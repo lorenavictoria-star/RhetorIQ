@@ -201,6 +201,64 @@ function ensureSchema() {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS quartalsreview_laeufe_client_q_idx ON quartalsreview_laeufe (client_id, quartal)`);
+    // Themenwahl: Angaben des Klienten zum Monat, der erzeugte Plan als Struktur, gewählte und abgelehnte Themen
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS themenplan_eingaben (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        monat TEXT NOT NULL,
+        text TEXT NOT NULL DEFAULT '',
+        von_rolle TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS themenplan_eingaben_client_monat_idx ON themenplan_eingaben (client_id, monat)`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS themenplan_plaene (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        monat TEXT NOT NULL,
+        themen JSONB NOT NULL DEFAULT '[]',
+        review_id INTEGER,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS themenplan_plaene_client_monat_idx ON themenplan_plaene (client_id, monat)`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS themenplan_auswahl (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        monat TEXT NOT NULL,
+        titel TEXT NOT NULL,
+        textart TEXT,
+        gewaehlt BOOLEAN NOT NULL DEFAULT FALSE,
+        wunsch TEXT,
+        review_id INTEGER,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS themenplan_auswahl_uniq_idx ON themenplan_auswahl (client_id, monat, titel)`);
+    // Klaviyo-Anbindung: privater Schlüssel verschlüsselt (lib/secretBox.js), je Klient oder je Beraterin; Protokoll der Übertragungen
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS klaviyo_zugang (
+        id SERIAL PRIMARY KEY,
+        owner_kind TEXT NOT NULL,
+        owner_id INTEGER NOT NULL,
+        key_enc TEXT NOT NULL,
+        rechte JSONB,
+        geprueft_am TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS klaviyo_zugang_owner_idx ON klaviyo_zugang (owner_kind, owner_id)`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS klaviyo_uebertragungen (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        review_id INTEGER,
+        vorlage_id TEXT,
+        kampagne_id TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
     // Indizes für die häufigsten Abfragen (Kundenliste, Verlauf, Nutzung)
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_client_created_idx ON analyses (client_id, created_at DESC)`);
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_advisor_created_idx ON analyses (advisor_id, created_at DESC)`);

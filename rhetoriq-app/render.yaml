@@ -36,6 +36,8 @@ services:
         sync: false   # set in Render dashboard — from Stripe dashboard
       - key: STRIPE_WEBHOOK_SECRET
         sync: false   # set in Render dashboard — from Stripe webhook settings
+      - key: SECRETS_ENCRYPTION_KEY
+        sync: false   # set in Render dashboard — 64 hex characters (openssl rand -hex 32), never change after first use
       - key: CORS_ORIGIN
         value: https://rhetoriq.ch
       - key: APP_URL

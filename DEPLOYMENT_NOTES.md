@@ -162,3 +162,15 @@ Check logs:
 - **Database logs:** (if available from Render)
 - **Browser console:** F12 → Console tab during login
 - **Render job logs:** One-off Jobs → [Your Job] → Logs
+
+## Klaviyo-Schlüssel verschlüsselt ablegen (SECRETS_ENCRYPTION_KEY)
+
+Klienten und Beraterin tragen ihren privaten Klaviyo-Schlüssel in der Oberfläche ein. Der Server legt ihn verschlüsselt ab (AES-256-GCM). Dafür braucht es einmalig die Umgebungsvariable `SECRETS_ENCRYPTION_KEY` in Render:
+
+1. Wert erzeugen: `openssl rand -hex 32` (64 Zeichen).
+2. In Render unter Environment als `SECRETS_ENCRYPTION_KEY` eintragen.
+3. Danach nie mehr ändern. Mit einem neuen Wert lassen sich gespeicherte Schlüssel nicht mehr lesen, die Klienten müssten ihren Klaviyo-Schlüssel neu eintragen.
+
+Ohne die Variable meldet die Oberfläche «Die sichere Ablage ist noch nicht eingerichtet» und speichert nichts. Bei der Beraterin bleibt dann das bisherige Verhalten (Schlüssel im Browser).
+
+Der Klaviyo-Schlüssel braucht diese Rechte: Templates (Vollzugriff), Campaigns (Vollzugriff), Lists (Lesen). Die Plattform versendet nie selbst, sie legt nur Vorlagen und Kampagnenentwürfe an.
