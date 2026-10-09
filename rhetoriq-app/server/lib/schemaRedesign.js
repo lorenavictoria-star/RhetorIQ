@@ -70,6 +70,17 @@ function ensureSchema() {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
     await pool.query(`CREATE INDEX IF NOT EXISTS learning_suggestions_client_idx ON learning_suggestions (client_id, status)`);
+    // Goldtexte: gesendete, von der Beraterin korrigierte Fassungen als Stilvorbild (je Klient und Textart)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS goldtexte (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER REFERENCES clients(id) ON DELETE CASCADE,
+        feedback_key TEXT NOT NULL,
+        text TEXT NOT NULL,
+        quelle_review_id INTEGER,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS goldtexte_client_idx ON goldtexte (client_id, feedback_key, created_at DESC)`);
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS recommended_plan TEXT`);
     // Zeiterfassung: Minuten je Freigabe und inbegriffenes Monatskontingent je Klient
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS minutes INTEGER`);

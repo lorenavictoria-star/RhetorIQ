@@ -1496,6 +1496,7 @@ function buildGeoBlock(data) {
 // contradictory text. Nothing is lost: the raw note is still logged to
 // client_feedback_history, just never injected into generation prompts.
 const FEEDBACK_CATEGORIES = ['TON', 'STRUKTUR', 'FAKTEN', 'FORMAT', 'SONSTIGES'];
+const { getGoldBlock, queryTextOf } = require('../lib/goldtexte');
 async function consolidateFeedback(clientId, moduleKey, rating, note) {
   const { rows: existing } = await pool.query(
     'SELECT category, summary FROM client_feedback_learnings WHERE client_id=$1 AND module_key=$2',
@@ -1674,6 +1675,7 @@ router.post('/', requireAuth, async (req, res) => {
         restDynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(combined);
       }
       restDynamicSystem += await getFeedbackLearningsBlock(resolvedClientId, instructionsKey && instructionsKey !== module ? [module, instructionsKey] : [module]);
+      restDynamicSystem += await getGoldBlock(resolvedClientId, keys, queryTextOf(data));
     }
 
     // Resolve advisor + industry early (needed for both brand voice and examples)
@@ -1901,6 +1903,7 @@ router.post('/stream', requireAuth, async (req, res) => {
       if (combined)
         restDynamicSystem += '\n\nCUSTOM INSTRUCTIONS FOR THIS CLIENT:\n' + sanitizeForPrompt(combined);
       restDynamicSystem += await getFeedbackLearningsBlock(resolvedClientId, instructionsKey && instructionsKey !== module ? [module, instructionsKey] : [module]);
+      restDynamicSystem += await getGoldBlock(resolvedClientId, keys, queryTextOf(data));
     }
     let clientIndustry = null;
     let hasBrandVoice = false;

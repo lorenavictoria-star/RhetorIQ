@@ -150,4 +150,4 @@ async function learnFromReviewInner(reviewId) {
   return { created, merged };
 }
 
-module.exports = { learnFromReview, getResult, learnKeyFor, changedShare, similar, parseObservations, CATEGORIES };
+module.exports = { learnFromReview, getResult, learnKeyFor, changedShare, similar, parseObservations, words, CATEGORIES };
