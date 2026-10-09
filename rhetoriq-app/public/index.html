@@ -3158,49 +3158,6 @@ async function saveMyProfile(){
 }
 
 // ── SAVED TEMPLATES ───────────────────────────────────────────
-function getTpls(modKey){return JSON.parse(localStorage.getItem('riq-tpl-'+modKey)||'[]');}
-function saveTpls(modKey,arr){localStorage.setItem('riq-tpl-'+modKey,JSON.stringify(arr));}
-
-function saveTemplate(){
-  const modKey=window._currentModule;if(!modKey)return;
-  const def=MDEFS[modKey];if(!def)return;
-  const name=prompt('Template name (e.g. "Patientenbrief Orthopädie"):');
-  if(!name)return;
-  const fields={};
-  // collect all inputs in mod-form
-  document.querySelectorAll('#mod-form input,#mod-form textarea,#mod-form select').forEach(el=>{
-    if(el.id)fields[el.id]=el.value;
-  });
-  const tpls=getTpls(modKey);
-  tpls.push({name,fields,created:Date.now()});
-  saveTpls(modKey,tpls);
-  alert('Vorlage gespeichert: '+name);
-}
-
-function loadTemplate(){
-  const modKey=window._currentModule;if(!modKey)return;
-  const tpls=getTpls(modKey);
-  if(!tpls.length)return alert('Für dieses Modul gibt es noch keine gespeicherten Vorlagen.');
-  const names=tpls.map((t,i)=>`${i+1}. ${t.name}`).join('\n');
-  const idx=parseInt(prompt('Select template:\n'+names))-1;
-  if(isNaN(idx)||idx<0||idx>=tpls.length)return;
-  const tpl=tpls[idx];
-  Object.entries(tpl.fields).forEach(([id,val])=>{
-    const el=document.getElementById(id);if(el)el.value=val;
-  });
-}
-
-function deleteTemplate(){
-  const modKey=window._currentModule;if(!modKey)return;
-  const tpls=getTpls(modKey);
-  if(!tpls.length)return alert('Für dieses Modul gibt es noch keine gespeicherten Vorlagen.');
-  const names=tpls.map((t,i)=>`${i+1}. ${t.name}`).join('\n');
-  const idx=parseInt(prompt('Delete which template?\n'+names))-1;
-  if(isNaN(idx)||idx<0||idx>=tpls.length)return;
-  tpls.splice(idx,1);saveTpls(modKey,tpls);
-  alert('Vorlage gelöscht.');
-}
-
 function injectTemplateBtn(){
   const modKey=window._currentModule;if(!modKey||!MDEFS[modKey])return;
   if(document.getElementById('tpl-bar'))return;
@@ -3208,18 +3165,7 @@ function injectTemplateBtn(){
   const bar=document.createElement('div');
   bar.id='tpl-bar';
   bar.style.cssText='display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center';
-  // "Templates" (Load/Save) is an advisor-only convenience that saves/
-  // reloads this browser's own form-field presets per module — it has
-  // nothing to do with the client-facing, server-side Company Memory
-  // reference material, and showing both together in the same form reads
-  // as one confusing "which do I pick?" step to a client, so it's hidden
-  // from clients. "+ Neu" (clear draft) is a genuine everyday action and
-  // stays visible for everyone.
-  const tplControls=isAdv?`<span style="font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Templates</span>
-    <button onclick="loadTemplate()" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:var(--sans)">Load ▾</button>
-    <button onclick="saveTemplate()" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:var(--sans)">Save</button>
-    <span style="width:1px;height:16px;background:var(--bd);margin:0 2px"></span>`:'';
-  bar.innerHTML=`${tplControls}<button onclick="clearModuleDraft()" title="Entwurf löschen und leer neu beginnen" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:var(--sans)">＋ Neu</button>`;
+  bar.innerHTML=`<button onclick="clearModuleDraft()" title="Entwurf löschen und leer neu beginnen" style="padding:5px 12px;border:1px solid var(--bd);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:var(--sans)">＋ Neu</button>`;
   form.insertBefore(bar,form.firstChild);
 }
 function clearModuleDraft(){
