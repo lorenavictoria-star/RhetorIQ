@@ -142,6 +142,16 @@ function ensureSchema() {
         value JSONB,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
+    // Empfehlungsprogramm: Partner und Zuordnung der vermittelten Klienten
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS partner (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        kontakt_email TEXT,
+        code TEXT UNIQUE NOT NULL,
+        aktiv BOOLEAN NOT NULL DEFAULT TRUE
+      )`);
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS partner_id INTEGER`);
     // Indizes für die häufigsten Abfragen (Kundenliste, Verlauf, Nutzung)
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_client_created_idx ON analyses (client_id, created_at DESC)`);
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_advisor_created_idx ON analyses (advisor_id, created_at DESC)`);

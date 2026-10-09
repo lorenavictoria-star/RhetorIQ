@@ -258,6 +258,7 @@ app.use('/api/inquiries', inquiries.advisorRouter);
 app.use('/api/schnelltest', require('./routes/schnelltest'));
 app.use('/api/onboarding-drafts', require('./routes/onboardingDrafts'));
 app.use('/api/files', require('./routes/files'));
+app.use('/api/partners', require('./routes/partners'));
 app.use('/api/help-chat', require('./routes/helpChat'));
 app.use('/api/memory-suggest', require('./routes/memorySuggest'));
 app.use('/api/learning', require('./routes/learning'));
@@ -332,7 +333,7 @@ app.use((err, req, res, _next) => {
 // ── Serve Frontend ────────────────────────────────────────────
 const FRONTEND = path.join(__dirname, '..', 'public');
 // Landingpage auf "/", die App (mit Login) bleibt unter /index.html und /login erreichbar.
-app.get('/', (req, res) => res.sendFile(path.join(FRONTEND, Object.keys(req.query).length ? 'index.html' : 'landing.html')));
+app.get('/', (req, res) => res.sendFile(path.join(FRONTEND, Object.keys(req.query).filter(k => k !== 'ref').length ? 'index.html' : 'landing.html')));
 app.get('/login', (_, res) => res.redirect(302, '/index.html'));
 app.use(express.static(FRONTEND, { index: false }));
 app.get('*', (_, res) => res.sendFile(path.join(FRONTEND, 'index.html')));

@@ -349,10 +349,11 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
 Array.prototype.forEach.call(document.querySelectorAll('a[href="#buchen"],#go'),function(a){a.addEventListener("click",op)});
 document.getElementById("rqx").onclick=function(){d.close()};d.addEventListener("click",function(e){if(e.target===d)d.close()});
 var t0=Date.now(),sending=false;
+function refCode(){try{var q=new URLSearchParams(location.search).get("ref");if(q){sessionStorage.setItem("rqref",q)}return(sessionStorage.getItem("rqref")||"").slice(0,24)}catch(x){return ""}}
 function viaMail(n,e,t){var u=["contact","lorenalienhard.ch"].join("@"),b="Name: "+n+"\nE-Mail: "+e+"\n\n"+t,a=document.createElement("a");a.href="mailto:"+u+"?subject="+encodeURIComponent("Gespräch zu RhetorIQ")+"&body="+encodeURIComponent(b);document.body.appendChild(a);a.click();a.remove();m.textContent="Ihr E-Mail-Programm öffnet sich mit der fertigen Anfrage, bitte noch auf Senden klicken."}
 f.addEventListener("submit",function(ev){ev.preventDefault();if(sending)return;var n=f.fn.value.trim(),e=f.fe.value.trim(),t=f.ft.value.trim();if(!n||!/^\S+@\S+\.\S+$/.test(e)){m.textContent="Bitte Name und eine gültige E-Mail-Adresse angeben.";return}
 sending=true;m.textContent="Wird gesendet …";
-fetch("/api/inquiry",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:n,email:e,message:t,website2:f.fw.value,elapsed:Date.now()-t0})})
+fetch("/api/inquiry",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:n,email:e,message:t,ref:refCode(),website2:f.fw.value,elapsed:Date.now()-t0})})
 .then(function(r){if(!r.ok)throw 0;m.textContent="Danke. Ich habe Ihre Anfrage erhalten und melde mich in der Regel innert eines Werktags persönlich bei Ihnen.";f.reset()})
 .catch(function(){viaMail(n,e,t)})
 .then(function(){sending=false})})})();
