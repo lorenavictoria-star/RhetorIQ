@@ -260,6 +260,7 @@ app.use('/api/help-chat', require('./routes/helpChat'));
 app.use('/api/memory-suggest', require('./routes/memorySuggest'));
 app.use('/api/learning', require('./routes/learning'));
 app.use('/api/comm-profile', require('./routes/commProfile'));
+app.use('/api/client-plan', require('./routes/clientPlan'));
 
 // Manual report trigger (advisor only)
 const { requireAdvisor } = require('./middleware/auth');

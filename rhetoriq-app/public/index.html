@@ -889,6 +889,12 @@ body:not(.adv) #rq-day{display:none}
 html.rq-big{zoom:1.15}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 /* Doppelten Knopf entfernen: «Neuer Klient» steht schon auf der Kunden-Seite und im Onboarding */
+/* Empfohlenes Paket: wird je Klient gesetzt */
+.rq-plan-rec{background:var(--ac)!important;border-color:var(--ac)!important;position:relative}
+.rq-plan-rec,.rq-plan-rec *{color:#fff!important}
+.rq-plan-rec a{border-color:rgba(255,255,255,.85)!important}
+.rq-plan-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:#fff;color:var(--ac)!important;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;border:1.5px solid var(--ac);white-space:nowrap}
+.rq-plan-rec .rq-plan-badge{color:var(--ac)!important}
 #cbar-new{display:none!important}
 
 /* Zurück-Knopf */
@@ -1782,21 +1788,20 @@ html[lang="en"] .legal-en-note{display:block}
           <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Starter%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:12px 0;border:1.5px solid var(--ac);border-radius:9px;color:var(--ac);font-size:13.5px;font-weight:600;text-decoration:none;font-family:var(--sans);letter-spacing:.02em">Jetzt starten &rarr;</a>
         </div>
 
-        <!-- Wachstum (highlighted) -->
-        <div style="border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:0;background:var(--ac);color:#fff;position:relative">
-          <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:#fff;color:var(--ac);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;border-radius:20px;border:1.5px solid var(--ac);white-space:nowrap">Empfohlen</div>
-          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:10px">Wachstum</div>
-          <div style="font-family:var(--serif);font-size:34px;font-weight:400;color:#fff;line-height:1">CHF 590</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:18px;margin-top:4px">pro Monat · bis ca. 150 Texte/Monat</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.9);line-height:1.5;margin-bottom:18px">Für wachsende Teams mit regelmässigem Kommunikationsbedarf.</div>
+        <!-- Wachstum -->
+        <div style="border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:0;border:1px solid var(--bd);position:relative">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);margin-bottom:10px">Wachstum</div>
+          <div style="font-family:var(--serif);font-size:34px;font-weight:400;color:var(--tx);line-height:1">CHF 590</div>
+          <div style="font-size:12px;color:var(--mu);margin-bottom:18px;margin-top:4px">pro Monat · bis ca. 150 Texte/Monat</div>
+          <div style="font-size:13px;color:var(--tx);line-height:1.5;margin-bottom:18px">Für wachsende Teams mit regelmässigem Kommunikationsbedarf.</div>
           <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:9px">
-            <li style="font-size:12.5px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Alle Module ohne Einschränkung</li>
-            <li style="font-size:12.5px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Team-Zugang (mehrere Nutzer, einzeln anmeldbar)</li>
-            <li style="font-size:12.5px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Erweiterte Trainingsdaten & Memory</li>
-            <li style="font-size:12.5px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Rückmeldung innert 3h, 7 Tage die Woche</li>
-            <li style="font-size:12.5px;color:#fff;display:flex;align-items:flex-start;gap:8px"><span style="color:rgba(255,255,255,.8);font-weight:700;flex-shrink:0">✓</span> Kündigung monatlich</li>
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Alle Module ohne Einschränkung</li>
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Team-Zugang (mehrere Nutzer, einzeln anmeldbar)</li>
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Erweiterte Trainingsdaten & Memory</li>
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Rückmeldung innert 3h, 7 Tage die Woche</li>
+            <li style="font-size:12.5px;color:var(--tx);display:flex;align-items:flex-start;gap:8px"><span style="color:var(--ac);font-weight:700;flex-shrink:0">✓</span> Kündigung monatlich</li>
           </ul>
-          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Wachstum%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:12px 0;border:1.5px solid rgba(255,255,255,.8);border-radius:9px;color:#fff;font-size:13.5px;font-weight:600;text-decoration:none;font-family:var(--sans);letter-spacing:.02em">Jetzt starten &rarr;</a>
+          <a href="mailto:contact@lorenalienhard.ch?subject=RhetorIQ%20Wachstum%20%E2%80%93%20Anfrage" style="display:block;text-align:center;padding:12px 0;border:1.5px solid var(--ac);border-radius:9px;color:var(--ac);font-size:13.5px;font-weight:600;text-decoration:none;font-family:var(--sans);letter-spacing:.02em">Jetzt starten &rarr;</a>
         </div>
 
         <!-- Team -->
@@ -10205,6 +10210,53 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
   var _gh=window.goHome;
   if(typeof _gh==='function')window.goHome=function(){var r=_gh.apply(this,arguments);setTimeout(clientCard,300);return r;};
   setTimeout(clientCard,2500);
+})();
+</script>
+<script id="rq-plan-js">
+(function(){
+  var NAMES={starter:'Starter',wachstum:'Wachstum',team:'Team',enterprise:'Enterprise'};
+  function cards(){
+    var page=document.getElementById('page-pricing');if(!page)return [];
+    var out=[];page.querySelectorAll('div[style*="border-radius:14px"]').forEach(function(c){
+      var t=c.firstElementChild&&c.firstElementChild.textContent.trim().toLowerCase();
+      if(NAMES[t]&&c.parentNode&&c.parentNode.children.length>=4)out.push([t,c]);
+    });return out;
+  }
+  async function apply(){
+    try{
+      var plan=null,firm='';
+      var cid=null;
+      if(typeof isAdv!=='undefined'&&isAdv){cid=(typeof clientId!=='undefined')?clientId:null;}
+      else if(typeof clientId!=='undefined')cid=clientId;
+      if(cid){var r=await api('/api/client-plan/'+cid);var d=await r.json();if(r.ok){plan=d.plan;firm=d.name||'';}}
+      if(!plan)plan='wachstum';
+      cards().forEach(function(x){
+        x[1].classList.toggle('rq-plan-rec',x[0]===plan);
+        var b=x[1].querySelector('.rq-plan-badge');if(b)b.remove();
+        if(x[0]===plan){b=document.createElement('div');b.className='rq-plan-badge';b.textContent=(firm&&cid&&typeof isAdv!=='undefined'&&!isAdv)?'Empfohlen für Sie':'Empfohlen'+(firm&&cid?' für '+firm:'');x[1].insertBefore(b,x[1].firstChild);}
+      });
+    }catch(e){}
+  }
+  var gp=window.goPage;
+  if(typeof gp==='function')window.goPage=function(name){var r=gp.apply(this,arguments);if(name==='pricing')apply();return r;};
+  // Beraterin: Empfohlenes Paket in der Verwaltung des Klienten setzen
+  var ra=window.wsRenderAdmin;
+  if(typeof ra==='function')window.wsRenderAdmin=function(body){
+    ra.apply(this,arguments);
+    try{
+      var cid=_wsClientId;if(!cid)return;
+      var box=document.createElement('div');box.style.cssText='margin:0 0 18px;padding:14px 16px;border:1px solid var(--bd);background:#fff';
+      box.innerHTML='<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Empfohlenes Paket</div><div style="font-size:12.5px;color:var(--mu);margin-bottom:8px">Dieses Paket hebt die Seite «Preise» für diesen Klienten hervor.</div>'
+        +'<select id="rqpl-sel" style="min-width:200px;margin-right:8px"><option value="">Standard (Wachstum)</option>'+Object.keys(NAMES).map(function(k){return '<option value="'+k+'">'+NAMES[k]+'</option>';}).join('')+'</select><button type="button" class="obtn" id="rqpl-save">Speichern</button> <span id="rqpl-msg" style="font-size:12.5px;color:var(--mu)"></span>';
+      body.insertBefore(box,body.firstChild);
+      api('/api/client-plan/'+cid).then(function(r){return r.json();}).then(function(d){if(d&&d.plan)box.querySelector('#rqpl-sel').value=d.plan;}).catch(function(){});
+      box.querySelector('#rqpl-save').onclick=function(){
+        var m=box.querySelector('#rqpl-msg');m.textContent='Speichert …';
+        api('/api/client-plan/'+cid,{method:'PUT',body:JSON.stringify({plan:box.querySelector('#rqpl-sel').value||null})}).then(function(r){m.textContent=r.ok?'Gespeichert.':'Konnte nicht gespeichert werden.';}).catch(function(){m.textContent='Konnte nicht gespeichert werden.';});
+      };
+    }catch(e){console.error(e);}
+  };
+  setTimeout(apply,2500);
 })();
 </script>
 </body>
