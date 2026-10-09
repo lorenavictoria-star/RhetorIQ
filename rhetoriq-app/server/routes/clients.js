@@ -260,6 +260,28 @@ router.get('/:id/users', requireAdvisor, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
+// GET /api/clients/:id/user-limit — Nutzerlimit des Pakets, belegte Plätze, Zusatznutzer
+router.get('/:id/user-limit', requireAdvisor, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT id FROM clients WHERE id=$1 AND advisor_id=$2', [req.params.id, req.user.id]);
+    if (!rows[0]) return res.status(404).json({ error: 'Not found' });
+    res.json(await require('../lib/userLimit').status(req.params.id));
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// PUT /api/clients/:id/extra-users  { extra_users: 0..50 } — gebuchte Zusatznutzer (CHF 49 pro Monat und Person)
+router.put('/:id/extra-users', requireAdvisor, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT id FROM clients WHERE id=$1 AND advisor_id=$2', [req.params.id, req.user.id]);
+    if (!rows[0]) return res.status(404).json({ error: 'Not found' });
+    const n = Math.round(Number(req.body.extra_users));
+    if (!Number.isFinite(n) || n < 0 || n > 50) return res.status(400).json({ error: 'Zusatznutzer müssen zwischen 0 und 50 liegen.' });
+    await require('../lib/schemaRedesign').ensureSchema();
+    await pool.query('UPDATE clients SET extra_users=$1 WHERE id=$2', [n, req.params.id]);
+    res.json(await require('../lib/userLimit').status(req.params.id));
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
 // POST /api/clients/:id/users — add team member
 router.post('/:id/users', requireAdvisor, async (req, res) => {
   try {
@@ -267,6 +289,13 @@ router.post('/:id/users', requireAdvisor, async (req, res) => {
     if (!clientRows[0]) return res.status(404).json({ error: 'Not found' });
     const { email, name, password, role = 'editor' } = req.body;
     if (!email || !name || !password) return res.status(400).json({ error: 'Email, name and password required' });
+    // Nutzerlimit je Paket (ein bereits vorhandenes Mitglied mit derselben E-Mail zählt nicht neu)
+    const ul = require('../lib/userLimit');
+    const st = await ul.status(req.params.id);
+    const { rows: ex } = await pool.query('SELECT 1 FROM client_users WHERE client_id=$1 AND email=$2', [req.params.id, String(email).toLowerCase()]);
+    if (st && st.full && !ex.length) {
+      return res.status(409).json({ error: `Das Paket ${st.planName} enthält ${st.limit} ${st.limit === 1 ? 'Nutzer' : 'Nutzer'} (Hauptzugang inklusive). Weitere Personen sind als Zusatznutzer für CHF 49 pro Monat möglich: Zusatznutzer erhöhen oder das Paket wechseln.`, limit: st.limit, used: st.used });
+    }
     if (!password || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
     const hash = await bcrypt.hash(password, 12);
     const { rows } = await pool.query(

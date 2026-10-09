@@ -75,6 +75,7 @@ function ensureSchema() {
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS minutes INTEGER`);
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS time_logged_at TIMESTAMPTZ`);
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS included_minutes INTEGER`);
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS extra_users INTEGER NOT NULL DEFAULT 0`);
     await pool.query(`ALTER TABLE onboarding_drafts ADD COLUMN IF NOT EXISTS paket TEXT`);
     await pool.query(`ALTER TABLE onboarding_drafts ADD COLUMN IF NOT EXISTS groesse JSONB`);
     // Kommunikationsprofil: Ausgangslage, Ziel und laufende Messungen je Klient
