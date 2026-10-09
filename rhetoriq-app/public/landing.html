@@ -157,6 +157,7 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
   section{padding-block:70px 0}
 }
 p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:break-word}
+@media(max-width:819px){.wrap{position:relative;z-index:2}}
 </style>
 </head>
 <body>
@@ -380,7 +381,11 @@ fetch("/api/inquiry",{method:"POST",headers:{"Content-Type":"application/json"},
   function lay(c,w,da,op,lc){var p=document.createElementNS(NS,"path");p.setAttribute("fill","none");p.setAttribute("stroke",c);p.setAttribute("stroke-width",w);if(da)p.setAttribute("stroke-dasharray",da);if(op)p.setAttribute("opacity",op);p.setAttribute("stroke-linecap",lc||"round");p.setAttribute("stroke-linejoin","round");tg.appendChild(p);return p}
   var layers=[];
   var brp=document.createElementNS(NS,"path"),anch=null;brp.setAttribute("fill","none");brp.setAttribute("stroke","url(#mt)");brp.setAttribute("stroke-width","2");brp.setAttribute("stroke-linecap","round");brp.setAttribute("opacity","0");
-  svg.appendChild(tg);svg.appendChild(brp);document.body.appendChild(svg);document.body.style.position="relative";
+  var fdm=document.createElementNS(NS,"mask"),fdr=document.createElementNS(NS,"rect"),fgr=document.createElementNS(NS,"linearGradient"),fg=document.createElementNS(NS,"g");
+  fgr.setAttribute("id","fgr");fgr.setAttribute("gradientUnits","userSpaceOnUse");fgr.setAttribute("x1","0");fgr.setAttribute("x2","0");
+  fdm.setAttribute("id","fdm");fdm.setAttribute("maskUnits","userSpaceOnUse");fdm.setAttribute("x","-200");fdm.setAttribute("y","-200");fdm.setAttribute("width","9000");fdm.setAttribute("height","30000");
+  fdr.setAttribute("x","-200");fdr.setAttribute("y","-200");fdr.setAttribute("width","9000");fdr.setAttribute("height","30000");fdr.setAttribute("fill","url(#fgr)");fdm.appendChild(fdr);defs.appendChild(fdm);defs.appendChild(fgr);
+  fg.appendChild(tg);svg.appendChild(fg);svg.appendChild(brp);document.body.appendChild(svg);document.body.style.position="relative";
   function doc(el){var r=el.getBoundingClientRect();return{l:r.left+scrollX,t:r.top+scrollY,b:r.bottom+scrollY,w:r.width,h:r.height}}
   function smooth(P){var d="M"+P[0][0].toFixed(1)+" "+P[0][1].toFixed(1),n=P.length;
     function dist(a,b){return Math.max(.001,Math.pow(Math.hypot(a[0]-b[0],a[1]-b[1]),.5))}
@@ -400,7 +405,11 @@ fetch("/api/inquiry",{method:"POST",headers:{"Content-Type":"application/json"},
     var yEnd=btn.t+btn.h/2,Eb=[btn.l+btn.w+12,yEnd],RE=170,heroB=doc(document.querySelector(".hero")).b;
     S=[cx+rr*.4,cy+rr*.9];window.__tailDir=[.3,1];
     var dx=X-S[0],dy=Math.max(140,Math.abs(dx)*.9),B=[X,S[1]+dy];
-    anch=S;B=m?[X,S[1]+72]:[X,S[1]+Math.max(460,Math.abs(dx)*1.5)];var hh=B[1]-S[1],hc1=m?[S[0]+14,S[1]+34]:[S[0]+.30*hh*.42,S[1]+.95*hh*.42],hc2=m?[X,S[1]+8]:[X,B[1]-hh*.5],d="M"+fmt(S)+" C"+fmt(hc1)+" "+fmt(hc2)+" "+fmt(B);
+    anch=S;var ctE=document.querySelector(".cta2"),cta=ctE?doc(ctE):null,mm=m&&cta;
+    B=mm?[X,cta.b+12]:[X,S[1]+Math.max(460,Math.abs(dx)*1.5)];var hh=B[1]-S[1],hc1=mm?[S[0]+16,S[1]+hh*.3]:[S[0]+.30*hh*.42,S[1]+.95*hh*.42],hc2=mm?[X,B[1]-hh*.35]:[X,B[1]-hh*.5];
+    svg.style.zIndex=mm?"1":"60";
+    if(mm){var fy1=S[1],fy2=cta.b+90,fp=Math.max(.1,Math.min(.9,(cta.b-70-fy1)/(fy2-fy1)));fgr.setAttribute("y1",fy1);fgr.setAttribute("y2",fy2);while(fgr.firstChild)fgr.removeChild(fgr.firstChild);[[0,.2],[fp,.2],[1,1]].forEach(function(a){var st=document.createElementNS(NS,"stop");st.setAttribute("offset",a[0]);st.setAttribute("stop-color","#fff");st.setAttribute("stop-opacity",a[1]);fgr.appendChild(st)});fg.setAttribute("mask","url(#fdm)")}else fg.removeAttribute("mask");
+    var d="M"+fmt(S)+" C"+fmt(hc1)+" "+fmt(hc2)+" "+fmt(B);
     var mid=[B];for(var y=B[1]+260;y<yEnd-RE-80;y+=260)mid.push([X+Math.sin(y/260)*(m?1.5:3),y]);mid.push([X,yEnd-RE]);
     d+=" "+smooth(mid).replace(/^M[^C]*/,"");
     var tail=" C"+fmt([X,yEnd-RE*.35])+" "+fmt([Eb[0]+(X-Eb[0])*.4,yEnd])+" "+fmt(Eb);
