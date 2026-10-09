@@ -1546,12 +1546,14 @@ async function consolidateFeedback(clientId, moduleKey, rating, note) {
     );
     return;
   }
+  const herkunftMerk = await lernquellen.vorMerken(clientId, moduleKey, category).catch(() => null);   // Herkunft der Sätze festhalten
   await pool.query(
     `INSERT INTO client_feedback_learnings (client_id, module_key, category, summary, updated_at)
      VALUES ($1,$2,$3,$4,NOW())
      ON CONFLICT (client_id, module_key, category) DO UPDATE SET summary=$4, updated_at=NOW()`,
     [clientId, moduleKey, category, summary]
   );
+  await lernquellen.nachMerken(herkunftMerk, 'klient').catch(() => {});   // neue und umformulierte Sätze: aus Rückmeldung des Klienten
   await pool.query(
     'INSERT INTO client_feedback_history (client_id, module_key, category, rating, note) VALUES ($1,$2,$3,$4,$5)',
     [clientId, moduleKey, category, rating, note]
@@ -1587,6 +1589,7 @@ function buildFollowUpPrompt(originalUserMsg, previousResult, note) {
 const { GLOBAL_STYLE_RULES, BRAND_VOICE_HEAD, BRAND_VOICE_TAIL } = require('../lib/promptRules');
 const { heuteBlock } = require('../lib/heute');
 const { temperaturFor } = require('../lib/temperaturen');
+const lernquellen = require('../lib/lernquellen');
 const { lintFuerDurchgang, lintErgebnis } = require('../lib/lint');
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses

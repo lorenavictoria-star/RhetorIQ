@@ -4,6 +4,7 @@ const { requireAdvisor } = require('../middleware/auth');
 const { ensureSchema } = require('../lib/schemaRedesign');
 const { CATEGORIES, getResult } = require('../lib/learnFromCorrections');
 const { preserveDates, ensureMeta, listSentences, noteSentence, forgetSentence } = require('../lib/learnedMeta');
+const { markiereHerkunft, anreichern } = require('../lib/lernquellen');
 
 // Lernvorschläge aus den Korrekturen der Beraterin.
 //   GET  /api/learning?client_id=&status=offen   Liste (nach Häufigkeit)
@@ -67,7 +68,10 @@ router.get('/learned', requireAdvisor, async (req, res) => {
        FROM client_feedback_learnings fl JOIN clients c ON c.id = fl.client_id
        WHERE fl.client_id=$1 AND c.advisor_id=$2 ORDER BY fl.module_key, fl.category`, [clientId, req.user.id]);
     // je Satz mit Datum und Zähler (bei älteren Lernständen: Änderungsdatum der Zeile, Zähler 1)
-    res.json(rows.map(r => { const saetze = listSentences(r); delete r.satz_meta; return { ...r, saetze }; }));
+    // Herkunft («aus deiner Korrektur», «aus Rückmeldung des Klienten») und Widersprüche je Satz (lib/lernquellen.js)
+    const alle = rows.map(r => listSentences(r));
+    anreichern(rows, alle);
+    res.json(rows.map((r, i) => { const o = { ...r, saetze: alle[i] }; delete o.satz_meta; return o; }));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
@@ -108,6 +112,37 @@ router.post('/learned/:id/forget', requireAdvisor, async (req, res) => {
     const r = await forgetSentence(row, text);
     if (!r.found) return res.status(404).json({ error: 'Satz nicht gefunden.' });
     res.json({ ok: true, deleted: r.deleted });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Bei einem Widerspruch diesen Satz behalten: Die widersprechenden Sätze derselben Kategorie werden vergessen.
+router.post('/learned/:id/keep', requireAdvisor, async (req, res) => {
+  try {
+    await ensureMeta();
+    const row = await loadOwnLearned(req);
+    if (!row) return res.status(404).json({ error: 'Eintrag nicht gefunden.' });
+    const text = typeof req.body?.text === 'string' ? req.body.text.trim() : '';
+    if (!text) return res.status(400).json({ error: 'Satz erforderlich.' });
+    const { rows } = await pool.query(
+      `SELECT fl.* FROM client_feedback_learnings fl JOIN clients c ON c.id = fl.client_id WHERE fl.client_id=$1 AND c.advisor_id=$2 ORDER BY fl.module_key, fl.category`,
+      [row.client_id, req.user.id]);
+    const alle = rows.map(r => listSentences(r));
+    anreichern(rows, alle);
+    const idx = rows.findIndex(r => r.id === row.id);
+    const satz = idx >= 0 && alle[idx].find(x => x.text.trim().toLowerCase() === text.toLowerCase());
+    if (!satz) return res.status(404).json({ error: 'Satz nicht gefunden.' });
+    if (!satz.konflikt) return res.status(409).json({ error: 'Zu diesem Satz gibt es keinen Widerspruch.' });
+    let vergessen = 0;
+    for (const gegen of satz.konflikt.mit) {
+      const ri = rows.findIndex((r, i) => r.module_key === row.module_key && r.category === row.category && alle[i].some(x => x.text === gegen));
+      if (ri < 0) continue;
+      const { rows: fresh } = await pool.query('SELECT * FROM client_feedback_learnings WHERE id=$1', [rows[ri].id]);
+      if (fresh[0] && (await forgetSentence(fresh[0], gegen)).found) vergessen++;
+    }
+    res.json({ ok: true, vergessen });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
@@ -157,6 +192,7 @@ router.post('/:id/accept', requireAdvisor, async (req, res) => {
        ON CONFLICT (client_id, module_key, category) DO UPDATE SET summary=$4, updated_at=NOW()`,
       [ls.client_id, ls.module_key, category, summary]);
     await noteSentence(ls.client_id, ls.module_key, category, text, ls.occurrences).catch(() => {});
+    await markiereHerkunft(ls.client_id, ls.module_key, category, 'korrektur', text).catch(() => {});
     // Spur im Protokoll des gelernten Feedbacks, falls die Tabelle da ist
     await pool.query(
       'INSERT INTO client_feedback_history (client_id, module_key, category, rating, note) VALUES ($1,$2,$3,$4,$5)',
