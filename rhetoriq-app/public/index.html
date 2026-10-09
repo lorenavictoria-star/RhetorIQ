@@ -10284,5 +10284,143 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
   setTimeout(apply,2500);
 })();
 </script>
+<script id="rq-time-js">
+(function(){
+  var E=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');};
+  function ctx(id){return (typeof _wsReviews!=='undefined'?_wsReviews:[]).filter(function(r){return r.id===id;})[0];}
+  function tkey(id){return 'rq-timer-'+id;}
+  function tget(id){try{return parseInt(localStorage.getItem(tkey(id)),10)||0;}catch(e){return 0;}}
+  function tset(id,v){try{if(v)localStorage.setItem(tkey(id),String(v));else localStorage.removeItem(tkey(id));}catch(e){}}
+  function hhmm(ms){var d=new Date(ms);return d.toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'});}
+  // ── Zeit je Freigabe ──
+  function block(rv){
+    var run=tget(rv.id),m=rv.minutes!=null?rv.minutes:'';
+    return '<div class="rq-card" id="rq-time-'+rv.id+'"><span class="rq-eb">Meine Zeit für diesen Text</span>'
+      +'<span class="rq-hint">Pro Überarbeitung sind 15 Minuten inbegriffen. Was darüber liegt, wird im 15-Minuten-Takt zu CHF 180 pro Stunde verrechnet. Trage die Minuten vor dem Senden ein.</span>'
+      +'<div class="rq-acts" style="align-items:center">'
+      +'<input type="number" min="0" max="600" class="rq-in" id="rq-min-'+rv.id+'" value="'+E(m)+'" placeholder="Minuten" style="max-width:130px" aria-label="Minuten">'
+      +'<button type="button" class="rq-btn ghost sm" data-rqt="timer">'+(run?'Stoppen und eintragen':'Zeit starten')+'</button>'
+      +'<button type="button" class="rq-btn ghost sm" data-rqt="save">Minuten speichern</button>'
+      +'<span class="rq-hint" id="rq-tmsg-'+rv.id+'">'+(run?'Läuft seit '+E(hhmm(run))+' Uhr':(rv.minutes!=null?'Gespeichert: '+E(rv.minutes)+' Minuten':''))+'</span></div></div>';
+  }
+  var _card=window.wsReviewCard;
+  if(typeof _card==='function')window.wsReviewCard=function(rv,idx){
+    var h=_card.apply(this,arguments);
+    try{var i=h.lastIndexOf('</div>');return h.slice(0,i)+block(rv)+h.slice(i);}catch(e){return h;}
+  };
+  async function save(id,silent){
+    var inp=document.getElementById('rq-min-'+id),msg=document.getElementById('rq-tmsg-'+id);if(!inp)return;
+    var v=inp.value.trim();if(v==='')return;
+    var r=await api('/api/review-time/review/'+id,{method:'PUT',body:JSON.stringify({minutes:Number(v)})});
+    var d=await r.json();if(!r.ok)throw new Error(d.error||'Fehler');
+    var rv=ctx(id);if(rv)rv.minutes=d.minutes;
+    if(msg&&!silent)msg.textContent='Gespeichert: '+d.minutes+' Minuten';
+  }
+  document.addEventListener('click',async function(e){
+    var b=e.target.closest&&e.target.closest('[data-rqt]');if(!b)return;
+    var card=b.closest('[id^=rq-time-]');if(!card)return;var id=parseInt(card.id.replace('rq-time-',''),10);
+    var msg=document.getElementById('rq-tmsg-'+id),inp=document.getElementById('rq-min-'+id),a=b.getAttribute('data-rqt');
+    try{
+      if(a==='timer'){
+        var run=tget(id);
+        if(!run){tset(id,Date.now());b.textContent='Stoppen und eintragen';if(msg)msg.textContent='Läuft seit '+hhmm(Date.now())+' Uhr';return;}
+        var mins=Math.max(1,Math.ceil((Date.now()-run)/60000));tset(id,0);
+        inp.value=String((parseInt(inp.value,10)||0)+mins);b.textContent='Zeit starten';await save(id);
+      }else if(a==='save'){await save(id);}
+    }catch(er){if(msg)msg.textContent='Nicht gespeichert. '+er.message;}
+  });
+  // Beim Senden die eingetragene Zeit mitnehmen (läuft eine Uhr, wird sie gestoppt)
+  var _sr=window.saveReview;
+  if(typeof _sr==='function')window.saveReview=async function(id,send){
+    try{
+      if(send){
+        var run=tget(id),inp=document.getElementById('rq-min-'+id);
+        if(run&&inp){var mins=Math.max(1,Math.ceil((Date.now()-run)/60000));tset(id,0);inp.value=String((parseInt(inp.value,10)||0)+mins);}
+        await save(id,true);
+      }
+    }catch(e){/* Zeit ist ein Zusatz, das Senden geht vor */}
+    return _sr.apply(this,arguments);
+  };
+  // ── Monatsübersicht je Klient (Verwaltung) ──
+  function months(){var o=[],d=new Date();for(var i=0;i<6;i++){var x=new Date(d.getFullYear(),d.getMonth()-i,1);o.push(x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0'));}return o;}
+  function chf(n){return 'CHF '+Number(n).toFixed(2);}
+  async function renderSummary(host,cid,month){
+    host.innerHTML='<div class="rq-hint">Lädt …</div>';
+    var r=await api('/api/review-time/client/'+cid+'?month='+month),s=await r.json();
+    if(!r.ok){host.innerHTML='<div class="rq-err">'+E(s.error||'Fehler')+'</div>';return;}
+    var rows=(s.rows||[]).map(function(x){return '<tr><td style="padding:4px 8px 4px 0">'+E(new Date(x.time_logged_at).toLocaleDateString('de-CH'))+'</td><td style="padding:4px 8px">'+E(x.module_label||'Text')+'</td><td style="padding:4px 0;text-align:right">'+E(x.minutes)+' Min.</td></tr>';}).join('');
+    host.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:8px 0 12px">'
+      +'<div><div class="rq-hint">Verbraucht</div><b style="font-size:22px;font-weight:500">'+s.usedMinutes+' Min.</b></div>'
+      +'<div><div class="rq-hint">Inbegriffen</div><b style="font-size:22px;font-weight:500">'+s.includedMinutes+' Min.</b></div>'
+      +'<div><div class="rq-hint">Mehraufwand</div><b style="font-size:22px;font-weight:500">'+s.extraMinutes+' Min.</b></div>'
+      +'<div><div class="rq-hint">Mehraufwand zu verrechnen</div><b style="font-size:22px;font-weight:500;color:'+(s.extraChf>0?'#a8392c':'var(--tx)')+'">'+E(chf(s.extraChf))+'</b></div></div>'
+      +(s.aboChf!=null?'<div style="border-top:1px solid var(--bd);padding:8px 0;margin-bottom:8px;font-size:14px">Monatsabo '+E(chf(s.aboChf))+' plus Mehraufwand '+E(chf(s.extraChf))+' ergibt <b style="font-weight:600">'+E(chf(s.totalChf))+'</b> für '+E(s.month)+'.</div>':'')
+      +(rows?'<table style="width:100%;font-size:13px;border-collapse:collapse">'+rows+'</table>':'<div class="rq-hint">In diesem Monat sind noch keine Minuten erfasst.</div>')
+      +'<div class="rq-acts" style="margin-top:10px;align-items:center"><label class="rq-hint" for="rqt-inc">Inbegriffene Minuten pro Monat</label><input id="rqt-inc" type="number" min="0" class="rq-in" style="max-width:110px" value="'+E(s.includedMinutes)+'"><button type="button" class="rq-btn ghost sm" id="rqt-incsave">Speichern</button><span class="rq-hint" id="rqt-incmsg">'+(s.customIncluded?'eigener Wert':'Standard laut Paket')+'</span></div>';
+    host.querySelector('#rqt-incsave').onclick=async function(){
+      var v=host.querySelector('#rqt-inc').value;
+      var rr=await api('/api/review-time/client/'+cid+'/included?month='+month,{method:'PUT',body:JSON.stringify({minutes:v===''?null:Number(v)})});
+      if(rr.ok)renderSummary(host,cid,month);else host.querySelector('#rqt-incmsg').textContent='Nicht gespeichert.';
+    };
+  }
+  var ra=window.wsRenderAdmin;
+  if(typeof ra==='function')window.wsRenderAdmin=function(body){
+    ra.apply(this,arguments);
+    try{
+      var cid=_wsClientId;if(!cid)return;
+      var box=document.createElement('div');box.style.cssText='margin:0 0 18px;padding:14px 16px;border:1px solid var(--bd);background:#fff';
+      box.innerHTML='<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Zeit und Mehraufwand</div>'
+        +'<select id="rqt-month" style="margin-right:8px">'+months().map(function(m){return '<option value="'+m+'">'+m+'</option>';}).join('')+'</select>'
+        +'<div id="rqt-host"></div>';
+      body.insertBefore(box,body.firstChild);
+      var host=box.querySelector('#rqt-host'),sel=box.querySelector('#rqt-month');
+      sel.onchange=function(){renderSummary(host,cid,sel.value);};
+      renderSummary(host,cid,sel.value);
+    }catch(e){console.error(e);}
+  };
+  // ── Liste für die Rechnung (alle Klienten) auf der Seite Nutzung ──
+  function usageExport(){
+    var pg=document.getElementById('page-usage');if(!pg||document.getElementById('rqt-export'))return;
+    var d=document.createElement('div');d.id='rqt-export';d.style.cssText='padding:0 16px;margin:0 0 18px;max-width:900px';
+    d.innerHTML='<div style="border:1px solid var(--bd);background:#fff;padding:14px 16px"><div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Zeiterfassung für Rechnungen</div>'
+      +'<div class="rq-hint" style="margin-bottom:8px">Alle Klienten mit erfasster Zeit, Mehraufwand und Betrag pro Monat als Liste (CSV, in Excel öffnen).</div>'
+      +'<select id="rqt-exm" style="margin-right:8px">'+months().map(function(m){return '<option value="'+m+'">'+m+'</option>';}).join('')+'</select><button type="button" class="obtn" id="rqt-exb">Monatsliste herunterladen</button> <span class="rq-hint" id="rqt-exmsg"></span></div>';
+    pg.insertBefore(d,pg.children[1]||null);
+    d.querySelector('#rqt-exb').onclick=async function(){
+      var m=d.querySelector('#rqt-exm').value,msg=d.querySelector('#rqt-exmsg');msg.textContent='Wird erstellt …';
+      try{
+        var r=await api('/api/review-time/export?month='+m);if(!r.ok)throw new Error('Fehler');
+        var b=await r.blob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Zeiterfassung_'+m+'.csv';document.body.appendChild(a);a.click();a.remove();msg.textContent='Heruntergeladen.';
+      }catch(e){msg.textContent='Das hat nicht geklappt.';}
+    };
+  }
+
+  // ── Klient: «Ihre Betreuung im Monat» mit Monatsabo und Mehraufwand obendrauf ──
+  async function clientCard(){
+    try{
+      if(typeof isAdv!=='undefined'&&isAdv)return;
+      var home=document.getElementById('page-home');if(!home)return;
+      var r=await api('/api/review-time/mine'),s=await r.json();
+      if(!r.ok||!s.rows||!s.rows.length)return;
+      var old=document.getElementById('rq-time-card');if(old)old.remove();
+      var c=document.createElement('div');c.id='rq-time-card';c.style.cssText='border:1px solid var(--bd);background:#fff;padding:22px 26px;margin:0 0 24px';
+      var rows=s.rows.map(function(x){return '<tr><td style="padding:5px 12px 5px 0">'+E(new Date(x.time_logged_at).toLocaleDateString('de-CH'))+'</td><td style="padding:5px 12px">'+E(x.module_label||'Text')+'</td><td style="padding:5px 0;text-align:right">'+E(x.minutes)+' Min.</td></tr>';}).join('');
+      var aboLine=s.aboChf!=null?'<tr><td colspan="2" style="padding:6px 12px 6px 0">Monatsabo</td><td style="padding:6px 0;text-align:right">'+E(chf(s.aboChf))+'</td></tr>':'';
+      var extraLine='<tr><td colspan="2" style="padding:6px 12px 6px 0">Persönliche Bearbeitung über dem Inbegriffenen ('+E(s.billedMinutes)+' Min. zu CHF '+E(s.rateChf)+' pro Stunde)</td><td style="padding:6px 0;text-align:right">'+E(chf(s.extraChf))+'</td></tr>';
+      var totalLine=s.totalChf!=null?'<tr style="border-top:1px solid var(--tx)"><td colspan="2" style="padding:8px 12px 4px 0"><b style="font-weight:600">Total für '+E(s.month)+'</b></td><td style="padding:8px 0 4px;text-align:right"><b style="font-weight:600">'+E(chf(s.totalChf))+'</b></td></tr>':'';
+      c.innerHTML='<div style="font-family:var(--serif);font-size:24px;margin-bottom:2px">Ihre Betreuung im Monat</div>'
+        +'<div style="font-size:13px;color:var(--mu);margin-bottom:14px">Inbegriffen sind '+E(s.includedMinutes)+' Minuten persönliche Bearbeitung durch Lorena Lienhard. Verbraucht: '+E(s.usedMinutes)+' Minuten. Was darüber liegt, wird zum Monatsabo hinzugerechnet.</div>'
+        +'<table style="width:100%;font-size:14px;border-collapse:collapse">'+rows+'<tr><td colspan="3" style="padding:4px 0"></td></tr>'+aboLine+extraLine+totalLine+'</table>';
+      var after=document.getElementById('rq-prof-card');
+      if(after&&after.parentNode===home)after.after(c);else home.insertBefore(c,home.firstChild);
+    }catch(e){/* Karte ist ein Zusatz */}
+  }
+  var _gh=window.goHome;
+  if(typeof _gh==='function')window.goHome=function(){var r=_gh.apply(this,arguments);setTimeout(clientCard,600);return r;};
+  setTimeout(clientCard,3200);
+  var gp=window.goPage;
+  if(typeof gp==='function')window.goPage=function(name){var r=gp.apply(this,arguments);if(name==='usage'&&typeof isAdv!=='undefined'&&isAdv)setTimeout(usageExport,200);return r;};
+})();
+</script>
 </body>
 </html>

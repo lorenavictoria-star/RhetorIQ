@@ -71,6 +71,10 @@ function ensureSchema() {
       )`);
     await pool.query(`CREATE INDEX IF NOT EXISTS learning_suggestions_client_idx ON learning_suggestions (client_id, status)`);
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS recommended_plan TEXT`);
+    // Zeiterfassung: Minuten je Freigabe und inbegriffenes Monatskontingent je Klient
+    await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS minutes INTEGER`);
+    await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS time_logged_at TIMESTAMPTZ`);
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS included_minutes INTEGER`);
     await pool.query(`ALTER TABLE onboarding_drafts ADD COLUMN IF NOT EXISTS paket TEXT`);
     await pool.query(`ALTER TABLE onboarding_drafts ADD COLUMN IF NOT EXISTS groesse JSONB`);
     // Kommunikationsprofil: Ausgangslage, Ziel und laufende Messungen je Klient
