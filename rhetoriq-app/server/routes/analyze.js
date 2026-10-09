@@ -1659,8 +1659,10 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
       if (!cap.ok) return res.status(429).json({ error: cap.error, dailyCapReached: true, scope: cap.scope });
     }
     let quotaWarning = null;
+    // Prüfsatz (lib/pruefsatz.js) ruft diese Route intern auf: req.pruefsatz ist nur dort gesetzt, nie aus der Anfrage
+    const dry = req.pruefsatz === true;
     if (resolvedClientId) {
-      const quota = await checkQuota(resolvedClientId);
+      const quota = dry ? { ok: true } : await checkQuota(resolvedClientId);
       if (!quota.ok) {
         return res.status(429).json(quota.cancelled ? {
           error: 'Ihr Abo ist nicht mehr aktiv.',
@@ -1804,6 +1806,8 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
 
     // Log token usage (fire-and-forget) — Fix 11: also log for client-only analyses
     // Das Nutzungsprotokoll schreibt jeder KI-Aufruf selbst (lib/meter.js), hier ist nichts mehr nötig.
+
+    if (dry) return res.json({ result });   // Prüfsatz: nichts speichern (kein Eintrag in analyses, kein Kontingent)
 
     // Persist analysis
     const generatedBy = req.user.role === 'advisor'

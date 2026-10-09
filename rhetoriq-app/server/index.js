@@ -266,6 +266,7 @@ app.use('/api/comm-profile', require('./routes/commProfile'));
 app.use('/api/lernkurve', require('./routes/lernkurve'));
 app.use('/api/stimmnaehe', require('./routes/stimmnaehe'));
 app.use('/api/messung', require('./routes/messung'));
+app.use('/api/pruefsatz', require('./routes/pruefsatz'));
 app.use('/api/client-plan', require('./routes/clientPlan'));
 app.use('/api/review-time', require('./routes/reviewTime'));
 app.use('/api/archive', require('./routes/archive'));

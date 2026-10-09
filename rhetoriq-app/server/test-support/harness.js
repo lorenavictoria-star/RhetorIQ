@@ -55,7 +55,7 @@ stub('lib/aiProvider.js', {
   generateText: async (opts) => {
     ai.calls.push(opts);
     if (ai.fail) throw new Error('KI kaputt');
-    return { text: typeof ai.reply === 'function' ? ai.reply(opts) : ai.reply, inputTokens: 1, outputTokens: 1 };
+    return { text: typeof ai.reply === 'function' ? await ai.reply(opts) : ai.reply, inputTokens: 1, outputTokens: 1 };
   },
   streamText: async function* () {},
   resolveModelId: (p) => 'test-' + p

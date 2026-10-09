@@ -66,7 +66,7 @@ function contextFromRequest(req, user) {
   const advisorId = user.role === 'advisor' ? user.id : user.advisorId;
   const clientId = user.role === 'client' ? user.clientId : (body.clientId || q.clientId || q.client_id || params.clientId || null);
   const num = v => { const n = parseInt(v, 10); return Number.isInteger(n) && n > 0 ? n : null; };
-  return { advisorId: num(advisorId), clientId: num(clientId), module: body.module || null };
+  return { advisorId: num(advisorId), clientId: num(clientId), module: req.meterModule || body.module || null };
 }
 
 // COALESCE-Ausdruck für ältere Zeilen ohne exakte Kosten (reiner Sonnet-Preis auf die erfassten Tokens)
