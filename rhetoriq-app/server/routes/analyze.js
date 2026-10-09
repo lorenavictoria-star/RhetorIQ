@@ -1529,7 +1529,8 @@ async function consolidateFeedback(clientId, moduleKey, rating, note) {
     cfg.build({ existingSummaries, note, label }),
     MODULE_MAX_TOKENS['consolidate-feedback'],
     resolveModel('consolidate-feedback'),
-    0
+    0,
+    'lernen-daumen'
   );
   const catMatch = resp.text.match(/KATEGORIE:\s*(\w+)/i);
   const sumMatch = resp.text.match(/ZUSAMMENFASSUNG:\s*([\s\S]+)/i);
@@ -1603,13 +1604,15 @@ function resolveModel(module) {
   return resolveModelId(HAIKU_MODULES.has(module) ? 'haiku' : 'sonnet');
 }
 
-async function callClaude(system, user, maxTokens, model, temperature) {
+// meterModule (optional): Name im Nutzungsprotokoll für Hilfsaufrufe. Ohne Angabe gilt das Modul der Anfrage.
+async function callClaude(system, user, maxTokens, model, temperature, meterModule) {
   const resp = await generateText({
     system,
     messages: [{ role: 'user', content: user }],
     maxTokens: maxTokens || DEFAULT_MAX_TOKENS,
     model: model || resolveModelId('sonnet'),
-    temperature
+    temperature,
+    ...(meterModule ? { meter: { module: meterModule } } : {})
   });
   return {
     text: resp.text,
@@ -2140,7 +2143,8 @@ router.post('/chat', requireAuth, requireRole('editor'), async (req, res) => {
       system: cfg.system,
       messages,
       maxTokens: 600,
-      model: resolveModelId('sonnet')
+      model: resolveModelId('sonnet'),
+      meter: { module: 'assistent-chat' }
     });
     res.json({ reply: resp.text });
   } catch (e) {
@@ -2237,7 +2241,7 @@ router.get('/health-score', requireAuth, async (req, res) => {
       ? excerptRows.map((r, i) => `[${i+1}] ${r.module_label||r.module}:\n${r.snippet}...`).join('\n\n')
       : null;
     const cfg = PROMPTS['health-score'];
-    const claudeResp = await callClaude(cfg.system, cfg.build({ log, period: 'Last 90 days', count: rows.length, excerpts }), MODULE_MAX_TOKENS['health-score'], resolveModel('health-score'), temperaturFor('health-score'));
+    const claudeResp = await callClaude(cfg.system, cfg.build({ log, period: 'Last 90 days', count: rows.length, excerpts }), MODULE_MAX_TOKENS['health-score'], resolveModel('health-score'), temperaturFor('health-score'), 'health-score');
     res.json({ result: claudeResp.text, count: rows.length });
   } catch (e) {
     console.error(e);
@@ -2354,7 +2358,7 @@ router.post('/route', requireAuth, async (req, res) => {
   try {
     const { text } = req.body;
     const cfg = PROMPTS['router'];
-    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['router'], resolveModel('router'), 0);
+    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['router'], resolveModel('router'), 0, 'router');
     res.json({ module: claudeResp.text.trim().toLowerCase().replace(/[^a-z-]/g, '') });
   } catch (e) {
     console.error(e);
@@ -2370,7 +2374,7 @@ router.post('/route-fill', requireAuth, async (req, res) => {
     const { text } = req.body;
     if (!text || typeof text !== 'string') return res.status(400).json({ error: 'text required' });
     const cfg = PROMPTS['route-fill'];
-    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['route-fill'], resolveModel('route-fill'), 0);
+    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['route-fill'], resolveModel('route-fill'), 0, 'router');
     let parsed;
     try {
       const jsonMatch = claudeResp.text.match(/\{[\s\S]*\}/);
@@ -2393,7 +2397,7 @@ router.post('/suggest-subject', requireAuth, async (req, res) => {
     const { text } = req.body;
     if (!text || typeof text !== 'string' || text.trim().length < 10) return res.status(400).json({ error: 'text too short' });
     const cfg = PROMPTS['suggest-subject'];
-    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['suggest-subject'], resolveModel('suggest-subject'), 0);
+    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['suggest-subject'], resolveModel('suggest-subject'), 0, 'router');
     res.json({ subject: claudeResp.text.trim().replace(/^["']|["']$/g, '') });
   } catch (e) {
     console.error(e);
@@ -2408,7 +2412,7 @@ router.post('/suggest-title', requireAuth, async (req, res) => {
     const { text } = req.body;
     if (!text || typeof text !== 'string' || text.trim().length < 10) return res.json({ title: '' });
     const cfg = PROMPTS['suggest-title'];
-    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['suggest-title'], resolveModel('suggest-title'), 0);
+    const claudeResp = await callClaude(cfg.system, cfg.build({ text }), MODULE_MAX_TOKENS['suggest-title'], resolveModel('suggest-title'), 0, 'router');
     res.json({ title: claudeResp.text.trim().replace(/^["']|["']$/g, '') });
   } catch (e) {
     console.error(e);
@@ -2428,7 +2432,7 @@ router.post('/presentation-preflight', requireAuth, async (req, res) => {
     const { data } = req.body;
     if (!data || typeof data !== 'object') return res.json({ ready: true });
     const cfg = PROMPTS['presentation-preflight'];
-    const resp = await callClaude(cfg.system, cfg.build(data), MODULE_MAX_TOKENS['presentation-preflight'], resolveModel('presentation-preflight'), 0);
+    const resp = await callClaude(cfg.system, cfg.build(data), MODULE_MAX_TOKENS['presentation-preflight'], resolveModel('presentation-preflight'), 0, 'router');
     const text = resp.text || '';
     if (/STATUS:\s*RUECKFRAGEN/i.test(text)) {
       const questions = [...text.matchAll(/^-\s*(.+)$/gm)].map(m => m[1].trim()).filter(Boolean).slice(0, 4);

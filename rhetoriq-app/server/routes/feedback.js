@@ -46,7 +46,8 @@ router.post('/', requireAuth, async (req, res) => {
           system: SOLUTION_SYSTEM_PROMPT,
           messages: [{ role: 'user', content: `Feedback-Notiz von ${authorLabel} (${req.user.role === 'advisor' ? 'Beraterin' : 'Klient'}):\n"${message.trim()}"\n\nSeite/Kontext: ${pageContext || 'nicht angegeben'}` }],
           maxTokens: 500,
-          model: resolveModelId('sonnet')
+          model: resolveModelId('sonnet'),
+          meter: { module: 'feedback-vorschlag' }
         });
         solution = resp.text || '';
         if (solution) {

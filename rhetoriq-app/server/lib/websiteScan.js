@@ -72,7 +72,8 @@ async function scanWebsite({ text, firma, sektor }) {
     messages: [{ role: 'user', content: user }],
     maxTokens: 3500,
     model: resolveModelId('sonnet'),
-    temperature: 0.3
+    temperature: 0.3,
+    meter: { module: 'website-scan' }
   });
   const parsed = normalizeScan(extractJson(resp && resp.text));
   if (!parsed) {

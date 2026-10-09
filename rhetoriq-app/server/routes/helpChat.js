@@ -43,7 +43,8 @@ router.post('/', requireAuth, limiter, async (req, res) => {
       messages: [{ role: 'user', content: `<frage>${q.replace(/<\/?frage>/gi, '')}</frage>` }],
       maxTokens: 400,
       model: resolveModelId('haiku'),
-      temperature: 0.3
+      temperature: 0.3,
+      meter: { module: 'hilfe-chat' }
     });
     const answer = String(resp?.text || '').trim();
     if (!answer) return res.status(502).json({ error: 'Die Hilfe ist gerade nicht erreichbar. Bitte später erneut versuchen.' });

@@ -258,7 +258,8 @@ ${contextParts}`;
       messages,
       maxTokens: 3000,
       model: resolveModelId('sonnet'),
-      temperature: 0.5
+      temperature: 0.5,
+      meter: { module: 'berater-chat' }
     });
 
     let reply = resp.text || '';

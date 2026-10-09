@@ -66,7 +66,8 @@ Format: {"type":"<Schlüssel>","confidence":<0.0-1.0>,"summary":"<ein kurzer deu
       messages: [{ role: 'user', content: `Dateiname: ${filename}\n<dokument>\n${excerpt.replace(/<\/?dokument>/gi, '')}\n</dokument>` }],
       maxTokens: 200,
       model: resolveModelId('haiku'),
-      temperature: 0
+      temperature: 0,
+      meter: { module: 'memory-vorschlag' }
     });
     const a = parseAnswer(resp && resp.text);
     if (!a || !TYPES[a.type]) return res.json({ type: null, label: '', confidence: 0, summary: '' });
