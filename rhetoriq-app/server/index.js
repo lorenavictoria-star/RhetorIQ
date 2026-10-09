@@ -274,6 +274,7 @@ app.use('/api/archive', require('./routes/archive'));
 app.use('/api/quartalsreview', require('./routes/quartalsreview'));
 app.use('/api/status', require('./routes/status'));
 app.use('/api/stimmenmappe', require('./routes/stimmenmappe'));
+app.use('/api/notfallkarte', require('./routes/notfallkarte'));
 
 // Manual report trigger (advisor only)
 const { requireAdvisor } = require('./middleware/auth');
