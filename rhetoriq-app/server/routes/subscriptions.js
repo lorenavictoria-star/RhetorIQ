@@ -72,8 +72,23 @@ router.post('/create-payment-link/:clientId', requireAdvisor, ownClient('clientI
     // Build a payment link. Advisor can pass priceId in body, or we use a default.
     // For a recurring subscription: pass a Price ID with type=recurring.
     // For a one-time payment: pass a Price ID with type=one_time.
-    const { priceId } = req.body;
-    if (!priceId) return res.status(400).json({ error: 'priceId required in request body' });
+    const { priceId, angebot } = req.body;
+    // Eingebaute Angebote (Pakete, Stimm-Audit, Workshop): Preis direkt im Aufruf, keine Vorbereitung in Stripe nötig
+    const ang = angebot ? require('../lib/angebote').ANGEBOTE[String(angebot)] : null;
+    if (angebot && !ang) return res.status(400).json({ error: 'Unbekanntes Angebot.' });
+    if (!priceId && !ang) return res.status(400).json({ error: 'priceId oder angebot erforderlich' });
+
+    if (ang) {
+      const meta = { clientId: String(clientId), clientName: rows[0].name, angebot: String(angebot) };
+      if (ang.einrichtung) meta.type = 'einrichtung';
+      const p2 = {
+        line_items: [{ price_data: { currency: 'chf', unit_amount: ang.amountCents, ...(ang.recurring ? { recurring: { interval: 'month' } } : {}), product_data: { name: `RhetorIQ ${ang.name} — ${rows[0].name}` } }, quantity: 1 }],
+        metadata: meta
+      };
+      if (ang.recurring) p2.subscription_data = { metadata: { clientId: String(clientId), clientName: rows[0].name } };
+      const l2 = await stripe.paymentLinks.create(p2);
+      return res.json({ url: l2.url, angebot: String(angebot), amountCents: ang.amountCents });
+    }
 
     const params = {
       line_items: [{ price: priceId, quantity: 1 }],
@@ -92,6 +107,10 @@ router.post('/create-payment-link/:clientId', requireAdvisor, ownClient('clientI
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// ── GET /api/subscriptions/angebote ───────────────────────────
+// Liste der eingebauten Angebote für die Auswahl beim Zahlungslink (nur Beraterin)
+router.get('/angebote', requireAdvisor, (req, res) => res.json(require('../lib/angebote').LISTE));
 
 // ── GET /api/subscriptions/status/:clientId ───────────────────
 router.get('/status/:clientId', requireAdvisor, ownClient('clientId'), async (req, res) => {
@@ -441,6 +460,15 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
               } catch (e) { /* gleichzeitige Zustellung: der eindeutige Index hat die zweite Karte verhindert */ }
             }
           }
+        }
+      } else if (clientId && obj.metadata?.type === 'einrichtung') {
+        // Einrichtung (Stimm-Audit, Workshop): einmalige Zahlung. Das Stimm-Audit schaltet 30 Tage Zugang mit 40 Texten frei,
+        // das Abo Stimme folgt danach mit eigenem Link. Workshops ändern nichts am Abo.
+        if (event.type === 'checkout.session.completed' && obj.metadata.angebot === 'stimm-audit') {
+          await pool.query(`UPDATE clients SET subscription_status='active', monthly_token_limit=200000 WHERE id=$1`, [clientId]);
+          console.log(`[stripe] client ${clientId} → Stimm-Audit bezahlt, 30 Tage mit 40 Texten`);
+        } else {
+          console.log(`[stripe] client ${clientId} → Einrichtung bezahlt (${obj.metadata.angebot || 'unbekannt'}), Abo unverändert`);
         }
       } else if (clientId && isTopup) {
         // One-time top-up: add tokens for the current month only, never

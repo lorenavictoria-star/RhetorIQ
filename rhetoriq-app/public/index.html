@@ -7077,13 +7077,16 @@ async function sendPaymentLink(clientId, btn) {
     const r = await api('/api/subscriptions/prices');
     prices = await r.json();
   } catch { prices = []; }
+  let angebote = [];
+  try { const ra = await api('/api/subscriptions/angebote'); const da = await ra.json(); if (Array.isArray(da)) angebote = da; } catch { angebote = []; }
 
   let priceId;
-  if (prices.length) {
+  if (prices.length || angebote.length) {
     const ov = document.createElement('div');
     ov.className = 'ov';
     ov.id = 'price-pick-ov';
-    const options = prices.map(p => {
+    const angOpts = angebote.length ? '<optgroup label="Pakete und Einrichtung (ohne Vorbereitung in Stripe)">' + angebote.map(a => `<option value="angebot:${a.key}">${safeText(a.name)} — CHF ${(a.amountCents / 100).toFixed(0)}${a.recurring ? ' / Monat' : ' einmalig'}</option>`).join('') + '</optgroup>' : '';
+    const options = angOpts + prices.map(p => {
       const amount = p.amount != null ? (p.amount / 100).toFixed(2) + ' ' + p.currency.toUpperCase() : '';
       const label = `${safeText(p.productName)} — ${amount}${p.recurring ? ' / ' + p.recurring : ''}`;
       return `<option value="${p.id}">${label}</option>`;
@@ -7114,7 +7117,7 @@ async function sendPaymentLink(clientId, btn) {
     const r = await api('/api/subscriptions/create-payment-link/' + clientId, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ priceId })
+      body: JSON.stringify(String(priceId).startsWith('angebot:') ? { angebot: String(priceId).slice(8) } : { priceId })
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'Fehler');
