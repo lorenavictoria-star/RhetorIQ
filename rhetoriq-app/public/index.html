@@ -7072,13 +7072,17 @@ function filterAdvClients(q){
 }
 
 async function sendPaymentLink(clientId, btn) {
+  // Sofort sichtbar reagieren, auch wenn Stripe langsam antwortet (die Stripe-Preise laden höchstens 6 Sekunden)
+  const oldLabel = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Lädt …'; }
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('Zeitüberschreitung')), ms))]);
   let prices = [];
-  try {
-    const r = await api('/api/subscriptions/prices');
-    prices = await r.json();
-  } catch { prices = []; }
   let angebote = [];
-  try { const ra = await api('/api/subscriptions/angebote'); const da = await ra.json(); if (Array.isArray(da)) angebote = da; } catch { angebote = []; }
+  await Promise.all([
+    withTimeout(api('/api/subscriptions/prices').then(r => r.json()), 6000).then(d => { if (Array.isArray(d)) prices = d; }).catch(() => {}),
+    withTimeout(api('/api/subscriptions/angebote').then(r => r.json()), 6000).then(d => { if (Array.isArray(d)) angebote = d; }).catch(() => {})
+  ]);
+  if (btn) { btn.disabled = false; btn.textContent = oldLabel || 'Zahlungslink senden'; }
 
   let priceId;
   if (prices.length || angebote.length) {
