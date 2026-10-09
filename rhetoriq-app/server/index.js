@@ -396,6 +396,12 @@ const PORT = process.env.PORT || 3001;
   cron.schedule('*/3 * * * *', () => sweepOutbox().catch(e => console.error('[email-outbox] sweep failed:', e.message)));
   console.log('[cron] Email outbox sweep: every 3 minutes');
 
+  // Löschfristen (F-10, F-17): täglich 03:30 Zürich, einmal auch beim Start
+  const { runRetention } = require('./lib/retention');
+  runRetention().catch(e => console.error('[retention] boot run failed:', e.message));
+  cron.schedule('30 3 * * *', () => runRetention().catch(e => console.error('[retention] failed:', e.message)), { timezone: 'Europe/Zurich' });
+  console.log('[cron] Retention: daily 03:30 Zurich');
+
   // Monatserinnerung an den Export der Stimmenmappen: am 1. um 09:00, nur eine Mail ohne Anhang
   cron.schedule('0 9 1 * *', () => require('./jobs/stimmenmappe-erinnerung').runErinnerung().catch(e => console.error('[stimmenmappe] Erinnerung failed:', e.message)), { timezone: 'Europe/Zurich' });
 

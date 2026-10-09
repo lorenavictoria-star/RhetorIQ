@@ -1,7 +1,7 @@
 const ExcelJS = require('exceljs');
 
-// Excel-Liste aller Texte einer Woche für den Wochenbericht.
-// rows: [{ created_at, client_name, module_label, user_rating, result }]
+// Excel-Liste der Texte einer Woche für den Wochenbericht, bewusst ohne Textinhalte (Befund F-17):
+// Datum, Klient, Textart, Bewertung und Länge. rows: [{ created_at, client_name, module_label, user_rating, len }]
 // Gibt einen Buffer (.xlsx) zurück.
 async function buildWeeklyTextsXlsx(rows) {
   const wb = new ExcelJS.Workbook();
@@ -13,7 +13,7 @@ async function buildWeeklyTextsXlsx(rows) {
     { header: 'Klient', key: 'klient', width: 26 },
     { header: 'Textart', key: 'textart', width: 24 },
     { header: 'Bewertung', key: 'bewertung', width: 12 },
-    { header: 'Text', key: 'text', width: 110 }
+    { header: 'Länge (Zeichen)', key: 'laenge', width: 16 }
   ];
   const head = ws.getRow(1);
   head.font = { bold: true };
@@ -22,9 +22,8 @@ async function buildWeeklyTextsXlsx(rows) {
   const fmt = (t) => new Date(t).toLocaleString('de-CH', { timeZone: 'Europe/Zurich', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   for (const r of rows) {
     const rating = r.user_rating === 1 ? 'gut' : r.user_rating === -1 ? 'schlecht' : '';
-    // Excel erlaubt höchstens 32767 Zeichen pro Zelle
-    const text = String(r.result || '').slice(0, 32000);
-    const row = ws.addRow({ datum: fmt(r.created_at), klient: r.client_name || 'Ohne Klient', textart: r.module_label || r.module || '', bewertung: rating, text });
+    const laenge = r.len != null ? Number(r.len) : String(r.result || '').length; // nur die Länge, nie der Text
+    const row = ws.addRow({ datum: fmt(r.created_at), klient: r.client_name || 'Ohne Klient', textart: r.module_label || r.module || '', bewertung: rating, laenge });
     row.alignment = { vertical: 'top', wrapText: true };
   }
   ws.autoFilter = { from: 'A1', to: 'E1' };

@@ -168,11 +168,11 @@ async function runWeeklyReport() {
       'RhetorIQ · contact@lorenalienhard.ch'
     );
 
-    // Alle Texte der Woche als Excel-Liste im Anhang (ersetzt das Durchblättern des Verlaufs in der Plattform)
+    // Liste der Texte der Woche im Anhang, ohne Textinhalte (Titel, Datum, Klient, Länge); die Volltexte bleiben in der Plattform
     let attachments;
     try {
       const { rows: weekTexts } = await pool.query(`
-        SELECT a.created_at, c.name AS client_name, a.module, a.module_label, a.user_rating, a.result
+        SELECT a.created_at, c.name AS client_name, a.module, a.module_label, a.user_rating, LENGTH(a.result) AS len
         FROM analyses a
         LEFT JOIN clients c ON c.id = a.client_id
         WHERE a.created_at > NOW() - INTERVAL '7 days' AND a.result IS NOT NULL
@@ -183,7 +183,7 @@ async function runWeeklyReport() {
         const buf = await buildWeeklyTextsXlsx(weekTexts);
         const stamp = new Date().toISOString().slice(0, 10);
         attachments = [{ name: `RhetorIQ_Texte_Woche_${stamp}.xlsx`, contentBase64: buf.toString('base64') }];
-        lines.splice(lines.length - 3, 0, `TEXTE DIESER WOCHE: ${weekTexts.length} Texte als Excel-Liste im Anhang.`, '');
+        lines.splice(lines.length - 3, 0, `TEXTE DIESER WOCHE: ${weekTexts.length} Texte, Liste (ohne Textinhalte) im Anhang. Die Texte selbst stehen in der Plattform.`, '');
       }
     } catch (e) {
       console.error('[weekly-report] Excel attachment failed:', e.message);

@@ -550,7 +550,9 @@ test('Excel-Liste der Wochentexte ist eine gültige Datei mit allen Zeilen', asy
   const zip = await JSZip.loadAsync(buf);
   assert.ok(zip.file('xl/worksheets/sheet1.xml'));
   const shared = await zip.file('xl/sharedStrings.xml').async('string');
-  assert.ok(shared.includes('Keller Bau AG') && shared.includes('Ohne Klient') && shared.includes('Sehr geehrte Damen und Herren'));
+  assert.ok(shared.includes('Keller Bau AG') && shared.includes('Ohne Klient'));
+  assert.ok(!shared.includes('Sehr geehrte Damen und Herren') && !shared.includes('ab dem 1. April'), 'keine Textinhalte in der Liste');
+  assert.ok(shared.includes('Länge'));
   assert.ok(shared.includes('Datum') && shared.includes('Textart'));
 });
 
