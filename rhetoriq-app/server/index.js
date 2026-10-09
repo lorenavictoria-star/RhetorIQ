@@ -270,6 +270,7 @@ app.use('/api/review-time', require('./routes/reviewTime'));
 app.use('/api/archive', require('./routes/archive'));
 app.use('/api/quartalsreview', require('./routes/quartalsreview'));
 app.use('/api/status', require('./routes/status'));
+app.use('/api/stimmenmappe', require('./routes/stimmenmappe'));
 
 // Manual report trigger (advisor only)
 const { requireAdvisor } = require('./middleware/auth');
@@ -391,6 +392,9 @@ const PORT = process.env.PORT || 3001;
   sweepOutbox().catch(e => console.error('[email-outbox] boot sweep failed:', e.message));
   cron.schedule('*/3 * * * *', () => sweepOutbox().catch(e => console.error('[email-outbox] sweep failed:', e.message)));
   console.log('[cron] Email outbox sweep: every 3 minutes');
+
+  // Monatserinnerung an den Export der Stimmenmappen: am 1. um 09:00, nur eine Mail ohne Anhang
+  cron.schedule('0 9 1 * *', () => require('./jobs/stimmenmappe-erinnerung').runErinnerung().catch(e => console.error('[stimmenmappe] Erinnerung failed:', e.message)), { timezone: 'Europe/Zurich' });
 
   // KI-Wächter: alle 5 Minuten eine winzige Anfrage (haiku, 5 Token), sichtbar im Nutzungsprotokoll unter «waechter».
   // Abschaltbar mit KI_WAECHTER=aus.
