@@ -16,6 +16,8 @@ if (missingRecommended.length) {
   console.warn('WARNING: Missing recommended environment variables (feature will be disabled):', missingRecommended.join(', '));
 }
 
+if (process.env.JWT_SECRET.length < 32) console.warn('WARNING: JWT_SECRET ist kürzer als 32 Zeichen. In Render einen langen Zufallswert setzen.');
+
 const Sentry = require('@sentry/node');
 require('./lib/asyncErrors'); // vor dem Laden der Routen: Fehler in async-Routen landen im Fehlerbehandler
 const express = require('express');
@@ -352,19 +354,8 @@ app.get('*', (_, res) => res.sendFile(path.join(FRONTEND, 'index.html')));
 
 // ── Seed Advisor Account ──────────────────────────────────────
 async function seedAdvisor() {
-  const email = process.env.ADVISOR_EMAIL;
-  const password = process.env.ADVISOR_PASSWORD;
-  const name = process.env.ADVISOR_NAME || 'Advisor';
-  if (!email || !password) return;
-
-  const hash = await bcrypt.hash(password, 12);
-  // UPSERT: insert if not exists, update password if exists
-  await pool.query(
-    'INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) ' +
-    'ON CONFLICT (email) DO UPDATE SET password_hash = $2, name = $3',
-    [email, hash, name, 'advisor']
-  );
-  console.log(`✓ Advisor account ready: ${email}`);
+  const r = await require('./lib/seedAdvisor').seedAdvisor();
+  if (process.env.ADVISOR_EMAIL) console.log(`✓ Advisor account ready: ${process.env.ADVISOR_EMAIL}${r.changed ? ' (Passwort geändert, alte Sitzungen beendet)' : ''}`);
 }
 
 // ── Boot ──────────────────────────────────────────────────────

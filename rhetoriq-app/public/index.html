@@ -924,7 +924,7 @@ html[lang="en"] .legal-en-note{display:block}
     <div id="register-form" style="display:none">
       <div class="fg"><label class="fl">Name</label><input class="fi" type="text" id="reg-name" placeholder="Your name"></div>
       <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="reg-email" placeholder="your@email.com"></div>
-      <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="reg-pw" placeholder="Min. 8 characters"></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="reg-pw" placeholder="Min. 12 characters"></div>
       <div class="fg"><label class="fl">Invite Code</label><input class="fi" type="text" id="reg-code" placeholder="XXXXXXXX" style="text-transform:uppercase;letter-spacing:.1em"></div>
       <button class="lbtn" onclick="registerAdvisor()">Create Account</button>
       <div class="lerr" id="reg-err"></div>
@@ -963,7 +963,7 @@ html[lang="en"] .legal-en-note{display:block}
   <div class="lbox">
     <div class="llogo">Rhetor<span class="llogo-iq">IQ</span></div>
     <div class="ltag" style="margin-bottom:20px">Please set your personal password to continue.</div>
-    <div class="fg"><label class="fl">New Password</label><input class="fi" type="password" id="new-pw1" placeholder="Minimum 8 characters"></div>
+    <div class="fg"><label class="fl">New Password</label><input class="fi" type="password" id="new-pw1" placeholder="Minimum 12 characters"></div>
     <div class="fg"><label class="fl">Confirm Password</label><input class="fi" type="password" id="new-pw2" placeholder="Repeat password"></div>
     <button class="lbtn" onclick="submitNewPassword()">Set Password</button>
     <div class="lerr" id="pw-change-err"></div>
@@ -1040,7 +1040,7 @@ html[lang="en"] .legal-en-note{display:block}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div class="mf" style="margin-bottom:0"><label class="fl">Name</label><input type="text" id="tm-name" placeholder="Anna Berger"></div>
         <div class="mf" style="margin-bottom:0"><label class="fl">Email</label><input type="email" id="tm-email" placeholder="anna@company.com"></div>
-        <div class="mf" style="margin-bottom:0"><label class="fl">Password</label><input type="text" id="tm-pw" placeholder="min. 8 characters"></div>
+        <div class="mf" style="margin-bottom:0"><label class="fl">Password</label><input type="text" id="tm-pw" placeholder="min. 12 characters"></div>
         <div class="mf" style="margin-bottom:0"><label class="fl">Role</label>
           <select id="tm-role" style="width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);font-size:13px;font-family:var(--sans)">
             <option value="editor">Editor (can generate)</option>
@@ -1223,7 +1223,7 @@ html[lang="en"] .legal-en-note{display:block}
       <div style="font-size:12px;color:var(--mu);margin-bottom:8px">Mit Email + Passwort kann der Klient sofort einloggen. Welcome-Email wird automatisch versendet.</div>
       <input type="email" id="nc-email" placeholder="Email-Adresse des Klienten" style="margin-bottom:8px" class="fi">
       <div style="position:relative">
-        <input type="text" id="nc-initpw" placeholder="Initiales Passwort (mind. 8 Zeichen)" style="margin-bottom:8px;padding-right:80px" class="fi">
+        <input type="text" id="nc-initpw" placeholder="Initiales Passwort (mind. 12 Zeichen)" style="margin-bottom:8px;padding-right:80px" class="fi">
         <button type="button" onclick="document.getElementById('nc-initpw').value=Math.random().toString(36).slice(2,10)" style="position:absolute;right:8px;top:8px;font-size:11px;padding:3px 8px;border:1px solid var(--bd);border-radius:4px;background:var(--sf);cursor:pointer;font-family:inherit">Generate</button>
       </div>
       <div style="display:flex;gap:8px">
@@ -2272,7 +2272,7 @@ html[lang="en"] .legal-en-note{display:block}
 </script>
 <script id="rq-xpairs">
 // Zusätzliche DE/EN-Paare (Sicherheitsfunktionen); rq-i18n fügt sie zu PAIRS hinzu.
-window.RQ_EXTRA_PAIRS=[["Zugang und Sitzungen", "Access and sessions"], ["Zugang entziehen", "Revoke access"], ["Alle Geräte abmelden", "Sign out all devices"], ["Alle Geräte dieses Klienten und seines Teams abmelden?", "Sign out all devices of this client and their team?"], ["Alle Geräte sind abgemeldet.", "All devices are signed out."], ["Zugang wirklich entziehen? Alle Sitzungen enden und der bisherige Zugangscode wird ungültig.", "Really revoke access? All sessions end and the previous access code becomes invalid."], ["Soll zusätzlich das Passwort des Hauptzugangs gelöscht werden?\n\nOK: Passwort löschen. Abbrechen: Passwort behalten.", "Should the password of the main account be deleted as well?\n\nOK: delete password. Cancel: keep password."], ["Der Zugang ist entzogen. Neuer Zugangscode: ", "Access revoked. New access code: "], [". Der neue Code lässt sich auf der Kundenkarte per E-Mail an den Klienten senden.", ". The new code can be emailed to the client from the client card."], ["Das hat nicht geklappt. ", "That did not work. "], ["Klientendaten exportieren", "Export client data"], ["Klient vollständig löschen", "Delete client completely"], ["Der Datenauszug wird erstellt …", "Creating the data export …"], ["Der Datenauszug wurde geladen.", "The data export has been downloaded."], ["Zugang entziehen beendet alle Sitzungen des Klienten und seines Teams und erzeugt einen neuen Zugangscode. Der alte Code ist danach ungültig. Alle Geräte abmelden beendet die Sitzungen, der Zugangscode bleibt gleich. Der Datenauszug enthält alle Daten des Klienten als ZIP. Vollständig löschen entfernt den Klienten mit allen Daten.", "Revoking access ends all sessions of the client and their team and creates a new access code. The old code is invalid afterwards. Signing out all devices ends the sessions and the access code stays the same. The data export contains all data of the client as a ZIP. Deleting completely removes the client with all data."]];
+window.RQ_EXTRA_PAIRS=[["Zugang und Sitzungen", "Access and sessions"], ["Zugang entziehen", "Revoke access"], ["Alle Geräte abmelden", "Sign out all devices"], ["Alle Geräte dieses Klienten und seines Teams abmelden?", "Sign out all devices of this client and their team?"], ["Alle Geräte sind abgemeldet.", "All devices are signed out."], ["Zugang wirklich entziehen? Alle Sitzungen enden und der bisherige Zugangscode wird ungültig.", "Really revoke access? All sessions end and the previous access code becomes invalid."], ["Soll zusätzlich das Passwort des Hauptzugangs gelöscht werden?\n\nOK: Passwort löschen. Abbrechen: Passwort behalten.", "Should the password of the main account be deleted as well?\n\nOK: delete password. Cancel: keep password."], ["Der Zugang ist entzogen. Neuer Zugangscode: ", "Access revoked. New access code: "], [". Der neue Code lässt sich auf der Kundenkarte per E-Mail an den Klienten senden.", ". The new code can be emailed to the client from the client card."], ["Das hat nicht geklappt. ", "That did not work. "], ["Klientendaten exportieren", "Export client data"], ["Klient vollständig löschen", "Delete client completely"], ["Der Datenauszug wird erstellt …", "Creating the data export …"], ["Der Datenauszug wurde geladen.", "The data export has been downloaded."], ["Zugang entziehen beendet alle Sitzungen des Klienten und seines Teams und erzeugt einen neuen Zugangscode. Der alte Code ist danach ungültig. Alle Geräte abmelden beendet die Sitzungen, der Zugangscode bleibt gleich. Der Datenauszug enthält alle Daten des Klienten als ZIP. Vollständig löschen entfernt den Klienten mit allen Daten.", "Revoking access ends all sessions of the client and their team and creates a new access code. The old code is invalid afterwards. Signing out all devices ends the sessions and the access code stays the same. The data export contains all data of the client as a ZIP. Deleting completely removes the client with all data."], ["Alle Geräte abmelden? Du musst dich danach überall neu anmelden.", "Sign out all devices? You will have to sign in again everywhere."], ["Initiales Passwort (mind. 12 Zeichen)", "Initial password (min. 12 characters)"], ["Mindestens 12 Zeichen", "Minimum 12 characters"], ["mind. 12 Zeichen", "min. 12 characters"], ["Neues Passwort muss mind. 12 Zeichen haben.", "New password must be at least 12 characters."], ["Passwort muss mind. 12 Zeichen haben.", "Password must be at least 12 characters."], ["Passwort muss mindestens 12 Zeichen haben. Am besten ein Satz oder mehrere Wörter.", "Password must be at least 12 characters. Ideally a sentence or several words."], ["Bitte mindestens 12 Zeichen wählen, am besten ein Satz oder mehrere Wörter.", "Please choose at least 12 characters, ideally a sentence or several words."], ["Zu viele Fehlversuche für dieses Konto. Bitte in {1} Minuten erneut versuchen.", "Too many failed attempts for this account. Please try again in {1} minutes."]];
 </script>
 <script id="rq-i18n">
 // ── I18N: Wörterbuch-Ebene über dem bestehenden T/applyLang-System ──
@@ -3090,7 +3090,7 @@ async function submitNewPassword(){
   const err=document.getElementById('pw-change-err');
   const p1=document.getElementById('new-pw1').value;
   const p2=document.getElementById('new-pw2').value;
-  if(p1.length<8){err.textContent='Password must be at least 8 characters';err.style.display='block';return;}
+  if(p1.length<12){err.textContent='Password must be at least 12 characters';err.style.display='block';return;}
   if(p1!==p2){err.textContent='Passwords do not match';err.style.display='block';return;}
   err.style.display='none';
   try{
@@ -3136,7 +3136,7 @@ async function saveMyProfile(){
   const newPassword=document.getElementById('mp-newpw').value;
   const currentPassword=document.getElementById('mp-curpw').value;
   if(!currentPassword){status.textContent='Bitte aktuelles Passwort eingeben.';status.style.color='#c0392b';return;}
-  if(newPassword&&newPassword.length<8){status.textContent='Neues Passwort muss mind. 8 Zeichen haben.';status.style.color='#c0392b';return;}
+  if(newPassword&&newPassword.length<12){status.textContent='Neues Passwort muss mind. 12 Zeichen haben.';status.style.color='#c0392b';return;}
   status.textContent='Wird gespeichert…';status.style.color='var(--mu)';
   try{
     const r=await fetch(API+'/auth/client-user/profile',{
@@ -4197,7 +4197,7 @@ function ncUpdateModules(){
 async function addClient(){
   const name=document.getElementById('nc-name').value.trim();if(!name)return alert('Bitte den Firmennamen eintragen.');
   if(!document.getElementById('nc-privacy').checked)return alert('Bitte bestätige, dass der Klient über die Datenverarbeitung durch Anthropic informiert wurde.');
-  const ov=document.getElementById('nc-ov');const clientType=ov.dataset.type||'company';const emailLang=ov.dataset.lang||'de';const email=document.getElementById('nc-email').value.trim();const initpw=document.getElementById('nc-initpw').value;const salutation=document.getElementById('nc-salutation').value;const lastName=document.getElementById('nc-lastname').value.trim();if(email&&initpw&&initpw.length<8)return alert('Initial password must be at least 8 characters.');
+  const ov=document.getElementById('nc-ov');const clientType=ov.dataset.type||'company';const emailLang=ov.dataset.lang||'de';const email=document.getElementById('nc-email').value.trim();const initpw=document.getElementById('nc-initpw').value;const salutation=document.getElementById('nc-salutation').value;const lastName=document.getElementById('nc-lastname').value.trim();if(email&&initpw&&initpw.length<12)return alert('Initial password must be at least 12 characters.');
   const sector=document.getElementById('nc-sector').value;
   const checkedMods=[...document.querySelectorAll('.nc-mod-cb:checked')].map(cb=>cb.dataset.mod);
   const enabledModules=checkedMods.length?[...new Set([...NC_ALWAYS,...checkedMods])]:null;
@@ -7912,7 +7912,7 @@ async function addTeamMember(){
   const err=document.getElementById('tm-err');
   err.style.display='none';
   if(!name||!email||!password){err.textContent='Name, Email und Passwort sind erforderlich.';err.style.display='block';return;}
-  if(password.length<8){err.textContent='Passwort muss mind. 8 Zeichen haben.';err.style.display='block';return;}
+  if(password.length<12){err.textContent='Passwort muss mind. 12 Zeichen haben.';err.style.display='block';return;}
   try{
     const pr=await api('/api/clients/'+_teamClientId+'/users',{method:'POST',body:JSON.stringify({name,email,password,role})});
     if(!pr.ok){let m='Das Teammitglied konnte nicht angelegt werden.';try{const j=await pr.json();if(j&&j.error)m=j.error;}catch(_){}err.textContent=m;err.style.display='block';return;}
@@ -8575,7 +8575,7 @@ function legalBack(){
       </div>
       <div style="margin-bottom:16px">
         <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)">Neues Passwort</label>
-        <input id="setup-pw1" type="password" placeholder="Mindestens 8 Zeichen" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;margin-top:6px;font-size:14px;background:var(--bg);color:var(--tx);box-sizing:border-box">
+        <input id="setup-pw1" type="password" placeholder="Mindestens 12 Zeichen" style="width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;margin-top:6px;font-size:14px;background:var(--bg);color:var(--tx);box-sizing:border-box">
       </div>
       <div style="margin-bottom:24px">
         <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)">Passwort bestätigen</label>
@@ -8620,7 +8620,7 @@ async function completeSetup(t) {
   const pw2 = document.getElementById('setup-pw2').value;
   const err = document.getElementById('setup-err');
   err.style.display = 'none';
-  if (pw1.length < 8) { err.textContent = 'Passwort muss mindestens 8 Zeichen haben.'; err.style.display='block'; return; }
+  if (pw1.length < 12) { err.textContent = 'Passwort muss mindestens 12 Zeichen haben. Am besten ein Satz oder mehrere Wörter.'; err.style.display='block'; return; }
   if (pw1 !== pw2)    { err.textContent = 'Passwörter stimmen nicht überein.';          err.style.display='block'; return; }
   const btn = document.querySelector('#setup-ov button');
   btn.textContent = 'Wird gespeichert…'; btn.disabled = true;
@@ -9184,6 +9184,29 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
     }catch(e){console.error(e);}
     return r;
   };
+})();
+
+// ═══ Alle Geräte abmelden (Beraterin, Klient, Teammitglied) ═══
+(function(){
+  async function doAll(){
+    if(!confirm('Alle Geräte abmelden? Du musst dich danach überall neu anmelden.'))return;
+    try{await rqJ('/auth/logout-all',{method:'POST',body:'{}'});}catch(e){rqToast('Das hat nicht geklappt. '+e.message);return;}
+    logout();
+  }
+  function add(){
+    var so=document.getElementById('hdr-signout');
+    if(so&&!document.getElementById('rq-logout-all')){
+      var b=document.createElement('button');b.type='button';b.id='rq-logout-all';b.className=so.className;b.textContent='Alle Geräte abmelden';b.onclick=doAll;
+      so.parentNode.insertBefore(b,so);
+    }
+    var mm=document.querySelector('.mm-row[onclick="logout()"]');
+    if(mm&&!document.getElementById('rq-logout-all-m')){
+      var r=document.createElement('div');r.id='rq-logout-all-m';r.className='mm-row';r.style.borderTop='1px solid var(--bd)';
+      r.innerHTML='<i class="ti ti-devices-off"></i> <span>Alle Geräte abmelden</span>';r.onclick=doAll;
+      mm.parentNode.insertBefore(r,mm);
+    }
+  }
+  add();document.addEventListener('DOMContentLoaded',add);setTimeout(add,1500);setTimeout(add,5000);
 })();
 </script>
 <script id="rq-wiz-js">

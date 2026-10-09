@@ -1,4 +1,5 @@
 const express = require('express');
+const { validPassword, PASSWORD_HINT } = require('../lib/passwordPolicy');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const { pool } = require('../db');
@@ -215,7 +216,7 @@ router.post('/:id/send-welcome', requireAdvisor, async (req, res) => {
 router.post('/:id/set-password', requireAdvisor, async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!password || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    if (!validPassword(password)) return res.status(400).json({ error: PASSWORD_HINT });
     const hash = await bcrypt.hash(password, 12);
     const updates = [hash, req.params.id, req.user.id];
     let q = 'UPDATE clients SET password_hash=$1, must_change_password=false, token_version=token_version+1';
@@ -306,7 +307,7 @@ router.post('/:id/users', requireAdvisor, async (req, res) => {
     if (st && st.full && !ex.length) {
       return res.status(409).json({ error: `Das Paket ${st.planName} enthält ${st.limit} ${st.limit === 1 ? 'Nutzer' : 'Nutzer'} (Hauptzugang inklusive). Weitere Personen sind als Zusatznutzer für CHF 49 pro Monat möglich: Zusatznutzer erhöhen oder das Paket wechseln.`, limit: st.limit, used: st.used });
     }
-    if (!password || password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    if (!validPassword(password)) return res.status(400).json({ error: PASSWORD_HINT });
     const hash = await bcrypt.hash(password, 12);
     const { rows } = await pool.query(
       'INSERT INTO client_users (client_id, email, name, password_hash, role) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (client_id, email) DO UPDATE SET name=$3, password_hash=$4, role=$5, token_version=client_users.token_version+1 RETURNING id, email, name, role, created_at',

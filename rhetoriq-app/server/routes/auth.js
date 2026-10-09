@@ -1,9 +1,11 @@
 const express = require('express');
+const { validPassword, PASSWORD_HINT } = require('../lib/passwordPolicy');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { CLIENT_SESSION } = require('../lib/accessControl');
+const lock = require('../lib/loginLock');
 
 const router = express.Router();
 
@@ -13,12 +15,15 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
+    const lockKey = lock.keyOf('adv', email);
+    if (lock.blocked(res, lockKey)) return;
     const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
     const user = rows[0];
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!user) { lock.recordFailure(lockKey); return res.status(401).json({ error: 'Invalid credentials' }); }
 
     const ok = await bcrypt.compare(password, user.password_hash);
-    if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!ok) { lock.recordFailure(lockKey); return res.status(401).json({ error: 'Invalid credentials' }); }
+    lock.recordSuccess(lockKey);
 
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name, role: user.role, tokenVersion: user.token_version },
@@ -73,10 +78,13 @@ router.post('/client-password-login', async (req, res) => {
       [email.toLowerCase()]
     );
     const client = rows[0];
-    if (!client || !client.password_hash) return res.status(401).json({ error: 'Invalid credentials' });
+    const lockKey = lock.keyOf('cli', email);
+    if (lock.blocked(res, lockKey)) return;
+    if (!client || !client.password_hash) { lock.recordFailure(lockKey); return res.status(401).json({ error: 'Invalid credentials' }); }
 
     const ok = await bcrypt.compare(password, client.password_hash);
-    if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!ok) { lock.recordFailure(lockKey); return res.status(401).json({ error: 'Invalid credentials' }); }
+    lock.recordSuccess(lockKey);
 
     const jwtToken = jwt.sign(
       { clientId: client.id, clientName: client.name, role: 'client', advisorId: client.advisor_id, mustChangePassword: !!client.must_change_password, tokenVersion: client.token_version },
@@ -110,10 +118,13 @@ router.post('/client-user-login', async (req, res) => {
       [email.toLowerCase()]
     );
     const cu = rows[0];
-    if (!cu || !cu.password_hash) return res.status(401).json({ error: 'Invalid credentials' });
+    const lockKey = lock.keyOf('team', email);
+    if (lock.blocked(res, lockKey)) return;
+    if (!cu || !cu.password_hash) { lock.recordFailure(lockKey); return res.status(401).json({ error: 'Invalid credentials' }); }
 
     const ok = await bcrypt.compare(password, cu.password_hash);
-    if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!ok) { lock.recordFailure(lockKey); return res.status(401).json({ error: 'Invalid credentials' }); }
+    lock.recordSuccess(lockKey);
 
     const jwtToken = jwt.sign(
       { clientId: cu.client_id, clientName: cu.client_name, role: 'client', advisorId: null,
@@ -140,7 +151,7 @@ router.post('/client-change-password', requireAuth, async (req, res) => {
     // Das Hauptpasswort ändert nur der Hauptzugang, kein Teammitglied (diese ändern ihr eigenes Passwort über /client-user/profile).
     if (req.user.clientUserId) return res.status(403).json({ error: 'Das Hauptpasswort ändert nur der Hauptzugang.' });
     const { newPassword, currentPassword } = req.body;
-    if (!newPassword || newPassword.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    if (!validPassword(newPassword)) return res.status(400).json({ error: PASSWORD_HINT });
     // Bisheriges Passwort verlangen, ausser beim erzwungenen ersten Wechsel (must_change_password) oder wenn noch keines gesetzt ist.
     const { rows: cur } = await pool.query('SELECT password_hash, must_change_password FROM clients WHERE id = $1', [req.user.clientId]);
     if (!cur[0]) return res.status(404).json({ error: 'Not found' });
@@ -186,7 +197,7 @@ router.put('/client-user/profile', requireAuth, async (req, res) => {
     }
     const { name, email, currentPassword, newPassword } = req.body;
     if (!currentPassword) return res.status(400).json({ error: 'Aktuelles Passwort erforderlich.' });
-    if (newPassword && newPassword.length < 8) return res.status(400).json({ error: 'Neues Passwort muss mind. 8 Zeichen haben.' });
+    if (newPassword && !validPassword(newPassword)) return res.status(400).json({ error: PASSWORD_HINT });
     if (email && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
       return res.status(400).json({ error: 'Ungültige E-Mail-Adresse.' });
     }
@@ -240,8 +251,8 @@ router.post('/register', async (req, res) => {
     const { email, password, name, inviteCode } = req.body;
     if (!email || !password || !name || !inviteCode)
       return res.status(400).json({ error: 'email, password, name and inviteCode required' });
-    if (password.length < 8)
-      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    if (!validPassword(password))
+      return res.status(400).json({ error: PASSWORD_HINT });
 
     // Validate invite code
     const { rows: codeRows } = await pool.query(
@@ -264,7 +275,7 @@ router.post('/register', async (req, res) => {
     // Mark invite code as used
     await pool.query('UPDATE invite_codes SET used_by=$1, used_at=NOW() WHERE id=$2', [user.id, codeRows[0].id]);
 
-    const token = jwt.sign({ id: user.id, role: 'advisor', name: user.name, tokenVersion: 1 }, process.env.JWT_SECRET, { expiresIn: '90d' });
+    const token = jwt.sign({ id: user.id, role: 'advisor', name: user.name, tokenVersion: 1 }, process.env.JWT_SECRET, { expiresIn: '30d' });
     res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (e) {
     console.error(e);

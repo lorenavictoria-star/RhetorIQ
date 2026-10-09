@@ -15,7 +15,7 @@ test.before(async () => {
 });
 test.after(async () => { await srv.close(); });
 
-const add = (email) => srv.call('POST', `/api/clients/${c.id}/users`, { token: H.advisorToken(), body: { email, name: 'N ' + email, password: 'geheim1234', role: 'editor' } });
+const add = (email) => srv.call('POST', `/api/clients/${c.id}/users`, { token: H.advisorToken(), body: { email, name: 'N ' + email, password: 'geheim1234-lang', role: 'editor' } });
 
 test('Ohne Paket unbegrenzt, Stimme erlaubt nur den Hauptzugang, Zusatznutzer öffnen Plätze', async () => {
   assert.equal((await add('a@x.ch')).status, 201, 'kein Paket: unbegrenzt');

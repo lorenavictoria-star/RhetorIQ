@@ -1,4 +1,5 @@
 const express = require('express');
+const { validPassword, PASSWORD_HINT } = require('../lib/passwordPolicy');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../db');
@@ -38,7 +39,7 @@ router.post('/complete', async (req, res) => {
   try {
     const { token, password } = req.body;
     if (!token || !password) return res.status(400).json({ error: 'Token und Passwort erforderlich.' });
-    if (password.length < 8) return res.status(400).json({ error: 'Passwort muss mindestens 8 Zeichen haben.' });
+    if (!validPassword(password)) return res.status(400).json({ error: PASSWORD_HINT });
 
     const { rows } = await pool.query(
       `SELECT ot.id AS token_id, ot.used_at, ot.expires_at, c.id AS client_id, c.name AS client_name,
@@ -66,7 +67,7 @@ router.post('/complete', async (req, res) => {
     const jwtToken = jwt.sign(
       { clientId: row.client_id, clientName: row.client_name, role: 'client', advisorId: null, tokenVersion: updated[0].token_version },
       process.env.JWT_SECRET,
-      { expiresIn: '90d' }
+      { expiresIn: require('../lib/accessControl').CLIENT_SESSION }
     );
 
     res.json({
