@@ -9870,6 +9870,17 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
 #page-module[data-rqstep] #mod-form{display:block!important;max-width:820px}
 #page-module[data-rqstep] #mod-form > .rbox,#page-module[data-rqstep] #mod-form > .tg-rbox-wrap,#page-module[data-rqstep] .tg-rbox-wrap{position:static!important;max-height:none!important;overflow:visible!important;grid-column:auto!important}
 #page-module[data-rqstep] .tg-back,#page-module[data-rqstep] .rq-dup{display:none!important}
+#page-module[data-rqstep] #mod-form,#page-module[data-rqstep] #rq-mstep{max-width:1040px}
+#page-module[data-rqstep] .fg2 textarea{min-height:190px!important;font-size:15px;line-height:1.6;padding:14px}
+#page-module[data-rqstep] .fg2>div[style*="font-size:11px"],#page-module[data-rqstep] .fg2 .rq-hint{font-size:13px!important;color:var(--mu)}
+#page-module[data-rqstep] .fl2{font-size:14px;letter-spacing:0;text-transform:none;font-weight:500;color:var(--tx)}
+#page-module[data-rqstep] .rq-col{display:flex!important;flex-direction:column;gap:6px}
+.rq-pick{display:flex;gap:12px;margin:4px 0 22px;flex-wrap:wrap}
+.rq-pick button{flex:1 1 220px;text-align:left;padding:14px 16px;border:1px solid var(--bd);background:#fff;color:var(--tx);cursor:pointer;font-family:var(--sans);font-size:14px;min-height:64px}
+.rq-pick button b{display:block;font-weight:500;font-size:15px;margin-bottom:2px}
+.rq-pick button span{color:var(--mu);font-size:13px}
+.rq-pick button.on{border-color:var(--ac);background:#faf6ec}
+.rq-pick button:hover{border-color:var(--ac)}
 #rq-mstep button:disabled{opacity:.45;cursor:default}
 .rq-mnav{display:flex;gap:10px;margin:18px 0 6px;flex-wrap:wrap}
 .rq-mnav button{min-height:44px;padding:8px 22px;border:1px solid var(--tx);background:var(--tx);color:#fff;font-family:var(--sans);font-size:14px;cursor:pointer}
@@ -9932,6 +9943,53 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     var b=document.getElementById('rq-mstep');if(b)b.style.display='none';
     if(obs){obs.disconnect();obs=null;}if(rbObs){rbObs.disconnect();rbObs=null;}
   }
+  var NOUN={linkedin:'LinkedIn-Beitrag',newsletter:'Newsletter',email:'E-Mail',speech:'Rede',press:'Medienmitteilung',website:'Webseitentext',brief:'Brief',custom:'Text'};
+  var EX={
+    linkedin:'Beispiel: Wir eröffnen im Mai eine zweite Niederlassung in Winterthur. Der Beitrag richtet sich an Geschäftspartner und soll die Verbundenheit zur Region zeigen.',
+    newsletter:'Beispiel: Quartalsausgabe mit drei Themen: neue Geschäftsleitung, Projektabschluss Areal Nord, Termine im Herbst. Leserschaft sind Kundschaft und Partner.',
+    email:'Beispiel: Preisanpassung von rund 3 Prozent per 1. April. Empfänger sind unsere Bestandskunden. Die Begründung soll nachvollziehbar sein, der Ton sachlich und wertschätzend.',
+    speech:'Beispiel: Eröffnungsrede zur Jahresversammlung vor 120 Mitgliedern, 8 Minuten. Rückblick auf das Jahr und Ausblick auf die Investitionen.',
+    press:'Beispiel: Mitteilung zur Übernahme der Firma X per 1. Juli. Zielgruppe sind Fachmedien. Kernaussage: Standorte und Arbeitsplätze bleiben erhalten.',
+    website:'Beispiel: Startseite für ein Treuhandunternehmen mit Fokus auf KMU. Hauptaussage: persönliche Beratung und klare Preise.',
+    brief:'Beispiel: Antwort an einen Kunden auf eine Reklamation wegen verspäteter Lieferung. Entschuldigung, Lösung bis Freitag anbieten.',
+    custom:'Beispiel: Ansprache an der Mitarbeiterversammlung. Anlass, Zielgruppe und Kernaussage nennen.'
+  };
+  function tgEnhance(tile,firstOne){
+    var noun=NOUN[tile]||'Text';
+    var femNew=(tile==='email'||tile==='speech'||tile==='press')?'Neue ':'Neuen ';
+    var opts=[['new',(tile==='email'?'Neue E-Mail verfassen':tile==='speech'?'Neue Rede verfassen':tile==='press'?'Neue Medienmitteilung verfassen':(noun+' neu verfassen')),'Sie geben die Kernpunkte vor.']];
+    if(tile==='email')opts.push(['reply','E-Mail beantworten','Sie fügen die erhaltene Nachricht ein.']);
+    opts.push(['revise','Bestehenden Text überarbeiten','Sie fügen einen vorhandenen Entwurf ein.']);
+    var host=document.createElement('div');host.className='rq-pick';host.setAttribute('data-s','1');host.setAttribute('data-rqmade','1');host.setAttribute('role','radiogroup');
+    opts.forEach(function(o){var b=document.createElement('button');b.type='button';b.setAttribute('data-k',o[0]);b.setAttribute('role','radio');b.innerHTML='<b>'+o[1]+'</b><span>'+o[2]+'</span>';b.addEventListener('click',function(){choose(o[0]);});host.appendChild(b);});
+    var ref=firstOne||document.getElementById('tg-panel-'+tile).firstElementChild;
+    ref.parentNode.insertBefore(host,ref);
+    var mb=document.getElementById('tg-mode-new-'+tile);if(mb&&mb.parentNode)mb.parentNode.classList.add('rq-dup');
+    var ta=document.getElementById('tg-task-'+tile),lab=document.getElementById('tg-task-label-'+tile),labEl=lab&&lab.closest('label'),hint=labEl&&labEl.nextElementSibling;
+    var reply=document.getElementById('tg-reply-email'),replyWrap=reply&&reply.closest('.fg2'),draft=document.getElementById('tg-draft-'+tile),draftLab=draft&&draft.closest('.fg2')&&draft.closest('.fg2').querySelector('label');
+    var two=replyWrap&&replyWrap.parentNode;if(two)two.classList.add('rq-col');
+    function hintOf(el,t){if(!el)return;el.textContent=t;el.classList.add('rq-hint');}
+    function choose(k){
+      host.querySelectorAll('button').forEach(function(b){var on=b.getAttribute('data-k')===k;b.classList.toggle('on',on);b.setAttribute('aria-checked',on?'true':'false');});
+      if(typeof tgSetMode==='function')tgSetMode(tile,k==='revise'?'revise':'new');
+      if(replyWrap)replyWrap.style.display=(k==='reply')?'':'none';
+      if(k==='reply'){
+        if(replyWrap){replyWrap.style.order=0;var rl=replyWrap.querySelector('label');if(rl)rl.textContent='1. Erhaltene E-Mail';reply.placeholder='Beispiel: Guten Tag, wir haben Ihre Offerte erhalten. Können Sie uns den Liefertermin bestätigen? …';
+          var h=replyWrap.querySelector('.rq-hint');if(!h){h=document.createElement('div');h.className='rq-hint';rl.after(h);}h.textContent='Fügen Sie die vollständige Nachricht ein, inklusive Anrede und Signatur.';}
+        if(ta){ta.closest('.fg2').style.order=1;ta.placeholder='Beispiel: Liefertermin 14. Mai bestätigen. Rückfrage zur bestellten Menge stellen.';}
+        if(lab)lab.textContent='2. Inhalt Ihrer Antwort';hintOf(hint,'Halten Sie in Stichworten fest, was die Antwort enthalten soll.');
+      } else if(k==='revise'){
+        if(draftLab)draftLab.textContent='1. Bestehender Text';if(draft)draft.placeholder='Fügen Sie hier den vorhandenen Entwurf ein. Er wird überarbeitet und an Ihre Brand Voice angepasst.';
+        if(lab)lab.textContent='2. Gewünschte Änderungen';hintOf(hint,'Beschreiben Sie, was am bestehenden Text angepasst werden soll.');
+        if(ta){ta.placeholder='Beispiel: Kürzer fassen und den Schluss verbindlicher formulieren.';}
+      } else {
+        if(lab)lab.textContent='Worum geht es?';hintOf(hint,'Nennen Sie Anlass, Empfänger und die wichtigste Aussage. Stichworte genügen.');
+        if(ta){ta.placeholder=EX[tile]||EX.custom;if(ta.closest('.fg2'))ta.closest('.fg2').style.order=0;}
+      }
+    }
+    var dw=document.getElementById('tg-draft-wrap-'+tile);
+    choose(dw&&dw.style.display==='block'?'revise':'new');
+  }
   function stepify(){
     clearOld();
     var mf=document.getElementById('mod-form');
@@ -9962,7 +10020,8 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
       if(s===1)lastOne=n;
     });
     if(isTg){var w=document.getElementById('tg-rbox-wrap-'+tile);if(w)w.setAttribute('data-s','3');}
-    var tw=document.getElementById('thorough-wrap');if(tw)tw.setAttribute('data-s','2');
+    if(isTg){var firstOne=root.querySelector('[data-s="1"]');try{tgEnhance(tile,firstOne);}catch(e){console.error(e);}}
+    var tw=document.getElementById('thorough-wrap');if(tw){tw.setAttribute('data-s','2');tw.style.margin='4px 0 14px';var rb=root.querySelector('.runbtn');if(rb&&rb.parentNode)rb.parentNode.insertBefore(tw,rb);}
     // Weiter / Zurück
     if(lastOne){var nv=mk('',[['Weiter',2]]);nv.setAttribute('data-s','1');nv.setAttribute('data-rqmade','1');lastOne.after(nv);}
     var back=mk('',[['Zurück',1,true]]);back.setAttribute('data-s','2');back.setAttribute('data-rqmade','1');
