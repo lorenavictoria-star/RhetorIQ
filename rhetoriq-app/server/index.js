@@ -267,6 +267,7 @@ app.use('/api/client-plan', require('./routes/clientPlan'));
 app.use('/api/review-time', require('./routes/reviewTime'));
 app.use('/api/archive', require('./routes/archive'));
 app.use('/api/quartalsreview', require('./routes/quartalsreview'));
+app.use('/api/status', require('./routes/status'));
 
 // Manual report trigger (advisor only)
 const { requireAdvisor } = require('./middleware/auth');
@@ -388,6 +389,13 @@ const PORT = process.env.PORT || 3001;
   sweepOutbox().catch(e => console.error('[email-outbox] boot sweep failed:', e.message));
   cron.schedule('*/3 * * * *', () => sweepOutbox().catch(e => console.error('[email-outbox] sweep failed:', e.message)));
   console.log('[cron] Email outbox sweep: every 3 minutes');
+
+  // KI-Wächter: alle 5 Minuten eine winzige Anfrage (haiku, 5 Token), sichtbar im Nutzungsprotokoll unter «waechter».
+  // Abschaltbar mit KI_WAECHTER=aus.
+  if ((process.env.KI_WAECHTER || '').toLowerCase() !== 'aus') {
+    cron.schedule('*/5 * * * *', () => require('./jobs/ki-waechter').runWaechter().catch(e => console.error('[ki-waechter] failed:', e.message)));
+    console.log('[cron] KI-Wächter: every 5 minutes');
+  }
 })();
 
 function gracefulShutdown(signal) {

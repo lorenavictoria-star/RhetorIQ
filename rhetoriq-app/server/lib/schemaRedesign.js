@@ -135,6 +135,13 @@ function ensureSchema() {
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trial'`);
     // Hinweis auf KI-Unterstützung unter exportierten Texten (Standard: aus)
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS ki_hinweis BOOLEAN NOT NULL DEFAULT FALSE`);
+    // Betriebszustand (KI-Wächter, Hinweis von Hand, Reservekonto-Schalter)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS system_status (
+        key TEXT PRIMARY KEY,
+        value JSONB,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
     // Indizes für die häufigsten Abfragen (Kundenliste, Verlauf, Nutzung)
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_client_created_idx ON analyses (client_id, created_at DESC)`);
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_advisor_created_idx ON analyses (advisor_id, created_at DESC)`);
