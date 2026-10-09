@@ -55,4 +55,18 @@ function ownPerson(param = 'id') {
   };
 }
 
-module.exports = { canAccessClient, ownClient, allowedClientId, canAccessPerson, ownPerson };
+// Wie ownClient, aber die Klienten-Nummer steht im Body oder in der Abfrage (req.body[field] oder req.query[field])
+function ownClientBody(field = 'clientId') {
+  return async (req, res, next) => {
+    try {
+      const v = (req.body && req.body[field] != null) ? req.body[field] : (req.query || {})[field];
+      if (await canAccessClient(req, v)) return next();
+      return res.status(403).json({ error: 'Kein Zugriff auf diesen Klienten.' });
+    } catch (e) {
+      console.error('[ownership]', e.message);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+}
+
+module.exports = { ownClientBody, canAccessClient, ownClient, allowedClientId, canAccessPerson, ownPerson };

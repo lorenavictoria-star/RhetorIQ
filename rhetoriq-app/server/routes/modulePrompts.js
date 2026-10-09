@@ -3,12 +3,13 @@ const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
+const { ownClient, ownClientBody } = require('../middleware/ownership');
 const meterLib = require('../lib/meter');
 
 const router = express.Router();
 
 // GET /api/module-prompts/:clientId/:moduleKey
-router.get('/:clientId/:moduleKey', requireAuth, async (req, res) => {
+router.get('/:clientId/:moduleKey', requireAuth, ownClient('clientId'), async (req, res) => {
   if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Forbidden' });
   const { clientId, moduleKey } = req.params;
   const { rows } = await pool.query(
@@ -19,7 +20,7 @@ router.get('/:clientId/:moduleKey', requireAuth, async (req, res) => {
 });
 
 // POST /api/module-prompts/:clientId/:moduleKey
-router.post('/:clientId/:moduleKey', requireAuth, requireRole('editor'), async (req, res) => {
+router.post('/:clientId/:moduleKey', requireAuth, ownClient('clientId'), requireRole('editor'), async (req, res) => {
   if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Forbidden' });
   const { clientId, moduleKey } = req.params;
   const { instructions } = req.body;
@@ -34,7 +35,7 @@ router.post('/:clientId/:moduleKey', requireAuth, requireRole('editor'), async (
 });
 
 // POST /api/module-prompts/suggest — generate a prompt suggestion for one module+client
-router.post('/suggest', requireAuth, async (req, res) => {
+router.post('/suggest', requireAuth, ownClientBody('clientId'), async (req, res) => {
   if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Forbidden' });
   const { clientId, moduleKey, moduleLabel } = req.body;
   if (!clientId || !moduleKey) return res.status(400).json({ error: 'Missing params' });
@@ -111,7 +112,7 @@ Nur die Anweisung selbst, kein Intro, kein Outro. Auf Deutsch.`;
 // (4+ occurrence) feedback pattern for one client+module into a concrete
 // instruction addition, so the advisor can fix the root cause in one click
 // instead of manually rewriting the prompt each time the same complaint recurs.
-router.post('/suggest-from-feedback', requireAuth, async (req, res) => {
+router.post('/suggest-from-feedback', requireAuth, ownClientBody('clientId'), async (req, res) => {
   if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Forbidden' });
   const { clientId, moduleKey, category, summary } = req.body;
   if (!clientId || !moduleKey || !summary) return res.status(400).json({ error: 'Missing params' });
@@ -157,7 +158,7 @@ Nur die Ergänzung selbst, kein Intro, kein Outro. Auf Deutsch.`;
 });
 
 // POST /api/module-prompts/generate-starters
-router.post('/generate-starters', requireAuth, async (req, res) => {
+router.post('/generate-starters', requireAuth, ownClientBody('clientId'), async (req, res) => {
   if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Forbidden' });
   const { clientId, brandVoice, type } = req.body;
   if (!clientId || !brandVoice) return res.status(400).json({ error: 'Missing clientId or brandVoice' });
