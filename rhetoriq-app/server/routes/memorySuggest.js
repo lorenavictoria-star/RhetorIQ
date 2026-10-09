@@ -52,6 +52,8 @@ router.post('/', requireAuth, limiter, async (req, res) => {
     const filename = typeof req.body?.filename === 'string' ? req.body.filename.slice(0, 200) : '';
     const text = typeof req.body?.text === 'string' ? req.body.text.trim() : '';
     if (!text) return res.status(400).json({ error: 'Kein Text übergeben.' });
+    // Tagesbudget erreicht: die Oberfläche fällt auf die manuelle Auswahl zurück
+    if (!(await require('../lib/budget').allow('memory-vorschlag')).ok) return res.json({ type: null, label: '', confidence: 0, summary: '' });
     // Nur ein Ausschnitt reicht zum Erkennen (spart Kosten): Anfang und ein Stück aus der Mitte.
     const excerpt = text.length <= 2400 ? text : text.slice(0, 1600) + '\n[…]\n' + text.slice(Math.floor(text.length / 2), Math.floor(text.length / 2) + 800);
     const system = `Du ordnest ein hochgeladenes Dokument einem Typ im Firmengedächtnis einer Kommunikationsplattform zu.

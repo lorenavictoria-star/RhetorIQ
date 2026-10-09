@@ -19,6 +19,7 @@ function parse(raw) {
 // Ordnet den Wunsch ein und formuliert ihn als allgemeine Vorliebe. Bei einem Fehler der KI gilt der Wunsch selbst.
 async function classify(clientId, note) {
   try {
+    if (!(await require('./budget').allow('lernvorschlaege')).ok) throw new Error('Tagesbudget erreicht');   // weiter mit dem Wunsch im Wortlaut
     const resp = await generateText({
       system: `Du ordnest den Änderungswunsch eines Klienten zu einem KI-Text ein. Antworte NUR mit JSON: {"category":"TON|STRUKTUR|FAKTEN|FORMAT|SONSTIGES","observation":"..."}.
 FAKTEN heisst: Einzelfälle, Namen, Daten, Zahlen, Termine, konkrete Sachangaben. Alle anderen Kategorien beschreiben Stil, Aufbau oder Form.

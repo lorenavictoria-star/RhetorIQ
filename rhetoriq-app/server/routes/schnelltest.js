@@ -63,6 +63,7 @@ function makeRouter({ max = 5, fetchHtml = safeFetch.safeFetchHtml } = {}) {
       await ensureTable();
       const day = await pool.query(`SELECT COUNT(*)::int AS n FROM schnelltests WHERE created_at > NOW() - INTERVAL '24 hours'`);
       if (day.rows[0].n >= DAILY_MAX) return res.status(429).json({ error: 'Der Schnelltest ist für heute ausgeschöpft. Bitte versuchen Sie es morgen erneut.' });
+      if (!(await require('../lib/budget').allow('schnelltest')).ok) return res.status(429).json({ error: 'Der Schnelltest ist für heute ausgeschöpft. Bitte versuchen Sie es morgen erneut.' });
       const dup = await pool.query(`SELECT id FROM schnelltests WHERE (host=$1 OR email=$2) AND created_at > NOW() - INTERVAL '24 hours' LIMIT 1`, [host, email]);
       if (dup.rows.length) return res.status(429).json({ error: 'Für diese Webseite oder E-Mail-Adresse wurde in den letzten 24 Stunden schon ein Test erstellt.' });
       // Platz reservieren, damit zwei gleichzeitige Anfragen nicht beide durchkommen

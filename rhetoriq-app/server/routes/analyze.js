@@ -1514,6 +1514,11 @@ const { getGoldBlock, queryTextOf } = require('../lib/goldtexte');
 const { scopeSql } = require('../lib/exampleScope');
 const { proposeFromFollowUp, addSuggestion } = require('../lib/followupLearning');
 async function consolidateFeedback(clientId, moduleKey, rating, note) {
+  // Tagesbudget (lib/budget.js): ist es erreicht, bleibt die Notiz im Rohprotokoll, der Lernstand wird nicht verfeinert
+  if (!(await require('../lib/budget').allow('lernvorschlaege')).ok) {
+    await pool.query('INSERT INTO client_feedback_history (client_id, module_key, category, rating, note) VALUES ($1,$2,$3,$4,$5)', [clientId, moduleKey, 'SONSTIGES', rating, note]);
+    return;
+  }
   const { rows: existing } = await pool.query(
     'SELECT category, summary FROM client_feedback_learnings WHERE client_id=$1 AND module_key=$2',
     [clientId, moduleKey]

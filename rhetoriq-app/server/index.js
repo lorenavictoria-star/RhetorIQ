@@ -412,11 +412,12 @@ const PORT = process.env.PORT || 3001;
   // Papierkorb: täglich um 03:40 Klienten endgültig löschen, die seit 30 Tagen im Papierkorb liegen
   cron.schedule('40 3 * * *', () => require('./jobs/papierkorb').runPapierkorb().catch(e => console.error('[papierkorb] job failed:', e.message)), { timezone: 'Europe/Zurich' });
 
-  // KI-Wächter: alle 5 Minuten eine winzige Anfrage (haiku, 5 Token), sichtbar im Nutzungsprotokoll unter «waechter».
+  // KI-Wächter: alle 5 Minuten ein kostenloser Prüfaufruf (count_tokens), alle 30 Minuten ein echter Aufruf (haiku, 1 Token),
+  // sichtbar im Nutzungsprotokoll unter «waechter». Tagesbudget: lib/budget.js.
   // Abschaltbar mit KI_WAECHTER=aus.
   if ((process.env.KI_WAECHTER || '').toLowerCase() !== 'aus') {
     cron.schedule('*/5 * * * *', () => require('./jobs/ki-waechter').runWaechter().catch(e => console.error('[ki-waechter] failed:', e.message)));
-    console.log('[cron] KI-Wächter: every 5 minutes');
+    console.log('[cron] KI-Wächter: Prüfaufruf alle 5 Minuten, echter Aufruf alle 30 Minuten');
   }
 })();
 

@@ -37,6 +37,7 @@ router.post('/', requireAuth, limiter, async (req, res) => {
     const q = typeof req.body?.question === 'string' ? req.body.question.trim() : '';
     if (!q) return res.status(400).json({ error: 'Bitte eine Frage eingeben.' });
     if (q.length > MAX_QUESTION) return res.status(400).json({ error: `Die Frage darf höchstens ${MAX_QUESTION} Zeichen lang sein.` });
+    if (!(await require('../lib/budget').allow('hilfe-chat')).ok) return res.status(429).json({ error: 'Die Hilfe ist für heute ausgeschöpft. Bitte morgen wieder versuchen oder die Beraterin fragen.' });
     const rolle = req.user.role === 'advisor' ? 'advisor' : 'client';
     const resp = await generateText({
       system: `${BASIS}\n\n${ROLLE[rolle]}`,

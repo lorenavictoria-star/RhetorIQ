@@ -42,6 +42,7 @@ router.post('/', requireAuth, async (req, res) => {
     (async () => {
       let solution = '';
       try {
+        if (!(await require('../lib/budget').allow('feedback')).ok) throw new Error('Tagesbudget erreicht');
         const resp = await generateText({
           system: SOLUTION_SYSTEM_PROMPT,
           messages: [{ role: 'user', content: `Feedback-Notiz von ${authorLabel} (${req.user.role === 'advisor' ? 'Beraterin' : 'Klient'}):\n"${message.trim()}"\n\nSeite/Kontext: ${pageContext || 'nicht angegeben'}` }],

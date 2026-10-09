@@ -348,4 +348,4 @@ function streamText(opts) {
   })();
 }
 
-module.exports = { generateText, streamText, resolveModelId, resetReserveCache, _cfg: cfg };
+module.exports = { generateText, streamText, resolveModelId, resetReserveCache, keyOrder, _cfg: cfg };

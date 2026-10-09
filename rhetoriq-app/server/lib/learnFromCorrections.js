@@ -120,6 +120,8 @@ async function learnFromReviewInner(reviewId) {
     await done();
     return { skipped: 'kaum verändert' };
   }
+  // Tagesbudget (lib/budget.js): bei erreichter Grenze wird nicht gelernt (die Freigabe bleibt unverändert und lernt beim nächsten Senden)
+  if (!(await require('./budget').allow('lernvorschlaege')).ok) return { skipped: 'Tagesbudget' };
   const key = learnKeyFor(rv);
   const { rows: learned } = await pool.query('SELECT category, summary FROM client_feedback_learnings WHERE client_id=$1 AND module_key=$2', [rv.client_id, key]).catch(() => ({ rows: [] }));
   const known = learned.map(l => `${l.category}: ${l.summary}`).join('\n').slice(0, 1200);
