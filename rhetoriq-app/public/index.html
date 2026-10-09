@@ -10583,6 +10583,14 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
       if(send){
         var run=tget(id),inp=document.getElementById('rq-min-'+id);
         if(run&&inp){var mins=Math.max(1,Math.ceil((Date.now()-run)/60000));tset(id,0);inp.value=String((parseInt(inp.value,10)||0)+mins);}
+        // Noch keine Zeit eingetragen: nachfragen, damit kein Mehraufwand vergessen geht
+        if(inp&&inp.value.trim()===''){
+          var ans=window.prompt('Wie viele Minuten hast du für diese Überarbeitung aufgewendet? Gib 0 ein, wenn es kein Mehraufwand war. Abbrechen bringt dich zurück, ohne zu senden.');
+          if(ans===null)return;
+          ans=String(ans).trim().replace(',','.');
+          if(ans===''||isNaN(Number(ans))||Number(ans)<0){alert('Bitte eine Zahl in Minuten eingeben, zum Beispiel 15 oder 0.');return;}
+          inp.value=String(Math.round(Number(ans)));
+        }
         await save(id,true);
       }
     }catch(e){/* Zeit ist ein Zusatz, das Senden geht vor */}
