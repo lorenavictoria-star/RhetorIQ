@@ -82,6 +82,13 @@ async function runWeeklyReport() {
       ORDER BY count DESC
     `);
 
+    // 7. Die drei teuersten KI-Funktionen der Woche (aus dem Nutzungsprotokoll, mit Hinweis auf Funktionen ohne Klick)
+    let teuerste = null;
+    try {
+      const k = require('../lib/kostenNachFunktion');
+      teuerste = k.zeileTeuersteFunktionen(await k.kostenNachFunktion({ days: 7 }));
+    } catch (e) { console.error('[weekly-report] Kosten je Funktion fehlgeschlagen:', e.message); }
+
     // ── Build report text ────────────────────────────────────────────────────
     const lines = [
       `RHETORIQ WOCHENBERICHT — ${week}`,
@@ -92,6 +99,7 @@ async function runWeeklyReport() {
       `  Input-Tokens:      ${(tokens.total_input  || 0).toLocaleString('de-CH')}`,
       `  Output-Tokens:     ${(tokens.total_output || 0).toLocaleString('de-CH')}`,
       `  KI-Kosten (exakt): USD ${costEst}`,
+      ...(teuerste ? [teuerste] : []),
       `  Brand Voice-Rate:  ${bvRate}% der Analysen`,
       '',
       'MODULE-RANKING (diese Woche):',

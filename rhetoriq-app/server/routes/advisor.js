@@ -325,4 +325,29 @@ router.get('/client-usage/:clientId', requireAdvisor, async (req, res) => {
   }
 });
 
+// GET /api/advisor/costs-by-module?days=30 — Kosten, Aufrufe und Tokens je Funktion (Spalte module im Nutzungsprotokoll).
+// Zeigt auch Hintergrundfunktionen ohne Klick (Wächter, Messungen, Themenplan, Lernvorschläge). Zeilen ohne Beraterin und
+// ohne Klient (Wächter, Schnelltest) sieht nur die erste Beraterin der Plattform (Betreiberin).
+router.get('/costs-by-module', requireAdvisor, async (req, res) => {
+  try {
+    const days = parseInt(req.query.days, 10) || 30;
+    if (days < 1 || days > 365) return res.status(400).json({ error: 'days muss zwischen 1 und 365 liegen' });
+    const [{ rows: mine }, { rows: first }] = await Promise.all([
+      pool.query('SELECT id FROM clients WHERE advisor_id=$1', [req.user.id]),
+      pool.query(`SELECT id FROM users WHERE role='advisor' ORDER BY id LIMIT 1`)
+    ]);
+    const { kostenNachFunktion } = require('../lib/kostenNachFunktion');
+    const A = require('./analyze')._internal;
+    const out = await kostenNachFunktion({
+      days,
+      scope: { advisorId: req.user.id, clientIds: mine.map(r => r.id), plattform: !!first[0] && first[0].id === req.user.id },
+      labelFor: (k) => (A.PROMPTS[k] && A.PROMPTS[k].label) || null
+    });
+    res.json(out);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;

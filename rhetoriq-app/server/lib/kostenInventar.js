@@ -218,6 +218,7 @@ function szenario() {
 // Hinweis für die Übersicht «Wohin das KI-Geld fliesst»: gilt auch für Schlüssel, die nicht im Inventar stehen
 function info(moduleKey) {
   const e = INVENTAR[moduleKey];
+  if (moduleKey === 'ki') return { label: 'Nicht zugeordnet (Hilfsaufrufe ohne Namen)', automatisch: false, ausloeser: null };
   if (!e) return { label: moduleKey, automatisch: false, ausloeser: null };
   return { label: e.label, automatisch: ist_automatisch(e.ausloeser), ausloeser: AUSLOESER_TEXT[e.ausloeser] };
 }
