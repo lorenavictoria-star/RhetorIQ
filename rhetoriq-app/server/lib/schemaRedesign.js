@@ -91,6 +91,18 @@ function ensureSchema() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
     await pool.query(`CREATE INDEX IF NOT EXISTS communication_profiles_client_idx ON communication_profiles (client_id, kind, created_at DESC)`);
+    // Kostenloser Stimm-Schnelltest der Landingpage (Lead-Magnet)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS schnelltests (
+        id SERIAL PRIMARY KEY,
+        url TEXT NOT NULL,
+        host TEXT NOT NULL,
+        email TEXT NOT NULL,
+        befunde JSONB,
+        ergebnis TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS schnelltests_created_idx ON schnelltests (created_at DESC)`);
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS learned_at TIMESTAMPTZ`);
     // Abo-Status direkt am Klienten (derselbe Befehl wie in routes/subscriptions.js), damit die Kundenliste ihn mitladen kann
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trial'`);

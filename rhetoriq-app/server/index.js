@@ -254,6 +254,7 @@ app.use('/api/setup', require('./routes/setup'));
 const inquiries = require('./routes/inquiries');
 app.use('/api/inquiry', inquiries.publicRouter);
 app.use('/api/inquiries', inquiries.advisorRouter);
+app.use('/api/schnelltest', require('./routes/schnelltest'));
 app.use('/api/onboarding-drafts', require('./routes/onboardingDrafts'));
 app.use('/api/files', require('./routes/files'));
 app.use('/api/help-chat', require('./routes/helpChat'));

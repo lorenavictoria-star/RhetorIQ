@@ -158,6 +158,16 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
 }
 p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:break-word}
 @media(max-width:819px){.wrap{position:relative;z-index:2}}
+.stf{display:grid;gap:18px;max-width:560px;margin-top:24px}
+.stf label{display:grid;gap:6px;font-size:13px;letter-spacing:.04em;color:var(--mute)}
+.stf input[type=text],.stf input[type=email]{font:300 16px var(--sans);color:var(--cream);background:transparent;border:0;border-bottom:1px solid #3a3a37;border-radius:0;padding:10px 0;outline:0;width:100%}
+.stf input:focus{border-bottom-color:var(--gold)}
+.stf .act{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.stf .msg{font-size:13px;color:var(--mute);margin:0}
+.str{max-width:760px;margin-top:28px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
+.str h3{font:400 26px/1.15 var(--serif);margin:0 0 12px}
+.str ol{margin:0 0 16px;padding-left:20px}.str li{margin-bottom:10px}
+.str .nx{color:var(--gold);margin:0 0 18px}
 </style>
 </head>
 <body>
@@ -236,6 +246,35 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
     <p class="vert" style="margin-top:28px"><b>Einstieg: Stimm-Audit, CHF 950 einmalig.</b> Sie geben mir 10 Ihrer Texte und Ihre Webseite, wir sprechen eine Stunde, und Sie erhalten Ihr Stimmprofil, einen Ausgangswert «Klingt wie ich» und 30 Tage Zugang mit 40 Texten. Danach bleiben Sie bei Stimme oder wechseln auf Team oder Business, wo der Betrag auf den Workshop angerechnet wird (Team CHF 3’900, Business CHF 5’000).</p>
     <p class="vert" style="margin-top:14px">10 % Rabatt bei jährlicher Zahlung, bei Business zwei Monate gratis. Zusatzpaket «+20 Texte» CHF 49. Weitere Überarbeitungen CHF 90 pro 30 Minuten (CHF 180 pro Stunde werktags, CHF 270 abends und am Wochenende).</p>
   </section>
+
+  <section id="schnelltest">
+    <p class="eyebrow">Stimm-Schnelltest</p>
+    <h2>Wie klingt Ihre Webseite? Drei Befunde in einer Minute.</h2>
+    <p class="p">Geben Sie die Adresse Ihrer Webseite und Ihre E-Mail-Adresse ein. Sie erhalten sofort eine Kurzauswertung zur Sprache Ihrer Seite. Der Test ist kostenlos. Ich sehe Ihre Angaben und melde mich bei Bedarf persönlich.</p>
+    <form class="stf" id="stf" novalidate>
+      <label>Webseite<input id="stu" type="text" inputmode="url" autocomplete="url" placeholder="www.ihrefirma.ch" required></label>
+      <label>E-Mail<input id="ste" type="email" autocomplete="email" placeholder="name@firma.ch" required></label>
+      <input type="text" id="stw" name="website2" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+      <div class="act"><button class="btn" type="submit" id="stb">Schnelltest starten</button></div>
+      <p class="msg" id="stm" aria-live="polite"></p>
+    </form>
+    <div class="str" id="str" hidden aria-live="polite"></div>
+  </section>
+  <script>
+  (function(){var f=document.getElementById("stf"),m=document.getElementById("stm"),o=document.getElementById("str"),b=document.getElementById("stb"),t0=Date.now(),busy=false;
+  f.addEventListener("submit",function(ev){ev.preventDefault();if(busy)return;var u=f.stu.value.trim(),e=f.ste.value.trim();
+  if(!u||!/^\S+@\S+\.\S+$/.test(e)){m.textContent="Bitte geben Sie die Adresse Ihrer Webseite und eine gültige E-Mail-Adresse an.";return}
+  busy=true;b.disabled=true;o.hidden=true;m.textContent="Ihre Webseite wird gelesen und ausgewertet, das dauert etwa eine halbe Minute …";
+  fetch("/api/schnelltest",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:u,email:e,website2:f.stw.value,elapsed:Date.now()-t0})})
+  .then(function(r){return r.json().catch(function(){return {}}).then(function(d){return {ok:r.ok,d:d}})})
+  .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=(x.d&&x.d.error)||"Der Schnelltest ist gerade nicht verfügbar. Bitte versuchen Sie es später erneut.";return}
+  m.textContent="";o.textContent="";var h=document.createElement("h3");h.textContent="Ihre drei Befunde";o.appendChild(h);
+  var ol=document.createElement("ol");x.d.ergebnis.befunde.forEach(function(s){var li=document.createElement("li");li.textContent=s;ol.appendChild(li)});o.appendChild(ol);
+  var p=document.createElement("p");p.className="nx";p.textContent=x.d.ergebnis.naechsterSchritt;o.appendChild(p);
+  var a=document.createElement("button");a.type="button";a.className="btn";a.textContent="Gespräch anfragen";a.addEventListener("click",function(){var g=document.getElementById("go");if(g)g.click()});o.appendChild(a);o.hidden=false;f.reset()})
+  .catch(function(){m.textContent="Keine Verbindung. Bitte versuchen Sie es erneut."})
+  .then(function(){busy=false;b.disabled=false})})})();
+  </script>
 
   <section id="fragen">
     <p class="eyebrow">Fragen</p>
