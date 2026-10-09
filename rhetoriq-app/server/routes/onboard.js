@@ -6,6 +6,7 @@ const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
 const { generateText, resolveModelId } = require('../lib/aiProvider');
 const { allowedClientId } = require('../middleware/ownership');
+const { TEMPERATUR } = require('../lib/temperaturen');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 5 } });
 const router = express.Router();
@@ -27,7 +28,8 @@ const CATEGORIES = {
 async function callClaude(system, user) {
   const r = await generateText({
     system, messages: [{ role: 'user', content: user }], maxTokens: 400,
-    model: resolveModelId('sonnet'), meter: { module: 'onboard' }
+    // Dateisortierung ist eine einfache Zuordnung (Kategorie, Kurzfassung): das günstige Modell genügt
+    model: resolveModelId('haiku'), temperature: TEMPERATUR.analyse, meter: { module: 'onboard' }
   });
   return r.text || '';
 }

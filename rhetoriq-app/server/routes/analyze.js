@@ -1586,10 +1586,12 @@ function buildFollowUpPrompt(originalUserMsg, previousResult, note) {
 // Regelwerk jedes Auftrags (Rangfolge-Block plus Stilregeln) steht in lib/promptRules.js, als letzter Systemblock angehängt.
 const { GLOBAL_STYLE_RULES, BRAND_VOICE_HEAD, BRAND_VOICE_TAIL } = require('../lib/promptRules');
 const { heuteBlock } = require('../lib/heute');
+const { temperaturFor } = require('../lib/temperaturen');
 const { lintFuerDurchgang, lintErgebnis } = require('../lib/lint');
 
 // Task 17: Haiku for simple/routing calls, Sonnet for complex analyses
-const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'suggest-title', 'consolidate-feedback', 'presentation-preflight', 'chat', 'vs-cal', 'vs-gen', 'tc', 'before-after', 'rh-translate']);
+// 'before-after' und 'rh-translate' erzeugen Text in der Stimme des Klienten und laufen deshalb auf Sonnet, nicht auf Haiku.
+const HAIKU_MODULES = new Set(['router', 'route-fill', 'suggest-subject', 'suggest-title', 'consolidate-feedback', 'presentation-preflight', 'chat', 'vs-cal', 'vs-gen', 'tc']);
 // Model choice stays abstract everywhere in this file — a "sonnet" (capable)
 // or "haiku" (fast/cheap) preset, never a literal vendor model ID. The
 // vendor + literal model IDs live entirely behind lib/aiProvider — swapping
@@ -1785,7 +1787,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     const willTwoPass = useTwoPass(module, req.body) && !(followUp && followUp.note) && !hasLargeInput(data);
     const cheapDraft = willTwoPass && draftModelFor(module) !== resolveModel(module);
     if (TWO_PASS_MODULES.has(module) && !cheapDraft) tuneCache(systemBlocks);   // Zwischenspeicher (siehe tuneCache)
-    const claudeResp = await callClaude(systemBlocks, willTwoPass && !cheapDraft ? draftUserContent(userMsg) : userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, willTwoPass ? draftModelFor(module) : resolveModel(module));
+    const claudeResp = await callClaude(systemBlocks, willTwoPass && !cheapDraft ? draftUserContent(userMsg) : userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, willTwoPass ? draftModelFor(module) : resolveModel(module), temperaturFor(module));
     let result = claudeResp.text;
     let totalInputTokens = claudeResp.inputTokens, totalOutputTokens = claudeResp.outputTokens;
 
@@ -1798,7 +1800,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     // latency (painfully so for long documents like a full speech) without
     // improving quality, and risks over-editing an already-finished text.
     if (willTwoPass) {
-      const revisionResp = await callClaude(systemBlocks, cheapDraft ? buildRevisionPrompt(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module)) : revisionUserContent(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module)),MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module));
+      const revisionResp = await callClaude(systemBlocks, cheapDraft ? buildRevisionPrompt(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module)) : revisionUserContent(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module)),MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module), temperaturFor(module));
       if (revisionResp.text) result = revisionResp.text;
       totalInputTokens += revisionResp.inputTokens;
       totalOutputTokens += revisionResp.outputTokens;
@@ -2004,7 +2006,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     let draftInputTokens = 0, draftOutputTokens = 0, draftText = null;
     if (willTwoPassS && !aborted) {
       console.log(`[trace] ${module} starting draft pass, maxTokens=${maxTokens}`);
-      const draftResp = await callClaude(streamSystemBlocks, cheapDraftS ? userMsg : draftUserContent(userMsg), maxTokens, draftModelFor(module));
+      const draftResp = await callClaude(streamSystemBlocks, cheapDraftS ? userMsg : draftUserContent(userMsg), maxTokens, draftModelFor(module), temperaturFor(module));
       console.log(`[trace] ${module} draft pass done, chars=${(draftResp.text || '').length}`);
       if (draftResp.text) streamUserMsg = cheapDraftS ? buildRevisionPrompt(userMsg, draftResp.text, module, lintFuerDurchgang(draftResp.text, data, module)) : revisionUserContent(userMsg, draftResp.text, module, lintFuerDurchgang(draftResp.text, data, module));
       draftInputTokens = draftResp.inputTokens;
@@ -2023,6 +2025,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
         messages: [{ role: 'user', content: streamUserMsg }],
         maxTokens,
         model: resolveModel(module),
+        temperature: temperaturFor(module),
         signal: abortController.signal
       })) {
         if (evt.type === 'text') {
@@ -2231,7 +2234,7 @@ router.get('/health-score', requireAuth, async (req, res) => {
       ? excerptRows.map((r, i) => `[${i+1}] ${r.module_label||r.module}:\n${r.snippet}...`).join('\n\n')
       : null;
     const cfg = PROMPTS['health-score'];
-    const claudeResp = await callClaude(cfg.system, cfg.build({ log, period: 'Last 90 days', count: rows.length, excerpts }), MODULE_MAX_TOKENS['health-score'], resolveModel('health-score'));
+    const claudeResp = await callClaude(cfg.system, cfg.build({ log, period: 'Last 90 days', count: rows.length, excerpts }), MODULE_MAX_TOKENS['health-score'], resolveModel('health-score'), temperaturFor('health-score'));
     res.json({ result: claudeResp.text, count: rows.length });
   } catch (e) {
     console.error(e);
