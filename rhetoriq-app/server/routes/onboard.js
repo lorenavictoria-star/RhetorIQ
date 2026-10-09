@@ -42,7 +42,9 @@ Respond ONLY with valid JSON — no explanation, no markdown.
 Categories:
 ${Object.entries(CATEGORIES).map(([k,v]) => `- ${k}: ${v}`).join('\n')}
 
-Return: {"category":"<one of the category keys>","personName":"<only if people_voice, else null>","summary":"<one sentence describing what this document is>","confidence":<0.0-1.0>}`;
+Also decide whether the document is a finished sample text (a complete speech, post, email, newsletter, press release or web text that could serve as a writing example). If yes, set "sampleTile" to one of: speech, linkedin, email, newsletter, press, website, brief, custom. Otherwise null.
+
+Return: {"category":"<one of the category keys>","personName":"<only if people_voice, else null>","summary":"<one sentence describing what this document is>","sampleTile":"<tile or null>","confidence":<0.0-1.0>}`;
 
   const raw = await callClaude(system, `Filename: ${filename}\n\nContent (excerpt):\n${snippet}`);
   try {
@@ -51,6 +53,24 @@ Return: {"category":"<one of the category keys>","personName":"<only if people_v
   } catch {
     return { category: 'skip', personName: null, summary: 'Could not categorize', confidence: 0 };
   }
+}
+
+// Vorschlag, welchem Modul ein fertiger Mustertext als Beispiel dient. Wird als Vorschlag (status proposed) abgelegt und
+// fliesst erst in die Auswahl ein, wenn die Beraterin ihn bestätigt (POST /api/module-examples/:id/confirm).
+const TILE_AUS_KATEGORIE = { ref_speech: 'speech', ref_linkedin: 'linkedin', ref_email: 'email', ref_newsletter: 'newsletter', ref_press: 'press', ref_website: 'website' };
+const TILES = ['speech', 'linkedin', 'email', 'newsletter', 'press', 'website', 'brief', 'custom'];
+async function schlageBeispielVor({ clientId, advisorId, filename, summary, category, sampleTile, text }) {
+  const tile = TILES.includes(sampleTile) ? sampleTile : (TILE_AUS_KATEGORIE[category] || null);
+  const body = String(text || '').trim().slice(0, 12000);
+  if (!tile || !advisorId || body.length < 200) return null;
+  const { rows: dup } = await pool.query(
+    'SELECT id FROM module_examples WHERE advisor_id=$1 AND source_client_id=$2 AND output_text=$3', [advisorId, clientId, body]);
+  if (dup[0]) return null;
+  const { rows } = await pool.query(
+    `INSERT INTO module_examples (advisor_id, module_key, tile, label, input_text, output_text, rating, auto_generated, source_client_id, is_cross_client_shareable, origin, status)
+     VALUES ($1,'text-gen',$2,$3,$4,$5,3,false,$6,false,'onboarding','proposed') RETURNING id`,
+    [advisorId, tile, String(filename || '').slice(0, 120) || null, String(summary || filename || 'Mustertext').slice(0, 300), body, clientId]);
+  return { id: rows[0].id, module_key: 'text-gen', tile };
 }
 
 async function saveToMemory(clientId, advisorId, type, content) {
@@ -104,6 +124,10 @@ router.post('/', requireAuth, requireRole('editor'), upload.array('files', 5), a
       result.category = cat.category;
       result.summary = cat.summary;
       result.personName = cat.personName;
+      try {
+        const v = await schlageBeispielVor({ clientId, advisorId, filename: file.originalname, summary: cat.summary, category: cat.category, sampleTile: cat.sampleTile, text });
+        if (v) result.exampleProposal = v;
+      } catch (e) { console.error('[onboard] Beispielvorschlag:', e.message); }
 
       if (cat.category === 'brand_voice_source') {
         brandVoiceSources.push(text);
@@ -153,3 +177,4 @@ router.post('/', requireAuth, requireRole('editor'), upload.array('files', 5), a
 });
 
 module.exports = router;
+module.exports.schlageBeispielVor = schlageBeispielVor;

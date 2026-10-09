@@ -13,7 +13,7 @@ test.before(async () => {
   await H.setupBase();
   await q(`CREATE TABLE module_examples (id SERIAL PRIMARY KEY, advisor_id INTEGER, module_key TEXT NOT NULL, label TEXT, industry_tag TEXT,
     input_text TEXT NOT NULL, output_text TEXT NOT NULL, rating INTEGER DEFAULT 3, created_at TIMESTAMPTZ DEFAULT NOW(),
-    auto_generated BOOLEAN DEFAULT FALSE, source_client_id INTEGER, is_cross_client_shareable BOOLEAN DEFAULT TRUE)`);
+    auto_generated BOOLEAN DEFAULT FALSE, source_client_id INTEGER, is_cross_client_shareable BOOLEAN DEFAULT TRUE, origin TEXT, status TEXT DEFAULT 'active', tile TEXT, analysis_id INTEGER)`);
   await q(`CREATE TABLE client_feedback_learnings (id SERIAL PRIMARY KEY, client_id INTEGER, module_key TEXT NOT NULL, category TEXT NOT NULL, summary TEXT NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(client_id, module_key, category))`);
   await setupGenerate(H);
   srv = await H.startApp([
@@ -66,7 +66,8 @@ test('Auto-Import und Import: Beispiele bekommen den Klienten und sind nicht kli
 test('Vorlagen: beide Generierungsrouten und der Vorschlag für Anweisungen filtern mit scopeSql', () => {
   const fs = require('fs');
   const a = fs.readFileSync(require.resolve('../routes/analyze'), 'utf8');
-  assert.equal((a.match(/\$\{scopeSql\(4\)\}/g) || []).length, 2);
+  assert.equal((a.match(/ladeBeispiele\(pool,/g) || []).length, 2);
+  assert.equal((fs.readFileSync(require.resolve('../lib/beispielAuswahl'), 'utf8').match(/\$\{scopeSql\(4\)\}/g) || []).length, 1);
   assert.ok(fs.readFileSync(require.resolve('../routes/modulePrompts'), 'utf8').includes('scopeSql(3)'));
 });
 

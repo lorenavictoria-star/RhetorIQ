@@ -304,6 +304,13 @@ async function init() {
     -- Automatisch aus Texten von Klienten entstandene Vorlagen gelten nie klientenübergreifend (siehe lib/exampleScope.js)
     UPDATE module_examples SET is_cross_client_shareable = FALSE WHERE auto_generated = TRUE AND is_cross_client_shareable IS TRUE;
 
+    -- Beispiele mit Herkunft (manual, thumbs, client, onboarding), Textart, Status (active oder proposed) und Bezug zum Text
+    ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS origin TEXT;
+    ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
+    ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS tile TEXT;
+    ALTER TABLE module_examples ADD COLUMN IF NOT EXISTS analysis_id INTEGER;
+    CREATE INDEX IF NOT EXISTS module_examples_client_idx ON module_examples(source_client_id, module_key);
+
     -- Secure onboarding: time-limited setup tokens (48h) instead of plaintext passwords in email
     CREATE TABLE IF NOT EXISTS onboarding_tokens (
       id SERIAL PRIMARY KEY,

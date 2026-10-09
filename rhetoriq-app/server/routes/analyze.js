@@ -1535,7 +1535,7 @@ function buildGeoBlock(data) {
 // client_feedback_history, just never injected into generation prompts.
 const FEEDBACK_CATEGORIES = ['TON', 'STRUKTUR', 'FAKTEN', 'FORMAT', 'SONSTIGES'];
 const { getGoldBlock, queryTextOf } = require('../lib/goldtexte');
-const { scopeSql } = require('../lib/exampleScope');
+const { ladeBeispiele, daumenAufBeispiel } = require('../lib/beispielAuswahl');
 const { proposeFromFollowUp, addSuggestion } = require('../lib/followupLearning');
 async function consolidateFeedback(clientId, moduleKey, rating, note) {
   // Tagesbudget (lib/budget.js): ist es erreicht, bleibt die Notiz im Rohprotokoll, der Lernstand wird nicht verfeinert
@@ -1775,18 +1775,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     if (advisorId) {
       // Only inject manually-curated examples (auto_generated=false, rating >= 3)
       // This prevents the contamination loop where auto-saved AI outputs train future outputs.
-      const { rows: examples } = await pool.query(
-        `SELECT input_text, output_text, industry_tag FROM module_examples
-         WHERE advisor_id=$1 AND module_key=$2
-           AND auto_generated = false AND rating >= 3
-           AND ${scopeSql(4)}
-           AND (industry_tag IS NULL OR $3::text IS NULL OR lower(industry_tag)=lower($3))
-         ORDER BY
-           CASE WHEN $3::text IS NOT NULL AND lower(industry_tag)=lower($3) THEN 0 ELSE 1 END,
-           rating DESC, created_at DESC
-         LIMIT 3`,
-        [advisorId, module, clientIndustry, resolvedClientId || null]
-      );
+      const examples = await ladeBeispiele(pool, { advisorId, module, industry: clientIndustry, clientId: resolvedClientId, data });
 
       if (examples.length) {
         restDynamicSystem += '\n\n--- STRUKTURVORLAGEN ---\n'
@@ -1970,15 +1959,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       }
     }
     if (advisorId) {
-      const { rows: examples } = await pool.query(
-        `SELECT input_text, output_text, industry_tag FROM module_examples
-         WHERE advisor_id=$1 AND module_key=$2 AND auto_generated=false AND rating>=3
-           AND ${scopeSql(4)}
-           AND (industry_tag IS NULL OR $3::text IS NULL OR lower(industry_tag)=lower($3))
-         ORDER BY CASE WHEN $3::text IS NOT NULL AND lower(industry_tag)=lower($3) THEN 0 ELSE 1 END,
-           rating DESC, created_at DESC LIMIT 3`,
-        [advisorId, module, clientIndustry, resolvedClientId || null]
-      );
+      const examples = await ladeBeispiele(pool, { advisorId, module, industry: clientIndustry, clientId: resolvedClientId, data });
       if (examples.length) {
         restDynamicSystem += '\n\n--- STRUKTURVORLAGEN ---\n'
           + (hasBrandVoice ? 'Nur Struktur übernehmen, Brand Voice bestimmt Ton.' : 'Passe Stil an den Klienten an.')
@@ -2557,7 +2538,7 @@ router.post('/:id/rate', requireAuth, requireRole('editor'), async (req, res) =>
     const ownershipValue = req.user.role === 'advisor' ? req.user.id : req.user.clientId;
 
     const { rows } = await pool.query(
-      `UPDATE analyses SET user_rating=$1, feedback_note=$4 WHERE id=$2 AND ${ownershipClause} RETURNING id, module, feedback_key, client_id, advisor_id`,
+      `UPDATE analyses SET user_rating=$1, feedback_note=$4 WHERE id=$2 AND ${ownershipClause} RETURNING id, module, module_label, feedback_key, client_id, advisor_id, input_data, result`,
       [rating, req.params.id, ownershipValue, note || null]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });
@@ -2567,11 +2548,16 @@ router.post('/:id/rate', requireAuth, requireRole('editor'), async (req, res) =>
     // Nur Vorlagen, die aus Texten dieses Klienten stammen, werden durch seine Bewertung verschoben. Bewertungen eines
     // Klienten ändern die Rangfolge der Vorlagen für andere Klienten nicht.
     if (analysis.advisor_id && analysis.client_id) {
+      // Von Hand angelegte Beispiele des Klienten (Herkunft leer oder «manual») steigen und sinken gemeinsam mit seiner Bewertung.
       pool.query(
         `UPDATE module_examples SET rating = ${rating === 1 ? 'LEAST(5, rating + 1)' : 'GREATEST(1, rating - 1)'}
-         WHERE advisor_id=$1 AND module_key=$2 AND auto_generated=false AND source_client_id=$3`,
+         WHERE advisor_id=$1 AND module_key=$2 AND auto_generated=false AND source_client_id=$3
+           AND (origin IS NULL OR origin='manual') AND COALESCE(status,'active')='active'`,
         [analysis.advisor_id, analysis.module, analysis.client_id]
       ).catch(() => {});
+      // Daumen hoch macht genau diesen Text zum Beispiel des Klienten, Daumen runter senkt oder entfernt ihn wieder.
+      try { await daumenAufBeispiel(pool, { analysis, rating: Number(rating) }); }
+      catch (e) { console.error('[rate] Beispiel aus Daumen fehlgeschlagen:', e.message); }
     }
 
     // Categorize and consolidate this feedback into a compact, continuously
