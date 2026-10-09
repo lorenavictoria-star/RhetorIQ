@@ -4,7 +4,7 @@ const https = require('https');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
-const meterLib = require('../lib/meter');
+const { generateText, resolveModelId } = require('../lib/aiProvider');
 const { allowedClientId } = require('../middleware/ownership');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 200 * 1024 * 1024 } });
@@ -25,24 +25,11 @@ const CATEGORIES = {
 };
 
 async function callClaude(system, user) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 400,
-      system,
-      messages: [{ role: 'user', content: user }]
-    })
+  const r = await generateText({
+    system, messages: [{ role: 'user', content: user }], maxTokens: 400,
+    model: resolveModelId('sonnet'), meter: { module: 'onboard' }
   });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  meterLib.recordApi('claude-sonnet-4-6', data.usage, { module: 'onboard' });
-  return data.content?.[0]?.text || '';
+  return r.text || '';
 }
 
 async function categorize(filename, text) {

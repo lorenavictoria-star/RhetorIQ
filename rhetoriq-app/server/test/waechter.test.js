@@ -47,6 +47,18 @@ test('Wiederkehr entwarnt per Mail und löscht den Hinweis', async () => {
   assert.deepEqual((await srv.call('GET', '/api/status')).body, { ki: 'ok' });
 });
 
+test('Reservekonto-Schalter: nur Beraterin, Wert wird gespeichert', async () => {
+  const c = await H.addClient('Reservefirma');
+  assert.equal((await srv.call('PUT', '/api/status/reserve', { token: H.clientToken(c.id), body: { an: true } })).status, 403);
+  assert.equal((await srv.call('GET', '/api/status/reserve', { token: H.advisorToken() })).body.erzwingen, false);
+  const r = await srv.call('PUT', '/api/status/reserve', { token: H.advisorToken(), body: { an: true } });
+  assert.equal(r.body.erzwingen, true);
+  assert.deepEqual(await getStatus('ai_reserve_erzwingen'), { an: true });
+  assert.equal((await srv.call('GET', '/api/status/reserve', { token: H.advisorToken() })).body.erzwingen, true);
+  await srv.call('PUT', '/api/status/reserve', { token: H.advisorToken(), body: { an: false } });
+  assert.deepEqual(await getStatus('ai_reserve_erzwingen'), { an: false });
+});
+
 test('Hinweis von Hand: nur Beraterin, mit eigenem Text', async () => {
   const c = await H.addClient('Statusfirma');
   assert.equal((await srv.call('PUT', '/api/status/manuell', { token: H.clientToken(c.id), body: { an: true } })).status, 403);

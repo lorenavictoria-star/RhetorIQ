@@ -2,7 +2,7 @@ const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
-const meterLib = require('../lib/meter');
+const { generateText, resolveModelId } = require('../lib/aiProvider');
 const { canAccessClient, allowedClientId } = require('../middleware/ownership');
 
 const router = express.Router();
@@ -25,24 +25,11 @@ async function ensureTable() {
 ensureTable().catch(console.error);
 
 async function callClaude(system, user) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 4000,
-      system,
-      messages: [{ role: 'user', content: user }]
-    })
+  const r = await generateText({
+    system, messages: [{ role: 'user', content: user }], maxTokens: 4000,
+    model: resolveModelId('sonnet'), meter: { module: 'custom-module' }
   });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  meterLib.recordApi('claude-sonnet-4-6', data.usage, { module: 'custom-module' });
-  return data.content?.[0]?.text || '';
+  return r.text || '';
 }
 
 // POST /api/custom-modules/generate — advisor only, generates module suggestions from discovery notes

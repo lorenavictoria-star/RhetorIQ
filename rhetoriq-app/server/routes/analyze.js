@@ -2036,6 +2036,8 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     }
 
     const donePayload = { id: rows[0].id, hasBrandVoice, quotaWarning };
+    // Nur für die Beraterin: Text wurde mit dem Reservekonto erstellt (lib/aiProvider.js)
+    if (req.user.role === 'advisor' && require('../lib/meter').context().reserve) donePayload.reserve = true;
     if (isDebug) donePayload.systemPrompt = baseSystem + (brandVoiceBlock ? '\n\n[BRAND VOICE CACHED]\n' + brandVoiceBlock : '') + (restDynamicSystem ? '\n\n--- DYNAMIC ---\n' + restDynamicSystem : '');
     res.write(`event: done\ndata: ${JSON.stringify(donePayload)}\n\n`);
     res.end();
