@@ -3,7 +3,7 @@ services:
     name: rhetoriq
     runtime: node
     region: frankfurt
-    nodeVersion: 20
+    nodeVersion: 22
     healthCheckPath: /health
     plan: starter   # must not be free — free tier spins down after 15min idle, causing 50s+ cold-start failures for real customers
     rootDir: server
@@ -24,6 +24,8 @@ services:
         sync: false
       - key: ADVISOR_NAME
         value: Lorena Lienhard
+      - key: NODE_VERSION
+        value: "22"   # Render liest die Node-Version aus dieser Variable (Node 20 erhält keine Sicherheitsupdates mehr)
       - key: NODE_ENV
         value: production
       - key: SENTRY_DSN
