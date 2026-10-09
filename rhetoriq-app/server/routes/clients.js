@@ -129,7 +129,7 @@ router.get('/export', requireAdvisor, async (req, res) => {
       'SELECT name, industry, contact, token, created_at FROM clients WHERE advisor_id = $1 AND geloescht_am IS NULL ORDER BY created_at DESC',
       [req.user.id]
     );
-    const esc = v => `"${(v || '').replace(/"/g, '""')}"`;
+    const esc = require('../lib/csvSafe').csvCell;
     const csv = [
       ['Name', 'Industry', 'Contact', 'Token', 'Created'].map(esc).join(','),
       ...rows.map(r => [r.name, r.industry, r.contact, r.token, new Date(r.created_at).toLocaleDateString('de-CH')].map(esc).join(','))

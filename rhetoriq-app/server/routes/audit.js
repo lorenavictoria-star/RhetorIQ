@@ -54,7 +54,7 @@ router.get('/:clientId/export', requireAuth, requireAdvisor, async (req, res) =>
       [clientId]
     );
 
-    const esc = v => `"${(v || '').toString().replace(/"/g, '""').replace(/\n/g, ' ')}"`;
+    const esc = require('../lib/csvSafe').csvCell;
     const csv = [
       ['ID', 'Modul', 'Modul-Label', 'Erstellt von', 'Datum/Uhrzeit', 'Vorschau'].map(esc).join(','),
       ...rows.map(r => [
