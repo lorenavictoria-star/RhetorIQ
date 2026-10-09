@@ -11,7 +11,7 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@sentry/node": "^10.64.0",
+    "@sentry/node": "^11.4.0",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "docx": "^9.7.1",
