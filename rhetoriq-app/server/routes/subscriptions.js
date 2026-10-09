@@ -4,6 +4,10 @@ const { requireAuth, requireAdvisor } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
 const { ownClient, ownClientBody } = require('../middleware/ownership');
 const yearly = require('../lib/yearlyPlan');
+const { ensureSchema } = require('../lib/schemaRedesign');
+
+// 10er-Karte Überarbeitungen: 10 mal 30 Minuten, CHF 690, verfällt nicht
+const KARTE = { amountCents: 69000, minutes: 300, label: '10er-Karte Überarbeitungen (10 mal 30 Minuten)' };
 
 const router = express.Router();
 
@@ -197,6 +201,25 @@ router.post('/topup-link/:clientId', requireAuth, requireRole('admin'), async (r
   }
 });
 
+// ── POST /api/subscriptions/karte-link/:clientId ────────────────
+// Einmaliger Zahlungslink für die 10er-Karte. Klienten nur für sich (Hauptzugang oder Admin), die Beraterin für ihre Klienten.
+router.post('/karte-link/:clientId', requireAuth, ownClient('clientId'), async (req, res) => {
+  try {
+    if (req.user.role === 'client' && req.user.clientUserRole && req.user.clientUserRole !== 'admin') return res.status(403).json({ error: 'Nicht erlaubt.' });
+    const { clientId } = req.params;
+    const { rows } = await pool.query('SELECT id, name FROM clients WHERE id=$1', [clientId]);
+    if (!rows.length) return res.status(404).json({ error: 'Client not found' });
+    const link = await getStripe().paymentLinks.create({
+      line_items: [{ price_data: { currency: 'chf', unit_amount: KARTE.amountCents, product_data: { name: `RhetorIQ ${KARTE.label}, ${rows[0].name}` } }, quantity: 1 }],
+      metadata: { clientId: String(clientId), clientName: rows[0].name, type: 'karte' },
+    });
+    res.json({ url: link.url, minutes: KARTE.minutes, amountCents: KARTE.amountCents });
+  } catch (e) {
+    console.error('[stripe] karte-link error:', e.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ── POST /api/subscriptions/upgrade-link/:clientId ──────────────
 // Self-serve: client hit their monthly quota and wants to move up a tier
 // right now. Builds a new recurring Payment Link for the next tier's price
@@ -369,13 +392,29 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       // clientId stored in metadata at payment-link creation time
       const clientId = obj.metadata?.clientId;
       const isTopup = obj.metadata?.type === 'topup';
+      const isKarte = obj.metadata?.type === 'karte';
       // Save the Stripe Customer ID the first time we see it, so the client
       // can later open the Customer Portal to manage/cancel their own
       // subscription (portal sessions are keyed by Customer ID, not by ours).
       if (clientId && obj.customer) {
         await pool.query('UPDATE clients SET stripe_customer_id=$2 WHERE id=$1', [clientId, obj.customer]);
       }
-      if (clientId && isTopup) {
+      if (clientId && isKarte) {
+        // 10er-Karte: nur beim abgeschlossenen Checkout, jede Stripe-Sitzung legt höchstens eine Karte an
+        if (event.type === 'checkout.session.completed') {
+          await ensureSchema();
+          const ref = obj.id || obj.payment_intent;
+          if (ref) {
+            const ins = await pool.query('SELECT id FROM ueberarbeitungskarten WHERE stripe_ref=$1', [String(ref)]);
+            if (!ins.rows.length) {
+              try {
+                await pool.query('INSERT INTO ueberarbeitungskarten (client_id, minuten_gesamt, stripe_ref) VALUES ($1,$2,$3)', [clientId, KARTE.minutes, String(ref)]);
+                console.log(`[stripe] client ${clientId} → neue 10er-Karte (${ref})`);
+              } catch (e) { /* gleichzeitige Zustellung: der eindeutige Index hat die zweite Karte verhindert */ }
+            }
+          }
+        }
+      } else if (clientId && isTopup) {
         // One-time top-up: add tokens for the current month only, never
         // touch the recurring monthly_token_limit.
         const tokens = parseInt(obj.metadata.tokens, 10) || 0;

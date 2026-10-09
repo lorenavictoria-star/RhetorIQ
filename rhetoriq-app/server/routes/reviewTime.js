@@ -30,7 +30,7 @@ router.get('/mine', requireAuth, async (req, res) => {
     if (!s) return res.status(404).json({ error: 'Klient nicht gefunden.' });
     // Nur, was der Klient sehen soll
     res.json({ month: s.month, aboChf: s.aboChf, totalChf: s.totalChf, includedMinutes: s.includedMinutes, usedMinutes: s.usedMinutes,
-      extraMinutes: s.extraMinutes, billedMinutes: s.billedMinutes, extraChf: s.extraChf, rateChf: s.rateChf, step: s.step,
+      extraMinutes: s.extraMinutes, kartenMinuten: s.kartenMinuten, guthabenMinuten: s.guthabenMinuten, extraChfVorKarte: s.extraChfVorKarte, abgeschlossen: s.abgeschlossen, billedMinutes: s.billedMinutes, extraChf: s.extraChf, rateChf: s.rateChf, step: s.step,
       rows: s.rows.map(r => ({ id: r.id, module_label: r.module_label, minutes: r.minutes, time_logged_at: r.time_logged_at })) });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
@@ -41,6 +41,15 @@ router.get('/client/:clientId', requireAdvisor, ownClient('clientId'), async (re
     const s = await rt.clientSummary(Number(req.params.clientId), req.query.month);
     if (!s) return res.status(404).json({ error: 'Klient nicht gefunden.' });
     res.json(s);
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// POST /api/review-time/client/:clientId/abschliessen?month=2026-10  (bucht den Kartenverbrauch, einmal pro Monat)
+router.post('/client/:clientId/abschliessen', requireAdvisor, ownClient('clientId'), async (req, res) => {
+  try {
+    const out = await rt.closeMonth(Number(req.params.clientId), req.query.month);
+    if (!out) return res.status(404).json({ error: 'Klient nicht gefunden.' });
+    res.json(out);
   } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
 

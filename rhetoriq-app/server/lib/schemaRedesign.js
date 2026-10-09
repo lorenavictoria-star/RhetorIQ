@@ -153,6 +153,26 @@ function ensureSchema() {
         aktiv BOOLEAN NOT NULL DEFAULT TRUE
       )`);
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS partner_id INTEGER`);
+    // 10er-Karte Überarbeitungen (300 Minuten persönliche Bearbeitung, verfallen nicht) und Monatsabschluss
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS ueberarbeitungskarten (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        minuten_gesamt INTEGER NOT NULL DEFAULT 300,
+        minuten_verbraucht INTEGER NOT NULL DEFAULT 0,
+        gekauft_am TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        stripe_ref TEXT
+      )`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS ueberarbeitungskarten_ref_idx ON ueberarbeitungskarten (stripe_ref)`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS monatsabschluss (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        monat TEXT NOT NULL,
+        karten_minuten INTEGER NOT NULL DEFAULT 0,
+        abgeschlossen_am TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS monatsabschluss_client_monat_idx ON monatsabschluss (client_id, monat)`);
     // Indizes für die häufigsten Abfragen (Kundenliste, Verlauf, Nutzung)
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_client_created_idx ON analyses (client_id, created_at DESC)`);
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_advisor_created_idx ON analyses (advisor_id, created_at DESC)`);

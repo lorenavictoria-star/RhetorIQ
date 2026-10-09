@@ -22,6 +22,29 @@ function extraFor(used, pool_) {
   return { extraMinutes: extra, billedMinutes: billedMin, extraChf: Math.round(billedMin / 60 * RATE_CHF * 100) / 100 };
 }
 
+// Reine Rechnung: Mehraufwand (Minuten) zuerst mit dem Guthaben der Karten verrechnen, älteste Karte zuerst.
+// cards: [{ id, minuten_gesamt, minuten_verbraucht, gekauft_am }]. Verbraucht nichts, liefert nur die Aufteilung.
+function cardsApply(extraMinutes, cards) {
+  const sorted = [...(cards || [])].sort((a, b) => new Date(a.gekauft_am || 0) - new Date(b.gekauft_am || 0) || Number(a.id) - Number(b.id));
+  let rest = Math.max(0, Math.round(Number(extraMinutes) || 0));
+  const parts = [];
+  let balance = 0;
+  for (const c of sorted) {
+    const free = Math.max(0, Number(c.minuten_gesamt) - Number(c.minuten_verbraucht || 0));
+    balance += free;
+    const take = Math.min(free, rest);
+    if (take > 0) { parts.push({ id: c.id, minutes: take }); rest -= take; }
+  }
+  const cardMinutes = Math.max(0, Math.round(Number(extraMinutes) || 0)) - rest;
+  const billedMin = Math.ceil(rest / STEP) * STEP;
+  return { kartenMinuten: cardMinutes, restMinutes: rest, billedMinutes: billedMin, extraChf: Math.round(billedMin / 60 * RATE_CHF * 100) / 100, parts, guthabenMinuten: balance, guthabenNach: balance - cardMinutes };
+}
+
+async function loadCards(clientId) {
+  const { rows } = await pool.query('SELECT id, minuten_gesamt, minuten_verbraucht, gekauft_am FROM ueberarbeitungskarten WHERE client_id=$1 ORDER BY gekauft_am ASC, id ASC', [clientId]);
+  return rows;
+}
+
 async function clientSummary(clientId, month) {
   await ensureSchema();
   const r = monthRange(month);
@@ -35,11 +58,24 @@ async function clientSummary(clientId, month) {
   const used = rows.reduce((s, x) => s + Number(x.minutes || 0), 0);
   // Monatsabo laut gebuchtem Kontingent (wie in den Kostenwarnungen), der Mehraufwand kommt oben drauf
   const aboChf = planPriceChf(c[0].monthly_token_limit);
-  const ex = extraFor(used, poolMin);
+  const ex0 = extraFor(used, poolMin);
+  const cards = await loadCards(clientId);
+  const { rows: closed } = await pool.query('SELECT karten_minuten, abgeschlossen_am FROM monatsabschluss WHERE client_id=$1 AND monat=$2', [clientId, r.month]);
+  const guthaben = cards.reduce((s, x) => s + Math.max(0, Number(x.minuten_gesamt) - Number(x.minuten_verbraucht || 0)), 0);
+  let ca;
+  if (closed[0]) {
+    // Abgeschlossener Monat: festgehaltene Kartenminuten, Guthaben ist schon abgezogen
+    const km = Number(closed[0].karten_minuten) || 0, rest = Math.max(0, ex0.extraMinutes - km), bm = Math.ceil(rest / STEP) * STEP;
+    ca = { kartenMinuten: km, billedMinutes: bm, extraChf: Math.round(bm / 60 * RATE_CHF * 100) / 100, guthabenMinuten: guthaben };
+  } else {
+    ca = cardsApply(ex0.extraMinutes, cards);
+  }
+  const ex = { extraMinutes: ex0.extraMinutes, billedMinutes: ca.billedMinutes, extraChf: ca.extraChf };
   return {
     month: r.month, aboChf, totalChf: aboChf != null ? Math.round((aboChf + ex.extraChf) * 100) / 100 : null, clientId: c[0].id, clientName: c[0].name, plan: c[0].recommended_plan || null,
     includedMinutes: poolMin, customIncluded: c[0].included_minutes != null, usedMinutes: used, rateChf: RATE_CHF, step: STEP,
-    ...extraFor(used, poolMin), rows
+    ...ex, extraChfVorKarte: ex0.extraChf, kartenMinuten: ca.kartenMinuten, guthabenMinuten: ca.guthabenMinuten,
+    abgeschlossen: !!closed[0], abgeschlossenAm: closed[0] ? closed[0].abgeschlossen_am : null, rows
   };
 }
 
@@ -53,19 +89,40 @@ async function setMinutes(reviewId, minutes) {
   return rows[0] || null;
 }
 
+// Monat abschliessen: bucht den Kartenverbrauch genau einmal pro Klient und Monat.
+async function closeMonth(clientId, month) {
+  await ensureSchema();
+  const r = monthRange(month);
+  const s = await clientSummary(clientId, r.month);
+  if (!s) return null;
+  if (s.abgeschlossen) return { ...s, neu: false };
+  const cards = await loadCards(clientId);
+  const ca = cardsApply(s.extraMinutes, cards);
+  // Der Eintrag mit eindeutigem Index gilt als Reservierung: wer ihn zuerst anlegt, bucht.
+  try {
+    await pool.query('INSERT INTO monatsabschluss (client_id, monat, karten_minuten) VALUES ($1,$2,$3)', [clientId, r.month, ca.kartenMinuten]);
+  } catch (e) {
+    return { ...(await clientSummary(clientId, r.month)), neu: false };
+  }
+  for (const p of ca.parts) {
+    await pool.query('UPDATE ueberarbeitungskarten SET minuten_verbraucht = minuten_verbraucht + $1 WHERE id=$2', [p.minutes, p.id]);
+  }
+  return { ...(await clientSummary(clientId, r.month)), neu: true };
+}
+
 async function exportCsv(advisorId, month) {
   await ensureSchema();
   const { rows: cl } = await pool.query('SELECT id FROM clients WHERE advisor_id=$1 ORDER BY name', [advisorId]);
-  const lines = ['Klient;Monat;Freigaben mit Zeit;Minuten verbraucht;Minuten inbegriffen;Mehraufwand Minuten;Verrechnet Minuten;Mehraufwand CHF;Monatsabo CHF;Total CHF'];
+  const lines = ['Klient;Monat;Freigaben mit Zeit;Minuten verbraucht;Minuten inbegriffen;Mehraufwand Minuten;Verrechnet Minuten;Karte abgezogen Minuten;Mehraufwand CHF;Monatsabo CHF;Total CHF'];
   let total = 0;
   for (const c of cl) {
     const s = await clientSummary(c.id, month);
     if (!s || (!s.rows.length)) continue;
     total += s.extraChf;
-    lines.push([`"${String(s.clientName).replace(/"/g, '""')}"`, s.month, s.rows.length, s.usedMinutes, s.includedMinutes, s.extraMinutes, s.billedMinutes, s.extraChf.toFixed(2), s.aboChf != null ? s.aboChf.toFixed(2) : '', s.totalChf != null ? s.totalChf.toFixed(2) : ''].join(';'));
+    lines.push([`"${String(s.clientName).replace(/"/g, '""')}"`, s.month, s.rows.length, s.usedMinutes, s.includedMinutes, s.extraMinutes, s.billedMinutes, s.kartenMinuten, s.extraChf.toFixed(2), s.aboChf != null ? s.aboChf.toFixed(2) : '', s.totalChf != null ? s.totalChf.toFixed(2) : ''].join(';'));
   }
-  lines.push(`Total Mehraufwand;;;;;;;${total.toFixed(2)};;`);
+  lines.push(`Total Mehraufwand;;;;;;;;${total.toFixed(2)};;`);
   return '﻿' + lines.join('\r\n');
 }
 
-module.exports = { clientSummary, setMinutes, exportCsv, monthRange, extraFor, PLAN_MINUTES, RATE_CHF, STEP };
+module.exports = { cardsApply, closeMonth, loadCards, clientSummary, setMinutes, exportCsv, monthRange, extraFor, PLAN_MINUTES, RATE_CHF, STEP };
