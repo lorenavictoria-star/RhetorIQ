@@ -345,8 +345,8 @@ async function sendeMails(clientId, quartal, lauf, name) {
 }
 
 // ── Lauf für einen Klienten ──
-// status: fertig | uebersprungen | abgebrochen | fehler. Einmal pro Klient und Quartal (eindeutiger Index).
-// Nur Fehler und Abbrüche (und unvollständig versendete Mails) dürfen wiederholt werden. opts.wiederholen setzt einen fertigen Lauf neu auf.
+// status: fertig | vorschau (erstellt, nicht versendet) | uebersprungen | abgebrochen | fehler | mailfehler. Einmal pro Klient und Quartal (eindeutiger Index).
+// Nur Fehler und Abbrüche (und unvollständig oder noch nicht versendete Mails) dürfen wiederholt werden. opts.wiederholen setzt einen fertigen Lauf neu auf.
 async function runForClient(clientId, opts = {}) {
   await ensureSchema();
   const now = opts.now || new Date();
@@ -365,7 +365,7 @@ async function runForClient(clientId, opts = {}) {
 
   let lauf = prev;
   if (prev) {
-    const up = await pool.query(`UPDATE quartalsreview_laeufe SET status='laeuft', updated_at=NOW() WHERE id=$1 AND status IN ('fehler','abgebrochen','mailfehler') RETURNING *`, [prev.id]);
+    const up = await pool.query(`UPDATE quartalsreview_laeufe SET status='laeuft', updated_at=NOW() WHERE id=$1 AND status IN ('fehler','abgebrochen','mailfehler','vorschau') RETURNING *`, [prev.id]);
     if (!up.rows.length) return { status: 'uebersprungen', grund: 'Der Lauf ist im Gang.', quartal };
     lauf = up.rows[0];
   } else {
@@ -388,7 +388,7 @@ async function runForClient(clientId, opts = {}) {
         [JSON.stringify({ daten, ki: r.ki, erstelltAm: new Date().toISOString() }), kosten, lauf.id]);
       lauf.ki_json = 'x';
     }
-    if (opts.mails === false) return await finish('fertig', { mails: false });
+    if (opts.mails === false) return await finish('vorschau', { mails: false });
     const frisch = (await pool.query('SELECT * FROM quartalsreview_laeufe WHERE id=$1', [lauf.id])).rows[0];
     const mails = await sendeMails(clientId, quartal, frisch, c.name);
     if (mails.beraterin) {

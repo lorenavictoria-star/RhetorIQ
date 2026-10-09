@@ -26,6 +26,8 @@ test.before(async () => {
   await pool.query(`CREATE TABLE usage_topups (id SERIAL PRIMARY KEY, client_id INTEGER, tokens BIGINT, created_at TIMESTAMPTZ DEFAULT NOW())`);
   await pool.query(`CREATE TABLE usage_log (id SERIAL PRIMARY KEY, advisor_id INTEGER, client_id INTEGER, module TEXT NOT NULL, input_tokens INTEGER NOT NULL DEFAULT 0, output_tokens INTEGER NOT NULL DEFAULT 0, model TEXT, cache_creation_tokens BIGINT NOT NULL DEFAULT 0, cache_read_tokens BIGINT NOT NULL DEFAULT 0, cost_usd NUMERIC(14,6), created_at TIMESTAMPTZ DEFAULT NOW())`);
   await pool.query(`CREATE TABLE client_feedback_learnings (id SERIAL PRIMARY KEY, client_id INTEGER, module_key TEXT NOT NULL, category TEXT NOT NULL, summary TEXT NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW(), resolved_at TIMESTAMPTZ, satz_meta JSONB)`);
+  const { DataType } = require('pg-mem');
+  try { H.mem.public.registerFunction({ name: 'date_trunc', args: [DataType.text, DataType.timestamptz], returns: DataType.timestamptz, implementation: (u, t) => { const d = new Date(t); return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)); } }); } catch { /* schon registriert */ }
   await require('../lib/schemaRedesign').ensureSchema();
   biz = await H.addClient('Business AG'); ent = await H.addClient('Enterprise AG'); team = await H.addClient('Team AG');
   teamAddon = await H.addClient('Team Zusatz AG'); stimme = await H.addClient('Stimme AG'); cancelled = await H.addClient('Gekuendigt AG'); plain = await H.addClient('Ohne Paket AG');
@@ -194,10 +196,16 @@ test('Testlauf per Knopf: nur für die eigenen Klienten, ohne Versand möglich',
   assert.equal((await srv.call('POST', '/api/quartalsreview/auswertung/lauf', { token: H.clientToken(biz.id), body: {} })).status, 403);
   assert.equal((await srv.call('POST', '/api/quartalsreview/auswertung/lauf', { token: H.advisorToken(), body: { quartal: '2026-Q9' } })).status, 400);
   const r = await srv.call('POST', '/api/quartalsreview/auswertung/lauf', { token: H.advisorToken(), body: { clientId: biz.id, quartal: Q, mails: false } });
-  assert.equal(r.status, 200); assert.equal(r.body[0].status, 'fertig');
+  assert.equal(r.status, 200); assert.equal(r.body[0].status, 'vorschau');
   assert.equal(H.brevoMails.length, 0);
   const w = await srv.call('GET', `/api/quartalsreview/${biz.id}/auswertung.docx?quartal=${Q}`, { token: H.advisorToken(), raw: true });
   assert.equal(w.status, 200);
+  // Danach lässt sich dieselbe Auswertung versenden, ohne erneuten KI-Aufruf
+  const n = H.ai.calls.length;
+  const s2 = await srv.call('POST', '/api/quartalsreview/auswertung/lauf', { token: H.advisorToken(), body: { clientId: biz.id, quartal: Q } });
+  assert.equal(s2.body[0].status, 'fertig');
+  assert.equal(H.ai.calls.length, n);
+  assert.equal(H.brevoMails.length, 2);
 });
 
 test('Webhook: Zusatzzahlung setzt das Flag, Paket und Kontingent bleiben', async () => {
@@ -267,13 +275,15 @@ test('Kaufroute: nur Rolle admin, nur Stimme und Team, Abo mit Intervall 3 Monat
   assert.equal((await subsSrv.call('POST', url(team.id))).status, 401);
   // schon gebucht
   assert.equal((await subsSrv.call('POST', url(teamAddon.id), { token: H.clientToken(teamAddon.id) })).status, 400);
-  // Angebot zeigt sich nur dort, wo es gilt
-  const o1 = await subsSrv.call('GET', `/api/subscriptions/quartalsreview-offer/${team.id}`, { token: H.clientToken(team.id) });
-  assert.deepEqual([o1.body.available, o1.body.aktiv, o1.body.amountCents, o1.body.intervalMonths], [true, false, 29000, 3]);
-  const o2 = await subsSrv.call('GET', `/api/subscriptions/quartalsreview-offer/${biz.id}`, { token: H.clientToken(biz.id) });
-  assert.equal(o2.body.available, false);
-  const o3 = await subsSrv.call('GET', `/api/subscriptions/quartalsreview-offer/${teamAddon.id}`, { token: H.clientToken(teamAddon.id) });
-  assert.equal(o3.body.aktiv, true);
+  // Beraterin hat dafür den Zahlungslink (create-payment-link), die Kaufroute ist Kundensache
+  assert.equal((await subsSrv.call('POST', url(team.id), { token: H.advisorToken() })).status, 403);
+  // Angebot zeigt sich in «Abo verwalten» nur dort, wo es gilt
+  const o1 = await subsSrv.call('GET', `/api/subscriptions/abo/${team.id}`, { token: H.clientToken(team.id) });
+  assert.deepEqual([o1.body.quartalsreview.verfuegbar, o1.body.quartalsreview.aktiv, o1.body.quartalsreview.amountCents, o1.body.quartalsreview.intervalMonths], [true, false, 29000, 3]);
+  const o2 = await subsSrv.call('GET', `/api/subscriptions/abo/${biz.id}`, { token: H.clientToken(biz.id) });
+  assert.equal(o2.body.quartalsreview.verfuegbar, false); assert.equal(o2.body.quartalsreview.imPaket, true);
+  const o3 = await subsSrv.call('GET', `/api/subscriptions/abo/${teamAddon.id}`, { token: H.clientToken(teamAddon.id) });
+  assert.equal(o3.body.quartalsreview.aktiv, true);
 });
 
 test('Beraterin-Zahlungslink für den Zusatz trägt dieselben Metadaten', async () => {

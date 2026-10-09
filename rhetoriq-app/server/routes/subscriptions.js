@@ -313,18 +313,8 @@ async function quartalsOffer(clientId) {
   return { client: rows[0], plan, available: plan === 'stimme' || plan === 'team', aktiv: rows[0].quartalsreview_aktiv === true };
 }
 
-// GET /api/subscriptions/quartalsreview-offer/:clientId  (Wird der Zusatz angeboten, ist er schon gebucht? Preis zur Anzeige)
-router.get('/quartalsreview-offer/:clientId', requireAuth, requireRole('admin'), ownClient('clientId'), async (req, res) => {
-  try {
-    const o = await quartalsOffer(req.params.clientId);
-    if (!o) return res.status(404).json({ error: 'Client not found' });
-    const a = require('../lib/angebote').ANGEBOTE.quartalsreview;
-    res.json({ available: o.available, aktiv: o.aktiv, plan: o.plan, amountCents: a.amountCents, intervalMonths: a.intervalCount });
-  } catch (e) { res.status(500).json({ error: 'Internal server error' }); }
-});
-
 // POST /api/subscriptions/quartalsreview-link/:clientId
-router.post('/quartalsreview-link/:clientId', requireAuth, requireRole('admin'), ownClient('clientId'), async (req, res) => {
+router.post('/quartalsreview-link/:clientId', requireAuth, nurKlientenAdmin, nichtNurLesend, ownClient('clientId'), async (req, res) => {
   try {
     const { clientId } = req.params;
     const o = await quartalsOffer(clientId);
@@ -463,6 +453,7 @@ router.get('/abo/:clientId', requireAuth, nurKlientenAdmin, ownClient('clientId'
       jahresabo: o ? { verfuegbar: true, paket: o.name, jahrCents: o.yearlyCents, monatCents: o.monthlyCents } : { verfuegbar: false },
       zusatz: { texte: TOPUP.tokens / abo.TOKENS_PRO_TEXT, amountCents: TOPUP.amountCents },
       karte: { amountCents: KARTE.amountCents, minuten: KARTE.minutes },
+      quartalsreview: await (async () => { const o = await quartalsOffer(row.id); const a = require('../lib/angebote').ANGEBOTE.quartalsreview; return { verfuegbar: !!(o && o.available), imPaket: !!(o && (o.plan === 'business' || o.plan === 'enterprise')), aktiv: !!(o && o.aktiv), amountCents: a.amountCents, intervalMonths: a.intervalCount }; })(),
       themenplan: { aktiv: !!(await pool.query('SELECT themenplan_aktiv FROM clients WHERE id=$1', [row.id])).rows[0]?.themenplan_aktiv, amountCents: THEMENPLAN.amountCents },
       portal: !!row.stripe_customer_id
     });
