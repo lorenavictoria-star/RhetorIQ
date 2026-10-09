@@ -21,10 +21,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Inter+Tight:wght@300;400;500;600;700&display=swap');
 :root{
   /* Palette */
-  --bg:#FFFFFF;--sf:#FFFFFF;--bg2:#FFFFFF;--bd:#E2E0DC;--tx:#0E0D0B;--mu:#6A665F;--dm:#8E8880;--red:#B42318;
+  --bg:#FFFFFF;--sf:#FFFFFF;--bg2:#FFFFFF;--bd:#E2E0DC;--tx:#0E0D0B;--mu:#6A665F;--dm:#6B665E;--red:#B42318;
   --serif:'Newsreader',Georgia,serif;--sans:'Inter Tight',system-ui,sans-serif;--rail:#0E0D0B;--rail-tx:#F1EDE4;--rail-mu:#9A978E;--rail-ln:#2A2824;--rail-ac:#D9B26A;
   /* Accent — Porsche Racing Green */
-  --ac:#97702A;--acl:#FBF6EA;--ac-light:#FBF6EA;--acc:#97702A;
+  --ac:#8A6420;--acl:#FBF6EA;--ac-light:#FBF6EA;--acc:#8A6420;
   /* Transitions */
   --t-fast:120ms ease;--t-base:200ms ease;
   /* Safe areas */
@@ -163,7 +163,7 @@ body.adv .adv-only{display:block!important}
 .mem-body.open{display:block}
 .mem-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .mem-chip{font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--bd);background:var(--sf);color:var(--mu);display:flex;align-items:center;gap:5px}
-.mem-chip.done{border-color:#4a4;color:#4a4}
+.mem-chip.done{border-color:#4a4;color:#2a6a2a}
 .mem-chip.done::before{content:'&#10003;'}
 .mem-edit{font-size:12px;color:var(--mu);text-decoration:underline;cursor:pointer;background:none;border:none;font-family:var(--sans)}
 
@@ -947,12 +947,12 @@ html[lang="en"] .legal-en-note{display:block}
       <div class="lerr" id="cl-err"></div>
       <div class="lsw"><a onclick="sf('advisor-form','client-form')">Back</a></div>
     </div>
-    <div style="margin-top:20px;text-align:center;font-size:11px;color:#9ca3af;line-height:2">
-      <a onclick="showLegal('agb')" style="color:#9ca3af;cursor:pointer;text-decoration:none">AGB</a>
+    <div style="margin-top:20px;text-align:center;font-size:11px;color:#6B7280;line-height:2">
+      <a onclick="showLegal('agb')" style="color:#6B7280;cursor:pointer;text-decoration:none">AGB</a>
       &nbsp;·&nbsp;
-      <a onclick="showLegal('datenschutz')" style="color:#9ca3af;cursor:pointer;text-decoration:none">Datenschutz</a>
+      <a onclick="showLegal('datenschutz')" style="color:#6B7280;cursor:pointer;text-decoration:none">Datenschutz</a>
       &nbsp;·&nbsp;
-      <a onclick="showLegal('impressum')" style="color:#9ca3af;cursor:pointer;text-decoration:none">Impressum</a>
+      <a onclick="showLegal('impressum')" style="color:#6B7280;cursor:pointer;text-decoration:none">Impressum</a>
     </div>
   </div></div>
   <div class="lhero" id="lhero" aria-hidden="true"><div class="ball3d" id="ball3d" role="img" aria-label="Ein goldener und ein silberner Faden, zu einem Knäuel gewickelt"></div></div>
@@ -7763,7 +7763,7 @@ function hsAdvPrint() {
       .score{font-size:64px;font-weight:300;color:#111;line-height:1;margin:0 0 4px}
       .score-label{font-size:13px;color:#666;margin-bottom:24px}
       pre{white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.75;border:1px solid #e5e7eb;border-radius:8px;padding:16px;background:#f9fafb}
-      .footer{font-size:11px;color:#9ca3af;margin-top:24px;border-top:1px solid #e5e7eb;padding-top:12px}
+      .footer{font-size:11px;color:#6B7280;margin-top:24px;border-top:1px solid #e5e7eb;padding-top:12px}
       @media print{body{margin:20px}}
     </style></head><body>
     <h1>Communication Health Score</h1>
@@ -8663,7 +8663,7 @@ tryAutoLogin();
     var br=box.getBoundingClientRect(),bt=b.getBoundingClientRect(),cx=br.left+br.width/2,cy=br.top+br.height/2,rr=br.width*.315;
     var S0=[cx+rr*.55,cy+rr*.82],E=[bt.right+14,bt.top+bt.height/2],NS='http://www.w3.org/2000/svg';
     var sv=document.createElementNS(NS,'svg');sv.id='login-thread';sv.setAttribute('viewBox','0 0 '+innerWidth+' '+innerHeight);
-    var ac='#97702A',id='lt'+Date.now();
+    var ac='#8A6420',id='lt'+Date.now();
     sv.innerHTML='<defs><linearGradient id="'+id+'" gradientUnits="userSpaceOnUse" x1="'+E[0]+'" y1="0" x2="'+S0[0]+'" y2="0"><stop offset="0" stop-color="#D9B26A"/><stop offset="1" stop-color="#8F9298"/></linearGradient></defs>';
     var dy=Math.max(110,(E[1]-S0[1])*.55);
     var d='M'+S0[0]+' '+S0[1]+' C'+(S0[0]+34)+' '+(S0[1]+dy*.7)+' '+(E[0]+(S0[0]-E[0])*.55)+' '+(E[1]+10)+' '+E[0]+' '+E[1];
