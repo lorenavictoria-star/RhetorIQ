@@ -263,6 +263,7 @@ app.use('/api/learning', require('./routes/learning'));
 app.use('/api/comm-profile', require('./routes/commProfile'));
 app.use('/api/client-plan', require('./routes/clientPlan'));
 app.use('/api/review-time', require('./routes/reviewTime'));
+app.use('/api/archive', require('./routes/archive'));
 
 // Manual report trigger (advisor only)
 const { requireAdvisor } = require('./middleware/auth');
