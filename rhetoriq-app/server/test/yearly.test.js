@@ -46,7 +46,10 @@ test('yearly-link: Paket, Zugriff, Betrag', async () => {
   assert.equal(li.unit_amount, 637200);
   assert.equal(calls.at(-1).metadata.type, 'yearly');
   assert.equal((await srv.call('POST', `/api/subscriptions/yearly-link/${c.id}`, { token: H.advisorToken() })).status, 200);
+  const off = await srv.call('GET', `/api/subscriptions/yearly-offer/${c.id}`, { token: H.clientToken(c.id) });
+  assert.deepEqual(off.body, { available: true, tier: 'Team', yearlyCents: 637200, monthlyCents: 59000 });
   const other = await H.addClient('Andere AG');
+  assert.equal((await srv.call('GET', `/api/subscriptions/yearly-offer/${other.id}`, { token: H.clientToken(c.id) })).status, 403);
   assert.equal((await srv.call('POST', `/api/subscriptions/yearly-link/${other.id}`, { token: H.clientToken(c.id) })).status, 403);
   await pool.query('UPDATE clients SET monthly_token_limit=1500000 WHERE id=$1', [c.id]);
   assert.equal((await srv.call('POST', `/api/subscriptions/yearly-link/${c.id}`, { token: H.advisorToken() })).status, 400);

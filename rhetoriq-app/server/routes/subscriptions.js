@@ -246,6 +246,16 @@ router.post('/upgrade-link/:clientId', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/subscriptions/yearly-offer/:clientId  (Gibt es für das Paket eine Jahreszahlung? Preise zur Anzeige)
+router.get('/yearly-offer/:clientId', requireAuth, ownClient('clientId'), async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT monthly_token_limit FROM clients WHERE id=$1', [req.params.clientId]);
+    if (!rows.length) return res.status(404).json({ error: 'Client not found' });
+    const o = yearly.yearlyOfferFor(rows[0].monthly_token_limit);
+    res.json(o ? { available: true, tier: o.name, yearlyCents: o.yearlyCents, monthlyCents: o.monthlyCents } : { available: false });
+  } catch (e) { res.status(500).json({ error: 'Internal server error' }); }
+});
+
 // ── POST /api/subscriptions/yearly-link/:clientId ───────────────
 // Jahresabo mit 10 % Rabatt (Business: zwei Monate gratis). Das Paket ergibt sich aus dem Monatskontingent.
 // Klient nur für sich selbst, Beraterin für ihre Klienten.
