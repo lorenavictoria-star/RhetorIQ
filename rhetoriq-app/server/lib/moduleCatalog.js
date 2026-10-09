@@ -2,7 +2,7 @@
 // Die Sektorlisten entsprechen SECMODS im Designbaukasten.
 
 const ALLE_MODULE = [
-  'Brand Voice', 'Text Generator', 'Vorher / Nachher', 'Varianten-Generator', 'Situations-Variante',
+  'Brand Voice', 'Text Generator', 'Varianten-Generator', 'Situations-Variante',
   'Kommunikations-Profil', 'Feedback Writer', 'Wertschätzung', 'Meeting-Vorbereitung', 'Risiko-Scan',
   'Klarheits-Check', 'Notizen zu Aufgaben', 'Einwand-Training', 'Debrief'
 ];
@@ -14,20 +14,19 @@ const SEKTOR_NAME = {
 };
 
 const SECMODS = {
-  kmu: ['Text Generator', 'Vorher / Nachher', 'Kommunikations-Profil', 'Feedback Writer', 'Wertschätzung', 'Meeting-Vorbereitung', 'Risiko-Scan', 'Klarheits-Check', 'Notizen zu Aufgaben'],
-  hotellerie: ['Text Generator', 'Vorher / Nachher', 'Varianten-Generator', 'Situations-Variante', 'Kommunikations-Profil', 'Feedback Writer', 'Wertschätzung', 'Meeting-Vorbereitung', 'Einwand-Training', 'Debrief'],
+  kmu: ['Text Generator', 'Kommunikations-Profil', 'Feedback Writer', 'Wertschätzung', 'Meeting-Vorbereitung', 'Risiko-Scan', 'Klarheits-Check', 'Notizen zu Aufgaben'],
+  hotellerie: ['Text Generator', 'Varianten-Generator', 'Situations-Variante', 'Kommunikations-Profil', 'Feedback Writer', 'Wertschätzung', 'Meeting-Vorbereitung', 'Einwand-Training', 'Debrief'],
   capital: ['Text Generator', 'Varianten-Generator', 'Situations-Variante', 'Kommunikations-Profil', 'Feedback Writer', 'Meeting-Vorbereitung', 'Risiko-Scan', 'Einwand-Training'],
-  bildung: ['Text Generator', 'Vorher / Nachher', 'Kommunikations-Profil', 'Feedback Writer', 'Wertschätzung', 'Meeting-Vorbereitung', 'Klarheits-Check'],
-  nonprofit: ['Text Generator', 'Vorher / Nachher', 'Varianten-Generator', 'Kommunikations-Profil', 'Feedback Writer', 'Wertschätzung', 'Meeting-Vorbereitung'],
-  tech: ['Text Generator', 'Vorher / Nachher', 'Varianten-Generator', 'Situations-Variante', 'Kommunikations-Profil', 'Feedback Writer', 'Meeting-Vorbereitung', 'Risiko-Scan', 'Klarheits-Check', 'Notizen zu Aufgaben', 'Einwand-Training'],
-  beratung: ['Text Generator', 'Vorher / Nachher', 'Varianten-Generator', 'Kommunikations-Profil', 'Feedback Writer', 'Wertschätzung', 'Meeting-Vorbereitung', 'Risiko-Scan', 'Einwand-Training', 'Debrief', 'Notizen zu Aufgaben']
+  bildung: ['Text Generator', 'Kommunikations-Profil', 'Feedback Writer', 'Wertschätzung', 'Meeting-Vorbereitung', 'Klarheits-Check'],
+  nonprofit: ['Text Generator', 'Varianten-Generator', 'Kommunikations-Profil', 'Feedback Writer', 'Wertschätzung', 'Meeting-Vorbereitung'],
+  tech: ['Text Generator', 'Varianten-Generator', 'Situations-Variante', 'Kommunikations-Profil', 'Feedback Writer', 'Meeting-Vorbereitung', 'Risiko-Scan', 'Klarheits-Check', 'Notizen zu Aufgaben', 'Einwand-Training'],
+  beratung: ['Text Generator', 'Varianten-Generator', 'Kommunikations-Profil', 'Feedback Writer', 'Wertschätzung', 'Meeting-Vorbereitung', 'Risiko-Scan', 'Einwand-Training', 'Debrief', 'Notizen zu Aufgaben']
 };
 
 // Anzeigename -> Schlüssel in clients.enabled_modules (siehe NC_MODULE_LABELS im Frontend).
 const MODUL_SCHLUESSEL = {
   'Brand Voice': 'brand-voice',
   'Text Generator': 'text-gen',
-  'Vorher / Nachher': 'before-after',
   'Varianten-Generator': 'vs-gen',
   'Situations-Variante': 'vs-cal',
   'Kommunikations-Profil': 'profiling',

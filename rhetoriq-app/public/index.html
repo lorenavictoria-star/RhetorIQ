@@ -2423,7 +2423,7 @@ if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https:/
 const API=(location.protocol==='file:'||/(^|\.)rhetoriq\.ch$/.test(location.hostname))?'https://rhetoriq.ch':'';
 let token=localStorage.getItem('riq-token'),isAdv=false,clientId=null,clients=[],people=[],memory=[],chatHist=[],voiceProf=null,enabledModules=null,clientUserId=null,clientUserName=null,clientUserEmail=null;
 let debugMode=localStorage.getItem('riq-debug')==='1';
-const DEFAULT_MODULES=['profiling','brand-voice','text-gen','review','pre-meeting','arg-reaction','crisis','risk','thread','rh-translate','before-after','sparring','debrief','presentation','customer-review'];
+const DEFAULT_MODULES=['profiling','brand-voice','text-gen','review','pre-meeting','arg-reaction','crisis','risk','thread','rh-translate','sparring','debrief','presentation','customer-review'];
 // Fixed Anrede/Ton presets for Email & Brief — replaces the free-form Ton-Kalibrator
 // sliders for these two formats. Each label must match a key in the backend's
 // TONE_PRESETS map (server/routes/analyze.js) verbatim.
@@ -3959,10 +3959,10 @@ async function sendWelcomeByEmail(clientId){
 let _mcClientId=null;
 const MC_SECTIONS=[
   {label:'Fundament',keys:['profiling','brand-voice','text-gen']},
-  {label:'Schreiben',keys:['review','before-after','text-gen','brief','presentation','customer-review']},
+  {label:'Schreiben',keys:['review','text-gen','brief','presentation','customer-review']},
   {label:'Prävention',keys:['risk','crisis','arg-reaction','pre-meeting']},
   {label:'Effizienz',keys:['thread','rh-translate']},
-  {label:'Wachstum',keys:['sparring','debrief','before-after']},
+  {label:'Wachstum',keys:['sparring','debrief']},
 ];
 const MC_SUITES=[
   {label:'Capital Markets Suite',color:'#0369a1',bg:'#f0f9ff',border:'#bae6fd',prefix:'cm-',keys:['cm-qa-trainer','cm-equity-story','cm-earnings-analyzer','cm-board-coach','cm-roadshow']},
@@ -4142,9 +4142,9 @@ function ncSetLang(l){
   document.getElementById('nc-lang-en').style.border=isDE?'1.5px solid var(--bd)':'none';
   document.getElementById('nc-ov').dataset.lang=l;
 }
-const NC_MODULE_LABELS={'brand-voice':'Brand Voice','text-gen':'Text Generator','brief':'Formeller Brief','before-after':'Vorher / Nachher','profiling':'Kommunikations-Profil','review':'Feedback Writer','recognition':'Wertschätzung','pre-meeting':'Meeting-Vorbereitung','risk':'Risiko-Scan','actionability':'Klarheits-Check','thread':'Notizen zu Aufgaben','sparring':'Einwand-Training','debrief':'Debrief','vs-gen':'Varianten-Generator','vs-cal':'Situations-Variante'};
+const NC_MODULE_LABELS={'brand-voice':'Brand Voice','text-gen':'Text Generator','brief':'Formeller Brief','profiling':'Kommunikations-Profil','review':'Feedback Writer','recognition':'Wertschätzung','pre-meeting':'Meeting-Vorbereitung','risk':'Risiko-Scan','actionability':'Klarheits-Check','thread':'Notizen zu Aufgaben','sparring':'Einwand-Training','debrief':'Debrief','vs-gen':'Varianten-Generator','vs-cal':'Situations-Variante'};
 const NC_SECTOR_MODULES={kmu:['profiling','review','brief','pre-meeting','risk','thread'],hotellerie:['profiling','review','brief','pre-meeting','risk','thread','sparring','debrief','vs-gen','vs-cal'],capital:['profiling','review','brief','vs-gen','vs-cal','sparring','pre-meeting','risk'],bildung:['profiling','text-gen','before-after','review','brief','pre-meeting'],nonprofit:['profiling','text-gen','before-after','review','brief','vs-gen','pre-meeting'],tech:['profiling','review','brief','pre-meeting','risk','thread','vs-gen','vs-cal','sparring'],beratung:['profiling','review','brief','pre-meeting','risk','thread','vs-gen','sparring','debrief']};
-const NC_ALWAYS=['brand-voice','text-gen','before-after'];
+const NC_ALWAYS=['brand-voice','text-gen'];
 function ncUpdateModules(){
   const sector=document.getElementById('nc-sector').value;
   const wrap=document.getElementById('nc-modules-wrap');
@@ -7316,7 +7316,7 @@ const ALL_MODULES=[
   // old history rows referencing this key still display sensibly.
   {key:'thread',name:'Notizen zu Aufgaben',cat:'efficiency',tag:'Effizienz',icon:'ti-list-check'},
   {key:'rh-translate',name:'Übersetzen',cat:'efficiency',tag:'Effizienz',isNew:true,icon:'ti-language'},
-  {key:'before-after',name:'Vorher / Nachher',cat:'growth',tag:'Wachstum',isNew:true,icon:'ti-arrows-left-right'},
+
   {key:'sparring',name:'2-Min. Training',cat:'growth',tag:'Wachstum',isNew:true,icon:'ti-target-arrow'},
   {key:'debrief',name:'Nachbesprechung',cat:'growth',tag:'Wachstum',isNew:true,icon:'ti-clipboard-text'},
   // vs-gen/vs-cal deliberately not listed here — they've had no distinct
@@ -9039,13 +9039,13 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
   window.rqDate=function(d){if(!d)return '';var x=new Date(d);return isNaN(x)?'':x.toLocaleDateString(DLOC(),{day:'numeric',month:'short',year:'numeric'});};
   window.rqDateTime=function(d){if(!d)return '';var x=new Date(d);return isNaN(x)?'':x.toLocaleString(DLOC(),{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});};
   // Module: Anzeigename, Schlüssel (enabled_modules)
-  window.RQ_MODS=[['brand-voice','Brand Voice'],['text-gen','Text Generator'],['before-after','Vorher / Nachher'],['vs-gen','Varianten-Generator'],['vs-cal','Situations-Variante'],['profiling','Kommunikations-Profil'],['review','Feedback Writer'],['recognition','Wertschätzung'],['pre-meeting','Meeting-Vorbereitung'],['risk','Risiko-Scan'],['actionability','Klarheits-Check'],['thread','Notizen zu Aufgaben'],['sparring','Einwand-Training'],['debrief','Debrief']];
+  window.RQ_MODS=[['brand-voice','Brand Voice'],['text-gen','Text Generator'],['vs-gen','Varianten-Generator'],['vs-cal','Situations-Variante'],['profiling','Kommunikations-Profil'],['review','Feedback Writer'],['recognition','Wertschätzung'],['pre-meeting','Meeting-Vorbereitung'],['risk','Risiko-Scan'],['actionability','Klarheits-Check'],['thread','Notizen zu Aufgaben'],['sparring','Einwand-Training'],['debrief','Debrief']];
   window.rqModName=function(k){var m=RQ_MODS.filter(function(x){return x[0]===k;})[0];return m?m[1]:k;};
   window.rqModKey=function(v){ // Name oder Schlüssel zu Schlüssel
     v=String(v||'');var m=RQ_MODS.filter(function(x){return x[0]===v||x[1].toLowerCase()===v.toLowerCase();})[0];return m?m[0]:null;
   };
   window.RQ_SECTORS={kmu:'KMU / Allgemein',hotellerie:'Hotellerie / Tourismus',capital:'Capital / Finance',bildung:'Bildung / Public Sector',nonprofit:'Non-Profit / NGO',tech:'Tech / Startup',beratung:'Beratung / Coaching'};
-  window.RQ_SECMODS={kmu:['text-gen','before-after','profiling','review','recognition','pre-meeting','risk','actionability','thread'],hotellerie:['text-gen','before-after','vs-gen','vs-cal','profiling','review','recognition','pre-meeting','sparring','debrief'],capital:['text-gen','vs-gen','vs-cal','profiling','review','pre-meeting','risk','sparring'],bildung:['text-gen','before-after','profiling','review','recognition','pre-meeting','actionability'],nonprofit:['text-gen','before-after','vs-gen','profiling','review','recognition','pre-meeting'],tech:['text-gen','before-after','vs-gen','vs-cal','profiling','review','pre-meeting','risk','actionability','thread','sparring'],beratung:['text-gen','before-after','vs-gen','profiling','review','recognition','pre-meeting','risk','sparring','debrief','thread']};
+  window.RQ_SECMODS={kmu:['text-gen','profiling','review','recognition','pre-meeting','risk','actionability','thread'],hotellerie:['text-gen','vs-gen','vs-cal','profiling','review','recognition','pre-meeting','sparring','debrief'],capital:['text-gen','vs-gen','vs-cal','profiling','review','pre-meeting','risk','sparring'],bildung:['text-gen','profiling','review','recognition','pre-meeting','actionability'],nonprofit:['text-gen','vs-gen','profiling','review','recognition','pre-meeting'],tech:['text-gen','vs-gen','vs-cal','profiling','review','pre-meeting','risk','actionability','thread','sparring'],beratung:['text-gen','vs-gen','profiling','review','recognition','pre-meeting','risk','sparring','debrief','thread']};
 })();
 </script>
 <script id="rq-wiz-js">
