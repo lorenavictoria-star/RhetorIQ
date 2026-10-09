@@ -235,6 +235,7 @@ app.use(require('./middleware/readOnly').readOnlyGuard);
 app.use('/auth', require('./routes/auth'));
 app.use('/api/clients', require('./routes/clients'));
 app.use('/api/clients', require('./routes/clientStats'));
+app.use('/api/clients', require('./routes/kiHinweis'));
 app.use('/api/analyze', require('./routes/analyze'));
 app.use('/api/people', require('./routes/people'));
 app.use('/api/memory', require('./routes/memory'));

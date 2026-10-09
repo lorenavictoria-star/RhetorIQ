@@ -147,6 +147,20 @@ async function runWeeklyReport() {
       });
     }
 
+    // Klumpenrisiko: Zeile nur, wenn ein Klient über dem Richtwert liegt
+    try {
+      const { rows: adv } = await pool.query(`SELECT id FROM users WHERE role='advisor' ORDER BY id LIMIT 1`);
+      if (adv[0]) {
+        const rs = await require('../lib/revenueShare').revenueShare(adv[0].id);
+        if (rs.zuHoch.length) {
+          lines.push('', 'KLUMPENRISIKO:');
+          rs.zuHoch.forEach(k => lines.push(`  ${k.name} macht ${k.anteilProzent} % des Umsatzes im ${rs.month} aus (Richtwert: kein Klient über ${rs.limitProzent} %).`));
+        }
+      }
+    } catch (e) {
+      console.error('[weekly-report] revenue share failed:', e.message);
+    }
+
     lines.push(
       '',
       '─'.repeat(52),

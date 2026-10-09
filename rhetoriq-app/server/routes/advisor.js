@@ -38,6 +38,17 @@ router.put('/sender-address', requireAdvisor, async (req, res) => {
   }
 });
 
+// GET /api/advisor/revenue-share?month=2026-10 (Klumpenrisiko: Umsatzanteil je Klient, Richtwert 40 Prozent)
+router.get('/revenue-share', requireAdvisor, async (req, res) => {
+  try {
+    await ensureSchema();
+    res.json(await require('../lib/revenueShare').revenueShare(req.user.id, req.query.month));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /api/advisor/dashboard
 router.get('/dashboard', requireAdvisor, async (req, res) => {
   try {

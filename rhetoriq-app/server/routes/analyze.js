@@ -2393,11 +2393,14 @@ router.post('/presentation-preflight', requireAuth, async (req, res) => {
 // a raw web page. This produces a genuine binary .docx.
 router.post('/export-docx', requireAuth, async (req, res) => {
   try {
-    const { content, title, presentation } = req.body;
+    const { content, title, presentation, clientId: reqClientId } = req.body;
     if (!content || typeof content !== 'string' || !content.trim()) {
       return res.status(400).json({ error: 'No content provided' });
     }
-    const { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, BorderStyle } = require('docx');
+    const docxLib = require('docx');
+    const { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, BorderStyle } = docxLib;
+    const kiH = require('../lib/kiHinweis');
+    const mitHinweis = await kiH.flagForRequest(req, reqClientId);
     const docTitle = (title && String(title).trim()) || 'RhetorIQ Dokument';
     const date = new Date().toLocaleDateString('de-CH');
 
@@ -2451,13 +2454,15 @@ router.post('/export-docx', requireAuth, async (req, res) => {
     }
 
     const doc = new Document({
+      ...kiH.docMeta(),
       styles: { default: { document: { run: { font: 'Calibri', size: 22 } } } },
       sections: [{
         properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } },
         children: [
           new Paragraph({ alignment: AlignmentType.LEFT, spacing: { after: 120 }, children: [new TextRun({ text: docTitle, bold: true, size: 32 })] }),
           new Paragraph({ alignment: AlignmentType.LEFT, spacing: { after: 480 }, children: [new TextRun({ text: `RhetorIQ — ${date}`, size: 18, color: '888888' })] }),
-          ...bodyParagraphs
+          ...bodyParagraphs,
+          ...(mitHinweis ? [kiH.hinweisParagraph(docxLib)] : [])
         ]
       }]
     });

@@ -131,6 +131,8 @@ function ensureSchema() {
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS quartalsreviews_client_q_idx ON quartalsreviews (client_id, quartal)`);
     // Abo-Status direkt am Klienten (derselbe Befehl wie in routes/subscriptions.js), damit die Kundenliste ihn mitladen kann
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trial'`);
+    // Hinweis auf KI-Unterstützung unter exportierten Texten (Standard: aus)
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS ki_hinweis BOOLEAN NOT NULL DEFAULT FALSE`);
     // Indizes für die häufigsten Abfragen (Kundenliste, Verlauf, Nutzung)
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_client_created_idx ON analyses (client_id, created_at DESC)`);
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_advisor_created_idx ON analyses (advisor_id, created_at DESC)`);
