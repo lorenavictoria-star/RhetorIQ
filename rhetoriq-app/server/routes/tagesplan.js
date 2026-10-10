@@ -82,7 +82,9 @@ async function pruefen(req) {
   const s = await D.einstellungen(req.user.id);
   return T.eintragPruefen(req.body, { settings: s, heute: Z.heute() });
 }
-const syncEreignis = (e) => ({ uid: `rq-e${e.id}@rhetoriq.ch`, titel: e.titel, datum: e.datum, beginn: e.beginn, ende: e.ende, ganztaegig: e.ganztaegig, typ: e.typ, notiz: e.notiz });
+const syncEreignis = (e, aid) => ({ advisorId: aid, id: e.id, uid: `rq-e${e.id}@rhetoriq.ch`, titel: e.titel, datum: e.datum, beginn: e.beginn, ende: e.ende, ganztaegig: e.ganztaegig, typ: e.typ, notiz: e.notiz,
+  wiederholung: e.wiederholung, wochentage: e.wochentage, bis: e.bis });
+const planGeaendert = (aid) => ({ advisorId: aid, uid: 'plan', art: 'plan' });
 router.get('/termine', async (req, res) => {
   try { res.json({ termine: await D.eintraege(req.user.id), typen: T.alleTypen(await D.einstellungen(req.user.id)) }); } catch (e) { fail(res, e); }
 });
@@ -91,7 +93,7 @@ router.post('/termine', async (req, res) => {
     const p = await pruefen(req);
     if (p.fehler) return res.status(400).json({ error: p.fehler });
     const e = await D.eintragAnlegen(req.user.id, p.eintrag);
-    await sync.push(syncEreignis(e));
+    await sync.push(syncEreignis(e, req.user.id));
     res.status(201).json(e);
   } catch (e) { fail(res, e); }
 });
@@ -103,7 +105,7 @@ router.put('/termine/:id', async (req, res) => {
     if (p.fehler) return res.status(400).json({ error: p.fehler });
     const e = await D.eintragAendern(req.user.id, id, p.eintrag);
     if (!e) return res.status(404).json({ error: 'Eintrag nicht gefunden.' });
-    await sync.push(syncEreignis(e));
+    await sync.push(syncEreignis(e, req.user.id));
     res.json(e);
   } catch (e) { fail(res, e); }
 });
@@ -113,7 +115,7 @@ router.delete('/termine/:id', async (req, res) => {
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'Ungültige Nummer.' });
     const e = await D.eintragLoeschen(req.user.id, id);
     if (!e) return res.status(404).json({ error: 'Eintrag nicht gefunden.' });
-    await sync.delete(syncEreignis(e));
+    await sync.delete(syncEreignis(e, req.user.id));
     res.json({ ok: true });
   } catch (e) { fail(res, e); }
 });
@@ -125,11 +127,12 @@ router.put('/position/:key', async (req, res) => {
     const beginn = Z.zeitZuMin(req.body && req.body.beginn);
     if (!/^[a-z][A-Za-z0-9-]{0,40}$/.test(key) || !Z.istDatum(req.body && req.body.datum) || beginn == null || beginn >= 1440) return res.status(400).json({ error: 'Datum oder Uhrzeit ungültig.' });
     await D.positionSetzen(req.user.id, key, req.body.datum, beginn);
+    await sync.push(planGeaendert(req.user.id));
     res.json({ ok: true });
   } catch (e) { fail(res, e); }
 });
 router.delete('/position/:key', async (req, res) => {
-  try { await D.positionLoeschen(req.user.id, String(req.params.key)); res.json({ ok: true }); } catch (e) { fail(res, e); }
+  try { await D.positionLoeschen(req.user.id, String(req.params.key)); await sync.push(planGeaendert(req.user.id)); res.json({ ok: true }); } catch (e) { fail(res, e); }
 });
 router.post('/dringlich', async (req, res) => {
   try {
@@ -137,6 +140,7 @@ router.post('/dringlich', async (req, res) => {
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'Ungültige Freigabe.' });
     const ok = await D.dringlichSetzen(req.user.id, id, req.body.dringlich !== false);
     if (!ok) return res.status(404).json({ error: 'Freigabe nicht gefunden.' });
+    await sync.push(planGeaendert(req.user.id));
     res.json({ ok: true });
   } catch (e) { fail(res, e); }
 });

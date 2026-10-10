@@ -38,6 +38,10 @@ services:
         sync: false   # set in Render dashboard — from Stripe webhook settings
       - key: SECRETS_ENCRYPTION_KEY
         sync: false   # set in Render dashboard — 64 hex characters (openssl rand -hex 32), never change after first use
+      - key: GOOGLE_CLIENT_ID
+        sync: false   # set in Render dashboard — OAuth-Client (Webanwendung) aus Google Cloud, für die Kalender-Synchronisation
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false   # set in Render dashboard — Client-Geheimnis desselben OAuth-Clients, nie im Code oder Chat
       - key: CORS_ORIGIN
         value: https://rhetoriq.ch
       - key: APP_URL

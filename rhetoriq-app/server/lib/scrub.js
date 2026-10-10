@@ -1,10 +1,11 @@
 // Schlüssel aus Texten entfernen, bevor sie in Logs, Fehlermeldungen oder an Sentry gehen.
 // Erkannt werden private Klaviyo-Schlüssel (pk_ + Zeichen) und Autorisierungsangaben im Klartext.
 const PK = /\bpk_[A-Za-z0-9_-]{8,}/g;
+const GOOGLE = /\b(?:ya29\.[A-Za-z0-9._-]{10,}|1\/\/[A-Za-z0-9._-]{20,}|GOCSPX-[A-Za-z0-9_-]{8,})/g;
 const AUTH = /(Klaviyo-API-Key|Bearer)\s+[A-Za-z0-9._~+\/-]{8,}/gi;
 
 function scrubText(t, extra) {
-  let s = String(t == null ? '' : t).replace(PK, '[Schlüssel entfernt]').replace(AUTH, '$1 [entfernt]');
+  let s = String(t == null ? '' : t).replace(PK, '[Schlüssel entfernt]').replace(AUTH, '$1 [entfernt]').replace(GOOGLE, '[Schlüssel entfernt]').replace(/\b(refresh_token|access_token|client_secret|code_verifier)=[^&\s]+/gi, '$1=[entfernt]');
   if (extra && String(extra).length >= 8) s = s.split(String(extra)).join('[Schlüssel entfernt]');
   return s;
 }

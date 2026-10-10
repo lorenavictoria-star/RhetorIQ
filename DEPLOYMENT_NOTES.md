@@ -174,3 +174,15 @@ Klienten und Beraterin tragen ihren privaten Klaviyo-Schlüssel in der Oberfläc
 Ohne die Variable meldet die Oberfläche «Die sichere Ablage ist noch nicht eingerichtet» und speichert nichts. Bei der Beraterin bleibt dann das bisherige Verhalten (Schlüssel im Browser).
 
 Der Klaviyo-Schlüssel braucht diese Rechte: Templates (Vollzugriff), Campaigns (Vollzugriff), Lists (Lesen). Die Plattform versendet nie selbst, sie legt nur Vorlagen und Kampagnenentwürfe an.
+
+## Kalender-Synchronisation mit Google (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
+
+Google ist die Zentrale: RhetorIQ schreibt Tagesplan und Termine in einen eigenen Google-Kalender «RhetorIQ» und liest Änderungen vom Handy zurück. Einmalige Einrichtung durch Lorena:
+
+1. In der Google Cloud Console ein Projekt wählen, die «Google Calendar API» aktivieren, den OAuth-Zustimmungsbildschirm einrichten (Scope `https://www.googleapis.com/auth/calendar.app.created`, die eigene Adresse als Testnutzerin eintragen).
+2. Unter «Anmeldedaten» einen OAuth-Client vom Typ «Webanwendung» anlegen. Als autorisierte Weiterleitungs-URI exakt `https://rhetoriq.ch/api/kalender/google/callback` eintragen (APP_URL plus `/api/kalender/google/callback`).
+3. Client-ID und Client-Geheimnis in Render als `GOOGLE_CLIENT_ID` und `GOOGLE_CLIENT_SECRET` eintragen. Nie in Chat oder Code.
+4. `SECRETS_ENCRYPTION_KEY` muss gesetzt sein (siehe oben), sonst wird kein Token gespeichert.
+5. `APP_URL` muss mit `https://` beginnen, sonst gibt es keine Push-Benachrichtigungen (der Abgleich alle 15 Minuten läuft trotzdem).
+
+Danach in der Oberfläche unter Kalender, «Kalender verbinden», «Mit Google verbinden». Abschalten des 15-Minuten-Jobs: `KALENDERSYNC=aus`.

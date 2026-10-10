@@ -133,4 +133,4 @@ function htmlToText(html, max = 12000) {
   return (head ? head + '\n\n' : '') + text.slice(0, max);
 }
 
-module.exports = { safeFetchHtml, htmlToText, isBlockedAddress, parseTarget };
+module.exports = { safeFetchHtml, htmlToText, isBlockedAddress, parseTarget, guardedLookup };

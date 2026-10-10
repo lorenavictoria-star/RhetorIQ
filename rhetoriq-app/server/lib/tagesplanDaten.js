@@ -4,6 +4,8 @@ const { pool } = require('../db');
 const Z = require('./zeit');
 const T = require('./tagesplan');
 const { baueIcs } = require('./ics');
+const KS = require('./kalendersync/daten');
+const { expandiere: icsExpandiere } = require('./icsLesen');
 
 let ensured = null;
 function ensureSchema() {
@@ -21,6 +23,10 @@ function ensureSchema() {
     await pool.query(`CREATE TABLE IF NOT EXISTS tagesplan_positionen (id SERIAL PRIMARY KEY, advisor_id INTEGER NOT NULL, task_key TEXT NOT NULL, datum TEXT NOT NULL, beginn INTEGER NOT NULL)`);
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS tagesplan_positionen_key_idx ON tagesplan_positionen (advisor_id, task_key)`);
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS dringlich BOOLEAN NOT NULL DEFAULT FALSE`);
+    await pool.query(`ALTER TABLE tagesplan_eintraege ADD COLUMN IF NOT EXISTS ausnahmen TEXT NOT NULL DEFAULT ''`);
+    await pool.query(`ALTER TABLE tagesplan_positionen ADD COLUMN IF NOT EXISTS dauer INTEGER`);
+    await pool.query(`ALTER TABLE tagesplan_positionen ADD COLUMN IF NOT EXISTS geaendert TIMESTAMPTZ NOT NULL DEFAULT NOW()`);
+    await KS.ensureSchema();
   })().catch(e => { ensured = null; throw e; });
   return ensured;
 }
@@ -45,7 +51,8 @@ async function einstellungenSpeichern(aid, roh) {
 // ── Einträge ──
 function zeile(r) {
   return { id: r.id, titel: r.titel, typ: r.typ, datum: r.datum, beginn: r.beginn, ende: r.ende, ganztaegig: !!r.ganztaegig, wiederholung: r.wiederholung,
-    wochentage: String(r.wochentage || '').split(',').filter(Boolean).map(Number), bis: r.bis || null, notiz: r.notiz || '' };
+    wochentage: String(r.wochentage || '').split(',').filter(Boolean).map(Number), bis: r.bis || null, notiz: r.notiz || '',
+    ausnahmen: String(r.ausnahmen || '').split(',').filter(Boolean), aktualisiert: r.updated_at };
 }
 async function eintraege(aid) {
   await ensureSchema();
@@ -68,6 +75,19 @@ async function eintragAendern(aid, id, e) {
     [id, aid, e.titel, e.typ, e.datum, e.beginn, e.ende, e.ganztaegig, e.wiederholung, e.wochentage.join(','), e.bis, e.notiz]);
   return rows[0] ? zeile(rows[0]) : null;
 }
+async function eintragHole(aid, id) {
+  await ensureSchema();
+  const { rows } = await pool.query('SELECT * FROM tagesplan_eintraege WHERE id=$1 AND advisor_id=$2', [id, aid]);
+  return rows[0] ? zeile(rows[0]) : null;
+}
+// Einzelne Wiederholung einer Serie auslassen
+async function eintragAusnahme(aid, id, datum) {
+  await ensureSchema();
+  const e = await eintragHole(aid, id);
+  if (!e || e.ausnahmen.includes(datum)) return e;
+  await pool.query('UPDATE tagesplan_eintraege SET ausnahmen=$3, updated_at=NOW() WHERE id=$1 AND advisor_id=$2', [id, aid, [...e.ausnahmen, datum].join(',')]);
+  return eintragHole(aid, id);
+}
 async function eintragLoeschen(aid, id) {
   await ensureSchema();
   const { rows } = await pool.query('DELETE FROM tagesplan_eintraege WHERE id=$1 AND advisor_id=$2 RETURNING *', [id, aid]);
@@ -77,15 +97,15 @@ async function eintragLoeschen(aid, id) {
 // ── Von Hand verschobene Aufgaben ──
 async function positionen(aid) {
   await ensureSchema();
-  const { rows } = await pool.query('SELECT task_key, datum, beginn FROM tagesplan_positionen WHERE advisor_id=$1', [aid]);
+  const { rows } = await pool.query('SELECT task_key, datum, beginn, dauer, geaendert FROM tagesplan_positionen WHERE advisor_id=$1', [aid]);
   const o = {};
-  for (const r of rows) o[r.task_key] = { datum: r.datum, beginn: r.beginn };
+  for (const r of rows) o[r.task_key] = { datum: r.datum, beginn: r.beginn, dauer: r.dauer || null, geaendert: r.geaendert };
   return o;
 }
-async function positionSetzen(aid, key, datum, beginn) {
+async function positionSetzen(aid, key, datum, beginn, dauer = null) {
   await ensureSchema();
-  const up = await pool.query('UPDATE tagesplan_positionen SET datum=$3, beginn=$4 WHERE advisor_id=$1 AND task_key=$2', [aid, key, datum, beginn]);
-  if (!up.rowCount) await pool.query('INSERT INTO tagesplan_positionen (advisor_id, task_key, datum, beginn) VALUES ($1,$2,$3,$4)', [aid, key, datum, beginn]);
+  const up = await pool.query('UPDATE tagesplan_positionen SET datum=$3, beginn=$4, dauer=$5, geaendert=NOW() WHERE advisor_id=$1 AND task_key=$2', [aid, key, datum, beginn, dauer]);
+  if (!up.rowCount) await pool.query('INSERT INTO tagesplan_positionen (advisor_id, task_key, datum, beginn, dauer) VALUES ($1,$2,$3,$4,$5)', [aid, key, datum, beginn, dauer]);
 }
 async function positionLoeschen(aid, key) {
   await ensureSchema();
@@ -177,10 +197,29 @@ async function aufgaben(aid, settings) {
   return out;
 }
 
+// Besetzt-Zeiten aus fremden Kalendern (iCloud, Outlook) als gesperrte Blöcke eines Tages. Nur lesen, nie nach Google gespiegelt.
+async function fremdFuerTag(aid, datum) {
+  await ensureSchema();
+  const out = [];
+  for (const k of await KS.fremdAlle(aid)) {
+    if (!k.aktiv) continue;
+    let master = [];
+    try { master = JSON.parse(k.ereignisse || '[]'); } catch { master = []; }
+    let n = 0;
+    for (const t of icsExpandiere(master, datum, datum)) {
+      if (!t.ganztaegig && t.frei) continue; // als «frei» markierte Termine sperren keine Zeit
+      out.push({ id: `f${k.id}-${n++}`, titel: t.titel || k.bezeichnung, typ: 'fremd', datum, beginn: t.beginn, ende: t.ende, ganztaegig: t.ganztaegig,
+        wiederholung: 'keine', wochentage: [], bis: null, notiz: '', fremd: true, farbe: k.farbe, quelle: k.bezeichnung });
+    }
+  }
+  return out;
+}
+
 async function planFuer(aid, datum, jetzt = new Date()) {
-  const [s, ei, pos] = await Promise.all([einstellungen(aid), eintraege(aid), positionen(aid)]);
-  const auf = await aufgaben(aid, s);
-  const plan = T.planBauen(auf, { datum, eintraege: ei, settings: s, jetzt, positionen: pos });
+  const [s, ei, pos, fremd, versteckt] = await Promise.all([einstellungen(aid), eintraege(aid), positionen(aid), fremdFuerTag(aid, datum), KS.ausgeblendetAm(aid, datum)]);
+  const auf = (await aufgaben(aid, s)).filter(a => !versteckt.has(a.key));
+  const plan = T.planBauen(auf, { datum, eintraege: ei.concat(fremd), settings: s, jetzt, positionen: pos });
+  plan.ausgeblendet = versteckt.size;
   plan.text = T.planText(plan);
   return plan;
 }
@@ -193,7 +232,7 @@ function planEreignisse(plan, { termine = false, jetzt = new Date() } = {}) {
     beschreibung: `Dauer ${T.dauerText(i.dauer)}${i.fristText ? '. Frist: ' + i.fristText : ''}${i.paketName ? '. Paket: ' + i.paketName : ''}${i.verspaetet ? '. Die Frist wird nicht gehalten.' : ''}`,
     url: i.link
   }));
-  if (termine) for (const b of plan.bloecke) ev.push({ uid: `rq-e${b.id}-${plan.datum}@rhetoriq.ch`, datum: plan.datum, beginn: b.beginn, ende: b.ende, ganztaegig: b.ganztaegig, titel: b.titel, beschreibung: b.notiz || '', sequenz: seq });
+  if (termine) for (const b of plan.bloecke.filter(x => !x.fremd)) ev.push({ uid: `rq-e${b.id}-${plan.datum}@rhetoriq.ch`, datum: plan.datum, beginn: b.beginn, ende: b.ende, ganztaegig: b.ganztaegig, titel: b.titel, beschreibung: b.notiz || '', sequenz: seq });
   return ev;
 }
 async function icsFuerTag(aid, datum, { abo = false, jetzt = new Date() } = {}) {
@@ -201,5 +240,5 @@ async function icsFuerTag(aid, datum, { abo = false, jetzt = new Date() } = {}) 
   return { plan, ics: baueIcs(planEreignisse(plan, { termine: abo, jetzt }), { jetzt, abo }) };
 }
 
-module.exports = { ensureSchema, einstellungen, einstellungenSpeichern, eintraege, eintragAnlegen, eintragAendern, eintragLoeschen, positionen, positionSetzen, positionLoeschen,
+module.exports = { ensureSchema, einstellungen, einstellungenSpeichern, eintraege, eintragAnlegen, eintragAendern, eintragLoeschen, eintragHole, eintragAusnahme, fremdFuerTag, positionen, positionSetzen, positionLoeschen,
   tokenErzeugen, tokenWiderrufen, tokenStatus, advisorZuToken, hashVon, dringlichSetzen, aufgaben, planFuer, planEreignisse, icsFuerTag, appUrl };

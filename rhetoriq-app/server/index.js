@@ -171,7 +171,7 @@ app.use(express.json({ limit: '5mb' }));
 
 // Structured request logging: timestamp · method · path · status · duration
 // Der geheime Token des Kalender-Feeds steht im Pfad und darf nie ins Log
-morgan.token('sicherurl', (req) => String(req.originalUrl || req.url).replace(/(\/api\/tagesplan\/feed\/)[^/?#]*/, '$1***'));
+morgan.token('sicherurl', (req) => String(req.originalUrl || req.url).replace(/(\/api\/tagesplan\/feed\/)[^/?#]*/, '$1***').replace(/(\/api\/kalender\/google\/callback)\?.*/, '$1?***'));
 app.use(morgan(':date[iso] :method :sicherurl :status :res[content-length]b :response-time ms'));
 // Security headers. CSP is disabled: the frontend is a single-file app that
 // relies on one large inline <script> block and inline onclick="" handlers
@@ -276,6 +276,8 @@ app.use('/api/files', require('./routes/files'));
 app.use('/api/help-chat', require('./routes/helpChat'));
 app.use('/api/assistent', require('./routes/assistent'));
 app.use('/api/tagesplan', require('./routes/tagesplan'));
+app.use('/api/kalender/google', require('./routes/kalenderGoogle'));
+app.use('/api/kalender/fremd', require('./routes/kalenderFremd'));
 app.use('/api/memory-suggest', require('./routes/memorySuggest'));
 app.use('/api/learning', require('./routes/learning'));
 app.use('/api/comm-profile', require('./routes/commProfile'));
@@ -392,6 +394,8 @@ const PORT = process.env.PORT || 3001;
   cron.schedule('0 7 2 1,4,7,10 *', () => require('./jobs/quartalsauswertung').runQuartalsauswertungJob().catch(e => console.error('[quartalsreview] job failed:', e.message)), { timezone: 'Europe/Zurich' });
   // Tagesplan mit Kalenderdatei: jeden Tag um 07:00 (abschaltbar mit TAGESPLAN=aus)
   cron.schedule('0 7 * * *', () => require('./jobs/tagesplan').runTagesplanJob().catch(e => console.error('[tagesplan] job failed:', e.message)), { timezone: 'Europe/Zurich' });
+  // Kalender-Synchronisation: alle 15 Minuten (fremde Kalender lesen, Google-Kanal erneuern, Abgleich als Sicherheitsnetz; abschaltbar mit KALENDERSYNC=aus)
+  cron.schedule('*/15 * * * *', () => require('./jobs/kalendersync').runKalendersyncJob().catch(e => console.error('[kalendersync] job failed:', require('./lib/scrub').scrubText(e.message))), { timezone: 'Europe/Zurich' });
   console.log('[cron] Weekly report: every Sunday 08:00 Zurich');
   console.log('[cron] Monthly report: 1st of month 08:07 Zurich');
 

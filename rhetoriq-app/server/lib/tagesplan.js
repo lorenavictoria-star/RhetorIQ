@@ -103,6 +103,7 @@ function eintragPruefen(inp, { settings, heute, nurZukunft = false } = {}) {
 // Alle Vorkommen eines Eintrags an einem Datum
 function vorkommen(e, datum) {
   if (datum < e.datum) return false;
+  if (Array.isArray(e.ausnahmen) && e.ausnahmen.includes(datum)) return false;
   if (e.wiederholung === 'keine') return datum === e.datum;
   if (e.bis && datum > e.bis) return false;
   if (e.wiederholung === 'taeglich') return true;
@@ -112,7 +113,8 @@ function vorkommen(e, datum) {
 function eintraegeAm(eintraege, datum) {
   return (eintraege || []).filter(e => vorkommen(e, datum)).map(e => ({
     id: e.id, titel: e.titel, typ: e.typ, datum, beginn: e.ganztaegig ? null : e.beginn, ende: e.ganztaegig ? null : e.ende,
-    ganztaegig: !!e.ganztaegig, notiz: e.notiz || '', wiederholung: e.wiederholung, serie: e.wiederholung !== 'keine'
+    ganztaegig: !!e.ganztaegig, notiz: e.notiz || '', wiederholung: e.wiederholung, serie: e.wiederholung !== 'keine',
+    ...(e.fremd ? { fremd: true, farbe: e.farbe, quelle: e.quelle } : {})
   })).sort((a, b) => (a.beginn == null ? -1 : a.beginn) - (b.beginn == null ? -1 : b.beginn));
 }
 
@@ -178,7 +180,9 @@ function planBauen(aufgaben, opts) {
   const alle = (aufgaben || []).map(a => {
     const paket = RANG[a.paket] ? a.paket : (a.paket == null ? null : 'team');
     const frist = a.frist ? new Date(a.frist) : (a.eingang && paket ? fristBerechnen(new Date(a.eingang), paket, eintraege, s) : null);
-    return { ...a, paket, frist, dauer: Math.max(5, Math.min(480, Math.round(a.dauer || s.dauer.freigabe))) };
+    const pos = positionen[a.key];
+    const dauerPos = pos && pos.datum === datum && pos.dauer ? pos.dauer : null; // am Handy geänderte Dauer
+    return { ...a, paket, frist, dauer: Math.max(5, Math.min(480, Math.round(dauerPos || a.dauer || s.dauer.freigabe))) };
   });
   const jetztMs = Math.max(jetzt.getTime(), refStart.getTime());
   for (const a of alle) {
