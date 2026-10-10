@@ -1621,9 +1621,13 @@ html[lang="en"] .legal-en-note{display:block}
           <button type="button" class="rq-chip" data-ex="Zeig mir die Kunden">Zeig mir die Kunden</button>
           <button type="button" class="rq-chip" data-ex="Öffne die Nutzung">Öffne die Nutzung</button>
           <button type="button" class="rq-chip" data-ex="Starte ein Onboarding">Starte ein Onboarding</button>
+          <button type="button" class="rq-chip" data-ex="Mach mir den Tagesplan">Mach mir den Tagesplan</button>
+          <button type="button" class="rq-chip" data-ex="Was ist als Nächstes dran?">Was ist als Nächstes dran?</button>
+          <button type="button" class="rq-chip" data-ex="Trage Sport morgen 17 bis 18 Uhr ein">Trage Sport morgen 17 bis 18 Uhr ein</button>
           <button type="button" class="rq-chip" data-ex="Wie lade ich ein Dokument hoch?">Wie lade ich ein Dokument hoch?</button>
         </div></div>
       </div>
+      <div id="tp-root"></div>
     </div>
 
     <!-- VIDEOS -->
@@ -2379,6 +2383,10 @@ window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Assistent","Assistan
 <script id="rq-xpairs-finanzen">
 // DE/EN-Paare für die Finanzaufstellung der Beraterin; rq-i18n fügt window.RQ_EXTRA_PAIRS zu PAIRS hinzu.
 window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Finanzen","Finances"],["Monat","Month"],["Neu laden","Reload"],["Export CSV","Export CSV"],["Export Word","Export Word"],["Die Zahlen werden geladen.","Loading the figures."],["Einnahmen","Income"],["Kosten","Costs"],["Ergebnis","Result"],["Kosten und Ergebnis","Costs and result"],["Kennzahlen","Key figures"],["Ergebnis je Klient","Result per client"],["Fixkosten und weitere Kosten","Fixed and other costs"],["Einstellungen","Settings"],["Was gerechnet wurde","How it was calculated"],["Anzahl","Count"],["Betrag","Amount"],["Bezahlte Abos","Paid subscriptions"],["Zusatzmodule","Add-on modules"],["Zusatzkäufe","Extra purchases"],["Einmalige Leistungen","One-off services"],["Zusätzliche Beratung","Additional consulting"],["Nicht zugeordnet","Unassigned"],["Rückerstattungen","Refunds"],["Summe Einnahmen","Total income"],["Summe Kosten","Total costs"],["Ergebnis des Monats","Result of the month"],["KI-Kosten (Anthropic)","AI costs (Anthropic)"],["Stripe-Gebühren","Stripe fees"],["Weitere variable Kosten","Other variable costs"],["Fixkosten","Fixed costs"],["Marge","Margin"],["KI-Kosten in Prozent des Umsatzes","AI costs as a percentage of revenue"],["Zahlende Klienten","Paying clients"],["Wiederkehrender Monatsumsatz (MRR)","Monthly recurring revenue (MRR)"],["Jahreswert (ARR)","Annual value (ARR)"],["KI-Kosten","AI costs"],["Bezeichnung","Name"],["Betrag in CHF","Amount in CHF"],["Art","Type"],["Fix","Fixed"],["Variabel","Variable"],["Rhythmus","Frequency"],["Jeden Monat","Every month"],["Einmalig","One-off"],["Gültig ab","Valid from"],["Gültig bis","Valid until"],["Posten hinzufügen","Add item"],["Änderung speichern","Save change"],["Bearbeiten","Edit"],["Löschen","Delete"],["Abbrechen","Cancel"],["Noch keine Posten erfasst.","No items yet."],["Mehrwertsteuerpflichtig","Subject to VAT"],["Satz in Prozent","Rate in percent"],["Beträge zeigen","Show amounts"],["Netto (ohne MwSt)","Net (excl. VAT)"],["Brutto (mit MwSt)","Gross (incl. VAT)"],["Wechselkurs (US-Dollar für 1 Franken)","Exchange rate (US dollars per franc)"],["Rückstellung Steuern und Sozialversicherung in Prozent","Provision for taxes and social security in percent"],["Einstellungen speichern","Save settings"],["Tatsächliche Rechnung Anthropic im Monat (CHF)","Actual Anthropic invoice for the month (CHF)"],["Speichern","Save"],["Diesen Posten löschen?","Delete this item?"],["Schätzung, nicht aus Stripe.","Estimate, not from Stripe."],["Die fünf grössten Klienten:","The five largest clients:"]]);
+</script>
+<script id="rq-xpairs-tagesplan">
+// DE/EN-Paare für Tagesplan und Kalender der Beraterin; rq-i18n fügt window.RQ_EXTRA_PAIRS zu PAIRS hinzu.
+window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Tagesplan", "Daily plan"], ["Kalender", "Calendar"], ["Bausteine", "Building blocks"], ["Heute", "Today"], ["Tag", "Day"], ["Woche", "Week"], ["Zurück", "Back"], ["Weiter", "Next"], ["Plan neu berechnen", "Recalculate plan"], ["Als Kalenderdatei laden", "Download as calendar file"], ["Plan jetzt per Mail senden", "Email plan now"], ["Synchronisiert mit Handy und Laptop", "Synced with phone and laptop"], ["Noch nicht mit Handy und Laptop verbunden", "Not yet connected to phone and laptop"], ["Für diesen Tag steht nichts im Plan.", "Nothing is planned for this day."], ["Kein Plan für diesen Tag.", "No plan for this day."], ["Voraussichtliches Ende", "Expected end"], ["Frist wird nicht gehalten", "Deadline will be missed"], ["überfällig", "overdue"], ["dringlich", "urgent"], ["von Hand verschoben", "moved by hand"], ["Öffnen", "Open"], ["Als dringlich markieren", "Mark as urgent"], ["Nicht mehr dringlich", "No longer urgent"], ["Position freigeben", "Release position"], ["Mittagspause", "Lunch break"], ["Löschen", "Delete"], ["Duplizieren", "Duplicate"], ["Speichern", "Save"], ["Abbrechen", "Cancel"], ["Schliessen", "Close"], ["Neuer Termin", "New appointment"], ["Termin bearbeiten", "Edit appointment"], ["Termine", "Appointments"], ["Titel", "Title"], ["Typ", "Type"], ["Datum", "Date"], ["Beginn", "Start"], ["Ende", "End"], ["Ganztägig", "All day"], ["Wiederholung", "Repeat"], ["Keine", "None"], ["Täglich", "Daily"], ["Wöchentlich an bestimmten Wochentagen", "Weekly on selected weekdays"], ["Bis (Datum)", "Until (date)"], ["Notiz", "Note"], ["Von (erster Tag)", "From (first day)"], ["Bis (letzter Ferientag)", "Until (last day of holiday)"], ["Wochentage", "Weekdays"], ["Sport", "Sport"], ["Kundentermin", "Client appointment"], ["Fokuszeit", "Focus time"], ["Termin", "Appointment"], ["Pause", "Break"], ["Ferien", "Holiday"], ["Privat", "Private"], ["Feiertag", "Public holiday"], ["Ziehen oder antippen, danach auf die Zeit im Kalender tippen. Mit der Eingabetaste setzt du den Baustein zur nächsten vollen Stunde ein.", "Drag or tap, then tap the time in the calendar. With the Enter key you place the block at the next full hour."], ["Ziehe einen Baustein in den Kalender. Zum Verschieben ziehst du den Block, zum Ändern der Dauer den unteren Rand. Mit der Tastatur: Tab zum Block, Pfeiltasten verschieben, Umschalt mit Pfeiltasten ändert die Dauer, Eingabe öffnet, Entf löscht.", "Drag a block into the calendar. Drag the block to move it, drag its lower edge to change the duration. With the keyboard: Tab to the block, arrow keys move, Shift with arrow keys changes the duration, Enter opens, Delete removes."], ["Kalender auf Handy und Laptop", "Calendar on phone and laptop"], ["Kalender abonnieren", "Subscribe to calendar"], ["Neuen Link erzeugen", "Create new link"], ["Abo widerrufen", "Revoke subscription"], ["Im Kalender öffnen", "Open in calendar"], ["Link kopieren", "Copy link"], ["Keine kommenden Termine.", "No upcoming appointments."], ["Bearbeiten", "Edit"], ["Einstellungen", "Settings"], ["Mittagspause von", "Lunch break from"], ["Mittagspause bis", "Lunch break until"], ["Arbeitsbeginn normal", "Normal start of work"], ["Arbeitsbeginn bei Dringlichem", "Start of work when urgent items are due"], ["Frist in Stunden (Team, Business, Enterprise)", "Deadline in hours (Team, Business, Enterprise)"], ["Standarddauer in Minuten", "Default duration in minutes"], ["Typen und Farben", "Types and colours"], ["Typ hinzufügen", "Add type"], ["Entfernen", "Remove"], ["Einstellungen speichern", "Save settings"], ["Texte", "Texts"], ["Anfragen", "Enquiries"], ["Onboarding-Entwürfe", "Onboarding drafts"], ["Quartalsauswertungen", "Quarterly evaluations"], ["Themenpläne", "Topic plans"], ["Quartalsreviews", "Quarterly reviews"], ["Im Arbeitsbereich öffnen", "Open in workspace"], ["Aufgabe", "Task"], ["Zeit festlegen", "Set time"], ["Verschieben auf (Tag)", "Move to (day)"], ["Ja, eintragen", "Yes, add it"], ["Nein", "No"]]);
 </script>
 <script id="rq-i18n">
 // ── I18N: Wörterbuch-Ebene über dem bestehenden T/applyLang-System ──
@@ -12183,7 +12191,7 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
       case 'open_history':goPage('history');loadHistory();if(window.rqMarkRail)rqMarkRail('history');break;
       case 'open_beispiele':goPage('training');loadTraining();if(window.rqMarkRail)rqMarkRail('training');break;
       case 'summary_today':await summary();break;
-      default:break;
+      default:if(window.rqTagesplanRun)await window.rqTagesplanRun(a);break;
     }
   }
   async function command(text){
@@ -12200,6 +12208,7 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     }finally{busy=false;status('');var l=log();if(l)l.scrollTop=l.scrollHeight;}
   }
   window.rqAssistentRun=command;
+  window.rqAssistentAdd=add;
   window.rqAssistentSubmit=function(e){if(e&&e.preventDefault)e.preventDefault();var i=$('as-in');command(i&&i.value);return false;};
 
   // Sprachaufnahme (MediaRecorder), höchstens 30 Sekunden. Gedrückt halten oder klicken: Start, erneut klicken: Stopp.
@@ -12497,6 +12506,809 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     });
   }
   window.rqFinanzen={load:load,state:st};
+})();
+</script>
+<style id="rq-tagesplan-css">
+#page-assistent{max-width:1180px}
+#tp-root{display:flex;flex-direction:column;gap:16px;margin-top:16px}
+.tp-card{gap:12px}
+.tp-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tp-sync{font-size:14px;color:var(--mu);padding:6px 12px;border:1px solid var(--bd);background:#fff}
+.tp-sync.ok{color:#1f6b45;border-color:#9ccbb1;background:#eef8f2}
+.tp-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tp-title{flex:1;min-width:160px;font-weight:600;font-size:16px}
+.rq-btn.tp-sm{min-height:44px;padding:8px 16px}
+.tp-seg{display:inline-flex}
+.tp-seg button{min-height:44px;padding:8px 16px;border:1px solid var(--bd);background:#fff;color:var(--tx);cursor:pointer;font:inherit}
+.tp-seg button.on{background:var(--acl);border-color:var(--ac);color:var(--ac);font-weight:600}
+.tp-msg{min-height:20px;font-size:14px;color:#1f6b45}
+.tp-msg.bad{color:#a8392c}
+.tp-note{font-size:14px;color:var(--mu);margin-bottom:6px}
+.tp-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.tp-li{display:grid;grid-template-columns:150px 1fr auto;gap:10px;align-items:start;padding:10px 12px;border:1px solid var(--bd);border-left:4px solid #4a7fc4;background:#fff;font-size:15px}
+.tp-li.rot{border-left-color:#b3261e;background:#fdf3f2}
+.tp-t{font-variant-numeric:tabular-nums;font-weight:600}
+.tp-f{color:var(--mu)}
+.tp-badge{display:inline-block;margin-left:6px;padding:1px 8px;font-size:12px;border:1px solid var(--bd);background:#fff;color:var(--tx)}
+.tp-badge.rot{border-color:#b3261e;color:#b3261e;background:#fff}
+.tp-badge.pk{border-color:#4a7fc4;color:#2f64ad}
+.tp-lb{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.tp-link{background:none;border:0;padding:8px 4px;min-height:44px;color:var(--ac);text-decoration:underline;cursor:pointer;font:inherit;font-size:14px}
+.tp-link:focus-visible,.tp-b:focus-visible,.tp-pi:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.tp-end{margin-top:8px;font-weight:600}
+.tp-actions{display:flex;gap:10px;flex-wrap:wrap}
+.tp-del{color:#a8392c!important;border-color:#e3b8b1!important}
+.tp-layout{display:grid;grid-template-columns:190px minmax(0,1fr);gap:16px;align-items:start}
+.tp-palwrap{display:flex;flex-direction:column;gap:8px;position:sticky;top:8px}
+.tp-pal{display:flex;flex-direction:column;gap:8px}
+.tp-pi{display:flex;align-items:center;gap:10px;min-height:48px;padding:8px 14px;border:1px solid var(--bd);background:#fff;color:var(--tx);cursor:grab;font:inherit;font-size:15px;text-align:left;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.tp-pi.on{border-color:var(--ac);background:var(--acl)}
+.tp-dot{width:14px;height:14px;border-radius:3px;flex:none;display:inline-block}
+.tp-palhint{font-size:13px;color:var(--mu);line-height:1.45}
+.tp-ghost{position:fixed;z-index:10000;pointer-events:none;padding:8px 14px;color:#fff;font-size:14px;opacity:.9;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.tp-gridwrap{border:1px solid var(--bd);background:#fff;overflow-x:auto}
+.tp-head,.tp-body{display:grid;min-width:0}
+.tp-head{border-bottom:1px solid var(--bd);background:#faf9f7}
+.tp-dh{padding:6px 4px;text-align:center;font-size:13px;border-left:1px solid var(--bd);min-width:0}
+.tp-dh.heute .tp-dn{color:var(--ac);font-weight:700}
+.tp-dn{font-weight:600}
+.tp-ban{display:block;width:100%;margin-top:4px;padding:3px 6px;border:0;color:#fff;font:inherit;font-size:12px;cursor:pointer;text-align:center;overflow-wrap:anywhere}
+.tp-ban.frei{background:#8a8f98;color:#fff;cursor:default}
+.tp-times{position:relative}
+.tp-tl{position:absolute;right:6px;font-size:11px;color:var(--mu);transform:translateY(-7px);font-variant-numeric:tabular-nums}
+.tp-col{position:relative;border-left:1px solid var(--bd);min-width:0;touch-action:pan-y}
+.tp-col.frei{background:repeating-linear-gradient(135deg,#faf9f7,#faf9f7 8px,#f3f1ed 8px,#f3f1ed 16px)}
+.tp-line{position:absolute;left:0;right:0;border-top:1px solid #e8e5e0;pointer-events:auto}
+.tp-line.half{border-top-style:dashed;border-top-color:#f0eeea}
+.tp-lunch{position:absolute;left:0;right:0;background:rgba(138,143,152,.14);font-size:11px;color:var(--mu);padding:2px 6px;pointer-events:auto}
+.tp-now{position:absolute;left:0;right:0;border-top:2px solid #b3261e;z-index:3;pointer-events:none}
+.tp-b{position:absolute;box-sizing:border-box;color:#fff;border-radius:4px;padding:3px 22px 3px 6px;font-size:12px;line-height:1.25;overflow:hidden;cursor:grab;z-index:2;touch-action:manipulation;border:1px solid rgba(0,0,0,.15)}
+.tp-b.rot{border:2px solid #7a1912}
+.tp-b.drag{opacity:.85;z-index:5;cursor:grabbing;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.tp-bt{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.tp-bz{opacity:.9;font-variant-numeric:tabular-nums}
+.tp-x{position:absolute;top:0;right:0;width:24px;height:24px;border:0;background:rgba(0,0,0,.2);color:#fff;font-size:16px;line-height:1;cursor:pointer;padding:0}
+.tp-x:hover{background:rgba(0,0,0,.45)}
+.tp-rz{position:absolute;left:0;right:0;bottom:0;height:8px;cursor:ns-resize;background:rgba(255,255,255,.35)}
+.tp-ov{position:fixed;inset:0;background:rgba(14,13,11,.45);z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px}
+.tp-dlgbox{background:#fff;border:1px solid var(--bd);max-width:520px;width:100%;max-height:92vh;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+.tp-dtitle{font-size:20px;font-weight:700}
+.tp-form,.tp-info{display:flex;flex-direction:column;gap:12px}
+.tp-fl{display:flex;flex-direction:column;gap:4px;font-size:14px}
+.tp-two,.tp-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tp-chk{display:flex;align-items:center;gap:8px;min-height:44px}
+.tp-wt{display:flex;gap:6px;flex-wrap:wrap}
+.tp-wtl{display:flex;align-items:center;gap:4px;min-height:44px;padding:0 8px;border:1px solid var(--bd)}
+.tp-dact{display:flex;gap:10px;flex-wrap:wrap}
+.tp-tl2{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.tp-ti{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--bd);font-size:15px}
+.tp-tt{flex:1;min-width:200px}
+.tp-sum{cursor:pointer;font-size:20px;font-weight:700;min-height:44px;display:flex;align-items:center}
+.tp-trow{display:flex;align-items:center;gap:10px;margin:6px 0}
+.tp-trow input[type=color]{width:44px;height:44px;padding:2px;border:1px solid var(--bd);background:#fff}
+.tp-linkbox{display:flex;flex-direction:column;gap:10px;padding:12px;border:1px solid var(--ac);background:var(--acl)}
+.tp-conf{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+@media(max-width:700px){
+  .tp-layout{grid-template-columns:1fr}
+  .tp-palwrap{position:static}
+  .tp-pal{flex-direction:row;flex-wrap:wrap}
+  .tp-li{grid-template-columns:1fr}
+  .tp-lb{justify-content:flex-start}
+  .tp-two,.tp-grid2{grid-template-columns:1fr}
+}
+</style>
+<script id="rq-tagesplan-js">
+// ═══ Tagesplan und Kalender der Beraterin: Baukasten, Drag and Drop (Pointer-Events), Tastatur, Touch ═══
+// Keine externe Bibliothek. Alle Texte aus Daten werden mit textContent gesetzt.
+(function(){
+  var DAY0=7*60,DAY1=19*60,PPM=1.2,SNAP=15;
+  var BAUSTEINE=[{typ:'sport',dauer:60},{typ:'kunde',dauer:60},{typ:'fokus',dauer:90},{typ:'termin',dauer:60},{typ:'pause',dauer:30},{typ:'ferien',dauer:0},{typ:'privat',dauer:60}];
+  var PAKETFARBE={enterprise:'#17407a',business:'#2f64ad',team:'#4a7fc4',stimme:'#7ea3d6'};
+  var ROT='#b3261e',BLAU='#4a7fc4';
+  var st={datum:null,ansicht:'tag',tage:[],typen:[],termine:[],ein:null,abo:null,werkzeug:null,dringl:{},init:false,busy:false};
+  var drag=null;
+  function isA(){try{return !!isAdv;}catch(e){return false;}}
+  function $(id){return document.getElementById(id);}
+  function h(tag,attrs,kids){
+    var e=document.createElement(tag);
+    if(attrs)Object.keys(attrs).forEach(function(k){
+      var v=attrs[k];if(v==null||v===false)return;
+      if(k==='class')e.className=v;else if(k==='text')e.textContent=v;else if(k.slice(0,2)==='on')e.addEventListener(k.slice(2),v);else e.setAttribute(k,v===true?'':v);
+    });
+    (kids||[]).forEach(function(c){if(c!=null)e.appendChild(typeof c==='string'?document.createTextNode(c):c);});
+    return e;
+  }
+  function p2(n){return (n<10?'0':'')+n;}
+  function hhmm(m){return p2(Math.floor(m/60))+':'+p2(m%60);}
+  function toMin(s){var m=/^(\d{1,2}):(\d{2})$/.exec(String(s||''));return m?(+m[1])*60+(+m[2]):null;}
+  function heute(){var p=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Zurich',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());return p;}
+  function nowMin(){var f=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Zurich',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date()).split(':');return (+f[0])*60+(+f[1]);}
+  function addD(d,n){var t=new Date(d+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10);}
+  function wd(d){var g=new Date(d+'T00:00:00Z').getUTCDay();return g===0?7:g;}
+  function montag(d){return addD(d,1-wd(d));}
+  var WK=['Mo','Di','Mi','Do','Fr','Sa','So'];
+  function ch(d){return d.slice(8,10)+'.'+d.slice(5,7)+'.'+d.slice(0,4);}
+  function chKurz(d){return d.slice(8,10)+'.'+d.slice(5,7)+'.';}
+  function wochentagKurz(d){return WK[wd(d)-1];}
+  function kw(d){var t=new Date(d+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));var y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y0)/86400000+1)/7);}
+  function mobil(){return window.matchMedia&&window.matchMedia('(max-width:700px)').matches;}
+  async function call(path,method,body){
+    var o={method:method||'GET'};if(body!==undefined)o.body=JSON.stringify(body);
+    var r=await api(path,o),j=null;try{j=await r.json();}catch(e){}
+    if(!r.ok)throw new Error((j&&j.error)||'Das hat nicht geklappt. Bitte versuche es erneut.');
+    return j;
+  }
+  function typ(k){for(var i=0;i<st.typen.length;i++)if(st.typen[i].key===k)return st.typen[i];return {key:k,name:k,farbe:'#3b6fb6'};}
+  function meldung(t,schlecht){var m=$('tp-msg');if(!m)return;m.textContent=t||'';m.className='tp-msg'+(schlecht?' bad':'');}
+
+  // ── Laden ──
+  async function laden(){
+    if(!isA()||!$('tp-root'))return;
+    var d=st.datum||(st.datum=heute());
+    try{
+      var tasks=[call('/api/tagesplan/termine'),call('/api/tagesplan/kalender')];
+      if(st.ansicht==='woche'&&!mobil())tasks.push(call('/api/tagesplan/woche?montag='+montag(d)));else tasks.push(call('/api/tagesplan/plan?datum='+d));
+      var res=await Promise.all(tasks);
+      st.termine=res[0].termine;st.typen=res[0].typen;st.abo=res[1];
+      st.tage=res[2].tage?res[2].tage:[res[2]];
+      st.dringl={};st.tage.forEach(function(p){p.items.forEach(function(i){if(i.reviewId)st.dringl[i.reviewId]=i.dringlich;});});
+      zeichne();
+      if(window.rqTpMarkReviews)window.rqTpMarkReviews();
+    }catch(e){meldung(e.message,true);}
+  }
+  window.rqTagesplanLaden=laden;
+
+  // ── Grundgerüst ──
+  function baue(){
+    var r=$('tp-root');if(!r||st.init)return;st.init=true;
+    var pal=h('div',{class:'tp-pal',role:'group','aria-label':'Bausteine'});
+    r.appendChild(h('div',{class:'rq-card tp-card','aria-labelledby':'tp-h'},[
+      h('div',{class:'tp-top'},[
+        h('div',{class:'page-title',id:'tp-h',style:'margin:0;font-size:22px',text:'Tagesplan'}),
+        h('div',{class:'tp-sync',id:'tp-sync',role:'status'})
+      ]),
+      h('div',{class:'tp-bar'},[
+        h('button',{type:'button',class:'rq-btn ghost tp-sm',id:'tp-prev','aria-label':'Zurück',onclick:function(){schritt(-1);}},['‹']),
+        h('button',{type:'button',class:'rq-btn ghost tp-sm',id:'tp-today',onclick:function(){st.datum=heute();laden();}},['Heute']),
+        h('button',{type:'button',class:'rq-btn ghost tp-sm',id:'tp-next','aria-label':'Weiter',onclick:function(){schritt(1);}},['›']),
+        h('div',{class:'tp-title',id:'tp-title',role:'heading','aria-level':'3'}),
+        h('div',{class:'tp-seg',id:'tp-seg',role:'group','aria-label':'Ansicht'},[
+          h('button',{type:'button',id:'tp-vt',onclick:function(){st.ansicht='tag';laden();}},['Tag']),
+          h('button',{type:'button',id:'tp-vw',onclick:function(){st.ansicht='woche';laden();}},['Woche'])
+        ])
+      ]),
+      h('div',{class:'tp-msg',id:'tp-msg',role:'status','aria-live':'polite'}),
+      h('div',{id:'tp-plan'}),
+      h('div',{class:'tp-actions'},[
+        h('button',{type:'button',class:'rq-btn',id:'tp-neu',onclick:neuBerechnen},['Plan neu berechnen']),
+        h('button',{type:'button',class:'rq-btn ghost',onclick:ladeIcs},['Als Kalenderdatei laden']),
+        h('button',{type:'button',class:'rq-btn ghost',onclick:mailJetzt},['Plan jetzt per Mail senden'])
+      ])
+    ]));
+    r.appendChild(h('div',{class:'rq-card tp-card'},[
+      h('div',{class:'page-title',style:'margin:0;font-size:20px',text:'Kalender'}),
+      h('p',{class:'rq-hint',id:'tp-hint'},['Ziehe einen Baustein in den Kalender. Zum Verschieben ziehst du den Block, zum Ändern der Dauer den unteren Rand. Mit der Tastatur: Tab zum Block, Pfeiltasten verschieben, Umschalt mit Pfeiltasten ändert die Dauer, Eingabe öffnet, Entf löscht.']),
+      h('div',{class:'tp-layout'},[
+        h('div',{class:'tp-palwrap'},[h('div',{class:'rq-eb',text:'Bausteine'}),pal,h('div',{class:'tp-palhint',id:'tp-palhint',text:'Ziehen oder antippen, danach auf die Zeit im Kalender tippen. Mit der Eingabetaste setzt du den Baustein zur nächsten vollen Stunde ein.'})]),
+        h('div',{class:'tp-gridwrap',id:'tp-gridwrap'})
+      ])
+    ]));
+    r.appendChild(h('div',{class:'rq-card tp-card',id:'tp-abo'}));
+    r.appendChild(h('div',{class:'rq-card tp-card',id:'tp-termine'}));
+    r.appendChild(h('details',{class:'rq-card tp-card',id:'tp-ein'},[h('summary',{class:'tp-sum'},['Einstellungen']),h('div',{id:'tp-einbody'})]));
+    r.appendChild(h('div',{id:'tp-dlg-host'}));
+    document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&$('tp-dlg'))schliesse();});
+    window.addEventListener('resize',function(){if(st.init&&$('page-assistent')&&$('page-assistent').classList.contains('active'))zeichne();});
+  }
+  function schritt(n){st.datum=addD(st.datum,n*(st.ansicht==='woche'&&!mobil()?7:1));laden();}
+  function palette(){
+    var pal=document.querySelector('.tp-pal');if(!pal)return;pal.textContent='';
+    BAUSTEINE.forEach(function(b){
+      var t=typ(b.typ);
+      var el=h('button',{type:'button',class:'tp-pi'+(st.werkzeug===b.typ?' on':''),'data-typ':b.typ,'aria-pressed':st.werkzeug===b.typ?'true':'false','aria-label':t.name+' einsetzen'},[h('span',{class:'tp-dot',style:'background:'+t.farbe}),t.name]);
+      el.addEventListener('pointerdown',function(ev){palDrag(ev,b,el);});
+      el.addEventListener('keydown',function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();setzeAmNaechsten(b);}});
+      pal.appendChild(el);
+    });
+  }
+  function setzeAmNaechsten(b){
+    var d=st.datum,m=Math.ceil((d===heute()?nowMin()+1:9*60)/60)*60;
+    if(m<DAY0)m=DAY0;
+    neuerBlock(b,d,Math.min(m,1440-(b.dauer||60)));
+  }
+
+  // ── Zeichnen ──
+  function zeichne(){
+    if(!$('tp-root'))return;
+    var wo=st.ansicht==='woche'&&!mobil();
+    $('tp-vt').className=wo?'':'on';$('tp-vw').className=wo?'on':'';$('tp-vt').setAttribute('aria-pressed',wo?'false':'true');$('tp-vw').setAttribute('aria-pressed',wo?'true':'false');
+    $('tp-seg').style.display=mobil()?'none':'';
+    $('tp-title').textContent=wo?('KW '+kw(st.datum)+', '+chKurz(montag(st.datum))+' bis '+ch(addD(montag(st.datum),6))):(wochentagKurz(st.datum)+', '+ch(st.datum));
+    var s=$('tp-sync');
+    if(st.abo&&st.abo.aktiv){s.textContent='Synchronisiert mit Handy und Laptop';s.className='tp-sync ok';s.title='Apple und Google holen Änderungen im eigenen Takt, oft erst nach einigen Stunden.';}
+    else{s.textContent='Noch nicht mit Handy und Laptop verbunden';s.className='tp-sync';s.title='Unten kannst du den Kalender abonnieren.';}
+    palette();planKarte();raster();aboKarte();termineKarte();einKarte();
+  }
+  function planKarte(){
+    var host=$('tp-plan');host.textContent='';
+    var p=st.tage.filter(function(x){return x.datum===st.datum;})[0]||st.tage[0];
+    if(!p)return;
+    if(p.hinweise&&p.hinweise.length)p.hinweise.forEach(function(t){host.appendChild(h('div',{class:'tp-note',text:t}));});
+    if(!p.items.length){host.appendChild(h('div',{class:'rq-hint',text:p.arbeitstag?'Für diesen Tag steht nichts im Plan.':'Kein Plan für diesen Tag.'}));return;}
+    var ol=h('ol',{class:'tp-list'});
+    p.items.forEach(function(i){
+      var li=h('li',{class:'tp-li'+(i.verspaetet?' rot':'')},[
+        h('span',{class:'tp-t',text:i.start+' bis '+i.endeText}),
+        h('span',{class:'tp-n'},[h('strong',{text:i.titel}),' ('+(i.dauer>=60?Math.floor(i.dauer/60)+' Std.'+(i.dauer%60?' '+(i.dauer%60)+' Min.':''):i.dauer+' Min.')+(i.dauerQuelle==='erfasst'?', Erfahrungswert':'')+')',
+          i.fristText?h('span',{class:'tp-f',text:' Frist: '+i.fristText}):null,
+          i.verspaetet?h('span',{class:'tp-badge rot',text:'Frist wird nicht gehalten'}):null,
+          i.ueberfaellig?h('span',{class:'tp-badge rot',text:'überfällig'}):null,
+          i.dringlich?h('span',{class:'tp-badge',text:'dringlich'}):null,
+          i.paketName?h('span',{class:'tp-badge pk',text:i.paketName}):null,
+          i.fixiert?h('span',{class:'tp-badge',text:'von Hand verschoben'}):null])
+      ]);
+      var bt=h('span',{class:'tp-lb'});
+      if(i.klientId)bt.appendChild(h('button',{type:'button',class:'tp-link',onclick:function(){oeffneWs(i.klientId);}},['Öffnen']));
+      if(i.reviewId)bt.appendChild(h('button',{type:'button',class:'tp-link','aria-pressed':i.dringlich?'true':'false',onclick:function(){dringlich(i.reviewId,!i.dringlich);}},[i.dringlich?'Nicht mehr dringlich':'Als dringlich markieren']));
+      if(i.fixiert)bt.appendChild(h('button',{type:'button',class:'tp-link',onclick:function(){freigeben(i.key);}},['Position freigeben']));
+      li.appendChild(bt);ol.appendChild(li);
+    });
+    host.appendChild(ol);
+    host.appendChild(h('div',{class:'tp-end',text:'Voraussichtliches Ende: '+p.ende+' Uhr'}));
+  }
+
+  function bereich(){
+    var lo=DAY0,hi=DAY1;
+    st.tage.forEach(function(p){
+      p.items.forEach(function(i){lo=Math.min(lo,Math.floor(i.beginn/60)*60);hi=Math.max(hi,Math.ceil(i.ende/60)*60);});
+      p.bloecke.forEach(function(b){if(!b.ganztaegig){lo=Math.min(lo,Math.floor(b.beginn/60)*60);hi=Math.max(hi,Math.ceil(b.ende/60)*60);}});
+    });
+    return {lo:Math.max(0,lo),hi:Math.min(1440,hi)};
+  }
+  function blockDaten(p){
+    var out=[];
+    p.items.forEach(function(i){
+      out.push({art:'task',key:i.key,datum:p.datum,beginn:i.beginn,ende:i.ende,titel:i.titel,farbe:(i.verspaetet||i.ueberfaellig)?ROT:(PAKETFARBE[i.paket]||BLAU),rot:i.verspaetet||i.ueberfaellig,item:i});
+    });
+    p.bloecke.forEach(function(b){
+      if(b.ganztaegig)return;
+      out.push({art:'eintrag',id:b.id,datum:p.datum,beginn:b.beginn,ende:b.ende,titel:b.titel,farbe:typ(b.typ).farbe,typ:b.typ,serie:b.serie});
+    });
+    return out;
+  }
+  function lanes(bl){
+    bl.sort(function(a,b){return a.beginn-b.beginn||a.ende-b.ende;});
+    var cl=[],cur=null,cend=-1;
+    bl.forEach(function(b){
+      if(!cur||b.beginn>=cend){cur={items:[],lanes:[]};cl.push(cur);cend=-1;}
+      var l=0;while(cur.lanes[l]!=null&&cur.lanes[l]>b.beginn)l++;
+      cur.lanes[l]=b.ende;b.lane=l;cur.items.push(b);cend=Math.max(cend,b.ende);
+    });
+    cl.forEach(function(c){c.items.forEach(function(b){b.nl=c.lanes.length;});});
+  }
+  function raster(){
+    var host=$('tp-gridwrap');host.textContent='';
+    var br=bereich(),lo=br.lo,hi=br.hi,hoehe=(hi-lo)*PPM;
+    st.br=br;
+    var head=h('div',{class:'tp-head'},[h('div',{class:'tp-corner'})]);
+    var body=h('div',{class:'tp-body'});
+    var times=h('div',{class:'tp-times',style:'height:'+hoehe+'px'});
+    for(var m=lo;m<hi;m+=60)times.appendChild(h('div',{class:'tp-tl',style:'top:'+((m-lo)*PPM)+'px',text:hhmm(m)}));
+    body.appendChild(times);
+    st.tage.forEach(function(p){
+      var banner=p.bloecke.filter(function(b){return b.ganztaegig;});
+      var kopf=h('div',{class:'tp-dh'+(p.datum===heute()?' heute':'')},[h('div',{class:'tp-dn',text:wochentagKurz(p.datum)+' '+chKurz(p.datum)})]);
+      banner.forEach(function(b){kopf.appendChild(h('button',{type:'button',class:'tp-ban',style:'background:'+typ(b.typ).farbe,onclick:function(){oeffneEintrag(b.id);}},[b.titel]));});
+      if(!p.arbeitstag&&!banner.length&&p.grund)kopf.appendChild(h('div',{class:'tp-ban frei',text:p.grund}));
+      head.appendChild(kopf);
+      var col=h('div',{class:'tp-col'+(p.arbeitstag?'':' frei'),'data-datum':p.datum,style:'height:'+hoehe+'px',role:'group','aria-label':wochentagKurz(p.datum)+' '+ch(p.datum)});
+      for(var mm=lo;mm<hi;mm+=30)col.appendChild(h('div',{class:'tp-line'+(mm%60?' half':''),style:'top:'+((mm-lo)*PPM)+'px'}));
+      if(p.mittag&&p.mittag.ende>lo&&p.mittag.beginn<hi)col.appendChild(h('div',{class:'tp-lunch',style:'top:'+((Math.max(lo,p.mittag.beginn)-lo)*PPM)+'px;height:'+((Math.min(hi,p.mittag.ende)-Math.max(lo,p.mittag.beginn))*PPM)+'px',text:'Mittagspause'}));
+      if(p.datum===heute()){var nm=nowMin();if(nm>=lo&&nm<=hi)col.appendChild(h('div',{class:'tp-now',style:'top:'+((nm-lo)*PPM)+'px'}));}
+      col.addEventListener('click',function(ev){if(ev.target!==col&&!ev.target.classList.contains('tp-line')&&!ev.target.classList.contains('tp-lunch'))return;kolonneKlick(ev,col,p.datum);});
+      var bl=blockDaten(p);lanes(bl);
+      bl.forEach(function(b){col.appendChild(blockEl(b,lo));});
+      body.appendChild(col);
+    });
+    host.appendChild(head);host.appendChild(body);
+    head.style.gridTemplateColumns=body.style.gridTemplateColumns='46px repeat('+st.tage.length+',minmax(0,1fr))';
+  }
+  function blockEl(b,lo){
+    var dauer=b.ende-b.beginn;
+    var zeit=hhmm(b.beginn)+' bis '+hhmm(b.ende);
+    var el=h('div',{class:'tp-b '+b.art+(b.rot?' rot':''),tabindex:'0',role:'button','aria-label':b.titel+', '+zeit+(b.art==='task'?', Aufgabe':', '+typ(b.typ).name)+(b.rot?', Frist gefährdet':''),
+      style:'top:'+((b.beginn-lo)*PPM)+'px;height:'+Math.max(18,dauer*PPM-1)+'px;left:calc('+(b.lane/b.nl*100)+'% + 1px);width:calc('+(100/b.nl)+'% - 3px);background:'+b.farbe});
+    el._b=b;
+    el.appendChild(h('div',{class:'tp-bt',text:b.titel}));
+    if(dauer*PPM>34)el.appendChild(h('div',{class:'tp-bz',text:zeit}));
+    if(b.art==='eintrag'){
+      var x=h('button',{type:'button',class:'tp-x','aria-label':'Löschen: '+b.titel},['×']);
+      x.addEventListener('pointerdown',function(ev){ev.stopPropagation();});
+      x.addEventListener('click',function(ev){ev.stopPropagation();loesche(b.id,b.titel);});
+      el.appendChild(x);
+      var rz=h('div',{class:'tp-rz','aria-hidden':'true'});
+      rz.addEventListener('pointerdown',function(ev){startDrag(ev,el,'resize');});
+      el.appendChild(rz);
+    }
+    el.addEventListener('pointerdown',function(ev){el._pt=ev.pointerType;if(ev.target.classList.contains('tp-rz')||ev.target.classList.contains('tp-x'))return;startDrag(ev,el,'move');});
+    el.addEventListener('click',function(ev){if(el._pt==='touch'&&!ev.target.classList.contains('tp-x'))blockOeffnen(b);});
+    el.addEventListener('keydown',function(ev){blockTaste(ev,b);});
+    return el;
+  }
+
+  // ── Ziehen (Maus und Stift; Touch öffnet per Antippen) ──
+  function colAt(x){
+    var cols=document.querySelectorAll('.tp-col');
+    for(var i=0;i<cols.length;i++){var r=cols[i].getBoundingClientRect();if(x>=r.left&&x<=r.right)return cols[i];}
+    return null;
+  }
+  function startDrag(ev,el,mode){
+    if(ev.button&&ev.button!==0)return;
+    if(ev.pointerType==='touch')return; // Touch: Antippen öffnet den Block, siehe click
+    var b=el._b;
+    drag={el:el,b:b,mode:mode,x0:ev.clientX,y0:ev.clientY,moved:false,beginn:b.beginn,ende:b.ende,datum:b.datum,col:el.parentNode};
+    el.setPointerCapture&&el.setPointerCapture(ev.pointerId);
+    ev.preventDefault();
+    el.addEventListener('pointermove',dragMove);el.addEventListener('pointerup',dragEnde);el.addEventListener('pointercancel',dragAbbruch);
+  }
+  function dragMove(ev){
+    if(!drag)return;
+    var dy=ev.clientY-drag.y0,dx=ev.clientX-drag.x0;
+    if(!drag.moved&&Math.abs(dy)<4&&Math.abs(dx)<4)return;
+    drag.moved=true;drag.el.classList.add('drag');
+    var dm=Math.round(dy/PPM/SNAP)*SNAP,lo=st.br.lo,hi=st.br.hi,b=drag.b,dauer=b.ende-b.beginn;
+    if(drag.mode==='resize'){
+      drag.ende=Math.max(b.beginn+SNAP,Math.min(hi,b.ende+dm));drag.beginn=b.beginn;
+      drag.el.style.height=Math.max(18,(drag.ende-drag.beginn)*PPM-1)+'px';
+    }else{
+      drag.beginn=Math.max(lo,Math.min(hi-dauer,b.beginn+dm));drag.ende=drag.beginn+dauer;
+      drag.el.style.top=((drag.beginn-lo)*PPM)+'px';
+      if(st.tage.length>1){var c=colAt(ev.clientX);if(c&&c!==drag.col){drag.col=c;drag.datum=c.getAttribute('data-datum');c.appendChild(drag.el);}}
+    }
+    var z=drag.el.querySelector('.tp-bz');if(z)z.textContent=hhmm(drag.beginn)+' bis '+hhmm(drag.ende);
+  }
+  function dragAbbruch(){if(!drag)return;ende();zeichne();}
+  function ende(){var d=drag;drag=null;if(d){d.el.removeEventListener('pointermove',dragMove);d.el.removeEventListener('pointerup',dragEnde);d.el.removeEventListener('pointercancel',dragAbbruch);}return d;}
+  async function dragEnde(){
+    var d=ende();if(!d)return;
+    if(!d.moved){blockOeffnen(d.b);return;}
+    try{
+      if(d.b.art==='task'){
+        await call('/api/tagesplan/position/'+encodeURIComponent(d.b.key),'PUT',{datum:d.datum,beginn:hhmm(d.beginn)});
+        meldung('Die Aufgabe bleibt an dieser Stelle. Der Plan richtet sich darum herum neu aus.');
+      }else await speichereVerschiebung(d.b,d.datum,d.beginn,d.ende);
+    }catch(e){meldung(e.message,true);}
+    laden();
+  }
+  async function speichereVerschiebung(b,datum,beginn,ende){
+    var e=eintragVon(b.id);if(!e)return;
+    var neu=Object.assign({},e,{beginn:hhmm(beginn),ende:hhmm(ende),ganztaegig:false});
+    if(e.wiederholung==='keine')neu.datum=datum;
+    else if(datum!==b.datum)meldung('Wiederkehrende Termine lassen sich in der Zeit verschieben. Für einen anderen Tag öffne den Termin.');
+    await call('/api/tagesplan/termine/'+e.id,'PUT',neu);
+    if(neu.datum===heute()||b.datum===heute())meldung('Gespeichert. Der Plan für heute ist neu berechnet.');
+  }
+  function eintragVon(id){for(var i=0;i<st.termine.length;i++)if(st.termine[i].id===id)return st.termine[i];return null;}
+
+  // ── Baustein aus der Palette ──
+  function palDrag(ev,b,el){
+    if(ev.button&&ev.button!==0)return;
+    if(ev.pointerType==='touch'){return;}
+    var x0=ev.clientX,y0=ev.clientY,ghost=null,id=ev.pointerId;
+    function mv(e){
+      if(!ghost&&Math.abs(e.clientX-x0)+Math.abs(e.clientY-y0)>6){ghost=h('div',{class:'tp-ghost',text:typ(b.typ).name,style:'background:'+typ(b.typ).farbe});document.body.appendChild(ghost);}
+      if(ghost){ghost.style.left=(e.clientX+8)+'px';ghost.style.top=(e.clientY+8)+'px';}
+    }
+    function up(e){
+      document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',cancel);
+      if(!ghost){st.werkzeug=st.werkzeug===b.typ?null:b.typ;palette();hinweisWerkzeug();return;}
+      ghost.remove();
+      var c=colAt(e.clientX);if(!c)return;
+      var r=c.getBoundingClientRect();
+      neuerBlock(b,c.getAttribute('data-datum'),minutenAus(e.clientY-r.top));
+    }
+    function cancel(){document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',cancel);if(ghost)ghost.remove();}
+    document.addEventListener('pointermove',mv);document.addEventListener('pointerup',up);document.addEventListener('pointercancel',cancel);
+  }
+  function hinweisWerkzeug(){
+    var t=st.werkzeug?typ(st.werkzeug).name+' ausgewählt. Tippe im Kalender auf die gewünschte Zeit.':'';
+    meldung(t);
+  }
+  function minutenAus(y){var m=st.br.lo+Math.floor(y/PPM/SNAP)*SNAP;return Math.max(st.br.lo,Math.min(1440-SNAP,m));}
+  function kolonneKlick(ev,col,datum){
+    if(!st.werkzeug)return;
+    var b=BAUSTEINE.filter(function(x){return x.typ===st.werkzeug;})[0];
+    var r=col.getBoundingClientRect();
+    var w=st.werkzeug;st.werkzeug=null;meldung('');
+    neuerBlock(b,datum,minutenAus(ev.clientY-r.top));
+  }
+  async function neuerBlock(b,datum,beginn){
+    var t=typ(b.typ),ganz=b.typ==='ferien';
+    var e={titel:t.name,typ:b.typ,datum:datum,ganztaegig:ganz,wiederholung:'keine',notiz:''};
+    if(!ganz){e.beginn=hhmm(beginn);e.ende=hhmm(Math.min(1440,beginn+(b.dauer||60)));}
+    try{
+      var neu=await call('/api/tagesplan/termine','POST',e);
+      st.werkzeug=null;await laden();
+      meldung('«'+neu.titel+'» ist eingetragen.'+(datum===heute()?' Der Plan für heute ist neu berechnet.':''));
+      oeffneEintrag(neu.id);
+    }catch(er){meldung(er.message,true);}
+  }
+  // Touch: Palette per Antippen
+  document.addEventListener('pointerup',function(ev){
+    if(ev.pointerType!=='touch')return;
+    var pi=ev.target.closest&&ev.target.closest('.tp-pi');if(!pi)return;
+    var tp=pi.getAttribute('data-typ');st.werkzeug=st.werkzeug===tp?null:tp;palette();hinweisWerkzeug();
+  });
+
+  // ── Tastatur ──
+  function blockTaste(ev,b){
+    var k=ev.key;
+    if(k==='Enter'||k===' '){ev.preventDefault();blockOeffnen(b);return;}
+    if(b.art==='eintrag'&&(k==='Delete'||k==='Backspace')){ev.preventDefault();loesche(b.id,b.titel);return;}
+    if(k==='d'||k==='D'){if(b.art==='eintrag'){ev.preventDefault();dupliziere(b.id);}return;}
+    var dm=0,dd=0;
+    if(k==='ArrowUp')dm=-SNAP;else if(k==='ArrowDown')dm=SNAP;else if(k==='ArrowLeft')dd=-1;else if(k==='ArrowRight')dd=1;else return;
+    ev.preventDefault();
+    var dauer=b.ende-b.beginn,beginn=b.beginn,ende=b.ende,datum=b.datum;
+    if(ev.shiftKey&&b.art==='eintrag'){ende=Math.max(beginn+SNAP,Math.min(1440,ende+dm));}
+    else{beginn=Math.max(0,Math.min(1440-dauer,beginn+dm));ende=beginn+dauer;if(dd&&st.tage.length>1)datum=addD(datum,dd);}
+    kurzSpeichern(b,datum,beginn,ende);
+  }
+  var tasteTimer=null,tasteB=null;
+  function kurzSpeichern(b,datum,beginn,ende){
+    // mehrere Tastendrücke sammeln, dann einmal speichern
+    b.datum=datum;b.beginn=beginn;b.ende=ende;tasteB=b;
+    var el=document.querySelector('.tp-b:focus');if(el){el.style.top=((beginn-st.br.lo)*PPM)+'px';el.style.height=Math.max(18,(ende-beginn)*PPM-1)+'px';el.setAttribute('aria-label',b.titel+', '+hhmm(beginn)+' bis '+hhmm(ende));}
+    clearTimeout(tasteTimer);
+    tasteTimer=setTimeout(async function(){
+      var bb=tasteB;
+      try{
+        if(bb.art==='task')await call('/api/tagesplan/position/'+encodeURIComponent(bb.key),'PUT',{datum:bb.datum,beginn:hhmm(bb.beginn)});
+        else await speichereVerschiebung(bb,bb.datum,bb.beginn,bb.ende);
+      }catch(e){meldung(e.message,true);}
+      var id=bb.art==='task'?bb.key:bb.id;
+      await laden();
+      var all=document.querySelectorAll('.tp-b');for(var i=0;i<all.length;i++){var x=all[i]._b;if(x&&((bb.art==='task'&&x.key===id)||(bb.art==='eintrag'&&x.id===id))){x.el=all[i];all[i].focus();break;}}
+    },500);
+  }
+
+  // ── Bearbeiten, Löschen, Duplizieren ──
+  function blockOeffnen(b){if(b.art==='eintrag')oeffneEintrag(b.id);else oeffneAufgabe(b.item);}
+  function schliesse(){var d=$('tp-dlg');if(d){d.remove();if(st.fokus&&st.fokus.focus)st.fokus.focus();}}
+  function dialog(titel,inhalt,aktionen){
+    schliesse();st.fokus=document.activeElement;
+    var dlg=h('div',{class:'tp-ov',id:'tp-dlg',role:'dialog','aria-modal':'true','aria-labelledby':'tp-dt'},[
+      h('div',{class:'tp-dlgbox'},[h('div',{class:'tp-dtitle',id:'tp-dt',text:titel}),inhalt,h('div',{class:'tp-dact'},aktionen)])
+    ]);
+    dlg.addEventListener('click',function(ev){if(ev.target===dlg)schliesse();});
+    $('tp-dlg-host').appendChild(dlg);
+    var f=dlg.querySelector('input,select,textarea,button');if(f)f.focus();
+    dlg.addEventListener('keydown',function(ev){
+      if(ev.key!=='Tab')return;
+      var fs=dlg.querySelectorAll('input:not([disabled]),select,textarea,button');if(!fs.length)return;
+      var a=fs[0],z=fs[fs.length-1];
+      if(ev.shiftKey&&document.activeElement===a){ev.preventDefault();z.focus();}else if(!ev.shiftKey&&document.activeElement===z){ev.preventDefault();a.focus();}
+    });
+    return dlg;
+  }
+  function feld(label,el){return h('label',{class:'tp-fl'},[h('span',{text:label}),el]);}
+  function oeffneAufgabe(i){
+    var inh=h('div',{class:'tp-info'},[
+      h('div',{text:i.titel}),h('div',{text:'Zeit: '+i.start+' bis '+i.endeText+' Uhr, Dauer '+i.dauer+' Minuten'}),
+      i.fristText?h('div',{text:'Frist: '+i.fristText}):null,i.paketName?h('div',{text:'Paket: '+i.paketName}):null,
+      i.verspaetet?h('div',{class:'tp-badge rot',text:'Die Frist wird nicht gehalten.'}):null
+    ]);
+    var akt=[];
+    if(i.klientId)akt.push(h('button',{type:'button',class:'rq-btn',onclick:function(){schliesse();oeffneWs(i.klientId);}},['Im Arbeitsbereich öffnen']));
+    if(i.reviewId)akt.push(h('button',{type:'button',class:'rq-btn ghost',onclick:function(){schliesse();dringlich(i.reviewId,!i.dringlich);}},[i.dringlich?'Nicht mehr dringlich':'Als dringlich markieren']));
+    if(i.fixiert)akt.push(h('button',{type:'button',class:'rq-btn ghost',onclick:function(){schliesse();freigeben(i.key);}},['Position freigeben']));
+    var zeitIn=h('input',{type:'time',class:'rq-in',value:i.start,step:'300'});
+    var tagIn=h('input',{type:'date',class:'rq-in',value:st.tage.filter(function(p){return p.items.indexOf(i)>=0;})[0]?st.tage.filter(function(p){return p.items.indexOf(i)>=0;})[0].datum:st.datum});
+    inh.appendChild(feld('Verschieben auf (Tag)',tagIn));inh.appendChild(feld('Beginn',zeitIn));
+    akt.push(h('button',{type:'button',class:'rq-btn ghost',onclick:async function(){
+      var m=toMin(zeitIn.value);if(m==null||!tagIn.value)return;
+      try{await call('/api/tagesplan/position/'+encodeURIComponent(i.key),'PUT',{datum:tagIn.value,beginn:zeitIn.value});schliesse();meldung('Die Aufgabe bleibt an dieser Stelle.');laden();}catch(e){meldung(e.message,true);}
+    }},['Zeit festlegen']));
+    akt.push(h('button',{type:'button',class:'rq-btn ghost',onclick:schliesse},['Schliessen']));
+    dialog('Aufgabe',inh,akt);
+  }
+  function oeffneEintrag(id,vorlage){
+    var e=id?eintragVon(id):(vorlage||null);
+    if(!e&&id)return;
+    var neu=!id;
+    var tIn=h('input',{type:'text',class:'rq-in',maxlength:'80',value:e.titel||''});
+    var ty=h('select',{class:'rq-in'});st.typen.forEach(function(t){ty.appendChild(h('option',{value:t.key,text:t.name,selected:t.key===e.typ}));});
+    var dIn=h('input',{type:'date',class:'rq-in',value:e.datum});
+    var gz=h('input',{type:'checkbox',checked:!!e.ganztaegig});
+    var bIn=h('input',{type:'time',class:'rq-in',step:'300',value:e.beginn!=null&&!e.ganztaegig?hhmm(e.beginn):'09:00'});
+    var eIn=h('input',{type:'time',class:'rq-in',step:'300',value:e.ende!=null&&!e.ganztaegig?hhmm(e.ende):'10:00'});
+    var wh=h('select',{class:'rq-in'},[h('option',{value:'keine',text:'Keine',selected:e.wiederholung==='keine'}),h('option',{value:'taeglich',text:'Täglich',selected:e.wiederholung==='taeglich'}),h('option',{value:'woechentlich',text:'Wöchentlich an bestimmten Wochentagen',selected:e.wiederholung==='woechentlich'})]);
+    var tage=h('div',{class:'tp-wt',role:'group','aria-label':'Wochentage'});
+    var tcb=[];WK.forEach(function(n,i){var c=h('input',{type:'checkbox',checked:(e.wochentage||[]).indexOf(i+1)>=0,'data-d':i+1});tcb.push(c);tage.appendChild(h('label',{class:'tp-wtl'},[c,n]));});
+    var bis=h('input',{type:'date',class:'rq-in',value:e.bis||''});
+    var no=h('textarea',{class:'rq-in',rows:'2',maxlength:'500'});no.value=e.notiz||'';
+    var zeitRow=h('div',{class:'tp-two'},[feld('Beginn',bIn),feld('Ende',eIn)]);
+    var whBox=h('div',{},[feld('Wiederholung',wh),h('div',{id:'tp-wtbox'},[tage]),feld('Bis (Datum)',bis)]);
+    var dLabel=h('span',{text:'Datum'});
+    var dFeld=h('label',{class:'tp-fl'},[dLabel,dIn]);
+    var bisFerien=feld('Bis (letzter Ferientag)',h('input',{type:'date',class:'rq-in',id:'tp-fbis',value:e.bis||e.datum}));
+    var gzRow=h('label',{class:'tp-chk'},[gz,' Ganztägig']);
+    function sicht(){
+      var fe=ty.value==='ferien'||ty.value==='feiertag';
+      gzRow.style.display=fe?'none':'';zeitRow.style.display=(fe||gz.checked)?'none':'';
+      whBox.style.display=fe?'none':'';bisFerien.style.display=fe?'':'none';
+      tage.parentNode.style.display=wh.value==='woechentlich'?'':'none';bis.parentNode.style.display=wh.value==='keine'?'none':'';
+      dLabel.textContent=fe?'Von (erster Tag)':'Datum';
+    }
+    [ty,gz,wh].forEach(function(x){x.addEventListener('change',sicht);});
+    var inh=h('div',{class:'tp-form'},[feld('Titel',tIn),feld('Typ',ty),dFeld,bisFerien,gzRow,zeitRow,whBox,feld('Notiz',no)]);
+    sicht();
+    function lies(){
+      var fe=ty.value==='ferien'||ty.value==='feiertag';
+      var o={titel:tIn.value,typ:ty.value,datum:dIn.value,ganztaegig:fe||gz.checked,notiz:no.value};
+      if(!o.ganztaegig){o.beginn=bIn.value;o.ende=eIn.value;}
+      if(fe){var fb=$('tp-fbis').value;o.wiederholung=fb&&fb>o.datum?'taeglich':'keine';o.bis=fb&&fb>o.datum?fb:null;}
+      else{
+        o.wiederholung=wh.value;
+        o.wochentage=tcb.filter(function(c){return c.checked;}).map(function(c){return +c.getAttribute('data-d');});
+        o.bis=wh.value!=='keine'&&bis.value?bis.value:null;
+      }
+      return o;
+    }
+    var akt=[h('button',{type:'button',class:'rq-btn',onclick:async function(){
+      try{
+        var o=lies();
+        if(neu)await call('/api/tagesplan/termine','POST',o);else await call('/api/tagesplan/termine/'+id,'PUT',o);
+        schliesse();meldung('Gespeichert.'+((o.datum===heute()||(o.wiederholung!=='keine'))?' Der Plan für heute ist neu berechnet.':''));laden();
+      }catch(er){meldung(er.message,true);var m=$('tp-dlgmsg');if(m)m.textContent=er.message;}
+    }},['Speichern'])];
+    if(!neu){
+      akt.push(h('button',{type:'button',class:'rq-btn ghost',onclick:function(){schliesse();dupliziere(id);}},['Duplizieren']));
+      akt.push(h('button',{type:'button',class:'rq-btn ghost tp-del',onclick:function(){schliesse();loesche(id,e.titel);}},['Löschen']));
+    }
+    akt.push(h('button',{type:'button',class:'rq-btn ghost',onclick:schliesse},['Abbrechen']));
+    var d=dialog(neu?'Neuer Termin':'Termin bearbeiten',inh,akt);
+    inh.appendChild(h('div',{id:'tp-dlgmsg',class:'tp-msg bad',role:'alert'}));
+    return d;
+  }
+  function neuerTermin(){
+    oeffneEintrag(null,{titel:'',typ:'termin',datum:st.datum,beginn:9*60,ende:10*60,ganztaegig:false,wiederholung:'keine',wochentage:[],bis:null,notiz:''});
+  }
+  async function loesche(id,titel){
+    if(!window.confirm('«'+titel+'» löschen?'))return;
+    try{await call('/api/tagesplan/termine/'+id,'DELETE');meldung('Gelöscht.');laden();}catch(e){meldung(e.message,true);}
+  }
+  async function dupliziere(id){
+    var e=eintragVon(id);if(!e)return;
+    var neu=Object.assign({},e);delete neu.id;
+    if(e.ganztaegig){neu.datum=addD(e.datum,1);if(neu.bis)neu.bis=addD(neu.bis,1);}
+    else{var dauer=e.ende-e.beginn;if(e.ende+dauer<=1440){neu.beginn=hhmm(e.ende);neu.ende=hhmm(e.ende+dauer);}else{neu.datum=addD(e.datum,1);neu.beginn=hhmm(e.beginn);neu.ende=hhmm(e.ende);}}
+    if(!e.ganztaegig){if(typeof neu.beginn!=='string')neu.beginn=hhmm(e.beginn);if(typeof neu.ende!=='string')neu.ende=hhmm(e.ende);}
+    try{await call('/api/tagesplan/termine','POST',neu);meldung('Dupliziert.');laden();}catch(er){meldung(er.message,true);}
+  }
+  // Rohdaten der Einträge enthalten Minuten; für Senden in HH:MM umwandeln
+  var _call=call;
+  call=async function(path,method,body){
+    if(body&&typeof body==='object'&&/\/termine/.test(path)){
+      body=Object.assign({},body);
+      if(typeof body.beginn==='number')body.beginn=hhmm(body.beginn);
+      if(typeof body.ende==='number')body.ende=hhmm(body.ende);
+    }
+    return _call(path,method,body);
+  };
+
+  // ── Aufgaben ──
+  async function dringlich(reviewId,wert){
+    try{await call('/api/tagesplan/dringlich','POST',{reviewId:reviewId,dringlich:wert});st.dringl[reviewId]=wert;meldung(wert?'Als dringlich markiert. Der Plan ist neu berechnet.':'Nicht mehr dringlich. Der Plan ist neu berechnet.');laden();}
+    catch(e){meldung(e.message,true);}
+  }
+  async function freigeben(key){
+    try{await call('/api/tagesplan/position/'+encodeURIComponent(key),'DELETE');meldung('Die Position ist freigegeben.');laden();}catch(e){meldung(e.message,true);}
+  }
+  async function oeffneWs(cid){
+    try{
+      if(typeof clients!=='undefined'&&!clients.length)await loadClients();
+      await openWorkspace(cid,true);
+    }catch(e){meldung('Der Arbeitsbereich konnte nicht geöffnet werden.',true);}
+  }
+  window.rqTpOpenWs=oeffneWs;
+  async function neuBerechnen(){
+    var b=$('tp-neu');if(b)b.disabled=true;
+    try{await call('/api/tagesplan/plan/neu','POST',{datum:st.datum});await laden();meldung('Der Plan ist neu berechnet.');}
+    catch(e){meldung(e.message,true);}finally{if(b)b.disabled=false;}
+  }
+  async function ladeIcs(){
+    try{
+      var r=await api('/api/tagesplan/ics?datum='+st.datum);
+      if(!r.ok)throw new Error('Die Kalenderdatei konnte nicht erstellt werden.');
+      var bl=await r.blob(),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='tagesplan.ics';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+      meldung('Die Kalenderdatei wurde geladen.');
+    }catch(e){meldung(e.message,true);}
+  }
+  async function mailJetzt(){
+    if(!window.confirm('Den Plan für heute jetzt per Mail mit Kalenderdatei senden?'))return;
+    try{await call('/api/tagesplan/mail','POST',{});meldung('Die Mail ist unterwegs.');}catch(e){meldung(e.message,true);}
+  }
+
+  // ── Abo ──
+  function aboKarte(){
+    var host=$('tp-abo');host.textContent='';
+    host.appendChild(h('div',{class:'page-title',style:'margin:0;font-size:20px',text:'Kalender auf Handy und Laptop'}));
+    host.appendChild(h('p',{class:'rq-hint',text:'Mit dem Abo erscheinen dein Tagesplan und deine Termine automatisch im Kalender auf Handy und Laptop (Apple, Google oder Outlook). Apple und Google holen Änderungen im eigenen Takt, oft erst nach einigen Stunden. Die Mail um 07:00 enthält dieselben Einträge als Datei.'}));
+    var box=h('div',{id:'tp-link'});
+    var akt=h('div',{class:'tp-actions'});
+    if(st.abo&&st.abo.aktiv){
+      akt.appendChild(h('button',{type:'button',class:'rq-btn ghost',onclick:function(){aboErzeugen(true);}},['Neuen Link erzeugen']));
+      akt.appendChild(h('button',{type:'button',class:'rq-btn ghost tp-del',onclick:aboWiderrufen},['Abo widerrufen']));
+      host.appendChild(h('div',{class:'rq-hint',text:'Das Abo ist aktiv. Der Link wird aus Sicherheitsgründen nur beim Erzeugen angezeigt.'}));
+    }else akt.appendChild(h('button',{type:'button',class:'rq-btn',onclick:function(){aboErzeugen(false);}},['Kalender abonnieren']));
+    host.appendChild(akt);host.appendChild(box);
+  }
+  async function aboErzeugen(neu){
+    if(neu&&!window.confirm('Der bisherige Link wird ungültig. Neuen Link erzeugen?'))return;
+    try{
+      var d=await call('/api/tagesplan/kalender','POST',{});st.abo={aktiv:true};
+      var box=$('tp-link');box.textContent='';
+      var inp=h('input',{type:'text',class:'rq-in',readonly:true,value:d.webcal,'aria-label':'Abo-Link'});
+      box.appendChild(h('div',{class:'tp-linkbox'},[
+        h('div',{class:'rq-hint',text:d.hinweis}),
+        h('a',{class:'rq-btn',href:d.webcal,text:'Im Kalender öffnen'}),
+        inp,
+        h('button',{type:'button',class:'rq-btn ghost',onclick:function(){inp.select();try{navigator.clipboard.writeText(d.webcal);meldung('Der Link ist kopiert.');}catch(e){}}},['Link kopieren'])
+      ]));
+      var s=$('tp-sync');s.textContent='Synchronisiert mit Handy und Laptop';s.className='tp-sync ok';
+    }catch(e){meldung(e.message,true);}
+  }
+  async function aboWiderrufen(){
+    if(!window.confirm('Das Abo widerrufen? Kalender, die den Link nutzen, bekommen keine Updates mehr.'))return;
+    try{await call('/api/tagesplan/kalender','DELETE');st.abo={aktiv:false};zeichne();meldung('Das Abo ist widerrufen.');}catch(e){meldung(e.message,true);}
+  }
+
+  // ── Terminliste ──
+  function wiederholText(e){
+    if(e.wiederholung==='taeglich')return 'täglich'+(e.bis?' bis '+ch(e.bis):'');
+    if(e.wiederholung==='woechentlich')return 'wöchentlich '+(e.wochentage||[]).map(function(n){return WK[n-1];}).join(', ')+(e.bis?' bis '+ch(e.bis):'');
+    return '';
+  }
+  function termineKarte(){
+    var host=$('tp-termine');host.textContent='';
+    host.appendChild(h('div',{class:'tp-top'},[h('div',{class:'page-title',style:'margin:0;font-size:20px',text:'Termine'}),h('button',{type:'button',class:'rq-btn',onclick:neuerTermin},['Neuer Termin'])]));
+    var h0=heute();
+    var l=st.termine.filter(function(e){return e.wiederholung!=='keine'?(!e.bis||e.bis>=h0):e.datum>=h0;});
+    if(!l.length){host.appendChild(h('div',{class:'rq-hint',text:'Keine kommenden Termine.'}));return;}
+    var ul=h('ul',{class:'tp-tl2'});
+    l.forEach(function(e){
+      var t=typ(e.typ);
+      ul.appendChild(h('li',{class:'tp-ti'},[
+        h('span',{class:'tp-dot',style:'background:'+t.farbe}),
+        h('span',{class:'tp-tt'},[h('strong',{text:e.titel}),' '+t.name+', '+wochentagKurz(e.datum)+' '+ch(e.datum)+(e.bis&&e.wiederholung==='keine'?'':'')+(e.ganztaegig?(e.bis?' bis '+ch(e.bis):', ganztägig'):', '+hhmm(e.beginn)+' bis '+hhmm(e.ende))+(e.wiederholung!=='keine'&&!(e.ganztaegig&&e.wiederholung==='taeglich')?', '+wiederholText(e):'')]),
+        h('button',{type:'button',class:'tp-link',onclick:function(){oeffneEintrag(e.id);}},['Bearbeiten']),
+        h('button',{type:'button',class:'tp-link',onclick:function(){loesche(e.id,e.titel);}},['Löschen'])
+      ]));
+    });
+    host.appendChild(ul);
+  }
+
+  // ── Einstellungen ──
+  async function einKarte(){
+    var body=$('tp-einbody');if(!body)return;
+    if(!st.ein){try{var r=await call('/api/tagesplan/einstellungen');st.ein=r.einstellungen;st.typen=r.typen;}catch(e){return;}}
+    var s=st.ein;body.textContent='';
+    var f={};
+    function zeit(k,l){f[k]=h('input',{type:'time',class:'rq-in',value:hhmm(s[k])});return feld(l,f[k]);}
+    function zahl(g,k,l,min,max){var i=h('input',{type:'number',class:'rq-in',min:min,max:max,value:g==null?s[k]:s.dauer[k]});f[(g||'')+k]=i;return feld(l,i);}
+    body.appendChild(h('div',{class:'tp-grid2'},[
+      zeit('mittag_von','Mittagspause von'),zeit('mittag_bis','Mittagspause bis'),zeit('start_normal','Arbeitsbeginn normal'),zeit('start_frueh','Arbeitsbeginn bei Dringlichem'),
+      zahl(null,'frist_stunden','Frist in Stunden (Team, Business, Enterprise)',1,24)
+    ]));
+    body.appendChild(h('div',{class:'rq-eb',style:'margin-top:12px',text:'Standarddauer in Minuten'}));
+    var dn={freigabe:'Texte',newsletter:'Newsletter',anfrage:'Anfragen',onboarding:'Onboarding-Entwürfe',auswertung:'Quartalsauswertungen',themenplan:'Themenpläne',quartalsreview:'Quartalsreviews'};
+    var g=h('div',{class:'tp-grid2'});Object.keys(dn).forEach(function(k){g.appendChild(zahl('d',k,dn[k],5,480));});body.appendChild(g);
+    body.appendChild(h('div',{class:'rq-eb',style:'margin-top:12px',text:'Typen und Farben'}));
+    var tl=h('div',{class:'tp-typen'}),farben={};
+    st.typen.forEach(function(t){
+      var c=h('input',{type:'color',value:t.farbe,'aria-label':'Farbe für '+t.name});farben[t.key]=c;
+      var row=h('div',{class:'tp-trow'},[c,h('span',{text:t.name})]);
+      if(!t.eingebaut){row.appendChild(h('button',{type:'button',class:'tp-link',onclick:function(){st.typen=st.typen.filter(function(x){return x.key!==t.key;});delete farben[t.key];row.remove();}},['Entfernen']));}
+      tl.appendChild(row);
+    });
+    var nn=h('input',{type:'text',class:'rq-in',maxlength:'30',placeholder:'Eigener Typ, zum Beispiel Weiterbildung'}),nc=h('input',{type:'color',value:'#2a7f9e','aria-label':'Farbe des neuen Typs'});
+    body.appendChild(tl);
+    body.appendChild(h('div',{class:'tp-trow'},[nc,nn,h('button',{type:'button',class:'rq-btn ghost tp-sm',onclick:function(){
+      var name=nn.value.trim();if(!name)return;
+      var key='x_'+(name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12)||'typ')+Math.floor(Math.random()*90+10);
+      st.typen.push({key:key,name:name,farbe:nc.value,eingebaut:false});
+      var c=h('input',{type:'color',value:nc.value});farben[key]=c;tl.appendChild(h('div',{class:'tp-trow'},[c,h('span',{text:name})]));nn.value='';
+    }},['Typ hinzufügen'])]));
+    body.appendChild(h('div',{class:'tp-actions'},[h('button',{type:'button',class:'rq-btn',onclick:async function(){
+      var o={mittag_von:toMin(f.mittag_von.value),mittag_bis:toMin(f.mittag_bis.value),start_normal:toMin(f.start_normal.value),start_frueh:toMin(f.start_frueh.value),frist_stunden:+f.frist_stunden.value,dauer:{},typen:[]};
+      Object.keys(dn).forEach(function(k){o.dauer[k]=+f['d'+k].value;});
+      st.typen.forEach(function(t){o.typen.push({key:t.key,name:t.name,farbe:farben[t.key]?farben[t.key].value:t.farbe});});
+      try{var r=await call('/api/tagesplan/einstellungen','PUT',o);st.ein=r.einstellungen;st.typen=r.typen;meldung('Die Einstellungen sind gespeichert.');laden();}catch(e){meldung(e.message,true);}
+    }},['Einstellungen speichern'])]));
+  }
+
+  // ── Dringlich-Knopf bei der Freigabe ──
+  window.rqTpMarkReviews=function(){
+    var cards=document.querySelectorAll('#rev-list .rev-card');
+    cards.forEach(function(c){
+      var m=/^rvc-(\d+)$/.exec(c.id);if(!m||c.querySelector('.tp-dr'))return;
+      var id=+m[1],on=!!st.dringl[id];
+      var b=h('button',{type:'button',class:'obtn tp-dr','aria-pressed':on?'true':'false',style:'margin:0 0 8px'},[on?'Nicht mehr dringlich':'Als dringlich markieren']);
+      b.addEventListener('click',async function(){
+        var neu=b.getAttribute('aria-pressed')!=='true';
+        try{await call('/api/tagesplan/dringlich','POST',{reviewId:id,dringlich:neu});st.dringl[id]=neu;b.setAttribute('aria-pressed',neu?'true':'false');b.textContent=neu?'Nicht mehr dringlich':'Als dringlich markieren';}catch(e){}
+      });
+      c.insertBefore(b,c.firstChild.nextSibling);
+    });
+  };
+  var _lar=window.loadAdvisorReviews;
+  if(typeof _lar==='function'){
+    window.loadAdvisorReviews=async function(){
+      var r=await _lar.apply(this,arguments);
+      if(isA()){
+        if(!Object.keys(st.dringl).length){try{var p=await call('/api/tagesplan/plan?datum='+heute());p.items.forEach(function(i){if(i.reviewId)st.dringl[i.reviewId]=i.dringlich;});}catch(e){}}
+        window.rqTpMarkReviews();
+      }
+      return r;
+    };
+  }
+
+  // ── Assistent: Aktionen aus dem Gespräch ──
+  function chat(t,cls){return window.rqAssistentAdd?window.rqAssistentAdd(t,cls):null;}
+  window.rqTagesplanRun=async function(a){
+    if(!a||!isA())return;
+    baue();
+    if(a.type==='termin_anlegen'||a.type==='ferien_anlegen'){
+      var m=chat(a.text||'Soll ich das eintragen?');
+      if(!m)return;
+      var row=h('div',{class:'tp-conf'},[
+        h('button',{type:'button',class:'rq-btn',onclick:async function(){
+          row.remove();
+          try{await call('/api/tagesplan/termine','POST',a.termin);chat('Eingetragen.'+(a.termin.datum===heute()?' Der Plan für heute ist neu berechnet.':''));st.datum=a.termin.datum;await laden();}
+          catch(e){chat(e.message,'err');}
+        }},['Ja, eintragen']),
+        h('button',{type:'button',class:'rq-btn ghost',onclick:function(){row.remove();chat('Gut, ich trage nichts ein.');}},['Nein'])
+      ]);
+      m.appendChild(row);return;
+    }
+    if(a.type==='plan_zeigen'){
+      st.datum=a.datum||heute();await laden();
+      var p=st.tage.filter(function(x){return x.datum===st.datum;})[0];
+      chat(p?p.text:'Für diesen Tag gibt es keinen Plan.');scrolleZuPlan();return;
+    }
+    if(a.type==='plan_neu'){
+      st.datum=heute();var pl=await call('/api/tagesplan/plan/neu','POST',{datum:st.datum});await laden();chat(pl.text);scrolleZuPlan();return;
+    }
+    if(a.type==='naechste_aufgabe'){
+      try{
+        var r=await call('/api/tagesplan/naechste'+(a.minuten?'?minuten='+a.minuten:''));
+        if(!r.dran){chat('Heute ist nichts mehr offen.');return;}
+        var t='Als Nächstes: '+r.dran.titel+' ('+r.dran.start+' bis '+r.dran.endeText+' Uhr, '+r.dran.dauer+' Minuten).';
+        if(a.minuten){t+=r.passt.length?' In '+a.minuten+' Minuten schaffst du: '+r.passt.map(function(i){return i.titel+' ('+i.dauer+' Min.)';}).join(', ')+'.':' Keine Aufgabe passt in diese Zeit.';}
+        chat(t);
+      }catch(e){chat(e.message,'err');}
+    }
+  };
+  function scrolleZuPlan(){var e=$('tp-h');if(e&&e.scrollIntoView)e.scrollIntoView({behavior:'smooth',block:'start'});}
+
+  // ── Start ──
+  function start(){
+    if(!isA())return;
+    baue();st.datum=st.datum||heute();laden();
+  }
+  var _open=window.rqAssistentOpen;
+  window.rqAssistentOpen=function(){
+    var r=_open?_open.apply(this,arguments):undefined;
+    start();return r;
+  };
+  // Link aus der Mail oder dem Kalender: #ws=KlientenNummer öffnet den Arbeitsbereich
+  var tries=0,iv=setInterval(function(){
+    tries++;var m=/^#ws=(\d+)/.exec(location.hash);
+    if(!m||tries>120){clearInterval(iv);return;}
+    var ls=document.getElementById('login-screen');
+    if(ls&&ls.classList.contains('hidden')&&isA()){clearInterval(iv);var id=+m[1];history.replaceState(null,'',location.pathname+location.search);oeffneWs(id);}
+  },1000);
 })();
 </script>
 <script id="rq-lernkurve-js">

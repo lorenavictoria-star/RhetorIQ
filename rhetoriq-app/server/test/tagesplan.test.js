@@ -55,7 +55,7 @@ test('Start 07:30 bei Dringlichem, sonst 08:00; Mittagspause', () => {
   assert.equal(plan([frg('e', 'enterprise', at(DI, '07:00'))]).start, '07:30', 'Enterprise');
   assert.equal(plan([frg('a', 'team', at(DI, '07:00'), { dringlich: true })]).start, '07:30', 'manuell dringlich');
   // Mittag: acht Aufgaben zu 30 Minuten reichen über 12:00
-  const viele = plan(Array.from({ length: 8 }, (_, i) => ({ key: 'n' + i, typ: 'anfrage', klient: 'K' + i, textart: 'Anfrage', paket: null, dauer: 30 })));
+  const viele = plan(Array.from({ length: 10 }, (_, i) => ({ key: 'n' + i, typ: 'anfrage', klient: 'K' + i, textart: 'Anfrage', paket: null, dauer: 30 })));
   for (const i of viele.items) assert.ok(i.ende <= 720 || i.beginn >= 780, 'nie in der Mittagspause');
   assert.ok(viele.items.some(i => i.beginn === 780));
 });

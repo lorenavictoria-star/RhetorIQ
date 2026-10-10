@@ -65,7 +65,7 @@ router.post('/befehl', requireAdvisor, befehlLimit, async (req, res) => {
       const resp = await generateText({
         system: A.baueSystem(hilfe, new Date()),
         messages: [{ role: 'user', content: A.baueNutzer(text, rows.map(r => r.name)) }],
-        maxTokens: 400,
+        maxTokens: 300,
         model: resolveModelId('haiku'),
         temperature: 0,
         meter: { module: 'assistent', advisorId: req.user.id }
