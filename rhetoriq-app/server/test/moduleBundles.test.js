@@ -1,3 +1,4 @@
+process.env.ABO_PFLICHT_AB = '2099-01-01T00:00:00Z'; // Diese Tests prüfen die Modulsperre, nicht die Abopflicht für neue Testklienten
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { toEnabledModules, ALLE_MODULE } = require('../lib/moduleCatalog');

@@ -1,5 +1,6 @@
 // Module und Textarten pro Klient: serverseitige Sperre bei der Generierung, Speichern durch die Beraterin,
 // Newsletter-Erstellung aus der Themenwahl bei gesperrter Textart.
+process.env.ABO_PFLICHT_AB = '2099-01-01T00:00:00Z'; // Diese Tests prüfen die Modulsperre, nicht die Abopflicht für neue Testklienten
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const H = require('../test-support/harness');
