@@ -16,7 +16,7 @@ const EINGEBAUTE_TYPEN = [
 const ARBEITSFREI = ['ferien', 'feiertag'];
 
 const STANDARD = {
-  start_normal: 480, start_frueh: 450, mittag_von: 720, mittag_bis: 780,
+  start_normal: 480, start_frueh: 450, mittag_von: 720, mittag_bis: 720, // Pause plant der Plan nicht selbst; die Beraterin setzt den Baustein Pause. Bis grösser als von ergibt eine feste Pause.
   frist_stunden: 3, frist_beginn: 480, frist_ende: 1080, stimme_frist: 1020,
   dauer: { freigabe: 20, newsletter: 30, anfrage: 15, onboarding: 30, auswertung: 20, themenplan: 30, quartalsreview: 60 },
   typen: [] // eigene Typen und Farbänderungen: [{ key, name, farbe }]
