@@ -63,9 +63,9 @@ router.post('/befehl', requireAdvisor, befehlLimit, async (req, res) => {
     let roh = '';
     try {
       const resp = await generateText({
-        system: A.baueSystem(hilfe),
+        system: A.baueSystem(hilfe, new Date()),
         messages: [{ role: 'user', content: A.baueNutzer(text, rows.map(r => r.name)) }],
-        maxTokens: 250,
+        maxTokens: 400,
         model: resolveModelId('haiku'),
         temperature: 0,
         meter: { module: 'assistent', advisorId: req.user.id }
@@ -75,7 +75,8 @@ router.post('/befehl', requireAdvisor, befehlLimit, async (req, res) => {
       console.error('[assistent] KI fehlgeschlagen:', e.message);
       return res.status(502).json({ error: 'Der Assistent ist gerade nicht erreichbar. Bitte versuche es gleich noch einmal.' });
     }
-    const aktion = A.pruefeAktion(roh, rows);
+    const settings = await require('../lib/tagesplanDaten').einstellungen(req.user.id).catch(() => undefined);
+    const aktion = A.pruefeAktion(roh, rows, { settings });
     res.json({ aktion, antwort: A.antwortFuer(aktion) });
   } catch (e) {
     console.error('[assistent] Befehl fehlgeschlagen:', e.message);
