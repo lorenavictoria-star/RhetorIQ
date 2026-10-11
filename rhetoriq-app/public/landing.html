@@ -163,7 +163,7 @@ dialog.rqd{max-height:calc(100dvh - 32px);overflow:auto}
 .zsr{list-style:none;margin:10px 0 0;padding:0;font-size:12px;line-height:1.5;color:#6c6a63}.zsr li{display:inline}.zsr li+li:before{content:" · "}
 .zmid{font:400 clamp(18px,2vw,22px) var(--serif);color:var(--mute);margin:40px 0 14px}
 .zst{min-height:320px}
-.zst .zt{display:block;font:500 11px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:0 0 4px}
+.zst .zt{display:flex;align-items:center;gap:12px;font:500 13px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin:0 0 8px}.zst .zt:before{content:"";width:28px;height:2px;background:currentColor;opacity:.7}.zst .g .zt{color:var(--gold)}.zst .s .zt{color:#c4c8ce}
 .zst strong{display:block;font:400 clamp(68px,15vw,150px)/.98 var(--serif);margin:2px 0 12px;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .zst .g strong{background:linear-gradient(100deg,#e8cf9a 0%,#d9b26a 45%,#b8903f 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .zst .s strong{background:linear-gradient(100deg,#f4f4f4 0%,#c4c8ce 50%,#8d9299 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -182,7 +182,7 @@ dialog.rqd{max-height:calc(100dvh - 32px);overflow:auto}
 @media (max-width:640px){
 .ztk{padding:11px 0;margin-top:22px}.ztk span{font-size:12px;margin-right:28px}.ztk b{font-size:24px}
 .zsr{font-size:10px}.zmid{font-size:16px;margin-top:24px}
-.zst{min-height:200px}.zst strong{font-size:68px}.zrow{gap:22px;flex-wrap:nowrap}.zrow .zb strong{font-size:46px}.zrow .zl{font-size:9px;letter-spacing:.1em}#zahlen .zst p{font-size:14px}.zst small{font-size:10px}
+.zst{min-height:200px}.zst strong{font-size:68px}.zst .zt{font-size:11px;gap:8px}.zst .zt:before{width:18px}.zrow{gap:16px;flex-wrap:nowrap}.zrow .zb strong{font-size:40px}.zrow .zl{font-size:8.5px;letter-spacing:.06em;line-height:1.3}#zahlen .zst p{font-size:14px}.zst small{font-size:10px}
 .znv button{font-size:12px;padding:6px 16px}.zdt i{width:16px}}
 }
 .navr{display:flex;align-items:center;gap:20px}.lg{font:400 17px var(--sans);color:var(--cream);text-decoration:none;border:1px solid #6b6552;border-radius:99px;padding:11px 28px;opacity:.9;transition:border-color .2s,opacity .2s}.lg:hover{opacity:1;border-color:var(--gold)}
@@ -391,10 +391,9 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
 
     (function(){
     var T=[["47%","der Schweizer KMU nutzen KI für Korrespondenz","AXA KMU-Arbeitsmarktstudie, November 2025"],["117","E-Mails pro Person und Tag","Microsoft Work Trend Index, 31’000 Wissensarbeitende in 31 Märkten, darunter die Schweiz, 2025"]];
-    var S=[["Vertrauen","61%","g","weniger Vertrauen bei KI-Inhalten","EY, 1’000 Konsumenten in der Schweiz, Dezember 2025. Klaviyo und Datalily, 8’000 Konsumenten weltweit, Dezember 2025",["61%","in der Schweiz"],["31%","weltweit"]],
-    ["Effizienz","77%","s","deshalb ist KI effizient","KPMG und Universität Melbourne, 48’000 Befragte in 47 Ländern, 2025. Noy und Zhang, Science, 2023",["77%","der Berufstätigen nutzen KI im Job (Schweiz)"],["−40%","Zeit pro Schreibaufgabe mit KI"]],
-    ["Qualität","+18%","s","höhere Qualität der Ergebnisse.","Noy und Zhang, Science, 2023"],
-    ["Zeitverlust","7,5 Std.","g","verlorene Arbeitszeit durch schlechte Kommunikation","Grammarly und Harris Poll, USA, 2022. Grammarly und Statista, 1’100 Beschäftigte in Deutschland, 2024",["7,5 Std.","pro Woche, USA"],["11,5 Tage","pro Jahr, Deutschland"]]];
+    var S=[["EQ · Vertrauen","61%","g","weniger Vertrauen bei KI-Inhalten","EY, 1’000 Konsumenten in der Schweiz, Dezember 2025. Klaviyo und Datalily, 8’000 Konsumenten weltweit, Dezember 2025",["61%","in der Schweiz"],["31%","weltweit"]],
+    ["IQ · Effizienz","77%","s","deshalb ist KI effizient","KPMG und Universität Melbourne, 48’000 Befragte in 47 Ländern, 2025. Noy und Zhang, Science, 2023",["77%","nutzen KI im Job (Schweiz)"],["−40%","Zeit pro Schreibaufgabe"],["+18%","höhere Qualität"]],
+    ["EQ · Kommunikation","7,5 Std.","g","verlorene Arbeitszeit durch schlechte Kommunikation","Grammarly und Harris Poll, USA, 2022. Grammarly und Statista, 1’100 Beschäftigte in Deutschland, 2024",["7,5 Std.","pro Woche, USA"],["11,5 Tage","pro Jahr, Deutschland"]]];
     var tk=document.getElementById("ztk"),sr=document.getElementById("zsr"),st=document.getElementById("zst"),dt=document.getElementById("zdt"),k=0;
     if(!tk||!st)return;
     function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
