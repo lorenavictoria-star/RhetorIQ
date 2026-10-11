@@ -153,27 +153,34 @@ dialog.rqd{max-height:calc(100dvh - 32px);overflow:auto}
 @media (max-width:820px){.usp{grid-template-columns:1fr}.usp>div+div{padding:24px 0 0;border-left:0;border-top:1px solid var(--line);margin-top:24px}}
 .who{display:grid;grid-template-columns:minmax(0,300px) 1fr;gap:clamp(24px,5vw,64px);align-items:center}.foto{width:100%;height:auto;aspect-ratio:941/1672;object-fit:cover;border-radius:150px 150px 14px 14px;display:block;filter:grayscale(.15)}
 @media (max-width:700px){.who{grid-template-columns:1fr}.foto{width:min(100%,260px)}}
-.zpl{display:flex;gap:8px;flex-wrap:wrap;margin-top:28px}
-.zpl button,.znv button{background:transparent;border:1px solid #3a3a37;color:var(--cream);border-radius:99px;padding:8px 18px;font:400 14px var(--sans);cursor:pointer;transition:border-color .2s}
-.zpl button[aria-pressed="true"]{border-color:var(--gold)}
-.zpl button:hover,.znv button:hover{border-color:#6b6552}
-.zw{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);margin-top:18px;border-top:1px solid var(--line)}
-.zc{padding:28px 28px 8px 0;min-width:0}.zc+.zc{padding:28px 0 8px 28px;border-left:1px solid var(--line)}
-.zh{display:block;font:500 11px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:12px}
-.zc strong{display:block;font:400 clamp(48px,8vw,92px)/1 var(--serif);margin-bottom:12px}
-.zl strong{background:linear-gradient(100deg,#f4f4f4 0%,#c4c8ce 50%,#8d9299 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.zr strong{background:linear-gradient(100deg,#e8cf9a 0%,#d9b26a 45%,#b8903f 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.zc p{margin:0;font-size:clamp(15px,1.5vw,18px);line-height:1.45;color:var(--cream);max-width:420px}
-.zc small{display:block;margin-top:10px;font-size:12px;color:#6c6a63}
-#zahlen .zc p{text-align:left;-webkit-hyphens:manual;hyphens:manual}
-.zdt{display:flex;gap:6px;margin-top:18px}.zdt button{width:30px;height:3px;border:0;border-radius:2px;background:#2c2c29;padding:0;cursor:pointer}.zdt button[aria-pressed="true"]{background:var(--gold)}
-.znv{display:flex;gap:8px;margin-top:16px}
+.zn{display:inline-block;font:500 12px var(--sans);letter-spacing:.14em;color:#6c6a63;margin-right:14px;vertical-align:middle;position:relative;top:-.2em}
+.ztk{overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:16px 0;margin-top:30px;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.ztk>div{display:inline-block;animation:zmq 34s linear infinite}
+.ztk:hover>div{animation-play-state:paused}
+.ztk span{display:inline-block;margin-right:42px;font-size:14px;color:#c8c2b4}
+.ztk b{font:400 clamp(28px,4vw,38px) var(--serif);margin-right:10px;background:linear-gradient(100deg,#f4f4f4 0%,#c4c8ce 50%,#8d9299 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+@keyframes zmq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.zsr{list-style:none;margin:10px 0 0;padding:0;font-size:12px;line-height:1.5;color:#6c6a63}.zsr li{display:inline}.zsr li+li:before{content:" · "}
+.zmid{font:400 clamp(18px,2vw,22px) var(--serif);color:var(--mute);margin:40px 0 14px}
+.zst{min-height:320px}
+.zst .zt{display:block;font:500 11px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:0 0 4px}
+.zst strong{display:block;font:400 clamp(68px,15vw,150px)/.98 var(--serif);margin:2px 0 12px;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.zst .g strong{background:linear-gradient(100deg,#e8cf9a 0%,#d9b26a 45%,#b8903f 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.zst .s strong{background:linear-gradient(100deg,#f4f4f4 0%,#c4c8ce 50%,#8d9299 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+#zahlen .zst p{margin:0;text-align:left;-webkit-hyphens:manual;hyphens:manual;font-size:clamp(16px,2vw,20px);line-height:1.4;color:var(--cream);max-width:560px}
+.zst small{display:block;margin-top:10px;font-size:12px;line-height:1.4;color:#6c6a63;max-width:560px}
+.zst>div{animation:zfd .4s ease}
+@keyframes zfd{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.znv{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
+.znv button{background:transparent;border:1px solid #3a3a37;color:var(--cream);border-radius:99px;padding:8px 22px;font:400 14px var(--sans);cursor:pointer;transition:border-color .2s}
+.znv button:hover{border-color:#6b6552}
+.zdt{display:flex;gap:6px;margin-left:6px}.zdt i{width:28px;height:3px;border-radius:2px;background:#2c2c29;cursor:pointer;display:block}.zdt i.on{background:var(--gold)}
+@media (prefers-reduced-motion:reduce){.ztk>div{animation:none}.zst>div{animation:none}}
 @media (max-width:640px){
-.zc{padding:18px 9px 4px 0}.zc+.zc{padding:18px 0 4px 9px}
-.zh{font-size:9px;letter-spacing:.1em;margin-bottom:8px}
-.zc strong{font-size:34px;margin-bottom:6px}
-.zc p{font-size:12px;line-height:1.35}.zc small{font-size:9px;line-height:1.3;margin-top:6px}
-.zpl button,.znv button{font-size:12px;padding:6px 12px}}
+.ztk{padding:11px 0;margin-top:22px}.ztk span{font-size:12px;margin-right:28px}.ztk b{font-size:24px}
+.zsr{font-size:10px}.zmid{font-size:16px;margin-top:24px}
+.zst{min-height:200px}.zst strong{font-size:68px}#zahlen .zst p{font-size:14px}.zst small{font-size:10px}
+.znv button{font-size:12px;padding:6px 16px}.zdt i{width:16px}}
 }
 .navr{display:flex;align-items:center;gap:20px}.lg{font:400 17px var(--sans);color:var(--cream);text-decoration:none;border:1px solid #6b6552;border-radius:99px;padding:11px 28px;opacity:.9;transition:border-color .2s,opacity .2s}.lg:hover{opacity:1;border-color:var(--gold)}
 .plb{position:absolute;transform:translate(-50%,-50%);font:300 14px var(--sans);letter-spacing:.01em;color:var(--cream);white-space:nowrap}
@@ -270,11 +277,12 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
   <div class="brk" aria-hidden="false"><span></span><p>Ich trage zum <b class="eq">Erfolg</b> mit</p><span></span></div>
   <section id="zahlen">
     <p class="eyebrow">Warum sich das lohnt</p>
-    <h2>KI macht schneller. Vertrauen macht ein Mensch.</h2>
-    <div class="zpl" id="zpl" role="group" aria-label="Studienpaar wählen"></div>
-    <div class="zw" id="zw" aria-live="polite"></div>
-    <div class="zdt" id="zdt" role="group" aria-label="Paar wählen"></div>
-    <div class="znv"><button type="button" id="zpv">Zurück</button><button type="button" id="znx">Weiter</button></div>
+    <h2><span class="zn">1</span>KI ist im Arbeitsalltag angekommen.</h2>
+    <div class="ztk"><div id="ztk" aria-hidden="true"></div></div>
+    <ul class="zsr" id="zsr"></ul>
+    <p class="zmid">Und das zeigen die Studien.</p>
+    <div class="zst" id="zst" aria-live="polite"></div>
+    <div class="znv"><button type="button" id="zpv">Zurück</button><button type="button" id="znx">Weiter</button><div class="zdt" id="zdt"></div></div>
     <p class="p" style="margin-top:34px">Darum braucht jede KI eine menschliche Hand. Ich lese Ihre Texte als Expertin für Sprache und schärfe sie, im Umfang Ihres Pakets.</p>
   </section>
 
@@ -379,17 +387,20 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
   })();
 
     (function(){
-    var P=[["Tempo und Vertrauen",["−40%","Zeit pro Schreibaufgabe mit KI, bei 18% höherer Qualität","Noy und Zhang, Science, 2023"],["6 von 10","Schweizer:innen äussern die Sorge, dass KI Online-Inhalte weniger vertrauenswürdig macht","EY, 1’000 Konsumenten in der Schweiz, Dezember 2025 (61%)"]],
-    ["Verbreitung und Zweifel",["77%","der Berufstätigen in der Schweiz nutzen KI im Job. Weltweit sind es 58%","KPMG und Universität Melbourne, 48’000 Befragte in 47 Ländern, 2025"],["31%","vertrauen weniger, sobald sie KI-Texte bemerken","Klaviyo und Datalily, 8’000 Konsumenten weltweit, Dezember 2025"]],
-    ["Textflut und Zeitverlust",["117","E-Mails und 153 Teams-Nachrichten pro Person und Tag","Microsoft Work Trend Index, 31’000 Wissensarbeitende in 31 Märkten, darunter die Schweiz, 2025"],["11,5 Tage","pro Jahr gehen durch schlechte Kommunikation verloren","Grammarly und Statista, 1’100 Beschäftigte in Deutschland, 2024"]]];
-    var pl=document.getElementById("zpl"),zw=document.getElementById("zw"),dt=document.getElementById("zdt"),k=0;
-    if(!pl||!zw)return;
-    function col(cls,h,c){var d=document.createElement("div");d.className="zc "+cls;var a=document.createElement("span");a.className="zh";a.textContent=h;var s=document.createElement("strong");s.textContent=c[0];var p=document.createElement("p");p.textContent=c[1];var m=document.createElement("small");m.textContent=c[2];d.appendChild(a);d.appendChild(s);d.appendChild(p);d.appendChild(m);return d}
-    function show(i){k=i;zw.textContent="";zw.appendChild(col("zl","IQ · Die KI",P[i][1]));zw.appendChild(col("zr","EQ · Der Mensch",P[i][2]));
-      [].forEach.call(pl.children,function(b,j){b.setAttribute("aria-pressed",j===i)});[].forEach.call(dt.children,function(b,j){b.setAttribute("aria-pressed",j===i)})}
-    P.forEach(function(p,i){var b=document.createElement("button");b.type="button";b.textContent=p[0];b.onclick=function(){show(i)};pl.appendChild(b);var d=document.createElement("button");d.type="button";d.setAttribute("aria-label","Paar "+(i+1));d.onclick=function(){show(i)};dt.appendChild(d)});
-    document.getElementById("znx").onclick=function(){show((k+1)%P.length)};
-    document.getElementById("zpv").onclick=function(){show((k+P.length-1)%P.length)};
+    var T=[["77%","der Berufstätigen nutzen KI im Job (Schweiz)","KPMG und Universität Melbourne, 48’000 Befragte in 47 Ländern, 2025"],["47%","der Schweizer KMU nutzen KI für Korrespondenz","AXA KMU-Arbeitsmarktstudie, November 2025"],["117","E-Mails pro Person und Tag","Microsoft Work Trend Index, 31’000 Wissensarbeitende in 31 Märkten, darunter die Schweiz, 2025"],["7,5 Std.","pro Woche und Mitarbeiter gehen durch schlechte Kommunikation verloren","Grammarly und Harris Poll, 2022"]];
+    var S=[["Vertrauen","31%","g","vertrauen weniger, sobald sie KI-Texte bemerken.","Klaviyo und Datalily, 8’000 Konsumenten weltweit, Dezember 2025"],
+    ["Tempo","−40%","s","Zeit pro Schreibaufgabe mit KI.","Noy und Zhang, Science, 2023"],
+    ["Qualität","+18%","s","höhere Qualität der Ergebnisse.","Noy und Zhang, Science, 2023"],
+    ["Zeitverlust","11,5 Tage","g","pro Jahr gehen durch schlechte Kommunikation verloren.","Grammarly und Statista, 1’100 Beschäftigte in Deutschland, 2024"]];
+    var tk=document.getElementById("ztk"),sr=document.getElementById("zsr"),st=document.getElementById("zst"),dt=document.getElementById("zdt"),k=0;
+    if(!tk||!st)return;
+    function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+    T.concat(T).forEach(function(t){var s=el("span");s.appendChild(el("b",null,t[0]));s.appendChild(document.createTextNode(t[1]));tk.appendChild(s)});
+    T.forEach(function(t){sr.appendChild(el("li",null,t[2]))});
+    function show(i){k=i;st.textContent="";var d=el("div",S[i][2]);d.appendChild(el("span","zt",S[i][0]));d.appendChild(el("strong",null,S[i][1]));d.appendChild(el("p",null,S[i][3]));d.appendChild(el("small",null,S[i][4]));st.appendChild(d);[].forEach.call(dt.children,function(b,j){b.className=j===i?"on":""})}
+    S.forEach(function(s,i){var b=el("i");b.onclick=function(){show(i)};dt.appendChild(b)});
+    document.getElementById("znx").onclick=function(){show((k+1)%S.length)};
+    document.getElementById("zpv").onclick=function(){show((k+S.length-1)%S.length)};
     show(0);
   })();
 
