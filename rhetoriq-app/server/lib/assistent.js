@@ -86,6 +86,7 @@ const STANDARD_ANTWORT = {
   plan_zeigen: () => 'Hier ist dein Tagesplan.',
   plan_neu: () => 'Ich berechne den Plan neu.',
   naechste_aufgabe: () => 'Ich schaue nach, was als Nächstes dran ist.',
+  termine_zeigen: () => 'Ich schaue in deinen Kalender.',
   answer: (a) => a.text
 };
 function antwortFuer(a) { return (STANDARD_ANTWORT[a.type] || (() => ''))(a); }

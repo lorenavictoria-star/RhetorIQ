@@ -1,13 +1,17 @@
 // Google Kalender: OAuth (Autorisierungscode mit PKCE) und die Aufrufe der Kalender-API.
 // Zugangsdaten: GOOGLE_CLIENT_ID und GOOGLE_CLIENT_SECRET aus der Umgebung. Sie und alle Tokens werden nie geloggt und nie in Fehlertexte übernommen.
 // Das Refresh-Token liegt nur verschlüsselt in der Datenbank (lib/secretBox.js). Der Zugriffstoken lebt nur im Arbeitsspeicher.
-// Scope nur calendar.app.created: die App sieht und ändert ausschliesslich Kalender, die sie selbst angelegt hat.
+// Scope calendar.app.created: die App sieht und ändert ausschliesslich Kalender, die sie selbst angelegt hat (der Kalender «RhetorIQ»).
+// Scope calendar.readonly (zusätzlich, nur lesen): die übrigen Kalender des Kontos erscheinen im Kalender von RhetorIQ. Er schreibt dort nie.
 const crypto = require('crypto');
 const secretBox = require('../secretBox');
 const { scrubText } = require('../scrub');
 const KD = require('./daten');
 
 const SCOPE = 'https://www.googleapis.com/auth/calendar.app.created';
+const SCOPE_LESEN = 'https://www.googleapis.com/auth/calendar.readonly';
+const scopeListe = (t) => String(t || '').split(/\s+/).filter(Boolean);
+const hatLesen = (scopes) => scopeListe(scopes).includes(SCOPE_LESEN);
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const REVOKE_URL = 'https://oauth2.googleapis.com/revoke';
@@ -35,8 +39,8 @@ function pkce() {
 }
 function autorisierungsUrl(state, challenge) {
   const q = new URLSearchParams({
-    client_id: clientId(), redirect_uri: redirectUri(), response_type: 'code', scope: SCOPE,
-    access_type: 'offline', prompt: 'consent', include_granted_scopes: 'false', state,
+    client_id: clientId(), redirect_uri: redirectUri(), response_type: 'code', scope: `${SCOPE} ${SCOPE_LESEN}`,
+    access_type: 'offline', prompt: 'consent', include_granted_scopes: 'true', state,
     code_challenge: challenge, code_challenge_method: 'S256'
   });
   return `${AUTH_URL}?${q.toString()}`;
@@ -132,9 +136,21 @@ const ereignisAendern = (aid, cal, eid, body) => api(aid, 'PATCH', `/calendars/$
 const ereignisLoeschen = (aid, cal, eid) => api(aid, 'DELETE', `/calendars/${encodeURIComponent(cal)}/events/${encodeURIComponent(eid)}`, { erlaubt: [404, 410] });
 const ereignisListe = (aid, cal, query) => api(aid, 'GET', `/calendars/${encodeURIComponent(cal)}/events`, { query, erlaubt: [410] });
 const beobachten = (aid, cal, body) => api(aid, 'POST', `/calendars/${encodeURIComponent(cal)}/events/watch`, { body });
+// Alle Kalender des Kontos (Seite für Seite). Braucht den Scope calendar.readonly.
+async function kalenderListe(aid) {
+  const out = [];
+  let seite = null;
+  for (let n = 0; n < 10; n++) {
+    const r = await api(aid, 'GET', '/users/me/calendarList', { query: { maxResults: 250,...(seite ? { pageToken: seite } : {}) } });
+    for (const k of (r.json && r.json.items) || []) out.push(k);
+    seite = r.json && r.json.nextPageToken;
+    if (!seite) break;
+  }
+  return out;
+}
 const kanalStoppen = (aid, body) => api(aid, 'POST', '/channels/stop', { body, erlaubt: [404] });
 
 module.exports = {
-  SCOPE, GoogleFehler, konfiguriert, redirectUri, webhookUrl, webhookMoeglich, appUrl, pkce, autorisierungsUrl, codeTauschen, zugriffstoken, tokenVergessen, widerrufen,
+  SCOPE, SCOPE_LESEN, scopeListe, hatLesen, kalenderListe, GoogleFehler, konfiguriert, redirectUri, webhookUrl, webhookMoeglich, appUrl, pkce, autorisierungsUrl, codeTauschen, zugriffstoken, tokenVergessen, widerrufen,
   api, kalenderAnlegen, kalenderPruefen, ereignisEinfuegen, ereignisErsetzen, ereignisAendern, ereignisLoeschen, ereignisListe, beobachten, kanalStoppen, sauber, _setHttp
 };

@@ -4,6 +4,8 @@
 //  GET    /api/kalender/google/callback      öffentlich: Weiterleitung von Google (state einmalig, an Sitzung und Browser gebunden)
 //  POST   /api/kalender/google/sync          jetzt abgleichen (lesen und schreiben); leise: nur wenn der letzte Abgleich länger her ist
 //  POST   /api/kalender/google/trennen       widerruft das Token bei Google und löscht es lokal
+//  GET    /api/kalender/google/quellen       weitere Google-Kalender des Kontos (nur lesen) mit Haken und Farbe; gleicht mit Google ab
+//  PATCH  /api/kalender/google/quellen/:id   { aktiv?, farbe? } Kalender an- oder abwählen, Farbe ändern
 //  DELETE /api/kalender/google/ausgeblendet  am Handy gelöschte Plan-Aufgaben für heute wieder einblenden
 //  POST   /api/kalender/google/webhook       öffentlich, geprüft mit Kanal-ID und Kanal-Token
 // Tokens, Codes und der state erscheinen nie in Antworten oder Logs.
@@ -16,6 +18,7 @@ const KD = require('../lib/kalendersync/daten');
 const G = require('../lib/kalendersync/googleApi');
 const google = require('../lib/kalendersync/google');
 const Z = require('../lib/zeit');
+const Q = require('../lib/kalendersync/googleQuellen');
 
 const router = express.Router();
 const COOKIE = 'rq_gs';
@@ -58,7 +61,7 @@ router.post('/webhook', webhookLimit, async (req, res) => {
     if (!row) return res.status(404).end();
     const zustand = String(req.get('x-goog-resource-state') || '').toLowerCase();
     if (zustand === 'sync') return res.status(200).end(); // Bestätigung nach dem Anlegen des Kanals
-    if (zustand === 'exists' || zustand === 'not_exists') google.lesenEinplanen(row.advisor_id);
+    if (zustand === 'exists' || zustand === 'not_exists') google.lesenEinplanen(row.advisor_id, row.quelleId || null);
     res.status(200).end();
   } catch (e) {
     console.error('[kalender-google] Webhook fehlgeschlagen:', G.sauber(e && e.message));
@@ -85,7 +88,10 @@ router.get('/status', async (req, res) => {
     res.json({
       konfiguriert: G.konfiguriert(), schluesselOk: secretBox.available(), redirectUri: G.redirectUri(),
       hinweis: G.konfiguriert() ? null : `${NICHT_EINGERICHTET}. ${EINRICHTUNG}`,
-      verbunden: !!(row && row.calendar_id), letzteSync: row ? row.letzte_sync : null, fehler: row ? row.fehler : null, fehlerSeit: row ? row.fehler_seit : null,
+      verbunden: !!(row && row.calendar_id),
+      lesenErlaubt: Q.lesenErlaubt(row), zusatzFreigabeNoetig: !!(row && row.calendar_id && !Q.lesenErlaubt(row)),
+      zusatzFreigabeHinweis: row && row.calendar_id && !Q.lesenErlaubt(row) ? 'Für die Anzeige deiner übrigen Termine ist eine zusätzliche Freigabe nötig.' : null,
+      letzteSync: row ? row.letzte_sync : null, fehler: row ? row.fehler : null, fehlerSeit: row ? row.fehler_seit : null,
       kanalBis: row ? row.channel_ablauf : null, ausgeblendet: (await KD.ausgeblendetAm(req.user.id, Z.heute())).size
     });
   } catch (e) { fail(res, e); }
@@ -101,6 +107,43 @@ router.post('/verbinden', async (req, res) => {
     await KD.stateAnlegen(req.user.id, state, bindung, secretBox.encrypt(verifier));
     res.append('Set-Cookie', `${COOKIE}=${bindung}; Max-Age=600; Path=/api/kalender/google; HttpOnly; SameSite=Lax${G.appUrl().startsWith('https') ? '; Secure' : ''}`);
     res.json({ url: G.autorisierungsUrl(state, challenge) });
+  } catch (e) { fail(res, e); }
+});
+
+router.get('/quellen', async (req, res) => {
+  try {
+    const row = await KD.googleZeile(req.user.id);
+    if (!row || !row.calendar_id) return res.status(409).json({ error: 'Google ist nicht verbunden.' });
+    if (!Q.lesenErlaubt(row)) return res.json({ lesenErlaubt: false, hinweis: 'Für die Anzeige deiner übrigen Termine ist eine zusätzliche Freigabe nötig.', kalender: [] });
+    let liste;
+    try { liste = req.query.abgleichen === '1' || !(await KD.quellenAlle(req.user.id)).length ? await Q.listeAbgleichen(req.user.id) : await KD.quellenAlle(req.user.id); }
+    catch (e) {
+      console.error('[kalender-google] Kalenderliste fehlgeschlagen:', G.sauber(e && e.message));
+      if (e && e.status === 403) return res.json({ lesenErlaubt: false, hinweis: 'Für die Anzeige deiner übrigen Termine ist eine zusätzliche Freigabe nötig.', kalender: [] });
+      return res.status(502).json({ error: 'Die Kalender konnten nicht von Google geladen werden. Bitte versuche es gleich noch einmal.' });
+    }
+    res.json({ lesenErlaubt: true, kalender: liste.map(KD.quelleOeffentlich) });
+  } catch (e) { fail(res, e); }
+});
+
+router.patch('/quellen/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: 'Ungültige Nummer.' });
+    const row = await KD.googleZeile(req.user.id);
+    if (!row || !Q.lesenErlaubt(row)) return res.status(409).json({ error: 'Für die Anzeige deiner übrigen Termine ist eine zusätzliche Freigabe nötig.' });
+    const q = await KD.quelleHole(req.user.id, id);
+    if (!q) return res.status(404).json({ error: 'Kalender nicht gefunden.' });
+    const b = req.body || {};
+    if (b.farbe !== undefined) {
+      if (typeof b.farbe !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(b.farbe)) return res.status(400).json({ error: 'Die Farbe ist ungültig.' });
+      await KD.quelleSetzen(id, { farbe: b.farbe });
+    }
+    if (b.aktiv !== undefined) {
+      if (typeof b.aktiv !== 'boolean') return res.status(400).json({ error: 'Ungültiger Wert.' });
+      if (b.aktiv !== !!q.aktiv) await google.quelleUmschalten(req.user.id, id, b.aktiv);
+    }
+    res.json(KD.quelleOeffentlich(await KD.quelleHole(req.user.id, id)));
   } catch (e) { fail(res, e); }
 });
 

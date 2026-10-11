@@ -3,7 +3,7 @@
 const Z = require('./zeit');
 const T = require('./tagesplan');
 
-const PLAN_AKTIONEN = ['termin_anlegen', 'ferien_anlegen', 'plan_zeigen', 'plan_neu', 'naechste_aufgabe'];
+const PLAN_AKTIONEN = ['termin_anlegen', 'ferien_anlegen', 'plan_zeigen', 'plan_neu', 'naechste_aufgabe', 'termine_zeigen'];
 const TAGE = { montag: 1, mo: 1, dienstag: 2, di: 2, mittwoch: 3, mi: 3, donnerstag: 4, do: 4, freitag: 5, fr: 5, samstag: 6, sa: 6, sonntag: 7, so: 7 };
 
 // Form für POST /api/tagesplan/termine (Uhrzeiten als HH:MM)
@@ -37,6 +37,12 @@ const tageText = (tage) => tage.map(n => Z.WOCHENTAGE[n % 7]).join(', ').replace
 function pruefePlanAktion(typ, o, { heute, settings } = {}) {
   heute = heute || Z.heute();
   if (typ === 'plan_neu') return { type: 'plan_neu' };
+  if (typ === 'termine_zeigen') {
+    const modus = o.modus === 'zeit' ? 'zeit' : 'termine';
+    if (o.datum == null || o.datum === '') return { type: 'termine_zeigen', datum: heute, modus };
+    const d = datumAufloesen(o.datum, heute);
+    return d ? { type: 'termine_zeigen', datum: d, modus } : frage('Für welchen Tag soll ich nachschauen?');
+  }
   if (typ === 'plan_zeigen') {
     if (o.datum == null || o.datum === '') return { type: 'plan_zeigen', datum: heute };
     const d = datumAufloesen(o.datum, heute);
@@ -102,6 +108,55 @@ const PLAN_PROMPT = `- termin_anlegen: Termin oder Block eintragen. Felder: "tit
 - ferien_anlegen: Ferien eintragen. Felder: "von" und "bis" (YYYY-MM-DD), optional "titel".
 - plan_zeigen: Tagesplan zeigen ("Mach mir den Tagesplan"). Optional "datum".
 - plan_neu: Tagesplan neu berechnen.
+- termine_zeigen: Termine des Kalenders nennen ("Was habe ich heute?", "Was steht morgen an?") oder freie Zeit nennen ("Wann habe ich Zeit?", modus "zeit"). Felder: optional "datum" (wie bei plan_zeigen), "modus" ("termine" oder "zeit"). Den Inhalt der Termine kennst Du nicht; er wird ausserhalb von Dir eingesetzt.
 - naechste_aufgabe: Was als Nächstes dran ist ("Was ist als Nächstes dran?", "Ich habe nur noch zwei Stunden"). Bei einer Zeitangabe "minuten" als ganze Zahl.`;
 
-module.exports = { PLAN_AKTIONEN, PLAN_PROMPT, pruefePlanAktion, datumAufloesen, wochentageLesen };
+// ── Antwort aus Kalender und Plan, ohne KI ──
+// Die Termine kommen nie in den Auftrag an die KI. Dieser Text entsteht hier aus dem Plan des Tages (nur Titel, Zeit, Ort; keine Beschreibung).
+const ohneStriche = (t) => String(t == null ? '' : t).replace(/\s*[–—―]\s*/g, ', ').replace(/\s{2,}/g, ' ').trim();
+const tagName = (datum, heute) => (datum === heute ? 'Heute' : datum === Z.addTage(heute, 1) ? 'Morgen' : Z.datumLang(datum));
+function terminZeile(b) {
+  const wo = b.ort ? `, ${ohneStriche(b.ort)}` : '';
+  const frei = b.frei ? ' (verfügbar)' : '';
+  const was = `«${ohneStriche(b.titel).replace(/[«»]/g, '')}»`;
+  return b.ganztaegig ? `ganztägig ${was}${wo}${frei}` : `${Z.hhmm(b.beginn)} bis ${Z.hhmm(b.ende)} Uhr ${was}${wo}${frei}`;
+}
+// Freie Zeitfenster von mindestens 30 Minuten zwischen Arbeitsbeginn und Fristende, ohne Termine (ausser «verfügbar»), Plan-Aufgaben und Pause
+function freieFenster(plan, settings, jetzt, heute) {
+  const s = settings || T.STANDARD;
+  let von = s.start_normal, bis = s.frist_ende;
+  if (plan.datum === heute) von = Math.max(von, Math.ceil(Z.zurich(jetzt).min / 5) * 5);
+  const belegt = [];
+  for (const b of plan.bloecke || []) if (!b.ganztaegig && !b.frei) belegt.push([b.beginn, b.ende]);
+  for (const i of plan.items || []) belegt.push([i.beginn, i.ende]);
+  if (plan.mittag) belegt.push([plan.mittag.beginn, plan.mittag.ende]);
+  belegt.sort((a, b) => a[0] - b[0]);
+  const out = [];
+  let t = von;
+  for (const [a, b] of belegt) {
+    if (a > t && Math.min(a, bis) - t >= 30) out.push([t, Math.min(a, bis)]);
+    t = Math.max(t, b);
+  }
+  if (bis - t >= 30) out.push([t, bis]);
+  return out;
+}
+function termineAntwort(plan, modus, { settings, jetzt = new Date(), heute = Z.heute(jetzt) } = {}) {
+  const tag = tagName(plan.datum, heute);
+  const bl = (plan.bloecke || []).slice().sort((a, b) => (a.ganztaegig ? -1 : a.beginn) - (b.ganztaegig ? -1 : b.beginn));
+  const aufg = (plan.items || []).length;
+  const z = [];
+  if (modus === 'zeit') {
+    if (plan.arbeitstag === false) z.push(`${tag} ist ein freier Tag (${plan.grund}).`);
+    const f = freieFenster(plan, settings, jetzt, heute);
+    if (!f.length) z.push(`${tag} ist zwischen Arbeitsbeginn und Feierabend keine zusammenhängende freie Zeit von mindestens 30 Minuten übrig.`);
+    else z.push(`${tag} hast du Zeit: ${f.slice(0, 6).map(([a, b]) => `${Z.hhmm(a)} bis ${Z.hhmm(b)} Uhr`).join(', ')}.`);
+    return ohneStriche(z.join(' ')).slice(0, 700);
+  }
+  if (plan.arbeitstag === false && !bl.length) z.push(`${tag} ist ein freier Tag (${plan.grund}).`);
+  if (!bl.length) z.push(`${tag} hast du keine Termine.`);
+  else z.push(`${tag} ${bl.length === 1 ? 'hast du einen Termin' : `hast du ${bl.length} Termine`}: ${bl.slice(0, 12).map(terminZeile).join('; ')}.${bl.length > 12 ? ' Weitere stehen im Kalender.' : ''}`);
+  if (aufg) z.push(`Im Plan ${aufg === 1 ? 'steht eine Aufgabe' : `stehen ${aufg} Aufgaben`}, die letzte endet um ${plan.ende} Uhr.`);
+  return ohneStriche(z.join(' ')).slice(0, 900);
+}
+
+module.exports = { termineAntwort, freieFenster, PLAN_AKTIONEN, PLAN_PROMPT, pruefePlanAktion, datumAufloesen, wochentageLesen };

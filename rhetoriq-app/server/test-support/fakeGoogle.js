@@ -1,6 +1,7 @@
 // Attrappe der Google-Kalender-API und des OAuth-Servers für Tests. Kein echtes Netz.
 // Wird mit googleApi._setHttp({ fetch: fake.fetch, sleep: fake.sleep }) eingehängt.
 const SCOPE = 'https://www.googleapis.com/auth/calendar.app.created';
+const SCOPE_LESEN = 'https://www.googleapis.com/auth/calendar.readonly';
 
 function antwort(status, body, headers = {}) {
   const h = Object.fromEntries(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), String(v)]));
@@ -11,7 +12,7 @@ function fakeGoogle() {
   const g = {
     refresh: '1//refresh-token-geheim-1234567890abcdef', access: 'ya29.access-token-geheim-1234567890',
     code: 'gute-code', scope: SCOPE, ohneRefresh: false, tokenAnfragen: [], widerrufen: [], kalender: null, ereignisse: new Map(), version: 0,
-    log: [], sleeps: [], rate429: 0, serverFehler: 0, gone410: false, kanaele: [], gestoppt: [], listen: [], zaehler: 0, uhr: () => new Date().toISOString(), seitenGroesse: 0
+    fremd: new Map(), kalenderListe: [], gone410Fremd: false, listeSeite: 0, log: [], sleeps: [], rate429: 0, serverFehler: 0, gone410: false, kanaele: [], gestoppt: [], listen: [], zaehler: 0, uhr: () => new Date().toISOString(), seitenGroesse: 0
   };
   const buche = (ev) => { ev.v = ++g.version; ev.etag = `"etag-${ev.v}"`; ev.updated = g.uhr(); return ev; };
   const fuer = (ev) => { const { v, ...rest } = ev; return JSON.parse(JSON.stringify(rest)); };
@@ -41,6 +42,48 @@ function fakeGoogle() {
     if (g.rate429 > 0) { g.rate429--; return antwort(429, { error: { code: 429, errors: [{ reason: 'rateLimitExceeded' }] } }, { 'Retry-After': '1' }); }
     if (g.serverFehler > 0) { g.serverFehler--; return antwort(503, { error: { code: 503 } }); }
     let m;
+    // Weitere Kalender des Kontos: nur mit dem Lesezugriff (calendar.readonly) und nur lesend
+    if (methode === 'GET' && pfad === '/users/me/calendarList') {
+      if (!g.scope.split(' ').includes(SCOPE_LESEN)) return antwort(403, { error: { code: 403, errors: [{ reason: 'insufficientPermissions' }] } });
+      const alle = [...(g.kalender ? [{ id: g.kalender.id, summary: 'RhetorIQ', accessRole: 'owner', backgroundColor: '#16a765' }] : []), ...g.kalenderListe];
+      const q = Object.fromEntries(u.searchParams);
+      if (g.listeSeite) {
+        const start = parseInt(q.pageToken || '0', 10);
+        const teil = alle.slice(start, start + g.listeSeite);
+        return antwort(200, { items: JSON.parse(JSON.stringify(teil)), ...(start + g.listeSeite < alle.length ? { nextPageToken: String(start + g.listeSeite) } : {}) });
+      }
+      return antwort(200, { items: JSON.parse(JSON.stringify(alle)) });
+    }
+    if ((m = /^\/calendars\/([^/]+)\/events(\/watch|\/[^/]+)?$/.exec(pfad)) && !(g.kalender && decodeURIComponent(m[1]) === g.kalender.id)) {
+      const cal = decodeURIComponent(m[1]);
+      if (!g.scope.split(' ').includes(SCOPE_LESEN)) return antwort(403, { error: { code: 403, errors: [{ reason: 'insufficientPermissions' }] } });
+      if (!g.kalenderListe.some(k => k.id === cal)) return antwort(404, { error: { code: 404 } });
+      if (methode === 'POST' && m[2] === '/watch') {
+        const k = { ...body, kalender: cal, resourceId: 'res-' + (++g.zaehler), expiration: String(Date.now() + (g.kanalDauer || 7 * 24 * 3600 * 1000)) };
+        g.kanaele.push(k);
+        return antwort(200, { kind: 'api#channel', id: k.id, resourceId: k.resourceId, expiration: k.expiration });
+      }
+      if (methode !== 'GET' || m[2]) return antwort(403, { error: { code: 403, errors: [{ reason: 'forbidden' }] } }); // schreibgeschützt
+      const q = Object.fromEntries(u.searchParams);
+      g.listen.push({ ...q, kalender: cal });
+      const evs = g.fremd.get(cal) || new Map();
+      let ab = 0;
+      if (q.syncToken) {
+        if (g.gone410Fremd) { g.gone410Fremd = false; return antwort(410, { error: { code: 410 } }); }
+        ab = parseInt(String(q.syncToken).replace('st', ''), 10);
+      }
+      const ms = (x) => (x && (x.dateTime ? Date.parse(x.dateTime) : x.date ? Date.parse(x.date + 'T00:00:00Z') : NaN));
+      let items = [...evs.values()].filter(e => e.v > ab && (q.syncToken || e.status !== 'cancelled'))
+        .filter(e => q.syncToken || !q.timeMin || (ms(e.end) > Date.parse(q.timeMin) && ms(e.start) < Date.parse(q.timeMax))).sort((a, b) => a.v - b.v);
+      let next = null;
+      if (g.seitenGroesse) {
+        const start = parseInt(q.pageToken || '0', 10);
+        const rest = items.slice(start + g.seitenGroesse);
+        items = items.slice(start, start + g.seitenGroesse);
+        if (rest.length) next = String(start + g.seitenGroesse);
+      }
+      return antwort(200, { items: items.map(fuer), ...(next ? { nextPageToken: next } : { nextSyncToken: 'st' + g.version }) });
+    }
     if (methode === 'POST' && pfad === '/calendars') { g.kalender = { id: 'cal-1@group.calendar.google.com', ...body }; return antwort(200, g.kalender); }
     if (methode === 'GET' && (m = /^\/calendars\/([^/]+)$/.exec(pfad))) return g.kalender && decodeURIComponent(m[1]) === g.kalender.id ? antwort(200, g.kalender) : antwort(404, { error: { code: 404 } });
     if (methode === 'POST' && pfad === '/channels/stop') { g.gestoppt.push(body); return antwort(204); }
@@ -92,9 +135,16 @@ function fakeGoogle() {
   g.handyNeu = (b) => { const id = 'h' + (++g.zaehler); const ev = buche({ id, status: 'confirmed', ...b }); g.ereignisse.set(id, ev); return id; };
   g.handyAendern = (id, b, updated) => { const ev = g.ereignisse.get(id); Object.assign(ev, b); buche(ev); if (updated) ev.updated = updated; return ev; };
   g.handyLoeschen = (id, updated) => { const ev = g.ereignisse.get(id); ev.status = 'cancelled'; buche(ev); if (updated) ev.updated = updated; };
+  // Weitere Kalender des Kontos (nur lesen): Hilfen für Tests
+  g.kalenderDazu = (id, o = {}) => { g.kalenderListe.push({ id, summary: id, accessRole: 'owner', backgroundColor: '#9fe1e7', ...o }); g.fremd.set(id, new Map()); return id; };
+  g.fremdNeu = (cal, b) => { const id = b.id || 'f' + (++g.zaehler); const ev = buche({ status: 'confirmed', ...b, id }); g.fremd.get(cal).set(id, ev); return id; };
+  g.fremdAendern = (cal, id, b) => { const ev = g.fremd.get(cal).get(id); Object.assign(ev, b); buche(ev); return ev; };
+  g.fremdAbsagen = (cal, id) => { const ev = g.fremd.get(cal).get(id); ev.status = 'cancelled'; buche(ev); };
+  g.fremdAufrufe = () => g.log.filter(l => !/^\/calendars\/cal-1/.test(decodeURIComponent(l.pfad)) && /^\/calendars\/[^/]+\/events/.test(l.pfad));
+  g.fremdSchreibaufrufe = () => g.fremdAufrufe().filter(l => ['POST', 'PATCH', 'PUT', 'DELETE'].includes(l.methode) && !/watch$/.test(l.pfad));
   g.schreibaufrufe = () => g.log.filter(l => /events/.test(l.pfad) && ['POST', 'PATCH', 'PUT', 'DELETE'].includes(l.methode) && !/watch$/.test(l.pfad));
   g.aktive = () => [...g.ereignisse.values()].filter(e => e.status !== 'cancelled');
   return g;
 }
 
-module.exports = { fakeGoogle, SCOPE };
+module.exports = { fakeGoogle, SCOPE, SCOPE_LESEN };

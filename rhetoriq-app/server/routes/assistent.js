@@ -76,7 +76,17 @@ router.post('/befehl', requireAdvisor, befehlLimit, async (req, res) => {
       return res.status(502).json({ error: 'Der Assistent ist gerade nicht erreichbar. Bitte versuche es gleich noch einmal.' });
     }
     const settings = await require('../lib/tagesplanDaten').einstellungen(req.user.id).catch(() => undefined);
-    const aktion = A.pruefeAktion(roh, rows, { settings });
+    let aktion = A.pruefeAktion(roh, rows, { settings });
+    if (aktion.type === 'termine_zeigen') {
+      // Termine und Zeiten stammen aus dem Kalender und werden hier eingesetzt. Sie gingen nie an die KI.
+      try {
+        const plan = await require('../lib/tagesplanDaten').planFuer(req.user.id, aktion.datum);
+        aktion = { type: 'answer', text: require('../lib/assistentPlan').termineAntwort(plan, aktion.modus, { settings }) };
+      } catch (e) {
+        console.error('[assistent] Kalender nicht lesbar:', e.message);
+        aktion = { type: 'answer', text: 'Dein Kalender konnte gerade nicht geladen werden. Bitte versuche es gleich noch einmal.' };
+      }
+    }
     res.json({ aktion, antwort: A.antwortFuer(aktion) });
   } catch (e) {
     console.error('[assistent] Befehl fehlgeschlagen:', e.message);

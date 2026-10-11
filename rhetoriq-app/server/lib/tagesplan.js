@@ -114,7 +114,8 @@ function eintraegeAm(eintraege, datum) {
   return (eintraege || []).filter(e => vorkommen(e, datum)).map(e => ({
     id: e.id, titel: e.titel, typ: e.typ, datum, beginn: e.ganztaegig ? null : e.beginn, ende: e.ganztaegig ? null : e.ende,
     ganztaegig: !!e.ganztaegig, notiz: e.notiz || '', wiederholung: e.wiederholung, serie: e.wiederholung !== 'keine',
-    ...(e.fremd ? { fremd: true, farbe: e.farbe, quelle: e.quelle } : {})
+    ...(e.fremd ? { fremd: true, farbe: e.farbe, quelle: e.quelle } : {}),
+    ...(e.google ? { google: true, frei: !!e.frei, ort: e.ort || '', link: e.link || '', teilnehmer: e.teilnehmer || 0 } : {})
   })).sort((a, b) => (a.beginn == null ? -1 : a.beginn) - (b.beginn == null ? -1 : b.beginn));
 }
 
@@ -204,7 +205,7 @@ function planBauen(aufgaben, opts) {
     return { datum, arbeitstag: false, grund: at.grund, leer: true, start: null, ende: null, items: [], bloecke, mittag: null, fruehStart: false, hinweise: [`${Z.datumLang(datum)} ist ein freier Tag (${at.grund}). Kein Plan.`], ueberfaellig: 0, verspaetet: 0 };
   }
 
-  const belegt = zeitBloecke.map(b => ({ von: b.beginn, bis: b.ende }));
+  const belegt = zeitBloecke.filter(b => !b.frei).map(b => ({ von: b.beginn, bis: b.ende })); // «Verfügbar»-Termine sperren nichts
   const mittag = s.mittag_bis > s.mittag_von ? { von: s.mittag_von, bis: s.mittag_bis } : null;
   if (mittag) belegt.push(mittag);
   for (const f of fixiert) {

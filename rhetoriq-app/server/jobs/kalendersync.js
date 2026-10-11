@@ -1,6 +1,6 @@
 // Kalender-Synchronisation, alle 15 Minuten (abschaltbar mit KALENDERSYNC=aus):
 //  1. fremde Kalender (iCloud, Outlook) neu lesen
-//  2. Google: Kanal vor Ablauf erneuern (Kanäle laufen höchstens 7 Tage), danach Sicherheitsnetz-Abgleich, falls ein Webhook ausgefallen ist
+//  2. Google: Kanäle (RhetorIQ-Kalender und weitere Kalender, nur lesen) vor Ablauf erneuern (Kanäle laufen höchstens 7 Tage), danach Sicherheitsnetz-Abgleich, falls ein Webhook ausgefallen ist
 const KD = require('../lib/kalendersync/daten');
 const F = require('../lib/kalendersync/fremd');
 const google = require('../lib/kalendersync/google');
@@ -17,6 +17,7 @@ async function runKalendersyncJob() {
       const k = await google.kanalSicherstellen(row.advisor_id);
       if (k.erneuert) r.kanaele++;
     } catch (e) { r.fehler++; console.error('[kalendersync] Kanal fehlgeschlagen:', sauber(e.message)); }
+    try { const k2 = await google.quellenKanaele(row.advisor_id); r.kanaele += k2.erneuert; } catch (e) { r.fehler++; console.error('[kalendersync] Kanäle der weiteren Kalender fehlgeschlagen:', sauber(e.message)); }
     const s = await google.synchronisiere(row.advisor_id, { kanal: false });
     if (s.ok) r.google++; else r.fehler++;
   }

@@ -10,6 +10,7 @@ const crypto = require('crypto');
 const secretBox = require('../secretBox');
 const KD = require('./daten');
 const G = require('./googleApi');
+const Q = require('./googleQuellen');
 const D = require('../tagesplanDaten');
 const T = require('../tagesplan');
 const Z = require('../zeit');
@@ -361,18 +362,24 @@ function einplanen(aid, wartezeit, versuch = 0) {
 function abbrechenGeplant(aid) { const a = geplant.get(aid); if (a) { clearTimeout(a.timer); geplant.delete(aid); } }
 
 const webhookGeplant = new Map();
-function lesenEinplanen(aid) {
-  if (webhookGeplant.has(aid)) return;
+// quelleId: Meldung eines weiteren Kalenders (nur lesen). Ohne: Meldung des Kalenders «RhetorIQ».
+function lesenEinplanen(aid, quelleId = null) {
+  const key = quelleId ? `${aid}:${quelleId}` : String(aid);
+  if (webhookGeplant.has(key)) return;
   const t = setTimeout(async () => {
-    webhookGeplant.delete(aid);
+    webhookGeplant.delete(key);
     laufend++;
     try {
-      await seriell(aid, async () => { await lesenAbgleich(aid); await schreibenAbgleich(aid); });
-      await KD.googleSetzen(aid, { letzte_sync: new Date(), fehler: null, fehler_seit: null });
-    } catch (e) { await fehlerSpeichern(aid, e); } finally { laufend--; }
+      if (quelleId) {
+        await seriell(aid, async () => { const r = await Q.alleLesen(aid, { nurId: quelleId }); if (r.fehler) throw new G.GoogleFehler('Ein weiterer Kalender konnte nicht gelesen werden.', { code: 'quelle' }); });
+      } else {
+        await seriell(aid, async () => { await lesenAbgleich(aid); await schreibenAbgleich(aid); });
+        await KD.googleSetzen(aid, { letzte_sync: new Date(), fehler: null, fehler_seit: null });
+      }
+    } catch (e) { if (!quelleId) await fehlerSpeichern(aid, e); } finally { laufend--; }
   }, zeitgeber.webhookEntprellung);
   if (t.unref) t.unref();
-  webhookGeplant.set(aid, t);
+  webhookGeplant.set(key, t);
 }
 // Wartet, bis keine geplante oder laufende Arbeit mehr aussteht (für Tests und sauberes Beenden)
 async function _ruhe() {
@@ -394,25 +401,60 @@ async function synchronisiere(aid, { voll = false, kanal = true } = {}) {
     await seriell(aid, async () => {
       r = await lesenAbgleich(aid, { voll });
       await schreibenAbgleich(aid);
+      const q = await quellenLesen(aid, { voll });
+      r.geaendert += q.geaendert;
     });
     await KD.googleSetzen(aid, { letzte_sync: new Date(), fehler: null, fehler_seit: null });
   } catch (e) {
     await fehlerSpeichern(aid, e);
     return { ok: false, fehler: G.sauber(e.message), code: e.code || '', geaendert: r.geaendert };
   }
-  if (kanal) { try { await kanalSicherstellen(aid); } catch (e) { /* ohne Kanal sorgt der Takt von 15 Minuten für den Abgleich */ } }
+  if (kanal) {
+    try { await kanalSicherstellen(aid); } catch (e) { /* ohne Kanal sorgt der Takt von 15 Minuten für den Abgleich */ }
+    try { await Q.alleKanaele(aid); } catch (e) { /* dito */ }
+  }
   return { ok: true, geaendert: r.geaendert };
 }
+
+// Weitere Google-Kalender (nur lesen): Auswahl abgleichen, wenn sie noch fehlt oder bei einem vollen Lauf, dann lesen. Fehler hier stoppen den übrigen Abgleich nie.
+async function quellenLesen(aid, { voll = false } = {}) {
+  try {
+    const row = await KD.googleZeile(aid);
+    if (!row || !Q.lesenErlaubt(row)) return { geaendert: 0 };
+    if (voll || !(await KD.quellenAlle(aid)).length) await Q.listeAbgleichen(aid);
+    const r = await Q.alleLesen(aid, { voll });
+    return { geaendert: r.geaendert };
+  } catch (e) {
+    console.error('[kalender-google] weitere Kalender fehlgeschlagen:', G.sauber(e && e.message));
+    return { geaendert: 0 };
+  }
+}
+// Auswahl ändern: Kalender an- oder abwählen. Beim Anwählen wird er sofort gelesen und beobachtet, beim Abwählen sind seine Termine weg.
+async function quelleUmschalten(aid, id, aktiv) {
+  return seriell(aid, async () => {
+    const q = await KD.quelleHole(aid, id);
+    if (!q) return null;
+    if (!aktiv) { await Q.abschalten(aid, q); return KD.quelleHole(aid, id); }
+    await KD.quelleSetzen(q.id, { aktiv: true });
+    const r = await Q.alleLesen(aid, { voll: true, nurId: q.id });
+    try { await Q.kanalSicherstellen(aid, await KD.quelleHole(aid, id)); } catch (e) { /* der Takt von 15 Minuten sorgt sonst für den Abgleich */ }
+    return { ...(await KD.quelleHole(aid, id)), geaendert: r.geaendert };
+  });
+}
+async function quellenKanaele(aid) { return Q.alleKanaele(aid); }
 
 // ── Verbinden und Trennen ──
 async function verbindungHerstellen(aid, code, verifier) {
   if (!secretBox.available()) { const e = new Error('Die Verschlüsselung ist nicht eingerichtet. Es wurde nichts gespeichert.'); e.code = 'NO_SECRET'; throw e; }
   const tok = await G.codeTauschen(code, verifier);
   if (!tok.refresh_token) throw new G.GoogleFehler('Google hat keinen Dauerzugriff erteilt. Bitte verbinde noch einmal und bestätige den Zugriff.', { code: 'kein_refresh' });
-  if (!String(tok.scope || '').split(/\s+/).includes(G.SCOPE)) throw new G.GoogleFehler('Google hat den Zugriff auf den Kalender nicht erteilt.', { code: 'scope' });
+  const scopes = G.scopeListe(tok.scope);
+  if (!scopes.includes(G.SCOPE)) throw new G.GoogleFehler('Google hat den Zugriff auf den Kalender nicht erteilt.', { code: 'scope' });
   const alt = await KD.googleZeile(aid);
-  await KD.googleVerbinden(aid, secretBox.encrypt(tok.refresh_token), alt ? alt.calendar_id : null);
+  if (alt) { try { await Q.kanaeleBeenden(aid); } catch { /* egal */ } } // alte Kanäle der weiteren Kalender beenden, neue entstehen beim nächsten Lauf
+  await KD.googleVerbinden(aid, secretBox.encrypt(tok.refresh_token), alt ? alt.calendar_id : null, scopes.join(' '));
   G.tokenVergessen(aid);
+  if (!scopes.includes(G.SCOPE_LESEN)) await Q.ohneLesenBereinigen(aid); // ohne Lesezugriff bleiben keine Termine aus weiteren Kalendern zurück
   let calId = alt && alt.calendar_id;
   if (calId) { const p = await G.kalenderPruefen(aid, calId); if (p.status !== 200) calId = null; }
   if (!calId) {
@@ -431,6 +473,7 @@ async function trennen(aid) {
   let widerrufen = false;
   if (row) {
     if (row.channel_id) { try { await G.kanalStoppen(aid, { id: row.channel_id, resourceId: row.channel_resource }); } catch { /* egal */ } }
+    try { await Q.kanaeleBeenden(aid); } catch { /* egal */ }
     try { widerrufen = await G.widerrufen(secretBox.decrypt(row.refresh_enc)); } catch { widerrufen = false; }
   }
   G.tokenVergessen(aid);
@@ -441,7 +484,8 @@ async function trennen(aid) {
 // ── Webhook: Prüfung von Kanal-ID und Kanal-Token ──
 async function webhookPruefen(kanalId, token) {
   const row = await KD.kanalZuId(kanalId);
-  if (!row || typeof token !== 'string' || !token || !row.channel_token_hash) return null;
+  if (!row) { const q = await Q.webhookPruefen(kanalId, token); return q ? { advisor_id: q.advisor_id, quelleId: q.id } : null; }
+  if (typeof token !== 'string' || !token || !row.channel_token_hash) return null;
   const a = Buffer.from(sha(token)), b = Buffer.from(row.channel_token_hash);
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
   return row;
@@ -452,6 +496,6 @@ module.exports = {
   name: 'google',
   async push(ereignis) { for (const aid of await ziele(ereignis)) einplanen(aid, zeitgeber.entprellung); },
   async delete(ereignis) { for (const aid of await ziele(ereignis)) einplanen(aid, zeitgeber.entprellung); },
-  synchronisiere, schreibenAbgleich, lesenAbgleich, kanalSicherstellen, verbindungHerstellen, trennen, webhookPruefen, lesenEinplanen,
+  synchronisiere, quellenLesen, quelleUmschalten, quellenKanaele, schreibenAbgleich, lesenAbgleich, kanalSicherstellen, verbindungHerstellen, trennen, webhookPruefen, lesenEinplanen,
   colorId, eventId, sollzustand, uidEintrag, uidAufgabe, statistik, _setZeitgeber, _ruhe, einplanen
 };

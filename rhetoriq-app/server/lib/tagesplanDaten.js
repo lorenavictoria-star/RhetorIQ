@@ -215,8 +215,27 @@ async function fremdFuerTag(aid, datum) {
   return out;
 }
 
+// Termine aus weiteren Google-Kalendern (nur lesen) als gesperrte Blöcke. «Verfügbar»-Termine werden angezeigt, sperren aber keine Zeit.
+// Mehrtägige Termine erscheinen an jedem Tag: Zeitblöcke laufen am ersten Tag bis Mitternacht, dazwischen ganztägig, am letzten Tag ab Mitternacht.
+async function googleFuerTag(aid, datum) {
+  await ensureSchema();
+  const out = [];
+  for (const t of await KS.termineFuerTag(aid, datum)) {
+    let beginn = null, ende = null;
+    if (!t.ganztaegig) {
+      beginn = t.datum_von === datum ? t.beginn_min : 0;
+      ende = t.datum_bis === datum ? t.ende_min : 1440;
+    }
+    out.push({ id: `g${t.id}`, titel: t.titel, typ: 'fremd', datum, beginn, ende, ganztaegig: !!t.ganztaegig,
+      wiederholung: 'keine', wochentage: [], bis: null, notiz: '', fremd: true, google: true, frei: !!t.frei, farbe: t.q_farbe, quelle: t.q_name,
+      ort: t.ort || '', link: t.link || '', teilnehmer: t.teilnehmer || 0 });
+  }
+  return out;
+}
+
 async function planFuer(aid, datum, jetzt = new Date()) {
-  const [s, ei, pos, fremd, versteckt] = await Promise.all([einstellungen(aid), eintraege(aid), positionen(aid), fremdFuerTag(aid, datum), KS.ausgeblendetAm(aid, datum)]);
+  const [s, ei, pos, fremd0, google, versteckt] = await Promise.all([einstellungen(aid), eintraege(aid), positionen(aid), fremdFuerTag(aid, datum), googleFuerTag(aid, datum), KS.ausgeblendetAm(aid, datum)]);
+  const fremd = fremd0.concat(google);
   const auf = (await aufgaben(aid, s)).filter(a => !versteckt.has(a.key));
   const plan = T.planBauen(auf, { datum, eintraege: ei.concat(fremd), settings: s, jetzt, positionen: pos });
   plan.ausgeblendet = versteckt.size;
@@ -240,5 +259,5 @@ async function icsFuerTag(aid, datum, { abo = false, jetzt = new Date() } = {}) 
   return { plan, ics: baueIcs(planEreignisse(plan, { termine: abo, jetzt }), { jetzt, abo }) };
 }
 
-module.exports = { ensureSchema, einstellungen, einstellungenSpeichern, eintraege, eintragAnlegen, eintragAendern, eintragLoeschen, eintragHole, eintragAusnahme, fremdFuerTag, positionen, positionSetzen, positionLoeschen,
+module.exports = { ensureSchema, einstellungen, einstellungenSpeichern, eintraege, eintragAnlegen, eintragAendern, eintragLoeschen, eintragHole, eintragAusnahme, fremdFuerTag, googleFuerTag, positionen, positionSetzen, positionLoeschen,
   tokenErzeugen, tokenWiderrufen, tokenStatus, advisorZuToken, hashVon, dringlichSetzen, aufgaben, planFuer, planEreignisse, icsFuerTag, appUrl };

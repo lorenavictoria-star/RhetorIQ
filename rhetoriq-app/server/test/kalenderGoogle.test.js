@@ -100,7 +100,8 @@ test('Autorisierungsadresse: Scope, offline, Zustimmung, state, PKCE, genaue Wei
   const r = await call('POST', '/api/kalender/google/verbinden', {});
   const u = new URL(r.body.url);
   assert.equal(u.origin + u.pathname, 'https://accounts.google.com/o/oauth2/v2/auth');
-  assert.equal(u.searchParams.get('scope'), 'https://www.googleapis.com/auth/calendar.app.created');
+  assert.equal(u.searchParams.get('scope'), 'https://www.googleapis.com/auth/calendar.app.created https://www.googleapis.com/auth/calendar.readonly');
+  assert.equal(u.searchParams.get('include_granted_scopes'), 'true');
   assert.equal(u.searchParams.get('access_type'), 'offline');
   assert.equal(u.searchParams.get('prompt'), 'consent');
   assert.equal(u.searchParams.get('response_type'), 'code');
