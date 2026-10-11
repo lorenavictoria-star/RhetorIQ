@@ -169,6 +169,9 @@ dialog.rqd{max-height:calc(100dvh - 32px);overflow:auto}
 .zst .s strong{background:linear-gradient(100deg,#f4f4f4 0%,#c4c8ce 50%,#8d9299 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 #zahlen .zst p{margin:0;text-align:left;-webkit-hyphens:manual;hyphens:manual;font-size:clamp(16px,2vw,20px);line-height:1.4;color:var(--cream);max-width:560px}
 .zst small{display:block;margin-top:10px;font-size:12px;line-height:1.4;color:#6c6a63;max-width:560px}
+.zrow{display:flex;gap:clamp(24px,5vw,64px);flex-wrap:wrap;margin:2px 0 12px}
+.zrow .zb strong{font-size:clamp(56px,10vw,112px);margin:0 0 6px}
+.zrow .zl{display:block;font:500 11px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
 .zst>div{animation:zfd .4s ease}
 @keyframes zfd{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .znv{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
@@ -179,7 +182,7 @@ dialog.rqd{max-height:calc(100dvh - 32px);overflow:auto}
 @media (max-width:640px){
 .ztk{padding:11px 0;margin-top:22px}.ztk span{font-size:12px;margin-right:28px}.ztk b{font-size:24px}
 .zsr{font-size:10px}.zmid{font-size:16px;margin-top:24px}
-.zst{min-height:200px}.zst strong{font-size:68px}#zahlen .zst p{font-size:14px}.zst small{font-size:10px}
+.zst{min-height:200px}.zst strong{font-size:68px}.zrow{gap:22px;flex-wrap:nowrap}.zrow .zb strong{font-size:46px}.zrow .zl{font-size:9px;letter-spacing:.1em}#zahlen .zst p{font-size:14px}.zst small{font-size:10px}
 .znv button{font-size:12px;padding:6px 16px}.zdt i{width:16px}}
 }
 .navr{display:flex;align-items:center;gap:20px}.lg{font:400 17px var(--sans);color:var(--cream);text-decoration:none;border:1px solid #6b6552;border-radius:99px;padding:11px 28px;opacity:.9;transition:border-color .2s,opacity .2s}.lg:hover{opacity:1;border-color:var(--gold)}
@@ -388,7 +391,7 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
 
     (function(){
     var T=[["77%","der Berufstätigen nutzen KI im Job (Schweiz)","KPMG und Universität Melbourne, 48’000 Befragte in 47 Ländern, 2025"],["47%","der Schweizer KMU nutzen KI für Korrespondenz","AXA KMU-Arbeitsmarktstudie, November 2025"],["117","E-Mails pro Person und Tag","Microsoft Work Trend Index, 31’000 Wissensarbeitende in 31 Märkten, darunter die Schweiz, 2025"]];
-    var S=[["Vertrauen","31%","g","vertrauen weniger, sobald sie KI-Texte bemerken.","Klaviyo und Datalily, 8’000 Konsumenten weltweit, Dezember 2025"],
+    var S=[["Vertrauen","6 von 10","g","weniger Vertrauen bei KI-Inhalten","EY, 1’000 Konsumenten in der Schweiz, Dezember 2025 (61%). Klaviyo und Datalily, 8’000 Konsumenten weltweit, Dezember 2025 (31%)",["6 von 10","in der Schweiz"],["31%","weltweit"]],
     ["Tempo","−40%","s","Zeit pro Schreibaufgabe mit KI.","Noy und Zhang, Science, 2023"],
     ["Qualität","+18%","s","höhere Qualität der Ergebnisse.","Noy und Zhang, Science, 2023"],
     ["Zeitverlust","11,5 Tage","g","pro Jahr gehen durch schlechte Kommunikation verloren.","Grammarly und Statista, 1’100 Beschäftigte in Deutschland, 2024"]];
@@ -397,7 +400,7 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
     function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
     T.concat(T).forEach(function(t){var s=el("span");s.appendChild(el("b",null,t[0]));s.appendChild(document.createTextNode(t[1]));tk.appendChild(s)});
     T.forEach(function(t){sr.appendChild(el("li",null,t[2]))});
-    function show(i){k=i;st.textContent="";var d=el("div",S[i][2]);d.appendChild(el("span","zt",S[i][0]));d.appendChild(el("strong",null,S[i][1]));d.appendChild(el("p",null,S[i][3]));d.appendChild(el("small",null,S[i][4]));st.appendChild(d);[].forEach.call(dt.children,function(b,j){b.className=j===i?"on":""})}
+    function show(i){k=i;st.textContent="";var d=el("div",S[i][2]);d.appendChild(el("span","zt",S[i][0]));if(S[i][5]){var r=el("div","zrow");S[i].slice(5).forEach(function(n){var b=el("div","zb");b.appendChild(el("strong",null,n[0]));b.appendChild(el("span","zl",n[1]));r.appendChild(b)});d.appendChild(r)}else d.appendChild(el("strong",null,S[i][1]));d.appendChild(el("p",null,S[i][3]));d.appendChild(el("small",null,S[i][4]));st.appendChild(d);[].forEach.call(dt.children,function(b,j){b.className=j===i?"on":""})}
     S.forEach(function(s,i){var b=el("i");b.onclick=function(){show(i)};dt.appendChild(b)});
     document.getElementById("znx").onclick=function(){show((k+1)%S.length)};
     document.getElementById("zpv").onclick=function(){show((k+S.length-1)%S.length)};
