@@ -131,7 +131,7 @@ dialog.rqd::backdrop{background:rgba(0,0,0,.72)}
 @media (max-width:820px){.usp{grid-template-columns:1fr}.usp>div+div{padding:24px 0 0;border-left:0;border-top:1px solid var(--line);margin-top:24px}}
 .who{display:grid;grid-template-columns:minmax(0,300px) 1fr;gap:clamp(24px,5vw,64px);align-items:center}.foto{width:100%;height:auto;aspect-ratio:941/1672;object-fit:cover;border-radius:150px 150px 14px 14px;display:block;filter:grayscale(.15)}
 @media (max-width:700px){.who{grid-template-columns:1fr}.foto{width:min(100%,260px)}}
-.focus{margin-top:36px;min-height:150px;border-top:1px solid var(--line);padding-top:30px}.focus strong{display:block;font:400 clamp(44px,7vw,72px)/1 var(--serif);margin-bottom:10px}.focus span{display:block;font-size:clamp(16px,1.6vw,19px);color:var(--cream);max-width:520px}.focus small{display:block;margin-top:10px;font-size:12px;color:#6c6a63}.fdots{display:flex;gap:8px;margin-top:20px}.fdots button{width:36px;height:3px;border:0;border-radius:2px;background:#2c2c29;cursor:pointer;padding:0}.fdots button[aria-pressed="true"]{background:var(--gold)}
+.focus{margin-top:36px;min-height:150px;border-top:1px solid var(--line);padding-top:30px}.focus strong,.focus strong.iq,.focus strong.eq{display:block;font:400 clamp(56px,10vw,104px)/1 var(--serif);margin-bottom:14px;color:var(--gold);background:linear-gradient(100deg,#e8cf9a 0%,#d9b26a 45%,#b8903f 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}.focus span{display:block;font-size:clamp(16px,1.6vw,19px);color:var(--cream);max-width:520px}.focus small{display:block;margin-top:10px;font-size:12px;color:#6c6a63}.fdots{display:flex;gap:8px;margin-top:20px}.fdots button{width:36px;height:3px;border:0;border-radius:2px;background:#2c2c29;cursor:pointer;padding:0}.fdots button[aria-pressed="true"]{background:var(--gold)}
 @media (prefers-reduced-motion:no-preference){.focus.sw strong,.focus.sw span,.focus.sw small{animation:fz .35s ease}}@keyframes fz{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .navr{display:flex;align-items:center;gap:20px}.lg{font:400 14px var(--sans);color:var(--cream);text-decoration:none;opacity:.8}.lg:hover{opacity:1}
 .plb{position:absolute;transform:translate(-50%,-50%);font:300 14px var(--sans);letter-spacing:.01em;color:var(--cream);white-space:nowrap}
@@ -172,7 +172,7 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
 </head>
 <body>
 <div class="wrap">
-  <nav><div class="logo">Rhetor<span class="iq">IQ</span><small class="sub">&ndash; Communication Intelligence</small></div><span class="navr"><a class="lg" href="/login">Login</a><a class="btn ghost" href="#buchen">Gespräch anfragen</a></span></nav>
+  <nav><div class="logo">Rhetor<span class="iq">IQ</span><small class="sub">&ndash; Communication Intelligence</small></div><span class="navr"><a class="lg" href="/login">Login</a></span></nav>
 
   <header class="hero">
     <div>
@@ -243,10 +243,6 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
       <div class="pr"><h3>Business</h3><b>CHF 1’490<small> / Monat</small></b><p class="sub">400 Texte pro Monat, bis 15 Nutzer</p><ul><li>Alles aus Team</li><li>15 Überarbeitungen durch Lorena inklusive</li><li>Quartalsreview mit Lorena</li><li>Antwort innert 3 Stunden, Wochenende gegen Zuschlag</li></ul></div>
       <div class="pr"><h3>Enterprise</h3><b>ab CHF 2’490<small> / Monat</small></b><p class="sub">auf Anfrage, unbegrenzte Nutzung</p><ul><li>Alles aus Business</li><li>Erreichbarkeit auch in den Ferien</li><li>Bis 5 h persönliche Bearbeitung inklusive</li><li>Antwort innert 3 Stunden an 365 Tagen</li></ul></div>
     </div>
-    <p class="vert" style="margin-top:28px"><b>Einstieg: Stimm-Audit, CHF 950 einmalig.</b> Sie geben mir 10 Ihrer Texte und Ihre Webseite, wir sprechen eine Stunde, und Sie erhalten Ihr Stimmprofil, einen Ausgangswert «Klingt wie ich» (Übereinstimmung mit Ihrer Ziel-Stimme in Prozent) und 30 Tage Zugang mit 40 Texten. Danach bleiben Sie bei Stimme oder wechseln auf Team oder Business, wo der Betrag auf den Workshop angerechnet wird (Team CHF 3’900, Business CHF 5’000).</p>
-    <p class="vert" style="margin-top:14px">10 % Rabatt bei jährlicher Zahlung auf allen Paketen. Zusatzpaket «+20 Texte» CHF 49. Weitere Überarbeitungen CHF 90 pro 30 Minuten (CHF 180 pro Stunde werktags, CHF 270 abends und am Wochenende).</p>
-    <p class="vert" style="margin-top:14px">Branchenpakete gegen Aufpreis: Hotellerie CHF 190 pro Monat, Capital Markets CHF 490 pro Monat, einmalige Einrichtung CHF 1’500.</p>
-    <p class="vert" style="margin-top:14px">10er-Karte Überarbeitungen CHF 690 (10 Überarbeitungen à 30 Minuten, verfällt nicht).</p>
   </section>
 
   <section id="schnelltest">
