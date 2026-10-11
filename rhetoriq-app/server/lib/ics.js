@@ -31,8 +31,8 @@ function utcStempel(d) { return d.toISOString().replace(/[-:]/g, '').replace(/\.
 function lokal(datum, min) { return datum.replace(/-/g, '') + 'T' + Z.p2(Math.floor(min / 60)) + Z.p2(min % 60) + '00'; }
 
 // ereignisse: [{ uid, datum, beginn (Min), ende (Min), ganztaegig, titel, beschreibung, url, sequenz }]
-function baueIcs(ereignisse, { name = 'RhetorIQ Tagesplan', jetzt = new Date(), abo = false } = {}) {
-  const z = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//RhetorIQ//Tagesplan//DE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+function baueIcs(ereignisse, { name = 'RhetorIQ Tagesplan', jetzt = new Date(), abo = false, methode = 'PUBLISH' } = {}) {
+  const z = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//RhetorIQ//Tagesplan//DE', 'CALSCALE:GREGORIAN', 'METHOD:' + (methode === 'CANCEL' ? 'CANCEL' : 'PUBLISH'),
     'X-WR-CALNAME:' + maskiere(name), 'X-WR-TIMEZONE:Europe/Zurich'];
   if (abo) z.push('REFRESH-INTERVAL;VALUE=DURATION:PT15M', 'X-PUBLISHED-TTL:PT15M');
   z.push(...VTIMEZONE);
@@ -40,6 +40,7 @@ function baueIcs(ereignisse, { name = 'RhetorIQ Tagesplan', jetzt = new Date(), 
   for (const e of ereignisse || []) {
     z.push('BEGIN:VEVENT', 'UID:' + String(e.uid).replace(/[^A-Za-z0-9@._-]/g, ''), 'DTSTAMP:' + stamp, 'LAST-MODIFIED:' + stamp);
     if (e.sequenz != null) z.push('SEQUENCE:' + Math.max(0, Math.floor(e.sequenz)));
+    if (e.status === 'CANCELLED') z.push('STATUS:CANCELLED');
     if (e.ganztaegig) {
       z.push('DTSTART;VALUE=DATE:' + e.datum.replace(/-/g, ''), 'DTEND;VALUE=DATE:' + Z.addTage(e.datumBis || e.datum, 1).replace(/-/g, ''), 'TRANSP:TRANSPARENT');
     } else {
@@ -47,6 +48,7 @@ function baueIcs(ereignisse, { name = 'RhetorIQ Tagesplan', jetzt = new Date(), 
     }
     z.push('SUMMARY:' + maskiere(e.titel));
     if (e.beschreibung) z.push('DESCRIPTION:' + maskiere(e.beschreibung));
+    if (e.ort) z.push('LOCATION:' + maskiere(e.ort));
     if (e.url) z.push('URL:' + String(e.url).replace(/[\r\n\s]/g, ''));
     z.push('END:VEVENT');
   }

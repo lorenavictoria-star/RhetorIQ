@@ -102,6 +102,28 @@ dialog.rqd::backdrop{background:rgba(0,0,0,.72)}
 .rqd .act{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .rqd .msg{font-size:13px;color:var(--mute);margin:0}
 .rqd .x{position:absolute;top:14px;right:18px;background:none;border:0;color:var(--mute);font:300 26px/1 var(--sans);cursor:pointer}
+dialog.rqd{max-height:calc(100dvh - 32px);overflow:auto}
+.rqd [hidden]{display:none!important}
+.rqd .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+.rqd .lbl{margin:0 0 8px;font-size:13px;letter-spacing:.04em;color:var(--mute)}
+.rqd .days{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;margin:0 0 10px}
+.rqd .day{flex:0 0 auto;min-width:64px;font:300 15px/1.3 var(--sans);color:var(--cream);background:transparent;border:1px solid #2c2c29;border-radius:10px;padding:10px 12px;cursor:pointer;text-align:center}
+.rqd .day small{display:block;color:var(--mute);font-size:12px}
+.rqd .day[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.rqd .day[aria-pressed="true"] small{color:var(--gold)}
+.rqd .slots{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));margin-bottom:12px}
+.rqd .slot{text-align:center;padding:12px 8px}
+.rqd #rqpers{display:grid;gap:18px}
+.rqd .chk{display:flex;gap:10px;align-items:flex-start;font-size:13px;letter-spacing:0;line-height:1.5}
+.rqd .chk input{width:20px;height:20px;flex:none;margin-top:1px;padding:0;accent-color:var(--gold)}
+.rqd .chk a{color:var(--cream)}
+.rqd .alt{margin:0}
+.rqd .lnk{background:none;border:0;padding:0;color:var(--mute);font:300 14px var(--sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.rqd .lnk:hover{color:var(--cream)}
+.rqd .done p,.rqd #rqmg p{margin:0 0 12px}
+.rqd .big{font:400 22px/1.3 var(--serif)}
+.rqd button:focus-visible,.rqd a:focus-visible,.rqd input:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.rqd .btn[disabled]{opacity:.6;cursor:default}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
 .card h3{font:400 26px var(--serif);margin:0 0 4px}
 .card .sub{font-size:13px;color:var(--mute);margin:0 0 18px}
@@ -269,7 +291,7 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
   m.textContent="";o.textContent="";var h=document.createElement("h3");h.textContent="Ihre drei Befunde";o.appendChild(h);
   var ol=document.createElement("ol");x.d.ergebnis.befunde.forEach(function(s){var li=document.createElement("li");li.textContent=s;ol.appendChild(li)});o.appendChild(ol);
   var p=document.createElement("p");p.className="nx";p.textContent=x.d.ergebnis.naechsterSchritt;o.appendChild(p);
-  var a=document.createElement("button");a.type="button";a.className="btn";a.textContent="Gespräch anfragen";a.addEventListener("click",function(){var g=document.getElementById("go");if(g)g.click()});o.appendChild(a);o.hidden=false;f.reset()})
+  var a=document.createElement("button");a.type="button";a.className="btn";a.textContent=window.rqGespraechText||"Gespräch anfragen";a.addEventListener("click",function(){var g=document.getElementById("go");if(g)g.click()});o.appendChild(a);o.hidden=false;f.reset()})
   .catch(function(){m.textContent="Keine Verbindung. Bitte versuchen Sie es erneut."})
   .then(function(){busy=false;b.disabled=false})})})();
   </script>
@@ -292,13 +314,17 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
         <p class="p">Ich höre zu und zeige, wie einer Ihrer Texte mit Feinschliff klingt. Der Einstieg ist das Stimm-Audit, die Details finden Sie bei den Preisen. Das Gespräch selbst ist kostenlos und unverbindlich.</p>
       </div>
       <div class="card">
-        <h3>Gespräch anfragen</h3>
+        <h3 id="rqct">Gespräch anfragen</h3>
         <button class="btn" id="go" type="button">Gespräch anfragen</button>
       </div>
     </div>
   </section>
 
-  <dialog class="rqd" id="rqd" aria-labelledby="rqdt"><button class="x" type="button" id="rqx" aria-label="Schliessen">&times;</button><h3 id="rqdt">Gespräch anfragen</h3><p class="sub">Zwanzig Minuten, kostenlos und unverbindlich.</p><form id="rqf" novalidate><label>Name<input id="fn" type="text" autocomplete="name" required></label><label>E-Mail<input id="fe" type="email" autocomplete="email" required></label><label>Ihr Anliegen<textarea id="ft" rows="4" placeholder="Worum geht es?"></textarea></label><input type="text" id="fw" name="website2" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"><div class="act"><button class="btn" type="submit">Anfrage senden</button></div><p class="msg" id="rqm" aria-live="polite"></p></form></dialog>
+  <dialog class="rqd" id="rqd" aria-labelledby="rqdt"><button class="x" type="button" id="rqx" aria-label="Schliessen">&times;</button><h3 id="rqdt">Gespräch anfragen</h3><p class="sub" id="rqsub">Zwanzig Minuten, kostenlos und unverbindlich.</p><p class="vh" id="rqlive" role="status" aria-live="polite"></p>
+  <div id="rqb" hidden><p class="lbl" id="rqdl">Tag wählen</p><div class="days" id="rqdays" role="group" aria-labelledby="rqdl"></div><p class="lbl" id="rqtl">Uhrzeit wählen (Schweizer Zeit)</p><div class="slots" id="rqtimes" role="group" aria-labelledby="rqtl"></div><p class="msg" id="rqsel"></p>
+  <form id="rqbf" novalidate><div id="rqpers"><label>Name<input id="bn" type="text" autocomplete="name" maxlength="80" required></label><label>E-Mail<input id="be" type="email" autocomplete="email" maxlength="120" required></label><label>Ihr Anliegen (freiwillig)<textarea id="bt" rows="3" maxlength="1500" placeholder="Worum geht es?"></textarea></label><label class="chk"><input id="bc" type="checkbox" required><span>Ich habe die <a href="/?p=datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und bin einverstanden, dass meine Angaben für die Terminbuchung verwendet werden.</span></label></div><input type="text" id="bw" name="website2" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"><p class="msg" id="rqbe"></p><div class="act"><button class="btn" type="submit" id="bsend">Termin buchen</button></div><p class="alt"><button class="lnk" type="button" id="rqtoform">Lieber eine Nachricht senden</button></p></form></div>
+  <form id="rqf" novalidate><label>Name<input id="fn" type="text" autocomplete="name" required></label><label>E-Mail<input id="fe" type="email" autocomplete="email" required></label><label>Ihr Anliegen<textarea id="ft" rows="4" placeholder="Worum geht es?"></textarea></label><input type="text" id="fw" name="website2" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"><div class="act"><button class="btn" type="submit">Anfrage senden</button></div><p class="alt" id="rqback" hidden><button class="lnk" type="button" id="rqtobook">Lieber einen Termin wählen</button></p><p class="msg" id="rqm" aria-live="polite"></p></form>
+  <div id="rqmg" hidden></div><div class="done" id="rqdone" hidden></div></dialog>
 <footer><span>Rhetor<span class="iq">IQ</span> von Lorena Lienhard</span><a href="/?p=datenschutz" style="color:inherit;text-decoration:underline;text-underline-offset:3px">Datenschutz</a></footer>
 </div>
 
@@ -342,17 +368,82 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
     }
   })();
 
-  (function(){var d=document.getElementById("rqd"),f=document.getElementById("rqf"),m=document.getElementById("rqm");function op(e){if(e)e.preventDefault();m.textContent="";if(d.showModal)d.showModal();else d.setAttribute("open","")}
+  (function(){var d=document.getElementById("rqd"),f=document.getElementById("rqf"),m=document.getElementById("rqm");
+var $=function(i){return document.getElementById(i)};
+var H=$("rqdt"),SUB=$("rqsub"),PB=$("rqb"),PM=$("rqmg"),PD=$("rqdone"),LIVE=$("rqlive"),BF=$("rqbf"),BACK=$("rqback");
+var SUBTXT="Zwanzig Minuten, kostenlos und unverbindlich.";
+var book=null,bookAt=0,day=0,pick=null,token=null,sendingB=false,t0=Date.now(),sending=false;
+function say(t){LIVE.textContent=t||""}
+function labels(on){window.rqGespraechText=on?"Gespräch buchen":"Gespräch anfragen";
+Array.prototype.forEach.call(document.querySelectorAll('.cta2 a[href="#buchen"],#go,#rqct'),function(e){e.textContent=window.rqGespraechText})}
+function loadSlots(){return fetch("/api/buchung/slots",{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){
+var ok=j&&j.aktiv&&j.tage&&j.tage.length&&j.ticket;book=ok?j:null;bookAt=Date.now();labels(!!ok);return book}).catch(function(){book=null;bookAt=Date.now();labels(false);return null})}
+function pane(w){PB.hidden=w!=="buchen";f.hidden=w!=="form";PM.hidden=w!=="verwalten";PD.hidden=w!=="fertig";
+H.textContent=w==="buchen"?"Gespräch buchen":w==="form"?"Gespräch anfragen":w==="verwalten"?"Ihr Gespräch":H.textContent;
+SUB.hidden=w==="fertig"||w==="verwalten";SUB.textContent=w==="buchen"?SUBTXT+" Alle Zeiten in Schweizer Zeit.":SUBTXT;
+if(w==="lade"){H.textContent=window.rqGespraechText||"Gespräch anfragen";SUB.hidden=false;SUB.textContent="Die freien Zeiten werden geladen …"}}
+function showForm(){pane("form");m.textContent="";say("");BACK.hidden=!book;var fn=$("fn");if(fn)fn.focus()}
+function showBook(){pane("buchen");say("");day=0;pick=null;$("rqpers").hidden=!!token;$("rqtoform").parentNode.hidden=!!token;$("bsend").textContent=token?"Termin verschieben":"Termin buchen";
+if(token){H.textContent="Termin verschieben";SUB.textContent="Wählen Sie die neue Zeit. Alle Zeiten in Schweizer Zeit."}
+renderDays();renderTimes();var first=$("rqdays").querySelector("button");if(first)first.focus()}
+function mk(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function renderDays(){var box=$("rqdays");box.textContent="";book.tage.forEach(function(t,i){var b=mk("button","day");b.type="button";b.setAttribute("aria-pressed",i===day?"true":"false");
+b.setAttribute("aria-label",t.label+", "+t.zeiten.length+(t.zeiten.length===1?" freie Zeit":" freie Zeiten"));
+b.appendChild(mk("span",null,t.kurz.split(" ")[0]));b.appendChild(mk("small",null,t.kurz.split(" ")[1]));
+b.addEventListener("click",function(){day=i;pick=null;renderDays();renderTimes();var again=$("rqdays").querySelectorAll("button")[i];if(again)again.focus();say(t.label+": "+t.zeiten.length+(t.zeiten.length===1?" freie Zeit.":" freie Zeiten."))});box.appendChild(b)})}
+function renderTimes(){var box=$("rqtimes"),t=book.tage[day];box.textContent="";box.setAttribute("aria-label","Uhrzeiten am "+t.label+", Schweizer Zeit");
+t.zeiten.forEach(function(z){var b=mk("button","slot",z.zeit);b.type="button";b.setAttribute("aria-pressed",pick&&pick.start===z.start?"true":"false");b.setAttribute("aria-label",z.zeit+" Uhr");
+b.addEventListener("click",function(){pick=z;Array.prototype.forEach.call(box.children,function(c){c.setAttribute("aria-pressed",c===b?"true":"false")});
+$("rqsel").textContent="Ihr Termin: "+t.label+", "+z.zeit+" Uhr (Schweizer Zeit)";say("Gewählt: "+t.label+", "+z.zeit+" Uhr, Schweizer Zeit.")});box.appendChild(b)});
+$("rqsel").textContent=pick?$("rqsel").textContent:"Bitte wählen Sie eine Uhrzeit."}
+function fertig(titel,zeilen,neu){pane("fertig");H.textContent=titel;PD.textContent="";zeilen.forEach(function(z,i){PD.appendChild(mk("p",i===0?"big":"",z))});
+var row=mk("div","act");if(neu){var n=mk("button","btn","Neuen Termin wählen");n.type="button";n.addEventListener("click",function(){token=null;(book?Promise.resolve(book):loadSlots()).then(function(b){b?showBook():showForm()})});row.appendChild(n)}
+var c=mk("button","btn ghost","Schliessen");c.type="button";c.addEventListener("click",function(){d.close()});row.appendChild(c);PD.appendChild(row);H.setAttribute("tabindex","-1");H.focus()}
+function wann(j){return j.label+", "+j.zeit+" bis "+j.ende+" Uhr (Schweizer Zeit)"}
+function verwalten(){pane("lade");
+fetch("/api/buchung/info",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:token})}).then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j}})}).then(function(res){
+if(!res.ok){token=null;fertig("Link nicht gültig",["Dieser Link ist nicht mehr gültig. Sie können hier einen neuen Termin wählen."],true);return}
+var j=res.j;if(j.status!=="gebucht"||!j.aenderbar){token=null;fertig("Termin nicht änderbar",["Dieser Termin ist bereits abgesagt oder vorbei. Sie können hier einen neuen Termin wählen."],true);return}
+pane("verwalten");PM.textContent="";PM.appendChild(mk("p","big",wann(j)));PM.appendChild(mk("p",null,"Dauer: "+j.dauer+" Minuten."));
+var row=mk("div","act"),mv=mk("button","btn","Termin verschieben"),ab=mk("button","btn ghost","Termin absagen");mv.type="button";ab.type="button";row.appendChild(mv);row.appendChild(ab);PM.appendChild(row);
+var conf=mk("div","act");conf.hidden=true;var ja=mk("button","btn","Ja, Termin absagen"),nein=mk("button","btn ghost","Termin behalten");ja.type="button";nein.type="button";conf.appendChild(ja);conf.appendChild(nein);PM.appendChild(conf);
+var q=mk("p","msg","");q.setAttribute("role","status");PM.insertBefore(q,row);
+mv.addEventListener("click",function(){(book?Promise.resolve(book):loadSlots()).then(function(b){if(b)showBook();else{q.textContent="Zurzeit sind keine freien Zeiten sichtbar. Bitte schreiben Sie mir eine Nachricht."}})});
+ab.addEventListener("click",function(){row.hidden=true;conf.hidden=false;q.textContent="Möchten Sie den Termin wirklich absagen?";ja.focus()});
+nein.addEventListener("click",function(){conf.hidden=true;row.hidden=false;q.textContent="";ab.focus()});
+ja.addEventListener("click",function(){ja.disabled=true;q.textContent="Wird abgesagt …";
+fetch("/api/buchung/absagen",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:token})}).then(function(r){if(!r.ok)throw 0;token=null;fertig("Termin abgesagt",["Ihr Gespräch ist abgesagt.","Eine Bestätigung ist unterwegs."],true)}).catch(function(){ja.disabled=false;q.textContent="Das Absagen hat gerade nicht geklappt. Bitte versuchen Sie es noch einmal oder schreiben Sie mir eine Nachricht."})});
+ab.focus()}).catch(function(){token=null;book?showBook():showForm()})}
+function op(e){if(e)e.preventDefault();m.textContent="";say("");if(!d.open){if(d.showModal)d.showModal();else d.setAttribute("open","")}
+pane("lade");var fresh=book&&Date.now()-bookAt<60000;(fresh?Promise.resolve(book):loadSlots()).then(function(b){if(token)verwalten();else if(b)showBook();else showForm()})}
 Array.prototype.forEach.call(document.querySelectorAll('a[href="#buchen"],#go'),function(a){a.addEventListener("click",op)});
 document.getElementById("rqx").onclick=function(){d.close()};d.addEventListener("click",function(e){if(e.target===d)d.close()});
-var t0=Date.now(),sending=false;
+$("rqtoform").addEventListener("click",showForm);$("rqtobook").addEventListener("click",function(){if(book)showBook()});
+function err(t,el){say(t);$("rqbe").textContent=t;if(el)el.focus()}
+BF.addEventListener("submit",function(ev){ev.preventDefault();if(sendingB||!book)return;$("rqbe").textContent="";
+var n=$("bn").value.trim(),e=$("be").value.trim(),t=$("bt").value.trim();
+if(!pick){err("Bitte wählen Sie zuerst eine Uhrzeit.",$("rqtimes").querySelector("button"));return}
+if(!token){if(n.length<2){err("Bitte geben Sie Ihren Namen an.",$("bn"));return}
+if(!/^\S+@\S+\.\S+$/.test(e)){err("Bitte geben Sie eine gültige E-Mail-Adresse an.",$("be"));return}
+if(!$("bc").checked){err("Bitte bestätigen Sie die Datenschutzerklärung.",$("bc"));return}}
+sendingB=true;$("bsend").disabled=true;say(token?"Der Termin wird verschoben …":"Der Termin wird gebucht …");
+var body={start:pick.start,ticket:book.ticket,website2:$("bw").value};if(token)body.token=token;else{body.name=n;body.email=e;body.message=t;body.einwilligung=$("bc").checked}
+fetch("/api/buchung",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json().then(function(j){return{ok:r.ok,status:r.status,j:j}},function(){return{ok:r.ok,status:r.status,j:{}}})}).then(function(res){
+if(res.ok&&res.j.label){var moved=!!res.j.verschoben;token=null;fertig(moved?"Ihr Gespräch ist verschoben":"Ihr Gespräch ist gebucht",[wann(res.j),"Eine Bestätigung mit Kalendereintrag ist unterwegs. Bitte prüfen Sie bei Bedarf auch den Spam-Ordner.","Ich melde mich zur vereinbarten Zeit telefonisch oder per Videolink bei Ihnen."],false);BF.reset();return}
+if(res.ok){token=null;fertig("Danke",["Ihre Anfrage ist eingegangen."],false);return}
+err((res.j&&res.j.error)||"Die Buchung hat gerade nicht geklappt. Bitte versuchen Sie es noch einmal oder senden Sie mir eine Nachricht.");
+if(res.status===409||res.status===400){loadSlots().then(function(b){if(b){pick=null;day=Math.min(day,b.tage.length-1);renderDays();renderTimes()}else{token=null;showForm()}})}
+}).catch(function(){err("Die Buchung ist gerade nicht möglich. Bitte senden Sie mir stattdessen eine Nachricht.");$("rqtoform").focus()}).then(function(){sendingB=false;$("bsend").disabled=false})});
 function viaMail(n,e,t){var u=["contact","lorenalienhard.ch"].join("@"),b="Name: "+n+"\nE-Mail: "+e+"\n\n"+t,a=document.createElement("a");a.href="mailto:"+u+"?subject="+encodeURIComponent("Gespräch zu RhetorIQ")+"&body="+encodeURIComponent(b);document.body.appendChild(a);a.click();a.remove();m.textContent="Ihr E-Mail-Programm öffnet sich mit der fertigen Anfrage, bitte noch auf Senden klicken."}
 f.addEventListener("submit",function(ev){ev.preventDefault();if(sending)return;var n=f.fn.value.trim(),e=f.fe.value.trim(),t=f.ft.value.trim();if(!n||!/^\S+@\S+\.\S+$/.test(e)){m.textContent="Bitte Name und eine gültige E-Mail-Adresse angeben.";return}
 sending=true;m.textContent="Wird gesendet …";
 fetch("/api/inquiry",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:n,email:e,message:t,website2:f.fw.value,elapsed:Date.now()-t0})})
 .then(function(r){if(!r.ok)throw 0;m.textContent="Danke. Ich habe Ihre Anfrage erhalten und melde mich in der Regel innert eines Werktags persönlich bei Ihnen.";f.reset()})
 .catch(function(){viaMail(n,e,t)})
-.then(function(){sending=false})})})();
+.then(function(){sending=false})});
+var mt=/^#t=([A-Za-z0-9_-]{43})$/.exec(location.hash||"");if(mt){token=mt[1];try{history.replaceState(null,"",location.pathname+location.search)}catch(x){}}
+var auf=!!token||/^\/termin\/?$/.test(location.pathname);
+loadSlots().then(function(){if(auf)op()});})();
   if(!window.THREE)return;
   var el=document.getElementById("ball"),reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
   var mob=innerWidth<820,r=new THREE.WebGLRenderer({antialias:true,alpha:!0});r.setPixelRatio(mob?1.1:Math.min(devicePixelRatio,2));

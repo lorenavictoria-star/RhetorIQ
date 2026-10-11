@@ -270,6 +270,7 @@ app.use('/api/setup', require('./routes/setup'));
 const inquiries = require('./routes/inquiries');
 app.use('/api/inquiry', inquiries.publicRouter);
 app.use('/api/inquiries', inquiries.advisorRouter);
+app.use('/api/buchung', require('./routes/buchung'));
 app.use('/api/schnelltest', require('./routes/schnelltest'));
 app.use('/api/onboarding-drafts', require('./routes/onboardingDrafts'));
 app.use('/api/files', require('./routes/files'));
@@ -360,6 +361,8 @@ const FRONTEND = path.join(__dirname, '..', 'public');
 // Landingpage auf "/", die App (mit Login) bleibt unter /index.html und /login erreichbar.
 app.get('/', (req, res) => res.sendFile(path.join(FRONTEND, Object.keys(req.query).length ? 'index.html' : 'landing.html')));
 app.get('/login', (_, res) => res.redirect(302, '/index.html'));
+// Eigene Adresse für die Terminbuchung (LinkedIn, Mails): zeigt die Landingpage, das Dialogfenster mit den freien Zeiten öffnet sich selbst.
+app.get('/termin', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.html')));
 app.use(express.static(FRONTEND, { index: false }));
 app.get('*', (_, res) => res.sendFile(path.join(FRONTEND, 'index.html')));
 
@@ -395,6 +398,7 @@ const PORT = process.env.PORT || 3001;
   // Tagesplan mit Kalenderdatei: jeden Tag um 07:00 (abschaltbar mit TAGESPLAN=aus)
   cron.schedule('0 7 * * *', () => require('./jobs/tagesplan').runTagesplanJob().catch(e => console.error('[tagesplan] job failed:', e.message)), { timezone: 'Europe/Zurich' });
   // Kalender-Synchronisation: alle 15 Minuten (fremde Kalender lesen, Google-Kanal erneuern, Abgleich als Sicherheitsnetz; abschaltbar mit KALENDERSYNC=aus)
+  cron.schedule('0 16 * * *', () => require('./jobs/buchung-erinnerung').runBuchungErinnerungJob().catch(e => console.error('[buchung] Erinnerung failed:', e.message)), { timezone: 'Europe/Zurich' });
   cron.schedule('*/15 * * * *', () => require('./jobs/kalendersync').runKalendersyncJob().catch(e => console.error('[kalendersync] job failed:', require('./lib/scrub').scrubText(e.message))), { timezone: 'Europe/Zurich' });
   console.log('[cron] Weekly report: every Sunday 08:00 Zurich');
   console.log('[cron] Monthly report: 1st of month 08:07 Zurich');

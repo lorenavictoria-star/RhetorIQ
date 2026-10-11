@@ -2392,6 +2392,10 @@ window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Kalender verbinden",
 // DE/EN-Paare für die weiteren Google-Kalender (nur lesen).
 window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Weitere Google-Kalender (nur lesen)", "More Google calendars (read only)"], ["Für die Anzeige deiner übrigen Termine ist eine zusätzliche Freigabe nötig.", "An additional permission is needed to show your other appointments."], ["Erneut mit Google verbinden", "Reconnect with Google"], ["Bisher sieht RhetorIQ nur den Kalender «RhetorIQ». Mit der zusätzlichen Freigabe liest RhetorIQ auch deine anderen Google-Kalender, zum Beispiel den Hauptkalender mit Einladungen. RhetorIQ liest sie nur und ändert dort nie etwas. Bis du die Freigabe erteilst, funktioniert alles weiter wie bisher.", "So far RhetorIQ only sees the calendar «RhetorIQ». With the additional permission, RhetorIQ also reads your other Google calendars, for example your main calendar with invitations. RhetorIQ only reads them and never changes anything there. Until you grant the permission, everything keeps working as before."], ["Hier wählst du, welche Kalender deines Google-Kontos im Kalender von RhetorIQ erscheinen: dein Hauptkalender mit Einladungen und selbst angelegten Terminen, dazu bei Bedarf weitere. Die Termine erscheinen leicht gestreift in der Farbe des Kalenders. Der Plan legt keine Aufgaben auf diese Zeiten, ausser ein Termin ist bei Google als «Verfügbar» markiert. RhetorIQ liest nur und schreibt dort nie. Abgesagte Termine und Termine, die du abgelehnt hast, fehlen.", "Here you choose which calendars of your Google account appear in the RhetorIQ calendar: your main calendar with invitations and appointments you created, plus others if needed. The appointments appear lightly striped in the colour of the calendar. The plan schedules no tasks at these times, unless an appointment is marked «Available» in Google. RhetorIQ only reads and never writes there. Cancelled appointments and appointments you declined are not shown."], ["Dein Google-Konto hat keine weiteren Kalender.", "Your Google account has no other calendars."], ["Wird nicht angezeigt.", "Not shown."], ["Wird gelesen …", "Reading …"], [" (Hauptkalender)", " (main calendar)"], ["Datenschutz: RhetorIQ speichert von diesen Terminen nur Titel, Ort, Zeit, den Link zu Google und die Anzahl der Teilnehmenden, nie die Teilnehmerliste und nie die Beschreibung. Die Daten bleiben in deiner Datenbank, gehen nicht an die KI und werden beim Trennen von Google gelöscht. Nur wenn du den Assistenten nach deinen Terminen fragst, nennt er dir Titel und Zeit.", "Privacy: of these appointments RhetorIQ only stores title, location, time, the link to Google and the number of participants, never the participant list and never the description. The data stays in your database, does not go to the AI and is deleted when you disconnect from Google. Only when you ask the assistant about your appointments does it tell you title and time."], ["Termin aus Google", "Appointment from Google"], ["In Google öffnen", "Open in Google"], ["Dieser Termin kommt aus Google und ist hier nur zum Lesen. Änderungen machst du in Google oder auf dem Handy.", "This appointment comes from Google and is read only here. You make changes in Google or on your phone."], ["Als «Verfügbar» markiert. Der Plan darf in dieser Zeit Aufgaben einplanen.", "Marked «Available». The plan may schedule tasks during this time."]]);
 </script>
+<script id="rq-xpairs-buchung">
+// DE/EN-Paare für die Terminbuchung; rq-i18n fügt window.RQ_EXTRA_PAIRS zu PAIRS hinzu.
+window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Terminbuchung", "Appointment booking"], ["Buchungen sind eingeschaltet", "Bookings are switched on"], ["Solange der Schalter aus ist, zeigt die Webseite nur das Formular für eine Nachricht. Niemand kann dann einen Termin buchen.", "While the switch is off, the website only shows the message form. Nobody can book an appointment."], ["Gesprächsdauer in Minuten", "Call length in minutes"], ["Puffer vor und nach jedem Termin in Minuten", "Buffer before and after each appointment in minutes"], ["Mindestvorlauf in Stunden", "Minimum notice in hours"], ["Wie viele Tage im Voraus buchbar", "How many days ahead can be booked"], ["Raster der Startzeiten", "Start time grid"], ["{1} Minuten", "{1} minutes"], ["Arbeitsfenster pro Wochentag", "Working hours per weekday"], ["Montag", "Monday"], ["Dienstag", "Tuesday"], ["Mittwoch", "Wednesday"], ["Donnerstag", "Thursday"], ["Freitag", "Friday"], ["Pause", "Break"], ["Samstag und Sonntag sind nie buchbar. Feiertage, Ferien, deine Termine, Google-Termine und Fremdkalender sperren die Zeit automatisch. Lässt du die Pause leer, gibt es keine feste Pause.", "Saturday and Sunday can never be booked. Public holidays, vacations, your appointments, Google events and external calendars block the time automatically. If you leave the break empty, there is no fixed break."], ["Bestätigungsmail", "Confirmation email"], ["Satz zum Ablauf des Gesprächs", "Sentence about how the call works"], ["Videolink (optional, beginnt mit https://)", "Video link (optional, starts with https://)"], ["Einstellungen speichern", "Save settings"], ["Gespeichert. Die Buchung ist eingeschaltet.", "Saved. Booking is switched on."], ["Gespeichert. Die Buchung ist ausgeschaltet.", "Saved. Booking is switched off."], ["Kommende Buchungen", "Upcoming bookings"], ["Noch keine Buchungen.", "No bookings yet."], ["Absagen", "Cancel"], ["Öffentlicher Link", "Public link"], ["Diesen Link kannst du in LinkedIn und in Mails verwenden. Er zeigt dieselbe Auswahl wie der Knopf auf der Webseite.", "You can use this link in LinkedIn and in emails. It shows the same selection as the button on the website."], ["Link kopieren", "Copy link"], ["Der Link ist kopiert.", "The link is copied."], ["Bitte kopiere den Link von Hand.", "Please copy the link by hand."], ["Der Termin ist abgesagt.", "The appointment is cancelled."]]);
+</script>
 <script id="rq-i18n">
 // ── I18N: Wörterbuch-Ebene über dem bestehenden T/applyLang-System ──
 // Löst fest eingebaute Texte (HTML und dynamisch erzeugte Listen) pro Sprache auf. Nur sichtbarer Text:
@@ -13674,6 +13678,143 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
   },1000);
 })();
 </script>
+<script id="rq-buchung-js">
+// ═══ Terminbuchung: Einstellungen und kommende Buchungen (Seite Kalender). Alle Texte aus Daten werden mit textContent gesetzt. ═══
+(function(){
+  var st={e:null,link:'',kommende:[],msg:null,init:false,busy:false};
+  var TAGE=[[1,'Montag'],[2,'Dienstag'],[3,'Mittwoch'],[4,'Donnerstag'],[5,'Freitag']];
+  function isA(){try{return !!isAdv;}catch(e){return false;}}
+  function $(id){return document.getElementById(id);}
+  function h(tag,attrs,kids){
+    var e=document.createElement(tag),k;
+    if(attrs)for(k in attrs){
+      if(k==='text')e.textContent=attrs[k];
+      else if(k.indexOf('on')===0&&typeof attrs[k]==='function')e.addEventListener(k.slice(2),attrs[k]);
+      else if(attrs[k]===true)e.setAttribute(k,'');
+      else if(attrs[k]!==false&&attrs[k]!=null)e.setAttribute(k,attrs[k]);
+    }
+    (kids||[]).forEach(function(c){if(c==null)return;e.appendChild(typeof c==='string'?document.createTextNode(c):c);});
+    return e;
+  }
+  async function call(path,method,body){
+    var o={method:method||'GET'};if(body!==undefined)o.body=JSON.stringify(body);
+    var r=await api(path,o),j=null;try{j=await r.json();}catch(e){}
+    if(!r.ok)throw new Error((j&&j.error)||'Das hat nicht geklappt. Bitte versuche es erneut.');
+    return j;
+  }
+  function meldung(t,schlecht){st.msg=t?{t:t,bad:!!schlecht}:null;var m=$('bu-msg');if(m){m.textContent=t||'';m.className='tp-msg'+(schlecht?' bad':'');}}
+  function hm(min){return (min==null)?'':(('0'+Math.floor(min/60)).slice(-2)+':'+('0'+(min%60)).slice(-2));}
+  function min(v){var m=/^(\d{1,2}):(\d{2})$/.exec(v||'');return m?(+m[1])*60+(+m[2]):null;}
+  function zahl(id){return parseInt($(id).value,10);}
+
+  function formular(){
+    var host=$('bu-form');if(!host||!st.e)return;host.textContent='';
+    var e=st.e;
+    var aktiv=h('input',{type:'checkbox',id:'bu-aktiv','aria-label':'Terminbuchung einschalten'});aktiv.checked=!!e.aktiv;
+    host.appendChild(h('label',{class:'tp-chk'},[aktiv,' Buchungen sind eingeschaltet']));
+    host.appendChild(h('p',{class:'rq-hint',text:'Solange der Schalter aus ist, zeigt die Webseite nur das Formular für eine Nachricht. Niemand kann dann einen Termin buchen.'}));
+    function feld(id,titel,wert,attrs){return h('label',{class:'tp-fl'},[h('span',{text:titel}),h('input',Object.assign({type:'number',class:'rq-in',id:id,value:String(wert)},attrs||{}))]);}
+    host.appendChild(h('div',{class:'bu-grid'},[
+      feld('bu-dauer','Gesprächsdauer in Minuten',e.dauer,{min:'10',max:'120'}),
+      feld('bu-puffer','Puffer vor und nach jedem Termin in Minuten',e.puffer,{min:'0',max:'120'}),
+      feld('bu-vorlauf','Mindestvorlauf in Stunden',e.vorlauf,{min:'0',max:'168'}),
+      feld('bu-horizont','Wie viele Tage im Voraus buchbar',e.horizont,{min:'1',max:'60'}),
+      h('label',{class:'tp-fl'},[h('span',{text:'Raster der Startzeiten'}),(function(){var s=h('select',{class:'rq-in',id:'bu-raster'});[15,20,30,60].forEach(function(v){var o=h('option',{value:String(v),text:v+' Minuten'});if(v===e.raster)o.selected=true;s.appendChild(o);});return s;})()])
+    ]));
+    host.appendChild(h('div',{class:'ks-h2',text:'Arbeitsfenster pro Wochentag'}));
+    TAGE.forEach(function(t){
+      var d=e.tage[t[0]]||{};
+      var an=h('input',{type:'checkbox',id:'bu-an'+t[0],'aria-label':t[1]+' buchbar'});an.checked=!!d.an;
+      function zeit(id,wert,name){return h('input',{type:'time',class:'rq-in bu-zeit',id:id,value:hm(wert),'aria-label':t[1]+' '+name});}
+      host.appendChild(h('div',{class:'bu-tag'},[
+        h('label',{class:'tp-chk bu-name'},[an,' '+t[1]]),
+        zeit('bu-von'+t[0],d.von,'von'),zeit('bu-bis'+t[0],d.bis,'bis'),
+        h('span',{class:'rq-hint',text:'Pause'}),zeit('bu-pv'+t[0],d.pause_von,'Pause von'),zeit('bu-pb'+t[0],d.pause_bis,'Pause bis')
+      ]));
+    });
+    host.appendChild(h('p',{class:'rq-hint',text:'Samstag und Sonntag sind nie buchbar. Feiertage, Ferien, deine Termine, Google-Termine und Fremdkalender sperren die Zeit automatisch. Lässt du die Pause leer, gibt es keine feste Pause.'}));
+    host.appendChild(h('div',{class:'ks-h2',text:'Bestätigungsmail'}));
+    host.appendChild(h('label',{class:'tp-fl'},[h('span',{text:'Satz zum Ablauf des Gesprächs'}),h('textarea',{class:'rq-in',id:'bu-text',rows:'2',maxlength:'300',text:e.kontakt_text})]));
+    host.appendChild(h('label',{class:'tp-fl'},[h('span',{text:'Videolink (optional, beginnt mit https://)'}),h('input',{type:'url',class:'rq-in',id:'bu-link',value:e.kontakt_link||'',maxlength:'300',autocomplete:'off'})]));
+    host.appendChild(h('div',{class:'tp-acts'},[h('button',{type:'button',class:'rq-btn',id:'bu-save',onclick:speichern},['Einstellungen speichern'])]));
+  }
+  function liste(){
+    var host=$('bu-liste');if(!host)return;host.textContent='';
+    host.appendChild(h('div',{class:'ks-h2',text:'Kommende Buchungen'}));
+    if(!st.kommende.length){host.appendChild(h('p',{class:'rq-hint',text:'Noch keine Buchungen.'}));return;}
+    var ul=h('ul',{class:'ks-ul'});
+    st.kommende.forEach(function(b){
+      ul.appendChild(h('li',{class:'ks-li'},[
+        h('div',{class:'ks-lt'},[h('div',{class:'ks-name',text:b.text}),h('div',{class:'rq-hint',text:b.name+', '+b.email}),b.anliegen?h('div',{class:'rq-hint',text:b.anliegen}):null]),
+        h('button',{type:'button',class:'rq-btn ghost tp-del',onclick:function(){absagen(b);}},['Absagen'])
+      ]));
+    });
+    host.appendChild(ul);
+  }
+  function linkBereich(){
+    var host=$('bu-link-box');if(!host)return;host.textContent='';
+    host.appendChild(h('div',{class:'ks-h2',text:'Öffentlicher Link'}));
+    host.appendChild(h('p',{class:'rq-hint',text:'Diesen Link kannst du in LinkedIn und in Mails verwenden. Er zeigt dieselbe Auswahl wie der Knopf auf der Webseite.'}));
+    var inp=h('input',{type:'text',class:'rq-in',id:'bu-url',readonly:true,value:st.link||'','aria-label':'Link zur Buchungsseite'});
+    host.appendChild(h('div',{class:'bu-row'},[inp,h('button',{type:'button',class:'rq-btn ghost',onclick:function(){
+      inp.select();
+      try{navigator.clipboard.writeText(inp.value).then(function(){meldung('Der Link ist kopiert.');},function(){meldung('Bitte kopiere den Link von Hand.',true);});}catch(x){meldung('Bitte kopiere den Link von Hand.',true);}
+    }},['Link kopieren'])]));
+  }
+  function zeichne(){linkBereich();formular();liste();if(st.msg)meldung(st.msg.t,st.msg.bad);}
+  async function laden(){
+    try{var r=await call('/api/buchung/admin/einstellungen');st.e=r.einstellungen;st.link=r.link;st.kommende=r.kommende||[];}
+    catch(x){meldung(x.message,true);}
+    zeichne();
+  }
+  async function speichern(){
+    if(st.busy)return;st.busy=true;
+    var b=$('bu-save');if(b)b.disabled=true;
+    try{
+      var tage={};
+      TAGE.forEach(function(t){var i=t[0];tage[i]={an:$('bu-an'+i).checked,von:min($('bu-von'+i).value),bis:min($('bu-bis'+i).value),pause_von:min($('bu-pv'+i).value),pause_bis:min($('bu-pb'+i).value)};
+        if(tage[i].pause_von==null||tage[i].pause_bis==null){tage[i].pause_von=null;tage[i].pause_bis=null;}});
+      var r=await call('/api/buchung/admin/einstellungen','PUT',{aktiv:$('bu-aktiv').checked,dauer:zahl('bu-dauer'),puffer:zahl('bu-puffer'),vorlauf:zahl('bu-vorlauf'),horizont:zahl('bu-horizont'),raster:zahl('bu-raster'),tage:tage,kontakt_text:$('bu-text').value,kontakt_link:$('bu-link').value});
+      st.e=r.einstellungen;meldung(st.e.aktiv?'Gespeichert. Die Buchung ist eingeschaltet.':'Gespeichert. Die Buchung ist ausgeschaltet.');
+    }catch(x){meldung(x.message,true);}
+    st.busy=false;zeichne();
+  }
+  async function absagen(b){
+    if(!window.confirm('Den Termin mit '+b.name+' am '+b.text+' absagen? Die Person erhält eine Mail, der Eintrag verschwindet aus deinem Kalender.'))return;
+    try{await call('/api/buchung/admin/liste/'+b.id+'/absagen','POST',{});meldung('Der Termin ist abgesagt.');if(window.rqTagesplanLaden)window.rqTagesplanLaden();}catch(x){meldung(x.message,true);}
+    try{st.kommende=(await call('/api/buchung/admin/liste')).kommende||[];}catch(x){}
+    liste();
+  }
+  function baue(){
+    var r=$('tp-root');if(!r||$('bu-root'))return false;
+    var d=h('details',{class:'rq-card tp-card',id:'bu-root'},[
+      h('summary',{class:'tp-sum',text:'Terminbuchung'}),
+      h('div',{class:'tp-msg',id:'bu-msg',role:'status','aria-live':'polite'}),
+      h('div',{id:'bu-link-box',class:'ks-sec'}),h('div',{id:'bu-form',class:'ks-sec'}),h('div',{id:'bu-liste',class:'ks-sec'})
+    ]);
+    var ks=$('ks-root'),ein=$('tp-ein'),ref=ks||ein;
+    if(ref&&ref.parentNode)ref.parentNode.insertBefore(d,ref.nextSibling);else r.appendChild(d);
+    return true;
+  }
+  async function start(){
+    if(!isA())return;
+    if(baue()||!st.init){st.init=true;await laden();}
+  }
+  var _open=window.rqAssistentOpen;
+  window.rqAssistentOpen=function(){
+    var r=_open?_open.apply(this,arguments):undefined;
+    setTimeout(start,50);return r;
+  };
+})();
+</script>
+<style id="rq-buchung-css">
+.bu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:12px 0}
+.bu-tag{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0}
+.bu-name{min-width:150px}
+.bu-zeit{width:130px}
+.bu-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.bu-row .rq-in{flex:1;min-width:220px}
+</style>
 <script id="rq-lernkurve-js">
 (function(){
   var E=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');};

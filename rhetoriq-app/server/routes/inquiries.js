@@ -4,7 +4,8 @@ const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { pool } = require('../db');
 const { requireAdvisor } = require('../middleware/auth');
 const { queueEmail } = require('../lib/emailOutbox');
-const { vorabText, ackText, notifyText } = require('../lib/inquiryMails');
+const { vorabText, notifyText } = require('../lib/inquiryMails');
+const { formularBestaetigung } = require('../lib/buchungMails');
 
 // Anfragen aus dem Kontaktformular der Webseite (lorenalienhard.ch).
 //   POST /api/inquiry                      oeffentlich, mit geheimem Schluessel (INQUIRY_KEY)
@@ -106,15 +107,16 @@ publicRouter.post('/', inquiryLimit, async (req, res) => {
     const ackRecent = await pool.query(
       `SELECT (SELECT COUNT(*) FROM inquiries WHERE email=$1 AND ack_sent_at > NOW() - INTERVAL '24 hours')::int AS same,
               (SELECT COUNT(*) FROM inquiries WHERE ack_sent_at > NOW() - INTERVAL '1 hour')::int AS hour`, [email]);
-    const sendAck = ackRecent.rows[0].same === 0 && ackRecent.rows[0].hour < 30;
+    // Höchstens eine Bestätigung je Adresse innert 24 Stunden und 30 pro Stunde insgesamt, nie an Adressen mit Zeilenumbrüchen.
+    const sendAck = ackRecent.rows[0].same === 0 && ackRecent.rows[0].hour < 30 && !/[\r\n\u0000-\u001f]/.test(email);
     const { rows } = await pool.query(
       `INSERT INTO inquiries (name, company, email, message) VALUES ($1,$2,$3,$4) RETURNING id`,
       [name, company, email, message]);
     const id = rows[0].id;
 
     // Eingangsbestätigung an die Anfragende Person (Sie-Form, weil noch nichts geklärt ist).
-    const ack = ackText({ name });
-    if (sendAck) queueEmail({ kind: 'inquiry_ack', to: email, subject: 'Ihre Anfrage bei RhetorIQ', text: ack, senderName: 'Lorena Lienhard' })
+    const ack = formularBestaetigung({ name, email, message });
+    if (sendAck) queueEmail({ kind: 'inquiry_ack', to: email, subject: ack.subject, text: ack.text, senderName: 'Lorena Lienhard' })
       .then(() => pool.query('UPDATE inquiries SET ack_sent_at=NOW() WHERE id=$1', [id]))
       .catch(e => console.error('[inquiry] ack failed:', e.message));
 
