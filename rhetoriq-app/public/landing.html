@@ -155,6 +155,7 @@ dialog.rqd{max-height:calc(100dvh - 32px);overflow:auto}
 @media (max-width:700px){.who{grid-template-columns:1fr}.foto{width:min(100%,260px)}}
 .zbt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:28px}
 .zbt button{all:unset;cursor:pointer;box-sizing:border-box;border:1px solid #2c2c29;border-radius:14px;padding:16px 16px 14px;display:flex;flex-direction:column;gap:6px;transition:border-color .25s,background .25s}
+.zbt button{position:relative;overflow:hidden}.zbt u{position:absolute;left:0;bottom:0;height:2px;width:0;background:var(--gold);text-decoration:none}.zbt button.run u{animation:zpr 3s linear forwards}@keyframes zpr{from{width:0}to{width:100%}}
 .zbt button:hover{border-color:#6b6552}.zbt button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .zbt b{font:400 clamp(28px,4vw,38px)/1 var(--serif);font-weight:400;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .zbt .zs b{background:linear-gradient(100deg,#f4f4f4 0%,#c4c8ce 50%,#8d9299 100%);-webkit-background-clip:text;background-clip:text}
@@ -275,9 +276,9 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
     <p class="eyebrow">Warum sich das lohnt</p>
     <h2>KI macht schneller. Vertrauen macht ein Mensch.</h2>
     <div class="zbt" id="zbt">
-      <button type="button" class="zs" aria-expanded="false" aria-controls="zp0"><b>IQ</b><span>Die KI · Effizienz</span><i aria-hidden="true">+</i></button>
-      <button type="button" class="zg" aria-expanded="false" aria-controls="zp1"><b>EQ</b><span>Der Mensch · Vertrauen</span><i aria-hidden="true">+</i></button>
-      <button type="button" class="zg" aria-expanded="false" aria-controls="zp2"><b>IQ + EQ</b><span>Deshalb ist Kommunikation relevant</span><i aria-hidden="true">+</i></button>
+      <button type="button" class="zs" aria-expanded="false" aria-controls="zp0"><b>IQ</b><span>Die KI · Effizienz</span><i aria-hidden="true">+</i><u aria-hidden="true"></u></button>
+      <button type="button" class="zg" aria-expanded="false" aria-controls="zp1"><b>EQ</b><span>Der Mensch · Vertrauen</span><i aria-hidden="true">+</i><u aria-hidden="true"></u></button>
+      <button type="button" class="zg" aria-expanded="false" aria-controls="zp2"><b>IQ + EQ</b><span>Deshalb ist Kommunikation relevant</span><i aria-hidden="true">+</i><u aria-hidden="true"></u></button>
     </div>
     <div class="zpn">
       <div class="zpl" id="zp0" hidden><div class="zgs">
@@ -398,10 +399,10 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
     var wrap=document.getElementById("zbt"),sec=document.getElementById("zahlen");
     if(!wrap||!sec)return;
     var bs=[].slice.call(wrap.children),cur=-1,tm=null,stopped=false,hover=false,reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-    function open(i){cur=i;bs.forEach(function(b,j){var on=j===i;b.setAttribute("aria-expanded",on?"true":"false");b.querySelector("i").textContent=on?"−":"+";document.getElementById("zp"+j).hidden=!on})}
+    function open(i){cur=i;bs.forEach(function(b,j){var on=j===i;b.setAttribute("aria-expanded",on?"true":"false");b.querySelector("i").textContent=on?"−":"+";document.getElementById("zp"+j).hidden=!on;b.classList.remove("run");if(on&&!stopped&&tm){void b.offsetWidth;b.classList.add("run")}})}
     function tick(){if(stopped||hover)return;open((cur+1)%bs.length)}
-    function start(){if(tm||stopped||reduce)return;if(cur<0)open(0);tm=setInterval(tick,3000)}
-    function stop(){clearInterval(tm);tm=null}
+    function start(){if(tm||stopped||reduce)return;tm=setInterval(tick,3000);open(cur<0?0:cur)}
+    function stop(){clearInterval(tm);tm=null;bs.forEach(function(b){b.classList.remove("run")})}
     bs.forEach(function(b,i){b.addEventListener("click",function(){stopped=true;stop();open(cur===i?-1:i)})});
     sec.addEventListener("mouseenter",function(){hover=true});sec.addEventListener("mouseleave",function(){hover=false});
     if(window.IntersectionObserver&&!reduce){new IntersectionObserver(function(en){if(en[0].isIntersecting)start();else stop()},{threshold:.4}).observe(wrap)}
