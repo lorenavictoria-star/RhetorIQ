@@ -44,7 +44,7 @@ function notifyTargets() {
   return [...new Set([main, (process.env.ADVISOR_NOTIFY_EMAIL_2 || '').trim()].filter(Boolean))];
 }
 
-const ALLOWED_ORIGINS = ['https://rhetoriq.ch', 'https://www.rhetoriq.ch'];
+const ALLOWED_ORIGINS = ['https://rhetoriq.ch', 'https://www.rhetoriq.ch', 'https://lorenalienhard.ch', 'https://www.lorenalienhard.ch', 'https://www-lorenalienhard-ch.filesusr.com'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const clip = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
 

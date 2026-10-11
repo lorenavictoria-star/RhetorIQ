@@ -164,7 +164,11 @@ app.locals.wss = wss;
 // ── Middleware ────────────────────────────────────────────────
 // Hinter dem Render-Proxy: sonst sehen alle Anfragen wie dieselbe Adresse aus, und alle Nutzer teilen sich die Anfrage-Limits.
 app.set('trust proxy', 1);
-app.use(cors({ origin: process.env.CORS_ORIGIN || 'https://rhetoriq.ch', credentials: true }));
+// Nur das öffentliche Anfrageformular darf auch von lorenalienhard.ch (und dem Einbettungsrahmen von Wix) aufgerufen werden.
+const INQUIRY_CORS_ORIGINS = ['https://rhetoriq.ch', 'https://www.rhetoriq.ch', 'https://lorenalienhard.ch', 'https://www.lorenalienhard.ch', 'https://www-lorenalienhard-ch.filesusr.com'];
+app.use(cors((req, cb) => cb(null, req.path === '/api/inquiry'
+  ? { origin: INQUIRY_CORS_ORIGINS, credentials: false }
+  : { origin: process.env.CORS_ORIGIN || 'https://rhetoriq.ch', credentials: true })));
 // Webhook needs raw body — must be registered before express.json()
 app.use('/api/subscriptions/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '5mb' }));
