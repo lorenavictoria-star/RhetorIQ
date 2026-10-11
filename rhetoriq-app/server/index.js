@@ -275,6 +275,8 @@ const inquiries = require('./routes/inquiries');
 app.use('/api/inquiry', inquiries.publicRouter);
 app.use('/api/inquiries', inquiries.advisorRouter);
 app.use('/api/buchung', require('./routes/buchung'));
+app.use('/api/warteliste', require('./routes/warteliste'));
+app.use('/api/geschenk', require('./routes/geschenk'));
 app.use('/api/schnelltest', require('./routes/schnelltest'));
 app.use('/api/onboarding-drafts', require('./routes/onboardingDrafts'));
 app.use('/api/files', require('./routes/files'));
@@ -368,6 +370,9 @@ app.get('/en', (req, res) => res.sendFile(path.join(FRONTEND, 'landing.en.html')
 app.get('/login', (_, res) => res.redirect(302, '/index.html'));
 // Eigene Adresse für die Terminbuchung (LinkedIn, Mails): zeigt die Landingpage, das Dialogfenster mit den freien Zeiten öffnet sich selbst.
 app.get('/termin', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.html')));
+// Warteliste «Platz sichern» und Geschenk-PDFs: dieselbe Landingpage, der passende Dialog öffnet sich selbst. Die PDFs liegen ausserhalb von public und werden nur per Mail verschickt.
+app.get('/platz', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.html')));
+app.get('/geschenk', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.html')));
 app.use(express.static(FRONTEND, { index: false }));
 app.get('*', (_, res) => res.sendFile(path.join(FRONTEND, 'index.html')));
 

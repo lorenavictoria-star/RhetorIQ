@@ -14,7 +14,7 @@ test('Alle Skriptblöcke von index.html und landing.html sind gültig', () => {
   for (const h of [html, landing]) {
     const re = /<script([^>]*)>([\s\S]*?)<\/script>/g;
     let m;
-    while ((m = re.exec(h))) { if (/src=/.test(m[1])) continue; assert.doesNotThrow(() => new vm.Script(m[2]), (/id="([^"]+)"/.exec(m[1]) || [])[1] || 'Block'); }
+    while ((m = re.exec(h))) { if (/src=|application\/ld\+json/.test(m[1])) continue; assert.doesNotThrow(() => new vm.Script(m[2]), (/id="([^"]+)"/.exec(m[1]) || [])[1] || 'Block'); }
   }
 });
 

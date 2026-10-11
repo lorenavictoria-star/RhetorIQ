@@ -247,6 +247,14 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:left;text-justify:auto;hyphen
 .logo .sub{font-size:12px;letter-spacing:.06em;max-width:210px;white-space:normal;line-height:1.3}
 }
 .vend{margin:40px 0 0;max-width:640px;font-size:13px;line-height:1.6;color:#8f8d85}
+section[hidden]{display:none}
+.rqd fieldset{border:0;margin:0;padding:0;display:grid;gap:10px}
+.rqd legend{padding:0;margin:0 0 8px;font-size:13px;letter-spacing:.04em;color:var(--mute)}
+.rqd .cnt{margin:0 0 16px;font-size:14px;color:var(--cream)}
+.gcards{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:28px}
+@media(max-width:700px){.gcards{grid-template-columns:1fr}}
+.gcards .card .btn{margin-top:14px}
+.zzl{margin:8px 0 0;font-size:15px;color:var(--gold)}
 </style>
 </head>
 <body>
@@ -368,6 +376,16 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:left;text-justify:auto;hyphen
   .then(function(){busy=false;b.disabled=false})})})();
   </script>
 
+  <section id="geschenk">
+    <p class="eyebrow">Zwei Geschenke</p>
+    <h2>Zwei Hilfen für Ihren Einstieg, kostenlos per E-Mail.</h2>
+    <p class="p">Wählen Sie ein PDF oder beide. Sie erhalten es sofort an Ihre E-Mail-Adresse.</p>
+    <div class="gcards">
+      <div class="card"><h3>Stimm-Prompt</h3><p class="sub">Das PDF für den Einstieg in Ihre Firmenstimme.</p><button class="btn" type="button" data-g="prompt">Stimm-Prompt erhalten</button></div>
+      <div class="card"><h3>KI-Leitfaden</h3><p class="sub">Das PDF für den sicheren Umgang mit KI im Unternehmen.</p><button class="btn" type="button" data-g="leitfaden">KI-Leitfaden erhalten</button></div>
+    </div>
+  </section>
+
   <section id="fragen">
     <p class="eyebrow">Fragen</p>
     <h2>Kurz beantwortet.</h2>
@@ -375,6 +393,23 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:left;text-justify:auto;hyphen
       <div><h3>Was ist der Unterschied zu allgemeinen KI-Chatbots?</h3><p>Ich lege Ihre Unternehmenssprache als Basis unter die KI und adjustiere von Hand nach.</p></div>
       <div><h3>Was geschieht mit meinen Texten?</h3><p>Ihre Inhalte werden nicht zum Training von KI-Modellen verwendet, und der Zugriff wird je Klient geprüft. Was RhetorIQ aus Ihren Korrekturen lernt, gilt nur für Ihren Arbeitsbereich. Welche Dienstleister Daten verarbeiten und wo, steht in der Datenschutzerklärung.</p></div>
       <div><h3>Kann ich kündigen?</h3><p>Monatlich, in jedem Paket.</p></div>
+    </div>
+  </section>
+
+  <section id="platz" hidden>
+    <div class="book">
+      <div>
+        <p class="eyebrow">Warteliste</p>
+        <h2>Platz sichern.</h2>
+        <p class="p">Ich nehme jeden Monat nur wenige Unternehmen auf. Tragen Sie sich ein, ich melde mich persönlich bei Ihnen.</p>
+        <p class="zzl" id="pzfrei" hidden></p>
+        <p class="zzl" id="pzn" hidden></p>
+      </div>
+      <div class="card">
+        <h3>Platz sichern</h3>
+        <p class="sub">Name, E-Mail, Unternehmen und Branche genügen.</p>
+        <button class="btn" id="pzgo" type="button">Platz sichern</button>
+      </div>
     </div>
   </section>
 
@@ -397,6 +432,10 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:left;text-justify:auto;hyphen
   <form id="rqbf" novalidate><div id="rqpers"><label>Name<input id="bn" type="text" autocomplete="name" maxlength="80" required></label><label>E-Mail<input id="be" type="email" autocomplete="email" maxlength="120" required></label><label>Ihr Anliegen (freiwillig)<textarea id="bt" rows="3" maxlength="1500" placeholder="Worum geht es?"></textarea></label><label class="chk"><input id="bc" type="checkbox" required><span>Ich habe die <a href="/?p=datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und bin einverstanden, dass meine Angaben für die Terminbuchung verwendet werden.</span></label></div><input type="text" id="bw" name="website2" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"><p class="msg" id="rqbe"></p><div class="act"><button class="btn" type="submit" id="bsend">Termin buchen</button></div><p class="alt"><button class="lnk" type="button" id="rqtoform">Lieber eine Nachricht senden</button></p></form></div>
   <form id="rqf" novalidate><label>Name<input id="fn" type="text" autocomplete="name" required></label><label>E-Mail<input id="fe" type="email" autocomplete="email" required></label><label>Ihr Anliegen<textarea id="ft" rows="4" placeholder="Worum geht es?"></textarea></label><input type="text" id="fw" name="website2" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"><div class="act"><button class="btn" type="submit">Anfrage senden</button></div><p class="alt" id="rqback" hidden><button class="lnk" type="button" id="rqtobook">Lieber einen Termin wählen</button></p><p class="msg" id="rqm" aria-live="polite"></p></form>
   <div id="rqmg" hidden></div><div class="done" id="rqdone" hidden></div></dialog>
+  <dialog class="rqd" id="rqw" aria-labelledby="rqwt"><button class="x" type="button" id="rqwx" aria-label="Schliessen">&times;</button><h3 id="rqwt">Platz sichern</h3><p class="sub" id="rqwsub"></p><p class="vh" id="rqwlive" role="status" aria-live="polite"></p>
+  <form id="pzf" novalidate hidden><p class="cnt" id="pzcnt" hidden></p><label>Name<input id="pn" type="text" autocomplete="name" maxlength="80" required></label><label>E-Mail<input id="pe" type="email" autocomplete="email" maxlength="120" required></label><label>Unternehmen<input id="pu" type="text" autocomplete="organization" maxlength="100" required></label><label>Branche<input id="pb" type="text" maxlength="80" required></label><label>Ihr Anliegen (freiwillig)<textarea id="pt" rows="3" maxlength="1000" placeholder="Worum geht es?"></textarea></label><label class="chk"><input id="pc" type="checkbox" required><span>Ich habe die <a href="/?p=datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und bin einverstanden, dass meine Angaben für die Warteliste verwendet werden und Lorena Lienhard mich dazu per E-Mail kontaktiert.</span></label><input type="text" id="pw" name="website2" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"><p class="msg" id="pzm" aria-live="polite"></p><div class="act"><button class="btn" type="submit" id="pzsend">Platz sichern</button></div></form>
+  <form id="gf" novalidate hidden><fieldset><legend>Welches Geschenk möchten Sie?</legend><label class="chk"><input type="radio" name="g" id="g-prompt" value="prompt"><span>Stimm-Prompt</span></label><label class="chk"><input type="radio" name="g" id="g-leitfaden" value="leitfaden"><span>KI-Leitfaden</span></label></fieldset><label>Name<input id="gn" type="text" autocomplete="name" maxlength="80" required></label><label>E-Mail<input id="ge" type="email" autocomplete="email" maxlength="120" required></label><label class="chk"><input id="gc" type="checkbox" required><span>Ich habe die <a href="/?p=datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und bin einverstanden, dass Lorena Lienhard mir das gewählte Geschenk per E-Mail sendet und sich zu den Themen Stimme und KI bei mir melden darf.</span></label><input type="text" id="gw" name="website2" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"><p class="msg" id="gm" aria-live="polite"></p><div class="act"><button class="btn" type="submit" id="gsend">Geschenk erhalten</button></div></form>
+  <div class="done" id="rqwdone" hidden></div></dialog>
 <p class="vert vend">Vertraulich von Anfang an. Ihre Unternehmensdaten bleiben Ihre. Welche Daten RhetorIQ nutzt und wie sie geschützt werden, halte ich vor dem Start schriftlich fest.</p>
   <footer><span>Rhetor<span class="iq">IQ</span> von Lorena Lienhard</span><a href="/?p=datenschutz" style="color:inherit;text-decoration:underline;text-underline-offset:3px">Datenschutz</a></footer>
 </div>
@@ -631,6 +670,100 @@ loadSlots().then(function(){if(auf)op()});})();
   addEventListener("scroll",function(){upd(Date.now()-lastTick>250)},{passive:true});
   addEventListener("resize",build);addEventListener("load",function(){build();setTimeout(build,800)});
   setTimeout(build,300);tick();
+})();
+</script>
+<script id="rq-warteliste-landing">
+// Warteliste «Platz sichern» und Geschenk-PDFs. Alle Texte aus Antworten werden mit textContent gesetzt.
+(function(){
+var $=function(i){return document.getElementById(i)};
+var d=$("rqw");if(!d)return;
+var H=$("rqwt"),SUB=$("rqwsub"),LIVE=$("rqwlive"),PF=$("pzf"),GF=$("gf"),DONE=$("rqwdone"),CNT=$("pzcnt");
+var tp=null,tg=null,busy=false;
+function say(t){LIVE.textContent=t||""}
+function mk(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function pane(w){PF.hidden=w!=="platz";GF.hidden=w!=="geschenk";DONE.hidden=w!=="fertig";SUB.hidden=w==="fertig"}
+function openD(){if(!d.open){if(d.showModal)d.showModal();else d.setAttribute("open","")}}
+function closeD(){if(d.close)d.close();else d.removeAttribute("open")}
+function fertig(titel,zeilen,extra){pane("fertig");H.textContent=titel;DONE.textContent="";
+zeilen.forEach(function(z,i){DONE.appendChild(mk("p",i===0?"big":"",z))});
+var row=mk("div","act");if(extra){var b=mk("button","btn",extra.text);b.type="button";b.addEventListener("click",function(){closeD();extra.tun()});row.appendChild(b)}
+var c=mk("button","btn ghost","Schliessen");c.type="button";c.addEventListener("click",closeD);row.appendChild(c);DONE.appendChild(row);
+say(titel);H.setAttribute("tabindex","-1");H.focus()}
+function gespraech(){var g=$("go");if(g)g.click()}
+
+// ── Warteliste ──
+function zaehlerText(j){
+  var frei=null,n=null;
+  if(j&&j.aktiv&&typeof j.frei==="number"&&typeof j.plaetze==="number"&&j.fenster)frei="Noch "+j.frei+" von "+j.plaetze+" Plätzen im "+j.fenster+" frei";
+  if(j&&j.aktiv&&typeof j.anzahl==="number")n=j.anzahl+" Unternehmen"+" auf der Warteliste";
+  return {frei:frei,n:n}}
+function zeigePlatz(j){
+  var sec=$("platz");if(!sec)return;
+  var on=!!(j&&j.aktiv),z=zaehlerText(j);
+  sec.hidden=!on;
+  var a=$("pzfrei"),b=$("pzn");
+  a.hidden=!z.frei;a.textContent=z.frei||"";b.hidden=!z.n;b.textContent=z.n||"";
+  var t=[z.frei,z.n].filter(Boolean).join(". ");CNT.hidden=!t;CNT.textContent=t}
+function ladePlatz(){return fetch("/api/warteliste/status",{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){
+  tp=j&&j.aktiv&&j.ticket?j.ticket:null;zeigePlatz(j);return j}).catch(function(){tp=null;zeigePlatz(null);return null})}
+function zeigePlatzDialog(){
+  H.textContent="Platz sichern";SUB.textContent="Begrenzte Plätze, persönliche Aufnahme.";
+  ladePlatz().then(function(j){
+    if(!j||!j.aktiv||!tp){fertig("Warteliste geschlossen",["Die Warteliste ist zurzeit geschlossen.","Sie können hier stattdessen ein Gespräch anfragen."],{text:"Gespräch anfragen",tun:gespraech});openD();return}
+    pane("platz");H.textContent="Platz sichern";SUB.hidden=false;$("pzm").textContent="";openD();say("");$("pn").focus()})}
+PF.addEventListener("submit",function(ev){ev.preventDefault();if(busy)return;var m=$("pzm");m.textContent="";
+  var n=$("pn").value.trim(),e=$("pe").value.trim(),u=$("pu").value.trim(),b=$("pb").value.trim(),t=$("pt").value.trim();
+  function err(x,el){m.textContent=x;say(x);if(el)el.focus()}
+  if(n.length<2){err("Bitte geben Sie Ihren Namen an.",$("pn"));return}
+  if(!/^\S+@\S+\.\S+$/.test(e)){err("Bitte geben Sie eine gültige E-Mail-Adresse an.",$("pe"));return}
+  if(u.length<2){err("Bitte geben Sie Ihr Unternehmen an.",$("pu"));return}
+  if(b.length<2){err("Bitte geben Sie Ihre Branche an.",$("pb"));return}
+  if(!$("pc").checked){err("Bitte bestätigen Sie die Datenschutzerklärung.",$("pc"));return}
+  busy=true;$("pzsend").disabled=true;say("Ihr Eintrag wird gesendet …");
+  fetch("/api/warteliste",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:n,email:e,unternehmen:u,branche:b,anliegen:t,einwilligung:$("pc").checked,website2:$("pw").value,ticket:tp})})
+  .then(function(r){return r.json().then(function(j){return{ok:r.ok,status:r.status,j:j}},function(){return{ok:r.ok,status:r.status,j:{}}})})
+  .then(function(res){
+    if(res.ok&&res.j.schon){fertig("Sie stehen bereits auf der Liste",[res.j.meldung||"Sie stehen bereits auf der Liste. Ich melde mich persönlich bei Ihnen."]);PF.reset();ladePlatz();return}
+    if(res.ok){fertig("Danke, Sie stehen auf der Liste",["Danke, Sie stehen auf der Liste.","Ich melde mich persönlich innert eines Werktags. Eine Bestätigung ist unterwegs. Bitte prüfen Sie bei Bedarf auch den Spam-Ordner."]);PF.reset();ladePlatz();return}
+    err((res.j&&res.j.error)||"Der Eintrag hat gerade nicht geklappt. Bitte versuchen Sie es noch einmal oder senden Sie mir eine Nachricht.");
+    if(res.status===400||res.status===403)ladePlatz().then(function(j){if(!j||!j.aktiv){fertig("Warteliste geschlossen",["Die Warteliste ist zurzeit geschlossen."],{text:"Gespräch anfragen",tun:gespraech})}})
+  }).catch(function(){err("Der Eintrag ist gerade nicht möglich. Bitte senden Sie mir eine Nachricht.")})
+  .then(function(){busy=false;$("pzsend").disabled=false})});
+
+// ── Geschenke ──
+function ladeTicket(){return fetch("/api/geschenk/ticket",{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){tg=j&&j.ticket||null;return tg}).catch(function(){tg=null;return null})}
+function zeigeGeschenk(wahl){
+  H.textContent="Ihr Geschenk";SUB.textContent="Das PDF kommt sofort per E-Mail zu Ihnen.";
+  $("gm").textContent="";
+  var r=$("g-"+wahl);if(r)r.checked=true;
+  ladeTicket().then(function(){pane("geschenk");SUB.hidden=false;openD();say("");(r||$("g-prompt")).focus()})}
+GF.addEventListener("submit",function(ev){ev.preventDefault();if(busy)return;var m=$("gm");m.textContent="";
+  var sel=GF.querySelector('input[name="g"]:checked'),n=$("gn").value.trim(),e=$("ge").value.trim();
+  function err(x,el){m.textContent=x;say(x);if(el)el.focus()}
+  if(!sel){err("Bitte wählen Sie ein Geschenk aus.",$("g-prompt"));return}
+  if(n.length<2){err("Bitte geben Sie Ihren Namen an.",$("gn"));return}
+  if(!/^\S+@\S+\.\S+$/.test(e)){err("Bitte geben Sie eine gültige E-Mail-Adresse an.",$("ge"));return}
+  if(!$("gc").checked){err("Bitte bestätigen Sie die Datenschutzerklärung und die Kontaktaufnahme.",$("gc"));return}
+  busy=true;$("gsend").disabled=true;say("Ihre Anfrage wird gesendet …");
+  fetch("/api/geschenk",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({geschenk:sel.value,name:n,email:e,einwilligung:$("gc").checked,website2:$("gw").value,ticket:tg})})
+  .then(function(r){return r.json().then(function(j){return{ok:r.ok,status:r.status,j:j}},function(){return{ok:r.ok,status:r.status,j:{}}})})
+  .then(function(res){
+    if(res.ok){var t=res.j.titel||"Geschenk";
+      fertig(res.j.schon?"Das PDF ist schon unterwegs":"Ihr Geschenk ist unterwegs",[res.j.schon?"Das PDF "+t+" haben wir Ihnen bereits gesendet. Bitte prüfen Sie auch den Spam-Ordner.":"Das PDF "+t+" ist unterwegs zu Ihnen. Bitte prüfen Sie bei Bedarf auch den Spam-Ordner.","Mit dem Stimm-Schnelltest sehen Sie in einer Minute, wie Ihre Webseite klingt. Ein Gespräch von zwanzig Minuten können Sie jederzeit buchen."],{text:"Gespräch anfragen",tun:gespraech});GF.reset();ladeTicket();return}
+    err((res.j&&res.j.error)||"Das hat gerade nicht geklappt. Bitte versuchen Sie es noch einmal oder senden Sie mir eine Nachricht.");
+    if(res.status===400)ladeTicket()
+  }).catch(function(){err("Das ist gerade nicht möglich. Bitte senden Sie mir eine Nachricht.")})
+  .then(function(){busy=false;$("gsend").disabled=false})});
+
+// ── Auslöser ──
+$("rqwx").addEventListener("click",closeD);d.addEventListener("click",function(e){if(e.target===d)closeD()});
+var pg=$("pzgo");if(pg)pg.addEventListener("click",zeigePlatzDialog);
+Array.prototype.forEach.call(document.querySelectorAll("[data-g]"),function(b){b.addEventListener("click",function(){zeigeGeschenk(b.getAttribute("data-g"))})});
+var q=/[?&]g=(prompt|leitfaden)\b/.exec(location.search),pfad=location.pathname.replace(/\/+$/,"");
+ladePlatz().then(function(){
+  if(pfad==="/platz")zeigePlatzDialog();
+  else if(pfad==="/geschenk")zeigeGeschenk(q?q[1]:"prompt");
+});
 })();
 </script>
 </body>

@@ -2396,6 +2396,10 @@ window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Weitere Google-Kalen
 // DE/EN-Paare für die Terminbuchung; rq-i18n fügt window.RQ_EXTRA_PAIRS zu PAIRS hinzu.
 window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Terminbuchung", "Appointment booking"], ["Buchungen sind eingeschaltet", "Bookings are switched on"], ["Solange der Schalter aus ist, zeigt die Webseite nur das Formular für eine Nachricht. Niemand kann dann einen Termin buchen.", "While the switch is off, the website only shows the message form. Nobody can book an appointment."], ["Gesprächsdauer in Minuten", "Call length in minutes"], ["Puffer vor und nach jedem Termin in Minuten", "Buffer before and after each appointment in minutes"], ["Mindestvorlauf in Stunden", "Minimum notice in hours"], ["Wie viele Tage im Voraus buchbar", "How many days ahead can be booked"], ["Raster der Startzeiten", "Start time grid"], ["{1} Minuten", "{1} minutes"], ["Arbeitsfenster pro Wochentag", "Working hours per weekday"], ["Montag", "Monday"], ["Dienstag", "Tuesday"], ["Mittwoch", "Wednesday"], ["Donnerstag", "Thursday"], ["Freitag", "Friday"], ["Pause", "Break"], ["Samstag und Sonntag sind nie buchbar. Feiertage, Ferien, deine Termine, Google-Termine und Fremdkalender sperren die Zeit automatisch. Lässt du die Pause leer, gibt es keine feste Pause.", "Saturday and Sunday can never be booked. Public holidays, vacations, your appointments, Google events and external calendars block the time automatically. If you leave the break empty, there is no fixed break."], ["Bestätigungsmail", "Confirmation email"], ["Satz zum Ablauf des Gesprächs", "Sentence about how the call works"], ["Videolink (optional, beginnt mit https://)", "Video link (optional, starts with https://)"], ["Einstellungen speichern", "Save settings"], ["Gespeichert. Die Buchung ist eingeschaltet.", "Saved. Booking is switched on."], ["Gespeichert. Die Buchung ist ausgeschaltet.", "Saved. Booking is switched off."], ["Kommende Buchungen", "Upcoming bookings"], ["Noch keine Buchungen.", "No bookings yet."], ["Absagen", "Cancel"], ["Öffentlicher Link", "Public link"], ["Diesen Link kannst du in LinkedIn und in Mails verwenden. Er zeigt dieselbe Auswahl wie der Knopf auf der Webseite.", "You can use this link in LinkedIn and in emails. It shows the same selection as the button on the website."], ["Link kopieren", "Copy link"], ["Der Link ist kopiert.", "The link is copied."], ["Bitte kopiere den Link von Hand.", "Please copy the link by hand."], ["Der Termin ist abgesagt.", "The appointment is cancelled."]]);
 </script>
+<script id="rq-xpairs-warteliste">
+// DE/EN-Paare für die Warteliste; rq-i18n fügt window.RQ_EXTRA_PAIRS zu PAIRS hinzu.
+window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Warteliste", "Waiting list"], ["Warteliste ist eingeschaltet", "Waiting list is switched on"], ["Solange der Schalter aus ist, zeigt die Webseite nichts von der Warteliste und niemand kann sich eintragen.", "While the switch is off, the website shows nothing about the waiting list and nobody can sign up."], ["Plätze pro Monat", "Places per month"], ["Name des Aufnahmefensters, zum Beispiel November", "Name of the intake window, for example November"], ["Freie Plätze auf der Webseite anzeigen", "Show free places on the website"], ["Anzahl der Unternehmen auf der Warteliste anzeigen", "Show the number of companies on the waiting list"], ["Anzahl erst ab dieser Zahl anzeigen", "Only show the number from this count"], ["Zähler", "Counters"], ["Freie Plätze", "Free places"], ["Auf der Warteliste", "On the waiting list"], ["Die Zahlen stammen aus den Einträgen. Freie Plätze sind die Plätze minus eingeladene und aufgenommene Einträge, nie unter 0.", "The numbers come from the entries. Free places are the places minus invited and accepted entries, never below 0."], ["Einträge", "Entries"], ["Noch keine Einträge.", "No entries yet."], ["Zum Gespräch einladen", "Invite to a call"], ["Als CSV exportieren", "Export as CSV"], ["Eintrag löschen", "Delete entry"], ["Einladung gesendet. Der Status ist auf eingeladen gesetzt.", "Invitation sent. The status is set to invited."], ["Der Eintrag ist gelöscht.", "The entry has been deleted."], ["Link zur Warteliste", "Link to the waiting list"], ["Neu", "New"], ["Eingeladen", "Invited"], ["Aufgenommen", "Accepted"], ["Abgesagt", "Declined"]]);
+</script>
 <script id="rq-i18n">
 // ── I18N: Wörterbuch-Ebene über dem bestehenden T/applyLang-System ──
 // Löst fest eingebaute Texte (HTML und dynamisch erzeugte Listen) pro Sprache auf. Nur sichtbarer Text:
@@ -13815,6 +13819,158 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
 .bu-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .bu-row .rq-in{flex:1;min-width:220px}
 </style>
+<script id="rq-warteliste-js">
+// ═══ Warteliste «Platz sichern»: Einstellungen, Zähler und Einträge (Seite Kalender). Alle Texte aus Daten werden mit textContent gesetzt. ═══
+(function(){
+  var st={e:null,z:null,link:'',eintraege:[],msg:null,init:false,busy:false};
+  var STATUS=[['neu','Neu'],['eingeladen','Eingeladen'],['aufgenommen','Aufgenommen'],['abgesagt','Abgesagt']];
+  function isA(){try{return !!isAdv;}catch(e){return false;}}
+  function $(id){return document.getElementById(id);}
+  function h(tag,attrs,kids){
+    var e=document.createElement(tag),k;
+    if(attrs)for(k in attrs){
+      if(k==='text')e.textContent=attrs[k];
+      else if(k.indexOf('on')===0&&typeof attrs[k]==='function')e.addEventListener(k.slice(2),attrs[k]);
+      else if(attrs[k]===true)e.setAttribute(k,'');
+      else if(attrs[k]!==false&&attrs[k]!=null)e.setAttribute(k,attrs[k]);
+    }
+    (kids||[]).forEach(function(c){if(c==null)return;e.appendChild(typeof c==='string'?document.createTextNode(c):c);});
+    return e;
+  }
+  async function call(path,method,body){
+    var o={method:method||'GET'};if(body!==undefined)o.body=JSON.stringify(body);
+    var r=await api(path,o),j=null;try{j=await r.json();}catch(e){}
+    if(!r.ok)throw new Error((j&&j.error)||'Das hat nicht geklappt. Bitte versuche es erneut.');
+    return j;
+  }
+  function meldung(t,schlecht){st.msg=t?{t:t,bad:!!schlecht}:null;var m=$('wl-msg');if(m){m.textContent=t||'';m.className='tp-msg'+(schlecht?' bad':'');}}
+  function zahl(id){return parseInt($(id).value,10);}
+  function datum(d){try{return new Date(d).toLocaleDateString('de-CH');}catch(e){return '';}}
+
+  function zaehlerBereich(){
+    var host=$('wl-zaehler');if(!host)return;host.textContent='';
+    if(!st.z||!st.e)return;
+    host.appendChild(h('div',{class:'ks-h2',text:'Zähler'}));
+    var frei=st.e.plaetze>0?('Freie Plätze: '+st.z.frei+' von '+st.e.plaetze+(st.e.fenster?' im '+st.e.fenster:'')):'Freie Plätze: Plätze pro Monat sind noch nicht gesetzt';
+    host.appendChild(h('p',{class:'rq-hint',text:frei}));
+    host.appendChild(h('p',{class:'rq-hint',text:'Auf der Warteliste: '+st.z.anzahl}));
+    host.appendChild(h('p',{class:'rq-hint',text:'Die Zahlen stammen aus den Einträgen. Freie Plätze sind die Plätze minus eingeladene und aufgenommene Einträge, nie unter 0.'}));
+  }
+  function formular(){
+    var host=$('wl-form');if(!host||!st.e)return;host.textContent='';
+    var e=st.e;
+    var aktiv=h('input',{type:'checkbox',id:'wl-aktiv','aria-label':'Warteliste einschalten'});aktiv.checked=!!e.aktiv;
+    host.appendChild(h('label',{class:'tp-chk'},[aktiv,' Warteliste ist eingeschaltet']));
+    host.appendChild(h('p',{class:'rq-hint',text:'Solange der Schalter aus ist, zeigt die Webseite nichts von der Warteliste und niemand kann sich eintragen.'}));
+    host.appendChild(h('div',{class:'bu-grid'},[
+      h('label',{class:'tp-fl'},[h('span',{text:'Plätze pro Monat'}),h('input',{type:'number',class:'rq-in',id:'wl-plaetze',value:String(e.plaetze),min:'0',max:'500'})]),
+      h('label',{class:'tp-fl'},[h('span',{text:'Name des Aufnahmefensters, zum Beispiel November'}),h('input',{type:'text',class:'rq-in',id:'wl-fenster',value:e.fenster||'',maxlength:'40',autocomplete:'off'})])
+    ]));
+    var pz=h('input',{type:'checkbox',id:'wl-pzeigen','aria-label':'Freie Plätze anzeigen'});pz.checked=!!e.plaetze_zeigen;
+    var lz=h('input',{type:'checkbox',id:'wl-lzeigen','aria-label':'Anzahl auf der Warteliste anzeigen'});lz.checked=!!e.liste_zeigen;
+    host.appendChild(h('label',{class:'tp-chk'},[pz,' Freie Plätze auf der Webseite anzeigen']));
+    host.appendChild(h('label',{class:'tp-chk'},[lz,' Anzahl der Unternehmen auf der Warteliste anzeigen']));
+    host.appendChild(h('div',{class:'bu-grid'},[
+      h('label',{class:'tp-fl'},[h('span',{text:'Anzahl erst ab dieser Zahl anzeigen'}),h('input',{type:'number',class:'rq-in',id:'wl-ab',value:String(e.liste_ab),min:'0',max:'1000'})])
+    ]));
+    host.appendChild(h('div',{class:'tp-acts'},[h('button',{type:'button',class:'rq-btn',id:'wl-save',onclick:speichern},['Einstellungen speichern'])]));
+  }
+  function linkBereich(){
+    var host=$('wl-link-box');if(!host)return;host.textContent='';
+    host.appendChild(h('div',{class:'ks-h2',text:'Link zur Warteliste'}));
+    var inp=h('input',{type:'text',class:'rq-in',id:'wl-url',readonly:true,value:st.link||'','aria-label':'Link zur Warteliste'});
+    host.appendChild(h('div',{class:'bu-row'},[inp,h('button',{type:'button',class:'rq-btn ghost',onclick:function(){
+      inp.select();
+      try{navigator.clipboard.writeText(inp.value).then(function(){meldung('Der Link ist kopiert.');},function(){meldung('Bitte kopiere den Link von Hand.',true);});}catch(x){meldung('Bitte kopiere den Link von Hand.',true);}
+    }},['Link kopieren'])]));
+  }
+  function liste(){
+    var host=$('wl-liste');if(!host)return;host.textContent='';
+    host.appendChild(h('div',{class:'ks-h2',text:'Einträge'}));
+    host.appendChild(h('div',{class:'tp-acts'},[h('button',{type:'button',class:'rq-btn ghost',onclick:exportCsv},['Als CSV exportieren'])]));
+    if(!st.eintraege.length){host.appendChild(h('p',{class:'rq-hint',text:'Noch keine Einträge.'}));return;}
+    var ul=h('ul',{class:'ks-ul'});
+    st.eintraege.forEach(function(x){
+      var sel=h('select',{class:'rq-in','aria-label':'Status von '+x.name,onchange:function(){setStatus(x,sel.value);}});
+      STATUS.forEach(function(s){var o=h('option',{value:s[0],text:s[1]});if(s[0]===x.status)o.selected=true;sel.appendChild(o);});
+      ul.appendChild(h('li',{class:'ks-li'},[
+        h('div',{class:'ks-lt'},[
+          h('div',{class:'ks-name',text:x.name+', '+x.unternehmen}),
+          h('div',{class:'rq-hint',text:x.branche+' · '+x.email+' · '+datum(x.created_at)+(x.monat?' · '+x.monat:'')}),
+          x.anliegen?h('div',{class:'rq-hint',text:x.anliegen}):null
+        ]),
+        sel,
+        h('button',{type:'button',class:'rq-btn',onclick:function(){einladen(x);}},['Zum Gespräch einladen']),
+        h('button',{type:'button',class:'rq-btn ghost tp-del',onclick:function(){loeschen(x);}},['Eintrag löschen'])
+      ]));
+    });
+    host.appendChild(ul);
+  }
+  function zeichne(){linkBereich();zaehlerBereich();formular();liste();if(st.msg)meldung(st.msg.t,st.msg.bad);}
+  async function laden(){
+    try{
+      var r=await call('/api/warteliste/admin/einstellungen');st.e=r.einstellungen;st.z=r.zaehler;st.link=r.link;
+      st.eintraege=(await call('/api/warteliste/admin/liste')).eintraege||[];
+    }catch(x){meldung(x.message,true);}
+    zeichne();
+  }
+  async function nachladen(){
+    try{var r=await call('/api/warteliste/admin/liste');st.eintraege=r.eintraege||[];st.z=r.zaehler;}catch(x){}
+    zaehlerBereich();liste();
+  }
+  async function speichern(){
+    if(st.busy)return;st.busy=true;
+    var b=$('wl-save');if(b)b.disabled=true;
+    try{
+      var r=await call('/api/warteliste/admin/einstellungen','PUT',{aktiv:$('wl-aktiv').checked,plaetze:zahl('wl-plaetze'),fenster:$('wl-fenster').value,plaetze_zeigen:$('wl-pzeigen').checked,liste_zeigen:$('wl-lzeigen').checked,liste_ab:zahl('wl-ab')});
+      st.e=r.einstellungen;st.z=r.zaehler;meldung(st.e.aktiv?'Gespeichert. Die Warteliste ist eingeschaltet.':'Gespeichert. Die Warteliste ist ausgeschaltet.');
+    }catch(x){meldung(x.message,true);}
+    st.busy=false;zeichne();
+  }
+  async function setStatus(x,s){
+    try{await call('/api/warteliste/admin/eintraege/'+x.id+'/status','PUT',{status:s});meldung('Der Status ist gespeichert.');}catch(e){meldung(e.message,true);}
+    await nachladen();
+  }
+  async function einladen(x){
+    if(!window.confirm('Eine Einladung mit dem Buchungslink an '+x.name+' ('+x.email+') senden?'))return;
+    try{await call('/api/warteliste/admin/eintraege/'+x.id+'/einladen','POST',{});meldung('Einladung gesendet. Der Status ist auf eingeladen gesetzt.');}catch(e){meldung(e.message,true);}
+    await nachladen();
+  }
+  async function loeschen(x){
+    if(!window.confirm('Den Eintrag von '+x.name+' ('+x.unternehmen+') endgültig löschen?'))return;
+    try{await call('/api/warteliste/admin/eintraege/'+x.id,'DELETE');meldung('Der Eintrag ist gelöscht.');}catch(e){meldung(e.message,true);}
+    await nachladen();
+  }
+  async function exportCsv(){
+    try{
+      var r=await api('/api/warteliste/admin/export.csv');
+      if(!r.ok)throw new Error('Der Export hat nicht geklappt. Bitte versuche es erneut.');
+      var blob=await r.blob(),u=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=u;a.download='warteliste.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},1000);
+    }catch(e){meldung(e.message,true);}
+  }
+  function baue(){
+    var r=$('tp-root');if(!r||$('wl-root'))return false;
+    var d=h('details',{class:'rq-card tp-card',id:'wl-root'},[
+      h('summary',{class:'tp-sum',text:'Warteliste'}),
+      h('div',{class:'tp-msg',id:'wl-msg',role:'status','aria-live':'polite'}),
+      h('div',{id:'wl-link-box',class:'ks-sec'}),h('div',{id:'wl-zaehler',class:'ks-sec'}),h('div',{id:'wl-form',class:'ks-sec'}),h('div',{id:'wl-liste',class:'ks-sec'})
+    ]);
+    var ref=$('bu-root')||$('ks-root')||$('tp-ein');
+    if(ref&&ref.parentNode)ref.parentNode.insertBefore(d,ref.nextSibling);else r.appendChild(d);
+    return true;
+  }
+  async function start(){
+    if(!isA())return;
+    if(baue()||!st.init){st.init=true;await laden();}
+  }
+  var _open=window.rqAssistentOpen;
+  window.rqAssistentOpen=function(){
+    var r=_open?_open.apply(this,arguments):undefined;
+    setTimeout(start,120);return r;
+  };
+})();
+</script>
 <script id="rq-lernkurve-js">
 (function(){
   var E=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');};
