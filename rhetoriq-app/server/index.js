@@ -364,6 +364,7 @@ app.use(require('./lib/errorHandler').errorHandler);
 const FRONTEND = path.join(__dirname, '..', 'public');
 // Landingpage auf "/", die App (mit Login) bleibt unter /index.html und /login erreichbar.
 app.get('/', (req, res) => res.sendFile(path.join(FRONTEND, Object.keys(req.query).length ? 'index.html' : 'landing.html')));
+app.get('/en', (req, res) => res.sendFile(path.join(FRONTEND, 'landing.en.html')));
 app.get('/login', (_, res) => res.redirect(302, '/index.html'));
 // Eigene Adresse für die Terminbuchung (LinkedIn, Mails): zeigt die Landingpage, das Dialogfenster mit den freien Zeiten öffnet sich selbst.
 app.get('/termin', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.html')));
