@@ -185,6 +185,19 @@ test('Echte Zähler: Plätze minus eingeladene und aufgenommene, nie unter 0, An
   assert.equal((await status()).frei, 3);
 });
 
+test('Von Hand vergebene Plätze zählen echt mit, nie unter 0, ungültige Werte werden 0', async () => {
+  await einstellen({ plaetze: 5, fenster: 'Vergeben-Test', plaetze_zeigen: true, bereits_vergeben: 1 });
+  assert.equal((await status()).frei, 4, '5 Plätze, einer an einen bestehenden Kunden vergeben');
+  await einstellen({ plaetze: 5, fenster: 'Vergeben-Test', plaetze_zeigen: true, bereits_vergeben: 9 });
+  assert.equal((await status()).frei, 0, 'nie unter 0');
+  await einstellen({ plaetze: 5, fenster: 'Vergeben-Test', plaetze_zeigen: true, bereits_vergeben: -2 });
+  assert.equal((await status()).frei, 5, 'ungültiger Wert wird 0');
+  await einstellen({ plaetze: 5, fenster: 'Vergeben-Test', plaetze_zeigen: true, bereits_vergeben: 1.5 });
+  assert.equal((await status()).frei, 5, 'keine Kommazahl');
+  const r = await adm('GET', '/admin/einstellungen');
+  assert.equal(r.body.einstellungen.bereits_vergeben, 0);
+});
+
 test('Zähler nur, wenn Lorena sie erlaubt', async () => {
   await einstellen({ plaetze_zeigen: false, liste_zeigen: false, liste_ab: 0 });
   await eintrag();

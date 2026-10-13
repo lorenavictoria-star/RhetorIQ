@@ -1,5 +1,5 @@
 // Warteliste «Platz sichern»: Einstellungen, Prüfung der Eingaben, Zähler und Datenzugriff.
-// Alle Zahlen sind echt. Freie Plätze = Plätze minus aufgenommene und eingeladene Einträge des Aufnahmefensters, nie unter 0.
+// Alle Zahlen sind echt. Freie Plätze = Plätze minus aufgenommene und eingeladene Einträge des Aufnahmefensters minus von Hand vergebene Plätze (zum Beispiel an bestehende Kunden), nie unter 0.
 const { pool } = require('../db');
 const B = require('./buchung');
 
@@ -7,7 +7,7 @@ const STATUS = ['neu', 'eingeladen', 'aufgenommen', 'abgesagt'];
 const STATUS_ZAEHLT = ['eingeladen', 'aufgenommen']; // belegen einen Platz
 const TAGESLIMIT = 40;
 
-const STANDARD = { aktiv: false, plaetze: 0, fenster: '', plaetze_zeigen: false, liste_zeigen: false, liste_ab: 5 };
+const STANDARD = { aktiv: false, plaetze: 0, fenster: '', plaetze_zeigen: false, liste_zeigen: false, liste_ab: 5, bereits_vergeben: 0 };
 const ganz = (v, min, max, std) => (Number.isInteger(v) && v >= min && v <= max ? v : std);
 
 function einstellungenAus(roh) {
@@ -18,7 +18,8 @@ function einstellungenAus(roh) {
     fenster: B.einZeile(o.fenster, 40),
     plaetze_zeigen: o.plaetze_zeigen === true,
     liste_zeigen: o.liste_zeigen === true,
-    liste_ab: ganz(o.liste_ab, 0, 1000, STANDARD.liste_ab)
+    liste_ab: ganz(o.liste_ab, 0, 1000, STANDARD.liste_ab),
+    bereits_vergeben: ganz(o.bereits_vergeben, 0, 500, STANDARD.bereits_vergeben)
   };
 }
 
@@ -63,7 +64,7 @@ async function zaehler(s) {
   const { rows } = await pool.query('SELECT status, monat FROM warteliste');
   const belegt = rows.filter(r => STATUS_ZAEHLT.includes(r.status) && r.monat === s.fenster).length;
   const anzahl = rows.filter(r => r.status !== 'abgesagt').length;
-  return { belegt, anzahl, frei: Math.max(0, s.plaetze - belegt) };
+  return { belegt, anzahl, frei: Math.max(0, s.plaetze - belegt - s.bereits_vergeben) };
 }
 
 // Öffentliche Sicht: bei ausgeschaltetem Schalter nichts ausser aktiv:false. Zähler nur, wenn Lorena sie erlaubt.
