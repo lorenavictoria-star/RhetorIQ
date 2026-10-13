@@ -6,10 +6,11 @@ const { einZeile, mehrzeilig } = require('./buchung');
 const betreff = (t) => einZeile(t, 150);
 const gruss = (name) => { const n = safeName(name); return n ? 'Guten Tag ' + n : 'Guten Tag'; };
 const SCHLUSS = 'Freundliche Grüsse\nLorena Lienhard\ncontact@lorenalienhard.ch';
+const SCHLUSS_HERZLICH = 'Herzliche Grüsse\nLorena Lienhard\ncontact@lorenalienhard.ch';
 
 function wartelisteBestaetigung(e) {
-  const text = `${gruss(e.name)}\n\nDanke, Sie stehen auf der Liste. Ich melde mich persönlich innert eines Werktags.\n\nIhre Angaben zur Kontrolle:\nUnternehmen: ${einZeile(e.unternehmen, 100) || '-'}\nBranche: ${einZeile(e.branche, 80) || '-'}\n\nWenn Sie sich wieder austragen möchten, antworten Sie einfach auf diese Mail.\n\n${SCHLUSS}`;
-  return { subject: 'Sie stehen auf der Warteliste von RhetorIQ', text };
+  const text = `${gruss(e.name)}\n\nSchön, dass Sie sich für RhetorIQ interessieren. Ihre Anmeldung ist bei mir angekommen, und Ihr Platz auf der Warteliste ist gesichert.\n\nIch lese jede Anmeldung selbst. Innert eines Werktags melde ich mich persönlich bei Ihnen. Wir besprechen dann kurz, was Sie sich von RhetorIQ wünschen und wie der Einstieg für Ihr Unternehmen aussehen kann.\n\nZur Sicherheit habe ich Folgendes notiert:\nUnternehmen: ${einZeile(e.unternehmen, 100) || '-'}\nBranche: ${einZeile(e.branche, 80) || '-'}\n\nWenn sich etwas ändert oder Sie sich wieder austragen möchten, antworten Sie mir einfach auf diese Mail. Sie erreicht mich direkt.\n\nIch freue mich darauf, Sie kennenzulernen.\n\n${SCHLUSS_HERZLICH}`;
+  return { subject: 'Ihr Platz auf der Warteliste von RhetorIQ', text };
 }
 function wartelisteHinweis(e) {
   const text = `Neuer Eintrag auf der Warteliste.\n\nName: ${einZeile(e.name, 80)}\nE-Mail: ${e.email}\nUnternehmen: ${einZeile(e.unternehmen, 100)}\nBranche: ${einZeile(e.branche, 80)}\n\nAnliegen:\n${mehrzeilig(e.anliegen, 1000) || '-'}\n\nDie Einwilligung liegt vor. Du findest den Eintrag unter Warteliste in der Plattform und kannst dort zum Gespräch einladen.`;

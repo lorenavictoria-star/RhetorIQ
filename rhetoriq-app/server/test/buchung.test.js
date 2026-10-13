@@ -499,7 +499,7 @@ test('Formular ohne Termin: sofortige Bestätigung mit Kopie, eine pro Adresse, 
   const ack = kinds('inquiry_ack');
   assert.equal(ack.length, 1);
   assert.equal(ack[0].to, 'clara@firma.ch');
-  assert.ok(ack[0].text.includes('Danke für Ihre Anfrage. Ich melde mich innert eines Werktags persönlich bei Ihnen.'));
+  assert.ok(ack[0].text.includes('Innert eines Werktags melde ich mich bei Ihnen'));
   assert.ok(ack[0].text.includes('clara@firma.ch') && ack[0].text.includes('Ich habe eine Frage zu Ihrem Angebot.'), 'Kopie der Angaben');
   assert.ok(!/[–—]/.test(ack[0].text));
   assert.equal(kinds('inquiry_notify').length, 1, 'die Beraterin erhält die Anfrage weiterhin');

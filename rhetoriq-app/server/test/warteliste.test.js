@@ -100,7 +100,7 @@ test('Eintrag: gespeichert, Bestätigung an die Person (Sie), Hinweis an Lorena'
   assert.equal(b.length, 1);
   assert.equal(b[0].to, 'anna@firma.ch');
   assert.equal(b[0].senderName, 'Lorena Lienhard');
-  assert.ok(b[0].text.includes('Danke, Sie stehen auf der Liste. Ich melde mich persönlich innert eines Werktags.'));
+  assert.ok(b[0].text.includes('Ihr Platz auf der Warteliste ist gesichert'));
   assert.ok(b[0].text.startsWith('Guten Tag Anna Muster'));
   assert.ok(!b[0].attachments);
   const h = kinds('warteliste_hinweis');
