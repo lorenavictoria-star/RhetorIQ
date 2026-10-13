@@ -380,6 +380,18 @@ async function init() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS feedback_notes_created_idx ON feedback_notes(created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS inbox_mails (
+      id SERIAL PRIMARY KEY,
+      von_name TEXT NOT NULL DEFAULT '',
+      von_adresse TEXT NOT NULL DEFAULT '',
+      an_adresse TEXT NOT NULL DEFAULT '',
+      betreff TEXT NOT NULL DEFAULT '',
+      auszug TEXT NOT NULL DEFAULT '',
+      empfangen_am TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      gelesen_am TIMESTAMPTZ,
+      message_id TEXT UNIQUE
+    );
   `);
 }
 

@@ -171,6 +171,8 @@ app.use(cors((req, cb) => cb(null, req.path === '/api/inquiry'
   : { origin: process.env.CORS_ORIGIN || 'https://rhetoriq.ch', credentials: true })));
 // Webhook needs raw body — must be registered before express.json()
 app.use('/api/subscriptions/webhook', express.raw({ type: 'application/json' }));
+// Mail-Empfang: eigenes, kleines Grössenlimit vor dem allgemeinen Parser
+app.use('/api/eingang/mail', express.json({ limit: '300kb' }));
 app.use(express.json({ limit: '5mb' }));
 
 // Structured request logging: timestamp · method · path · status · duration
@@ -281,6 +283,8 @@ app.use('/api/schnelltest', require('./routes/schnelltest'));
 app.use('/api/onboarding-drafts', require('./routes/onboardingDrafts'));
 app.use('/api/files', require('./routes/files'));
 app.use('/api/help-chat', require('./routes/helpChat'));
+app.use('/api/assistent/eingang', require('./routes/eingang').advisorRouter);
+app.use('/api/eingang', require('./routes/eingang').mailRouter);
 app.use('/api/assistent', require('./routes/assistent'));
 app.use('/api/tagesplan', require('./routes/tagesplan'));
 app.use('/api/kalender/google', require('./routes/kalenderGoogle'));

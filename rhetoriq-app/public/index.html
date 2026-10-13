@@ -1605,29 +1605,39 @@ html[lang="en"] .legal-en-note{display:block}
 
     <!-- ASSISTENT (nur Beraterin) -->
     <div class="page" id="page-assistent">
-      <div class="page-title" style="margin-bottom:6px">Assistent</div>
-      <p class="rq-hint" style="margin-bottom:16px">Sprich oder schreibe, was du öffnen möchtest. Der Assistent antwortet nur als Text. Der Verlauf bleibt nur in dieser Sitzung.</p>
-      <div class="rq-card" style="gap:14px">
+      <div class="page-title" style="margin-bottom:10px">Assistent</div>
+      <div class="rq-card eg-as">
         <div class="as-log" id="as-log" role="log" aria-live="polite" aria-label="Unterhaltung"></div>
-        <button type="button" class="as-mic" id="as-mic" aria-label="Aufnahme starten" aria-pressed="false" title="Gedrückt halten oder klicken zum Sprechen (höchstens 30 Sekunden)"><i class="ti ti-microphone" aria-hidden="true"></i></button>
-        <div class="as-st" id="as-st" role="status" aria-live="polite"></div>
-        <form class="as-row" onsubmit="return rqAssistentSubmit(event)">
+        <form class="as-row eg-asrow" onsubmit="return rqAssistentSubmit(event)">
           <input type="text" class="rq-in" id="as-in" maxlength="400" placeholder="Zum Beispiel: Öffne die Freigaben" autocomplete="off" aria-label="Befehl">
+          <button type="button" class="as-mic" id="as-mic" aria-label="Aufnahme starten" aria-pressed="false" title="Gedrückt halten oder klicken zum Sprechen (höchstens 30 Sekunden)"><i class="ti ti-microphone" aria-hidden="true"></i></button>
           <button type="submit" class="rq-btn">Senden</button>
         </form>
-        <div id="as-ex"><div class="rq-eb" style="margin-bottom:8px">Beispiele</div><div class="rq-chips">
-          <button type="button" class="rq-chip" data-ex="Was ist heute los?">Was ist heute los?</button>
-          <button type="button" class="rq-chip" data-ex="Öffne die Freigaben">Öffne die Freigaben</button>
-          <button type="button" class="rq-chip" data-ex="Zeig mir die Kunden">Zeig mir die Kunden</button>
-          <button type="button" class="rq-chip" data-ex="Öffne die Nutzung">Öffne die Nutzung</button>
-          <button type="button" class="rq-chip" data-ex="Starte ein Onboarding">Starte ein Onboarding</button>
-          <button type="button" class="rq-chip" data-ex="Mach mir den Tagesplan">Mach mir den Tagesplan</button>
-          <button type="button" class="rq-chip" data-ex="Was ist als Nächstes dran?">Was ist als Nächstes dran?</button>
-          <button type="button" class="rq-chip" data-ex="Trage Sport morgen 17 bis 18 Uhr ein">Trage Sport morgen 17 bis 18 Uhr ein</button>
-          <button type="button" class="rq-chip" data-ex="Wie lade ich ein Dokument hoch?">Wie lade ich ein Dokument hoch?</button>
-        </div></div>
+        <div class="as-st" id="as-st" role="status" aria-live="polite"></div>
+        <details class="eg-bsp" id="eg-bsp">
+          <summary>Beispiele</summary>
+          <p class="rq-hint">Sprich oder schreibe, was du öffnen möchtest. Der Assistent antwortet nur als Text. Der Verlauf bleibt nur in dieser Sitzung.</p>
+          <div id="as-ex"><div class="rq-chips">
+            <button type="button" class="rq-chip" data-ex="Was ist heute los?">Was ist heute los?</button>
+            <button type="button" class="rq-chip" data-ex="Öffne die Freigaben">Öffne die Freigaben</button>
+            <button type="button" class="rq-chip" data-ex="Zeig mir die Kunden">Zeig mir die Kunden</button>
+            <button type="button" class="rq-chip" data-ex="Öffne die Nutzung">Öffne die Nutzung</button>
+            <button type="button" class="rq-chip" data-ex="Starte ein Onboarding">Starte ein Onboarding</button>
+            <button type="button" class="rq-chip" data-ex="Mach mir den Tagesplan">Mach mir den Tagesplan</button>
+            <button type="button" class="rq-chip" data-ex="Was ist als Nächstes dran?">Was ist als Nächstes dran?</button>
+            <button type="button" class="rq-chip" data-ex="Trage Sport morgen 17 bis 18 Uhr ein">Trage Sport morgen 17 bis 18 Uhr ein</button>
+            <button type="button" class="rq-chip" data-ex="Wie lade ich ein Dokument hoch?">Wie lade ich ein Dokument hoch?</button>
+          </div></div>
+        </details>
       </div>
-      <div id="tp-root"></div>
+      <section class="eg-sec" id="eg-eingang" aria-labelledby="eg-h">
+        <div class="eg-head"><h2 class="eg-h" id="eg-h">Eingegangen</h2><span class="eg-live" id="eg-live" role="status" aria-live="polite"></span></div>
+        <div class="eg-pills" id="eg-pills" role="group" aria-label="Filter"></div>
+        <ul class="eg-list" id="eg-list" aria-labelledby="eg-h"></ul>
+      </section>
+      <section class="eg-heute" id="eg-heute" aria-label="Heute"></section>
+      <details class="eg-fold" id="eg-kal"><summary>Kalender öffnen</summary><div id="tp-root"></div></details>
+      <div id="eg-mehr"></div>
     </div>
 
     <!-- VIDEOS -->
@@ -2399,6 +2409,10 @@ window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Terminbuchung", "App
 <script id="rq-xpairs-warteliste">
 // DE/EN-Paare für die Warteliste; rq-i18n fügt window.RQ_EXTRA_PAIRS zu PAIRS hinzu.
 window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Warteliste", "Waiting list"], ["Warteliste ist eingeschaltet", "Waiting list is switched on"], ["Solange der Schalter aus ist, zeigt die Webseite nichts von der Warteliste und niemand kann sich eintragen.", "While the switch is off, the website shows nothing about the waiting list and nobody can sign up."], ["Plätze pro Monat", "Places per month"], ["Name des Aufnahmefensters, zum Beispiel November", "Name of the intake window, for example November"], ["Freie Plätze auf der Webseite anzeigen", "Show free places on the website"], ["Anzahl der Unternehmen auf der Warteliste anzeigen", "Show the number of companies on the waiting list"], ["Anzahl erst ab dieser Zahl anzeigen", "Only show the number from this count"], ["Zähler", "Counters"], ["Freie Plätze", "Free places"], ["Auf der Warteliste", "On the waiting list"], ["Die Zahlen stammen aus den Einträgen. Freie Plätze sind die Plätze minus eingeladene und aufgenommene Einträge, nie unter 0.", "The numbers come from the entries. Free places are the places minus invited and accepted entries, never below 0."], ["Einträge", "Entries"], ["Noch keine Einträge.", "No entries yet."], ["Zum Gespräch einladen", "Invite to a call"], ["Als CSV exportieren", "Export as CSV"], ["Eintrag löschen", "Delete entry"], ["Einladung gesendet. Der Status ist auf eingeladen gesetzt.", "Invitation sent. The status is set to invited."], ["Der Eintrag ist gelöscht.", "The entry has been deleted."], ["Link zur Warteliste", "Link to the waiting list"], ["Neu", "New"], ["Eingeladen", "Invited"], ["Aufgenommen", "Accepted"], ["Abgesagt", "Declined"]]);
+</script>
+<script id="rq-xpairs-eingang">
+// DE/EN-Paare für den Eingang der Beraterin; rq-i18n fügt window.RQ_EXTRA_PAIRS zu PAIRS hinzu.
+window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Eingegangen","Received"],["Beispiele","Examples"],["Alles erledigt. Nichts Neues.","All done. Nothing new."],["Hier ist nichts Neues.","Nothing new here."],["Alle","All"],["Freigaben","Approvals"],["Anfragen","Inquiries"],["E-Mails","Emails"],["Termine","Appointments"],["Warteliste","Waiting list"],["Freigeben","Approve"],["Antworten","Reply"],["Ansehen","View"],["Öffnen","Open"],["Schliessen","Close"],["Neu","New"],["gestern {1}","yesterday {1}"],["Der Eingang konnte nicht geladen werden.","The inbox could not be loaded."],["Heute","Today"],["Kalender öffnen","Open calendar"],["Terminbuchung","Appointment booking"],["Nächster Termin","Next appointment"],["Kein Termin mehr heute","No more appointments today"],["Heute ist ein freier Tag.","Today is a day off."],["Frei","Free"],["Jetzt","Now"],["Filter","Filter"],["Texte mit Frist","Texts with deadline"],["Blöcke","Blocks"],["Freie Zeit","Free time"]]);
 </script>
 <script id="rq-i18n">
 // ── I18N: Wörterbuch-Ebene über dem bestehenden T/applyLang-System ──
@@ -12179,8 +12193,7 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
   }
   window.rqAssistentOpen=function(){
     goPage('assistent');if(window.setMN)setMN('home');if(window.rqMarkRail)rqMarkRail('home');
-    var l=log();
-    if(l&&(!l.children.length||Date.now()-lastSummary>30*60*1000))summary();
+    // Die Übersicht liefert der Eingang. Der Verlauf erscheint erst, wenn du dem Assistenten etwas sagst.
     var i=$('as-in');if(i&&!/Mobi|Android/i.test(navigator.userAgent))i.focus();
   };
   async function ensureClients(){
@@ -13971,6 +13984,281 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
   };
 })();
 </script>
+<script id="rq-eingang-js">
+// ═══ Eingang der Beraterin: Liste von allem Neuen, Streifen «Heute», eingeklappte Kalender-Zeilen. Alle Texte aus Daten werden mit textContent gesetzt. ═══
+(function(){
+  var st={daten:null,filter:'alle',timer:null,laden:false,gelesen:{},offen:{}};
+  var FILTER=[['alle','Alle','alle'],['freigabe','Freigaben','freigaben'],['anfrage','Anfragen','anfragen'],['mail','E-Mails','mails'],['termin','Termine','termine'],['warteliste','Warteliste','warteliste']];
+  var ICON={freigabe:'ti-circle-check',anfrage:'ti-message-circle',mail:'ti-mail',termin:'ti-calendar-event',warteliste:'ti-list-details'};
+  var AKTION={freigabe:'Freigeben',anfrage:'Antworten',mail:'Öffnen',termin:'Ansehen',warteliste:'Öffnen'};
+  var TZ='Europe/Zurich',DAY0=7*60,DAY1=19*60;
+  function isA(){try{return !!isAdv;}catch(e){return false;}}
+  function $(id){return document.getElementById(id);}
+  function h(tag,attrs,kids){
+    var e=document.createElement(tag),k;
+    if(attrs)for(k in attrs){
+      if(k==='text')e.textContent=attrs[k];
+      else if(k.indexOf('on')===0&&typeof attrs[k]==='function')e.addEventListener(k.slice(2),attrs[k]);
+      else if(attrs[k]===true)e.setAttribute(k,'');
+      else if(attrs[k]!==false&&attrs[k]!=null)e.setAttribute(k,attrs[k]);
+    }
+    (kids||[]).forEach(function(c){if(c==null)return;e.appendChild(typeof c==='string'?document.createTextNode(c):c);});
+    return e;
+  }
+  function aktiv(){var p=$('page-assistent');return !!p&&p.classList.contains('active');}
+  async function call(path,method){
+    var r=await api(path,method?{method:method}:{}),j=null;
+    try{j=await r.json();}catch(e){}
+    if(!r.ok)throw new Error((j&&j.error)||'Fehler '+r.status);
+    return j;
+  }
+
+  // ── Zeit ──
+  function teile(d){
+    var o={};new Intl.DateTimeFormat('en-GB',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(d).forEach(function(p){o[p.type]=p.value;});
+    return o;
+  }
+  function tagKey(o){return o.year+'-'+o.month+'-'+o.day;}
+  function zeitText(iso){
+    var d=new Date(iso);if(isNaN(d.getTime()))return '';
+    var o=teile(d),n=new Date(),on=teile(n),gest=teile(new Date(n.getTime()-86400000));
+    var hm=o.hour+':'+o.minute;
+    if(tagKey(o)===tagKey(on))return hm;
+    if(tagKey(o)===tagKey(gest))return 'gestern '+hm;
+    return o.day+'.'+o.month+'.'+o.year;
+  }
+
+  // ── Eingang ──
+  function pills(){
+    var box=$('eg-pills');if(!box)return;box.textContent='';
+    var z=(st.daten&&st.daten.zaehler)||{};
+    FILTER.forEach(function(f){
+      var n=z[f[2]]||0,on=st.filter===f[0];
+      var b=h('button',{type:'button',class:'eg-pill'+(on?' on':'')+(n?'':' leer'),'aria-pressed':on?'true':'false',onclick:function(){st.filter=f[0];zeichne();}},[h('span',{text:f[1]}),h('span',{class:'eg-n',text:String(n)})]);
+      box.appendChild(b);
+    });
+  }
+  function aktion(e){
+    var z=e.ziel||{};
+    if(e.typ==='freigabe'){if(typeof openReviewPanel==='function')openReviewPanel();if(window.rqMarkRail)rqMarkRail('reviews');return;}
+    if(e.typ==='anfrage'){
+      if(typeof goPage==='function')goPage('clients');
+      if(typeof loadAdvisorDashboard==='function')loadAdvisorDashboard();
+      setTimeout(function(){var b=$('inq-box');if(b&&b.scrollIntoView)b.scrollIntoView({behavior:'smooth',block:'start'});},400);
+      return;
+    }
+    if(e.typ==='termin'){faltAuf('bu-root',true);return;}
+    if(e.typ==='warteliste'){faltAuf('wl-root',true);return;}
+  }
+  function faltAuf(id,scroll){
+    var d=$(id);if(!d)return;
+    d.open=true;
+    if(scroll&&d.scrollIntoView)setTimeout(function(){d.scrollIntoView({behavior:'smooth',block:'start'});},50);
+  }
+  function mailToggle(e,zeile,btn,dot){
+    var ex=zeile.querySelector('.eg-ex');if(!ex)return;
+    var auf=ex.hasAttribute('hidden');
+    if(auf)ex.removeAttribute('hidden');else ex.setAttribute('hidden','');
+    btn.textContent=auf?'Schliessen':'Öffnen';
+    btn.setAttribute('aria-expanded',auf?'true':'false');
+    st.offen[e.id]=auf;
+    if(auf&&e.neu&&!st.gelesen[e.id]){
+      st.gelesen[e.id]=true;e.neu=false;
+      zeile.classList.remove('neu');if(dot&&dot.parentNode)dot.parentNode.removeChild(dot);
+      var mid=e.ziel&&e.ziel.id;
+      if(mid!=null)call('/api/assistent/eingang/mail/'+encodeURIComponent(mid)+'/gelesen','POST').catch(function(){});
+    }
+  }
+  function zeile(e){
+    var z=e.ziel||{};
+    var neu=e.neu&&!st.gelesen[e.id];
+    var dot=neu?h('span',{class:'eg-dot',role:'img','aria-label':'Neu'}):null;
+    var li=h('li',{class:'eg-row'+(neu?' neu':''),'data-typ':e.typ});
+    var haupt=h('div',{class:'eg-main'},[h('div',{class:'eg-t',text:e.titel||''}),h('div',{class:'eg-i',text:e.info||''})]);
+    var btn=h('button',{type:'button',class:'rq-btn ghost eg-btn','aria-label':(AKTION[e.typ]||'Öffnen')+': '+(e.titel||'')},[AKTION[e.typ]||'Öffnen']);
+    if(e.typ==='mail'){
+      haupt.appendChild(h('div',{class:'eg-ex',hidden:true,text:z.auszug||'(kein Text)'}));
+      btn.setAttribute('aria-expanded','false');
+      btn.addEventListener('click',function(){mailToggle(e,li,btn,dot);});
+    }else btn.addEventListener('click',function(){aktion(e);});
+    li.appendChild(h('i',{class:'ti '+(ICON[e.typ]||'ti-bell')+' eg-ic','aria-hidden':'true'}));
+    li.appendChild(h('div',{class:'eg-mid'},[dot,haupt]));
+    li.appendChild(h('div',{class:'eg-side'},[h('span',{class:'eg-z',text:zeitText(e.zeit)}),btn]));
+    if(e.typ==='mail'&&st.offen[e.id]){mailToggle(e,li,btn,dot);}
+    return li;
+  }
+  function zeichne(){
+    var ul=$('eg-list');if(!ul)return;
+    pills();
+    ul.textContent='';
+    var l=(st.daten&&st.daten.eintraege)||[];
+    if(st.filter!=='alle')l=l.filter(function(e){return e.typ===st.filter;});
+    if(!l.length){ul.appendChild(h('li',{class:'eg-leer',text:st.filter==='alle'?'Alles erledigt. Nichts Neues.':'Hier ist nichts Neues.'}));return;}
+    l.forEach(function(e){ul.appendChild(zeile(e));});
+  }
+  async function eingangLaden(){
+    if(!isA()||!$('eg-list')||st.laden)return;
+    st.laden=true;
+    try{
+      var d=await call('/api/assistent/eingang');
+      st.daten=d;
+      var live=$('eg-live');if(live)live.textContent='';
+      zeichne();
+    }catch(e){
+      var l=$('eg-live');if(l)l.textContent='Der Eingang konnte nicht geladen werden.';
+    }finally{st.laden=false;}
+  }
+
+  // ── Heute ──
+  function p2(n){return (n<10?'0':'')+n;}
+  function hhmm(m){return p2(Math.floor(m/60))+':'+p2(m%60);}
+  function jetztMin(){var o=teile(new Date());return (+o.hour)*60+(+o.minute);}
+  function heuteDatum(){var o=teile(new Date());return o.year+'-'+o.month+'-'+o.day;}
+  function seg(cls,von,bis,a,b,titel){
+    var l=Math.max(0,(von-a)/(b-a)*100),w=Math.max(0.8,(Math.min(bis,b)-Math.max(von,a))/(b-a)*100);
+    if(bis<=a||von>=b)return null;
+    return h('span',{class:'eg-seg '+cls,style:'left:'+l.toFixed(2)+'%;width:'+w.toFixed(2)+'%',title:titel});
+  }
+  function heuteZeichnen(plan){
+    var box=$('eg-heute');if(!box)return;box.textContent='';
+    var kopf=h('div',{class:'eg-hl'},[h('strong',{text:'Heute'})]);
+    var info=h('span',{class:'eg-hsum'});kopf.appendChild(info);
+    box.appendChild(kopf);
+    if(!plan||(plan.arbeitstag===false&&(!plan.items||!plan.items.length))){
+      info.textContent='Heute ist ein freier Tag.';return;
+    }
+    var items=plan.items||[],bl=(plan.bloecke||[]).filter(function(b){return !b.ganztaegig;});
+    var a=DAY0,b=DAY1;
+    items.concat(bl).forEach(function(x){if(x.beginn<a)a=Math.floor(x.beginn/60)*60;if(x.ende>b)b=Math.ceil(x.ende/60)*60;});
+    b=Math.min(b,1440);
+    var bar=h('div',{class:'eg-bar',role:'img'});
+    var teile_=[];
+    bl.forEach(function(x){var s=seg('blk',x.beginn,x.ende,a,b,hhmm(x.beginn)+' '+(x.titel||''));if(s)bar.appendChild(s);teile_.push([x.beginn,x.ende]);});
+    items.forEach(function(x){var s=seg('txt'+(x.verspaetet||x.ueberfaellig?' spaet':''),x.beginn,x.ende,a,b,hhmm(x.beginn)+' '+(x.titel||''));if(s)bar.appendChild(s);teile_.push([x.beginn,x.ende]);});
+    var jetzt=jetztMin();
+    if(jetzt>=a&&jetzt<=b)bar.appendChild(h('span',{class:'eg-now',style:'left:'+((jetzt-a)/(b-a)*100).toFixed(2)+'%',title:'Jetzt'}));
+    // freie Zeit ab jetzt: Vereinigung der belegten Spannen
+    var von=Math.max(jetzt,a),belegt=0,last=von;
+    teile_.map(function(t){return [Math.max(t[0],von),Math.min(t[1],b)];}).filter(function(t){return t[1]>t[0];}).sort(function(x,y){return x[0]-y[0];}).forEach(function(t){
+      var s0=Math.max(t[0],last);if(t[1]>s0){belegt+=t[1]-s0;last=t[1];}
+    });
+    var frei=Math.max(0,b-von-belegt);
+    var mitFrist=items.filter(function(x){return x.frist;}).length;
+    var nachste=bl.filter(function(x){return x.beginn>=jetzt;}).sort(function(x,y){return x.beginn-y.beginn;})[0];
+    var txt=items.length+(items.length===1?' Text':' Texte')+(mitFrist?', '+mitFrist+' mit Frist':'')+', '+Math.floor(frei/60)+' Std. '+(frei%60)+' Min. frei';
+    info.textContent=txt;
+    bar.setAttribute('aria-label',txt+'. Plan von '+hhmm(a)+' bis '+hhmm(b)+' Uhr.');
+    box.appendChild(bar);
+    var ticks=h('div',{class:'eg-ticks','aria-hidden':'true'},[h('span',{text:hhmm(a)}),h('span',{text:hhmm(b)})]);
+    box.appendChild(ticks);
+    box.appendChild(h('div',{class:'eg-next'},[nachste?h('span',null,['Nächster Termin ',h('strong',{text:hhmm(nachste.beginn)}),' ',h('span',{text:nachste.titel||''})]):h('span',{text:'Kein Termin mehr heute'})]));
+  }
+  async function heuteLaden(){
+    if(!isA()||!$('eg-heute'))return;
+    try{heuteZeichnen(await call('/api/tagesplan/plan?datum='+heuteDatum()));}catch(e){heuteZeichnen(null);var b=$('eg-heute');if(b)b.textContent='';}
+  }
+
+  // ── Eingeklappte Zeilen ──
+  function ordnen(){
+    var mehr=$('eg-mehr'),bu=$('bu-root'),wl=$('wl-root');if(!mehr)return;
+    if(bu&&bu.parentNode!==mehr)mehr.appendChild(bu);
+    if(wl&&wl.parentNode!==mehr)mehr.appendChild(wl);
+    if(bu&&wl&&bu.nextSibling!==wl&&bu.parentNode===mehr)mehr.insertBefore(bu,wl);
+    [bu,wl].forEach(function(d){if(d)d.classList.add('eg-zeile');});
+  }
+  function verdrahten(){
+    var root=$('tp-root');
+    if(root&&!root._egBeobachter){root._egBeobachter=true;new MutationObserver(ordnen).observe(root,{childList:true});}
+    ordnen();
+    var k=$('eg-kal');
+    if(k&&!k._egTog){k._egTog=true;k.addEventListener('toggle',function(){
+      if(!k.open)return;
+      if(typeof window.rqTagesplanLaden==='function')window.rqTagesplanLaden();
+      setTimeout(function(){try{window.dispatchEvent(new Event('resize'));}catch(e){}},30);
+    });}
+    var mehr=$('eg-mehr');
+    if(mehr&&!mehr._egBeobachter){mehr._egBeobachter=true;}
+  }
+
+  // ── Start und Aktualisierung ──
+  function tick(){if(document.hidden||!aktiv()||!isA())return;eingangLaden();heuteLaden();}
+  function start(){
+    if(!isA())return;
+    verdrahten();eingangLaden();heuteLaden();
+    if(!st.timer)st.timer=setInterval(tick,60000);
+  }
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)tick();});
+  var _open=window.rqAssistentOpen;
+  window.rqAssistentOpen=function(){
+    var r=_open?_open.apply(this,arguments):undefined;
+    start();return r;
+  };
+  window.rqEingangLaden=function(){eingangLaden();heuteLaden();};
+})();
+</script>
+<style id="rq-eingang-css">
+#page-assistent .eg-as{gap:8px;padding:12px 14px}
+.as-log{min-height:0;max-height:34vh}
+.as-log:empty{display:none}
+.eg-asrow{align-items:center;gap:8px}
+.eg-asrow .rq-in{min-width:0}
+.eg-asrow .as-mic{width:48px;height:48px;min-width:48px;font-size:22px;border-width:1px;flex:none}
+.eg-asrow .rq-btn{flex:none;padding:10px 16px}
+@media(max-width:640px){.eg-asrow{flex-direction:row}}
+.eg-as .as-st{min-height:0;text-align:left}
+.as-st:empty{display:none}
+.eg-bsp>summary{cursor:pointer;font-size:13px;color:var(--mu);min-height:32px;display:flex;align-items:center}
+.eg-bsp>summary:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.eg-bsp .rq-hint{margin:6px 0 10px}
+.eg-sec{margin-top:20px}
+.eg-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.eg-h{font-size:22px;font-weight:700;margin:0;font-family:var(--sans);color:var(--tx)}
+.eg-live{font-size:13px;color:var(--red)}
+.eg-live:empty{display:none}
+.eg-pills{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.eg-pill{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:4px 12px;border:1px solid var(--bd);background:#fff;color:var(--tx);font-family:var(--sans);font-size:14px;cursor:pointer}
+.eg-pill .eg-n{font-size:12px;color:var(--mu);font-weight:700}
+.eg-pill.on{background:var(--acl);border-color:var(--ac);color:var(--ac)}
+.eg-pill.on .eg-n{color:var(--ac)}
+.eg-pill.leer{color:var(--mu)}
+.eg-pill:focus-visible,.eg-btn:focus-visible,.eg-fold>summary:focus-visible,.eg-zeile>summary:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.eg-list{list-style:none;margin:0;padding:0;border:1px solid var(--bd);background:#fff}
+.eg-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 14px;border-top:1px solid var(--bd)}
+.eg-row:first-child{border-top:0}
+.eg-ic{font-size:20px;color:var(--ac);margin-top:2px}
+.eg-mid{display:flex;gap:8px;align-items:flex-start;min-width:0}
+.eg-dot{flex:none;width:9px;height:9px;border-radius:50%;background:var(--ac);margin-top:7px}
+.eg-main{min-width:0}
+.eg-t{font-weight:700;font-size:15px;overflow-wrap:anywhere}
+.eg-i{font-size:13.5px;color:var(--mu);overflow-wrap:anywhere}
+.eg-ex{margin-top:6px;padding:8px 10px;background:var(--acl);font-size:14px;line-height:1.5;overflow-wrap:anywhere;white-space:pre-wrap}
+.eg-side{display:flex;align-items:center;gap:12px}
+.eg-z{font-size:13px;color:var(--mu);white-space:nowrap}
+.eg-btn{min-height:40px;padding:6px 14px;font-size:14px}
+.eg-leer{padding:22px 14px;text-align:center;color:var(--mu);font-size:15px}
+@media(max-width:560px){
+  .eg-row{grid-template-columns:24px minmax(0,1fr);padding:10px 12px}
+  .eg-side{grid-column:2;justify-content:space-between}
+}
+.eg-heute{margin-top:16px;border:1px solid var(--bd);background:#fff;padding:8px 14px;min-height:60px}
+.eg-heute:empty{display:none}
+.eg-hl{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;font-size:14px}
+.eg-hsum{color:var(--mu);font-size:13px}
+.eg-bar{position:relative;height:14px;margin:6px 0 2px;background:var(--acl);border:1px solid var(--bd)}
+.eg-seg{position:absolute;top:0;bottom:0}
+.eg-seg.txt{background:var(--ac)}
+.eg-seg.txt.spaet{background:var(--red)}
+.eg-seg.blk{background:var(--mu);opacity:.5}
+.eg-now{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--tx)}
+.eg-ticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mu);line-height:1}
+.eg-next{font-size:13px;margin-top:2px;overflow-wrap:anywhere}
+.eg-fold,.eg-zeile{margin-top:10px;border:1px solid var(--bd);background:#fff;padding:0 14px}
+.eg-fold>summary,.eg-zeile>.tp-sum{cursor:pointer;font-size:16px;font-weight:600;min-height:48px;display:flex;align-items:center;font-family:var(--sans)}
+.eg-zeile.rq-card{gap:0}
+.eg-fold[open]{padding-bottom:14px}
+.eg-fold>#tp-root{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+@media(prefers-reduced-motion:no-preference){.eg-pill,.eg-btn{transition:border-color .15s,background .15s}}
+</style>
 <script id="rq-lernkurve-js">
 (function(){
   var E=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');};
