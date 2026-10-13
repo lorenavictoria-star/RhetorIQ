@@ -13984,6 +13984,238 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
   };
 })();
 </script>
+<script id="rq-schnelltest-js">
+// ═══ Schnelltests der Landingpage: Liste, Auswahl von drei Auffälligkeiten, Einschätzung, PDF-Vorschau und Versand (nur Beraterin). Alle Texte aus Daten werden mit textContent oder value gesetzt. ═══
+(function(){
+  var st={liste:[],d:null,offen:null,msg:null,busy:false,init:false,auswahl:[]};
+  var STATUS={entwurf:'Entwurf',freigegeben:'Freigegeben',gesendet:'Gesendet'};
+  function isA(){try{return !!isAdv;}catch(e){return false;}}
+  function $(id){return document.getElementById(id);}
+  function h(tag,attrs,kids){
+    var e=document.createElement(tag),k;
+    if(attrs)for(k in attrs){
+      if(k==='text')e.textContent=attrs[k];
+      else if(k==='value')e.value=attrs[k];
+      else if(k.indexOf('on')===0&&typeof attrs[k]==='function')e.addEventListener(k.slice(2),attrs[k]);
+      else if(attrs[k]===true)e.setAttribute(k,'');
+      else if(attrs[k]!==false&&attrs[k]!=null)e.setAttribute(k,attrs[k]);
+    }
+    (kids||[]).forEach(function(c){if(c==null)return;e.appendChild(typeof c==='string'?document.createTextNode(c):c);});
+    return e;
+  }
+  async function call(path,method,body){
+    var o={method:method||'GET'};if(body!==undefined)o.body=JSON.stringify(body);
+    var r=await api(path,o),j=null;try{j=await r.json();}catch(e){}
+    if(!r.ok)throw new Error((j&&j.error)||'Das hat nicht geklappt. Bitte versuche es erneut.');
+    return j;
+  }
+  function meldung(t,schlecht){st.msg=t?{t:t,bad:!!schlecht}:null;var m=$('st-msg');if(m){m.textContent=t||'';m.className='tp-msg'+(schlecht?' bad':'');}}
+  function datum(d){try{return new Date(d).toLocaleString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+  function komma(n){return String(n).replace('.',',');}
+
+  function kennzahlenListe(k){
+    var z=[];if(!k)return z;
+    if(k.woerterProSatz!=null){z.push(['Wörter pro Satz (Durchschnitt)',komma(k.woerterProSatz)]);z.push(['Sätze über 25 Wörter',k.anteilLangeSaetze+' Prozent ('+k.langeSaetze+' von '+k.saetze+')']);}
+    if(k.wir!=null)z.push(['Wir-Wörter zu Sie-Wörtern (mitten im Satz)',k.wir+' zu '+k.sie]);
+    if(k.floskeln)z.push(['Floskeln',k.floskeln.treffer+' Treffer'+((k.floskeln.liste||[]).length?': '+k.floskeln.liste.slice(0,5).map(function(x){return x.floskel+' ('+x.anzahl+')';}).join(', '):'')]);
+    if(k.nominalstil)z.push(['Wörter auf -ung, -keit, -heit (Näherung)',komma(k.nominalstil.anteil)+' Prozent']);
+    if(k.passiv)z.push(['Sätze im Passiv (Näherung)',k.passiv.anteil+' Prozent']);
+    return z;
+  }
+
+  // ── Liste ──
+  function zeichneListe(){
+    var box=$('st-body');if(!box)return;box.textContent='';
+    if(!st.liste.length){box.appendChild(h('p',{class:'rq-hint',text:'Noch keine Schnelltests. Sobald jemand auf der Webseite den Stimm-Schnelltest ausfüllt, erscheint er hier.'}));return;}
+    var ul=h('ul',{class:'st-list'});
+    st.liste.forEach(function(x){
+      var b=h('button',{type:'button',class:'st-row','aria-label':'Schnelltest '+x.host+' öffnen',onclick:function(){oeffne(x.id);}},[
+        h('span',{class:'st-firma',text:x.firma||x.host}),
+        h('span',{class:'st-meta',text:datum(x.created_at)+(x.bereit?'':', Analyse läuft')}),
+        h('span',{class:'st-chip st-'+x.status,text:STATUS[x.status]||x.status})
+      ]);
+      ul.appendChild(h('li',null,[b]));
+    });
+    box.appendChild(ul);
+  }
+  async function laden(){
+    try{
+      var r=await call('/api/schnelltests');st.liste=r.schnelltests||[];
+      var n=st.liste.filter(function(x){return x.status!=='gesendet';}).length;
+      var s=$('st-zahl');if(s)s.textContent=n?(' ('+n+' offen)'):'';
+      if(!st.d)zeichneListe();
+    }catch(e){var b=$('st-body');if(b&&!st.d){b.textContent='';b.appendChild(h('p',{class:'rq-hint',text:e.message}));}}
+  }
+
+  // ── Detail ──
+  async function oeffne(id){
+    meldung('');
+    try{st.d=await call('/api/schnelltests/'+id);st.auswahl=(st.d.auswahl||[]).slice();zeichneDetail();}
+    catch(e){meldung(e.message,true);}
+  }
+  function schliesse(){st.d=null;meldung('');zeichneListe();laden();}
+  function gesendet(){return st.d&&st.d.status==='gesendet';}
+  function feld(label,id,wert,zeilen,max){
+    var ta=h('textarea',{class:'rq-in',id:id,rows:zeilen||3,maxlength:max||1000,'aria-label':label,value:wert||''});
+    if(gesendet())ta.disabled=true;
+    return h('label',{class:'st-feld'},[h('span',{class:'st-fl',text:label}),ta]);
+  }
+  function zaehlerText(){return st.auswahl.length+' von 3 ausgewählt';}
+  function aktualisiereZaehler(){
+    var z=$('st-zaehler');if(z)z.textContent=zaehlerText();
+    document.querySelectorAll('.st-cb').forEach(function(cb){cb.disabled=gesendet()||(!cb.checked&&st.auswahl.length>=3);});
+  }
+  function kandidatKarte(c){
+    var cb=h('input',{type:'checkbox',class:'st-cb','aria-label':'Auffälligkeit auswählen: '+c.titel,'data-id':c.id});
+    cb.checked=st.auswahl.indexOf(c.id)>=0;
+    cb.addEventListener('change',function(){
+      if(cb.checked){if(st.auswahl.length>=3){cb.checked=false;meldung('Du kannst höchstens drei Auffälligkeiten auswählen.',true);return;}st.auswahl.push(c.id);}
+      else st.auswahl=st.auswahl.filter(function(x){return x!==c.id;});
+      meldung('');aktualisiereZaehler();
+    });
+    var badges=[h('span',{class:'st-chip',text:c.kategorie})];
+    if(c.automatisch)badges.push(h('span',{class:'st-chip st-auto',text:'automatisch'}));
+    if(c.stilwarnung)badges.push(h('span',{class:'st-chip st-warn',text:'Formulierung prüfen'}));
+    var kopf=h('div',{class:'st-kk'},[h('label',{class:'tp-chk'},[cb,h('span',{class:'st-ktitel',text:c.titel})])]);
+    var det=h('details',{class:'st-det'},[
+      h('summary',{text:'Ansehen und bearbeiten'}),
+      h('div',{class:'st-fl',text:'Was gelesen wurde (Zitat aus dem Text, nicht änderbar)'}),
+      h('blockquote',{class:'st-zitat',text:c.beleg}),
+      feld('Titel','st-f-'+c.id+'-titel',c.titel,2,200),
+      feld('Beobachtung','st-f-'+c.id+'-beobachtung',c.beobachtung,3,600),
+      feld('Warum das so wirkt','st-f-'+c.id+'-warum',c.warum,5,1000),
+      feld('Der Aha-Moment','st-f-'+c.id+'-aha',c.aha,2,320),
+      feld('Vorschlag (Nachher)','st-f-'+c.id+'-nachher',c.nachher,3,600),
+      feld('Wirkung','st-f-'+c.id+'-wirkung',c.wirkung,3,500)
+    ]);
+    return h('li',{class:'st-karte'},[h('div',{class:'st-badges'},badges),kopf,det]);
+  }
+  function sammle(){
+    var kand=(st.d.kandidaten||[]).map(function(c){
+      var o={id:c.id};['titel','beobachtung','warum','aha','nachher','wirkung'].forEach(function(f){var e=$('st-f-'+c.id+'-'+f);if(e)o[f]=e.value;});return o;
+    });
+    return {kandidaten:kand,auswahl:st.auswahl,lorena_notiz:$('st-notiz').value,gesamteindruck:$('st-eindruck').value,firma:$('st-firma-in').value};
+  }
+  async function speichern(still){
+    if(st.busy)return false;st.busy=true;
+    try{st.d=await call('/api/schnelltests/'+st.d.id,'PUT',sammle());st.auswahl=(st.d.auswahl||[]).slice();if(!still)meldung('Gespeichert. Status: '+(STATUS[st.d.status]||st.d.status)+'.');return true;}
+    catch(e){meldung(e.message,true);return false;}
+    finally{st.busy=false;}
+  }
+  async function vorschau(){
+    if(!st.auswahl.length){meldung('Wähle zuerst mindestens eine Auffälligkeit aus.',true);return;}
+    if(!gesendet()&&!(await speichern(true)))return;
+    try{
+      var r=await api('/api/schnelltests/'+st.d.id+'/pdf');
+      if(!r.ok){var j=await r.json().catch(function(){return null;});throw new Error((j&&j.error)||'Das PDF konnte nicht erstellt werden.');}
+      var blob=await r.blob(),u=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=u;a.download='Stimm-Schnelltest_'+st.d.host+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},1000);
+      var n=parseInt(r.headers.get('X-Seiten'),10);
+      if(n>3)meldung('Das PDF hat '+n+' Seiten, weil die Texte sehr lang sind. Kürze die gewählten Auffälligkeiten oder Deine Einschätzung, sonst lässt es sich nicht senden.',true);
+      else meldung('Das PDF wurde heruntergeladen.');
+    }catch(e){meldung(e.message,true);}
+  }
+  async function senden(){
+    if(st.auswahl.length!==3){meldung('Wähle genau drei Auffälligkeiten aus, bevor Du sendest.',true);return;}
+    var ok=typeof window.rqConfirm==='function'?await window.rqConfirm('Das PDF jetzt an '+st.d.email+' senden? Das Senden lässt sich nicht zurücknehmen.',{ok:'Senden'}):confirm('Das PDF jetzt an '+st.d.email+' senden?');
+    if(!ok)return;
+    if(!(await speichern(true)))return;
+    if(st.busy)return;st.busy=true;
+    try{
+      st.d=await call('/api/schnelltests/'+st.d.id+'/senden','POST',{betreff:$('st-betreff').value,text:$('st-mail').value});
+      meldung('Gesendet an '+st.d.email+'.');zeichneDetail();
+    }catch(e){meldung(e.message,true);}
+    finally{st.busy=false;}
+  }
+  function zeichneDetail(){
+    var box=$('st-body');if(!box||!st.d)return;box.textContent='';var d=st.d,ro=gesendet();
+    box.appendChild(h('button',{type:'button',class:'rq-btn ghost sm',text:'Zurück zur Liste',onclick:schliesse}));
+    box.appendChild(h('div',{class:'st-kopf'},[h('div',{class:'ks-h2',text:d.host}),h('span',{class:'st-chip st-'+d.status,text:STATUS[d.status]||d.status})]));
+    box.appendChild(h('p',{class:'rq-hint',text:d.url+'  ·  '+d.email+'  ·  '+datum(d.created_at)+'  ·  gelesene Seiten: '+(d.mehrseiten_gelesen||1)+(ro&&d.gesendet_am?'  ·  gesendet am '+datum(d.gesendet_am):'')}));
+    if(!d.kandidaten){box.appendChild(h('p',{class:'rq-hint',text:'Die tiefe Analyse läuft noch oder ist fehlgeschlagen. Bitte öffne diese Seite in ein bis zwei Minuten erneut.'}));return;}
+    var fi=h('label',{class:'st-feld'},[h('span',{class:'st-fl',text:'Firma im PDF'}),h('input',{type:'text',class:'rq-in',id:'st-firma-in',maxlength:120,value:d.firma||d.host,disabled:ro||false})]);
+    box.appendChild(fi);
+    box.appendChild(feld('Gesamteindruck','st-eindruck',d.gesamteindruck,4,700));
+    box.appendChild(h('div',{class:'ks-h2',text:'Kennzahlen'}));
+    var kz=kennzahlenListe(d.kennzahlen);
+    if(kz.length)box.appendChild(h('ul',{class:'st-kz'},kz.map(function(x){return h('li',null,[h('span',{text:x[0]}),h('b',{text:x[1]})]);})));
+    else box.appendChild(h('p',{class:'rq-hint',text:'Für verlässliche Zahlen war zu wenig Text da.'}));
+    if((d.staerken||[]).length){
+      box.appendChild(h('div',{class:'ks-h2',text:'Stärken'}));
+      box.appendChild(h('ul',{class:'st-kz'},d.staerken.map(function(s){return h('li',null,[h('span',{text:s.titel}),h('span',{class:'st-plain',text:s.text})]);})));
+    }
+    box.appendChild(h('div',{class:'st-kopf'},[h('div',{class:'ks-h2',text:'Auffälligkeiten'}),h('span',{class:'rq-hint',id:'st-zaehler',text:zaehlerText()})]));
+    box.appendChild(h('p',{class:'rq-hint',text:'Wähle genau drei aus. Die Reihenfolge im PDF folgt der Reihenfolge, in der Du sie anklickst.'}));
+    box.appendChild(h('ul',{class:'st-karten'},d.kandidaten.map(kandidatKarte)));
+    box.appendChild(feld('Lorenas Einschätzung (erscheint im PDF)','st-notiz',d.lorena_notiz,5,1500));
+    var tb=h('div',{class:'tp-bar'},[
+      h('button',{type:'button',class:'rq-btn tp-sm',text:'Auswahl speichern',disabled:ro,onclick:function(){speichern(false);}}),
+      h('button',{type:'button',class:'rq-btn ghost tp-sm',text:'PDF-Vorschau herunterladen',onclick:vorschau})
+    ]);
+    box.appendChild(tb);
+    box.appendChild(h('div',{class:'ks-h2',text:'Begleitmail an die Firma'}));
+    var bm=d.begleitmail||{betreff:'',text:''};
+    box.appendChild(h('label',{class:'st-feld'},[h('span',{class:'st-fl',text:'Betreff'}),h('input',{type:'text',class:'rq-in',id:'st-betreff',maxlength:200,value:bm.betreff,disabled:ro||false})]));
+    box.appendChild(feld('Text der Mail (das PDF hängt automatisch an)','st-mail',bm.text,10,6000));
+    box.appendChild(h('div',{class:'tp-bar'},[h('button',{type:'button',class:'rq-btn tp-sm',text:ro?'Schon gesendet':'An Kunden senden',disabled:ro,onclick:senden})]));
+    aktualisiereZaehler();
+  }
+
+  function baue(){
+    var mehr=$('eg-mehr');if(!mehr||$('st-root'))return false;
+    var d=h('details',{class:'rq-card tp-card eg-zeile',id:'st-root'},[
+      h('summary',{class:'tp-sum'},[h('span',{text:'Schnelltests'}),h('span',{id:'st-zahl',class:'st-zahl'})]),
+      h('div',{class:'tp-msg',id:'st-msg',role:'status','aria-live':'polite'}),
+      h('div',{id:'st-body',class:'ks-sec'})
+    ]);
+    d.addEventListener('toggle',function(){if(d.open)laden();});
+    mehr.appendChild(d);
+    return true;
+  }
+  function ausHash(){
+    var m=(location.hash||'').match(/^#schnelltest-(\d+)$/);if(!m)return;
+    var d=$('st-root');if(!d)return;d.open=true;oeffne(m[1]);if(d.scrollIntoView)setTimeout(function(){d.scrollIntoView({behavior:'smooth',block:'start'});},200);
+  }
+  async function start(){
+    if(!isA())return;
+    if(baue()||!st.init){st.init=true;await laden();ausHash();}
+  }
+  var _open=window.rqAssistentOpen;
+  window.rqAssistentOpen=function(){
+    var r=_open?_open.apply(this,arguments):undefined;
+    setTimeout(start,150);return r;
+  };
+})();
+</script>
+<style id="rq-schnelltest-css">
+#st-root .st-zahl{font-weight:400;font-size:14px;color:var(--mu);margin-left:8px}
+.st-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.st-row{width:100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:48px;padding:8px 12px;border:1px solid var(--bd);background:#fff;font:inherit;color:var(--tx);cursor:pointer;text-align:left}
+.st-row:hover{border-color:var(--ac)}
+.st-row:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.st-firma{font-weight:600;flex:1;min-width:140px}
+.st-meta{font-size:13.5px;color:var(--mu)}
+.st-chip{display:inline-block;font-size:12.5px;padding:2px 10px;border:1px solid var(--bd);background:#fff;color:var(--mu)}
+.st-chip.st-entwurf{color:var(--mu)}
+.st-chip.st-freigegeben{color:#1f6b45;border-color:#9ccbb1;background:#eef8f2}
+.st-chip.st-gesendet{color:var(--ac);border-color:var(--ac);background:var(--acl)}
+.st-chip.st-auto{color:#7a5a12;border-color:#e0cf9c;background:#fbf6e4}
+.st-chip.st-warn{color:#a8392c;border-color:#e3b8b1;background:#fff}
+.st-kopf{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.st-kz{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.st-kz li{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;border-bottom:1px solid var(--bd);padding:6px 0;font-size:14.5px}
+.st-kz b{font-weight:600;text-align:right}
+.st-plain{font-style:normal;color:var(--mu);flex-basis:100%}
+.st-karten{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.st-karte{border:1px solid var(--bd);background:#fff;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.st-badges{display:flex;gap:6px;flex-wrap:wrap}
+.st-ktitel{font-weight:600;line-height:1.4}
+.st-cb{width:22px;height:22px;flex:none}
+.st-det>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:var(--ac);font-weight:600}
+.st-feld{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.st-fl{font-size:13px;font-weight:600;color:var(--mu)}
+.st-zitat{margin:6px 0 0;padding:8px 12px;border-left:3px solid var(--ac);background:var(--acl);font-size:14.5px;line-height:1.5}
+</style>
 <script id="rq-eingang-js">
 // ═══ Eingang der Beraterin: Liste von allem Neuen, Streifen «Heute», eingeklappte Kalender-Zeilen. Alle Texte aus Daten werden mit textContent gesetzt. ═══
 (function(){

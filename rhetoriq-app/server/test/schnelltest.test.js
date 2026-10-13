@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const H = require('../test-support/harness');
 const { pool } = require('../db');
 
-const PAGE = '<html><head><title>Muster AG</title></head><body>' + '<p>Wir sind ein führender Anbieter ganzheitlicher Lösungen im Sinne nachhaltiger Wertschöpfung für unsere Kundschaft.</p>'.repeat(6) + '</body></html>';
+const PAGE = '<html><head><title>Muster AG</title></head><body>' + [1, 2, 3, 4, 5, 6].map(i => `<p>Wir sind ein führender Anbieter ganzheitlicher Lösungen Nummer ${i} im Sinne nachhaltiger Wertschöpfung für unsere Kundschaft.</p>`).join('') + '</body></html>';
 const REPLY = JSON.stringify({ befunde: ['Die Sätze sind lang.', 'Viele Floskeln wie «führender Anbieter».', 'Die Lesenden werden kaum direkt angesprochen.'] });
 let fetched = [];
 const fetchHtml = async (u) => { fetched.push(u); if (/kaputt/.test(u)) throw new Error('weg'); if (/leer/.test(u)) return { html: '<p>Hi</p>' }; return { html: PAGE }; };
@@ -33,15 +33,17 @@ test('Schnelltest liefert drei Befunde, speichert und meldet an Lorena', async (
   assert.equal(r.status, 200);
   assert.equal(r.body.ergebnis.befunde.length, 3);
   assert.match(r.body.ergebnis.naechsterSchritt, /CHF 950/);
-  assert.equal(H.ai.calls.length, 1);
   assert.equal(H.ai.calls[0].meter.module, 'schnelltest');
   const { rows } = await pool.query('SELECT * FROM schnelltests WHERE host=$1', ['muster.ch']);
   assert.equal(rows.length, 1);
   assert.equal(rows[0].email, 'gast@test.ch');
   assert.ok(rows[0].ergebnis.length <= 1200);
-  await new Promise(r2 => setTimeout(r2, 20));
+  // Die tiefe Analyse läuft danach im Hintergrund, die Hinweis-Mail kommt erst mit ihrem Ergebnis
+  await require('../routes/schnelltest').drain();
+  assert.equal(H.ai.calls.length, 2);
+  assert.equal(H.ai.calls[1].meter.module, 'schnelltest_tief');
   const m = H.mails.find(x => x.kind === 'schnelltest_notify');
-  assert.ok(m && m.text.includes('gast@test.ch') && m.text.includes('muster.ch') && m.text.includes('Floskeln'));
+  assert.ok(m && m.text.includes('gast@test.ch') && m.text.includes('muster.ch') && m.text.includes('Kennzahlen'));
 });
 
 test('gleiche Adresse oder E-Mail nur einmal pro 24 Stunden', async () => {
@@ -51,6 +53,7 @@ test('gleiche Adresse oder E-Mail nur einmal pro 24 Stunden', async () => {
 });
 
 test('Herkunft, Honeypot und Zeitfalle', async () => {
+  await require('../routes/schnelltest').drain();
   H.ai.calls.length = 0;
   assert.equal((await post(big, { url: 'a1.ch', email: 'a1@test.ch' }, { origin: 'https://boese.example' })).status, 401);
   assert.equal((await post(big, { url: 'a1.ch', email: 'a1@test.ch' }, { origin: null })).status, 401);
