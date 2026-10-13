@@ -50,6 +50,16 @@ async function meldeLorena(m) {
   const notifyTo = process.env.ADVISOR_NOTIFY_EMAIL || process.env.SMTP_FROM || 'contact@lorenalienhard.ch';
   await queueEmail({ kind: 'schnelltest_notify', to: notifyTo, subject: m.subject, text: m.text });
 }
+// Einmal pro Tag eine Mail, sobald das Tagesbudget der tiefen Analyse aufgebraucht ist
+let budgetMailTag = '';
+async function meldeBudget() {
+  const tag = new Date().toISOString().slice(0, 10);
+  if (budgetMailTag === tag) return;
+  budgetMailTag = tag;
+  const notifyTo = process.env.ADVISOR_NOTIFY_EMAIL || process.env.SMTP_FROM || 'contact@lorenalienhard.ch';
+  await queueEmail({ kind: 'schnelltest_budget', to: notifyTo, subject: 'Stimm-Schnelltest: Tagesbudget für die tiefe Analyse erreicht',
+    text: 'Hallo Lorena\n\nDas Tagesbudget für die tiefe Analyse des Stimm-Schnelltests ist aufgebraucht. Bis morgen bekommen neue Tests nur die Kennzahlen und die automatischen Auffälligkeiten, ohne KI-Auswertung. Die Kurzbefunde auf der Webseite laufen weiter.\n\nWenn du mehr Tests pro Tag möchtest, erhöhst du auf Render die Variable BUDGET_SCHNELLTEST_TIEF_USD (heute 4 US-Dollar).' });
+}
 async function tiefenJob(j, deps) {
   try {
     await ensureTable();
@@ -59,6 +69,7 @@ async function tiefenJob(j, deps) {
       `UPDATE schnelltests SET kandidaten=$1, kennzahlen=$2, gesamteindruck=$3, staerken=$4, mehrseiten_gelesen=$5, analyse_fertig_am=NOW() WHERE id=$6`,
       [JSON.stringify(a.kandidaten), JSON.stringify(kennzahlen), a.gesamteindruck, JSON.stringify(a.staerken), a.mehrseiten, j.id]);
     if (a.kiFehler) console.error('[schnelltest] tiefe Analyse ohne KI-Ergebnis:', a.kiFehler);
+    if (a.kiFehler === 'Tagesbudget erreicht') await meldeBudget().catch(e => console.error('[schnelltest] Budget-Mail fehlgeschlagen:', e && e.message));
     await meldeLorena(MAILS.hinweisMail({ id: j.id, url: j.url, host: j.host, email: j.email, kennzahlen, kandidaten: a.kandidaten, mehrseiten: a.mehrseiten }));
   } catch (e) {
     console.error('[schnelltest] tiefe Analyse fehlgeschlagen:', e && e.message);
