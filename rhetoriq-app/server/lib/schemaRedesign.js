@@ -118,6 +118,11 @@ function ensureSchema() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
     await pool.query(`CREATE INDEX IF NOT EXISTS schnelltests_created_idx ON schnelltests (created_at DESC)`);
+    // Zweite Ausbaustufe: tiefe Analyse, Auswahl durch Lorena, Versandstatus (entwurf, freigegeben, gesendet)
+    for (const c of ['kandidaten jsonb', 'kennzahlen jsonb', 'gesamteindruck text', 'staerken jsonb', 'auswahl jsonb', 'lorena_notiz text',
+      `status text DEFAULT 'entwurf'`, 'gesendet_am timestamptz', 'mehrseiten_gelesen int', 'analyse_fertig_am timestamptz']) {
+      await pool.query(`ALTER TABLE schnelltests ADD COLUMN IF NOT EXISTS ${c}`);
+    }
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS learned_at TIMESTAMPTZ`);
     // Quartalsreview (Business: ein Gespräch pro Quartal)
     await pool.query(`

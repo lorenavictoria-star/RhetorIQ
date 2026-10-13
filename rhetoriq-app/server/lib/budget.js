@@ -16,6 +16,7 @@ const FUNKTIONEN = {
   quartalsreview: { usd: 1.00, label: 'Quartalsauswertung', module: ['quartalsreview'] },
   themenwahl: { usd: 3.00, label: 'Newsletter aus der Themenwahl des Klienten', module: ['themenwahl'] },
   schnelltest: { usd: 2.00, label: 'Stimm-Schnelltest', module: ['schnelltest'] },
+  schnelltest_tief: { usd: 4.00, label: 'Stimm-Schnelltest, tiefe Analyse', module: ['schnelltest_tief'] },
   lernvorschlaege: { usd: 2.00, label: 'Lernvorschläge', module: ['lernen-korrektur', 'lernen-nachfrage', 'lernen-daumen'] },
   'hilfe-chat': { usd: 2.00, label: 'Hilfe-Chat', module: ['hilfe-chat'] },
   'memory-vorschlag': { usd: 1.00, label: 'Dokumenttyp-Vorschläge im Gedächtnis', module: ['memory-vorschlag'] },
