@@ -90,6 +90,12 @@ async function eingang(aid, jetzt = new Date()) {
   return { zaehler, eintraege: alle.slice(0, MAX_EINTRAEGE) };
 }
 
+async function mailLoeschen(id) {
+  await ensureSchema();
+  const { rowCount } = await pool.query('DELETE FROM inbox_mails WHERE id = $1', [id]);
+  return rowCount > 0;
+}
+
 async function mailGelesen(id) {
   await ensureSchema();
   const { rowCount } = await pool.query('UPDATE inbox_mails SET gelesen_am = COALESCE(gelesen_am, NOW()) WHERE id = $1', [id]);
@@ -140,4 +146,4 @@ async function mailSpeichern(roh, zieladresse, jetzt = new Date()) {
   }
 }
 
-module.exports = { ensureSchema, eingang, mailGelesen, mailSpeichern, textAus, adressen, MAX_EINTRAEGE, MAX_TEXT, TYPEN };
+module.exports = { ensureSchema, eingang, mailGelesen, mailLoeschen, mailSpeichern, textAus, adressen, MAX_EINTRAEGE, MAX_TEXT, TYPEN };

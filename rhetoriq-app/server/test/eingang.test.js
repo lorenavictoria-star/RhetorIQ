@@ -104,6 +104,17 @@ test('Mail als gelesen markieren', async () => {
   assert.equal((await srv.call('POST', '/api/assistent/eingang/mail/abc/gelesen', { token: tAdv })).status, 400);
 });
 
+test('Mail löschen: nur die Beraterin, Mail verschwindet, unbekannte und ungültige Nummer', async () => {
+  const c = await fuellen();
+  const id = (await pool.query(`SELECT id FROM inbox_mails`)).rows[0].id;
+  assert.equal((await srv.call('DELETE', `/api/assistent/eingang/mail/${id}`, { token: H.clientToken(c.id) })).status, 403);
+  assert.equal((await srv.call('DELETE', `/api/assistent/eingang/mail/${id}`)).status, 401);
+  assert.equal((await srv.call('DELETE', `/api/assistent/eingang/mail/${id}`, { token: tAdv })).status, 200);
+  assert.equal((await pool.query('SELECT id FROM inbox_mails WHERE id=$1', [id])).rows.length, 0);
+  assert.equal((await srv.call('DELETE', `/api/assistent/eingang/mail/${id}`, { token: tAdv })).status, 404);
+  assert.equal((await srv.call('DELETE', '/api/assistent/eingang/mail/abc', { token: tAdv })).status, 400);
+});
+
 async function mailPost(body, token = SECRET, s = srv) {
   const headers = { 'Content-Type': 'application/json' };
   if (token != null) headers['x-eingang-token'] = token;

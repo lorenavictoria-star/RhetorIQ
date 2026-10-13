@@ -1,6 +1,7 @@
 // Eingang der Beraterin und Mail-Empfang.
 //  GET  /api/assistent/eingang                    Beraterin: { zaehler, eintraege } (höchstens 50, neueste zuerst)
 //  POST /api/assistent/eingang/mail/:id/gelesen   Beraterin: Mail als gelesen markieren
+//  DELETE /api/assistent/eingang/mail/:id         Beraterin: Mail aus dem Eingang löschen (die Mail in Gmail bleibt)
 //  POST /api/eingang/mail                         Zustelldienst: nimmt eine Mail an, geschützt mit Header x-eingang-token
 //
 // Mail-Empfang. Die Zustellung (Brevo Inbound Parsing, Gmail-Weiterleitung oder IMAP) richtet die Beraterin später ein.
@@ -51,6 +52,18 @@ function build(opts = {}) {
       const id = parseInt(req.params.id, 10);
       if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'Ungültige Nummer.' });
       if (!(await E.mailGelesen(id))) return res.status(404).json({ error: 'Mail nicht gefunden.' });
+      res.json({ ok: true });
+    } catch (e) {
+      console.error('[eingang]', e && e.message);
+      res.status(500).json({ error: 'Das hat nicht geklappt. Bitte versuche es noch einmal.' });
+    }
+  });
+
+  advisorRouter.delete('/mail/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'Ungültige Nummer.' });
+      if (!(await E.mailLoeschen(id))) return res.status(404).json({ error: 'Mail nicht gefunden.' });
       res.json({ ok: true });
     } catch (e) {
       console.error('[eingang]', e && e.message);

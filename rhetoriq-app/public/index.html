@@ -2412,7 +2412,7 @@ window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Warteliste", "Waitin
 </script>
 <script id="rq-xpairs-eingang">
 // DE/EN-Paare für den Eingang der Beraterin; rq-i18n fügt window.RQ_EXTRA_PAIRS zu PAIRS hinzu.
-window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Eingegangen","Received"],["Beispiele","Examples"],["Alles erledigt. Nichts Neues.","All done. Nothing new."],["Hier ist nichts Neues.","Nothing new here."],["Alle","All"],["Freigaben","Approvals"],["Anfragen","Inquiries"],["E-Mails","Emails"],["Termine","Appointments"],["Warteliste","Waiting list"],["Freigeben","Approve"],["Antworten","Reply"],["Ansehen","View"],["Öffnen","Open"],["Schliessen","Close"],["Neu","New"],["gestern {1}","yesterday {1}"],["Der Eingang konnte nicht geladen werden.","The inbox could not be loaded."],["Heute","Today"],["Kalender öffnen","Open calendar"],["Terminbuchung","Appointment booking"],["Nächster Termin","Next appointment"],["Kein Termin mehr heute","No more appointments today"],["Heute ist ein freier Tag.","Today is a day off."],["Frei","Free"],["Jetzt","Now"],["Filter","Filter"],["Texte mit Frist","Texts with deadline"],["Blöcke","Blocks"],["Freie Zeit","Free time"]]);
+window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Eingegangen","Received"],["Gelöscht.","Deleted."],["Diese Mail aus dem Eingang löschen? Die Mail in Gmail bleibt erhalten.","Delete this mail from the inbox? The mail stays in Gmail."],["Diese Anfrage endgültig löschen? Name, E-Mail und Nachricht werden entfernt.","Delete this inquiry permanently? Name, email and message will be removed."],["Diesen Eintrag von der Warteliste löschen? Das kann nicht rückgängig gemacht werden.","Delete this waiting list entry? This cannot be undone."],["Das Löschen hat nicht geklappt.","Deleting did not work."],["Beispiele","Examples"],["Alles erledigt. Nichts Neues.","All done. Nothing new."],["Hier ist nichts Neues.","Nothing new here."],["Alle","All"],["Freigaben","Approvals"],["Anfragen","Inquiries"],["E-Mails","Emails"],["Termine","Appointments"],["Warteliste","Waiting list"],["Freigeben","Approve"],["Antworten","Reply"],["Ansehen","View"],["Öffnen","Open"],["Schliessen","Close"],["Neu","New"],["gestern {1}","yesterday {1}"],["Der Eingang konnte nicht geladen werden.","The inbox could not be loaded."],["Heute","Today"],["Kalender öffnen","Open calendar"],["Terminbuchung","Appointment booking"],["Nächster Termin","Next appointment"],["Kein Termin mehr heute","No more appointments today"],["Heute ist ein freier Tag.","Today is a day off."],["Frei","Free"],["Jetzt","Now"],["Filter","Filter"],["Texte mit Frist","Texts with deadline"],["Blöcke","Blocks"],["Freie Zeit","Free time"]]);
 </script>
 <script id="rq-i18n">
 // ── I18N: Wörterbuch-Ebene über dem bestehenden T/applyLang-System ──
@@ -14302,6 +14302,25 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
       if(mid!=null)call('/api/assistent/eingang/mail/'+encodeURIComponent(mid)+'/gelesen','POST').catch(function(){});
     }
   }
+  var LOESCH={
+    mail:{pfad:function(id){return '/api/assistent/eingang/mail/'+encodeURIComponent(id);},frage:'Diese Mail aus dem Eingang löschen? Die Mail in Gmail bleibt erhalten.'},
+    anfrage:{pfad:function(id){return '/api/inquiries/'+encodeURIComponent(id);},frage:'Diese Anfrage endgültig löschen? Name, E-Mail und Nachricht werden entfernt.'},
+    warteliste:{pfad:function(id){return '/api/warteliste/admin/eintraege/'+encodeURIComponent(id);},frage:'Diesen Eintrag von der Warteliste löschen? Das kann nicht rückgängig gemacht werden.'}
+  };
+  async function loeschen(e,btn){
+    var cfg=LOESCH[e.typ],id=e.ziel&&e.ziel.id;
+    if(!cfg||id==null)return;
+    if(!window.confirm(cfg.frage))return;
+    btn.disabled=true;
+    try{
+      await call(cfg.pfad(id),'DELETE');
+      var live=$('eg-live');if(live)live.textContent='Gelöscht.';
+      st.laden=false;await eingangLaden();
+    }catch(x){
+      btn.disabled=false;
+      var l=$('eg-live');if(l)l.textContent=(x&&x.message)||'Das Löschen hat nicht geklappt.';
+    }
+  }
   function zeile(e){
     var z=e.ziel||{};
     var neu=e.neu&&!st.gelesen[e.id];
@@ -14316,7 +14335,13 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     }else btn.addEventListener('click',function(){aktion(e);});
     li.appendChild(h('i',{class:'ti '+(ICON[e.typ]||'ti-bell')+' eg-ic','aria-hidden':'true'}));
     li.appendChild(h('div',{class:'eg-mid'},[dot,haupt]));
-    li.appendChild(h('div',{class:'eg-side'},[h('span',{class:'eg-z',text:zeitText(e.zeit)}),btn]));
+    var knoepfe=[btn];
+    if(LOESCH[e.typ]&&z.id!=null){
+      var del=h('button',{type:'button',class:'rq-btn ghost eg-btn eg-del','aria-label':'Löschen: '+(e.titel||'')},['Löschen']);
+      del.addEventListener('click',function(){loeschen(e,del);});
+      knoepfe.push(del);
+    }
+    li.appendChild(h('div',{class:'eg-side'},[h('span',{class:'eg-z',text:zeitText(e.zeit)}),h('div',{class:'eg-btns'},knoepfe)]));
     if(e.typ==='mail'&&st.offen[e.id]){mailToggle(e,li,btn,dot);}
     return li;
   }
@@ -14468,6 +14493,8 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
 .eg-side{display:flex;align-items:center;gap:12px}
 .eg-z{font-size:13px;color:var(--mu);white-space:nowrap}
 .eg-btn{min-height:40px;padding:6px 14px;font-size:14px}
+.eg-btns{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.eg-del{color:var(--rd,#b3261e)}
 .eg-leer{padding:22px 14px;text-align:center;color:var(--mu);font-size:15px}
 @media(max-width:560px){
   .eg-row{grid-template-columns:24px minmax(0,1fr);padding:10px 12px}
