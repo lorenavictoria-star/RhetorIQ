@@ -7,7 +7,7 @@ const { einZeile, mehrzeilig } = require('./buchung');
 const betreff = (t) => einZeile(t, 150);
 const gruss = (name) => { const n = safeName(name); return n ? 'Guten Tag ' + n : 'Guten Tag'; };
 const SCHLUSS = 'Freundliche Grüsse\nLorena Lienhard\ncontact@lorenalienhard.ch';
-const SCHLUSS_HERZLICH = 'Herzliche Grüsse\nLorena Lienhard\ncontact@lorenalienhard.ch';
+const SCHLUSS_HERZLICH = 'Herzlich\nLorena Lienhard';
 
 function wann(b) {
   return { tag: Z.datumMitJahr(b.datum), zeit: `${Z.hhmm(b.beginn)} bis ${Z.hhmm(b.ende)} Uhr (Schweizer Zeit)`, dauer: `${b.ende - b.beginn} Minuten`,
@@ -60,10 +60,10 @@ function erinnerung(b, s) {
 }
 
 // Sofortige Antwort auf das Nachrichtenformular
-function formularBestaetigung({ name, email, message }) {
+function formularBestaetigung({ name, message }) {
   const kopie = mehrzeilig(message, 1500);
-  const text = `${gruss(name)}\n\nVielen Dank für Ihre Nachricht. Sie ist gerade bei mir angekommen, und ich lese sie persönlich. Innert eines Werktags melde ich mich bei Ihnen, wenn es sich einrichten lässt auch früher.\n\nDas haben Sie mir geschrieben:\n${kopie || '-'}\n\nIch antworte Ihnen an ${email}. Wenn Sie etwas ergänzen möchten oder es eilt, schreiben Sie mir einfach direkt zurück.\n\n${SCHLUSS_HERZLICH}`;
-  return { subject: 'Ihre Nachricht ist bei mir angekommen', text };
+  const text = `${gruss(name)}\n\nVielen Dank, dass Sie mir geschrieben haben. Ihre Nachricht ist bei mir angekommen, und ich freue mich darüber. Diese kurze Bestätigung geht automatisch raus. Die Antwort schreibe ich Ihnen selbst, innert eines Werktags und in Ruhe.\n\nDas haben Sie mir geschickt:\n\n${kopie || '-'}\n\nFalls Ihnen noch etwas einfällt oder es eilt, schreiben Sie mir einfach zurück. Ich lese es persönlich.\n\n${SCHLUSS_HERZLICH}`;
+  return { subject: 'Ihre Anfrage bei RhetorIQ', text };
 }
 
 module.exports = { bestaetigung, hinweisBeraterin, absageInteressent, absageBeraterin, erinnerung, formularBestaetigung, wann, betreff };
