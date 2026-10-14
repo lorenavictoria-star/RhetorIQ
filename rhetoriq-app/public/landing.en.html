@@ -466,6 +466,10 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
 .nums3.one{grid-template-columns:1fr}.nums3.one .num3{padding:30px 0 10px;display:grid;grid-template-columns:auto 1fr;column-gap:32px;align-items:center}.nums3.one .num3 strong{margin:0;grid-row:1/3}.nums3.one .num3 p{max-width:60ch}@media(max-width:700px){.nums3.one .num3{grid-template-columns:1fr}.nums3.one .num3 strong{grid-row:auto;margin-bottom:8px}}
 .pnote{margin:18px 0 0;font-size:16px;color:var(--mute);max-width:none;text-align:left}
 @media(max-width:700px){#ball{width:min(42%,170px)}.hero{padding-block:0 48px}}
+.pf-tw{display:flex;align-items:center;gap:8px;margin:2px 4px 14px}
+.pf-tw .pf-tabs{flex:0 1 auto;width:min(100%,340px);min-width:0;flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;margin:0;padding:2px 26px 2px 2px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 34px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 34px),transparent)}
+.pf-tw .pf-tabs::-webkit-scrollbar{display:none}.pf-tw .pf-tabs button{flex:0 0 auto;white-space:nowrap;scroll-snap-align:start}
+.pf-ta{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--cream);font:400 20px/1 var(--sans);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}.pf-ta:hover{border-color:#6b6552}.pf-ta:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -477,7 +481,7 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
     <div>
       <h1>Your voice, <span class="eq">polished by hand.</span></h1>
       <p class="lead">RhetorIQ makes your company's voice the foundation of every AI: that is the <span class="iq">IQ</span>. I check and polish every text by hand: that is the <span class="eq">EQ</span>.</p>
-      <p class="aud">For management teams, staff and client service in Swiss companies that write with AI and want to keep sounding like themselves.</p>
+      <p class="aud">For SMEs and companies in business and finance that write with AI and want to keep sounding like themselves.</p>
       <div class="cta2"><a class="btn" href="#schnelltest" id="hst">Start the voice quick test</a><a class="btn ghost" href="#buchen">Request a call</a></div>
     </div>
     <div id="ball" role="img" aria-label="A golden and a silver thread wound into a ball"></div>
@@ -499,7 +503,7 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
     <p class="eyebrow">The platform</p>
     <h2>How RhetorIQ works.</h2>
     <div class="bigp" id="bigp">
-      <div class="pf-tabs" id="pftabs" role="group" aria-label="Examples"><button type="button" data-i="0" aria-pressed="true">Talk</button><button type="button" data-i="1" aria-pressed="false">Customer email</button><button type="button" data-i="2" aria-pressed="false">Straight in your inbox <span class="nw">New</span></button><button type="button" data-i="3" aria-pressed="false">Crisis statement</button><button type="button" data-i="4" aria-pressed="false">Welcome speech</button></div>
+      <div class="pf-tw"><button type="button" class="pf-ta" data-d="-1" aria-label="Back">&lsaquo;</button><div class="pf-tabs" id="pftabs" role="group" aria-label="Examples"><button type="button" data-i="0" aria-pressed="true">Talk</button><button type="button" data-i="1" aria-pressed="false">Customer email</button><button type="button" data-i="2" aria-pressed="false">Straight in your inbox <span class="nw">New</span></button><button type="button" data-i="3" aria-pressed="false">Crisis statement</button><button type="button" data-i="4" aria-pressed="false">Welcome speech</button></div><button type="button" class="pf-ta" data-d="1" aria-label="Next">&rsaquo;</button></div>
       <div class="pm mm s2" id="pm" hidden>
         <div class="pf-steps mw-steps" id="pmsteps" role="group" aria-label="Steps"><button type="button" data-s="0" aria-pressed="false">1 Click the field</button><button type="button" data-s="1" aria-pressed="false">2 Describe briefly</button><button type="button" data-s="2" aria-pressed="true">3 Insert into field</button></div>
         <div class="mw">
@@ -528,7 +532,6 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
         </div>
       </div>
     </div>
-    <ul class="tch" aria-label="Text types"><li>Emails</li><li>Speeches</li><li>Talks with PowerPoint</li><li>Interviews</li><li class="d">+ Your text type</li></ul>
     <p class="tsn">Your voice in every text field in the browser as well. If you wish, I set up the extension for your team together with your IT.</p>
   </section>
 
@@ -853,6 +856,7 @@ function run(){
   if(still||stopped||!vis)return;
   timer=setInterval(function(){show((stage+1)%3)},4600);
 }
+(function(){var b=document.querySelectorAll(".pf-ta"),t=document.getElementById("pftabs");if(!t)return;[].forEach.call(b,function(a){a.addEventListener("click",function(){var c=[].slice.call(t.children),i=c.findIndex(function(x){return x.getAttribute("aria-pressed")==="true"}),n=(i+(+a.getAttribute("data-d"))+c.length)%c.length;c[n].click()})})})();
 tabs.addEventListener("click",function(ev){var b=ev.target.closest("button");if(b&&tabs.scrollWidth>tabs.clientWidth)tabs.scrollTo({left:b.offsetLeft-24,behavior:"smooth"})});
 tabs.addEventListener("click",function(ev){var b=ev.target.closest("button");if(!b)return;stop();cur=+b.getAttribute("data-i");draw();show(2)});
 [$("pfsteps"),$("pmsteps")].forEach(function(box){box.addEventListener("click",function(ev){var b=ev.target.closest("button");if(!b)return;stop();show(+b.getAttribute("data-s"))})});

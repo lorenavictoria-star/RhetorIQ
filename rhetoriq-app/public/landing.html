@@ -474,6 +474,10 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
 .nums3.one{grid-template-columns:1fr}.nums3.one .num3{padding:30px 0 10px;display:grid;grid-template-columns:auto 1fr;column-gap:32px;align-items:center}.nums3.one .num3 strong{margin:0;grid-row:1/3}.nums3.one .num3 p{max-width:60ch}@media(max-width:700px){.nums3.one .num3{grid-template-columns:1fr}.nums3.one .num3 strong{grid-row:auto;margin-bottom:8px}}
 .pnote{margin:18px 0 0;font-size:16px;color:var(--mute);max-width:none;text-align:left}
 @media(max-width:700px){#ball{width:min(42%,170px)}.hero{padding-block:0 48px}}
+.pf-tw{display:flex;align-items:center;gap:8px;margin:2px 4px 14px}
+.pf-tw .pf-tabs{flex:0 1 auto;width:min(100%,340px);min-width:0;flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;margin:0;padding:2px 26px 2px 2px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 34px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 34px),transparent)}
+.pf-tw .pf-tabs::-webkit-scrollbar{display:none}.pf-tw .pf-tabs button{flex:0 0 auto;white-space:nowrap;scroll-snap-align:start}
+.pf-ta{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--cream);font:400 20px/1 var(--sans);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}.pf-ta:hover{border-color:#6b6552}.pf-ta:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -485,7 +489,7 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
     <div>
       <h1>Ihre Stimme, von Hand <span class="eq">geschliffen.</span></h1>
       <p class="lead">RhetorIQ macht die Stimme Ihres Unternehmens zur Basis jeder KI: das ist der <span class="iq">IQ</span>. Ich prüfe und schleife jeden Text von Hand: das ist der <span class="eq">EQ</span>.</p>
-      <p class="aud">Für Geschäftsleitungen, Teams und Kundendienste in Schweizer Unternehmen, die mit KI schreiben und dabei nach sich selbst klingen wollen.</p>
+      <p class="aud">Für KMU und Unternehmen aus Wirtschaft und Finanz, die mit KI schreiben und dabei nach sich selbst klingen wollen.</p>
       <div class="cta2"><a class="btn" href="#schnelltest" id="hst">Stimm-Schnelltest starten</a><a class="btn ghost" href="#buchen">Gespräch anfragen</a></div>
     </div>
     <div id="ball" role="img" aria-label="Ein goldener und ein silberner Faden, zu einem Knäuel gewickelt"></div>
@@ -507,7 +511,7 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
     <p class="eyebrow">Die Plattform</p>
     <h2>So arbeitet RhetorIQ.</h2>
     <div class="bigp" id="bigp">
-      <div class="pf-tabs" id="pftabs" role="group" aria-label="Beispiele"><button type="button" data-i="0" aria-pressed="true">Vortrag</button><button type="button" data-i="1" aria-pressed="false">Kundenmail</button><button type="button" data-i="2" aria-pressed="false">Direkt im Postfach <span class="nw">Neu</span></button><button type="button" data-i="3" aria-pressed="false">Krisenstatement</button><button type="button" data-i="4" aria-pressed="false">Begrüssung</button></div>
+      <div class="pf-tw"><button type="button" class="pf-ta" data-d="-1" aria-label="Zurück">&lsaquo;</button><div class="pf-tabs" id="pftabs" role="group" aria-label="Beispiele"><button type="button" data-i="0" aria-pressed="true">Vortrag</button><button type="button" data-i="1" aria-pressed="false">Kundenmail</button><button type="button" data-i="2" aria-pressed="false">Direkt im Postfach <span class="nw">Neu</span></button><button type="button" data-i="3" aria-pressed="false">Krisenstatement</button><button type="button" data-i="4" aria-pressed="false">Begrüssung</button></div><button type="button" class="pf-ta" data-d="1" aria-label="Weiter">&rsaquo;</button></div>
       <div class="pm mm s2" id="pm" hidden>
         <div class="pf-steps mw-steps" id="pmsteps" role="group" aria-label="Schritte"><button type="button" data-s="0" aria-pressed="false">1 Feld anklicken</button><button type="button" data-s="1" aria-pressed="false">2 Kurz beschreiben</button><button type="button" data-s="2" aria-pressed="true">3 In Feld einfügen</button></div>
         <div class="mw">
@@ -536,7 +540,6 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
         </div>
       </div>
     </div>
-    <ul class="tch" aria-label="Textarten"><li>E-Mails</li><li>Reden</li><li>Vorträge mit PowerPoint</li><li>Interviews</li><li class="d">+ Ihre Textart</li></ul>
     <p class="tsn">Ihre Stimme auch in jedem Textfeld im Browser. Auf Wunsch richte ich die Erweiterung gemeinsam mit Ihrer IT für Ihr Team ein.</p>
   </section>
 
@@ -962,6 +965,7 @@ function run(){
   if(still||stopped||!vis)return;
   timer=setInterval(function(){show((stage+1)%3)},4600);
 }
+(function(){var b=document.querySelectorAll(".pf-ta"),t=document.getElementById("pftabs");if(!t)return;[].forEach.call(b,function(a){a.addEventListener("click",function(){var c=[].slice.call(t.children),i=c.findIndex(function(x){return x.getAttribute("aria-pressed")==="true"}),n=(i+(+a.getAttribute("data-d"))+c.length)%c.length;c[n].click()})})})();
 tabs.addEventListener("click",function(ev){var b=ev.target.closest("button");if(b&&tabs.scrollWidth>tabs.clientWidth)tabs.scrollTo({left:b.offsetLeft-24,behavior:"smooth"})});
 tabs.addEventListener("click",function(ev){var b=ev.target.closest("button");if(!b)return;stop();cur=+b.getAttribute("data-i");draw();show(2)});
 [$("pfsteps"),$("pmsteps")].forEach(function(box){box.addEventListener("click",function(ev){var b=ev.target.closest("button");if(!b)return;stop();show(+b.getAttribute("data-s"))})});
