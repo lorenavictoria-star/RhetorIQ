@@ -8644,8 +8644,9 @@ function legalBack(){
 }
 // Direktlink für die Datenschutzerklärung: https://rhetoriq.ch/?p=datenschutz
 (function(){
-  if(new URLSearchParams(window.location.search).get('p')!=='datenschutz')return;
-  showLegal('datenschutz');
+  var lp=new URLSearchParams(window.location.search).get('p');
+  if(lp!=='datenschutz'&&lp!=='agb'&&lp!=='impressum')return;
+  showLegal(lp);
 })();
 // ── SECURE ONBOARDING SETUP PAGE ─────────────────────────────
 // Shown when URL contains ?t=<token> — client sets their own password
