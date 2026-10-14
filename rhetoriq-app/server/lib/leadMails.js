@@ -22,8 +22,8 @@ function wartelisteEinladung(e, { terminUrl }) {
 }
 
 function geschenkMail(name, g, { terminUrl, schnelltestUrl }) {
-  const text = `${gruss(name)}\n\nVielen Dank für Ihr Interesse. Das gewünschte Geschenk finden Sie als PDF im Anhang: ${g.titel}.\n\nWenn Sie wissen möchten, wie Ihre Firmenstimme klingt, machen Sie den Stimm-Schnelltest:\n${schnelltestUrl}\n\nWenn Sie das Thema im Gespräch vertiefen möchten, wählen Sie hier ein 20-Minuten-Gespräch:\n${terminUrl}\n\nIch freue mich, wenn Ihnen das PDF nützt.\n\n${SCHLUSS}`;
-  return { subject: betreff(`Ihr Geschenk von RhetorIQ: ${g.titel}`), text };
+  const text = `${gruss(name)}\n\nSchön, dass Sie sich für den ${g.titel} interessieren. Ich habe ihn Ihnen als PDF angehängt.\n\nWenn Sie wissen möchten, wie Ihre Firmenstimme heute klingt: Der Stimm-Schnelltest liest Ihre Webseite und nennt Ihnen in einer Minute drei Befunde.\n${schnelltestUrl}\n\nUnd falls Sie das Thema lieber im Gespräch vertiefen, wählen Sie hier ein Zeitfenster mit mir. Wir haben dafür zwanzig Minuten.\n${terminUrl}\n\nBei Fragen zum PDF antworten Sie einfach auf diese Mail. Sie landet direkt bei mir.\n\n${SCHLUSS_HERZLICH}`;
+  return { subject: betreff(`Ihr ${g.titel} von Lorena Lienhard`), text };
 }
 function geschenkHinweis({ name, email }, g) {
   const text = `Neuer Lead über das Geschenk-Formular.\n\nName: ${einZeile(name, 80)}\nE-Mail: ${email}\nGewähltes Geschenk: ${g.titel}\n\nDie Einwilligung zur Datenschutzerklärung und zur Kontaktaufnahme liegt vor. Das PDF ist an die Person unterwegs. Der Lead steht unter Anfragen in der Plattform.`;

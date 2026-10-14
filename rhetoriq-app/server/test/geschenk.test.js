@@ -53,7 +53,7 @@ test('Stimm-Prompt: richtiges PDF im Anhang, Mail an die Person und Hinweis an L
   assert.equal(buf.subarray(0, 5).toString(), '%PDF-');
   assert.ok(buf.length < 1024 * 1024, 'Anhang klein');
   assert.ok(m[0].text.startsWith('Guten Tag Beat Beispiel'));
-  assert.ok(m[0].text.includes('Stimm-Schnelltest') && m[0].text.includes('https://rhetoriq.ch/termin') && m[0].text.includes('20-Minuten-Gespräch'));
+  assert.ok(m[0].text.includes('Stimm-Schnelltest') && m[0].text.includes('https://rhetoriq.ch/termin') && m[0].text.includes('zwanzig Minuten'));
   assert.ok(m[0].subject.includes('Stimm-Prompt'));
   const h = kinds('geschenk_hinweis');
   assert.equal(h.length, 1);
