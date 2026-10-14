@@ -279,6 +279,7 @@ app.use('/api/inquiries', inquiries.advisorRouter);
 app.use('/api/buchung', require('./routes/buchung'));
 app.use('/api/warteliste', require('./routes/warteliste'));
 app.use('/api/geschenk', require('./routes/geschenk'));
+app.use('/api/ev', require('./routes/ev'));
 app.use('/api/schnelltest', require('./routes/schnelltest'));
 app.use('/api/schnelltests', require('./routes/schnelltest').advisorRouter);
 app.use('/api/onboarding-drafts', require('./routes/onboardingDrafts'));

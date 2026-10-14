@@ -116,6 +116,11 @@ async function runWeeklyReport() {
       });
     }
 
+    try {
+      const se = require('../lib/siteEvents');
+      lines.push('', ...se.reportLines(await se.summary(pool, 7)));
+    } catch (e) { console.error('[weekly-report] Webseite:', e.message); }
+
     lines.push('', 'AKTIVSTE KLIENTEN:');
     if (clientRows.length === 0) {
       lines.push('  Keine Aktivität.');

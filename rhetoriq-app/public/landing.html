@@ -980,5 +980,15 @@ if(location.hash==="#schnelltest"&&det)det.open=true;
 [].forEach.call(document.querySelectorAll("a[data-g],#pzgo"),function(a){a.addEventListener("click",function(ev){ev.preventDefault()})});
 })();
 </script>
+<script>
+(function(){if(navigator.doNotTrack==="1")return;var P=location.pathname.replace(/\/$/,"")||"/";
+var v=P==="/en"?"view_home_en":/preise$/.test(P)?"view_preise":(P==="/kundenmails-mit-ki"||P==="/firmenstimme")?"view_inhalt":"view_home";
+function ev(n){try{fetch("/api/ev",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({e:n}),keepalive:true}).catch(function(){})}catch(e){}}
+ev(v);
+document.addEventListener("click",function(e){var t=e.target;if(!t||!t.closest)return;
+if(t.closest("#hst"))ev("cta_test_hero");else if(t.closest("#stlink"))ev("cta_test_fuss");else if(t.closest("#pzgo"))ev("wait_open");else if(t.closest("a[data-g]"))ev("gift_click");else if(t.closest("#go,a[href=\"#buchen\"]"))ev("call_click")});
+document.addEventListener("submit",function(e){if(e.target&&e.target.id==="stf")ev("test_submit")});
+})();
+</script>
 </body>
 </html>
