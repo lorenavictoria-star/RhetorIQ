@@ -27,7 +27,7 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&display=swap">
 <style>
 /* Layout: schwarze Bühne, Knäuel rechts im Hero, danach ruhige Streifen mit feinen Linien. Gold = IQ, Silber = EQ. */
 :root{
@@ -38,8 +38,8 @@
   --mute:#9a978e;
   --gold:#d9b26a;
   --silver:#d6d6d3;
-  --serif:"Inter Tight",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --sans:"Inter Tight",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --sans:"Instrument Serif",Georgia,"Times New Roman",serif;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -287,8 +287,8 @@ p.p{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto
 .pf-tabs button[aria-pressed="true"] .nw{background:#8A6420;color:#fff}
 .pf{display:grid;grid-template-columns:170px minmax(0,1fr);border-radius:18px;overflow:hidden;border:1px solid #2a2824;background:#fff;color:#0E0D0B;max-width:980px}
 .pf-rail{background:#0E0D0B;color:#F1EDE4;padding:22px 0;display:flex;flex-direction:column;gap:2px;min-width:0}
-.pf-logo{font:400 20px "Inter Tight",system-ui,sans-serif;margin:0 0 14px;padding:0 18px;white-space:nowrap}
-.pf-logo b{font:400 20px "Inter Tight",system-ui,sans-serif;color:#D9B26A}
+.pf-logo{font:400 20px "Instrument Serif",Georgia,serif;margin:0 0 14px;padding:0 18px;white-space:nowrap}
+.pf-logo b{font:400 20px "Instrument Serif",Georgia,serif;color:#D9B26A}
 .pf-rail .ri{display:flex;align-items:center;gap:12px;font-size:14px;padding:10px 18px;color:#9A978E;position:relative;white-space:nowrap}
 .pf-rail .ri svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .pf-rail .ri.on{background:#1d1b17;color:#D9B26A}
@@ -300,7 +300,7 @@ p.p{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto
 .pf-steps button[aria-pressed="true"],.mw-steps button[aria-pressed="true"]{background:#0E0D0B;color:#fff;border-color:#0E0D0B}
 .pf button:focus-visible,.pf-tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .pf-back{font-size:12px;color:#8A6420}
-.pf-title{font:400 26px "Inter Tight",system-ui,sans-serif;color:#0E0D0B}
+.pf-title{font:400 26px "Instrument Serif",Georgia,serif;color:#0E0D0B}
 .pf-desc{font-size:13px;color:#6A665F;margin-top:-4px}
 .pf-voice{display:flex;flex-wrap:wrap;gap:6px;min-height:28px}
 .pf-voice i{font-style:normal;font-size:12px;border:1px solid #D9B26A;background:#FBF6EA;color:#8A6420;border-radius:99px;padding:3px 12px;opacity:0;transition:opacity .35s}
@@ -309,7 +309,7 @@ p.p{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto
 .pf-reslabel{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#6A665F;display:flex;justify-content:space-between;gap:10px}
 .pf-badge{color:#8A6420;opacity:0;transition:opacity .35s;text-transform:none;letter-spacing:0;font-weight:500}
 .pf.s2 .pf-badge{opacity:1}
-.pf .pf-text{font:400 clamp(18px,2vw,22px)/1.35 "Inter Tight",system-ui,sans-serif;margin:8px 0 12px;color:#0E0D0B;max-width:none;min-height:3.9em}
+.pf .pf-text{font:400 clamp(18px,2vw,22px)/1.35 "Instrument Serif",Georgia,serif;margin:8px 0 12px;color:#0E0D0B;max-width:none;min-height:3.9em}
 .pf .pf-text.g{color:#7d7a72}
 .pf ins{text-decoration:none;background:#FBF6EA;border-bottom:1.5px solid #D9B26A;color:#0E0D0B}
 .pf del{color:#B42318;text-decoration:line-through;text-decoration-thickness:1px;opacity:.75}
@@ -337,14 +337,14 @@ p.p{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto
 .mw-bar span:last-child{font-weight:300;color:#64748b}
 .mw-head{padding:10px 16px;border-bottom:1px solid #eef0f4;font-size:13px;color:#475569;line-height:1.7}
 .mw-head b{font-weight:500;color:#1f2937;display:inline-block;width:64px}
-.mw-body{padding:14px 16px 130px;font:400 16px/1.55 "Inter Tight",system-ui,sans-serif;min-height:130px;color:#1f2937}
+.mw-body{padding:14px 16px 130px;font:400 16px/1.55 "Instrument Serif",Georgia,serif;min-height:130px;color:#1f2937}
 .mw-text{opacity:0;transition:opacity .35s}
 .pm.s2 .mw-text{opacity:1}
 .mw-ins{background:#FBF6EA;border-bottom:1.5px solid #D9B26A}
 .mw-caret{display:inline-block;width:1px;height:16px;background:#1f2937;vertical-align:-3px;animation:mwb 1s steps(2) infinite}
 .pm.s2 .mw-caret{display:none}
 @keyframes mwb{50%{opacity:0}}
-.mw-fab{position:absolute;right:16px;bottom:18px;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f0d9a0,#c99a52);color:#0E0D0B;display:flex;align-items:center;justify-content:center;font:400 19px "Inter Tight",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.mw-fab{position:absolute;right:16px;bottom:18px;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f0d9a0,#c99a52);color:#0E0D0B;display:flex;align-items:center;justify-content:center;font:400 19px "Instrument Serif",Georgia,serif;box-shadow:0 2px 10px rgba(0,0,0,.25)}
 .mw-panel{position:absolute;right:16px;bottom:62px;width:min(320px,calc(100% - 32px));background:#fff;border:1.5px solid #E2E0DC;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.22);padding:12px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s;color:#1f2937}
 .pm.s1 .mw-panel{opacity:1}
 .mw-ptitle{font-size:12px;font-weight:600;color:#8A6420;margin-bottom:4px}
@@ -448,6 +448,21 @@ p.p{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto
 .vend{text-align:left}
 .wl [hidden]{display:none}
 .lgs{display:inline-flex;gap:8px;font:400 15px var(--sans);letter-spacing:.04em;color:var(--mute)}.lgs a{color:var(--mute);text-decoration:none;min-height:44px;display:inline-flex;align-items:center}.lgs a:hover{color:var(--cream)}.lgs b{font-weight:400;color:var(--cream);display:inline-flex;align-items:center}.lgs i{font-style:normal;color:#4a4a45;display:inline-flex;align-items:center}
+.fin{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0;border-top:1px solid var(--line)}
+.fin>div{padding:26px 28px 26px 0;min-width:0}.fin>div+div{padding-left:28px;border-left:1px solid var(--line)}
+.fin h3{font:400 13px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:0 0 14px}
+.fin .rows{display:grid;gap:0}.fin .rows a{display:flex;justify-content:space-between;gap:16px;color:var(--cream);text-decoration:none;font:400 20px/1.3 var(--serif);padding:10px 0;border-bottom:1px solid var(--line)}
+.fin .rows a:first-child{padding-top:0}.fin .rows a:last-child{border-bottom:0}.fin .rows a:hover{color:var(--gold)}.fin .rows span{color:var(--mute)}
+.fin p{margin:0;font-size:16px;line-height:1.55;color:var(--mute);max-width:34ch;text-align:left}.fin #platz{padding:0}.fin #platz .wl{font-size:16px;line-height:1.55;color:var(--mute)}.fin #platz .wl b{display:block;font:400 13px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:0 0 14px}.fin>div:has(#platz[hidden]){display:none}.fin #platz .wl b{text-transform:uppercase}.fin #platz .wl a{display:flex;margin:12px 0 0;font:400 20px var(--serif);text-decoration:none;color:var(--cream)}.fin #platz .wl span{display:block;font-size:14px;margin-top:6px}
+@media(max-width:820px){.fin>div,.fin>div+div{padding:22px 0;border-left:0}.fin>div+div{border-top:1px solid var(--line)}}
+
+
+html body{font-size:18px}
+.num3 strong{font-size:clamp(30px,3.6vw,48px);margin-bottom:8px}.num3 p{font-size:17px;max-width:34ch}
+.who .p{font-size:clamp(19px,1.8vw,22px);line-height:1.6;max-width:none;color:var(--cream)}.who .fz{font-size:20px}
+.lead,.tsn,.who .p,#so .p,.prdb p{text-align:justify;hyphens:auto;-webkit-hyphens:auto;text-justify:inter-word}
+.lead,.hero .lead{max-width:none;text-align:justify}
+@media(max-width:700px){.lead,.who .p,.tsn{text-align:left;hyphens:manual}}
 </style>
 </head>
 <body>
@@ -558,7 +573,10 @@ p.p{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto
   </section>
 
   <section id="ausprobieren">
-    <p class="prt"><b>Kostenlos ausprobieren:</b> <a href="#schnelltest" id="stlink">Stimm-Schnelltest &rarr;</a><span class="prg" id="geschenk"><a href="/geschenk?g=prompt" data-g="prompt">Stimm-Prompt (PDF) &rarr;</a><a href="/geschenk?g=leitfaden" data-g="leitfaden">KI-Leitfaden (PDF) &rarr;</a></span></p>
+    <div class="fin"><div><h3>Kostenlos ausprobieren</h3><div class="rows"><a href="#schnelltest" id="stlink">Stimm-Schnelltest<span aria-hidden="true">&rarr;</span></a><a href="/geschenk?g=prompt" data-g="prompt">Stimm-Prompt (PDF)<span aria-hidden="true">&rarr;</span></a><a href="/geschenk?g=leitfaden" data-g="leitfaden">KI-Leitfaden (PDF)<span aria-hidden="true">&rarr;</span></a></div></div><div>  <section id="platz" hidden>
+    <p class="wl"><b>Warteliste.</b> Ich nehme jeden Monat nur wenige Unternehmen auf. <a href="/platz" id="pzgo">Platz sichern</a> <span>Name, E-Mail, Unternehmen und Branche genügen.</span> <span class="zzl" id="pzfrei" hidden></span> <span class="zzl" id="pzn" hidden></span></p>
+  </section>
+</div><div><h3>Vertraulich von Anfang an</h3><p>Ihre Unternehmensdaten bleiben Ihre. Welche Daten RhetorIQ nutzt und wie sie geschützt werden, halte ich vor dem Start schriftlich fest.</p></div></div>
     <section id="schnelltest" aria-label="Kostenlos ausprobieren">
       <details class="prd" id="stdet"><summary>Stimm-Schnelltest: Wie klingt Ihre Webseite? Drei Befunde in einer Minute.<i aria-hidden="true">+</i></summary><div class="prdb">
       <p>Geben Sie die Adresse Ihrer Webseite und Ihre E-Mail-Adresse ein. Sie erhalten sofort eine Kurzauswertung zur Sprache Ihrer Seite. Der Test ist kostenlos. Ich sehe Ihre Angaben und melde mich bei Bedarf persönlich.</p>
@@ -588,9 +606,6 @@ p.p{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto
   .catch(function(){m.textContent="Keine Verbindung. Bitte versuchen Sie es erneut."})
   .then(function(){busy=false;b.disabled=false})})})();
   </script>
-  <section id="platz" hidden>
-    <p class="wl"><b>Warteliste.</b> Ich nehme jeden Monat nur wenige Unternehmen auf. <a href="/platz" id="pzgo">Platz sichern</a> <span>Name, E-Mail, Unternehmen und Branche genügen.</span> <span class="zzl" id="pzfrei" hidden></span> <span class="zzl" id="pzn" hidden></span></p>
-  </section>
   </main>
 
   <dialog class="rqd" id="rqd" aria-labelledby="rqdt"><button class="x" type="button" id="rqx" aria-label="Schliessen">&times;</button><h3 id="rqdt">Gespräch anfragen</h3><p class="sub" id="rqsub">Zwanzig Minuten, kostenlos und unverbindlich.</p><p class="vh" id="rqlive" role="status" aria-live="polite"></p>
@@ -602,7 +617,6 @@ p.p{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto
   <form id="pzf" novalidate hidden><p class="cnt" id="pzcnt" hidden></p><label>Name<input id="pn" type="text" autocomplete="name" maxlength="80" required></label><label>E-Mail<input id="pe" type="email" autocomplete="email" maxlength="120" required></label><label>Unternehmen<input id="pu" type="text" autocomplete="organization" maxlength="100" required></label><label>Branche<input id="pb" type="text" maxlength="80" required></label><label>Ihr Anliegen (freiwillig)<textarea id="pt" rows="3" maxlength="1000" placeholder="Worum geht es?"></textarea></label><label class="chk"><input id="pc" type="checkbox" required><span>Ich habe die <a href="/?p=datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und bin einverstanden, dass meine Angaben für die Warteliste verwendet werden und Lorena Lienhard mich dazu per E-Mail kontaktiert.</span></label><input type="text" id="pw" name="hp_ref_q7" tabindex="-1" autocomplete="off" aria-hidden="true" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"><p class="msg" id="pzm" aria-live="polite"></p><div class="act"><button class="btn" type="submit" id="pzsend">Platz sichern</button></div></form>
   <form id="gf" novalidate hidden><fieldset><legend>Welches Geschenk möchten Sie?</legend><label class="chk"><input type="radio" name="g" id="g-prompt" value="prompt"><span>Stimm-Prompt</span></label><label class="chk"><input type="radio" name="g" id="g-leitfaden" value="leitfaden"><span>KI-Leitfaden</span></label></fieldset><label>Name<input id="gn" type="text" autocomplete="name" maxlength="80" required></label><label>E-Mail<input id="ge" type="email" autocomplete="email" maxlength="120" required></label><label class="chk"><input id="gc" type="checkbox" required><span>Ich habe die <a href="/?p=datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und bin einverstanden, dass Lorena Lienhard mir das gewählte Geschenk per E-Mail sendet und sich zu den Themen Stimme und KI bei mir melden darf.</span></label><input type="text" id="gw" name="hp_ref_q7" tabindex="-1" autocomplete="off" aria-hidden="true" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"><p class="msg" id="gm" aria-live="polite"></p><div class="act"><button class="btn" type="submit" id="gsend">Geschenk erhalten</button></div></form>
   <div class="done" id="rqwdone" hidden></div></dialog>
-<p class="vert vend">Vertraulich von Anfang an. Ihre Unternehmensdaten bleiben Ihre. Welche Daten RhetorIQ nutzt und wie sie geschützt werden, halte ich vor dem Start schriftlich fest.</p>
   <footer><span>Rhetor<span class="iq">IQ</span> von Lorena Lienhard</span><a href="/?p=datenschutz" style="color:inherit;text-decoration:underline;text-underline-offset:3px">Datenschutz</a></footer>
 </div>
 <script>
