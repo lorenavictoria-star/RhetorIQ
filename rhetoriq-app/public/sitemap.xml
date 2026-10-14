@@ -24,4 +24,14 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://rhetoriq.ch/en/preise"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://rhetoriq.ch/preise"/>
   </url>
+  <url>
+    <loc>https://rhetoriq.ch/kundenmails-mit-ki</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://rhetoriq.ch/kundenmails-mit-ki"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rhetoriq.ch/kundenmails-mit-ki"/>
+  </url>
+  <url>
+    <loc>https://rhetoriq.ch/firmenstimme</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://rhetoriq.ch/firmenstimme"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rhetoriq.ch/firmenstimme"/>
+  </url>
 </urlset>

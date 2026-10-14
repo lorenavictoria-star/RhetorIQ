@@ -375,6 +375,9 @@ app.get('/en', (req, res) => res.sendFile(path.join(FRONTEND, 'landing.en.html')
 // Eigene Preise-Seite (Vier Pakete, Vergleich) auf Deutsch und Englisch, mit demselben Kopf, Buchungsfenster und Fuss wie die Startseite.
 app.get('/preise', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.preise.html')));
 app.get('/en/preise', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.preise.en.html')));
+// Zwei Inhaltsseiten für die Suche (nur Deutsch), gleicher Kopf, Buchungsfenster und Fuss wie die Preise-Seite.
+app.get('/kundenmails-mit-ki', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.kundenmail.html')));
+app.get('/firmenstimme', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.stimme.html')));
 app.get('/login', (_, res) => res.redirect(302, '/index.html'));
 // Eigene Adresse für die Terminbuchung (LinkedIn, Mails): zeigt die Landingpage, das Dialogfenster mit den freien Zeiten öffnet sich selbst.
 app.get('/termin', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.html')));
