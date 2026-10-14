@@ -466,6 +466,7 @@ html body{font-size:18px}
 .who .fz,.eyebrow,.msg{text-align:left}
 @media(max-width:1060px){nav{display:flex;flex-wrap:wrap;align-items:center}.logo{order:1;flex:1 1 auto;min-width:0}.navr{order:2;margin-left:auto;gap:14px}.navm{order:3;flex:0 0 100%}}
 #schnelltest summary{display:none}#schnelltest .prd{border:0}#schnelltest .prd[open]{padding-top:24px;border-top:1px solid var(--line)}
+@media(max-width:700px){.pf-tabs{flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-inline:0;padding:2px 28px 2px 4px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent)}.pf-tabs::-webkit-scrollbar{display:none}.pf-tabs button{flex:0 0 auto;white-space:nowrap;scroll-snap-align:start}}
 </style>
 </head>
 <body>
@@ -532,7 +533,7 @@ html body{font-size:18px}
       <img class="foto" src="/foto-lorena.jpg" decoding="async" loading="lazy" alt="Lorena Lienhard" width="540" height="959">
       <div>
         <p class="eyebrow">Die Person hinter RhetorIQ</p>
-        <h2>Erreichbar.</h2>
+        <h2>Erreichbar.<br>Für die volle Wirkung.</h2>
         <p class="p">So schnell die KI auch schreibt: Wenn es wirklich zählt, wünschen Sie sich einen Menschen am anderen Ende. Ich bin in jedem Paket persönlich für Sie da. Mein Antwortziel: im Paket Stimme ein Werktag, ab Team drei Stunden an Werktagen, bei Enterprise drei Stunden an 365 Tagen. Ein Klick genügt, und ich melde mich persönlich bei Ihnen.</p>
         <p class="fz">Sie liefern den roten Faden, ich gebe ihm Gold: Sprache, die ankommt.</p>
       </div>
@@ -949,6 +950,7 @@ function run(){
   if(still||stopped||!vis)return;
   timer=setInterval(function(){show((stage+1)%3)},4600);
 }
+tabs.addEventListener("click",function(ev){var b=ev.target.closest("button");if(b&&tabs.scrollWidth>tabs.clientWidth)tabs.scrollTo({left:b.offsetLeft-24,behavior:"smooth"})});
 tabs.addEventListener("click",function(ev){var b=ev.target.closest("button");if(!b)return;stop();cur=+b.getAttribute("data-i");draw();show(2)});
 [$("pfsteps"),$("pmsteps")].forEach(function(box){box.addEventListener("click",function(ev){var b=ev.target.closest("button");if(!b)return;stop();show(+b.getAttribute("data-s"))})});
 if(window.IntersectionObserver&&!still){new IntersectionObserver(function(en){vis=en[0].isIntersecting;run()},{threshold:.3}).observe(root)}
