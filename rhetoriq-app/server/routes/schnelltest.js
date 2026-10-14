@@ -139,6 +139,9 @@ function makeRouter({ max = 5, fetchHtml = safeFetch.safeFetchHtml, deps: depsIn
       await pool.query(`UPDATE schnelltests SET befunde=$1, ergebnis=$2 WHERE id=$3`, [JSON.stringify(befunde), befunde.concat(NEXT_STEP).join('\n').slice(0, 1200), rowId]);
 
       res.json({ ok: true, ergebnis });
+      // Die Person bekommt dieselben drei Befunde sofort auch per Mail. Ein Fehler hier stört die Antwort nie.
+      const em = MAILS.ergebnisMail(host, befunde);
+      queueEmail({ kind: 'schnelltest_ergebnis', to: email, subject: em.subject, text: em.text, senderName: 'Lorena Lienhard' }).catch(e => console.error('[schnelltest] Ergebnis-Mail fehlgeschlagen:', e && e.message));
       // Die sofortige Antwort ist raus. Alles Weitere läuft im Hintergrund und kann die Antwort nie mehr stören.
       starteTiefenanalyse({ id: rowId, url: target.toString(), host, email, html: page.html, finalUrl: page.url || target.toString() }, deps);
     } catch (e) {

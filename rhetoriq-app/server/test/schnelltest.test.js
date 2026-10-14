@@ -43,6 +43,8 @@ test('Schnelltest liefert drei Befunde, speichert und meldet an Lorena', async (
   assert.equal(H.ai.calls.length, 2);
   assert.equal(H.ai.calls[1].meter.module, 'schnelltest_tief');
   const m = H.mails.find(x => x.kind === 'schnelltest_notify');
+  const eg = H.mails.find(x => x.kind === 'schnelltest_ergebnis');
+  assert.ok(eg && eg.to === 'gast@test.ch' && eg.text.includes('1. Die Sätze sind lang.') && eg.text.includes('/termin') && !/CHF/.test(eg.text), 'Ergebnis-Mail an die Person');
   assert.ok(m && m.text.includes('gast@test.ch') && m.text.includes('muster.ch') && m.text.includes('Kennzahlen'));
 });
 

@@ -44,4 +44,21 @@ function begleitMail(host) {
   };
 }
 
-module.exports = { hinweisMail, begleitMail, kennzahlenZeilen };
+
+// Sofortige Mail an die Person mit den drei Befunden, die auch auf dem Bildschirm stehen (Sie, in Lorenas Namen)
+function ergebnisMail(host, befunde) {
+  return {
+    subject: `Ihr Stimm-Schnelltest für ${host}`,
+    text: [
+      'Guten Tag', '',
+      `Danke, dass Sie den Stimm-Schnelltest für ${host} gemacht haben. Hier sind Ihre drei Befunde zur Sprache Ihrer Webseite:`, '',
+      ...befunde.map((b, i) => `${i + 1}. ${b}`), '',
+      `Wenn Sie die Befunde im Gespräch vertiefen möchten, wählen Sie hier ein Zeitfenster mit mir. Wir haben dafür zwanzig Minuten.`,
+      `${appUrl()}/termin`, '',
+      'Bei Fragen antworten Sie einfach auf diese Mail. Sie landet direkt bei mir.', '',
+      'Herzlich', 'Lorena Lienhard'
+    ].join('\n')
+  };
+}
+
+module.exports = { hinweisMail, begleitMail, kennzahlenZeilen, ergebnisMail };
