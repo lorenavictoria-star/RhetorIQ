@@ -53,8 +53,9 @@ test('Zähler auf der Landingpage kommen nur aus der Antwort des Servers', () =>
 });
 
 test('Schreibregeln auf der Landingpage (neue Texte): keine Gedankenstriche, kein ß, keine Gegenüberstellung', () => {
-  const a = landing.indexOf('<section id="geschenk">');
-  const teile = [landing.slice(a, landing.indexOf('<section id="fragen">')), landing.slice(landing.indexOf('<section id="platz"'), landing.indexOf('<section id="buchen">')),
+  const a = landing.indexOf('<section id="ausprobieren">');
+  assert.ok(a > 0 && landing.indexOf('<section id="platz"') > a);
+  const teile = [landing.slice(a, landing.indexOf('<section id="platz"')), landing.slice(landing.indexOf('<section id="platz"'), landing.indexOf('</main>')),
     landing.slice(landing.indexOf('<dialog class="rqd" id="rqw"'), landing.indexOf('</dialog>', landing.indexOf('<dialog class="rqd" id="rqw"'))),
     /<script id="rq-warteliste-landing">([\s\S]*?)<\/script>/.exec(landing)[1]];
   for (const t of teile) {
@@ -93,4 +94,20 @@ test('DE/EN-Paare (RQ_EXTRA_PAIRS) decken die neuen Texte der Verwaltung ab', ()
     assert.ok(de.has(t), 'Paar fehlt: ' + t);
   }
   for (const p of win.RQ_EXTRA_PAIRS) { assert.equal(p.length, 2); assert.ok(p[0] && p[1]); assert.ok(!/[–—―]/.test(p[0] + p[1])); }
+});
+
+test('Neue Startseite und Preise-Seiten: Struktur, Routen, Schreibregeln im sichtbaren Text', () => {
+  const idx = fs.readFileSync(path.join(__dirname, '..', 'index.js'), 'utf8');
+  assert.ok(/app\.get\('\/preise'.*landing\.preise\.html/.test(idx) && /app\.get\('\/en\/preise'.*landing\.preise\.en\.html/.test(idx));
+  for (const f of ['landing.html', 'landing.en.html', 'landing.preise.html', 'landing.preise.en.html']) {
+    const h = fs.readFileSync(path.join(pub, f), 'utf8');
+    assert.ok(/<link rel="canonical"/.test(h) && /hreflang="x-default"/.test(h), f);
+    const vis = h.slice(h.indexOf('<body>')).replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ').replace(/&ndash;/g, '');
+    assert.ok(!/[–—―]/.test(vis) && !/ß/.test(vis), f + ' Gedankenstrich oder ß');
+    assert.ok(!/\bsondern\b|, nicht\b|, not\b/.test(vis), f + ' Gegenüberstellung');
+  }
+  const home = fs.readFileSync(path.join(pub, 'landing.html'), 'utf8');
+  for (const t of ['Ihre Stimme, von Hand', 'Direkt im Postfach', 'IQ</span> schärft', 'Effizienz gewinnt Zeit', 'href="/preise"', 'Kostenlos ausprobieren:', 'name="hp_ref_q7"']) assert.ok(home.includes(t), t);
+  const pr = fs.readFileSync(path.join(pub, 'landing.preise.html'), 'utf8');
+  for (const t of ['Vier Pakete, monatlich kündbar.', 'CHF 1’490', 'ab CHF 2’490', 'Empfohlen', 'Pakete im Vergleich', 'id="go"']) assert.ok(pr.includes(t), t);
 });

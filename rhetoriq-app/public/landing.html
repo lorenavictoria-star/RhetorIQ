@@ -27,7 +27,7 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter+Tight:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter+Tight:wght@300;400;500&family=Newsreader:wght@400&display=swap">
 <style>
 /* Layout: schwarze Bühne, Knäuel rechts im Hero, danach ruhige Streifen mit feinen Linien. Gold = IQ, Silber = EQ. */
 :root{
@@ -221,7 +221,7 @@ footer{padding-block:90px 40px;display:flex;justify-content:space-between;gap:16
   .step+.step{border-top:1px solid var(--line)}
   section{padding-block:70px 0}
 }
-p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:break-word}
+p.p{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:break-word}
 @media(max-width:819px){.wrap{position:relative;z-index:2}}
 .stf{display:grid;gap:18px;max-width:560px;margin-top:24px}
 .stf label{display:grid;gap:6px;font-size:13px;letter-spacing:.04em;color:var(--mute)}
@@ -243,7 +243,7 @@ p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:justify;text-justify:inter-wo
 footer a{display:inline-block;padding-block:12px;margin-block:-12px}
 .eyebrow,.brk p{font-size:12px}
 @media(max-width:819px){
-p:not(.eyebrow):not(.sub):not(.msg),#vn{text-align:left;text-justify:auto;hyphens:manual;-webkit-hyphens:manual}
+p.p{text-align:left;text-justify:auto;hyphens:manual;-webkit-hyphens:manual}
 .logo .sub{font-size:12px;letter-spacing:.06em;max-width:210px;white-space:normal;line-height:1.3}
 }
 .vend{margin:40px 0 0;max-width:640px;font-size:13px;line-height:1.6;color:#8f8d85}
@@ -255,50 +255,257 @@ section[hidden]{display:none}
 @media(max-width:700px){.gcards{grid-template-columns:1fr}}
 .gcards .card .btn{margin-top:14px}
 .zzl{margin:8px 0 0;font-size:15px;color:var(--gold)}
+
+/* ===== Neue Startseite und Preise: Plattform-Beispiel, Zeitleiste, Zahlen, Pakete ===== */
+.navm{display:flex;align-items:center;gap:26px}
+.navm a{font-size:14px;color:var(--mute);text-decoration:none;display:inline-flex;align-items:center;min-height:44px}
+.navm a:hover,.navm a[aria-current="page"]{color:var(--cream)}
+.navr .btn{padding:9px 18px;font-size:14px;white-space:nowrap}
+.logo a{color:inherit;text-decoration:none;display:block}
+@media(max-width:1060px){nav{flex-wrap:wrap;row-gap:0}.navm{order:3;width:100%;flex-wrap:wrap;gap:0 20px}.navr .btn{display:none}}
+main{display:block}
+p.p{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:break-word}
+@media(max-width:819px){p.p{text-align:left;text-justify:auto;hyphens:manual;-webkit-hyphens:manual}}
+
+/* Einstieg: Knäuel zuerst, Text darunter */
+.hero .trt{font:400 clamp(20px,2.4vw,28px)/1.2 var(--serif);margin:6px 0 14px;max-width:none}
+.hero h1{margin:0 0 26px}
+.hero .lead{max-width:760px;margin:0;text-align:left}
+.hero .diff{max-width:760px;margin:20px 0 0;color:var(--mute);font-size:16px;text-align:left}
+.hero .diff b{font-weight:400;color:var(--cream)}
+.hero .cta2{margin-top:30px}
+
+/* Plattform-Beispiel */
+.bigp{background:#121211;border:1px solid #242422;border-radius:28px;padding:18px;margin-top:30px}
+.bigp [hidden]{display:none!important}
+.bigp p{text-align:left;max-width:none}
+.pf-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:2px 4px 14px}
+.pf-tabs button{font:300 14px var(--sans);background:transparent;color:var(--cream);border:1px solid var(--line);border-radius:99px;padding:6px 16px;min-height:40px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.pf-tabs button:hover{border-color:#6b6552}
+.pf-tabs button[aria-pressed="true"]{background:var(--cream);color:var(--ink);border-color:var(--cream)}
+.pf-tabs .nw{font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:var(--gold);color:#0a0a0a;border-radius:99px;padding:1px 7px;line-height:1.5}
+.pf-tabs button[aria-pressed="true"] .nw{background:#8A6420;color:#fff}
+.pf{display:grid;grid-template-columns:170px minmax(0,1fr);border-radius:18px;overflow:hidden;border:1px solid #2a2824;background:#fff;color:#0E0D0B;max-width:980px}
+.pf-rail{background:#0E0D0B;color:#F1EDE4;padding:22px 0;display:flex;flex-direction:column;gap:2px;min-width:0}
+.pf-logo{font:400 20px Newsreader,Georgia,serif;margin:0 0 14px;padding:0 18px;white-space:nowrap}
+.pf-logo b{font:400 20px Newsreader,Georgia,serif;color:#D9B26A}
+.pf-rail .ri{display:flex;align-items:center;gap:12px;font-size:14px;padding:10px 18px;color:#9A978E;position:relative;white-space:nowrap}
+.pf-rail .ri svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pf-rail .ri.on{background:#1d1b17;color:#D9B26A}
+.pf-rail .ri.on:before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:#D9B26A}
+.pf-rail .rs{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#85827a;padding:18px 18px 6px}
+.pf-main{padding:22px 26px 24px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.pf-steps,.mw-steps{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px}
+.pf-steps button,.mw-steps button{font:300 12px var(--sans);color:#6A665F;border:1px solid #E2E0DC;border-radius:99px;padding:3px 12px;min-height:30px;background:#fff;cursor:pointer;transition:all .3s}
+.pf-steps button[aria-pressed="true"],.mw-steps button[aria-pressed="true"]{background:#0E0D0B;color:#fff;border-color:#0E0D0B}
+.pf button:focus-visible,.pf-tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.pf-back{font-size:12px;color:#8A6420}
+.pf-title{font:400 26px Newsreader,Georgia,serif;color:#0E0D0B}
+.pf-desc{font-size:13px;color:#6A665F;margin-top:-4px}
+.pf-voice{display:flex;flex-wrap:wrap;gap:6px;min-height:28px}
+.pf-voice i{font-style:normal;font-size:12px;border:1px solid #D9B26A;background:#FBF6EA;color:#8A6420;border-radius:99px;padding:3px 12px;opacity:0;transition:opacity .35s}
+.pf.s1 .pf-voice i,.pf.s2 .pf-voice i{opacity:1}
+.pf-res{border:1px solid #E2E0DC;border-radius:10px;padding:14px 16px;background:#fff;margin-top:4px}
+.pf-reslabel{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#6A665F;display:flex;justify-content:space-between;gap:10px}
+.pf-badge{color:#8A6420;opacity:0;transition:opacity .35s;text-transform:none;letter-spacing:0;font-weight:500}
+.pf.s2 .pf-badge{opacity:1}
+.pf .pf-text{font:400 clamp(18px,2vw,22px)/1.35 Newsreader,Georgia,serif;margin:8px 0 12px;color:#0E0D0B;max-width:none;min-height:3.9em}
+.pf .pf-text.g{color:#7d7a72}
+.pf ins{text-decoration:none;background:#FBF6EA;border-bottom:1.5px solid #D9B26A;color:#0E0D0B}
+.pf del{color:#B42318;text-decoration:line-through;text-decoration-thickness:1px;opacity:.75}
+.pf-notes{display:none;border-left:2px solid #D9B26A;padding:4px 0 4px 12px;margin:2px 0 12px;font-size:13px;color:#6A665F}
+.pf.s2 .pf-notes{display:block}
+.pf-notes b{display:block;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#8A6420;margin-bottom:4px}
+.pf-notes ul{margin:0;padding-left:16px}.pf-notes li{margin:0 0 2px;color:#3a3732}
+.pf-actions{display:flex;gap:8px;flex-wrap:wrap}
+.pf-btn{font-size:12.5px;border:1px solid #D9B26A;border-radius:8px;padding:6px 12px;color:#8A6420;background:#fff}
+.pf-btn.ghost{border-color:#E2E0DC;color:#6A665F}
+@media(max-width:760px){
+.bigp{padding:10px;border-radius:20px}
+.pf{grid-template-columns:1fr}
+.pf-rail{flex-direction:row;flex-wrap:wrap;align-items:center;padding:10px 12px;gap:0}
+.pf-logo{width:100%;margin:0 0 4px;padding:0 4px}
+.pf-rail .ri{font-size:0;gap:0;padding:8px 10px}
+.pf-rail .rs{display:none}
+.pf-main{padding:16px 16px 18px}
+}
+
+/* Mail-Fenster, Erweiterung im Postfach */
+.pm{background:#fff;color:#1f2937;border-radius:14px;padding:16px 18px 14px;position:relative;max-width:980px}
+.mw{border:1px solid #E2E0DC;border-radius:10px;overflow:hidden;position:relative;min-height:330px}
+.mw-bar{background:#eef1f6;border-bottom:1px solid #dfe3ea;padding:8px 14px;font:500 12px var(--sans);color:#475569;display:flex;justify-content:space-between;gap:10px}
+.mw-bar span:last-child{font-weight:300;color:#64748b}
+.mw-head{padding:10px 16px;border-bottom:1px solid #eef0f4;font-size:13px;color:#475569;line-height:1.7}
+.mw-head b{font-weight:500;color:#1f2937;display:inline-block;width:64px}
+.mw-body{padding:14px 16px 130px;font:400 16px/1.55 Newsreader,Georgia,serif;min-height:130px;color:#1f2937}
+.mw-text{opacity:0;transition:opacity .35s}
+.pm.s2 .mw-text{opacity:1}
+.mw-ins{background:#FBF6EA;border-bottom:1.5px solid #D9B26A}
+.mw-caret{display:inline-block;width:1px;height:16px;background:#1f2937;vertical-align:-3px;animation:mwb 1s steps(2) infinite}
+.pm.s2 .mw-caret{display:none}
+@keyframes mwb{50%{opacity:0}}
+.mw-fab{position:absolute;right:16px;bottom:18px;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f0d9a0,#c99a52);color:#0E0D0B;display:flex;align-items:center;justify-content:center;font:400 19px Newsreader,Georgia,serif;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.mw-panel{position:absolute;right:16px;bottom:62px;width:min(320px,calc(100% - 32px));background:#fff;border:1.5px solid #E2E0DC;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.22);padding:12px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s;color:#1f2937}
+.pm.s1 .mw-panel{opacity:1}
+.mw-ptitle{font-size:12px;font-weight:600;color:#8A6420;margin-bottom:4px}
+.mw-tag{display:inline-block;font-size:10.5px;font-weight:500;color:#8A6420;background:#FBF6EA;border-radius:10px;padding:2px 8px;margin-bottom:8px}
+.mw-area{border:1.5px solid #E2E0DC;border-radius:6px;padding:8px;font-size:12.5px}
+.mw-result{margin-top:8px;padding:8px;background:#F6F4EF;border-radius:6px;font-size:12px;line-height:1.45}
+.mw-insert{display:block;margin-top:8px;border-radius:6px;padding:7px;border:1.5px solid #8A6420;color:#8A6420;text-align:center;font-size:12.5px;font-weight:500}
+.pm .mw-cap{margin:12px 2px 0;font-size:13px;color:#6A665F}
+@media(max-width:760px){.pm{padding:12px}.mw-panel{right:8px;bottom:60px;width:calc(100% - 16px)}.mw-body{padding-bottom:190px}}
+@media(prefers-reduced-motion:reduce){.pf *,.pm *{transition:none!important;animation:none!important}}
+
+.tch{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 0;padding:0;list-style:none}
+.tch li{font-size:14px;border:1px solid #3a3a37;border-radius:99px;padding:6px 15px;color:var(--cream)}
+.tch li.d{border-style:dashed;border-color:#D9B26A;color:#D9B26A}
+.tsn{margin:14px 0 0;font-size:14px;color:var(--mute);max-width:62ch;text-align:left}
+
+/* So funktioniert es: Zeitleiste vom roten Faden zu Gold */
+.tlw{margin-top:34px}
+.tll{display:flex;justify-content:space-between;gap:16px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+.tll span:first-child{color:#d98582}.tll span:last-child{color:var(--gold)}
+.tlx{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));position:relative;padding-top:30px}
+.tlx:before{content:"";position:absolute;left:0;right:0;top:6px;height:2px;background:linear-gradient(90deg,#c0504d 0%,#c0504d 30%,#d9b26a 100%)}
+.tlx>div{position:relative;padding-right:28px}
+.tlx>div:before{content:"";position:absolute;left:0;top:-30px;width:14px;height:14px;border-radius:50%;background:#c0504d}
+.tlx>div:nth-child(2):before{background:#c9803f}.tlx>div:nth-child(3):before{background:#d9b26a}
+.tlx h3{font:400 clamp(24px,2.8vw,34px)/1.1 var(--serif);margin:0 0 8px}
+.tlx p{margin:0;color:var(--mute);font-size:15px;text-align:left}
+@media(max-width:760px){.tlx{grid-template-columns:1fr;gap:26px;padding-top:0;padding-left:28px}.tlx:before{left:6px;right:auto;top:0;bottom:0;width:2px;height:auto;background:linear-gradient(180deg,#c0504d,#d9b26a)}.tlx>div{padding-right:0}.tlx>div:before{left:-28px;top:6px}}
+
+/* Person */
+.who .fz{margin:22px 0 0;font-size:16px;color:var(--gold);max-width:none;text-align:left}
+
+/* Zahlen */
+.nums3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);margin-top:34px}
+.num3{padding:30px 28px 10px 0;min-width:0}
+.num3+.num3{padding-left:28px;border-left:1px solid var(--line)}
+.num3 strong{display:block;font:400 clamp(48px,7vw,88px)/1 var(--serif);margin-bottom:10px;-webkit-text-fill-color:transparent;-webkit-background-clip:text;background-clip:text}
+.num3 .zsv{background-image:linear-gradient(100deg,#f4f4f4 0%,#c4c8ce 50%,#8d9299 100%)}
+.num3 .zgv{background-image:linear-gradient(100deg,#e8cf9a 0%,#d9b26a 45%,#b8903f 100%)}
+.num3 p{font-size:16px;color:var(--cream);margin:0 0 8px;max-width:30ch;text-align:left}
+.num3 small{display:block;font-size:11px;color:#8f8d85;line-height:1.5}
+@media(max-width:820px){.nums3{grid-template-columns:1fr}.num3,.num3+.num3{padding:24px 0 8px;border-left:0}.num3+.num3{border-top:1px solid var(--line)}}
+.studies{list-style:none;margin:0;padding:0;display:grid;gap:12px;max-width:70ch}
+.studies li{color:var(--mute);font-size:15px}
+.studies small{display:block;font-size:12px;color:#8f8d85;margin-top:2px}
+#zahlen .closing{margin:30px 0 0;color:var(--mute);max-width:620px;text-align:left}
+
+/* Aufklappbare Zeilen (Studien, Fragen, Vergleich, Schnelltest) */
+.prd{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.prd+.prd{border-top:0}
+.prd summary{display:flex;justify-content:space-between;align-items:center;gap:16px;cursor:pointer;list-style:none;padding:16px 0;min-height:44px;font-size:16px;color:var(--cream)}
+.prd summary::-webkit-details-marker{display:none}
+.prd summary i{font-style:normal;font-size:22px;line-height:1;color:var(--mute);flex:none;transition:transform .2s}
+.prd[open] summary i{transform:rotate(45deg)}
+.prd summary:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.prdb{padding:0 0 22px}
+.prdb p{margin:0;color:var(--mute);max-width:68ch;text-align:left}
+.faqs{margin-top:28px}
+
+/* Preisstreifen auf der Startseite */
+.strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:34px 0 32px}
+.strip .bw{font:400 clamp(26px,3vw,40px)/1.2 var(--serif);margin:0 0 18px;max-width:none;text-align:left}
+.strip .eyebrow{margin-bottom:14px}
+
+/* Pakete und Vergleich */
+.pcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:34px}
+.pcard{border:1px solid #242422;background:#121211;border-radius:20px;padding:26px;min-width:0}
+.pcard.hot{border-color:var(--gold)}
+.pcard h2,.pcard h3{font:400 28px var(--serif);margin:0 0 6px;letter-spacing:0}
+.pcard b{display:block;font:400 44px/1.1 var(--serif);margin-bottom:12px}
+.pcard b small{font:300 14px var(--sans);color:var(--mute)}
+.pcard ul{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:15px;color:#c9c5ba}
+.pcard li{padding-top:8px;border-top:1px solid var(--line)}
+.ptag{display:inline-block;font:500 11px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border:1px solid #7a6338;border-radius:99px;padding:2px 10px;margin-left:8px;vertical-align:middle}
+.cmp-w{overflow-x:auto;margin-top:8px}
+.cmp-w:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.ptable{width:100%;border-collapse:collapse;min-width:620px}
+.ptable th,.ptable td{text-align:left;padding:16px 14px;border-bottom:1px solid var(--line);font-weight:300;vertical-align:top;font-size:15px}
+.ptable thead th{font:400 22px var(--serif);border-bottom-color:var(--cream)}
+.ptable tbody th{color:var(--mute);font-weight:300;width:26%}
+.ptable .hotc{color:var(--gold)}
+.phead{padding-top:20px}
+.phead h1{font:400 clamp(40px,6vw,76px)/1 var(--serif);letter-spacing:-.015em;margin:0;text-wrap:balance;max-width:900px}
+
+/* Kostenlos ausprobieren, Warteliste */
+#ausprobieren{padding-top:64px}
+.prt{display:flex;flex-wrap:wrap;gap:8px 26px;align-items:baseline;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:18px 0;margin:0;font-size:14px;max-width:none;text-align:left}
+.prt b{font-weight:400;color:var(--mute)}
+.prt a,.wl a{color:var(--cream);text-decoration:underline;text-underline-offset:3px;display:inline-flex;align-items:center;min-height:44px}
+.prt .prg{display:contents}
+#schnelltest .prd{border-top:0}
+#schnelltest summary{font-size:14px;color:var(--mute)}
+#schnelltest .prdb .stf{margin-top:6px}
+#platz{padding-top:28px}
+.wl{font-size:13px;color:var(--mute);margin:0;max-width:none;text-align:left}
+.wl b{font-weight:400;color:var(--cream)}
+.wl a{margin:0 6px}
+.wl .zzl{display:inline;margin:0;font-size:13px}
+.wl span{color:#8f8d85}
+.wl .zzl{color:var(--gold)}
+.vend{text-align:left}
+.wl [hidden]{display:none}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <nav><div class="logo">Rhetor<span class="iq">IQ</span><small class="sub">&ndash; Communication Intelligence</small></div><span class="navr"><a class="lg lgl" href="/en" hreflang="en" lang="en" aria-label="English">EN</a><a class="lg" href="/login">Login</a></span></nav>
+  <nav aria-label="Hauptnavigation"><div class="logo">Rhetor<span class="iq">IQ</span><small class="sub">&ndash; Communication Intelligence</small></div><span class="navm"><a href="#so">So funktioniert es</a><a href="/preise">Preise</a><a href="#fragen">Fragen</a><a href="#buchen">Gespräch</a></span><span class="navr"><a class="lg lgl" href="/en" hreflang="en" lang="en" aria-label="English">EN</a><a class="lg" href="/login">Login</a><a class="btn" href="#buchen">Gespräch anfragen</a></span></nav>
 
+  <main>
   <header class="hero">
     <div>
-      <h1>Rhetor<span class="iq">IQ</span> trifft <span class="eq">EQ</span>.</h1>
-      <p class="lead"><b>RhetorIQ ist die KI-Plattform, die Ihre Unternehmenssprache lernt.</b> Ich begleite Sie persönlich und überarbeite Ihre Texte von Hand, im Umfang Ihres Pakets. Der <span class="iq">IQ</span> schärft, mein <span class="eq">EQ</span> trifft Ihre Stimme. Sie liefern den roten Faden, ich gebe ihm <span class="eq">Gold</span>: Sprache, die ankommt.</p>
-      <div class="cta2"><a class="btn" href="#buchen">Gespräch anfragen</a><a class="btn ghost" href="#preise">Preise ansehen</a></div>
+      <p class="trt">Rhetor<span class="iq">IQ</span> trifft <span class="eq">EQ</span>.</p>
+      <h1>Ihre Stimme, von Hand <span class="eq">geschliffen.</span></h1>
+      <p class="lead">RhetorIQ macht die Stimme Ihres Unternehmens zur Basis jeder KI. Ich prüfe und schleife jeden Text von Hand.</p>
+      <p class="diff"><b>Der Unterschied zu herkömmlicher KI:</b> Sie schreibt für alle gleich und kommt bei Ton und Zwischentönen an ihre Grenze. RhetorIQ gibt jedem Text Ihre Stimme, und ich schleife dort nach, wo die Maschine nicht weiterkommt.</p>
+      <div class="cta2"><a class="btn" href="#buchen">Gespräch anfragen</a><a class="btn ghost" href="#so">So funktioniert es</a></div>
     </div>
     <div id="ball" role="img" aria-label="Ein goldener und ein silberner Faden, zu einem Knäuel gewickelt"></div>
   </header>
 
-  <div class="brk" aria-hidden="false"><span></span><p>Ich <b class="eq">denke</b> mit</p><span></span></div>
-  <section id="beispiel" style="padding-top:60px">
-    <p class="eyebrow">So wirkt RhetorIQ</p>
-    <h2>Wie Ihre Stimme auf den Text kommt.</h2>
-    <div class="tabs" id="vstp" role="tablist" aria-label="Schritte" style="margin:22px 0 4px"><button class="tab" role="tab" aria-selected="true">1 Die KI allein</button><button class="tab" role="tab" aria-selected="false">2 Ihre Stimme</button><button class="tab" role="tab" aria-selected="false">3 Meine Hand</button></div>
-    <h3 class="stp3" id="vh">Gerade und gleich.</h3>
-    <p class="p" id="vn" style="min-height:96px">KI-Werkzeuge glätten die Töne eines Unternehmens zu einem einheitlichen Standard. Die erkennbare Stimme verschwindet. Zurück bleibt ein Text ohne Ihre DNA.</p>
-    <div class="vz"><svg viewBox="0 0 360 170" role="img" aria-label="Eine gerade Linie wird zu Ihrer Stimme"><title>Linie wird zur Stimme</title>
-      <defs><linearGradient id="vgl" x1="0" x2="1"><stop offset="0" stop-color="#b8935a"/><stop offset=".5" stop-color="#f0d9a0"/><stop offset="1" stop-color="#c99a52"/></linearGradient>
-      <linearGradient id="vfl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9b26a" stop-opacity=".16"/><stop offset="1" stop-color="#d9b26a" stop-opacity="0"/></linearGradient></defs>
-      <line id="vflat" x1="14" y1="96" x2="346" y2="96" stroke="#8a8780" stroke-width="1.6"/>
-      <path id="vvo" fill="none" stroke="#5a4e33" stroke-width="1.2" opacity="0"/>
-      <path id="var" fill="url(#vfl)" opacity="0"/>
-      <path id="vfin" fill="none" stroke="url(#vgl)" stroke-width="2.6" stroke-linecap="round" opacity="0"/>
-      <g id="vdots" opacity="0"></g></svg><div id="vlbs" style="opacity:0;transition:opacity .3s"></div></div>
+  <section id="plattform">
+    <p class="eyebrow">Die Plattform</p>
+    <h2>So entsteht ein Text, der nach Ihnen klingt.</h2>
+    <div class="bigp" id="bigp">
+      <div class="pf-tabs" id="pftabs" role="group" aria-label="Beispiele"><button type="button" data-i="0" aria-pressed="true">Krisenstatement</button><button type="button" data-i="1" aria-pressed="false">Vortrag</button><button type="button" data-i="2" aria-pressed="false">Kundenmail</button><button type="button" data-i="3" aria-pressed="false">Direkt im Postfach <span class="nw">Neu</span></button><button type="button" data-i="4" aria-pressed="false">Begrüssung</button></div>
+      <div class="pm mm s2" id="pm" hidden>
+        <div class="pf-steps mw-steps" id="pmsteps" role="group" aria-label="Schritte"><button type="button" data-s="0" aria-pressed="false">1 Feld anklicken</button><button type="button" data-s="1" aria-pressed="false">2 Kurz beschreiben</button><button type="button" data-s="2" aria-pressed="true">3 In Feld einfügen</button></div>
+        <div class="mw">
+          <div class="mw-bar"><span>Antwort verfassen</span><span>E-Mail im Browser</span></div>
+          <div class="mw-head"><b>An</b>keller@kanzlei-keller.ch<br><b>Betreff</b>AW: Beratungstermin verschieben</div>
+          <div class="mw-body"><span class="mw-text">Sehr geehrte Frau Keller, gern verschiebe ich unseren Termin auf <span class="mw-ins">Donnerstag, 14 Uhr</span>. Die Unterlagen erhalten Sie verbindlich bis Mittwoch per Post.</span><span class="mw-caret"></span></div>
+          <div class="mw-fab" aria-hidden="true">R</div>
+          <div class="mw-panel"><div class="mw-ptitle">RhetorIQ, Text generieren</div><div class="mw-tag">E-Mail an Kundschaft</div><div class="mw-area">Termin auf Donnerstag, 14 Uhr, Unterlagen bis Mittwoch.</div><div class="mw-result">Sehr geehrte Frau Keller, gern verschiebe ich unseren Termin auf Donnerstag, 14 Uhr. Die Unterlagen erhalten Sie verbindlich bis Mittwoch per Post.</div><span class="mw-insert">In Feld einfügen</span></div>
+        </div>
+        <p class="mw-cap">Die Browser-Erweiterung sitzt direkt im Antwortfeld Ihres Postfachs. Eine ursprüngliche Nachricht ist nicht nötig.</p>
+      </div>
+      <div class="pf lite s2" id="pf" role="group" aria-label="Beispiel aus der Plattform">
+        <div class="pf-rail" aria-hidden="true"><div class="pf-logo">Rhetor<b>IQ</b></div><span class="ri"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Beginn</span><span class="ri on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Textarten</span><span class="ri"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Personen</span><span class="rs">Service</span><span class="ri"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 11h6M9 15h6"/></svg>Gedächtnis</span><span class="ri"><svg viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/></svg>Preise</span><span class="ri"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>Abo verwalten</span><span class="ri"><svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></svg>Videos</span><span class="ri"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Kontakt</span></div>
+        <div class="pf-main">
+          <div class="pf-steps" id="pfsteps" role="group" aria-label="Schritte"><button type="button" data-s="0" aria-pressed="false">1 Ihre Vorlage</button><button type="button" data-s="1" aria-pressed="false">2 KI mit Ihrer Stimme</button><button type="button" data-s="2" aria-pressed="true">3 Meine Hand</button></div>
+          <div class="pf-back" aria-hidden="true">&larr; Module</div>
+          <div class="pf-title" id="pftitle">Krisenstatement</div>
+          <div class="pf-desc" id="pfdesc">Erste Stellungnahme nach einem Ausfall, in der Haltung der Geschäftsleitung.</div>
+          <div class="pf-voice" id="pfvoice"><i>Stimme: Geschäftsleitung &#10003;</i><i>Haltung: übernimmt Verantwortung</i><i>Reihenfolge: zuerst die Betroffenen</i></div>
+          <div class="pf-res">
+            <div class="pf-reslabel"><span id="pfreslabel">Ihr Text</span><span class="pf-badge" id="pfbadge">Von Lorena geprüft: nichts zu ändern</span></div>
+            <p class="pf-text" id="pftext">Der Ausfall vom Montag hat Sie getroffen, und dafür übernehmen wir die Verantwortung. Wir arbeiten an einer Lösung bis Mittwoch.</p>
+            <div class="pf-notes" id="pfnotes"><b>Was ich geschliffen habe</b><ul><li>Die Stimme sitzt, hier musste ich nichts ändern</li><li>Ich lese jeden Text trotzdem gegen. Wo alles stimmt, lasse ich es unverändert.</li></ul></div>
+            <div class="pf-actions" aria-hidden="true"><span class="pf-btn" id="pfsend">Gesendet &#10003;</span><span class="pf-btn ghost">Kopieren</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ul class="tch" aria-label="Textarten"><li>E-Mails</li><li>Reden</li><li>Vorträge mit PowerPoint</li><li>Interviews</li><li class="d">+ Ihre Textart</li></ul>
+    <p class="tsn">Ihre Stimme auch in jedem Textfeld im Browser. Auf Wunsch richte ich die Erweiterung gemeinsam mit Ihrer IT für Ihr Team ein.</p>
   </section>
 
-  <div class="brk" aria-hidden="false"><span></span><p>Ich <b class="eq">handle</b> mit</p><span></span></div>
   <section id="so">
     <p class="eyebrow">So funktioniert es</p>
     <h2><span class="iq">IQ</span> schärft. <span class="eq">EQ</span> individualisiert.</h2>
-    <p class="p">So arbeite ich mit Ihnen, vom Workshop bis zum täglichen Einsatz.</p>
-    <div class="steps4">
-      <div class="step"><div class="sn">01</div><h3>Der Workshop</h3><p>Ich lese Ihre Texte und beobachte Ihr Team. Ich zeige, wo Haltung und Wirkung auseinanderlaufen, und halte Ihre Stimme als Brand Voice fest.</p></div>
-      <div class="step"><div class="sn">02</div><h3>Module nach Mass</h3><p>E-Mails, Pitches, Reden, Vorträge, Interviews und Präsentationen. Sie wählen die Textarten, die Ihr Team wirklich braucht.</p></div>
-      <div class="step"><div class="sn">03</div><h3>Jede Person erhält die eigene Stimme</h3><p>Neben der Stimme des Unternehmens schreibt jede Person in der eigenen. Jeder Text bleibt Ihrer.</p></div>
-      <div class="step"><div class="sn">04</div><h3>Feinschliff von Hand</h3><p>Ich übernehme den Feinschliff von Hand. Je nach Paket sind 2, 6 oder 15 Überarbeitungen im Monat inklusive, bei Enterprise bis 5 Stunden. Mein Antwortziel liegt je nach Paket bei einem Werktag oder drei Stunden.</p></div>
-    </div>
-    
+    <div class="tlw"><div class="tll" aria-hidden="true"><span>Ihr roter Faden</span><span>mit Gold</span></div><div class="tlx"><div><h3>Stimme festhalten</h3><p>Im Workshop halte ich fest, wie Ihr Unternehmen spricht.</p></div><div><h3>Jeder Text klingt nach Ihnen</h3><p>Die KI schreibt in dieser Stimme, auch in der jeder einzelnen Person.</p></div><div><h3>Feinschliff von Hand</h3><p>Ich lese jeden Text gegen. Wo die KI an ihre Grenzen kommt oder Sie es wünschen, schleife ich nach. Wo alles stimmt, bleibt es unverändert.</p></div></div></div>
   </section>
 
   <section id="person">
@@ -308,109 +515,31 @@ section[hidden]{display:none}
         <p class="eyebrow">Die Person hinter RhetorIQ</p>
         <h2>Ich bin erreichbar. Für die volle Wirkung.</h2>
         <p class="p">So schnell die KI auch schreibt: Wenn es wirklich zählt, wünschen Sie sich einen Menschen am anderen Ende. Ich bin in jedem Paket persönlich für Sie da. Mein Antwortziel: im Paket Stimme ein Werktag, ab Team drei Stunden an Werktagen, bei Enterprise drei Stunden an 365 Tagen. Ein Klick genügt, und ich melde mich persönlich bei Ihnen.</p>
+        <p class="fz">Sie liefern den roten Faden, ich gebe ihm Gold: Sprache, die ankommt.</p>
       </div>
     </div>
   </section>
 
-  <div class="brk" aria-hidden="false"><span></span><p>Ich trage zum <b class="eq">Erfolg</b> mit</p><span></span></div>
   <section id="zahlen">
     <p class="eyebrow">Warum sich das lohnt</p>
     <h2>Effizienz gewinnt Zeit. Vertrauen gewinnt Kunden.</h2>
-    <div class="zbt" id="zbt" data-show="Studien zeigen" data-hide="Studien verbergen">
-      <button type="button" class="zs" aria-expanded="false" aria-controls="zp0"><b>IQ</b><span>Die KI · Effizienz</span><span class="zpil" aria-hidden="true"><span class="zlb">Studien zeigen</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></button>
-      <button type="button" class="zg" aria-expanded="false" aria-controls="zp1"><b>EQ</b><span>Der Mensch · Vertrauen</span><span class="zpil" aria-hidden="true"><span class="zlb">Studien zeigen</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></button>
-      <button type="button" class="zg" aria-expanded="false" aria-controls="zp2"><b>IQ + EQ</b><span>Deshalb ist Kommunikation relevant</span><span class="zpil" aria-hidden="true"><span class="zlb">Studien zeigen</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></button>
-    </div>
-    <div class="zpn">
-      <div class="zpl" id="zp0" hidden><div class="zgs">
-        <div class="zgp"><div class="znm"><div><strong class="zsv">77%</strong><span>im Job</span></div><div><strong class="zsv">47%</strong><span>KMU</span></div><div><strong class="zsv">117</strong><span>E-Mails pro Tag</span></div></div><p>KI ist im Arbeitsalltag angekommen.</p><small>KPMG 2025 · AXA 2025 · Microsoft 2025</small></div>
-        <div class="zgp"><div class="znm"><div><strong class="zsv">−40%</strong><span>Zeit</span></div><div><strong class="zsv">+18%</strong><span>Qualität</span></div></div><p>deshalb ist KI effizient.</p><small>Noy und Zhang, Science, 2023</small></div>
-      </div></div>
-      <div class="zpl" id="zp1" hidden><div class="zgs">
-        <div class="zgp g"><div class="znm"><div><strong class="zgv">61%</strong><span>Schweiz</span></div><div><strong class="zgv">31%</strong><span>weltweit</span></div></div><p>weniger Vertrauen bei KI-Inhalten</p><small>EY 2025 · Klaviyo und Datalily 2025</small></div>
-      </div></div>
-      <div class="zpl" id="zp2" hidden><div class="zgs">
-        <div class="zgp g"><div class="znm"><div><strong class="zgv">7,5 Std.</strong><span>pro Woche, USA</span></div><div><strong class="zgv">2 Std.</strong><span>pro Woche, Deutschland</span></div></div><p>verlorene Arbeitszeit durch schlechte Kommunikation</p><small>Grammarly und Harris Poll 2022 · Grammarly und Statista 2024 (zwei Drittel der Befragten)</small></div>
-      </div></div>
-    </div>
-    <p class="p" style="margin-top:34px">Darum braucht jede KI eine menschliche Hand. Ich lese Ihre Texte als Expertin für Sprache und schärfe sie, im Umfang Ihres Pakets.</p>
+    <div class="nums3"><div class="num3"><strong class="zsv">77 %</strong><p>der Berufstätigen nutzen KI im Job. Sie ist im Arbeitsalltag angekommen.</p><small>KPMG 2025 · AXA 2025 · Microsoft 2025</small></div><div class="num3"><strong class="zgv">61 %</strong><p>weniger Vertrauen in der Schweiz bei KI-Inhalten, weltweit 31 %.</p><small>EY 2025 · Klaviyo und Datalily 2025</small></div><div class="num3"><strong class="zgv">7,5 Std.</strong><p>pro Woche gehen in den USA durch schlechte Kommunikation verloren.</p><small>Grammarly und Harris Poll 2022</small></div></div>
+    <details class="prd" style="margin-top:26px"><summary>Weitere Studien<i aria-hidden="true">+</i></summary><div class="prdb"><ul class="studies"><li>47 % der KMU und 117 E-Mails pro Tag: KI ist im Alltag angekommen (KPMG, AXA, Microsoft 2025).</li><li>40 % weniger Zeit bei 18 % höherer Qualität: Deshalb ist KI effizient (Noy und Zhang, Science, 2023).</li><li>2 Std. pro Woche gehen in Deutschland verloren (Grammarly und Statista 2024).</li></ul></div></details>
+    <p class="closing">Darum braucht jede KI eine menschliche Hand. Ich lese Ihre Texte als Expertin für Sprache und schärfe sie, im Umfang Ihres Pakets.</p>
   </section>
 
   <section id="preise">
-    <p class="eyebrow">Preise</p>
-    <h2>Drei Pakete, ein Einstieg, monatlich kündbar.</h2>
-    <div class="prices">
-      <div class="pr"><h3>Stimme</h3><b>CHF 190<small> / Monat</small></b><p class="sub">40 Texte pro Monat, 1 Nutzer</p><ul><li>Brand Voice aus Ihrem Stimm-Audit</li><li>2 Überarbeitungen durch Lorena inklusive</li><li>Stilprofil mit Verlauf</li><li>Antwort innert 1 Werktag</li></ul></div>
-      <div class="pr hot"><h3>Team</h3><b>CHF 590<small> / Monat</small></b><p class="sub">150 Texte pro Monat, bis 5 Nutzer</p><ul><li>Alles aus Stimme</li><li>Jede Person mit eigener Stimme</li><li>6 Überarbeitungen durch Lorena inklusive</li><li>Antwort innert 3 Stunden an Werktagen</li></ul></div>
-      <div class="pr hot"><h3>Business</h3><b>CHF 1’490<small> / Monat</small></b><p class="sub">400 Texte pro Monat, bis 15 Nutzer</p><ul><li>Alles aus Team</li><li>15 Überarbeitungen durch Lorena inklusive</li><li>Quartalsreview mit Lorena</li><li>Antwort innert 3 Stunden, Wochenende gegen Zuschlag</li></ul></div>
-      <div class="pr"><h3>Enterprise</h3><b>ab CHF 2’490<small> / Monat</small></b><p class="sub">auf Anfrage, unbegrenzte Nutzung</p><ul><li>Alles aus Business</li><li>Erreichbarkeit auch in den Ferien</li><li>Bis 5 h persönliche Bearbeitung inklusive</li><li>Antwort innert 3 Stunden an 365 Tagen</li></ul></div>
-    </div>
-  </section>
-
-  <section id="schnelltest">
-    <p class="eyebrow">Stimm-Schnelltest</p>
-    <h2>Wie klingt Ihre Webseite? Drei Befunde in einer Minute.</h2>
-    <p class="p">Geben Sie die Adresse Ihrer Webseite und Ihre E-Mail-Adresse ein. Sie erhalten sofort eine Kurzauswertung zur Sprache Ihrer Seite. Der Test ist kostenlos. Ich sehe Ihre Angaben und melde mich bei Bedarf persönlich.</p>
-    <form class="stf" id="stf" novalidate>
-      <label>Webseite<input id="stu" type="text" inputmode="url" autocomplete="url" placeholder="www.ihrefirma.ch" required></label>
-      <label>E-Mail<input id="ste" type="email" autocomplete="email" placeholder="name@firma.ch" required></label>
-      <input type="text" id="stw" name="hp_ref_q7" tabindex="-1" autocomplete="off" aria-hidden="true" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-      <div class="act"><button class="btn" type="submit" id="stb">Schnelltest starten</button></div>
-      <p class="msg" id="stm" aria-live="polite"></p>
-    </form>
-    <div class="str" id="str" hidden aria-live="polite"></div>
-  </section>
-  <script>
-  (function(){var f=document.getElementById("stf"),m=document.getElementById("stm"),o=document.getElementById("str"),b=document.getElementById("stb"),t0=Date.now(),busy=false;
-  f.addEventListener("submit",function(ev){ev.preventDefault();if(busy)return;var u=f.stu.value.trim(),e=f.ste.value.trim();
-  if(!u||!/^\S+@\S+\.\S+$/.test(e)){m.textContent="Bitte geben Sie die Adresse Ihrer Webseite und eine gültige E-Mail-Adresse an.";return}
-  busy=true;b.disabled=true;o.hidden=true;m.textContent="Ihre Webseite wird gelesen und ausgewertet, das dauert etwa eine halbe Minute …";
-  fetch("/api/schnelltest",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:u,email:e,website2:f.stw.value,elapsed:Date.now()-t0})})
-  .then(function(r){return r.json().catch(function(){return {}}).then(function(d){return {ok:r.ok,d:d}})})
-  .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=(x.d&&x.d.error)||"Der Schnelltest ist gerade nicht verfügbar. Bitte versuchen Sie es später erneut.";return}
-  m.textContent="";o.textContent="";var h=document.createElement("h3");h.textContent="Ihre drei Befunde";o.appendChild(h);
-  var ol=document.createElement("ol");x.d.ergebnis.befunde.forEach(function(s){var li=document.createElement("li");li.textContent=s;ol.appendChild(li)});o.appendChild(ol);
-  var p=document.createElement("p");p.className="nx";p.textContent=x.d.ergebnis.naechsterSchritt;o.appendChild(p);
-  var a=document.createElement("button");a.type="button";a.className="btn";a.textContent=window.rqGespraechText||"Gespräch anfragen";a.addEventListener("click",function(){var g=document.getElementById("go");if(g)g.click()});o.appendChild(a);o.hidden=false;f.reset()})
-  .catch(function(){m.textContent="Keine Verbindung. Bitte versuchen Sie es erneut."})
-  .then(function(){busy=false;b.disabled=false})})})();
-  </script>
-
-  <section id="geschenk">
-    <p class="eyebrow">Zwei Geschenke</p>
-    <h2>Zwei Hilfen für Ihren Einstieg, kostenlos per E-Mail.</h2>
-    <p class="p">Wählen Sie ein PDF oder beide. Sie erhalten es sofort an Ihre E-Mail-Adresse.</p>
-    <div class="gcards">
-      <div class="card"><h3>Stimm-Prompt</h3><p class="sub">Das PDF für den Einstieg in Ihre Firmenstimme.</p><button class="btn" type="button" data-g="prompt">Stimm-Prompt erhalten</button></div>
-      <div class="card"><h3>KI-Leitfaden</h3><p class="sub">Das PDF für den sicheren Umgang mit KI im Unternehmen.</p><button class="btn" type="button" data-g="leitfaden">KI-Leitfaden erhalten</button></div>
+    <div class="strip">
+      <p class="eyebrow">Preise</p>
+      <p class="bw">Vier Pakete, ab CHF 190 pro Monat, monatlich kündbar.</p>
+      <a class="btn ghost" href="/preise">Alle Pakete ansehen</a>
     </div>
   </section>
 
   <section id="fragen">
     <p class="eyebrow">Fragen</p>
     <h2>Kurz beantwortet.</h2>
-    <div class="faq">
-      <div><h3>Was ist der Unterschied zu allgemeinen KI-Chatbots?</h3><p>Ich lege Ihre Unternehmenssprache als Basis unter die KI und adjustiere von Hand nach.</p></div>
-      <div><h3>Was geschieht mit meinen Texten?</h3><p>Ihre Inhalte werden nicht zum Training von KI-Modellen verwendet, und der Zugriff wird je Klient geprüft. Was RhetorIQ aus Ihren Korrekturen lernt, gilt nur für Ihren Arbeitsbereich. Welche Dienstleister Daten verarbeiten und wo, steht in der Datenschutzerklärung.</p></div>
-      <div><h3>Kann ich kündigen?</h3><p>Monatlich, in jedem Paket.</p></div>
-    </div>
-  </section>
-
-  <section id="platz" hidden>
-    <div class="book">
-      <div>
-        <p class="eyebrow">Warteliste</p>
-        <h2>Platz sichern.</h2>
-        <p class="p">Ich nehme jeden Monat nur wenige Unternehmen auf. Tragen Sie sich ein, ich melde mich persönlich bei Ihnen.</p>
-        <p class="zzl" id="pzfrei" hidden></p>
-        <p class="zzl" id="pzn" hidden></p>
-      </div>
-      <div class="card">
-        <h3>Platz sichern</h3>
-        <p class="sub">Name, E-Mail, Unternehmen und Branche genügen.</p>
-        <button class="btn" id="pzgo" type="button">Platz sichern</button>
-      </div>
-    </div>
+    <div class="faqs"><details class="prd"><summary>Was ist der Unterschied zu allgemeinen KI-Chatbots?<i aria-hidden="true">+</i></summary><div class="prdb"><p>Ich lege Ihre Unternehmenssprache als Basis unter die KI und adjustiere von Hand nach.</p></div></details><details class="prd"><summary>Was geschieht mit meinen Texten?<i aria-hidden="true">+</i></summary><div class="prdb"><p>Ihre Inhalte werden nicht zum Training von KI-Modellen verwendet, und der Zugriff wird je Klient geprüft. Was RhetorIQ aus Ihren Korrekturen lernt, gilt nur für Ihren Arbeitsbereich. Welche Dienstleister Daten verarbeiten und wo, steht in der Datenschutzerklärung. Welche Daten RhetorIQ nutzt und wie sie geschützt werden, halte ich vor dem Start schriftlich fest.</p></div></details><details class="prd"><summary>Kann ich kündigen?<i aria-hidden="true">+</i></summary><div class="prdb"><p>Monatlich, in jedem Paket.</p></div></details></div>
   </section>
 
   <section id="buchen">
@@ -427,6 +556,42 @@ section[hidden]{display:none}
     </div>
   </section>
 
+  <section id="ausprobieren">
+    <p class="prt"><b>Kostenlos ausprobieren:</b> <a href="#schnelltest" id="stlink">Stimm-Schnelltest &rarr;</a><span class="prg" id="geschenk"><a href="/geschenk?g=prompt" data-g="prompt">Stimm-Prompt (PDF) &rarr;</a><a href="/geschenk?g=leitfaden" data-g="leitfaden">KI-Leitfaden (PDF) &rarr;</a></span></p>
+    <section id="schnelltest" aria-label="Kostenlos ausprobieren">
+      <details class="prd" id="stdet"><summary>Stimm-Schnelltest: Wie klingt Ihre Webseite? Drei Befunde in einer Minute.<i aria-hidden="true">+</i></summary><div class="prdb">
+      <p>Geben Sie die Adresse Ihrer Webseite und Ihre E-Mail-Adresse ein. Sie erhalten sofort eine Kurzauswertung zur Sprache Ihrer Seite. Der Test ist kostenlos. Ich sehe Ihre Angaben und melde mich bei Bedarf persönlich.</p>
+      <form class="stf" id="stf" novalidate>
+        <label>Webseite<input id="stu" type="text" inputmode="url" autocomplete="url" placeholder="www.ihrefirma.ch" required></label>
+        <label>E-Mail<input id="ste" type="email" autocomplete="email" placeholder="name@firma.ch" required></label>
+        <input type="text" id="stw" name="hp_ref_q7" tabindex="-1" autocomplete="off" aria-hidden="true" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+        <div class="act"><button class="btn" type="submit" id="stb">Schnelltest starten</button></div>
+        <p class="msg" id="stm" aria-live="polite"></p>
+      </form>
+      <div class="str" id="str" hidden aria-live="polite"></div>
+      </div></details>
+    </section>
+  </section>
+  <script>
+  (function(){var f=document.getElementById("stf"),m=document.getElementById("stm"),o=document.getElementById("str"),b=document.getElementById("stb"),t0=Date.now(),busy=false;
+  f.addEventListener("submit",function(ev){ev.preventDefault();if(busy)return;var u=f.stu.value.trim(),e=f.ste.value.trim();
+  if(!u||!/^\S+@\S+\.\S+$/.test(e)){m.textContent="Bitte geben Sie die Adresse Ihrer Webseite und eine gültige E-Mail-Adresse an.";return}
+  busy=true;b.disabled=true;o.hidden=true;m.textContent="Ihre Webseite wird gelesen und ausgewertet, das dauert etwa eine halbe Minute …";
+  fetch("/api/schnelltest",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:u,email:e,website2:f.stw.value,elapsed:Date.now()-t0})})
+  .then(function(r){return r.json().catch(function(){return {}}).then(function(d){return {ok:r.ok,d:d}})})
+  .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=(x.d&&x.d.error)||"Der Schnelltest ist gerade nicht verfügbar. Bitte versuchen Sie es später erneut.";return}
+  m.textContent="";o.textContent="";var h=document.createElement("h3");h.textContent="Ihre drei Befunde";o.appendChild(h);
+  var ol=document.createElement("ol");x.d.ergebnis.befunde.forEach(function(s){var li=document.createElement("li");li.textContent=s;ol.appendChild(li)});o.appendChild(ol);
+  var p=document.createElement("p");p.className="nx";p.textContent=x.d.ergebnis.naechsterSchritt;o.appendChild(p);
+  var a=document.createElement("button");a.type="button";a.className="btn";a.textContent=window.rqGespraechText||"Gespräch anfragen";a.addEventListener("click",function(){var g=document.getElementById("go");if(g)g.click()});o.appendChild(a);o.hidden=false;f.reset()})
+  .catch(function(){m.textContent="Keine Verbindung. Bitte versuchen Sie es erneut."})
+  .then(function(){busy=false;b.disabled=false})})})();
+  </script>
+  <section id="platz" hidden>
+    <p class="wl"><b>Warteliste.</b> Ich nehme jeden Monat nur wenige Unternehmen auf. <a href="/platz" id="pzgo">Platz sichern</a> <span>Name, E-Mail, Unternehmen und Branche genügen.</span> <span class="zzl" id="pzfrei" hidden></span> <span class="zzl" id="pzn" hidden></span></p>
+  </section>
+  </main>
+
   <dialog class="rqd" id="rqd" aria-labelledby="rqdt"><button class="x" type="button" id="rqx" aria-label="Schliessen">&times;</button><h3 id="rqdt">Gespräch anfragen</h3><p class="sub" id="rqsub">Zwanzig Minuten, kostenlos und unverbindlich.</p><p class="vh" id="rqlive" role="status" aria-live="polite"></p>
   <div id="rqb" hidden><p class="lbl" id="rqdl">Tag wählen</p><div class="days" id="rqdays" role="group" aria-labelledby="rqdl"></div><p class="lbl" id="rqtl">Uhrzeit wählen (Schweizer Zeit)</p><div class="slots" id="rqtimes" role="group" aria-labelledby="rqtl"></div><p class="msg" id="rqsel"></p>
   <form id="rqbf" novalidate><div id="rqpers"><label>Name<input id="bn" type="text" autocomplete="name" maxlength="80" required></label><label>E-Mail<input id="be" type="email" autocomplete="email" maxlength="120" required></label><label>Ihr Anliegen (freiwillig)<textarea id="bt" rows="3" maxlength="1500" placeholder="Worum geht es?"></textarea></label><label class="chk"><input id="bc" type="checkbox" required><span>Ich habe die <a href="/?p=datenschutz" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und bin einverstanden, dass meine Angaben für die Terminbuchung verwendet werden.</span></label></div><input type="text" id="bw" name="hp_ref_q7" tabindex="-1" autocomplete="off" aria-hidden="true" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"><p class="msg" id="rqbe"></p><div class="act"><button class="btn" type="submit" id="bsend">Termin buchen</button></div><p class="alt"><button class="lnk" type="button" id="rqtoform">Lieber eine Nachricht senden</button></p></form></div>
@@ -439,41 +604,8 @@ section[hidden]{display:none}
 <p class="vert vend">Vertraulich von Anfang an. Ihre Unternehmensdaten bleiben Ihre. Welche Daten RhetorIQ nutzt und wie sie geschützt werden, halte ich vor dem Start schriftlich fest.</p>
   <footer><span>Rhetor<span class="iq">IQ</span> von Lorena Lienhard</span><a href="/?p=datenschutz" style="color:inherit;text-decoration:underline;text-underline-offset:3px">Datenschutz</a></footer>
 </div>
-
 <script>
 (function(){
-
-  (function(){
-    var X=[14,74,134,194,254,314,346],V=[96,62,118,76,116,90,96],F=[96,48,128,64,124,82,96],NS="http://www.w3.org/2000/svg";
-    function path(a){var d="M"+X[0]+" "+a[0];for(var i=0;i<X.length-1;i++){var mx=(X[i]+X[i+1])/2;d+=" C"+mx+" "+a[i]+" "+mx+" "+a[i+1]+" "+X[i+1]+" "+a[i+1]}return d}
-    var fd=path(F);document.getElementById("vvo").setAttribute("d",path(V));document.getElementById("vfin").setAttribute("d",fd);document.getElementById("var").setAttribute("d",fd+" L346 170 L14 170 Z");
-    var dots=document.getElementById("vdots"),lbs=document.getElementById("vlbs"),L=["Eigene Wörter","Klarheit","DNA"],P=[1,3,4];
-    function mk(t,at){var e=document.createElementNS(NS,t);for(var k in at)e.setAttribute(k,at[k]);return e}
-    P.forEach(function(p,i){var x=X[p],y=F[p];dots.appendChild(mk("line",{x1:x,y1:y,x2:x,y2:y<96?20:150,stroke:"#2c2c29","stroke-width":1}));
-      dots.appendChild(mk("circle",{cx:x,cy:y,r:9,fill:"none",stroke:"#f1ede4","stroke-opacity":.25,"stroke-width":1}));
-      dots.appendChild(mk("circle",{cx:x,cy:y,r:4.6,fill:"#f1ede4"}));
-      var lb=document.createElement("span");lb.className="plb";lb.textContent=L[i];lb.style.left=(x/360*100)+"%";lb.style.top=((y<96?10:164)/170*100)+"%";lbs.appendChild(lb)});
-    var T=[["Gerade und gleich.","KI-Werkzeuge glätten die Töne eines Unternehmens zu einem einheitlichen Standard. Die erkennbare Stimme verschwindet. Zurück bleibt ein Text ohne Ihre DNA."],["Hier kommt Ihre Stimme dazu.","In jedem Unternehmen sprechen viele Stimmen, und jede klingt ein wenig anders. Genau das macht es erkennbar. Aus dem Workshop kommt Ihre Brand Voice, sie legt Höhen und Tiefen auf den Text."],["Meine Hand setzt Ihre Worte.","Wo man die DNA nicht mehr erkennt, reisst der Faden und mit ihm das Vertrauen. Darum bewahre ich die Wörter, die nur Sie sagen, schaffe Klarheit und halte Ihre DNA fest."]];
-    var stp=document.getElementById("vstp"),cur=0,timer=null;
-    function sh(i){cur=i;[].forEach.call(stp.children,function(b,j){b.setAttribute("aria-selected",j===i)});
-      var h=document.getElementById("vh");h.textContent=T[i][0];h.className="stp3";document.getElementById("vn").textContent=T[i][1];
-      document.getElementById("vflat").setAttribute("stroke",i===0?"#8a8780":"#3a3a37");document.getElementById("vflat").setAttribute("stroke-dasharray",i===0?"":"2 5");
-      document.getElementById("vvo").setAttribute("opacity",i===1?1:(i===2?.6:0));
-      document.getElementById("vfin").setAttribute("opacity",i===2?1:0);document.getElementById("var").setAttribute("opacity",i===2?1:0);dots.setAttribute("opacity",i===2?1:0);lbs.style.opacity=i===2?1:0}
-    function arm(){clearInterval(timer);timer=null;if(reduceM||!vis)return;timer=setInterval(function(){sh((cur+1)%3)},5000)}
-    stp.onclick=function(e){var b=e.target.closest("button");if(b){sh([].indexOf.call(stp.children,b));arm()}};
-    sh(0);
-    var reduceM=matchMedia("(prefers-reduced-motion: reduce)").matches,vis=false;
-    if(window.IntersectionObserver){new IntersectionObserver(function(en){vis=en[0].isIntersecting;arm()},{threshold:.35}).observe(document.getElementById("beispiel"))}else{vis=true;arm()}
-  })();
-
-    (function(){
-    var wrap=document.getElementById("zbt");
-    if(!wrap)return;
-    var bs=[].slice.call(wrap.children),cur=-1;
-    function open(i){cur=i;bs.forEach(function(b,j){var on=j===i;b.setAttribute("aria-expanded",on?"true":"false");var l=b.querySelector(".zlb");if(l)l.textContent=on?wrap.getAttribute("data-hide"):wrap.getAttribute("data-show");document.getElementById("zp"+j).hidden=!on})}
-    bs.forEach(function(b,i){b.addEventListener("click",function(){open(cur===i?-1:i)})});
-  })();
 
   (function(){var d=document.getElementById("rqd"),f=document.getElementById("rqf"),m=document.getElementById("rqm");
 var $=function(i){return document.getElementById(i)};
@@ -764,6 +896,53 @@ ladePlatz().then(function(){
   if(pfad==="/platz")zeigePlatzDialog();
   else if(pfad==="/geschenk")zeigeGeschenk(q?q[1]:"prompt");
 });
+})();
+</script>
+<script>
+// Plattform-Beispiel: Reiter für fünf Beispiele, drei Schritte, automatischer Wechsel bis zum ersten Klick.
+(function(){
+var D={"items": [{"tab": "Krisenstatement", "t": "Krisenstatement", "d": "Erste Stellungnahme nach einem Ausfall, in der Haltung der Geschäftsleitung.", "v": ["Stimme: Geschäftsleitung", "Haltung: übernimmt Verantwortung", "Reihenfolge: zuerst die Betroffenen"], "b": "Von Lorena geprüft: nichts zu ändern", "s": ["Ausfall am Montag. Lösung bis Mittwoch. Kundschaft informieren.", "Der Ausfall vom Montag hat Sie getroffen, und dafür übernehmen wir die Verantwortung. Wir arbeiten an einer Lösung bis Mittwoch.", "Der Ausfall vom Montag hat Sie getroffen, und dafür übernehmen wir die Verantwortung. Wir arbeiten an einer Lösung bis Mittwoch."], "n": ["Die Stimme sitzt, hier musste ich nichts ändern", "Ich lese jeden Text trotzdem gegen. Wo alles stimmt, lasse ich es unverändert."]}, {"tab": "Vortrag", "t": "Vortrag", "d": "Eröffnung einer Keynote an einer Fachtagung, in der Haltung der Rednerin.", "v": ["Stimme: Führungskraft", "Anrede Sie · ruhig, konkret", "Stilmittel: Szene, Eröffnung mit einem Bild aus dem Alltag", "Rhythmus: kurze Sätze"], "b": "Von Lorena nachgeschliffen", "s": ["Digitale Werkzeuge: Anfragen schneller beantworten, drei Beispiele.", "Guten Morgen. Digitale Tools helfen uns, Anfragen schneller zu beantworten.", "Guten Morgen. <del>Digitale Tools helfen uns, Anfragen schneller zu beantworten.<\/del><ins>Stellen Sie sich Ihren Montagmorgen vor: Die Anfrage von gestern ist beantwortet, bevor Sie den Kaffee haben.<\/ins>"], "n": ["Stilmittel: Die Rednerin beginnt mit einer Szene, die das Publikum sofort selbst erlebt", "Die kurzen Sätze bleiben, sie sind ihr Rhythmus"]}, {"tab": "Kundenmail", "t": "Kundenmail", "d": "Antwort an eine Kundin oder einen Kunden, in der Stimme Ihres Unternehmens.", "v": ["Stimme: Treuhandfirma", "Anrede Sie · sachlich", "Lieblingswort: verbindlich", "Tabu: Ausrufezeichen"], "b": "Von Lorena nachgeschliffen", "s": ["Termin verschieben auf Donnerstag, 14 Uhr. Unterlagen per Post.", "Sehr geehrte Frau Keller, Ihr Beratungstermin verschiebt sich um zwei Tage. Die Unterlagen erhalten Sie vorab per Post.", "Sehr geehrte Frau Keller, Ihr Beratungstermin verschiebt sich um zwei Tage <ins>auf Donnerstag, 14 Uhr<\/ins>. Die Unterlagen erhalten Sie <del>vorab<\/del><ins>verbindlich bis Mittwoch<\/ins> per Post."], "n": ["Datum und Uhrzeit konkret gemacht", "«vorab» durch eine feste Frist ersetzt, das Lieblingswort «verbindlich» der Kanzlei"]}, {"tab": "Direkt im Postfach", "mail": true, "neu": true}, {"tab": "Begrüssung", "t": "Begrüssung", "d": "Begrüssung zum Gästeabend im Hotel, in der Haltung des Hauses.", "v": ["Stimme: Hotel am See", "Anrede Liebe Gäste · herzlich", "Lieblingswort: Zuhause", "Tabu: Service"], "b": "Von Lorena nachgeschliffen", "s": ["Gäste begrüssen. Menü aus der Region. Schöner Abend.", "Liebe Gäste, schön, dass Sie da sind. Wir bieten Ihnen heute Abend erstklassigen Service und ein Menü aus der Region.", "Liebe Gäste, schön, dass Sie da sind. Wir bieten Ihnen heute Abend <del>erstklassigen Service<\/del><ins>ein Zuhause für ein paar Stunden<\/ins> und ein Menü aus der Region."], "n": ["Tabuwort «Service» ersetzt, in diesem Haus steht der Gast im Mittelpunkt", "Lieblingswort «Zuhause» eingesetzt"]}], "new": "Neu", "labels": ["Ihre Vorlage", "Entwurf in Ihrer Stimme", "Ihr Text"], "send": ["An Beraterin Lorena senden", "An Beraterin Lorena senden", "Gesendet &#10003;"]};
+var root=document.getElementById("bigp");if(!root)return;
+var $=function(i){return document.getElementById(i)};
+var tabs=$("pftabs"),pf=$("pf"),pm=$("pm");
+var cur=0,stage=2,timer=null,vis=false,stopped=false;
+var still=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+function marks(box,n){[].forEach.call(box.children,function(b,i){b.setAttribute("aria-pressed",i===n?"true":"false")})}
+function draw(){
+  var e=D.items[cur];marks(tabs,cur);
+  pm.hidden=!e.mail;pf.hidden=!!e.mail;
+  if(e.mail)return;
+  $("pftitle").textContent=e.t;$("pfdesc").textContent=e.d;
+  $("pfvoice").innerHTML=e.v.map(function(x,i){return "<i>"+x+(i===0?" &#10003;":"")+"</i>"}).join("");
+  $("pfnotes").innerHTML="<b>"+$("pfnotes").firstChild.textContent+"</b><ul>"+e.n.map(function(x){return "<li>"+x+"</li>"}).join("")+"</ul>";
+  $("pfbadge").textContent=e.b;
+}
+function show(i){
+  stage=i;
+  var e=D.items[cur];
+  if(e.mail){pm.className="pm mm s"+i;marks($("pmsteps"),i);return}
+  pf.className="pf lite s"+i;marks($("pfsteps"),i);
+  var t=$("pftext");t.innerHTML=e.s[i];t.className="pf-text"+(i===0?" g":"");
+  $("pfreslabel").textContent=D.labels[i];$("pfsend").innerHTML=D.send[i];
+}
+function stop(){stopped=true;if(timer){clearInterval(timer);timer=null}}
+function run(){
+  if(timer){clearInterval(timer);timer=null}
+  if(still||stopped||!vis)return;
+  timer=setInterval(function(){show((stage+1)%3)},4600);
+}
+tabs.addEventListener("click",function(ev){var b=ev.target.closest("button");if(!b)return;stop();cur=+b.getAttribute("data-i");draw();show(2)});
+[$("pfsteps"),$("pmsteps")].forEach(function(box){box.addEventListener("click",function(ev){var b=ev.target.closest("button");if(!b)return;stop();show(+b.getAttribute("data-s"))})});
+if(window.IntersectionObserver&&!still){new IntersectionObserver(function(en){vis=en[0].isIntersecting;run()},{threshold:.3}).observe(root)}
+})();
+// Kostenlos ausprobieren: Schnelltest klappt auf, Geschenk- und Wartelisten-Links öffnen ihr Fenster ohne Seitenwechsel.
+(function(){
+var det=document.getElementById("stdet");
+function openTest(focus){if(!det)return;det.open=true;var s=document.getElementById("schnelltest");if(s&&s.scrollIntoView)s.scrollIntoView({block:"center",behavior:"smooth"});if(focus){var i=document.getElementById("stu");if(i)setTimeout(function(){i.focus({preventScroll:true})},250)}}
+var l=document.getElementById("stlink");
+if(l)l.addEventListener("click",function(ev){ev.preventDefault();openTest(true)});
+if(location.hash==="#schnelltest"&&det)det.open=true;
+[].forEach.call(document.querySelectorAll("a[data-g],#pzgo"),function(a){a.addEventListener("click",function(ev){ev.preventDefault()})});
 })();
 </script>
 </body>
