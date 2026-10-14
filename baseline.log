@@ -1,0 +1,2108 @@
+✔ Kontrast: Textfarben erreichen AA (4.5 zu 1) auf ihren Hintergründen (0.937791ms)
+✔ Struktur: genau ein main, Navigation, Ansageregion (2.201041ms)
+✔ Dialoge: role=dialog, aria-modal und Escape (0.649125ms)
+✔ Fokus: kein outline:none ohne sichtbaren Ersatz (2.035709ms)
+✔ Bewegung und Zielgrösse (0.294167ms)
+✔ Rollen: Elemente mit onclick bekommen Tastaturzugang (0.340875ms)
+✔ Selbstbuchung: Pakete mit Preis, Metadaten und Abo-Daten (182.285333ms)
+✔ Selbstbuchung: kein Enterprise, kein Stimm-Audit, kein Workshop (13.704875ms)
+✔ Selbstbuchung: nur Rolle admin und nur der eigene Klient (25.832083ms)
+✔ Selbstbuchung: Klient mit laufendem Abo bucht nicht doppelt (5.628292ms)
+[stripe] client 4 → active, monthly_token_limit=750000 (checkout.session.completed, 59000 chf)
+[stripe] client 4 → past_due (Zahlung fehlgeschlagen)
+[stripe] client 4 → active, monthly_token_limit=750000 (invoice.paid, 59000 chf)
+✔ Webhook: Abschluss der Selbstbuchung bucht active und Kontingent, fehlgeschlagene Zahlung setzt Hinweis (18.769959ms)
+✔ Sperre 402: Status trial ohne Zahlung, neuer Klient (21.963667ms)
+✔ Sperre 402: pending_plan, gekündigt, Stimm-Audit abgelaufen (18.082709ms)
+✔ Kein 402: Abo aktiv, Stimm-Audit läuft, früherer Klient, Zahlung fehlgeschlagen, Beraterin (118.651458ms)
+✔ Kontingent erreicht bleibt 429 mit Hinweis auf Zusatzpaket (15.764292ms)
+✔ Übersicht: Nutzung in Texten und Hinweise bei 80 und 100 Prozent (29.8775ms)
+✔ Hinweis ohne Abo und bei fehlgeschlagener Zahlung (9.714625ms)
+✔ Mail bei 80 und 100 Prozent: je Schwelle und Monat einmal, an Hauptadresse (10.737292ms)
+✔ Enterprise ist auch über choose-plan und upgrade-link nicht selbst buchbar (6.108334ms)
+✔ F-05 Normalfall: Token-Login und Passwort-Login funktionieren, Sitzung höchstens 30 Tage (64.525583ms)
+✔ F-05 Alle Geräte abmelden: Sitzung ungültig, Zugangscode bleibt (23.476583ms)
+✔ F-05 Zugang entziehen: alter Code und alte Sitzungen tot, neuer Code gilt (41.40475ms)
+✔ F-05 Rollenwechsel eines Teammitglieds beendet dessen alte Sitzung; ungültige Rolle abgelehnt (893.660042ms)
+✔ F-13 Normalfall: Beraterin meldet sich an, ein Fehlversuch ändert nichts (58.370417ms)
+✔ F-13 Sperre: 10 Fehlversuche, dann Pause für dieses Konto; andere Konten nicht betroffen (49.085291ms)
+✔ F-13 Passwort: neue Passwörter mindestens 12 Zeichen (Registrierung, Klient) (4.337375ms)
+✔ F-13 Alle Geräte abmelden und Passwortwechsel in Render beenden alte Sitzungen der Beraterin (379.951083ms)
+✔ F-19 Fehlgeschlagener KI-Aufruf wird an Sentry gemeldet und weitergereicht (1.14325ms)
+✔ F-19 Zweite Benachrichtigungsadresse ist optional und ohne Doppelungen (0.469375ms)
+[ai] 529, Wiederholung 1 von 2
+[ai] 503, Wiederholung 2 von 2
+[ai] 500, Wiederholung 1 von 2
+✔ Modellnamen sind Einstellungen mit heutigen Standardwerten (0.691667ms)
+✔ Überlastung 529: zwei Wiederholungen, dann Erfolg (4.729875ms)
+[ai] 500, Wiederholung 2 von 2
+✔ Ohne Reservekonto: nach drei Fehlschlägen kommt der Fehler an (147.146917ms)
+✔ Anfragefehler 400 wird nicht wiederholt (0.192833ms)
+✔ Kontofehler 402: sofort auf den zweiten Schlüssel, Vermerk im Protokoll (0.204875ms)
+✔ Meldung zu Guthaben bei Status 400 gilt als Kontofehler (0.111916ms)
+[ai] HTTP 402: wechsle auf das Reservekonto
+[ai] HTTP 400: wechsle auf das Reservekonto
+[ai] 529, Wiederholung 1 von 2
+[ai] 529, Wiederholung 2 von 2
+[ai] HTTP 529: wechsle auf das Reservekonto
+[ai] 503, Wiederholung 1 von 2
+[trace-ai] calling Anthropic, model=claude-sonnet-4-6
+[trace-ai] Anthropic responded, status=503
+✔ Wiederholungen erschöpft: Reservekonto springt ein (2.494417ms)
+✔ Schalter ai_reserve_erzwingen nutzt nur das Reservekonto (0.111791ms)
+✔ Normalfall ohne Reservekonto bleibt unverändert (ein Aufruf, normaler Modellname) (0.066708ms)
+✔ Anfrage ohne system wird ohne system gesendet (0.093292ms)
+[trace-ai] calling Anthropic, model=claude-sonnet-4-6
+[trace-ai] Anthropic responded, status=200
+[trace-ai] calling Anthropic, model=claude-sonnet-4-6
+[trace-ai] Anthropic responded, status=401
+[trace-ai] calling Anthropic, model=claude-sonnet-4-6
+[trace-ai] Anthropic responded, status=200
+✔ Stream: Wiederholung vor dem ersten Token, dann Reservekonto (1.422583ms)
+[ai] HTTP 401: wechsle auf das Reservekonto
+[ai] Netzwerkfehler, Wiederholung 1 von 2
+[ai] 529, Wiederholung 1 von 2
+[ai] 529, Wiederholung 2 von 2
+[trace-ai] calling Anthropic, model=claude-sonnet-4-6
+[trace-ai] Anthropic responded, status=503
+✔ Netzwerkfehler wird je Schlüssel höchstens einmal wiederholt (kein dreifacher Aufruf) (4.844958ms)
+[ai] 503, Wiederholung 1 von 2
+[trace-ai] calling Anthropic, model=claude-sonnet-4-6
+[trace-ai] Anthropic responded, status=200
+[trace-ai] calling Anthropic, model=claude-sonnet-4-6
+[trace-ai] Anthropic responded, status=200
+✔ Abgebrochener Stream: genau ein Protokolleintrag, Ausgabe aus der Zeichenzahl geschätzt, Wiederholung nur vor dem ersten Token (1.9205ms)
+✔ Zahlungslink aus eingebautem Angebot, ohne Preise in Stripe (102.289083ms)
+[stripe] client 1 → Einrichtung bezahlt (workshop-team), Abo unverändert
+[stripe] client 1 → Stimm-Audit bezahlt, 30 Tage mit 40 Texten
+✔ Webhook: Stimm-Audit schaltet 30 Tage mit 40 Texten frei, Workshop ändert das Abo nicht (64.110917ms)
+✔ Liste: nur Reden des Jahres, absteigend, mit Titel und Länge (88.870417ms)
+✔ Zugriff: Klient nur eigene Daten, Team ohne Admin gesperrt (23.574875ms)
+✔ Word-Rückblick wird erzeugt (38.682792ms)
+✔ Namensauflösung: Gross-/Kleinschreibung, Teilstrings, Umlaute (47.997208ms)
+✔ Namensauflösung: mehrdeutig und unbekannt (0.219583ms)
+✔ pruefeAktion: nur Aktionen der festen Liste, ungültige Ausgabe wird abgefangen (0.400375ms)
+✔ Befehl: Beraterin bekommt eine geprüfte Aktion, Prompt enthält nur Namen und Datenzaun (79.027083ms)
+✔ Befehl: Prompt-Injection im Satz kann den Zaun nicht verlassen (6.30525ms)
+[assistent] KI fehlgeschlagen: KI kaputt
+✔ Befehl: unbekannt, ungültige KI-Ausgabe und KI-Ausfall (24.54325ms)
+✔ Befehl: leere und zu lange Eingabe (4.893625ms)
+✔ Rollen: Klient und ohne Anmeldung bekommen 403 und 401, auch bei Tagesübersicht und Sprache (9.292584ms)
+✔ Tagesübersicht: Zahlen aus den Daten, ohne KI-Aufruf, ohne Gedankenstriche (41.534917ms)
+✔ Tagesbudget: Metering unter Modul assistent, bei Erreichen 429 ohne KI-Aufruf, Umgebungsvariable (49.167083ms)
+✔ Rate-Limit: nach 20 Befehlen pro Minute 429 (87.209917ms)
+✔ Sprache: Transkript auf Deutsch, danach DELETE des Transkripts, nichts auf der Platte (7.663625ms)
+[assistent] Spracherkennung fehlgeschlagen: kaputt
+[assistent] Spracherkennung fehlgeschlagen: Netz weg
+✔ Sprache: Fehler bei AssemblyAI wird klar gemeldet und das Transkript trotzdem gelöscht (9.751666ms)
+✔ Sprache: ohne Schlüssel 503, ohne Aufnahme, falscher Typ und zu gross (13.675ms)
+✔ Texte: keine Gedankenstriche, keine Verneinungsmuster in festen Antworten (0.299042ms)
+✔ Gesamtexport: JSON je Tabelle, seitenweise, ohne Hashes und fremde Daten (550.422875ms)
+✔ Papierkorb: Löschen blendet aus, Anmeldung und Zugriff gesperrt, Wiederherstellen holt zurück (88.093375ms)
+✔ Papierkorb: Sitzung des Klienten wird abgemeldet (7.684083ms)
+[clientData] Klient 2 vollständig gelöscht: {"people_profiles":0,"analyses":0,"company_memory":0,"review_requests":0,"client_users":0,"onboarding_tokens":0,"learning_suggestions":0,"client_files":0,"onboarding_drafts":0,"access_log":0,"goldtexte":0,"communication_profiles":0,"quartalsreviews":0,"quartalsreview_laeufe":0,"ueberarbeitungskarten":0,"monatsabschluss":0,"themenplan_laeufe":0,"people":0,"themenplan_eingaben":0,"themenplan_plaene":0,"themenplan_auswahl":0,"klaviyo_uebertragungen":0,"usage_log (anonymisiert)":0,"module_examples":0,"email_outbox":0,"schnelltests":0,"clients":1}
+[papierkorb] Klient 2 nach 30 Tagen endgültig gelöscht
+✔ Job: erst nach 30 Tagen endgültig, vorher nicht (48.636917ms)
+[clientData] Klient 4 vollständig gelöscht: {"people_profiles":0,"analyses":0,"company_memory":0,"review_requests":0,"client_users":0,"onboarding_tokens":0,"learning_suggestions":0,"client_files":0,"onboarding_drafts":0,"access_log":0,"goldtexte":0,"communication_profiles":0,"quartalsreviews":0,"quartalsreview_laeufe":0,"ueberarbeitungskarten":0,"monatsabschluss":0,"themenplan_laeufe":0,"people":0,"themenplan_eingaben":0,"themenplan_plaene":0,"themenplan_auswahl":0,"klaviyo_uebertragungen":0,"usage_log (anonymisiert)":0,"module_examples":0,"email_outbox":0,"schnelltests":0,"clients":1}
+[clientData] Protokoll: 🔨 Not supported 🔨 : The query you ran generated an AST which parts have not been read by the query planner. This means that those parts could be ignored:
+
+    ⇨ .columns[0].constraints[0].type ("primary key")
+    ⇨ .columns[4].constraints[0].type ("default")
+    ⇨ .columns[4].constraints[0].default.type ("call")
+    ⇨ .columns[4].constraints[0].default.function.name ("now")
+    ⇨ .columns[4].constraints[0].default.function ({"name":"now"})
+    ⇨ .columns[4].constraints[0].default.args ([])
+    ⇨ .columns[4].constraints[0].default ({"type":"call","function":{"name":"now"},"args":[]})
+
+👉 pg-mem is work-in-progress, and it would seem that you've hit one of its limits.
+
+*️⃣ Failed SQL statement: CREATE TABLE IF NOT EXISTS data_requests_log (id SERIAL PRIMARY KEY, advisor_id INTEGER, kind TEXT, client_name TEXT, created_at TIMESTAMPTZ DEFAULT NOW());
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[clientData] Klient 5 vollständig gelöscht: {"people_profiles":0,"analyses":0,"company_memory":0,"review_requests":0,"client_users":0,"onboarding_tokens":0,"learning_suggestions":0,"client_files":0,"onboarding_drafts":0,"access_log":0,"goldtexte":0,"communication_profiles":0,"quartalsreviews":0,"quartalsreview_laeufe":0,"ueberarbeitungskarten":0,"monatsabschluss":0,"themenplan_laeufe":0,"people":0,"themenplan_eingaben":0,"themenplan_plaene":0,"themenplan_auswahl":0,"klaviyo_uebertragungen":0,"usage_log (anonymisiert)":0,"module_examples":0,"email_outbox":0,"schnelltests":0,"clients":1}
+[clientData] Protokoll: 🔨 Not supported 🔨 : The query you ran generated an AST which parts have not been read by the query planner. This means that those parts could be ignored:
+
+    ⇨ .columns[0].constraints[0].type ("primary key")
+    ⇨ .columns[4].constraints[0].type ("default")
+    ⇨ .columns[4].constraints[0].default.type ("call")
+    ⇨ .columns[4].constraints[0].default.function.name ("now")
+    ⇨ .columns[4].constraints[0].default.function ({"name":"now"})
+    ⇨ .columns[4].constraints[0].default.args ([])
+    ⇨ .columns[4].constraints[0].default ({"type":"call","function":{"name":"now"},"args":[]})
+
+👉 pg-mem is work-in-progress, and it would seem that you've hit one of its limits.
+
+*️⃣ Failed SQL statement: CREATE TABLE IF NOT EXISTS data_requests_log (id SERIAL PRIMARY KEY, advisor_id INTEGER, kind TEXT, client_name TEXT, created_at TIMESTAMPTZ DEFAULT NOW());
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ Sofort endgültig: aus dem Papierkorb oder mit endgueltig=ja (50.759791ms)
+✔ Sicherung wird verschlüsselt abgelegt und lässt sich in eine Testdatenbank zurückspielen (758.642291ms)
+✔ Ohne Schlüssel und Passphrase wird nie unverschlüsselt gesichert (274.409708ms)
+✔ Fehler von pg_dump und winzige Dateien gelten als Fehlschlag (288.008083ms)
+✔ Aufbewahrung: alte Sicherungen werden entfernt (252.900958ms)
+✔ Auswahl: das thematisch passende Beispiel gewinnt knapp gegen höhere Bewertung, aber nur innerhalb des Gewichtsgrenzwerts (49.122417ms)
+✔ Auswahl: ohne Passung gilt das bisherige Verhalten, Länge ist begrenzt (0.479333ms)
+✔ Ende zu Ende: Auftrag enthält das passende Beispiel des Klienten und kein Fremdbeispiel (171.108292ms)
+✔ Unbestätigte Vorschläge und Beispiele unter Bewertung 3 stehen nie zur Auswahl (29.110042ms)
+✔ Daumen hoch legt ein Beispiel an (ohne Duplikat), Daumen runter entfernt es, Obergrenze gilt (193.32425ms)
+✔ Daumen eines Klienten betrifft nur seine Beispiele (31.408667ms)
+✔ Meine Beispiele: Klient legt an, sieht und löscht nur eigene; Klient B hat keinen Zugriff auf A (65.276583ms)
+✔ Meine Beispiele: Betrachter und Ansicht des Klienten werden abgelehnt, Obergrenze gilt (176.285ms)
+✔ Klientenbeispiel mit Anweisungstext wird abgegrenzt im Auftrag übergeben (17.319833ms)
+✔ Onboarding-Vorschlag wirkt erst nach Bestätigung durch die Beraterin (53.492625ms)
+✔ Grenzen: Handbeispiele werden nie überschrieben, Daumen-hoch-Beispiele werden ersetzt (286.498125ms)
+✔ Bezeichnung: ändern, auf 60 Zeichen kürzen, Grenze greift beim Umbenennen, fremde Beispiele unerreichbar (101.761458ms)
+✔ Bezeichnung aus dem Auftrag: Betreff oder Thema, sonst Textart (0.115875ms)
+✔ Vielfalt: pro Bezeichnung ein Beispiel, ähnliche nicht doppelt; Bezeichnung zählt stärker; Handbeispiele zuerst (0.470875ms)
+✔ Schalter AUS (Standard): Landingpage erhält keine Zeiten, Buchung wird abgelehnt (127.087667ms)
+✔ Einstellungen nur für die Beraterin (24.502792ms)
+✔ Freie Zeiten: gruppiert nach Tag, nur Zeitpunkte, Ticket, nie am Wochenende (51.191958ms)
+✔ Buchung: Eintrag im Tagesplan, Anfrage, Sync, Bestätigung mit Kalenderdatei, Hinweis an die Beraterin (129.903791ms)
+✔ Keine Doppelbuchung bei gleichzeitigen Anfragen, auch nicht für Zeiten im Puffer (91.727833ms)
+✔ Letzte Sicherung: ein bereits belegter Schlüssel in der Datenbank verhindert die Doppelbuchung auch ohne Kalendereintrag (34.752708ms)
+✔ Falsche Zeitpunkte werden abgelehnt (102.668375ms)
+✔ Missbrauchsschutz: Einwilligung, Honeypot, Zeitfenster, Ticket, Herkunft, Felder (92.365083ms)
+✔ Höchstens zwei offene Buchungen je E-Mail, höchstens zwölf pro Tag (117.4445ms)
+✔ Ratenbegrenzung pro IP und pro E-Mail (169.008333ms)
+✔ Eingaben in Mails: Zeilenumbrüche, Links und Kopfzeilen-Injektion (88.4715ms)
+✔ Absagen mit Token: gibt den Termin frei, löscht im Kalender, Mails an beide, idempotent, falscher Token (197.624458ms)
+✔ Verschieben mit demselben Token: neue Zeit, alter Eintrag weg, Token gilt weiter, vergebene Zeit lässt den Termin stehen (172.239958ms)
+✔ Beraterin sieht kommende Buchungen und sagt ab (134.934792ms)
+[buchung] 1 Erinnerung(en) gesendet
+[buchung] Erinnerung abgeschaltet (BUCHUNG_ERINNERUNG=aus)
+✔ Erinnerung am Vortag: einmal pro Buchung, nicht für Abgesagte (104.075208ms)
+✔ Besetzte Zeiten aus Google-Terminen und ICS-Kalendern sperren die Buchung (77.006833ms)
+✔ Ausschalten: die Landingpage erhält keine Zeiten mehr, Buchen und Verschieben sind verboten (118.940625ms)
+✔ Einstellungen wirken: Dauer, Puffer und Arbeitsfenster ändern die Zeiten (48.559125ms)
+✔ Formular ohne Termin: sofortige Bestätigung mit Kopie, eine pro Adresse, nie bei Zeilenumbruch, Anfrage kommt an (186.024792ms)
+✔ Alle Skriptblöcke von index.html und landing.html sind gültig (12.879875ms)
+✔ Einstellungen: Bereich, Schalter, Felder, Liste mit Absagen, öffentlicher Link, kein innerHTML (1.025417ms)
+✔ Schreibregeln im Bereich Terminbuchung (0.88825ms)
+✔ DE/EN-Paare decken die Texte ab (0.512833ms)
+✔ Landingpage: Dialog mit Terminwahl, Einwilligung, Textlink zum Formular, aria-live, Fallback, kein Gedankenstrich (0.379667ms)
+✔ Standard: Montag bis Freitag 09:00 bis 16:00, Pause 12:00 bis 13:00, Raster 30 Minuten, Gespräch 20 Minuten (3.391625ms)
+✔ Wochenenden sind nie buchbar, auch nicht wenn sie eingestellt werden (1.436ms)
+✔ Feiertag: Weihnachten und Stephanstag sind frei (1.63275ms)
+✔ Ferien und eigene Feiertage sperren den ganzen Tag (1.851917ms)
+✔ Puffer: 15 Minuten vor und nach jedem Termin bleiben frei (3.610042ms)
+✔ Mindestvorlauf 12 Stunden (3.432667ms)
+✔ Horizont: höchstens 14 Tage voraus (0.92425ms)
+✔ Sommerzeitwechsel im Herbst: gleiche Wanduhrzeit, andere UTC-Zeit (0.638541ms)
+✔ Sommerzeitwechsel im Frühling (0.53675ms)
+✔ Heute wird in Schweizer Zeit bestimmt: Freitag 23:30 UTC ist schon Samstag (1.569125ms)
+✔ Besetzte Zeiten aus Terminen, Google-Terminen und ICS-Kalendern sperren (3.459625ms)
+✔ Als «frei» markierte fremde Termine sperren nicht, ganztägige belegte fremde Termine sperren den Tag (0.236125ms)
+✔ Einstellungen: Eingaben werden begrenzt, Unsinn fällt auf den Standard zurück (0.235ms)
+✔ Öffentliche Form enthält nur Zeitpunkte und Beschriftungen (0.933167ms)
+✔ Zeitfenster-Ticket: gültig, zu alt gerechnet, gefälscht (0.327708ms)
+✔ Eingabeprüfung: Pflichtfelder, Format, Länge, Einwilligung (0.291209ms)
+✔ Standardgrenzen: wie vorgegeben, per Umgebungsvariable überschreibbar (66.462041ms)
+✔ allow: zählt nur die Module der Funktion und nur den heutigen Tag (88.963083ms)
+✔ Mail an Lorena genau einmal pro Funktion und Tag, mit Hinweis auf die Umgebungsvariable (17.220375ms)
+✔ Zürcher Tagesbeginn liegt im Sommer zwei Stunden und im Winter eine Stunde vor Mitternacht UTC (0.3795ms)
+✔ Hilfe-Chat und Dokumenttyp-Vorschlag: bei erreichtem Budget keine KI, freundliche Antwort bzw. manuelle Auswahl (68.58725ms)
+✔ Einordnung einer Nachfrage: bei erreichtem Budget gilt der Wunsch im Wortlaut, ohne KI (6.748625ms)
+✔ F-10 Export: nur Beraterin, ZIP mit JSON, Dateien und Word, ohne Passwörter (356.989042ms)
+✔ F-10 Löschen: braucht Bestätigung, fremde Beraterin gesperrt (13.680375ms)
+[clientData] Klient 1 vollständig gelöscht: {"people_profiles":1,"analyses":1,"company_memory":1,"review_requests":0,"client_users":1,"onboarding_tokens":0,"learning_suggestions":0,"client_files":1,"onboarding_drafts":0,"access_log":0,"goldtexte":0,"communication_profiles":0,"quartalsreviews":0,"quartalsreview_laeufe":0,"ueberarbeitungskarten":0,"monatsabschluss":0,"themenplan_laeufe":0,"people":1,"themenplan_eingaben":0,"themenplan_plaene":0,"themenplan_auswahl":0,"klaviyo_uebertragungen":0,"usage_log (anonymisiert)":1,"module_examples":1,"email_outbox":2,"schnelltests":1,"clients":1}
+[clientData] Protokoll: 🔨 Not supported 🔨 : The query you ran generated an AST which parts have not been read by the query planner. This means that those parts could be ignored:
+
+    ⇨ .columns[0].constraints[0].type ("primary key")
+    ⇨ .columns[4].constraints[0].type ("default")
+    ⇨ .columns[4].constraints[0].default.type ("call")
+    ⇨ .columns[4].constraints[0].default.function.name ("now")
+    ⇨ .columns[4].constraints[0].default.function ({"name":"now"})
+    ⇨ .columns[4].constraints[0].default.args ([])
+    ⇨ .columns[4].constraints[0].default ({"type":"call","function":{"name":"now"},"args":[]})
+
+👉 pg-mem is work-in-progress, and it would seem that you've hit one of its limits.
+
+*️⃣ Failed SQL statement: CREATE TABLE IF NOT EXISTS data_requests_log (id SERIAL PRIMARY KEY, advisor_id INTEGER, kind TEXT, client_name TEXT, created_at TIMESTAMPTZ DEFAULT NOW());
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ F-10 Löschen: alle Tabellen leer, andere Klienten unberührt (39.005667ms)
+✔ Empfohlenes Paket: Beraterin setzt, Klient liest nur das eigene (168.670875ms)
+✔ Metriken zählen Satzlänge und Wendungen ohne KI (32.112375ms)
+✔ Ausgangslage anlegen, nur Beraterin, Werte begrenzt (97.880917ms)
+[comm-profile] Bitte mindestens einen längeren Text einfügen (rund 300 Zeichen oder mehr).
+✔ zu kurzer Text wird abgelehnt (4.6835ms)
+✔ Ziel setzen und von Klient lesen, fremder Klient gesperrt (19.291125ms)
+✔ Messung braucht neue verwendete Texte (21.523167ms)
+[stimm-report] Für diesen Klienten gibt es noch keine Ausgangslage. Bitte zuerst die Texte auswerten.
+✔ Stimmprofil als Word: nur Beraterin, enthält Firma und Übereinstimmung (85.41325ms)
+✔ Stimmen-Check als Word: Inhalt, Zugriffsschutz (89.131167ms)
+✔ F-07 Normalfall: unter der Grenze geht alles durch (22.452416ms)
+✔ F-07 Klient über 10 Dollar am Tag gesperrt, der andere nicht, Beraterin ausgenommen, Mail an Lorena (36.740833ms)
+✔ F-07 Plattform über 40 Dollar: alle Klienten gesperrt, Beraterin nicht (2.960458ms)
+✔ F-07 Standardkontingent nur für neu angelegte Klienten, nicht für Enterprise (5.399667ms)
+✔ F-07 Eingabegrösse je Feld höchstens 60000 Zeichen (6.1535ms)
+[csp-report] script-src blockiert https://x.test auf http://127.0.0.1:62857
+✔ CSP: nur Report-Only (blockiert nichts), mit report-uri (34.32525ms)
+✔ SRI: feste externe Skripte haben integrity und crossorigin; pdf.js ohne eval (3.565792ms)
+SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+    at JSON.parse (<anonymous>)
+    at parse (/private/tmp/claude-501/-Users-lorenalienhard/82dd32b3-ce6a-4838-b0b1-fdcb06919135/scratchpad/repo-landing/rhetoriq-app/server/node_modules/body-parser/lib/types/json.js:96:19)
+    at /private/tmp/claude-501/-Users-lorenalienhard/82dd32b3-ce6a-4838-b0b1-fdcb06919135/scratchpad/repo-landing/rhetoriq-app/server/node_modules/body-parser/lib/read.js:128:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:227:14)
+    at invokeCallback (/private/tmp/claude-501/-Users-lorenalienhard/82dd32b3-ce6a-4838-b0b1-fdcb06919135/scratchpad/repo-landing/rhetoriq-app/server/node_modules/raw-body/index.js:238:16)
+    at done (/private/tmp/claude-501/-Users-lorenalienhard/82dd32b3-ce6a-4838-b0b1-fdcb06919135/scratchpad/repo-landing/rhetoriq-app/server/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/private/tmp/claude-501/-Users-lorenalienhard/82dd32b3-ce6a-4838-b0b1-fdcb06919135/scratchpad/repo-landing/rhetoriq-app/server/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:509:28)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+✔ csvCell: Formelzeichen am Anfang werden entschärft, normaler Text bleibt (0.681083ms)
+✔ Klientenliste als CSV: Name mit Formel wird als Text ausgegeben (96.593917ms)
+✔ fence: Inhalt zwischen Markierungen, Markierungen im Inhalt entschärft, leer bleibt leer (43.275625ms)
+✔ F-18 Prompt: Brand Voice, Referenz und Beispiele sind abgegrenzt, Systemregel vorhanden, Normalfall liefert Text (125.492208ms)
+✔ Freigabe zweimal kurz hintereinander gesendet: höchstens ein KI-Aufruf für die Lernvorschläge (160.723916ms)
+✔ Webseiten-Scan: gleiche Eingabe liefert das Ergebnis aus dem Speicher, geänderte Eingabe einen neuen Aufruf (1.596167ms)
+✔ Erzeugen mit zweitem Durchgang speichert Entwurf, Endtext und Kennzahlen (197.54525ms)
+✔ ohne zweiten Durchgang (thorough:false) wird nichts gespeichert (173.546958ms)
+✔ vergleiche: gleiche Fassung ergibt keine Änderung; Lint nur, wenn lib/lint.js existiert (0.477833ms)
+✔ Auswertung: Durchschnitt, wesentliche Änderungen, nur eigene Beraterin, Zugriff (10.305959ms)
+✔ Zähler und Sortierung: neueste zuerst, alle Quellen (105.032833ms)
+✔ Leerer Eingang und Höchstzahl 50 (71.825375ms)
+✔ Rollenschutz: Kunde 403, ohne Anmeldung 401 (17.432625ms)
+✔ Mandantentrennung: Freigaben fremder oder gelöschter Kunden fehlen (29.904708ms)
+✔ Mail als gelesen markieren (22.171083ms)
+✔ Mail löschen: nur die Beraterin, Mail verschwindet, unbekannte und ungültige Nummer (15.715125ms)
+✔ Mail-Empfang: Token fehlt, falsch, Variable ungesetzt (12.422791ms)
+✔ Mail-Empfang: speichert, Doppelte ignoriert, erscheint im Eingang (11.109541ms)
+✔ Mail-Empfang: falsche Empfängeradresse wird nicht gespeichert, Liste mit Zieladresse schon (5.1475ms)
+✔ Mail-Empfang: HTML wird entfernt, Auszug höchstens 300 Zeichen (10.573459ms)
+✔ Mail-Filter: nur Mails von RhetorIQ, Mails mit eigenem Eintrag werden nicht doppelt gezeigt (29.125834ms)
+✔ Mail-Empfang: Grössenlimit und fehlende Felder (6.350333ms)
+✔ Mail-Empfang: Ratenbegrenzung (10.985125ms)
+✔ Skriptblock ist gültig und steht nach der Warteliste, vor der Lernkurve (5.700292ms)
+✔ Seite Assistent: eine Zeile, Beispiele eingeklappt, Eingang vor Heute vor den Kalender-Zeilen (0.502042ms)
+✔ Der Assistent legt beim Öffnen keine Übersichtsnachricht mehr ins Protokoll (0.853375ms)
+✔ Eingang: Filter, Leerzustand, Aktionen und Aktualisierung (0.960292ms)
+✔ Schreibregeln in Eingang und Seite (3.140792ms)
+✔ DE/EN-Paare (0.68075ms)
+✔ Routen sind eingehängt, Mail-Empfang hat ein eigenes Grössenlimit (0.059458ms)
+✔ Zahlen, Prozente, Beträge, Daten und Namen aus dem Auftrag bleiben unmarkiert (1.397791ms)
+✔ Was nicht im Auftrag steht, wird markiert (Zahl, Prozent, Betrag, Datum, Name) (0.234542ms)
+✔ Tausenderschreibweise: 1'200 im Ergebnis entspricht 1200 im Auftrag (0.124416ms)
+✔ HTML: Fundstellen als mark, Sonderzeichen werden maskiert (0.810708ms)
+✔ Briefing aus verschachtelten Eingabedaten, leerer Text und kein Briefing (0.232666ms)
+[rate] Beispiel aus Daumen fehlgeschlagen: relation "module_examples" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, rating FROM module_examples WHERE advisor_id='1' AND source_client_id='1' AND module_key='text-gen' AND origin='thumbs'
+       AND (analysis_id='1' OR output_text='Ergebnis');
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['lernen-korrektur', 'lernen-nachfrage', 'lernen-daumen']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[rate] Beispiel aus Daumen fehlgeschlagen: relation "module_examples" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, rating FROM module_examples WHERE advisor_id='1' AND source_client_id='1' AND module_key='text-gen' AND origin='thumbs'
+       AND (analysis_id='2' OR output_text='Ergebnis');
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['lernen-korrektur', 'lernen-nachfrage', 'lernen-daumen']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[rate] Beispiel aus Daumen fehlgeschlagen: relation "module_examples" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, rating FROM module_examples WHERE advisor_id='1' AND source_client_id='1' AND module_key='text-gen' AND origin='thumbs'
+       AND (analysis_id='3' OR output_text='Ergebnis');
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['lernen-korrektur', 'lernen-nachfrage', 'lernen-daumen']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ Nachfrage des Klienten wird Lernvorschlag und nicht sofort gelernt, Wiederholung erhöht die Gewichtung (300.315333ms)
+[rate] Beispiel aus Daumen fehlgeschlagen: relation "module_examples" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, rating FROM module_examples WHERE advisor_id='1' AND source_client_id='2' AND module_key='text-gen' AND origin='thumbs'
+       AND (analysis_id='4' OR output_text='Ergebnis');
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['lernen-korrektur', 'lernen-nachfrage', 'lernen-daumen']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[rate] Beispiel aus Daumen fehlgeschlagen: relation "module_examples" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, rating FROM module_examples WHERE advisor_id='1' AND source_client_id='2' AND module_key='text-gen' AND origin='thumbs'
+       AND (analysis_id='5' OR output_text='Ergebnis');
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['lernen-korrektur', 'lernen-nachfrage', 'lernen-daumen']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[rate] Beispiel aus Daumen fehlgeschlagen: relation "module_examples" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, rating FROM module_examples WHERE advisor_id='1' AND source_client_id='2' AND module_key='text-gen' AND origin='thumbs'
+       AND (analysis_id='6' OR output_text='Ergebnis');
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['lernen-korrektur', 'lernen-nachfrage', 'lernen-daumen']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ Nachfrage zu Fakten bleibt Vorschlag; Daumen-Notiz ohne Nachfrage lernt weiter direkt, ausser bei Fakten (148.660458ms)
+✔ Gelernte Sätze: Datum und Zähler, Altbestand unverändert, einzelner Satz vergessen (54.851625ms)
+✔ Einnahmen nach Kategorien, Anzahl Klienten und Summe (43.573667ms)
+✔ Zuordnung nach Betrag ohne Angaben, Unbekanntes landet bei Nicht zugeordnet (0.275583ms)
+✔ Rückerstattung wird abgezogen (0.310708ms)
+✔ Jahresabo zählt im Zahlungsmonat voll, MRR teilt durch 12 (0.09375ms)
+✔ Mehrwertsteuer netto und brutto (0.203167ms)
+✔ Fixkosten: gültig ab und bis, einmalig, variable Kosten (0.377125ms)
+✔ Ergebnis, Marge, KI-Kosten, gebuchte Anthropic-Rechnung, Rückstellung, Gebühren (0.182625ms)
+✔ Klumpenrisiko über 40 Prozent und Top 5 (0.078791ms)
+✔ Zahlungen fremder Klienten zählen nicht (0.079875ms)
+✔ Schweizer Zahlenformat (0.054916ms)
+✔ Klient erhält 403, ohne Anmeldung 401 (43.180708ms)
+✔ Bericht aus Stripe: Kategorien, Gebühren, Kliententrennung, KI-Kosten, Vergleich (92.945125ms)
+✔ Einstellungen, Fixkosten, Anthropic-Rechnung speichern und wirken (59.547792ms)
+[finanzen] Stripe: Netzwerk weg
+[finanzen] Stripe: Netzwerk weg
+✔ Stripe nicht erreichbar: Schätzung aus der Datenbank, deutlich gekennzeichnet (21.682209ms)
+[finanzen] Stripe: STRIPE_SECRET_KEY not set
+✔ Stripe nicht konfiguriert gibt ebenfalls eine Schätzung (10.246667ms)
+✔ Export als CSV und Word (49.566666ms)
+✔ Stimm-Prompt: richtiges PDF im Anhang, Mail an die Person und Hinweis an Lorena (112.156542ms)
+✔ KI-Leitfaden: das andere PDF (49.231625ms)
+✔ Unbekannte Auswahl wird abgelehnt (auch Pfadtricks) (58.159042ms)
+✔ Lead landet in inquiries mit source geschenk-prompt oder geschenk-leitfaden (55.999292ms)
+✔ Einwilligung ist Pflicht, ebenso Name und E-Mail (56.855166ms)
+✔ Missbrauchsschutz: Herkunft, Honeypot, Ticket, Mindestzeit (55.033041ms)
+✔ Ticket-Abruf liefert ein gültiges Ticket (2.737459ms)
+✔ Rate-Limit pro IP, pro E-Mail und Tageslimit (95.006708ms)
+✔ Dasselbe Geschenk an dieselbe Adresse höchstens einmal je 24 Stunden (139.988041ms)
+✔ Die PDFs sind nicht öffentlich erreichbar (23.211042ms)
+✔ Die Geschenk-Dateien sind klein und gültige PDFs (0.365791ms)
+✔ Goldtexte: gespeichert werden nur gesendete, genug veränderte Texte passender Länge, ohne Duplikate (57.486583ms)
+✔ Goldtexte: höchstens 20 je Klient und Textart, die ältesten fallen weg (57.893167ms)
+✔ Goldtexte: Auswahl nimmt den jüngsten und einen ähnlichen, trennt Klienten und Textarten, begrenzt die Länge (8.484208ms)
+✔ heuteZeile: Wochentag, Datum und Zeitzone mit festgelegter Uhr (31.934792ms)
+✔ Datum steht im ungecachten Teil des Auftrags, in POST / und /stream (42.626667ms)
+✔ F-09 Bereinigung: keine Zeilenumbrüche, keine Links, keine Adressen im Namen (25.799708ms)
+✔ F-09 Normalfall: einzelne Anfragen lösen je eine Hinweismail und eine Bestätigung aus (69.431375ms)
+✔ F-09 Mehr als 5 Anfragen in 15 Minuten: eine Sammelmeldung statt einer Mail je Anfrage (102.749334ms)
+✔ F-09 Flood-Grenze: Warnung an Lorena statt stillem Verwerfen (110.21925ms)
+✔ Parser: einfacher Termin mit Zeitzone, UTC und schwebender Zeit (93.232166ms)
+✔ Parser: andere Zeitzonen und Windows-Namen werden nach Zürich umgerechnet (1.790875ms)
+✔ Parser: ganztägige Termine, mehrtägig, Dauer statt Ende, Terminende über Mitternacht (0.981917ms)
+✔ Parser: RRULE täglich mit INTERVAL und COUNT (0.864625ms)
+✔ Parser: RRULE wöchentlich mit BYDAY, UNTIL und EXDATE (1.296084ms)
+✔ Parser: RRULE monatlich (Tag im Monat, erster Montag, letzter Freitag) und jährlich (1.499042ms)
+✔ Parser: Sommerzeit bleibt bei wöchentlichen Terminen auf der gleichen Uhrzeit (1.254166ms)
+✔ Parser: geänderte und abgesagte einzelne Termine einer Serie (RECURRENCE-ID) (0.962875ms)
+✔ Parser: Zeilenfaltung, Maskierung, abgesagte und freie Termine (1.213666ms)
+✔ SSRF: nur https, keine privaten oder lokalen Adressen, keine Zugangsdaten, kein fremder Port (2.801125ms)
+✔ SSRF: Namen, die auf private Adressen zeigen, werden beim Verbinden abgelehnt (DNS-Prüfung im Socket) (1.826125ms)
+✔ SSRF: Weiterleitungen werden begrenzt und jedes Ziel erneut geprüft (3.191833ms)
+✔ Antwortgrösse und Dauer sind begrenzt, der Socket prüft jede Adresse (1.862083ms)
+✔ Hinzufügen: Link wird geprüft, verschlüsselt gespeichert und nie zurückgegeben oder geloggt (39.665167ms)
+✔ Hinzufügen: ungültige, unsichere und keine Kalender-Links werden abgelehnt (29.076583ms)
+✔ Der Plan plant um die Besetzt-Zeiten herum, sie sind schreibgeschützt, grau markiert und nicht im Abo-Feed (113.951167ms)
+✔ Deaktivierte Kalender sperren nichts, Entfernen löscht die gespeicherten Termine (34.439584ms)
+✔ Serien aus dem fremden Kalender sperren jede Wiederholung (6.092583ms)
+✔ Fehler pro Quelle: «nicht erreichbar seit», der Plan läuft weiter, Erfolg löscht den Fehler (38.422875ms)
+✔ ETag und If-Modified-Since: unveränderte Kalender werden nicht neu gelesen (19.366041ms)
+✔ Beim Öffnen der Kalenderseite: leise nur für Quellen, die länger nicht gelesen wurden (18.707625ms)
+✔ Besetzt-Zeiten werden nie nach Google gespiegelt (84.612167ms)
+✔ Ohne Zugangsdaten meldet die Oberfläche «Google-Zugang ist noch nicht eingerichtet» (132.094583ms)
+✔ Ohne Verschlüsselungsschlüssel wird nichts gespeichert und klar gemeldet (11.821875ms)
+✔ Autorisierungsadresse: Scope, offline, Zustimmung, state, PKCE, genaue Weiterleitung (15.20825ms)
+✔ state ist einmalig, falscher state und fremder Browser werden abgelehnt (80.727583ms)
+✔ Verbinden: Kalender «RhetorIQ» wird angelegt, das Refresh-Token liegt nur verschlüsselt in der Datenbank (24.970791ms)
+✔ Token und Geheimnis stehen nie in Logs, Antworten oder Fehlertexten (69.293167ms)
+✔ Fehlender Dauerzugriff (kein Refresh-Token) oder abgelehnte Berechtigung speichern nichts (21.375541ms)
+✔ Nur die Beraterin: Klient, ohne Anmeldung und Webhook-Rolle (28.972791ms)
+✔ Termin anlegen, ändern, löschen: Ereignis mit Verknüpfung, Farbe und Herkunftskennung (157.830084ms)
+✔ Entprellung: viele Änderungen in kurzer Zeit führen zu einem einzigen Abgleich (104.695625ms)
+✔ Wiederkehrende Termine werden für 60 Tage als einzelne Ereignisse geschrieben (208.174333ms)
+✔ Ganztägige Einträge (Ferien) als Tagesereignis ohne Uhrzeit (58.880917ms)
+✔ Aufgabenblöcke enthalten nur Klientenname, Textart, Frist und Link (28.55475ms)
+✔ Retry: Limit 429 und Serverfehler werden mit wachsendem Abstand wiederholt (130.344792ms)
+✔ Dauerhafter Fehler wird der Beraterin angezeigt, ohne Geheimnisse (116.151167ms)
+✔ Webhook: nur mit gültiger Kanal-ID und gültigem Kanal-Token, Hash gespeichert (35.025291ms)
+✔ Webhook exists löst die inkrementelle Abfrage aus, Änderung vom Handy kommt an (80.085916ms)
+✔ syncToken: erst voll, dann inkrementell; bei 410 volle Neusynchronisation (51.039125ms)
+✔ Mehrere Seiten werden abgeholt (40.183417ms)
+✔ Neu am Handy angelegt: wird zum Termin vom Typ Termin und danach mit Herkunft und Farbe ergänzt (19.851834ms)
+✔ Ganztägige Mehrtagesereignisse vom Handy werden zu einer Tagesserie und einzeln zurückgeschrieben (24.059ms)
+✔ Verschoben oder in der Dauer geändert am Handy: Termin wird aktualisiert (75.1495ms)
+✔ Gelöscht am Handy: Termin wird gelöscht, bei einer Serie nur das eine Vorkommen (116.261875ms)
+✔ Verschobene Serien-Vorkommen werden zu einem einzelnen Termin, die Serie lässt den Tag aus (116.445666ms)
+✔ Plan-Block am Handy verschoben oder verlängert: tagesplan_positionen wird aktualisiert, der Plan plant darum herum (138.665709ms)
+✔ Plan-Aufgabe am Handy gelöscht: für den Tag ausgeblendet, die Aufgabe selbst bleibt (83.112833ms)
+✔ Gleichzeitige Änderung: die neuere gilt (updated-Zeitstempel) (169.897375ms)
+✔ Lokal neuer gilt auch beim Löschen am Handy: der Termin wird wieder angelegt (165.247041ms)
+✔ Echo-Schleifen: eigene Änderungen werden nicht zurückgespielt (123.423458ms)
+✔ Kanal: wird vor Ablauf erneuert, der alte gestoppt; weit entfernter Ablauf bleibt (35.856542ms)
+✔ Job alle 15 Minuten gleicht als Sicherheitsnetz ab, auch ohne Webhook (15.045416ms)
+✔ Abgleich beim Öffnen der Kalenderseite: «leise» überspringt einen frischen Abgleich (33.319167ms)
+✔ Nicht verbunden: Abgleich meldet es klar, push ohne Verbindung tut nichts (7.472125ms)
+✔ Trennen widerruft das Token bei Google und löscht es lokal samt Verknüpfungen (77.164958ms)
+✔ Abgelaufene Verbindung (invalid_grant) wird als Fehler gemeldet, ohne Wiederholungsschleife (30.843208ms)
+✔ Termine werden nicht mehrfach angelegt, wenn Google die ID schon kennt (409) (109.639958ms)
+✔ Scope: Verbindung ohne Lesezugriff läuft wie bisher, die Oberfläche bekommt den Hinweis und den Knopf (263.082708ms)
+✔ Scope: mit Lesezugriff ist keine zusätzliche Freigabe nötig, die Scope-Liste wird gespeichert (29.674708ms)
+✔ Scope: Verbinden über die Routen fordert beide Scopes an und speichert die erteilten (91.248ms)
+✔ Scope: neue Verbindung ohne Lesezugriff entfernt zuvor gelesene Termine und Kanäle (48.754125ms)
+✔ Kalenderliste ohne den RhetorIQ-Kalender, Voreinstellung nur Hauptkalender, Farbe von Google (21.892166ms)
+✔ Auswahl: Anhaken liest sofort und beobachtet, Abwählen entfernt Termine und Kanal, Farbe ist änderbar, Eingaben werden geprüft (82.699083ms)
+✔ Kalenderliste: ein bei Google verschwundener Kalender wird samt Terminen entfernt, neue Kalender kommen abgewählt dazu (45.4695ms)
+✔ Initial: 60 Tage zurück bis 180 Tage voraus, singleEvents, schlanke Felder; ausserhalb des Fensters wird nichts gespeichert (23.259917ms)
+✔ Inkrementell: ab dem zweiten Lauf mit syncToken, nur Änderungen, Absagen entfernen (48.09625ms)
+✔ 410: volle Neusynchronisation, was bei Google fehlt, verschwindet (33.651041ms)
+✔ Das Fenster wird neu gelesen, bevor es zu kurz wird (24.045625ms)
+✔ Seitenweises Lesen grosser Kalender (21.990916ms)
+✔ Abgesagte und abgelehnte Termine werden nicht angezeigt oder entfernt, vorläufige und Zusagen anderer bleiben (37.264916ms)
+✔ «Verfügbar» (transparent) wird angezeigt, sperrt aber keine Zeit; besetzte Termine sperren (40.6695ms)
+✔ Planung: Aufgaben liegen nie auf besetzten Zeiten, mehrere Termine und mehrere Kalender (38.382459ms)
+✔ Ganztägige Termine: ein Tag, mehrere Tage (Ende bei Google ist exklusiv), kein Zeitblock, der Tag bleibt Arbeitstag (44.734958ms)
+✔ Zeitzonen: Termine mit Offset anderer Zonen landen richtig in Zürich, Mitternacht und mehrtägige Zeittermine (37.378792ms)
+✔ Serien: einzelne Vorkommen (singleEvents), eine abgesagte Wiederholung entfernt nur diese (56.278333ms)
+✔ Titel, Ort, Link und Anzahl der Teilnehmenden kommen im Plan an, Termine ohne Titel und fremde Links werden abgesichert (53.557791ms)
+✔ Schreibschutz: nie ein Schreibaufruf an fremde Kalender, die Termine erscheinen weder im Kalender RhetorIQ noch im Abo-Feed (188.815958ms)
+✔ Abo-Feed und Plan-Ereignisse enthalten keine Termine aus weiteren Google-Kalendern (42.521584ms)
+✔ Webhook: pro Kalender ein Kanal mit eigenem Geheimnis (nur als Hash gespeichert), die Meldung liest nur diesen Kalender (83.056125ms)
+✔ 15-Minuten-Absicherung: der Job liest alle aktiven Kalender inkrementell und erneuert Kanäle vor Ablauf (41.19925ms)
+✔ Fehler pro Kalender: ein Kalender mit Fehler hält die anderen nicht auf, kein Geheimnis im Fehlertext (43.667292ms)
+✔ Ein bei Google gelöschter Kalender (404) wird samt Terminen entfernt (35.601875ms)
+✔ Keine Teilnehmerlisten, Beschreibungen oder Organisatoren in der Datenbank, nur die Anzahl (15.924875ms)
+✔ Titel und Orte stehen in keinem Log, Tokens und Google-Antworten bleiben geheim (43.768667ms)
+✔ Trennen löscht alle Daten der weiteren Kalender und beendet ihre Kanäle (46.990417ms)
+✔ Nur die Beraterin: Klienten und Anonyme sind abgewiesen (25.670083ms)
+✔ Assistent (Logik): «Was habe ich heute?» nennt Termine und Plan, «Wann habe ich Zeit?» freie Fenster, keine Gedankenstriche (1.689375ms)
+✔ Assistent (Erkennung): termine_zeigen ist eine Aktion der festen Liste, Datum und Modus werden geprüft (1.586458ms)
+✔ Assistent (Route): Termine stammen aus dem Kalender, die KI sieht nur die Frage und nie Titel, Orte oder Zeiten (43.649ms)
+✔ Oberfläche: Hinweis, Knopf, Auswahl mit Haken und Farbe, Details mit «In Google öffnen», Texte, Paare, alle Script-Blöcke gültig (20.120167ms)
+✔ Block rq-kalendersync-js steht vor rq-lernkurve-js und alle Script-Blöcke sind gültig (12.93925ms)
+✔ Oberfläche: Status, Knöpfe, Anleitungen, ehrlicher Hinweis zur Verzögerung und Datenschutz (0.779958ms)
+✔ Schreibregeln im neuen Block: Schweizer Rechtschreibung, keine Gedankenstriche, keine Gegenüberstellungen, keine Kursivschrift (3.117667ms)
+✔ DE/EN-Paare (RQ_EXTRA_PAIRS) decken die Texte des neuen Bereichs ab (0.668167ms)
+✔ Tagesplan-Kalender: Besetzt-Zeiten werden schreibgeschützt und gestreift dargestellt (1.169667ms)
+✔ cardsApply: älteste Karte zuerst, Rest in CHF (32.383875ms)
+✔ karte-link: Zugriff und Betrag (59.095458ms)
+[stripe] client 1 → neue 10er-Karte (cs_1)
+[stripe] Ereignis evt_karte_1 bereits verarbeitet, übersprungen
+✔ Webhook legt eine Karte an, doppelte Zustellung keine zweite (54.613459ms)
+✔ Anzeige mit Karte, Abschluss bucht einmal, Wiederholung ohne Doppelbuchung (79.427375ms)
+✔ Ohne SECRETS_ENCRYPTION_KEY: meldet sauber, speichert nichts (109.489375ms)
+✔ secretBox: AES-256-GCM, jede Verschlüsselung anders, Manipulation und falscher Schlüssel scheitern (0.580833ms)
+✔ Schlüssel eintragen: nur Rolle admin des eigenen Klienten, Prüfung vor dem Speichern, verschlüsselt abgelegt (34.837041ms)
+✔ Status zeigt nur «verbunden», nie den Schlüssel; fremde Klienten sehen nichts (9.101167ms)
+✔ Verbindung prüfen: Rechte, fehlende Rechte und Limit verständlich auf Deutsch (25.904084ms)
+✔ An Klaviyo senden: nur freigegebene Newsletter des eigenen Klienten, Vorlage mit sauberem HTML, kein Versand (37.055416ms)
+✔ Kampagnenentwurf auf Wunsch: Entwurf mit Vorlage, bei Fehler bleibt die Vorlage; nie ein Versandaufruf (14.30225ms)
+✔ Fehlerfälle beim Senden: ungültiger Schlüssel, fehlende Rechte, Limit, Serverfehler, Netz (21.983792ms)
+✔ Nicht verbunden: verständliche Meldung; Trennen löscht den Schlüssel (12.459083ms)
+✔ Beraterin: gleiche Ablage serverseitig, alte Aufrufe mit Schlüssel im Körper funktionieren weiter (27.321542ms)
+✔ Der Schlüssel taucht in keinem Log und keiner Fehlermeldung auf; Sentry und Fehlerbehandlung entfernen ihn (0.392166ms)
+✔ Vorlagen: eigene Klientenvorlage nur für den eigenen Klienten, freigegebene für alle, Beraterinnen-Vorlage für alle (62.486833ms)
+✔ Vorlagen: Anlegen mit Klientenbezug ist standardmässig nicht klientenübergreifend (49.023875ms)
+✔ Auto-Import und Import: Beispiele bekommen den Klienten und sind nicht klientenübergreifend (11.630417ms)
+✔ Vorlagen: beide Generierungsrouten und der Vorschlag für Anweisungen filtern mit scopeSql (0.590375ms)
+✔ Bewertung eines Klienten verändert nur Vorlagen aus seinen Texten, nicht die für andere (17.197834ms)
+✔ Ende zu Ende: der Auftrag enthält nur Vorlagen des eigenen Klienten und freigegebene (133.256333ms)
+✔ Kosten je Vorgang kommen aus costUsd (meter.js) (0.3785ms)
+✔ Text-Generator: Zwischenspeicher spart gegenüber ohne Zwischenspeicher, auch mit Schreibzuschlag (0.133792ms)
+✔ Szenario: Summe stimmt, automatische Funktionen sind markiert (0.293042ms)
+✔ Jeder Schlüssel für das Nutzungsprotokoll im Code steht im Inventar (7.264166ms)
+✔ Kosten je Funktion: gruppiert, Anteil, Zwischenspeicher-Lesequote, Hinweis «läuft ohne Klick» (87.427041ms)
+✔ Zugriff: nur Beraterin, Tage geprüft, Zeilen ohne Beraterin nur für die Betreiberin (22.853459ms)
+✔ Wochenbericht: eine Zeile mit den drei teuersten Funktionen (3.032542ms)
+✔ Lernkette: Lernstand unter text-gen-email erreicht den Block, andere Klienten und Textarten nicht (38.954708ms)
+✔ Lernkette: beide Generierungsrouten geben instructionsKey an den Lesezugriff weiter (0.761166ms)
+✔ Lernkette Ende zu Ende: POST / und /stream legen Lernstand und Goldtext der Textart in den Auftrag (126.8265ms)
+✔ Satzanteil: unverändert, teilweise, Normalisierung (27.870458ms)
+✔ Kurve und Satz: zwei Monate mit je drei Freigaben (12.334ms)
+✔ kein Satz bei nur einem tragfähigen Monat (8.848667ms)
+✔ Endpunkt: Beraterin, eigener Klient, fremder Klient, Teamrolle (40.633125ms)
+✔ Gegensatzpaare: kürzer gegen länger, formeller gegen lockerer, du gegen Sie (50.985583ms)
+✔ Verneinung dreht den Pol: Emojis verwenden gegen keine Emojis, nicht zu formell gegen locker (0.340791ms)
+✔ Kein Widerspruch: gleiche Richtung, verschiedene Themen, andere Kategorie oder andere Textart (0.088875ms)
+✔ anreichern: Herkunft und Konflikt je Satz, beidseitig mit dem Gegenstück (0.168334ms)
+[rate] Beispiel aus Daumen fehlgeschlagen: relation "module_examples" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, rating FROM module_examples WHERE advisor_id='1' AND source_client_id='1' AND module_key='text-gen' AND origin='thumbs'
+       AND (analysis_id='1' OR output_text='Ergebnis');
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['lernen-korrektur', 'lernen-nachfrage', 'lernen-daumen']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ Beide Wege: Daumen-Notiz des Klienten und angenommene Korrektur erscheinen mit Herkunft, der Widerspruch ist markiert (131.136959ms)
+✔ Verdichtung durch den Klienten behält die Herkunft eines ähnlichen Korrektursatzes (8.163584ms)
+✔ Gedankenstriche (Halbgeviert- und Geviertstrich) mit Position (32.124ms)
+✔ Eszett nur bei Deutsch (0.239542ms)
+✔ Floskeln und Füllwort (nur gemeldet, weich) (0.138208ms)
+✔ Gegenüberstellung «nicht X, sondern Y», aber nicht «nicht nur ... sondern auch» (0.0685ms)
+✔ Anrede: gemischt, mit vorgegebener Anrede und ohne Pronomen am Satzanfang (0.276292ms)
+✔ Gendern mit Sonderzeichen: Stern, Doppelpunkt, Unterstrich, Schrägstrich, Binnen-I (0.152583ms)
+✔ Markdown: Fettschrift, Überschrift, Stern-Aufzählung, Trennlinie, Tabelle, Backticks; Strich-Aufzählung bleibt erlaubt (0.130083ms)
+✔ Sauberer Text liefert keine Treffer, Treffer sind nach Position sortiert (0.59775ms)
+✔ Prüfauftrag und Zusammenfassung (0.203041ms)
+✔ POST /: Treffer im Entwurf gehen in den zweiten Durchgang, Rest erscheint als Prüfhinweis (38.676667ms)
+✔ POST /: ohne Treffer kein Prüfauftrag und kein Hinweis (8.106375ms)
+✔ brand_voice kommt zuerst und vollständig, auch über der Kappung eines Einzeldokuments (0.751458ms)
+✔ ref_tg der gewählten Textart vor allgemeinen Referenzen, andere Textarten gehören nicht dazu (0.08825ms)
+✔ key_facts vor ref_brand_voice_source, auch wenn die Quelle zum Briefing passt (0.073125ms)
+✔ Wortüberlappung ordnet allgemeine Einträge nach Relevanz zum Briefing (0.078666ms)
+✔ Füllen bis 40000 Zeichen: Was nicht passt, steht mit Grund in der Liste der weggelassenen (0.46175ms)
+✔ Ein kleinerer Eintrag weiter hinten wird nachgeladen, wenn ein grosser nicht mehr passt (0.048833ms)
+✔ Struktur-Referenz und leere Einträge bleiben draussen, die Anbindung im Browser ist vorhanden (2.2045ms)
+✔ Preise: Sonnet, Haiku, Zwischenspeicher, unbekanntes Modell wie Sonnet (12.435583ms)
+✔ record schreibt Tokens, Zwischenspeicher, Modell und Kosten; Zuordnung aus dem Zugriff (11.983125ms)
+[cost-alert] fehlgeschlagen: column "monthly_token_limit" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT name, monthly_token_limit FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ opts.meter überschreibt den Zugriff, leere Aufrufe werden nicht protokolliert (8.413625ms)
+[cost-alert] fehlgeschlagen: column "monthly_token_limit" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT name, monthly_token_limit FROM clients WHERE id='2';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ recordApi übernimmt das usage-Objekt der Anthropic-Antwort (8.706208ms)
+✔ Abopreis je Kontingent für die Monatswarnung (0.17275ms)
+[cost-alert] fehlgeschlagen: column "monthly_token_limit" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT name, monthly_token_limit FROM clients WHERE id='3';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "monthly_token_limit" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "monthly_token_limit" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='2';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "monthly_token_limit" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='3';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ Gesperrtes Modul gibt 403 ohne KI-Kosten, in POST / und /stream (173.357833ms)
+✔ Keine Auswahl (null) erlaubt alles; Brand Voice ist immer erlaubt (117.65275ms)
+✔ Bündel und alte Einzelschlüssel: Gespräch-Schlüssel und Rede-Schlüssel schalten die Einzelmodule frei (136.027ms)
+✔ Textart: erlaubte Kachel geht, gesperrte gibt 403 ohne KI-Kosten, null erlaubt alle (29.853166ms)
+✔ Beraterin und Prüfsatz bleiben unberührt (10.918208ms)
+✔ Speichern durch die Beraterin des Klienten, Fremd-Klient und Klient selbst abgelehnt (27.223792ms)
+✔ Newsletter-Erstellung aus der Themenwahl bei gesperrter Textart: 403 und keine KI-Kosten (14.210875ms)
+✔ Gebündeltes Modul Gespräch schaltet alle vier Einzelschlüssel frei (0.56325ms)
+✔ Rede und Auftritt, Bewertungen und Branchenpakete werden zu Einzelschlüsseln (0.147084ms)
+✔ Alte Einzelnamen gelten weiter, Unbekanntes wird ignoriert (0.467167ms)
+✔ Bündelnamen sind im Katalog zugelassen (0.130792ms)
+✔ Modul-Anweisungen: Beraterin für eigene Klienten, nicht für fremde (105.772666ms)
+✔ Modul-Anweisungen: Klient A liest und schreibt nicht bei B (9.24775ms)
+✔ Ohne Newsletter: kein Profil, Prompt sagt es klar und fällt auf die Brand Voice zurück (118.276333ms)
+✔ Ein einziger Newsletter genügt nicht (4.011208ms)
+✔ Eckdaten: Wortzahl, Betreff, Abschnitte, Anrede, Schluss, Zwischentitel, Listen, Absatzlänge (13.920667ms)
+✔ Few-Shot-Beispiele: höchstens drei, gekürzt, mit Datenmarkierung (5.343792ms)
+✔ Anrede mit Namen: häufigster Anfang (0.145584ms)
+✔ Prompts enthalten Längenvorgaben und Stilprofil (28.12925ms)
+✔ HTML: maskiert alles, keine Skripte, keine Vorlagenbefehle, Betreff und Vorschau getrennt (0.301208ms)
+✔ Karte hat sieben Symptome, sieben Schritte, drei Textbausteine und drei öffentliche Statusseiten (49.961084ms)
+✔ Nur Beraterin (10.093125ms)
+✔ Word: enthält Karte und Textbausteine (57.14125ms)
+✔ Stilregeln: keine Gedankenstriche, kein ß, keine Zugangsdaten in Karte und Notfallordner (50.752375ms)
+✔ F-01 Personen: Klient sieht und ändert nur eigene (108.990334ms)
+✔ F-01 Eigene Module: fremde Liste und fremder Lauf gesperrt (16.026125ms)
+✔ F-01 Auswertung und Löschen: Klient nur eigener Bereich (19.981292ms)
+✔ Rangfolge-Block ist vorhanden, nur einmal und hat sechs Stufen (0.3405ms)
+✔ Regelwerk liegt unter 7000 Zeichen und die alten Vorrangsätze sind weg (0.061583ms)
+✔ Kernverbote und Schutz vor erfundenen Fakten bleiben im Regelwerk (0.175667ms)
+✔ Brand-Voice-Kopf ist für beide Pfade derselbe Baustein (0.419ms)
+✔ Vorschau: höchstens 10 Briefings, Schätzung in Franken, ohne KI-Aufruf (92.810833ms)
+✔ Start nur mit ausdrücklicher Bestätigung und nur für eigene Klienten (17.810709ms)
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ Ablauf: Hintergrundlauf, kein Eintrag in analyses, Kostenprotokoll mit Modul pruefsatz (238.131042ms)
+✔ Blindvergleich: Mischung, Wahl je Auftrag, Auswertung erst nach der letzten Wahl (52.287375ms)
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='1';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ Kostenobergrenze von 3 US-Dollar bricht den Lauf ab (68.461584ms)
+✔ zu wenig Aufträge, Lauf für Klienten ohne Briefings (25.309292ms)
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='2';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='2';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='2';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='2';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='2';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='2';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='2';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='2';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[abo] Schwellenprüfung fehlgeschlagen: column "stripe_customer_id" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id='2';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ Quartal: am 2. Tag nach Quartalsende gilt das vorherige Quartal (72.017375ms)
+✔ Auswahl: Business, Enterprise und Zusatz; nicht Stimme, Team ohne Zusatz, Gekündigte, ohne Paket (2.724084ms)
+✔ Kennzahlen: nur vorhandene Daten, KI-Eingabe ohne Namen und Textinhalte (14.113709ms)
+✔ Lauf: Mails an Lorena (mit Word) und Admin, Status versendet, Idempotenz je Quartal (70.893459ms)
+✔ Word: Abruf in der Plattform enthält die Abschnitte, KI-Text ohne Gedankenstrich (34.041125ms)
+[quartalsreview] 2 von 3 Auswertungen erstellt
+[quartalsreview] 0 von 3 Auswertungen erstellt
+✔ Job: alle Berechtigten, bereits ausgewertete werden ausgelassen (77.472709ms)
+[quartalsreview] Klient 2: keine Admin-Mailadresse, keine Einladung
+✔ Mail an den Klienten schlägt fehl: Wiederholung sendet nur die fehlende Mail, ohne neuen KI-Aufruf (49.591ms)
+✔ Kostenobergrenze: Lauf bricht sauber ab, kein Versand, später wiederholbar (62.297792ms)
+[quartalsreview] 0 von 3 Auswertungen erstellt
+✔ Tagesbudget erreicht: der Job endet sauber und lässt die übrigen Klienten offen (7.380875ms)
+✔ Testlauf per Knopf: nur für die eigenen Klienten, ohne Versand möglich (94.886333ms)
+[stripe] client 3 → Zusatz Quartalsreview aktiv (checkout.session.completed)
+[stripe] client 3 → Zusatz Quartalsreview aktiv (invoice.paid)
+✔ Webhook: Zusatzzahlung setzt das Flag, Paket und Kontingent bleiben (16.069916ms)
+[stripe] client 3 → Zusatz Quartalsreview beendet (invoice.payment_failed)
+[stripe] client 3 → Zusatz Quartalsreview aktiv (invoice.paid)
+[stripe] client 3 → Zusatz Quartalsreview beendet (customer.subscription.updated)
+[stripe] client 3 → Zusatz Quartalsreview aktiv (invoice.paid)
+[stripe] client 3 → Zusatz Quartalsreview beendet (customer.subscription.deleted)
+[stripe] client 3 → cancelled
+✔ Webhook: Zahlungsausfall und Kündigung nehmen das Flag zurück, Paket bleibt aktiv (26.082333ms)
+✔ Kaufroute: nur Rolle admin, nur Stimme und Team, Abo mit Intervall 3 Monate (83.115416ms)
+✔ Beraterin-Zahlungslink für den Zusatz trägt dieselben Metadaten (3.563417ms)
+✔ Zusatz Quartalsreview ohne Zahlung: Beraterin schaltet, Klient und Fremde nicht, Lauf nimmt den Klienten auf (18.457167ms)
+✔ Quartal aus Datum (25.91125ms)
+✔ Fälligkeit: nur Business, offen bis erledigt (90.816583ms)
+✔ Eingaben prüfen und Zugriff nur für die Beraterin (19.278792ms)
+✔ Gesprächsvorlage als Word (73.566ms)
+✔ S1 Entwürfe: ohne Token 401, Klient-Token 403 (119.64025ms)
+✔ S1 Entwurf anlegen, lesen, ändern, löschen (140.240875ms)
+✔ S1 Entwurf aus Anfrage: Vorbefüllung, Status, draft_id in Liste (21.175042ms)
+✔ S2 safeFetch: interne und unerlaubte Adressen werden abgelehnt (2.059125ms)
+✔ S2 Scan: Erfolg speichert Vorschläge und Briefing, filtert unbekannte Module (17.541375ms)
+[scan] failed: Die Antwort der KI war nicht lesbar. Bitte den Scan erneut starten.
+[scan] failed: KI kaputt
+✔ S2 Scan: Fehlerfälle (kein Webseitenfeld, Abruf, KI, unlesbare Antwort), Rechte (33.725375ms)
+✔ S3 Workshop-Mappe: vier gültige DOCX im Ordner workshop, Rechte (101.944375ms)
+✔ S4 Ablage: Upload (JSON und multipart), Liste, Download, ZIP, Löschen (33.872334ms)
+✔ S4 Ablage: Grenzen und Rechte (72.72375ms)
+✔ S5 save-draft: speichert Datei im Ordner entwuerfe, Rechte (21.8445ms)
+[stimmnaehe] relation "company_memory" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT memory_type, content FROM company_memory WHERE client_id='5' AND (memory_type='ref_brand_voice_source' OR memory_type LIKE 'ref_tg_%' OR memory_type='brand_voice');
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ S5 Senden an Klienten legt Kopie in gesendet ab, Altverhalten bleibt (113.744709ms)
+✔ S6 Review-Anfrage: Altverhalten ohne neue Felder, Standardfrist 3 Stunden (107.709459ms)
+✔ S6 Review-Anfrage mit Auftrag und Frist: gespeichert, in GET und in der Mail (127.991333ms)
+[clientCreate] Standardkontingent: column "monthly_token_limit" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: UPDATE clients SET monthly_token_limit='200000' WHERE id='8' AND monthly_token_limit IS NULL;
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ S7 finish: legt Klienten an, Module, Dateien, Status, Einladung (Du, 7 Tage) (77.003792ms)
+[clientCreate] Standardkontingent: column "monthly_token_limit" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: UPDATE clients SET monthly_token_limit='200000' WHERE id='9' AND monthly_token_limit IS NULL;
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ S7 finish: Sie-Form, Pflichtangaben, Rechte (38.868458ms)
+[clientCreate] Standardkontingent: column "monthly_token_limit" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: UPDATE clients SET monthly_token_limit='200000' WHERE id='10' AND monthly_token_limit IS NULL;
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[onboarding-drafts] invite failed: Mail kaputt
+✔ S7 finish: Mailfehler legt Klienten trotzdem an und meldet inviteSent false (17.802375ms)
+[clientCreate] Standardkontingent: column "monthly_token_limit" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: UPDATE clients SET monthly_token_limit='200000' WHERE id='11' AND monthly_token_limit IS NULL;
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+Welcome email (setup link) sent to j@sieber.ch
+✔ S7 Regression: bestehendes POST /api/clients unverändert (Antwort, Willkommensmail 48 h) (112.775791ms)
+✔ S8 view-as: Beraterin erhält 30-Min-Token mit viewAs/readOnly, Protokolleintrag (27.2765ms)
+✔ S8 readOnly-Token darf nur lesen, normales Klient-Token darf weiterhin schreiben (31.218584ms)
+✔ S8 Lese-Token läuft nach Passwortwechsel (tokenVersion) wie jedes Klient-Token ab (13.696792ms)
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['hilfe-chat']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['hilfe-chat']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['hilfe-chat']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['hilfe-chat']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[help-chat] failed: KI kaputt
+✔ S9 Hilfe-Chat: Antwort, rollenabhängiger Prompt, Frage nicht gespeichert, Rechte und Limits (21.45025ms)
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['hilfe-chat']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['hilfe-chat']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['hilfe-chat']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['hilfe-chat']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['hilfe-chat']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['hilfe-chat']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['hilfe-chat']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['hilfe-chat']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['hilfe-chat']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['hilfe-chat']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ S9 Hilfe-Chat: Rate-Limit 10 pro Minute und Nutzer (28.721792ms)
+✔ S10 top-modules: Top 3 der letzten 30 Tage, Rechte (38.810375ms)
+✔ Anfrage löschen: nur Advisor, entfernt die Anfrage endgültig (8.964917ms)
+✔ Verlauf: Beraterin und Admin-Rolle ja, normale Klienten und Ansicht nein (15.794041ms)
+✔ Excel-Liste der Wochentexte ist eine gültige Datei mit allen Zeilen (112.264ms)
+✔ Brevo-Inhalt: Anhang wird mitgeschickt, ohne Anhang unverändert (0.351833ms)
+✔ Zähler, Modul-Zähler und Verlauf-Vorschau liefern keine vollen Texte (23.173458ms)
+✔ Kundenliste: Dashboard liefert Zugangscode und Abo-Status mit (eine Anfrage statt vieler) (21.830917ms)
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['memory-vorschlag']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['memory-vorschlag']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['memory-vorschlag']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['memory-vorschlag']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['memory-vorschlag']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[memory-suggest] failed: KI kaputt
+✔ Gedächtnis-Zuordnung: Vorschlag, Absicherungen und Rückfall bei Fehlern (27.300917ms)
+[stimmnaehe] relation "company_memory" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT memory_type, content FROM company_memory WHERE client_id='24' AND (memory_type='ref_brand_voice_source' OR memory_type LIKE 'ref_tg_%' OR memory_type='brand_voice');
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ Freigaben: Klienten dürfen nur einreichen, nur die Beraterin liest, ändert und löscht (107.093334ms)
+✔ Zweiter Durchgang: Standard an, bei Text Generator und Präsentation abschaltbar, Brand Voice immer (0.120917ms)
+✔ Lernbausteine: Änderungsanteil, Ähnlichkeit, Auswertung der KI-Antwort (0.539666ms)
+[stimmnaehe] relation "company_memory" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT memory_type, content FROM company_memory WHERE client_id='26' AND (memory_type='ref_brand_voice_source' OR memory_type LIKE 'ref_tg_%' OR memory_type='brand_voice');
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['lernen-korrektur', 'lernen-nachfrage', 'lernen-daumen']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[stimmnaehe] relation "company_memory" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT memory_type, content FROM company_memory WHERE client_id='26' AND (memory_type='ref_brand_voice_source' OR memory_type LIKE 'ref_tg_%' OR memory_type='brand_voice');
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['lernen-korrektur', 'lernen-nachfrage', 'lernen-daumen']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[stimmnaehe] relation "company_memory" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT memory_type, content FROM company_memory WHERE client_id='26' AND (memory_type='ref_brand_voice_source' OR memory_type LIKE 'ref_tg_%' OR memory_type='brand_voice');
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[stimmnaehe] relation "company_memory" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT memory_type, content FROM company_memory WHERE client_id='26' AND (memory_type='ref_brand_voice_source' OR memory_type LIKE 'ref_tg_%' OR memory_type='brand_voice');
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['lernen-korrektur', 'lernen-nachfrage', 'lernen-daumen']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[stimmnaehe] relation "company_memory" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT memory_type, content FROM company_memory WHERE client_id='26' AND (memory_type='ref_brand_voice_source' OR memory_type LIKE 'ref_tg_%' OR memory_type='brand_voice');
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['lernen-korrektur', 'lernen-nachfrage', 'lernen-daumen']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ Lernen aus Korrekturen: Vorschlag entsteht, zählt mit, wird übernommen oder verworfen (621.10225ms)
+✔ Bereits gelernt: ansehen, anpassen, entfernen, nur die eigene Beraterin (22.81375ms)
+✔ Zweiter Durchgang: Zwischenspeicher-Markierungen im erlaubten Rahmen, Prompt unverändert (0.214625ms)
+✔ Gelerntes Feedback: Textart-Schlüssel wird gelesen, das Genauere gewinnt, andere Textarten bleiben draussen (3.4165ms)
+[clientCreate] Standardkontingent: column "monthly_token_limit" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: UPDATE clients SET monthly_token_limit='200000' WHERE id='30' AND monthly_token_limit IS NULL;
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ S7 Paket: gewählte Grösse und Paket werden gespeichert und beim Anlegen am Klienten gesetzt (13.49175ms)
+[retention] {"emptied":2,"deletedMails":1,"deletedErrors":1}
+✔ Löschfristen: gesendete Mails nach 7 Tagen geleert, nach 90 Tagen gelöscht, Fehlerprotokoll nach 90 Tagen (65.088167ms)
+✔ Mehraufwand: 15-Minuten-Takt zu CHF 180 pro Stunde (40.966333ms)
+✔ Minuten erfassen, Monatsübersicht, eigenes Kontingent (151.851209ms)
+✔ CSV-Liste für die Rechnung (7.267834ms)
+✔ Klient sieht seine Übersicht mit Monatsabo und Mehraufwand obendrauf, andere Rollen nicht (19.8975ms)
+✔ KI-Hinweis: Standard aus, nur Beraterin schaltet, Klient liest nur das Eigene (166.906583ms)
+✔ Word-Export: Metadaten immer, Hinweis-Satz nur bei eingeschaltetem Schalter (104.385083ms)
+✔ Prüfhilfe erkennt Zahlen, Prozente, Beträge, Daten und Eigennamen (3.732791ms)
+✔ Umsatzanteil: Rechnung und Flag über 40 Prozent (0.114417ms)
+✔ GET /api/advisor/revenue-share: nur Beraterin, Abo plus Mehraufwand, Enterprise bei 2490 (18.224ms)
+✔ Umsatz: ohne bezahltes Abo kein Abopreis, auch ohne Kontingent kein Enterprise zu 2490 (12.6395ms)
+[error] GET /t/boom — async kaputt
+[error] GET /t/sync — sync kaputt
+✔ F-08 Fehler in async-Routen werden als 500 beantwortet, der Prozess lebt weiter (67.076042ms)
+[error] POST /api/onboard — Too many files
+[error] POST /api/onboard — File too large
+✔ F-08 Upload: mehr als 5 Dateien oder über 15 MB werden abgelehnt (413), kleine Uploads erreichen die Route (57.810375ms)
+✔ F-06 Betrachter darf nichts ändern, Bearbeiter schon (101.480209ms)
+✔ F-06 Gedächtnis löschen und Abo: nur Admin, Hauptzugang oder Beraterin (27.341459ms)
+✔ F-06 Hauptpasswort: nicht durch Teammitglieder, nur mit bisherigem Passwort (204.124125ms)
+✔ F-06 Erster Passwortwechsel (must_change_password) funktioniert weiterhin ohne bisheriges Passwort (193.574042ms)
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['schnelltest']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['schnelltest_tief']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ Schnelltest liefert drei Befunde, speichert und meldet an Lorena (118.934209ms)
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['schnelltest']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['schnelltest']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['schnelltest']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ gleiche Adresse oder E-Mail nur einmal pro 24 Stunden (17.747459ms)
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['schnelltest_tief']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ Herkunft, Honeypot und Zeitfalle (10.684458ms)
+✔ nur öffentliche Webadressen, ungültige E-Mail (14.202625ms)
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['schnelltest']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['schnelltest']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ Webseite nicht ladbar oder leer gibt Fehler und gibt den Platz wieder frei (13.806ms)
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['schnelltest']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ unlesbare KI-Antwort gibt 422 ohne Eintrag (5.358666ms)
+✔ höchstens 150 Tests pro Tag insgesamt (75.101375ms)
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['schnelltest']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['schnelltest_tief']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['schnelltest']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['schnelltest_tief']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+✔ Ratenbegrenzung pro IP (14.256166ms)
+✔ Kennzahlen: Satzlänge, lange Sätze, Wir und Sie, Floskeln, Nominalstil, Passiv (62.194833ms)
+✔ Kennzahlen: bei zu wenig Text keine unsicheren Zahlen (0.116167ms)
+✔ Kennzahlen: Abkürzungen und Zahlen trennen keine Sätze, Menüzeilen zählen nicht (0.053292ms)
+✔ Floskelliste hat mindestens 40 Einträge (0.038375ms)
+✔ Zitatprüfung: nur exakte Teilstrings, Leerzeichen normalisiert (0.107292ms)
+✔ pruefeKandidaten verwirft erfundene Zitate, fehlendes nachher und identisches vorher und nachher (1.170417ms)
+✔ bereinige entfernt Gedankenstriche und ß (0.221375ms)
+✔ Fallback ergänzt deterministische, als automatisch markierte Auffälligkeiten mit Zitat aus dem Text (0.583584ms)
+✔ findeLinks wählt Angebot und Über uns auf derselben Domain, sonst nichts (0.61825ms)
+✔ ladeSeiten liest Startseite plus zwei interne Seiten und begrenzt den Text (0.742125ms)
+✔ ladeSeiten: ein Fehler auf einer Folgeseite lässt die Startseite stehen, Zeitbudget wird eingehalten (300.4775ms)
+✔ analysiere: KI-Fehler ergibt Fallback, KI-Antwort wird geprüft, Prompt bekommt Kennzahlen (2.606958ms)
+✔ Prompt-Regeln enthalten die geforderten Leitplanken (0.0945ms)
+✔ PDF hat drei A4-Seiten, auch bei langen Texten, und enthält die Fussnote (65.4945ms)
+✔ nur die Beraterin kommt an die Schnelltests (27.861333ms)
+✔ Detail enthält Kandidaten, Kennzahlen und eine Begleitmail im Du-freien Sie-Ton mit Schluss von Lorena (7.489ms)
+✔ Auswahl: höchstens drei, nur vorhandene, Status wechselt zwischen entwurf und freigegeben (35.840542ms)
+✔ Karten sind bearbeitbar, das Zitat bleibt, leere Felder und identischer Vorschlag werden abgelehnt (16.191625ms)
+✔ PDF-Vorschau liefert ein PDF mit drei Seiten, ohne Auswahl 409 (40.587708ms)
+✔ Versand: genau drei nötig, sendet PDF-Anhang an die Firma, setzt gesendet, nur einmal (54.165625ms)
+✔ Zu lange Texte: Vorschau meldet mehr als drei Seiten, Versand wird abgelehnt und der Status bleibt (192.270042ms)
+[schnelltest] Mail kaputt
+✔ Fehler beim Versand setzt den Status zurück (32.246917ms)
+✔ Schema ist idempotent und enthält die neuen Spalten (0.383375ms)
+✔ Hinweis-Mail an Lorena nennt Firma, Kennzahlen, Kandidaten und den Link (0.353042ms)
+✔ Drei Textarten, Dauer und Kosten, keine Texte, kein Eintrag in analyses (49.177541ms)
+✔ Ohne Klient, Fehler werden pro Textart gemeldet (3.098125ms)
+✔ Nur Beraterin, nur eigene Klienten (6.83325ms)
+✔ every route file loads without throwing (89.794625ms)
+✔ middleware/auth.js loads without throwing (0.162084ms)
+✔ db.js exports pool and init (0.182625ms)
+✔ sanitizeForPrompt strips prompt-injection openers (0.313417ms)
+✔ sanitizeForPrompt passes through normal text unchanged (0.094375ms)
+✔ sanitizeForPrompt handles non-string input safely (0.073916ms)
+✔ capText leaves short text untouched (0.098958ms)
+✔ capText truncates text over the cap and adds a marker (0.296542ms)
+✔ every module referenced by MODULE_MAX_TOKENS exists in PROMPTS or is an internal-only key (0.156916ms)
+✔ every PROMPTS entry has both system and build (0.221208ms)
+✔ every HAIKU_MODULES entry that is a real module exists in PROMPTS (0.099583ms)
+✔ GLOBAL_STYLE_RULES bans the em dash and en dash characters in its own text sample instructions (0.104333ms)
+✔ PROMPTS.presentation builds a structured slide request (0.074875ms)
+AggregateError [ECONNREFUSED]: 
+    at /private/tmp/claude-501/-Users-lorenalienhard/82dd32b3-ce6a-4838-b0b1-fdcb06919135/scratchpad/repo-landing/rhetoriq-app/server/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async ensureTable (/private/tmp/claude-501/-Users-lorenalienhard/82dd32b3-ce6a-4838-b0b1-fdcb06919135/scratchpad/repo-landing/rhetoriq-app/server/routes/customModules.js:11:3) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:5432
+        at createConnectionError (node:net:1747:14)
+        at afterConnectMultiple (node:net:1777:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 5432
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:5432
+        at createConnectionError (node:net:1747:14)
+        at afterConnectMultiple (node:net:1777:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 5432
+    }
+  ]
+}
+✔ berechne: Satzlänge, Anteil kurzer Sätze, Anrede, Wendungen, Absatzlänge (90.0485ms)
+✔ berechne: zu wenige oder zu kurze Texte ergeben keine Karte, Du-Anrede wird erkannt (0.180167ms)
+✔ auftragsZeilen: höchstens drei Zeilen und 400 Zeichen, auch mit langen Wendungen (0.213ms)
+✔ holeKarte: berechnet aus den Freigaben, speichert als kind stilkarte und nutzt die Karte eine Woche lang (29.715584ms)
+✔ Auftrag: Stilkarte steht im dynamischen Teil bei Textarten, nicht bei Analysemodulen (95.287625ms)
+✔ Endpunkt: Beraterin und eigener Klient lesen, fremde Klienten nicht (38.58775ms)
+✔ Stimmenmappe: alle Abschnitte mit Inhalt des Klienten (203.657541ms)
+✔ Zehn Regeln: gelernte Sätze zuerst, dann Do und Don't, dann Grundregeln (6.249375ms)
+✔ Handbuch: Satzbau mit Zahlen, Anrede, Prüfliste (19.440125ms)
+✔ ZIP über alle Klienten der Beraterin (75.882ms)
+✔ Zugriff nur für die Beraterin (12.569625ms)
+✔ Monatserinnerung: Mail ohne Anhang an Lorena (0.361292ms)
+✔ Gewichte ergeben zusammen 1 (33.989958ms)
+✔ naher Text liegt klar über dem fernen Text (1.672833ms)
+✔ zu kurzer Text oder zu wenig Referenz ergibt keinen Wert (0.079209ms)
+✔ Referenzmaterial stammt aus company_memory, Speicherung und Monatsdurchschnitt (24.597417ms)
+✔ Endpunkte: nur Beraterin, fremde Klienten gesperrt (35.940625ms)
+[stripe] webhook abgelehnt: STRIPE_WEBHOOK_SECRET ist nicht gesetzt
+✔ F-15 Ohne STRIPE_WEBHOOK_SECRET wird nichts angenommen (98.895959ms)
+[stripe] webhook signature error: geheime Details der Signatur
+✔ F-15 Falsche Signatur: 400 ohne interne Details (5.131417ms)
+[stripe] client 1 → +100000 top-up tokens for this month (checkout.session.completed)
+[stripe] Ereignis evt_c bereits verarbeitet, übersprungen
+[stripe] client 1 → +100000 top-up tokens for this month (checkout.session.completed)
+✔ F-15 Normalfall und Wiederholung: Top-up zählt genau einmal (17.043542ms)
+[stripe] Kündigung evt_x konnte keinem Klienten zugeordnet werden
+[stripe] client 1 → cancelled
+[stripe] client 1 → cancelled
+✔ F-15 Kündigung: über Metadaten oder über gespeicherte Kundennummer (137.502459ms)
+✔ F-15 Payment Link: Klientennummer auch am wiederkehrenden Abo (15.360042ms)
+✔ Fristen: 3 Stunden für Team, Business, Enterprise, nächster Werktag für Stimme (114.026459ms)
+✔ Fristen laufen nur an Werktagen (0.586125ms)
+✔ Feiertage und Ferien (0.143209ms)
+✔ Start 07:30 bei Dringlichem, sonst 08:00; Mittagspause (0.870542ms)
+✔ Reihenfolge: Überfälliges, Frist, Paket, kurz vor lang, Fristloses zuletzt (0.314209ms)
+✔ Frist nicht haltbar: rot markiert (0.17625ms)
+✔ Planen um Termine herum, auch wiederkehrende (0.3235ms)
+✔ Wochenende, Feiertag, Ferien: kein Plan ausser Dringliches oder Enterprise (0.598291ms)
+✔ Von Hand verschobene Aufgabe bleibt, der Rest plant darum herum (0.213333ms)
+✔ Einträge: strenge Prüfung (0.33775ms)
+✔ ICS: Aufbau, Maskierung, Faltung, Zeitzone, keine Gedankenstriche (1.432667ms)
+✔ Zeitzone: Sommer- und Winterzeit (0.063875ms)
+✔ Rolle: nur die Beraterin, Klienten und Anonyme nicht (41.770458ms)
+✔ Plan aus offenen Freigaben, Dauer aus der Zeiterfassung, Link ohne Klienteninhalt im ICS (55.95875ms)
+✔ Dringlich-Knopf wirkt nur auf eigene Freigaben (22.8565ms)
+✔ Termine anlegen, ändern, löschen; Plan weicht aus (29.745666ms)
+✔ Position verschieben und freigeben (25.515625ms)
+✔ Einstellungen: Standarddauer und Typfarben (6.59275ms)
+✔ Kalender-Abo: Token nur als Hash, Feed, Widerruf (32.988834ms)
+[tagesplan] abgeschaltet (TAGESPLAN=aus)
+✔ Job: Mail mit Anhang, einmal pro Tag, aus per Umgebungsvariable, frei ohne Dringliches (11.837916ms)
+[tagesplan] nichts zu planen, keine Mail
+✔ Job: Wochenende ohne Dringliches schickt nichts, mit Enterprise schon (14.082875ms)
+✔ Assistent: Sport morgen 17 bis 18 Uhr (0.495917ms)
+✔ Assistent: Sportkurs jeden Dienstag 18 Uhr (0.101084ms)
+✔ Assistent: Ferien vom 12. bis 19. Oktober (0.053625ms)
+✔ Assistent: Nachfrage bei Unklarheit (0.097916ms)
+✔ Assistent: Plan, neu, nächste Aufgabe (0.062917ms)
+✔ Assistent: Systemtext nennt Datum und neue Aktionen (0.224375ms)
+✔ Standard: keine automatische Mittagspause, nur die selbst gesetzte Pause blockiert (0.158583ms)
+✔ Tabelle: 0.7 für Textarten, 0.2 für Analyse- und Prüfmodule, sonst keine Angabe (33.762333ms)
+✔ Modellwahl: Übersetzen und Vorher/Nachher auf Sonnet, Routing, Betreff und Titel bleiben Haiku (0.127ms)
+✔ Onboarding-Dateisortierung nutzt Haiku über den Adapter (0.1585ms)
+✔ POST /: Text Generator läuft mit 0.7 in beiden Durchgängen, Risk Management mit 0.2 (52.942333ms)
+✔ POST /: Vorher/Nachher und Übersetzen verwenden das Sonnet-Modell, Betreff das Haiku-Modell (20.14825ms)
+✔ F-14 Freigaben: jede Beraterin sieht und ändert nur die eigenen (130.969792ms)
+✔ F-14 Ablage: fremde Klienten- und Entwurfsdateien gesperrt (21.442792ms)
+✔ F-14 Entwürfe: nur eigene sichtbar (17.684208ms)
+✔ F-14 Abos und Zahlungsstatus: fremde Klienten gesperrt (26.204459ms)
+✔ Kalender: Ostern und Feiertage, Jahreszeit (182.210583ms)
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['themenplan']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[themenplan] 1 von 1 Läufen erzeugt
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['themenplan']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[themenplan] 0 von 1 Läufen erzeugt
+[budget] Prüfung fehlgeschlagen: relation "usage_log" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['themenplan']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[themenplan] 1 von 1 Läufen erzeugt
+[themenplan] abgeschaltet (THEMENPLAN=aus)
+✔ Job: nur aktive Klienten, Freigaben entstehen, ein Lauf pro Monat (62.836083ms)
+✔ Abschaltbar mit THEMENPLAN=aus (0.243458ms)
+✔ Kostenobergrenze: Abbruch ohne Freigabe, Wiederholung danach möglich (31.174792ms)
+[themenplan] Klient 3 KI kaputt
+✔ KI-Fehler: Status fehler, keine Freigabe, Wiederholung erlaubt (37.377ms)
+✔ Schalter, Zugriff und manueller Lauf (61.395166ms)
+✔ Onboarding: Wahl im Entwurf aktiviert den Themenplan beim Anlegen (13.799083ms)
+✔ Modul-Schalter der Beraterin ohne Zahlung, Datenquelle bleibt themenplan_aktiv (157.65625ms)
+✔ Kauf: Zahlungslink wiederkehrend monatlich mit inline price_data und Metadaten (8.65825ms)
+✔ Kauf: nur Rolle admin des eigenen Klienten (27.071209ms)
+[stripe] client 1 → Themenplan aktiv (checkout.session.completed)
+[stripe] client 1 → Themenplan aktiv (invoice.paid)
+[stripe] Zahlung für das Zusatzmodul Themenplan fehlgeschlagen, Stripe versucht es erneut
+✔ Webhook: Zahlung setzt themenplan_aktiv, Paket und Kontingent bleiben unberührt (16.136459ms)
+[stripe] client 1 → Themenplan gekündigt
+[stripe] client 1 → Themenplan aus (Status unpaid)
+✔ Webhook: Kündigung und Zahlungsausfall nehmen es zurück, das Paket bleibt (10.966083ms)
+✔ Kauf: bereits aktiv ergibt 409 (4.961416ms)
+✔ Abo-Übersicht nennt das Zusatzmodul mit Preis und Stand (14.162167ms)
+[themenplan] 0 von 0 Läufen erzeugt
+[stripe] client 1 → Themenplan aktiv (checkout.session.completed)
+[budget] Prüfung fehlgeschlagen: column "cost_usd" does not exist
+
+🐜 This seems to be an execution error, which means that your request syntax seems okay,
+    but the resulting statement cannot be executed → Probably not a pg-mem error.
+
+*️⃣ Failed SQL statement: SELECT COALESCE(SUM(COALESCE(cost_usd, (input_tokens * 3.0 + output_tokens * 15.0) / 1000000.0)),0)::float AS c FROM usage_log WHERE module = ANY(ARRAY['themenplan']) AND created_at >= '2026-10-14T00:00:00.000+02:00';
+
+👉 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+
+[themenplan] 1 von 1 Läufen erzeugt
+✔ Cron: nur aktive Klienten, auch nach Kauf und Kündigung (46.777916ms)
+✔ Oberfläche: Zusatzmodul im Onboarding, in «Module anpassen» und unter «Abo verwalten», Block vor rq-lernkurve-js (3.04375ms)
+✔ Angaben zum Monat: Klient (admin, editor) und Beraterin dürfen, Betrachter und Fremde nicht (233.841375ms)
+✔ Plan-Prompt nimmt die Angaben als Datenblock auf; der Klient sieht den Plan erst nach der Freigabe (52.104125ms)
+✔ Auswahl: Rollen, Grenzen, nur eigener Klient (28.069709ms)
+✔ Newsletter aus gewählten Themen: Stilprofil, Wunsch als Datenblock, zweiter Durchgang, Metering, Freigabe, Muster gespeichert (34.382375ms)
+[themenwahl] Klient 1 KI kaputt
+✔ Fehler werden sauber gemeldet, ohne Entwurf und ohne gespeicherte Wahl (13.225583ms)
+✔ Tageslimit der Funktion: bei erreichtem Budget keine KI (9.079375ms)
+✔ Ohne Abo: 402 vor jeder KI (4.379208ms)
+✔ Muster fliessen in den nächsten Themenplan: gewählt, abgelehnt, bevorzugte Textart; Wünsche als Datenblock (7.584042ms)
+✔ Liste der freigegebenen Newsletter nur für den eigenen Klienten (6.015042ms)
+✔ Oberfläche: eigene Script-Blöcke vor rq-lernkurve-js, DE/EN-Paare vor rq-i18n, keine Gedankenstriche, Schlüsselfeld ohne Anzeige (2.990875ms)
+✔ compute: unverändert unter 10 Prozent, Durchschnitt des veränderten Anteils (24.035042ms)
+✔ Woche: aktuelle Woche gegen Vorwoche, nur gesendete Freigaben (16.505708ms)
+✔ Monat und alle Klienten für die Berichte (10.236417ms)
+✔ Endpunkt: Klient sieht nur seine Zahlen, fremder Klient wird abgewiesen (50.536375ms)
+✔ Ohne Paket unbegrenzt, Stimme erlaubt nur den Hauptzugang, Zusatznutzer öffnen Plätze (911.7315ms)
+✔ Team erlaubt 5 Personen, Business 15, Enterprise unbegrenzt (0.168917ms)
+✔ Erster Lauf macht den echten Aufruf (1 Ausgabe-Token, haiku, Modul waechter), danach nur der kostenlose Prüfaufruf (153.630375ms)
+✔ Prüfaufruf schlägt fehl: Fehler zählt sofort, ohne echten Aufruf; drei Fehler lösen eine Mail pro Störung aus, mit Statusseite (42.839333ms)
+✔ Während der Störung laufen beide Prüfungen in jedem Lauf; Wiederkehr entwarnt per Mail und löscht den Hinweis (11.433833ms)
+✔ Erzeugung fällt zwischen zwei echten Aufrufen aus: wird spätestens beim nächsten echten Aufruf erkannt, nicht vom Prüfaufruf (14.323042ms)
+✔ Tagesbudget: ist die Grenze erreicht, entfällt der echte Aufruf und Lorena wird einmal informiert (18.375833ms)
+✔ Prüfaufruf: count_tokens ohne Erzeugung, Schlüssel im Kopf; Statusseite wirft nie (0.542708ms)
+✔ Reservekonto-Schalter: nur Beraterin, Wert wird gespeichert (22.58925ms)
+✔ Hinweis von Hand: nur Beraterin, mit eigenem Text (15.977541ms)
+✔ Schalter AUS (Standard): keine Anzeige, keine Zähler, kein Eintrag, keine Mails (158.579667ms)
+✔ Einstellungen und Verwaltung nur für die Beraterin (34.542292ms)
+✔ Einstellungen werden bereinigt gespeichert (3.370833ms)
+✔ Eintrag: gespeichert, Bestätigung an die Person (Sie), Hinweis an Lorena (53.24425ms)
+✔ Zweite Adresse für Lorena (ADVISOR_NOTIFY_EMAIL_2) erhält den Hinweis ebenfalls (49.136917ms)
+✔ Einwilligung ist Pflicht, ebenso Name, E-Mail, Unternehmen und Branche (23.372959ms)
+✔ Längen und Bereinigung: Anliegen optional, Eingaben einzeilig, Steuerzeichen entfernt (54.136292ms)
+✔ Echte Zähler: Plätze minus eingeladene und aufgenommene, nie unter 0, Anzahl erst ab Mindestzahl (58.114667ms)
+✔ Von Hand vergebene Plätze zählen echt mit, nie unter 0, ungültige Werte werden 0 (22.078375ms)
+✔ Zähler nur, wenn Lorena sie erlaubt (22.542209ms)
+✔ Doppeleintrag: zweiter Eintrag wird freundlich gemeldet, keine zweite Zeile, keine neuen Mails (90.521709ms)
+✔ Missbrauchsschutz: Herkunft, Honeypot, Ticket, Mindestzeit (60.536584ms)
+✔ Rate-Limit pro IP und pro E-Mail (17.880833ms)
+✔ Tageslimit (15.361917ms)
+✔ Verwaltung: Liste nach Datum, Status, Einladen, Löschen (26.744167ms)
+✔ CSV-Export: nur Beraterin, Kopfzeile, Formeln entschärft (5.839333ms)
+✔ Alle Inline-Skripte von landing.html und index.html sind gültig (node --check) (10.968083ms)
+✔ Adressen /platz und /geschenk zeigen die Landingpage, Router sind eingehängt (0.125958ms)
+✔ Landingpage: Abschnitte, Dialog, Felder, Einwilligung mit Datenschutzlink, Honeypot (0.673208ms)
+✔ Zähler auf der Landingpage kommen nur aus der Antwort des Servers (0.721917ms)
+✔ Schreibregeln auf der Landingpage (neue Texte): keine Gedankenstriche, kein ß, keine Gegenüberstellung (0.253ms)
+✔ Verwaltung in RhetorIQ: Bereich Warteliste, Felder, Aktionen, kein innerHTML, Schreibregeln (1.174ms)
+✔ DE/EN-Paare (RQ_EXTRA_PAIRS) decken die neuen Texte der Verwaltung ab (1.034084ms)
+✔ Jahrespreise und Zuordnung (22.815792ms)
+✔ yearly-link: Paket, Zugriff, Betrag (53.199125ms)
+[stripe] client 1 → active, monthly_token_limit=2000000 (checkout.session.completed, 1609200 chf)
+✔ Webhook setzt Monatskontingent bei Jahreszahlung (46.668333ms)
+✔ assembleSystemBlocks: Reihenfolge stabil nach wechselnd, Markierungen nur vor dem Wechselnden (45.165208ms)
+✔ shouldTuneCache: nur wenn jemand das System erneut liest (0.121875ms)
+✔ Text-Generator mit zwei Durchgängen: stabiler Teil vorn und markiert, Wechselndes dahinter, Durchgang 2 liest denselben Anfang (47.284417ms)
+✔ Ohne zweiten Durchgang (Haken aus): kein Schreibzuschlag am Ende des Systems, nur die stabilen Blöcke sind markiert (9.995458ms)
+✔ Grosse Eingabe überspringt den zweiten Durchgang und damit auch die End-Markierung (8.242417ms)
+✔ Beide Routen bauen das System über assembleSystemBlocks (0.541792ms)
+ℹ tests 673
+ℹ suites 0
+ℹ pass 673
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6728.632042
+done

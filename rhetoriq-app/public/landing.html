@@ -27,7 +27,7 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter+Tight:wght@300;400;500&family=Newsreader:wght@400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500&display=swap">
 <style>
 /* Layout: schwarze Bühne, Knäuel rechts im Hero, danach ruhige Streifen mit feinen Linien. Gold = IQ, Silber = EQ. */
 :root{
@@ -38,7 +38,7 @@
   --mute:#9a978e;
   --gold:#d9b26a;
   --silver:#d6d6d3;
-  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --serif:"Inter Tight",system-ui,-apple-system,"Segoe UI",sans-serif;
   --sans:"Inter Tight",system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:dark;
 }
@@ -287,8 +287,8 @@ p.p{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto
 .pf-tabs button[aria-pressed="true"] .nw{background:#8A6420;color:#fff}
 .pf{display:grid;grid-template-columns:170px minmax(0,1fr);border-radius:18px;overflow:hidden;border:1px solid #2a2824;background:#fff;color:#0E0D0B;max-width:980px}
 .pf-rail{background:#0E0D0B;color:#F1EDE4;padding:22px 0;display:flex;flex-direction:column;gap:2px;min-width:0}
-.pf-logo{font:400 20px Newsreader,Georgia,serif;margin:0 0 14px;padding:0 18px;white-space:nowrap}
-.pf-logo b{font:400 20px Newsreader,Georgia,serif;color:#D9B26A}
+.pf-logo{font:400 20px "Inter Tight",system-ui,sans-serif;margin:0 0 14px;padding:0 18px;white-space:nowrap}
+.pf-logo b{font:400 20px "Inter Tight",system-ui,sans-serif;color:#D9B26A}
 .pf-rail .ri{display:flex;align-items:center;gap:12px;font-size:14px;padding:10px 18px;color:#9A978E;position:relative;white-space:nowrap}
 .pf-rail .ri svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .pf-rail .ri.on{background:#1d1b17;color:#D9B26A}
@@ -300,7 +300,7 @@ p.p{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto
 .pf-steps button[aria-pressed="true"],.mw-steps button[aria-pressed="true"]{background:#0E0D0B;color:#fff;border-color:#0E0D0B}
 .pf button:focus-visible,.pf-tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .pf-back{font-size:12px;color:#8A6420}
-.pf-title{font:400 26px Newsreader,Georgia,serif;color:#0E0D0B}
+.pf-title{font:400 26px "Inter Tight",system-ui,sans-serif;color:#0E0D0B}
 .pf-desc{font-size:13px;color:#6A665F;margin-top:-4px}
 .pf-voice{display:flex;flex-wrap:wrap;gap:6px;min-height:28px}
 .pf-voice i{font-style:normal;font-size:12px;border:1px solid #D9B26A;background:#FBF6EA;color:#8A6420;border-radius:99px;padding:3px 12px;opacity:0;transition:opacity .35s}
@@ -309,7 +309,7 @@ p.p{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto
 .pf-reslabel{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#6A665F;display:flex;justify-content:space-between;gap:10px}
 .pf-badge{color:#8A6420;opacity:0;transition:opacity .35s;text-transform:none;letter-spacing:0;font-weight:500}
 .pf.s2 .pf-badge{opacity:1}
-.pf .pf-text{font:400 clamp(18px,2vw,22px)/1.35 Newsreader,Georgia,serif;margin:8px 0 12px;color:#0E0D0B;max-width:none;min-height:3.9em}
+.pf .pf-text{font:400 clamp(18px,2vw,22px)/1.35 "Inter Tight",system-ui,sans-serif;margin:8px 0 12px;color:#0E0D0B;max-width:none;min-height:3.9em}
 .pf .pf-text.g{color:#7d7a72}
 .pf ins{text-decoration:none;background:#FBF6EA;border-bottom:1.5px solid #D9B26A;color:#0E0D0B}
 .pf del{color:#B42318;text-decoration:line-through;text-decoration-thickness:1px;opacity:.75}
@@ -337,14 +337,14 @@ p.p{text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto
 .mw-bar span:last-child{font-weight:300;color:#64748b}
 .mw-head{padding:10px 16px;border-bottom:1px solid #eef0f4;font-size:13px;color:#475569;line-height:1.7}
 .mw-head b{font-weight:500;color:#1f2937;display:inline-block;width:64px}
-.mw-body{padding:14px 16px 130px;font:400 16px/1.55 Newsreader,Georgia,serif;min-height:130px;color:#1f2937}
+.mw-body{padding:14px 16px 130px;font:400 16px/1.55 "Inter Tight",system-ui,sans-serif;min-height:130px;color:#1f2937}
 .mw-text{opacity:0;transition:opacity .35s}
 .pm.s2 .mw-text{opacity:1}
 .mw-ins{background:#FBF6EA;border-bottom:1.5px solid #D9B26A}
 .mw-caret{display:inline-block;width:1px;height:16px;background:#1f2937;vertical-align:-3px;animation:mwb 1s steps(2) infinite}
 .pm.s2 .mw-caret{display:none}
 @keyframes mwb{50%{opacity:0}}
-.mw-fab{position:absolute;right:16px;bottom:18px;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f0d9a0,#c99a52);color:#0E0D0B;display:flex;align-items:center;justify-content:center;font:400 19px Newsreader,Georgia,serif;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.mw-fab{position:absolute;right:16px;bottom:18px;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f0d9a0,#c99a52);color:#0E0D0B;display:flex;align-items:center;justify-content:center;font:400 19px "Inter Tight",system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.25)}
 .mw-panel{position:absolute;right:16px;bottom:62px;width:min(320px,calc(100% - 32px));background:#fff;border:1.5px solid #E2E0DC;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.22);padding:12px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s;color:#1f2937}
 .pm.s1 .mw-panel{opacity:1}
 .mw-ptitle{font-size:12px;font-weight:600;color:#8A6420;margin-bottom:4px}
