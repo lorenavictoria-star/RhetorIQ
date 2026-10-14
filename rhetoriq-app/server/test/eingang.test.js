@@ -41,7 +41,7 @@ async function fuellen() {
   await pool.query(`INSERT INTO review_requests (client_id, module_label, original_text, created_at) VALUES ($1,'Newsletter','x',$2)`, [c.id, vor(30)]);
   await pool.query(`INSERT INTO inquiries (name, company, email, message, created_at) VALUES ('Berta','Firma GmbH','b@f.ch','Ich habe eine Frage',$1)`, [vor(10)]);
   await pool.query(`INSERT INTO inquiries (name, email, status, created_at) VALUES ('Alt','a@f.ch','archiviert',$1)`, [vor(5)]);
-  await pool.query(`INSERT INTO inbox_mails (von_name, von_adresse, an_adresse, betreff, auszug, empfangen_am, message_id) VALUES ('Carl','c@f.ch','contact@lorenalienhard.ch','Hallo','Kurztext',$1,'m1')`, [vor(5)]);
+  await pool.query(`INSERT INTO inbox_mails (von_name, von_adresse, an_adresse, betreff, auszug, empfangen_am, message_id) VALUES ('RhetorIQ','contact@lorenalienhard.ch','contact@lorenalienhard.ch','Hallo','Kurztext',$1,'m1')`, [vor(5)]);
   const morgen = new Date(Date.now() + 86400000);
   await pool.query(`INSERT INTO buchungen (advisor_id, name, email, start_at, ende_at, datum, beginn, ende, status, slot_key, created_at) VALUES (1,'Dora','d@f.ch',$1,$2,'2099-01-01',600,660,'gebucht','k1',$3)`, [morgen, morgen, vor(20)]);
   await pool.query(`INSERT INTO warteliste (name, email, unternehmen, anliegen, created_at) VALUES ('Emil','e@f.ch','E AG','Platz bitte',$1)`, [vor(1)]);
@@ -122,7 +122,7 @@ async function mailPost(body, token = SECRET, s = srv) {
   let json = null; try { json = await r.json(); } catch {}
   return { status: r.status, body: json };
 }
-const mail = (extra = {}) => ({ von: 'Anna Muster <anna@firma.ch>', an: 'contact@lorenalienhard.ch', betreff: 'Frage', text: 'Guten Tag, ich habe eine Frage.', message_id: '<a1@firma.ch>', ...extra });
+const mail = (extra = {}) => ({ von: 'RhetorIQ <contact@lorenalienhard.ch>', an: 'contact@lorenalienhard.ch', betreff: 'Neues Feedback von Anna', text: 'Guten Tag, ich habe eine Frage.', message_id: '<a1@firma.ch>', ...extra });
 const anzahl = async () => (await pool.query('SELECT COUNT(*)::int AS n FROM inbox_mails')).rows[0].n;
 
 test('Mail-Empfang: Token fehlt, falsch, Variable ungesetzt', async () => {
@@ -142,8 +142,8 @@ test('Mail-Empfang: speichert, Doppelte ignoriert, erscheint im Eingang', async 
   assert.equal(await anzahl(), 1);
   const r = await srv.call('GET', '/api/assistent/eingang', { token: tAdv });
   assert.equal(r.body.zaehler.mails, 1);
-  assert.equal(r.body.eintraege[0].titel, 'Frage');
-  assert.ok(r.body.eintraege[0].info.includes('anna@firma.ch'));
+  assert.equal(r.body.eintraege[0].titel, 'Neues Feedback von Anna');
+  assert.ok(r.body.eintraege[0].info.includes('contact@lorenalienhard.ch'));
 });
 
 test('Mail-Empfang: falsche Empfängeradresse wird nicht gespeichert, Liste mit Zieladresse schon', async () => {
@@ -165,6 +165,27 @@ test('Mail-Empfang: HTML wird entfernt, Auszug höchstens 300 Zeichen', async ()
   await mailPost(mail({ text: '<b>fett</b> <a href="http://x">Link</a>', message_id: 'h2' }));
   row = (await pool.query(`SELECT auszug FROM inbox_mails WHERE message_id='h2'`)).rows[0];
   assert.equal(row.auszug, 'fett Link');
+});
+
+test('Mail-Filter: nur Mails von RhetorIQ, Mails mit eigenem Eintrag werden nicht doppelt gezeigt', async () => {
+  const fremd = await mailPost(mail({ von: 'Anna Muster <anna@firma.ch>', betreff: 'Frage', message_id: 'f1' }));
+  assert.equal(fremd.status, 200); assert.equal(fremd.body.gespeichert, false);
+  const fake = await mailPost(mail({ von: 'RhetorIQ <anna@firma.ch>', message_id: 'f2' }));
+  assert.equal(fake.body.gespeichert, false, 'richtiger Name, falsche Adresse');
+  const anderer = await mailPost(mail({ von: 'Newsletter <contact@lorenalienhard.ch>', message_id: 'f3' }));
+  assert.equal(anderer.body.gespeichert, false, 'richtige Adresse, anderer Name');
+  for (const betreff of ['Neue Anfrage: Muster AG', 'RhetorIQ \u2014 Neue Freigabe-Anfrage: Kunde A (Rede)', 'Neue Buchung: Anna, Do 14:00', 'Neu auf der Warteliste: Muster AG', 'Geschenk angefordert: Leitfaden, Anna', 'Termin abgesagt: Anna, Do 14:00']) {
+    const r = await mailPost(mail({ betreff, message_id: 'd-' + betreff }));
+    assert.equal(r.body.gespeichert, false, betreff);
+  }
+  assert.equal(await anzahl(), 0);
+  const ok = await mailPost(mail({ betreff: 'RhetorIQ Kostenbremse: Tagesgrenze erreicht', message_id: 'ok1' }));
+  assert.equal(ok.body.gespeichert, true);
+  // Alte Zeilen von fremden Absendern bleiben in der Datenbank, erscheinen aber nicht im Eingang
+  await pool.query(`INSERT INTO inbox_mails (von_name, von_adresse, an_adresse, betreff, auszug, empfangen_am, message_id) VALUES ('Carl','c@f.ch','contact@lorenalienhard.ch','Privat','x',NOW(),'alt1')`);
+  const r = await srv.call('GET', '/api/assistent/eingang', { token: tAdv });
+  assert.equal(r.body.zaehler.mails, 1);
+  assert.ok(!r.body.eintraege.some(e => e.titel === 'Privat'));
 });
 
 test('Mail-Empfang: Grössenlimit und fehlende Felder', async () => {

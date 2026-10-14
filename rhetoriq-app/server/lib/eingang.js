@@ -66,7 +66,7 @@ async function eingang(aid, jetzt = new Date()) {
       zeit: iso(q.created_at), neu: true, ziel: { ansicht: 'anfragen', id: q.id } });
   }
 
-  for (const m of await sicher(`SELECT id, von_name, von_adresse, betreff, auszug, empfangen_am, gelesen_am FROM inbox_mails WHERE empfangen_am >= $1 ORDER BY empfangen_am DESC LIMIT 100`, [mailGrenze])) {
+  for (const m of (await sicher(`SELECT id, von_name, von_adresse, betreff, auszug, empfangen_am, gelesen_am FROM inbox_mails WHERE empfangen_am >= $1 ORDER BY empfangen_am DESC LIMIT 300`, [mailGrenze])).filter(m => plattformMail(m.von_name, m.von_adresse, m.betreff)).slice(0, 100)) {
     liste.push({ id: 'mail-' + m.id, typ: 'mail', titel: kurz(m.betreff || '(ohne Betreff)', 120), info: kurz(m.von_name ? `${m.von_name} <${m.von_adresse}>` : m.von_adresse, 140),
       zeit: iso(m.empfangen_am), neu: !m.gelesen_am, ziel: { ansicht: 'mail', id: m.id, auszug: m.auszug || '', von: m.von_adresse } });
   }
@@ -124,12 +124,23 @@ function absender(v) {
   return { name, adresse: a.slice(0, 254) };
 }
 
+// Nur Mails, die RhetorIQ selbst verschickt (Plattform und Webseite), kommen in den Eingang. Mails, zu denen es schon einen
+// eigenen Eintrag gibt (Freigabe-Anfrage, Kontaktanfrage, Buchung, Warteliste, Geschenk), werden nicht doppelt gezeigt.
+const PLATTFORM_ADRESSE = () => String(process.env.SMTP_FROM || 'contact@lorenalienhard.ch').trim().toLowerCase();
+const DOPPELT_RE = /^(rhetoriq\s*[\u2014\u2013-]\s*)?(neue anfrage:|neue freigabe-anfrage|neue buchung:|termin verschoben:|termin abgesagt:|neu auf der warteliste:|geschenk angefordert:)/i;
+function plattformMail(vonName, vonAdresse, betreff) {
+  if (String(vonAdresse || '').toLowerCase() !== PLATTFORM_ADRESSE()) return false;
+  if (!/^rhetoriq\b/i.test(String(vonName || '').trim())) return false;
+  return !DOPPELT_RE.test(String(betreff || '').trim());
+}
+
 async function mailSpeichern(roh, zieladresse, jetzt = new Date()) {
   await ensureSchema();
   const an = adressen(roh.an);
   if (!an.includes(String(zieladresse).toLowerCase())) return { gespeichert: false, grund: 'adresse' };
   const von = absender(roh.von);
   if (!von.adresse) return { gespeichert: false, grund: 'absender' };
+  if (!plattformMail(von.name, von.adresse, roh.betreff)) return { gespeichert: false, grund: 'filter' };
   const quelle = roh.text != null && String(roh.text).trim() ? roh.text : roh.html;
   const auszug = textAus(String(quelle == null ? '' : quelle).slice(0, MAX_TEXT)).slice(0, 300);
   const betreff = textAus(roh.betreff).slice(0, 300);
@@ -146,4 +157,4 @@ async function mailSpeichern(roh, zieladresse, jetzt = new Date()) {
   }
 }
 
-module.exports = { ensureSchema, eingang, mailGelesen, mailLoeschen, mailSpeichern, textAus, adressen, MAX_EINTRAEGE, MAX_TEXT, TYPEN };
+module.exports = { ensureSchema, eingang, mailGelesen, mailLoeschen, mailSpeichern, plattformMail, textAus, adressen, MAX_EINTRAEGE, MAX_TEXT, TYPEN };
