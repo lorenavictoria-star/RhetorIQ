@@ -594,18 +594,18 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
   </section>
 
   <section id="ausprobieren">
-    <div class="fin"><div><h3>Kostenlos ausprobieren</h3><div class="rows"><a href="#schnelltest" id="stlink">Stimm-Schnelltest<span aria-hidden="true">&rarr;</span></a><span id="geschenk" style="display:contents"><a href="/geschenk?g=prompt" data-g="prompt">Stimm-Prompt (PDF)<span aria-hidden="true">&rarr;</span></a><a href="/geschenk?g=leitfaden" data-g="leitfaden">KI-Leitfaden (PDF)<span aria-hidden="true">&rarr;</span></a></span></div></div><div>  <section id="platz" hidden>
+    <div class="fin"><div><h3>Kostenlos ausprobieren</h3><div class="rows"><a href="#schnelltest" id="stlink">Stimmtest<span aria-hidden="true">&rarr;</span></a><span id="geschenk" style="display:contents"><a href="/geschenk?g=prompt" data-g="prompt">Stimm-Prompt (PDF)<span aria-hidden="true">&rarr;</span></a><a href="/geschenk?g=leitfaden" data-g="leitfaden">KI-Leitfaden (PDF)<span aria-hidden="true">&rarr;</span></a></span></div></div><div>  <section id="platz" hidden>
     <p class="wl"><b>Warteliste.</b> Ich nehme jeden Monat nur wenige Unternehmen auf. <a href="/platz" id="pzgo">Platz sichern</a> <span>Name, E-Mail, Unternehmen und Branche genügen.</span> <span class="zzl" id="pzfrei" hidden></span> <span class="zzl" id="pzn" hidden></span></p>
   </section>
 </div><div><h3>Vertraulich von Anfang an</h3><p>Ihre Unternehmensdaten bleiben Ihre. Welche Daten RhetorIQ nutzt und wie sie geschützt werden, halte ich vor dem Start schriftlich fest.</p></div></div>
     <section id="schnelltest" aria-label="Kostenlos ausprobieren">
-      <details class="prd" id="stdet"><summary>Stimm-Schnelltest: Wie klingt Ihre Webseite? Drei Befunde in einer Minute.<i aria-hidden="true">+</i></summary><div class="prdb">
+      <details class="prd" id="stdet"><summary>Stimmtest: Wie klingt Ihre Webseite? Drei Befunde in einer Minute.<i aria-hidden="true">+</i></summary><div class="prdb">
       <p>Geben Sie die Adresse Ihrer Webseite und Ihre E-Mail-Adresse ein. Sie erhalten sofort eine Kurzauswertung zur Sprache Ihrer Seite. Der Test ist kostenlos. Ich sehe Ihre Angaben und melde mich bei Bedarf persönlich.</p>
       <form class="stf" id="stf" novalidate>
         <label>Webseite<input id="stu" type="text" inputmode="url" autocomplete="url" placeholder="www.ihrefirma.ch" required></label>
         <label>E-Mail<input id="ste" type="email" autocomplete="email" placeholder="name@firma.ch" required></label>
         <input type="text" id="stw" name="hp_ref_q7" tabindex="-1" autocomplete="off" aria-hidden="true" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-        <div class="act"><button class="btn" type="submit" id="stb">Schnelltest starten</button></div>
+        <div class="act"><button class="btn" type="submit" id="stb">Stimmtest starten</button></div>
         <p class="msg" id="stm" aria-live="polite"></p>
       </form>
       <div class="str" id="str" hidden aria-live="polite"></div>
@@ -619,7 +619,7 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
   busy=true;b.disabled=true;o.hidden=true;m.textContent="Ihre Webseite wird gelesen und ausgewertet, das dauert etwa eine halbe Minute …";
   fetch("/api/schnelltest",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:u,email:e,website2:f.stw.value,elapsed:Date.now()-t0})})
   .then(function(r){return r.json().catch(function(){return {}}).then(function(d){return {ok:r.ok,d:d}})})
-  .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=(x.d&&x.d.error)||"Der Schnelltest ist gerade nicht verfügbar. Bitte versuchen Sie es später erneut.";return}
+  .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=(x.d&&x.d.error)||"Der Stimmtest ist gerade nicht verfügbar. Bitte versuchen Sie es später erneut.";return}
   m.textContent="";o.textContent="";var h=document.createElement("h3");h.textContent="Ihre drei Befunde";o.appendChild(h);
   var ol=document.createElement("ol");x.d.ergebnis.befunde.forEach(function(s){var li=document.createElement("li");li.textContent=s;ol.appendChild(li)});o.appendChild(ol);
   var p=document.createElement("p");p.className="nx";p.textContent=x.d.ergebnis.naechsterSchritt;o.appendChild(p);
@@ -917,7 +917,7 @@ GF.addEventListener("submit",function(ev){ev.preventDefault();if(busy)return;var
   .then(function(r){return r.json().then(function(j){return{ok:r.ok,status:r.status,j:j}},function(){return{ok:r.ok,status:r.status,j:{}}})})
   .then(function(res){
     if(res.ok){var t=res.j.titel||"Geschenk";
-      fertig(res.j.schon?"Das PDF ist schon unterwegs":"Ihr Geschenk ist unterwegs",[res.j.schon?"Das PDF "+t+" haben wir Ihnen bereits gesendet. Bitte prüfen Sie auch den Spam-Ordner.":"Das PDF "+t+" ist unterwegs zu Ihnen. Bitte prüfen Sie bei Bedarf auch den Spam-Ordner.","Mit dem Stimm-Schnelltest sehen Sie in einer Minute, wie Ihre Webseite klingt. Ein Gespräch von zwanzig Minuten können Sie jederzeit buchen."],{text:"Gespräch anfragen",tun:gespraech});GF.reset();ladeTicket();return}
+      fertig(res.j.schon?"Das PDF ist schon unterwegs":"Ihr Geschenk ist unterwegs",[res.j.schon?"Das PDF "+t+" haben wir Ihnen bereits gesendet. Bitte prüfen Sie auch den Spam-Ordner.":"Das PDF "+t+" ist unterwegs zu Ihnen. Bitte prüfen Sie bei Bedarf auch den Spam-Ordner.","Mit dem Stimmtest sehen Sie in einer Minute, wie Ihre Webseite klingt. Ein Gespräch von zwanzig Minuten können Sie jederzeit buchen."],{text:"Gespräch anfragen",tun:gespraech});GF.reset();ladeTicket();return}
     err((res.j&&res.j.error)||"Das hat gerade nicht geklappt. Bitte versuchen Sie es noch einmal oder senden Sie mir eine Nachricht.");
     if(res.status===400)ladeTicket()
   }).catch(function(){err("Das ist gerade nicht möglich. Bitte senden Sie mir eine Nachricht.")})

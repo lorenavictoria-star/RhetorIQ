@@ -1,4 +1,4 @@
-// Stimm-Schnelltest, zweite Ausbaustufe: tiefe Analyse im Hintergrund.
+// Stimmtest, zweite Ausbaustufe: tiefe Analyse im Hintergrund.
 // Bausteine (alle einzeln testbar):
 //   htmlZuText, findeLinks         Text und interne Links einer Seite
 //   ladeSeiten                     bis zu 3 Seiten, gemeinsames Zeitbudget

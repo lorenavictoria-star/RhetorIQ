@@ -22,7 +22,7 @@ function wartelisteEinladung(e, { terminUrl }) {
 }
 
 function geschenkMail(name, g, { terminUrl, schnelltestUrl }) {
-  const text = `${gruss(name)}\n\nSchön, dass Sie sich für den ${g.titel} interessieren. Ich habe ihn Ihnen als PDF angehängt.\n\nWenn Sie wissen möchten, wie Ihre Firmenstimme heute klingt: Der Stimm-Schnelltest liest Ihre Webseite und nennt Ihnen in einer Minute drei Befunde.\n${schnelltestUrl}\n\nUnd falls Sie das Thema lieber im Gespräch vertiefen, wählen Sie hier ein Zeitfenster mit mir. Wir haben dafür zwanzig Minuten.\n${terminUrl}\n\nBei Fragen zum PDF antworten Sie einfach auf diese Mail. Sie landet direkt bei mir.\n\n${SCHLUSS_HERZLICH}`;
+  const text = `${gruss(name)}\n\nSchön, dass Sie sich für den ${g.titel} interessieren. Ich habe ihn Ihnen als PDF angehängt.\n\nWenn Sie wissen möchten, wie Ihre Firmenstimme heute klingt: Der Stimmtest liest Ihre Webseite und nennt Ihnen in einer Minute drei Befunde.\n${schnelltestUrl}\n\nUnd falls Sie das Thema lieber im Gespräch vertiefen, wählen Sie hier ein Zeitfenster mit mir. Wir haben dafür zwanzig Minuten.\n${terminUrl}\n\nBei Fragen zum PDF antworten Sie einfach auf diese Mail. Sie landet direkt bei mir.\n\n${SCHLUSS_HERZLICH}`;
   return { subject: betreff(`Ihr ${g.titel} von Lorena Lienhard`), text };
 }
 function geschenkHinweis({ name, email }, g) {

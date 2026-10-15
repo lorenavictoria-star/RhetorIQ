@@ -14030,7 +14030,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
   // ── Liste ──
   function zeichneListe(){
     var box=$('st-body');if(!box)return;box.textContent='';
-    if(!st.liste.length){box.appendChild(h('p',{class:'rq-hint',text:'Noch keine Schnelltests. Sobald jemand auf der Webseite den Stimm-Schnelltest ausfüllt, erscheint er hier.'}));return;}
+    if(!st.liste.length){box.appendChild(h('p',{class:'rq-hint',text:'Noch keine Schnelltests. Sobald jemand auf der Webseite den Stimmtest ausfüllt, erscheint er hier.'}));return;}
     var ul=h('ul',{class:'st-list'});
     st.liste.forEach(function(x){
       var b=h('button',{type:'button',class:'st-row','aria-label':'Schnelltest '+x.host+' öffnen',onclick:function(){oeffne(x.id);}},[
@@ -14113,7 +14113,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
       var r=await api('/api/schnelltests/'+st.d.id+'/pdf');
       if(!r.ok){var j=await r.json().catch(function(){return null;});throw new Error((j&&j.error)||'Das PDF konnte nicht erstellt werden.');}
       var blob=await r.blob(),u=URL.createObjectURL(blob),a=document.createElement('a');
-      a.href=u;a.download='Stimm-Schnelltest_'+st.d.host+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},1000);
+      a.href=u;a.download='Stimmtest_'+st.d.host+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},1000);
       var n=parseInt(r.headers.get('X-Seiten'),10);
       if(n>3)meldung('Das PDF hat '+n+' Seiten, weil die Texte sehr lang sind. Kürze die gewählten Auffälligkeiten oder Deine Einschätzung, sonst lässt es sich nicht senden.',true);
       else meldung('Das PDF wurde heruntergeladen.');

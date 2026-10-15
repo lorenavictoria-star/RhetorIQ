@@ -123,12 +123,12 @@ const INVENTAR = {
     cache: 'keiner', haeufigkeit: 'am 2. Tag nach Quartalsende, je Klient; Obergrenze 0.20 US-Dollar je Lauf'
   },
   'schnelltest': {
-    label: 'Stimm-Schnelltest (Landingpage)', funktion: '3 Befunde zu einer Webseite', ausloeser: 'besucher', modell: 'Haiku',
+    label: 'Stimmtest (Landingpage)', funktion: '3 Befunde zu einer Webseite', ausloeser: 'besucher', modell: 'Haiku',
     calls: () => [{ model: HAIKU, inputTokens: 250 + tok(6000), outputTokens: 250 }], menge: 30, mengeAnnahme: '30 Tests je Monat (Obergrenze 150 je Tag)',
     cache: 'keiner', haeufigkeit: 'je Besucherin, höchstens 5 je Stunde und Adresse'
   },
   'schnelltest_tief': {
-    label: 'Stimm-Schnelltest, tiefe Analyse (im Hintergrund)', funktion: '6 bis 8 geprüfte Auffälligkeiten zu bis zu 3 Seiten einer Webseite', ausloeser: 'besucher', modell: 'Sonnet',
+    label: 'Stimmtest, tiefe Analyse (im Hintergrund)', funktion: '6 bis 8 geprüfte Auffälligkeiten zu bis zu 3 Seiten einer Webseite', ausloeser: 'besucher', modell: 'Sonnet',
     calls: () => [{ model: SONNET, inputTokens: 1500 + tok(12000), outputTokens: 4500 }], menge: 30, mengeAnnahme: '30 Tests je Monat (Obergrenze 150 je Tag), jeder Test löst eine tiefe Analyse aus',
     cache: 'keiner', haeufigkeit: 'je Schnelltest, einmal; Obergrenze 4 US-Dollar je Tag (BUDGET_SCHNELLTEST_TIEF_USD)'
   },

@@ -1,4 +1,4 @@
-// Stimm-Schnelltest, zweite Ausbaustufe: Kennzahlen, Zitatprüfung, Fallback, Auswahl, Statuswechsel, PDF und Versand (pg-mem, Attrappen).
+// Stimmtest, zweite Ausbaustufe: Kennzahlen, Zitatprüfung, Fallback, Auswahl, Statuswechsel, PDF und Versand (pg-mem, Attrappen).
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const H = require('../test-support/harness');
@@ -244,7 +244,7 @@ test('PDF-Vorschau liefert ein PDF mit drei Seiten, ohne Auswahl 409', async () 
 
 test('Versand: genau drei nötig, sendet PDF-Anhang an die Firma, setzt gesendet, nur einmal', async () => {
   const leer = (await pool.query(`SELECT id FROM schnelltests WHERE host='leer.ch'`)).rows[0].id;
-  const mail = { betreff: 'Ihr Stimm-Schnelltest für muster.ch', text: 'Guten Tag\n\nHier ist Ihre Auswertung.\n\nHerzlich\nLorena Lienhard' };
+  const mail = { betreff: 'Ihr Stimmtest für muster.ch', text: 'Guten Tag\n\nHier ist Ihre Auswertung.\n\nHerzlich\nLorena Lienhard' };
   assert.equal((await app.call('POST', '/api/schnelltests/' + leer + '/senden', { token: tok, body: mail })).status, 400, 'ohne Auswahl');
   assert.equal((await app.call('POST', '/api/schnelltests/' + id + '/senden', { token: tok, body: { betreff: '', text: '' } })).status, 400, 'ohne Mailtext');
   H.mails.length = 0;
@@ -257,7 +257,7 @@ test('Versand: genau drei nötig, sendet PDF-Anhang an die Firma, setzt gesendet
   assert.equal(m.kind, 'schnelltest_kunde'); assert.equal(m.to, 'firma@muster.ch'); assert.equal(m.subject, mail.betreff);
   assert.equal(m.text, mail.text);
   assert.equal(m.attachments.length, 1);
-  assert.match(m.attachments[0].name, /^RhetorIQ_Stimm-Schnelltest_muster\.ch\.pdf$/);
+  assert.match(m.attachments[0].name, /^RhetorIQ_Stimmtest_muster\.ch\.pdf$/);
   assert.equal(Buffer.from(m.attachments[0].contentBase64, 'base64').slice(0, 4).toString(), '%PDF');
   assert.equal((await app.call('POST', '/api/schnelltests/' + id + '/senden', { token: tok, body: mail })).status, 409, 'kein zweiter Versand');
   assert.equal(H.mails.length, 1);

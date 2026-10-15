@@ -1,4 +1,4 @@
-// Kunden-PDF des Stimm-Schnelltests (A4, drei Seiten, Schwarz auf Weiss mit dezentem Dunkelgrün, Helvetica wie bei den Geschenk-PDFs).
+// Kunden-PDF des Stimmtests (A4, drei Seiten, Schwarz auf Weiss mit dezentem Dunkelgrün, Helvetica wie bei den Geschenk-PDFs).
 // Seite 1: Briefkopf, Titel, Gesamteindruck, Kennzahlen, Stärken. Seiten 2 und 3: die drei gewählten Auffälligkeiten,
 // Lorenas Einschätzung, nächster Schritt, Kontakt. Passt der Inhalt nicht auf drei Seiten, wird die Schrift schrittweise kleiner.
 const PDFDocument = require('pdfkit');
@@ -95,7 +95,7 @@ function messe(g, fn) {
 function render(daten, g) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margins: { top: 56, bottom: 60, left: R, right: R }, bufferPages: true,
-      info: { Title: 'Wie klingt Ihre Webseite?', Author: 'Lorena Lienhard', Subject: 'Stimm-Schnelltest ' + sauber(daten.host || '') } });
+      info: { Title: 'Wie klingt Ihre Webseite?', Author: 'Lorena Lienhard', Subject: 'Stimmtest ' + sauber(daten.host || '') } });
     const chunks = [];
     doc.on('data', c => chunks.push(c)); let n = 0; doc.on('end', () => resolve({ buf: Buffer.concat(chunks), seiten: n })); doc.on('error', reject);
     const { S, T, hoehe, absatz, label, linie, kandidat, schluss } = werkzeuge(doc, g);

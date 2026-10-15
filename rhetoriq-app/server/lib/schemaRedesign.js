@@ -106,7 +106,7 @@ function ensureSchema() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
     await pool.query(`CREATE INDEX IF NOT EXISTS communication_profiles_client_idx ON communication_profiles (client_id, kind, created_at DESC)`);
-    // Kostenloser Stimm-Schnelltest der Landingpage (Lead-Magnet)
+    // Kostenloser Stimmtest der Landingpage (Lead-Magnet)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS schnelltests (
         id SERIAL PRIMARY KEY,

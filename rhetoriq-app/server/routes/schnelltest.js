@@ -9,7 +9,7 @@ const A = require('../lib/schnelltestAnalyse');
 const MAILS = require('../lib/schnelltestMails');
 const { requireAdvisor } = require('../middleware/auth');
 
-// Kostenloser Stimm-Schnelltest (Lead-Magnet auf der Landingpage).
+// Kostenloser Stimmtest (Lead-Magnet auf der Landingpage).
 //   POST /api/schnelltest  { url, email, website2 (Honeypot), elapsed (Zeitfalle) }  oeffentlich, nur von rhetoriq.ch
 //   Danach läuft im Hintergrund die tiefe Analyse (bis 3 Seiten, Kennzahlen, 6 bis 8 geprüfte Auffälligkeiten) und meldet sich bei Lorena.
 //   Beraterin (Auth): GET /api/schnelltests, GET/PUT /api/schnelltests/:id, GET /api/schnelltests/:id/pdf, POST /api/schnelltests/:id/senden
@@ -57,8 +57,8 @@ async function meldeBudget() {
   if (budgetMailTag === tag) return;
   budgetMailTag = tag;
   const notifyTo = process.env.ADVISOR_NOTIFY_EMAIL || process.env.SMTP_FROM || 'contact@lorenalienhard.ch';
-  await queueEmail({ kind: 'schnelltest_budget', to: notifyTo, subject: 'Stimm-Schnelltest: Tagesbudget für die tiefe Analyse erreicht',
-    text: 'Hallo Lorena\n\nDas Tagesbudget für die tiefe Analyse des Stimm-Schnelltests ist aufgebraucht. Bis morgen bekommen neue Tests nur die Kennzahlen und die automatischen Auffälligkeiten, ohne KI-Auswertung. Die Kurzbefunde auf der Webseite laufen weiter.\n\nWenn du mehr Tests pro Tag möchtest, erhöhst du auf Render die Variable BUDGET_SCHNELLTEST_TIEF_USD (heute 4 US-Dollar).' });
+  await queueEmail({ kind: 'schnelltest_budget', to: notifyTo, subject: 'Stimmtest: Tagesbudget für die tiefe Analyse erreicht',
+    text: 'Hallo Lorena\n\nDas Tagesbudget für die tiefe Analyse des Stimmtests ist aufgebraucht. Bis morgen bekommen neue Tests nur die Kennzahlen und die automatischen Auffälligkeiten, ohne KI-Auswertung. Die Kurzbefunde auf der Webseite laufen weiter.\n\nWenn du mehr Tests pro Tag möchtest, erhöhst du auf Render die Variable BUDGET_SCHNELLTEST_TIEF_USD (heute 4 US-Dollar).' });
 }
 async function tiefenJob(j, deps) {
   try {
@@ -73,7 +73,7 @@ async function tiefenJob(j, deps) {
     await meldeLorena(MAILS.hinweisMail({ id: j.id, url: j.url, host: j.host, email: j.email, kennzahlen, kandidaten: a.kandidaten, mehrseiten: a.mehrseiten }));
   } catch (e) {
     console.error('[schnelltest] tiefe Analyse fehlgeschlagen:', e && e.message);
-    await meldeLorena({ subject: `Neuer Stimm-Schnelltest: ${j.host}`, text: `Hallo Lorena\n\nEin Stimm-Schnelltest wurde ausgefüllt. Die tiefe Analyse ist fehlgeschlagen.\n\nWebseite: ${j.url}\nE-Mail: ${j.email}\n\nRhetorIQ` }).catch(() => {});
+    await meldeLorena({ subject: `Neuer Stimmtest: ${j.host}`, text: `Hallo Lorena\n\nEin Stimmtest wurde ausgefüllt. Die tiefe Analyse ist fehlgeschlagen.\n\nWebseite: ${j.url}\nE-Mail: ${j.email}\n\nRhetorIQ` }).catch(() => {});
   }
 }
 function starteTiefenanalyse(j, deps) {
@@ -111,8 +111,8 @@ function makeRouter({ max = 5, fetchHtml = safeFetch.safeFetchHtml, deps: depsIn
 
       await ensureTable();
       const day = await pool.query(`SELECT COUNT(*)::int AS n FROM schnelltests WHERE created_at > NOW() - INTERVAL '24 hours'`);
-      if (day.rows[0].n >= DAILY_MAX) return res.status(429).json({ error: 'Der Schnelltest ist für heute ausgeschöpft. Bitte versuchen Sie es morgen erneut.' });
-      if (!(await require('../lib/budget').allow('schnelltest')).ok) return res.status(429).json({ error: 'Der Schnelltest ist für heute ausgeschöpft. Bitte versuchen Sie es morgen erneut.' });
+      if (day.rows[0].n >= DAILY_MAX) return res.status(429).json({ error: 'Der Stimmtest ist für heute ausgeschöpft. Bitte versuchen Sie es morgen erneut.' });
+      if (!(await require('../lib/budget').allow('schnelltest')).ok) return res.status(429).json({ error: 'Der Stimmtest ist für heute ausgeschöpft. Bitte versuchen Sie es morgen erneut.' });
       const dup = await pool.query(`SELECT id FROM schnelltests WHERE (host=$1 OR email=$2) AND created_at > NOW() - INTERVAL '24 hours' LIMIT 1`, [host, email]);
       if (dup.rows.length) return res.status(429).json({ error: 'Für diese Webseite oder E-Mail-Adresse wurde in den letzten 24 Stunden schon ein Test erstellt.' });
       // Platz reservieren, damit zwei gleichzeitige Anfragen nicht beide durchkommen
@@ -148,7 +148,7 @@ function makeRouter({ max = 5, fetchHtml = safeFetch.safeFetchHtml, deps: depsIn
       if (rowId) await pool.query('DELETE FROM schnelltests WHERE id=$1', [rowId]).catch(() => {});
       if (e.code === 'FETCH' || e.code === 'PARSE') return res.status(422).json({ error: e.message });
       console.error('[schnelltest]', e.message);
-      res.status(500).json({ error: 'Der Schnelltest ist gerade nicht verfügbar. Bitte versuchen Sie es später erneut.' });
+      res.status(500).json({ error: 'Der Stimmtest ist gerade nicht verfügbar. Bitte versuchen Sie es später erneut.' });
     }
   });
   return router;
@@ -296,7 +296,7 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
   });
   return router;
 }
-function dateiname(host) { return 'RhetorIQ_Stimm-Schnelltest_' + String(host || 'webseite').replace(/[^a-z0-9.-]/gi, '_').slice(0, 60) + '.pdf'; }
+function dateiname(host) { return 'RhetorIQ_Stimmtest_' + String(host || 'webseite').replace(/[^a-z0-9.-]/gi, '_').slice(0, 60) + '.pdf'; }
 
 module.exports = makeRouter();
 module.exports.makeRouter = makeRouter;

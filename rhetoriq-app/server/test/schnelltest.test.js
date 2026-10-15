@@ -1,4 +1,4 @@
-// Kostenloser Stimm-Schnelltest: Ablauf und Missbrauchsschutz (pg-mem, KI- und Mail-Attrappe).
+// Kostenloser Stimmtest: Ablauf und Missbrauchsschutz (pg-mem, KI- und Mail-Attrappe).
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const H = require('../test-support/harness');

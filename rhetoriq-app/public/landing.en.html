@@ -586,15 +586,15 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
   </section>
 
   <section id="ausprobieren">
-    <div class="fin"><div><h3>Try for free</h3><div class="rows"><a href="#schnelltest" id="stlink">Voice quick test<span aria-hidden="true">&rarr;</span></a></div></div><div><h3>Confidential from the start</h3><p>Your company data stays yours. Before we begin, I put in writing which data RhetorIQ uses and how it is protected.</p></div></div>
+    <div class="fin"><div><h3>Try for free</h3><div class="rows"><a href="#schnelltest" id="stlink">Voice test<span aria-hidden="true">&rarr;</span></a></div></div><div><h3>Confidential from the start</h3><p>Your company data stays yours. Before we begin, I put in writing which data RhetorIQ uses and how it is protected.</p></div></div>
     <section id="schnelltest" aria-label="Try for free">
-      <details class="prd" id="stdet"><summary>Voice quick test: What does your website sound like? Three findings in one minute.<i aria-hidden="true">+</i></summary><div class="prdb">
+      <details class="prd" id="stdet"><summary>Voice test: What does your website sound like? Three findings in one minute.<i aria-hidden="true">+</i></summary><div class="prdb">
       <p>Enter your website address and your email address. You receive a short evaluation of your site's language straight away. The test is free. I see your details and will get in touch personally if needed.</p>
       <form class="stf" id="stf" novalidate>
         <label>Website<input id="stu" type="text" inputmode="url" autocomplete="url" placeholder="www.yourcompany.ch" required></label>
         <label>Email<input id="ste" type="email" autocomplete="email" placeholder="name@company.ch" required></label>
         <input type="text" id="stw" name="hp_ref_q7" tabindex="-1" autocomplete="off" aria-hidden="true" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-        <div class="act"><button class="btn" type="submit" id="stb">Start quick test</button></div>
+        <div class="act"><button class="btn" type="submit" id="stb">Start voice test</button></div>
         <p class="msg" id="stm" aria-live="polite"></p>
       </form>
       <div class="str" id="str" hidden aria-live="polite"></div>
@@ -608,7 +608,7 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
   busy=true;b.disabled=true;o.hidden=true;m.textContent="Your website is being read and analysed, which takes about half a minute …";
   fetch("/api/schnelltest",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:u,email:e,website2:f.stw.value,elapsed:Date.now()-t0})})
   .then(function(r){return r.json().catch(function(){return {}}).then(function(d){return {ok:r.ok,d:d}})})
-  .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=(x.d&&x.d.error)||"The quick test is currently unavailable. Please try again later.";return}
+  .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=(x.d&&x.d.error)||"The voice test is currently unavailable. Please try again later.";return}
   m.textContent="";o.textContent="";var h=document.createElement("h3");h.textContent="Your three findings";o.appendChild(h);
   var ol=document.createElement("ol");x.d.ergebnis.befunde.forEach(function(s){var li=document.createElement("li");li.textContent=s;ol.appendChild(li)});o.appendChild(ol);
   var p=document.createElement("p");p.className="nx";p.textContent=x.d.ergebnis.naechsterSchritt;o.appendChild(p);
