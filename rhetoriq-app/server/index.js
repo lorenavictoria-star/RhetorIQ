@@ -370,6 +370,15 @@ app.use(require('./lib/errorHandler').errorHandler);
 
 // ── Serve Frontend ────────────────────────────────────────────
 const FRONTEND = path.join(__dirname, '..', 'public');
+// wissen.lorenalienhard.ch: eigene Inhaltsseiten im Design von lorenalienhard.ch (Host-Weiche, Dateien ausserhalb von public)
+const WISSEN_SEITEN = { '/': 'index.html', '/reden-schreiben-lassen': 'reden-schreiben-lassen.html', '/rhetorik-coaching-fuehrungspersonen': 'rhetorik-coaching-fuehrungspersonen.html', '/unternehmenssprache': 'unternehmenssprache.html', '/sitemap.xml': 'sitemap.xml', '/robots.txt': 'robots.txt' };
+app.use((req, res, next) => {
+  if (!/^wissen\.lorenalienhard\.ch$/i.test(req.hostname || '')) return next();
+  const f = WISSEN_SEITEN[req.path.replace(/(.)\/$/, '$1')];
+  if (f) return res.sendFile(path.join(__dirname, 'wissen', f));
+  if (req.path === '/og-lorena.jpg') return next();
+  res.status(404).type('text/plain').send('Seite nicht gefunden');
+});
 // Landingpage auf "/", die App (mit Login) bleibt unter /index.html und /login erreichbar.
 app.get('/', (req, res) => res.sendFile(path.join(FRONTEND, Object.keys(req.query).length ? 'index.html' : 'landing.html')));
 app.get('/en', (req, res) => res.sendFile(path.join(FRONTEND, 'landing.en.html')));
