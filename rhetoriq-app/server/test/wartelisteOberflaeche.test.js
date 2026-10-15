@@ -104,7 +104,9 @@ test('Neue Startseite und Preise-Seiten: Struktur, Routen, Schreibregeln im sich
     assert.ok(/<link rel="canonical"/.test(h) && /hreflang="x-default"/.test(h), f);
     const vis = h.slice(h.indexOf('<body>')).replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ').replace(/&ndash;/g, '');
     assert.ok(!/[–—―]/.test(vis) && !/ß/.test(vis), f + ' Gedankenstrich oder ß');
-    assert.ok(!/\bsondern\b|, nicht\b|, not\b/.test(vis), f + ' Gegenüberstellung');
+    // Von Lorena am 15.10.2026 ausdrücklich so freigegeben (Hero-Absatz der Startseite)
+    const visOhneFreigabe = vis.replace('Sie klingen nach Ihrem Unternehmen, nicht nach einer generativen KI.', '');
+    assert.ok(!/\bsondern\b|, nicht\b|, not\b/.test(visOhneFreigabe), f + ' Gegenüberstellung');
   }
   const home = fs.readFileSync(path.join(pub, 'landing.html'), 'utf8');
   for (const t of ['Ihre Stimme, von Hand', 'Direkt im Postfach', 'id="so"', 'Effizienz gewinnt Zeit', 'href="/preise"', 'Kostenlos ausprobieren:', 'name="hp_ref_q7"']) assert.ok(home.includes(t), t);
