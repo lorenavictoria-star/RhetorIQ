@@ -32,7 +32,7 @@ test('Schnelltest liefert drei Befunde, speichert und meldet an Lorena', async (
   const r = await post(big, { url: 'muster.ch', email: 'Gast@Test.ch' });
   assert.equal(r.status, 200);
   assert.equal(r.body.ergebnis.befunde.length, 3);
-  assert.match(r.body.ergebnis.naechsterSchritt, /CHF 950/);
+  assert.match(r.body.ergebnis.naechsterSchritt, /Stimm-Audit werten wir zehn Ihrer Texte/);
   assert.equal(H.ai.calls[0].meter.module, 'schnelltest');
   const { rows } = await pool.query('SELECT * FROM schnelltests WHERE host=$1', ['muster.ch']);
   assert.equal(rows.length, 1);
