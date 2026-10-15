@@ -14030,10 +14030,10 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
   // ── Liste ──
   function zeichneListe(){
     var box=$('st-body');if(!box)return;box.textContent='';
-    if(!st.liste.length){box.appendChild(h('p',{class:'rq-hint',text:'Noch keine Schnelltests. Sobald jemand auf der Webseite den Stimmtest ausfüllt, erscheint er hier.'}));return;}
+    if(!st.liste.length){box.appendChild(h('p',{class:'rq-hint',text:'Noch keine Stimmtests. Sobald jemand auf der Webseite den Stimmtest ausfüllt, erscheint er hier.'}));return;}
     var ul=h('ul',{class:'st-list'});
     st.liste.forEach(function(x){
-      var b=h('button',{type:'button',class:'st-row','aria-label':'Schnelltest '+x.host+' öffnen',onclick:function(){oeffne(x.id);}},[
+      var b=h('button',{type:'button',class:'st-row','aria-label':'Stimmtest '+x.host+' öffnen',onclick:function(){oeffne(x.id);}},[
         h('span',{class:'st-firma',text:x.firma||x.host}),
         h('span',{class:'st-meta',text:datum(x.created_at)+(x.bereit?'':', Analyse läuft')}),
         h('span',{class:'st-chip st-'+x.status,text:STATUS[x.status]||x.status})
@@ -14168,7 +14168,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
   function baue(){
     var mehr=$('eg-mehr');if(!mehr||$('st-root'))return false;
     var d=h('details',{class:'rq-card tp-card eg-zeile',id:'st-root'},[
-      h('summary',{class:'tp-sum'},[h('span',{text:'Schnelltests'}),h('span',{id:'st-zahl',class:'st-zahl'})]),
+      h('summary',{class:'tp-sum'},[h('span',{text:'Stimmtests'}),h('span',{id:'st-zahl',class:'st-zahl'})]),
       h('div',{class:'tp-msg',id:'st-msg',role:'status','aria-live':'polite'}),
       h('div',{id:'st-body',class:'ks-sec'})
     ]);

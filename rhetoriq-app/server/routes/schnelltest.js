@@ -207,15 +207,15 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
   });
 
   router.get('/:id', async (req, res) => {
-    try { const r = await holen(req.params.id); if (!r) return res.status(404).json({ error: 'Schnelltest nicht gefunden.' }); res.json(detail(r)); }
+    try { const r = await holen(req.params.id); if (!r) return res.status(404).json({ error: 'Stimmtest nicht gefunden.' }); res.json(detail(r)); }
     catch (e) { fehler(res, e); }
   });
 
   router.put('/:id', async (req, res) => {
     try {
       const r = await holen(req.params.id);
-      if (!r) return res.status(404).json({ error: 'Schnelltest nicht gefunden.' });
-      if (r.status === 'gesendet') return res.status(409).json({ error: 'Dieser Schnelltest wurde schon gesendet und lässt sich nicht mehr ändern.' });
+      if (!r) return res.status(404).json({ error: 'Stimmtest nicht gefunden.' });
+      if (r.status === 'gesendet') return res.status(409).json({ error: 'Dieser Stimmtest wurde schon gesendet und lässt sich nicht mehr ändern.' });
       const b = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
       let kand = jsonSpalte(r.kandidaten, null);
       if (!kand) return res.status(409).json({ error: 'Die Analyse ist noch nicht fertig. Bitte versuche es in einer Minute erneut.' });
@@ -260,7 +260,7 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
   router.get('/:id/pdf', async (req, res) => {
     try {
       const r = await holen(req.params.id);
-      if (!r) return res.status(404).json({ error: 'Schnelltest nicht gefunden.' });
+      if (!r) return res.status(404).json({ error: 'Stimmtest nicht gefunden.' });
       const d = pdfDaten(r);
       if (!d.kandidaten.length) return res.status(409).json({ error: 'Wähle zuerst mindestens eine Auffälligkeit aus und speichere die Auswahl.' });
       const pdf = await require('../lib/schnelltestPdf').erzeugePdf(d);
@@ -273,8 +273,8 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
     let beansprucht = null;
     try {
       const r = await holen(req.params.id);
-      if (!r) return res.status(404).json({ error: 'Schnelltest nicht gefunden.' });
-      if (r.status === 'gesendet') return res.status(409).json({ error: 'Dieser Schnelltest wurde schon gesendet.' });
+      if (!r) return res.status(404).json({ error: 'Stimmtest nicht gefunden.' });
+      if (r.status === 'gesendet') return res.status(409).json({ error: 'Dieser Stimmtest wurde schon gesendet.' });
       const d = pdfDaten(r);
       if (d.kandidaten.length !== 3) return res.status(400).json({ error: 'Wähle genau drei Auffälligkeiten aus und speichere die Auswahl, bevor Du sendest.' });
       if (!EMAIL_RE.test(String(r.email || ''))) return res.status(400).json({ error: 'Die E-Mail-Adresse dieses Schnelltests ist ungültig.' });
@@ -283,7 +283,7 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
       if (betreff.length < 3 || text.length < 20) return res.status(400).json({ error: 'Bitte gib Betreff und Text der Mail an.' });
       // Versand genau einmal: erst den Status setzen, dann senden
       beansprucht = (await pool.query(`UPDATE schnelltests SET status='gesendet', gesendet_am=NOW() WHERE id=$1 AND status<>'gesendet' RETURNING id`, [r.id])).rows[0];
-      if (!beansprucht) return res.status(409).json({ error: 'Dieser Schnelltest wurde schon gesendet.' });
+      if (!beansprucht) return res.status(409).json({ error: 'Dieser Stimmtest wurde schon gesendet.' });
       const pdf = await require('../lib/schnelltestPdf').erzeugePdf(d);
       if (pdf.seiten > 3) { await pool.query(`UPDATE schnelltests SET status='freigegeben', gesendet_am=NULL WHERE id=$1`, [r.id]); beansprucht = null; return res.status(409).json({ error: 'Die Texte sind zu lang für drei Seiten. Bitte kürze die gewählten Auffälligkeiten oder Deine Einschätzung.' }); }
       const buf = pdf.buf;

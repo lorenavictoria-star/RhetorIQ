@@ -6,7 +6,7 @@ const LABELS = {
   view_inhalt: 'Besuche Inhaltsseiten',
   cta_test_hero: 'Klick Stimmtest oben',
   cta_test_fuss: 'Klick Stimmtest unten',
-  test_submit: 'Schnelltest abgeschickt',
+  test_submit: 'Stimmtest abgeschickt',
   call_click: 'Klick Gespräch anfragen',
   wait_open: 'Klick Warteliste',
   gift_click: 'Klick Geschenk-PDF'
