@@ -6,6 +6,9 @@ const PUB = path.join(__dirname, '..', '..', 'public');
 const SEITEN = [
   ['landing.kundenmail.html', '/kundenmails-mit-ki'],
   ['landing.stimme.html', '/firmenstimme'],
+  ['landing.menschlicher.html', '/ki-texte-menschlicher'],
+  ['landing.stimmaudit.html', '/stimm-audit'],
+  ['landing.reden.html', '/reden-und-vortraege-mit-ki'],
 ];
 function sichtbar(html) {
   return html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ');

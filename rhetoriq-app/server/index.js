@@ -379,6 +379,9 @@ app.get('/en/preise', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.prei
 // Zwei Inhaltsseiten für die Suche (nur Deutsch), gleicher Kopf, Buchungsfenster und Fuss wie die Preise-Seite.
 app.get('/kundenmails-mit-ki', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.kundenmail.html')));
 app.get('/firmenstimme', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.stimme.html')));
+app.get('/ki-texte-menschlicher', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.menschlicher.html')));
+app.get('/stimm-audit', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.stimmaudit.html')));
+app.get('/reden-und-vortraege-mit-ki', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.reden.html')));
 app.get('/login', (_, res) => res.redirect(302, '/index.html'));
 // Eigene Adresse für die Terminbuchung (LinkedIn, Mails): zeigt die Landingpage, das Dialogfenster mit den freien Zeiten öffnet sich selbst.
 app.get('/termin', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.html')));
