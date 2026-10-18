@@ -14,3 +14,13 @@ test('Besucherzähler: nur bekannte Namen, Berichtszeilen', async () => {
   const t = ev.reportLines({ view_home: 12, test_submit: 3 }).join('\n');
   assert.ok(t.includes('Besuche Startseite: 12') && t.includes('Stimmtest abgeschickt: 3'));
 });
+
+test('Zähler: eigener Browser lässt sich ausnehmen (?ich=1)', () => {
+  const fs = require('fs'), path = require('path');
+  const PUB = path.join(__dirname, '..', '..', 'public');
+  for (const f of fs.readdirSync(PUB).filter(n => /^landing.*\.html$/.test(n))) {
+    const h = fs.readFileSync(path.join(PUB, f), 'utf8');
+    if (!h.includes('/api/ev')) continue;
+    assert.ok(h.includes('rq_self') && h.includes('ich=([01])'), f);
+  }
+});

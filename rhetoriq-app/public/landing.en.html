@@ -879,7 +879,8 @@ if(location.hash==="#schnelltest"&&det)det.open=true;
 <script>
 (function(){if(navigator.doNotTrack==="1")return;var P=location.pathname.replace(/\/$/,"")||"/";
 var v=P==="/en"?"view_home_en":/preise$/.test(P)?"view_preise":(P==="/kundenmails-mit-ki"||P==="/firmenstimme")?"view_inhalt":"view_home";
-function ev(n){try{fetch("/api/ev",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({e:n}),keepalive:true}).catch(function(){})}catch(e){}}
+try{var q=location.search.match(/[?&]ich=([01])/);if(q){if(q[1]=="1")localStorage.setItem("rq_self","1");else localStorage.removeItem("rq_self")}}catch(e){}
+function ev(n){try{if(localStorage.getItem("rq_self"))return;fetch("/api/ev",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({e:n}),keepalive:true}).catch(function(){})}catch(e){}}
 ev(v);
 document.addEventListener("click",function(e){var t=e.target;if(!t||!t.closest)return;
 if(t.closest("#hst"))ev("cta_test_hero");else if(t.closest("#stlink"))ev("cta_test_fuss");else if(t.closest("#pzgo"))ev("wait_open");else if(t.closest("a[data-g]"))ev("gift_click");else if(t.closest("#go,a[href=\"#buchen\"]"))ev("call_click")});
