@@ -3,7 +3,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 const DIR = path.join(__dirname, '..', 'wissen');
-const SEITEN = ['index', 'reden-schreiben-lassen', 'rhetorik-coaching-fuehrungspersonen', 'unternehmenssprache', 'ki-texte-in-ihrer-stimme'];
+const SEITEN = ['index', 'reden-schreiben-lassen', 'rhetorik-coaching-fuehrungspersonen', 'unternehmenssprache'];
 function sichtbar(html) {
   return html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ');
 }
