@@ -38,6 +38,71 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// POST /auth/login-any — eine Anmeldung für alle: Beraterin, Klient (Hauptzugang) und Teammitglied eines Klienten.
+// Der Server sucht das Konto zur E-Mail-Adresse und prüft das Passwort. Gibt es dieselbe Adresse in mehreren Kontoarten,
+// entscheidet das Passwort. Gezählt wird nur ein Fehlversuch je Adresse (nicht je Kontoart).
+router.post('/login-any', async (req, res) => {
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+    const mail = String(email).trim().toLowerCase();
+    const lockKey = lock.keyOf('any', mail);
+    if (lock.blocked(res, lockKey)) return;
+    const pw = String(password);
+    const check = async (hash) => !!hash && await bcrypt.compare(pw, hash);
+
+    const { rows: ur } = await pool.query('SELECT * FROM users WHERE email = $1', [mail]);
+    const user = ur[0];
+    if (user && await check(user.password_hash)) {
+      lock.recordSuccess(lockKey);
+      const token = jwt.sign(
+        { id: user.id, email: user.email, name: user.name, role: user.role, tokenVersion: user.token_version },
+        process.env.JWT_SECRET, { expiresIn: '30d' });
+      return res.json({ role: 'advisor', token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    }
+
+    const { rows: cr } = await pool.query(
+      'SELECT c.*, u.name as advisor_name FROM clients c JOIN users u ON c.advisor_id = u.id WHERE LOWER(c.email) = $1 AND c.geloescht_am IS NULL ORDER BY c.id',
+      [mail]);
+    for (const client of cr) {
+      if (!(await check(client.password_hash))) continue;
+      lock.recordSuccess(lockKey);
+      const token = jwt.sign(
+        { clientId: client.id, clientName: client.name, role: 'client', advisorId: client.advisor_id, mustChangePassword: !!client.must_change_password, tokenVersion: client.token_version },
+        process.env.JWT_SECRET, { expiresIn: CLIENT_SESSION });
+      return res.json({
+        role: 'client', token,
+        client: { id: client.id, name: client.name, industry: client.industry, advisorName: client.advisor_name },
+        mustChangePassword: !!client.must_change_password
+      });
+    }
+
+    const { rows: tr } = await pool.query(
+      `SELECT cu.*, c.name as client_name, c.industry, u.name as advisor_name
+       FROM client_users cu JOIN clients c ON cu.client_id = c.id JOIN users u ON c.advisor_id = u.id
+       WHERE LOWER(cu.email) = $1 AND c.geloescht_am IS NULL ORDER BY cu.id`, [mail]);
+    for (const cu of tr) {
+      if (!(await check(cu.password_hash))) continue;
+      lock.recordSuccess(lockKey);
+      const token = jwt.sign(
+        { clientId: cu.client_id, clientName: cu.client_name, role: 'client', advisorId: null,
+          clientUserId: cu.id, clientUserName: cu.name, clientUserEmail: cu.email, clientUserRole: cu.role, tokenVersion: cu.token_version },
+        process.env.JWT_SECRET, { expiresIn: CLIENT_SESSION });
+      return res.json({
+        role: 'client', token,
+        client: { id: cu.client_id, name: cu.client_name, industry: cu.industry, advisorName: cu.advisor_name },
+        clientUser: { id: cu.id, name: cu.name, email: cu.email, role: cu.role }
+      });
+    }
+
+    lock.recordFailure(lockKey);
+    return res.status(401).json({ error: 'Invalid credentials' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // POST /auth/client-login — client logs in via their token
 router.post('/client-login', async (req, res) => {
   try {
