@@ -332,9 +332,38 @@ function reportAiError(e, where, opts) {
   } catch { /* Meldung darf nie selbst einen Fehler auslösen */ }
 }
 
+// ── Daten-Wächter (lib/datenwaechter.js) ────────────────────────────────────
+// Prüft die Nachrichten vor dem Versand an den Anbieter. Modus «ersetzen»: Platzhalter statt Werte, nach der Antwort
+// zurückgesetzt. Modus «sperren»: Fehler 422 mit den Fundtypen (nie den Werten). Ein Fehler im Wächter selbst blockiert
+// die KI nie; nur die bewusste Sperre wird weitergegeben.
+async function waechterVorbereiten(opts) {
+  try {
+    const store = require('./datenwaechterStore');
+    const einstellungen = await store.holeEinstellungen();
+    if (einstellungen.modus === 'aus') return { opts, abbild: null };
+    const ctx = require('./meter').context() || {};
+    const meterO = (opts && opts.meter) || {};
+    const clientId = meterO.clientId !== undefined ? meterO.clientId : ctx.clientId;
+    let r;
+    try {
+      r = require('./datenwaechterEinsatz').bereiteVor(opts, { einstellungen, kontext: ctx });
+    } catch (e) {
+      if (e && e.datenwaechter) store.protokolliere({ clientId, modus: 'sperren', funde: e._funde }).catch(() => {});
+      throw e;
+    }
+    if (r.funde.length) store.protokolliere({ clientId, modus: r.modus, funde: r.funde }).catch(() => {});
+    return { opts: r.opts, abbild: r.abbild };
+  } catch (e) {
+    if (e && e.datenwaechter) throw e;
+    console.error('[datenwaechter] Prüfung übersprungen:', e && e.code ? e.code : 'Fehler');
+    return { opts, abbild: null };
+  }
+}
+
 // generateText({ system, messages, maxTokens, model, temperature })
 //   -> { text, inputTokens, outputTokens, reserve? }
-async function generateText(opts) {
+async function generateText(orig) {
+  const { opts, abbild } = await waechterVorbereiten(orig);
   let r;
   try {
     r = await activeProvider().generate(opts);
@@ -342,6 +371,7 @@ async function generateText(opts) {
     reportAiError(e, 'generate', opts);
     throw e;
   }
+  if (abbild) r = { ...r, text: require('./datenwaechter').stelleWiederHer(r.text, abbild) };
   if (r.reserve) markReserve();
   // Jeder Aufruf wird mit Tokens, Modell und Kosten protokolliert (lib/meter.js)
   require('./meter').record({ ...r, model: meterModel(r.model || opts.model, r.reserve), meter: opts.meter });
@@ -350,8 +380,10 @@ async function generateText(opts) {
 
 // streamText({ system, messages, maxTokens, model, temperature, signal })
 //   -> async generator yielding { type: 'text', text } | { type: 'usage', inputTokens?, outputTokens? }
-function streamText(opts) {
+function streamText(orig) {
   return (async function* () {
+    const { opts, abbild } = await waechterVorbereiten(orig);
+    const rueck = abbild ? require('./datenwaechter').neuerRueckwandler(abbild) : null;
     const u = { inputTokens: 0, outputTokens: 0, cacheCreationTokens: 0, cacheReadTokens: 0 };
     let reserve = false, chars = 0;
     try {
@@ -363,9 +395,17 @@ function streamText(opts) {
           if (evt.cacheCreationTokens !== undefined) u.cacheCreationTokens = evt.cacheCreationTokens;
           if (evt.cacheReadTokens !== undefined) u.cacheReadTokens = evt.cacheReadTokens;
         }
-        if (evt.type === 'text') chars += (evt.text || '').length;
+        if (evt.type === 'text') {
+          chars += (evt.text || '').length;
+          if (rueck) {
+            const t = rueck.push(evt.text);
+            if (t) yield { ...evt, text: t };
+            continue;
+          }
+        }
         yield evt;
       }
+      if (rueck) { const rest = rueck.ende(); if (rest) yield { type: 'text', text: rest }; }
     } catch (e) {
       if (!(opts && opts.signal && opts.signal.aborted)) reportAiError(e, 'stream', opts);   // Abbruch durch die Nutzerin ist kein Fehler
       throw e;

@@ -1666,6 +1666,15 @@ function logGenerationError(req, e) {
   ).catch(() => {});
 }
 
+// Daten-Wächter im Modus «sperren»: die Anfrage ging nicht an die KI. Antwort 422 mit den Fundtypen (nie den Werten).
+function waechterSperre(e, res) {
+  if (!e || !e.datenwaechter) return false;
+  const body = { error: e.message, datenwaechter: { typen: e.datenwaechter.typen } };
+  if (!res.headersSent) res.status(422).json(body);
+  else { res.write(`event: error\ndata: ${JSON.stringify(body)}\n\n`); res.end(); }
+  return true;
+}
+
 // POST /api/analyze
 router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
   try {
@@ -1869,6 +1878,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
 
     res.json({ result, id: rows[0].id, quotaWarning, lint: lintErgebnis(result, data, module) });
   } catch (e) {
+    if (waechterSperre(e, res)) return;
     console.error(e);
     logGenerationError(req, e);
     res.status(500).json({ error: 'Internal server error' });
@@ -1984,7 +1994,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     console.log(`[trace] ${module} headers flushed`);
 
     // Fix 10: SSE keepalive to prevent proxy timeouts
-    const keepAlive = setInterval(() => { console.log(`[trace] ${module} keepalive tick`); res.write(': keep-alive\n\n'); }, 15000);
+    const keepAlive = setInterval(() => { if (res.writableEnded) return clearInterval(keepAlive); console.log(`[trace] ${module} keepalive tick`); res.write(': keep-alive\n\n'); }, 15000);
 
     // Fix 13: Client disconnect handling
     let aborted = false;
@@ -2070,6 +2080,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     res.write(`event: done\ndata: ${JSON.stringify(donePayload)}\n\n`);
     res.end();
   } catch (e) {
+    if (waechterSperre(e, res)) return;
     console.error(e);
     logGenerationError(req, e);
     if (!res.headersSent) return res.status(500).json({ error: 'Internal server error' });
@@ -2139,6 +2150,7 @@ router.post('/chat', requireAuth, requireRole('editor'), async (req, res) => {
     });
     res.json({ reply: resp.text });
   } catch (e) {
+    if (waechterSperre(e, res)) return;
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
   }

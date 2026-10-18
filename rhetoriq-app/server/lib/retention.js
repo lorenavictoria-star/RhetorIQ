@@ -1,6 +1,7 @@
 // Löschfristen (Befunde F-10 und F-17), täglich per Zeitplan:
 //  - E-Mail-Warteschlange: Inhalt und Anhang gesendeter Mails nach 7 Tagen leeren, Zeilen nach 90 Tagen löschen
 //  - Fehlerprotokoll der KI (generation_errors) nach 90 Tagen löschen
+//  - Protokoll des Daten-Wächters (datenwaechter_log, ohne Inhalt) nach 90 Tagen löschen
 const { pool } = require('../db');
 
 async function runRetention() {
@@ -18,7 +19,10 @@ async function runRetention() {
     const c = await pool.query(`DELETE FROM generation_errors WHERE created_at < NOW() - INTERVAL '90 days'`);
     out.deletedErrors = c.rowCount || 0;
   } catch (e) { console.error('[retention] Fehlerprotokoll:', e.message); }
-  if (out.emptied || out.deletedMails || out.deletedErrors) console.log('[retention]', JSON.stringify(out));
+  try {
+    out.deletedDatenwaechter = await require('./datenwaechterStore').loescheAlt();
+  } catch (e) { console.error('[retention] Daten-Wächter-Protokoll:', e.message); }
+  if (out.emptied || out.deletedMails || out.deletedErrors || out.deletedDatenwaechter) console.log('[retention]', JSON.stringify(out));
   return out;
 }
 
