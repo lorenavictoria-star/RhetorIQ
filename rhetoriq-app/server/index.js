@@ -372,7 +372,7 @@ app.use(require('./lib/errorHandler').errorHandler);
 // ── Serve Frontend ────────────────────────────────────────────
 const FRONTEND = path.join(__dirname, '..', 'public');
 // wissen.lorenalienhard.ch: eigene Inhaltsseiten im Design von lorenalienhard.ch (Host-Weiche, Dateien ausserhalb von public)
-const WISSEN_SEITEN = { '/': 'index.html', '/reden-schreiben-lassen': 'reden-schreiben-lassen.html', '/rhetorik-coaching-fuehrungspersonen': 'rhetorik-coaching-fuehrungspersonen.html', '/unternehmenssprache': 'unternehmenssprache.html', '/sitemap.xml': 'sitemap.xml', '/robots.txt': 'robots.txt' };
+const WISSEN_SEITEN = { '/': 'index.html', '/reden-schreiben-lassen': 'reden-schreiben-lassen.html', '/rhetorik-coaching-fuehrungspersonen': 'rhetorik-coaching-fuehrungspersonen.html', '/unternehmenssprache': 'unternehmenssprache.html', '/ki-texte-in-ihrer-stimme': 'ki-texte-in-ihrer-stimme.html', '/sitemap.xml': 'sitemap.xml', '/robots.txt': 'robots.txt' };
 app.use((req, res, next) => {
   if (!/^wissen\.lorenalienhard\.ch$/i.test(req.hostname || '')) return next();
   const f = WISSEN_SEITEN[req.path.replace(/(.)\/$/, '$1')];
