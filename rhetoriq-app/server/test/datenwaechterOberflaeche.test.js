@@ -134,3 +134,8 @@ test('Fällt die Prüfung aus, wird trotzdem gesendet (der Server entscheidet)',
   assert.equal(log.gen.length, 1);
   assert.equal(log.dialoge.length, 0);
 });
+
+test('Router ist in index.js eingehängt', () => {
+  const idx = fs.readFileSync(path.join(__dirname, '..', 'index.js'), 'utf8');
+  assert.ok(idx.includes("app.use('/api/datenwaechter', require('./routes/datenwaechter'))"));
+});
