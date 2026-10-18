@@ -391,6 +391,9 @@ app.get('/firmenstimme', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.s
 app.get('/ki-texte-menschlicher', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.menschlicher.html')));
 app.get('/stimm-audit', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.stimmaudit.html')));
 app.get('/reden-und-vortraege-mit-ki', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.reden.html')));
+// Sicherheit und Datenschutz (Datenweg, Löschfristen, Sicherheitsstufen, Ampelmodell), Deutsch und Englisch.
+app.get('/sicherheit', (_, res) => res.sendFile(path.join(FRONTEND, 'sicherheit.html')));
+app.get('/en/security', (_, res) => res.sendFile(path.join(FRONTEND, 'sicherheit.en.html')));
 app.get('/login', (_, res) => res.redirect(302, '/index.html'));
 // Eigene Adresse für die Terminbuchung (LinkedIn, Mails): zeigt die Landingpage, das Dialogfenster mit den freien Zeiten öffnet sich selbst.
 app.get('/termin', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.html')));

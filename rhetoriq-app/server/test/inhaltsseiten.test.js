@@ -9,6 +9,8 @@ const SEITEN = [
   ['landing.menschlicher.html', '/ki-texte-menschlicher'],
   ['landing.stimmaudit.html', '/stimm-audit'],
   ['landing.reden.html', '/reden-und-vortraege-mit-ki'],
+  ['sicherheit.html', '/sicherheit'],
+  ['sicherheit.en.html', '/en/security'],
 ];
 function sichtbar(html) {
   return html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ');
