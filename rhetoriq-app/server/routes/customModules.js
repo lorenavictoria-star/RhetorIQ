@@ -172,10 +172,11 @@ router.post('/:id/run', requireAuth, requireRole('editor'), async (req, res) => 
     // Log to analyses table if it exists
     try {
       const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+      const [eingabeDb] = await require('../lib/speicherSchutz').schuetzeAlle(userMsg.slice(0, 500));
       await pool.query(
         `INSERT INTO analyses (advisor_id, client_id, module, input_text, created_at)
          VALUES ($1,$2,$3,$4,NOW())`,
-        [advisorId, clientId || null, 'custom:' + mod.name, userMsg.slice(0, 500)]
+        [advisorId, clientId || null, 'custom:' + mod.name, eingabeDb]
       );
     } catch {}
 

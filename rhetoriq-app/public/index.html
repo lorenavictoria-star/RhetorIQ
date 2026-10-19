@@ -1075,6 +1075,14 @@ html[lang="en"] .legal-en-note{display:block}
       </div>
       <div style="font-size:11px;color:var(--mu);margin-top:6px" id="mc-token-usage"></div>
     </div>
+    <div style="padding:12px 20px;border-bottom:1px solid var(--bd);flex-shrink:0">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-bottom:8px">Aufbewahrung der Texte</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <input type="number" id="mc-aufbewahrung" min="7" max="3650" step="1" placeholder="unbegrenzt" style="width:150px;padding:7px 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg)">
+        <span style="font-size:12px;color:var(--mu)">Tage &middot; danach werden Eingaben und Ergebnisse gelöscht &middot; leer lassen = unbegrenzt</span>
+        <button class="lbtn" style="padding:5px 12px;font-size:11px" onclick="saveAufbewahrung()">Speichern</button>
+      </div>
+    </div>
     <div id="mc-body" style="overflow-y:auto;flex:1;padding:8px 0"></div>
     <div style="padding:10px 20px;border-top:1px solid var(--bd);flex-shrink:0">
       <div id="mc-custom-form" style="display:none;margin-bottom:12px;padding:14px;background:var(--sf);border-radius:8px;border:1px solid var(--bd)">
@@ -4149,8 +4157,27 @@ async function saveTokenLimit(){
     loadTokenUsage(_mcClientId);
   }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
 }
+async function loadAufbewahrung(cid){
+  const input=document.getElementById('mc-aufbewahrung');
+  input.value='';
+  try{
+    const r=await api('/api/clients/'+cid+'/aufbewahrung');
+    const d=await r.json();if(!r.ok)throw new Error(d.error);
+    if(d.tage)input.value=d.tage;
+  }catch(e){console.error(e);}
+}
+async function saveAufbewahrung(){
+  if(!_mcClientId)return;
+  const raw=document.getElementById('mc-aufbewahrung').value.trim();
+  try{
+    const r=await api('/api/clients/'+_mcClientId+'/aufbewahrung',{method:'PUT',body:JSON.stringify({tage:raw===''?null:raw})});
+    const d=await r.json();if(!r.ok){alert(d.error||'Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');return;}
+    loadAufbewahrung(_mcClientId);
+  }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
+}
 function openModuleConfig(cid){
   _mcClientId=cid;
+  loadAufbewahrung(cid);
   const c=clients.find(x=>x.id==cid);if(!c)return;
   loadTokenUsage(cid);
   document.getElementById('mc-title').textContent='Module — '+c.name;

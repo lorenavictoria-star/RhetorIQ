@@ -478,6 +478,39 @@ router.put('/:id/token-limit', requireAdvisor, async (req, res) => {
   }
 });
 
+// PUT /api/clients/:id/aufbewahrung — wie lange Eingaben und Ergebnisse gespeichert bleiben (Tage, leer = unbegrenzt).
+// Danach leert der tägliche Löschlauf (lib/retention.js) die Inhalte; Zähler, Bewertungen und Daten bleiben.
+router.put('/:id/aufbewahrung', requireAdvisor, async (req, res) => {
+  try {
+    const roh = req.body && req.body.tage;
+    const tage = (roh === null || roh === undefined || roh === '') ? null : parseInt(roh, 10);
+    if (tage !== null && (!Number.isFinite(tage) || tage < 7 || tage > 3650)) {
+      return res.status(400).json({ error: 'Die Frist muss zwischen 7 und 3650 Tagen liegen.' });
+    }
+    const { rows } = await pool.query(
+      'UPDATE clients SET aufbewahrung_tage = $1 WHERE id = $2 AND advisor_id = $3 RETURNING aufbewahrung_tage',
+      [tage, req.params.id, req.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
+    res.json({ tage: rows[0].aufbewahrung_tage });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/clients/:id/aufbewahrung
+router.get('/:id/aufbewahrung', requireAdvisor, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT aufbewahrung_tage FROM clients WHERE id = $1 AND advisor_id = $2', [req.params.id, req.user.id]);
+    if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
+    res.json({ tage: rows[0].aufbewahrung_tage });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /api/clients/:id/token-usage — current-month usage vs. quota, for
 // both the advisor dashboard and the client's own "usage" view.
 router.get('/:id/token-usage', requireAuth, async (req, res) => {

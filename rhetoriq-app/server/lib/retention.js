@@ -2,7 +2,29 @@
 //  - E-Mail-Warteschlange: Inhalt und Anhang gesendeter Mails nach 7 Tagen leeren, Zeilen nach 90 Tagen löschen
 //  - Fehlerprotokoll der KI (generation_errors) nach 90 Tagen löschen
 //  - Protokoll des Daten-Wächters (datenwaechter_log, ohne Inhalt) nach 90 Tagen löschen
+//  - Texte je Klient (clients.aufbewahrung_tage): Eingaben und Ergebnisse älterer Aufträge leeren, automatisch gelernte Beispiele löschen
 const { pool } = require('../db');
+
+// Leert Eingaben und Ergebnisse (analyses) und löscht automatisch erzeugte Lernbeispiele, die älter sind als die Frist des Klienten.
+// Klienten ohne Frist bleiben unberührt. Zeilen, Module, Daten und Bewertungen bleiben für Zähler und Statistik erhalten.
+async function leereAlteTexte() {
+  const { rows } = await pool.query('SELECT id, aufbewahrung_tage FROM clients WHERE aufbewahrung_tage IS NOT NULL AND geloescht_am IS NULL');
+  let n = 0;
+  for (const c of rows) {
+    const tage = Number(c.aufbewahrung_tage);
+    if (!Number.isFinite(tage) || tage < 7) continue;
+    const a = await pool.query(
+      `UPDATE analyses SET input_data=NULL, result=NULL
+       WHERE client_id=$1 AND created_at < NOW() - ($2 || ' days')::interval AND (input_data IS NOT NULL OR result IS NOT NULL)`,
+      [c.id, String(tage)]);
+    n += a.rowCount || 0;
+    await pool.query(
+      `DELETE FROM module_examples
+       WHERE source_client_id=$1 AND auto_generated=true AND created_at < NOW() - ($2 || ' days')::interval`,
+      [c.id, String(tage)]);
+  }
+  return n;
+}
 
 async function runRetention() {
   const out = { emptied: 0, deletedMails: 0, deletedErrors: 0 };
@@ -22,8 +44,12 @@ async function runRetention() {
   try {
     out.deletedDatenwaechter = await require('./datenwaechterStore').loescheAlt();
   } catch (e) { console.error('[retention] Daten-Wächter-Protokoll:', e.message); }
+  try {
+    out.geleerteTexte = await leereAlteTexte();
+  } catch (e) { console.error('[retention] Texte je Klient:', e.message); }
+  if (out.geleerteTexte) console.log('[retention] Texte geleert:', out.geleerteTexte);
   if (out.emptied || out.deletedMails || out.deletedErrors || out.deletedDatenwaechter) console.log('[retention]', JSON.stringify(out));
   return out;
 }
 
-module.exports = { runRetention };
+module.exports = { runRetention, leereAlteTexte };

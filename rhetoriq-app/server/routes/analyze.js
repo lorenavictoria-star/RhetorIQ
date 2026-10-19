@@ -1841,10 +1841,12 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
       ? (req.user.name || 'Advisor')
       : (req.user.clientUserName || req.user.clientName || 'Klient');
 
+    // Daten-Wächter «ersetzen»/«sperren»: in der Datenbank liegt die Fassung mit Platzhaltern (lib/speicherSchutz.js)
+    const [dataDb, resultDb] = await require('../lib/speicherSchutz').schuetzeAlle(data, result);
     const { rows } = await pool.query(
       `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice, feedback_key)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id, created_at`,
-      [resolvedClientId, advisorId, module, cfg.label, data, result, generatedBy, hasBrandVoice, instructionsKey || module]
+      [resolvedClientId, advisorId, module, cfg.label, dataDb, resultDb, generatedBy, hasBrandVoice, instructionsKey || module]
     );
 
     const analysis = { id: rows[0].id, module, label: cfg.label, result, createdAt: rows[0].created_at, clientId: resolvedClientId };
@@ -1855,7 +1857,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     // Only saves when output is substantive (>200 chars) to avoid polluting with short/error outputs.
     // auto_generated=true + rating=2 keeps these below the injection threshold (manual examples ≥3).
     if (advisorId && result && result.length > 200) {
-      const inputText = Object.entries(data || {})
+      const inputText = Object.entries(dataDb || {})
         .filter(([k, v]) => v && typeof v === 'string' && v.length > 2)
         .map(([k, v]) => `${k}: ${v}`)
         .join('\n');
@@ -1863,7 +1865,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
         pool.query(
           `INSERT INTO module_examples (advisor_id, module_key, industry_tag, input_text, output_text, rating, auto_generated, source_client_id, is_cross_client_shareable)
            VALUES ($1,$2,$3,$4,$5,2,true,$6,false)`,
-          [advisorId, module, clientIndustry || null, inputText, result, resolvedClientId || null]
+          [advisorId, module, clientIndustry || null, inputText, resultDb, resolvedClientId || null]
         ).catch(() => {});
       }
     }
@@ -2055,21 +2057,23 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     const generatedBy = req.user.role === 'advisor'
       ? (req.user.name || 'Advisor')
       : (req.user.clientUserName || req.user.clientName || 'Klient');
+    // Daten-Wächter «ersetzen»/«sperren»: in der Datenbank liegt die Fassung mit Platzhaltern (lib/speicherSchutz.js)
+    const [dataDb, fullTextDb] = await require('../lib/speicherSchutz').schuetzeAlle(data, fullText);
     const { rows } = await pool.query(
       `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice, feedback_key)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id, created_at`,
-      [resolvedClientId, advisorId, module, cfg.label, data, fullText, generatedBy, hasBrandVoice, instructionsKey || module]
+      [resolvedClientId, advisorId, module, cfg.label, dataDb, fullTextDb, generatedBy, hasBrandVoice, instructionsKey || module]
     );
     require('../lib/stimmnaehe').fuerAnalyse(rows[0].id, resolvedClientId, module, fullText);   // lokale Messung, ohne KI, wirft nie
     if (draftText) require('../lib/durchgang').speichern({ analysisId: rows[0].id, clientId: resolvedClientId, advisorId, module, entwurf: draftText, endtext: fullText });   // Entwurf gegen Endtext, ohne KI
     // Fix 11: Log usage for client analyses too
     if (advisorId && fullText.length > 200) {
-      const inputText = Object.entries(data || {})
+      const inputText = Object.entries(dataDb || {})
         .filter(([k, v]) => v && typeof v === 'string' && v.length > 2)
         .map(([k, v]) => `${k}: ${v}`).join('\n');
       if (inputText) pool.query(
         `INSERT INTO module_examples (advisor_id, module_key, industry_tag, input_text, output_text, rating, auto_generated, source_client_id, is_cross_client_shareable) VALUES ($1,$2,$3,$4,$5,2,true,$6,false)`,
-        [advisorId, module, clientIndustry || null, inputText, fullText, resolvedClientId || null]
+        [advisorId, module, clientIndustry || null, inputText, fullTextDb, resolvedClientId || null]
       ).catch(() => {});
     }
 
