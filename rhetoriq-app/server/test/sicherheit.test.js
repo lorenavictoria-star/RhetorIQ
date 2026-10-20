@@ -44,14 +44,14 @@ test('Sicherheit: Inhalt, Stufen, Ampel, FAQ, Datenfluss, Link zum Termin', () =
   assert.ok(de.includes('Verfügbar') && de.includes('Auf Anfrage') && de.includes('In Arbeit'));
   assert.ok(de.includes('Stufe 1') && de.includes('Stufe 2') && de.includes('Stufe 3'));
   for (const w of ['Grün', 'Gelb', 'Rot']) assert.ok(de.includes(`<p class="fb">${w}</p>`), w);
-  assert.strictEqual((de.match(/<details class="prd">/g) || []).length, 7, 'sieben Fragen');
+  assert.strictEqual((de.match(/<details class="prd">/g) || []).length, 9, 'neun Fragen');
   assert.ok(de.includes('<svg viewBox') && de.includes('<title id="fltt">') && de.includes('role="img"'));
   assert.ok(de.includes('href="/termin"') && de.includes('Auftragsbearbeitungsvertrag'));
   for (const a of ['Render', 'Anthropic', 'Brevo', 'AssemblyAI', 'Stripe', 'Sentry']) assert.ok(de.includes(`<b>${a}</b>`), a);
   assert.ok(!/garantiert|100 ?Prozent|100 ?%/i.test(sichtbar(de)), 'keine Übertreibung');
   const en = lies('sicherheit.en.html');
   assert.ok(en.includes('<h1>Your data stays yours.</h1>') && en.includes('Available') && en.includes('On request') && en.includes('In progress'));
-  assert.strictEqual((en.match(/<details class="prd">/g) || []).length, 7);
+  assert.strictEqual((en.match(/<details class="prd">/g) || []).length, 9);
   assert.ok(en.includes('href="/termin"'));
 });
 
