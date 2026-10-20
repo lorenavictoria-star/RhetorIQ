@@ -7678,10 +7678,10 @@ function modShown(m){
 function listModules(){return ALL_MODULES.filter(m=>!m.bundle&&m.cat!=='capital-markets'&&m.cat!=='hotel').concat(BUNDLE_MODULES);}
 function modClick(m){return m.isBundle?`openBundle('${m.bundleId}')`:(m.tile?`goTextGenTile('${m.tile}')`:(m.key==='brand-voice'?"goPage('brand-voice');setMN('modules')":`goModule('${m.key}')`));}
 const MOD_GROUPS=[
-  {label:'Grundlagen',cats:['foundation']},
   {label:'Texte schreiben',cats:['text-gen','creation']},
   {label:'Gespräche und Krisen',cats:['prevention','growth']},
   {label:'Arbeitshilfen',cats:['efficiency']},
+  {label:'Grundlagen',cats:['foundation']},
   {label:'Branchenpakete',cats:['packages']}
 ];
 let modsCatFilter='all',modsSearch='';
@@ -7744,17 +7744,13 @@ function renderModulesList(){
         ${favMods.map(m=>{const def=getMdefLang(m.key,MDEFS[m.key]);return `<div class="mfav-tile" onclick="${modClick(m)}">${m.isBundle?m.name:(def?.title||m.name)}</div>`;}).join('')}
       </div>`:'';
     // Flache Übersicht: jede Karte ist ein Einstiegspunkt, thematisch in Gruppen geordnet.
-    // Die Textarten (ohne Rede) erscheinen als eine Karte, die die Liste der Textarten öffnet.
+    // Die Textarten (E-Mail, LinkedIn, Newsletter ...) stehen als eigene Karten direkt in «Texte schreiben», ohne Zwischenschritt.
     const tgN=filtered.filter(m=>m.cat==='text-gen').length;
     const cardHtml=(icon,name,sub,click)=>`<div class="mcat-card" onclick="${click}"><div class="mcat-card-icon"><i class="ti ${icon}" aria-hidden="true"></i></div><div class="mcat-card-name">${name}</div><div class="mcat-card-count">${sub}</div></div>`;
     const groupsHtml=MOD_GROUPS.map(g=>{
       const items=[];
       filtered.forEach(m=>{
         if(!g.cats.includes(m.cat))return;
-        if(m.cat==='text-gen'){
-          if(!items.some(x=>x.tg))items.push({tg:true,html:cardHtml('ti-writing','Textarten',tgN+' '+(tgN===1?'Textart':'Textarten'),"filterModsCat('text-gen',document.getElementById('pill-text-gen'))")});
-          return;
-        }
         const def=m.isBundle?null:getMdefLang(m.key,MDEFS[m.key]);
         const sub=m.isBundle?m.desc:(m.desc||(def?.desc?safeText(def.desc).replace(/&mdash;/g,'—').slice(0,60)+(def.desc.length>60?'…':''):m.tag));
         items.push({html:cardHtml(m.icon||'ti-file-text',m.isBundle?m.name:(def?.title||m.name),sub,modClick(m))});
