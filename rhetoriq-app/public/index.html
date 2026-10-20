@@ -14943,6 +14943,8 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     var rbox=body.closest('.rbox');if(!rbox)return;
     var txt=(body.textContent||'').trim();
     var ex=rbox.querySelector(':scope > .rq-pruef');
+    if(ex)ex.remove();
+    return;   // Die Angaben zum Prüfen stehen jetzt in der einen Zeile des Faktenmarkers (rq-fakten-js)
     if(txt.length<30||!rbox.classList.contains('show')){if(ex)ex.remove();return;}
     var P=window.RQPruef,lines=[];
     try{if(P)lines=P.summary(P.find(txt));}catch(e){}
@@ -15562,23 +15564,24 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
     if(!r.anzahl)return;
     var el=window.rqAddNote(body,'rq-fakten','');
     if(!el)return;
-    var adv=false;try{adv=!!isAdv;}catch(e){}
-    var label=document.createElement('label');
-    label.style.cssText='display:inline-flex;align-items:center;gap:6px;cursor:pointer';
-    var cb=document.createElement('input');cb.type='checkbox';cb.checked=false;
-    var t1=document.createElement('span');t1.textContent='Fakten hervorheben';
-    label.appendChild(cb);label.appendChild(t1);
-    var t2=document.createElement('span');
-    t2.style.marginLeft='8px';
-    t2.textContent=r.anzahl===1?(adv?'1 Stelle steht nicht in deinem Auftrag':'1 Stelle steht nicht in Ihrem Auftrag')
-      :(r.anzahl+' '+(adv?'Stellen stehen nicht in deinem Auftrag':'Stellen stehen nicht in Ihrem Auftrag'));
-    el.appendChild(label);el.appendChild(t2);
-    cb.addEventListener('change',function(){
-      if(cb.checked){
-        if(body.textContent!==fullText){cb.checked=false;return;}
-        body.innerHTML=F.html(r.segmente);
+    // Eine einzige Zeile: «2 Angaben prüfen: 23. Oktober · Anna Keller  im Text zeigen». Gelb markiert wird erst auf Klick.
+    var namen=(r.funde||[]).map(function(f){return f.text;});
+    var n=namen.length||r.anzahl;
+    var zeigen=namen.slice(0,5),rest=namen.length-zeigen.length;
+    var head=document.createElement('b');head.style.cssText='font-weight:600;color:var(--tx)';
+    head.textContent=n===1?'1 Angabe prüfen:':n+' Angaben prüfen:';
+    var liste=document.createElement('span');
+    liste.textContent=' '+zeigen.join(' · ')+(rest>0?' · +'+rest:'')+'  ';
+    var lk=document.createElement('button');lk.type='button';lk.textContent='im Text zeigen';
+    lk.style.cssText='background:none;border:0;padding:0;font:inherit;color:var(--tx);text-decoration:underline;cursor:pointer';
+    el.appendChild(head);el.appendChild(liste);el.appendChild(lk);
+    var an=false;
+    lk.addEventListener('click',function(){
+      if(!an){
+        if(body.textContent!==fullText)return;
+        body.innerHTML=F.html(r.segmente);an=true;lk.textContent='Markierung ausblenden';
       }else{
-        body.textContent=fullText;
+        body.textContent=fullText;an=false;lk.textContent='im Text zeigen';
       }
     });
   });
