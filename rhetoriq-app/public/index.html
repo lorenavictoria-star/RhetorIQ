@@ -14935,8 +14935,9 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     if(txt.length<30||!rbox.classList.contains('show')){if(ex)ex.remove();return;}
     var P=window.RQPruef,lines=[];
     try{if(P)lines=P.summary(P.find(txt));}catch(e){}
-    var h='<div>Bitte prüfen Sie Zahlen, Namen und Daten vor dem Versand.</div>';
-    if(lines.length)h+='<div style="margin-top:4px">Das sollten Sie prüfen: '+lines.map(E).join(' &middot; ')+'</div>';
+    var h=lines.length
+      ?'<div><b style="font-weight:600;color:var(--tx)">Vor dem Versand prüfen:</b> '+lines.map(E).join(' &middot; ')+'</div>'
+      :'<div>Bitte prüfen Sie Zahlen, Namen und Daten vor dem Versand.</div>';
     if(!ex){ex=document.createElement('div');ex.className='rq-pruef';ex.style.cssText='padding:10px 20px;border-top:1px solid var(--bd);font-size:12px;line-height:1.5;color:var(--mu)';body.after(ex);}
     if(ex.getAttribute('data-h')!==h){ex.innerHTML=h;ex.setAttribute('data-h',h);}
   }

@@ -8,6 +8,10 @@
   var TITEL = ['Herr','Herrn','Frau','Dr','Prof','Dipl','Direktor','Direktorin','CEO','CFO','Präsident','Präsidentin','Firma','Unternehmen','Stadt','Kanton','Gemeinde'];
   var RECHTSFORM = ['AG','GmbH','SA','Sàrl','KG','Ltd','Inc','SE','Co'];
   var MAX = 12;
+  // Häufige Hauptwörter und Grussformeln: eine Folge nur aus solchen Wörtern ist kein Name («Lesen Freude»)
+  var GEMEIN = ['Freude','Lesen','Dank','Danke','Grüsse','Gruss','Grüssen','Hoffnung','Zeit','Thema','Anfrage','Termin','Gespräch','Vorschlag','Informationen','Unterlagen','Projekt','Angebot','Wunsch','Wünsche','Zusammenarbeit','Rückmeldung','Antwort','Frage','Fragen','Gelegenheit','Interesse','Austausch','Treffen','Besuch','Einladung','Mitteilung','Nachricht','Schreiben','Wochenende','Tag','Tage','Woche','Monat','Jahr','Morgen','Abend','Moment','Möglichkeit','Wissen','Erfolg','Gruesse'];
+  var NOMEN_ENDUNG = /(ung|heit|keit|schaft|tion|ismus|lich)$/i;
+  function istGemein(w) { return GEMEIN.indexOf(w) >= 0 || NOMEN_ENDUNG.test(w); }
 
   function uniq(arr) { var seen = {}, out = []; arr.forEach(function (x) { var k = x.toLowerCase(); if (!seen[k]) { seen[k] = 1; out.push(x); } }); return out.slice(0, MAX); }
   function mask(text, re, collect) {
@@ -46,7 +50,7 @@
         while (words.length && FUNKTION.indexOf(words[0]) >= 0) words = words.slice(1);
         while (words.length && TITEL.indexOf(words[0]) >= 0) words = words.slice(1);
         var ok = false;
-        if (words.length >= 2) ok = true;
+        if (words.length >= 2) ok = !words.every(istGemein);
         else if (words.length === 1) {
           var one = run[run.length - 1];
           if (run.length > 1 && TITEL.indexOf(run[run.length - 2].w) >= 0) ok = true;
