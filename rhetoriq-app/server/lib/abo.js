@@ -18,6 +18,7 @@ const TEST_TEXTE = parseInt(process.env.GRATIS_TEST_TEXTE, 10) || 10;
 const MELDUNG = {
   trial_abgelaufen: `Ihre Testzeit von ${TEST_TAGE} Tagen ist abgelaufen. Bitte schliessen Sie ein Abo ab, um weiterzuarbeiten.`,
   trial_texte: `Sie haben alle ${TEST_TEXTE} Testtexte genutzt. Bitte schliessen Sie ein Abo ab, um weiterzuarbeiten.`,
+  trial_ueberarbeitungen: 'Sie haben die Überarbeitungen des Gratis-Tests genutzt. Bitte schliessen Sie ein Abo ab, um weiterzuarbeiten.',
   kein_abo: 'Bitte schliessen Sie zuerst ein Abo ab.',
   audit_abgelaufen: 'Ihr Stimm-Audit-Zeitraum ist abgelaufen. Bitte schliessen Sie ein Abo ab.',
   cancelled: 'Ihr Abo ist nicht mehr aktiv. Bitte schliessen Sie ein neues Abo ab.',
@@ -35,26 +36,37 @@ async function starteTest(clientId) {
   } catch (e) { console.error('[abo] Teststart:', e.message); }
 }
 
-// Stand des Gratis-Tests: { aktiv, gestartet, ende, tageRest, texteGenutzt, texteMax }
+// Überarbeitungen nach Feedback zählen nicht als Text; damit sie nicht zum Gratis-Abo werden, gilt eine grosszügige Obergrenze
+const TEST_UEBERARBEITUNGEN = TEST_TEXTE * 3;
+
+// Stand des Gratis-Tests: { aktiv, gestartet, ende, tageRest, texteGenutzt, texteMax, ueberarbeitungen }
 async function teststand(row) {
   if (!testAktiv(row)) return { aktiv: false };
   const ende = testEnde(row);
-  let genutzt = 0;
+  let genutzt = 0, ueberarb = 0;
   if (row.trial_start) {
-    const { rows } = await pool.query('SELECT COUNT(*)::int AS n FROM analyses WHERE client_id=$1 AND created_at >= $2', [row.id, row.trial_start]);
-    genutzt = Number(rows[0].n) || 0;
+    const { rows } = await pool.query(
+      `SELECT COALESCE(SUM(CASE WHEN ueberarbeitung THEN 0 ELSE 1 END), 0)::int AS texte, COALESCE(SUM(CASE WHEN ueberarbeitung THEN 1 ELSE 0 END), 0)::int AS ueb
+       FROM analyses WHERE client_id=$1 AND created_at >= $2`, [row.id, row.trial_start]);
+    genutzt = Number(rows[0].texte) || 0;
+    ueberarb = Number(rows[0].ueb) || 0;
   }
   const tageRest = ende ? Math.max(0, Math.ceil((ende - new Date()) / 86400000)) : TEST_TAGE;
-  return { aktiv: true, gestartet: !!row.trial_start, ende, tageRest, texteGenutzt: genutzt, texteMax: TEST_TEXTE };
+  return { aktiv: true, gestartet: !!row.trial_start, ende, tageRest, texteGenutzt: genutzt, texteMax: TEST_TEXTE, ueberarbeitungen: ueberarb, ueberarbeitungenMax: TEST_UEBERARBEITUNGEN };
 }
 
 // Vor jeder Textgenerierung für Klienten im Gratis-Test: startet den Test, falls noch nicht gestartet, prüft Textgrenze.
 // Rückgabe { ok:true, warnung } oder { ok:false, zg }
-async function testPruefung(row) {
+async function testPruefung(row, { ueberarbeitung = false } = {}) {
   if (!testAktiv(row)) return { ok: true, warnung: null };
   let r = row;
   if (!row.trial_start) { await starteTest(row.id); r = { ...row, trial_start: new Date() }; }
   const st = await teststand(r);
+  if (ueberarbeitung) {
+    // Überarbeitung nach Feedback: zählt nicht als Text, hat aber eine Obergrenze
+    if (st.ueberarbeitungen >= st.ueberarbeitungenMax) return { ok: false, zg: { ok: false, grund: 'trial_ueberarbeitungen', error: MELDUNG.trial_ueberarbeitungen } };
+    return { ok: true, warnung: null };
+  }
   if (st.texteGenutzt >= st.texteMax) return { ok: false, zg: { ok: false, grund: 'trial_texte', error: MELDUNG.trial_texte } };
   const rest = st.texteMax - st.texteGenutzt - 1;   // nach dem Text, der jetzt erzeugt wird
   return { ok: true, warnung: `Gratis-Test: noch ${rest} von ${st.texteMax} Texten und ${st.tageRest} Tage.` };

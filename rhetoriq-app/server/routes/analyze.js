@@ -54,7 +54,7 @@ async function checkQuota(clientId, opts = {}) {
   // Gratis-Test (Schalter pro Klient): Textgrenze und Hinweis; die Beraterin ist ausgenommen
   let testWarnung = null;
   if (!opts.advisor) {
-    const tp = await require('../lib/abo').testPruefung(cRows[0]);
+    const tp = await require('../lib/abo').testPruefung(cRows[0], { ueberarbeitung: !!opts.ueberarbeitung });
     if (!tp.ok) return { ok: false, abo: tp.zg, used: 0, limit: 0 };
     testWarnung = tp.warnung;
   }
@@ -1719,7 +1719,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     // Prüfsatz (lib/pruefsatz.js) ruft diese Route intern auf: req.pruefsatz ist nur dort gesetzt, nie aus der Anfrage
     const dry = req.pruefsatz === true;
     if (resolvedClientId) {
-      const quota = dry ? { ok: true } : await checkQuota(resolvedClientId, { advisor: req.user.role === 'advisor' });
+      const quota = dry ? { ok: true } : await checkQuota(resolvedClientId, { advisor: req.user.role === 'advisor', ueberarbeitung: !!(followUp && followUp.note) });
       if (!quota.ok) {
         if (quota.abo) return res.status(402).json(require('../lib/abo').antwort402(quota.abo, resolvedClientId));
         return res.status(429).json({
@@ -1850,10 +1850,11 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
 
     // Daten-Wächter «ersetzen»/«sperren»: in der Datenbank liegt die Fassung mit Platzhaltern (lib/speicherSchutz.js)
     const [dataDb, resultDb] = await require('../lib/speicherSchutz').schuetzeAlle(data, result);
+    await require('../lib/schemaRedesign').ensureSchema();
     const { rows } = await pool.query(
-      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice, feedback_key)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id, created_at`,
-      [resolvedClientId, advisorId, module, cfg.label, dataDb, resultDb, generatedBy, hasBrandVoice, instructionsKey || module]
+      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice, feedback_key, ueberarbeitung)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id, created_at`,
+      [resolvedClientId, advisorId, module, cfg.label, dataDb, resultDb, generatedBy, hasBrandVoice, instructionsKey || module, !!(followUp && followUp.note)]
     );
 
     const analysis = { id: rows[0].id, module, label: cfg.label, result, createdAt: rows[0].created_at, clientId: resolvedClientId };
@@ -1926,7 +1927,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     }
     let quotaWarning = null;
     if (resolvedClientId) {
-      const quota = await checkQuota(resolvedClientId, { advisor: req.user.role === 'advisor' });
+      const quota = await checkQuota(resolvedClientId, { advisor: req.user.role === 'advisor', ueberarbeitung: !!(followUp && followUp.note) });
       quotaWarning = quota.warning || null;
       if (!quota.ok) {
         if (quota.abo) return res.status(402).json(require('../lib/abo').antwort402(quota.abo, resolvedClientId));
@@ -2066,10 +2067,11 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       : (req.user.clientUserName || req.user.clientName || 'Klient');
     // Daten-Wächter «ersetzen»/«sperren»: in der Datenbank liegt die Fassung mit Platzhaltern (lib/speicherSchutz.js)
     const [dataDb, fullTextDb] = await require('../lib/speicherSchutz').schuetzeAlle(data, fullText);
+    await require('../lib/schemaRedesign').ensureSchema();
     const { rows } = await pool.query(
-      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice, feedback_key)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id, created_at`,
-      [resolvedClientId, advisorId, module, cfg.label, dataDb, fullTextDb, generatedBy, hasBrandVoice, instructionsKey || module]
+      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice, feedback_key, ueberarbeitung)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id, created_at`,
+      [resolvedClientId, advisorId, module, cfg.label, dataDb, fullTextDb, generatedBy, hasBrandVoice, instructionsKey || module, !!(followUp && followUp.note)]
     );
     require('../lib/stimmnaehe').fuerAnalyse(rows[0].id, resolvedClientId, module, fullText);   // lokale Messung, ohne KI, wirft nie
     if (draftText) require('../lib/durchgang').speichern({ analysisId: rows[0].id, clientId: resolvedClientId, advisorId, module, entwurf: draftText, endtext: fullText });   // Entwurf gegen Endtext, ohne KI

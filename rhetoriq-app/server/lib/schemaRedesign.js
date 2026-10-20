@@ -145,6 +145,8 @@ function ensureSchema() {
     // Gratis-Test (Schalter pro Klient, von der Beraterin gesetzt): beginnt beim ersten Login (trial_start)
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS gratis_test BOOLEAN NOT NULL DEFAULT FALSE`);
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS trial_start TIMESTAMPTZ`);
+    // Überarbeitungen nach Feedback (followUp) zählen im Gratis-Test nicht als Text
+    await pool.query(`ALTER TABLE analyses ADD COLUMN IF NOT EXISTS ueberarbeitung BOOLEAN NOT NULL DEFAULT FALSE`);
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS abo_mail_log TEXT`);
     // Hinweis auf KI-Unterstützung unter exportierten Texten (Standard: aus)
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS ki_hinweis BOOLEAN NOT NULL DEFAULT FALSE`);

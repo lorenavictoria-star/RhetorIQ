@@ -92,3 +92,22 @@ test('Schalter: Beraterin setzt und liest den Gratis-Test, Einschalten startet n
   r = await srv.call('GET', `/api/clients/${c.id}/gratis-test`, { token: tok });
   assert.equal(r.body.an, false);
 });
+
+test('Gratis-Test: Überarbeitung nach Feedback zählt nicht als Text, hat aber eine Obergrenze', async () => {
+  H.ai.reply = 'Ein Text.';
+  const c = await H.addClient('Überarbeitung AG');
+  await set(c.id, "subscription_status='trial', gratis_test=true, trial_start=$2", new Date());
+  const rev = () => srv.call('POST', '/api/analyze', { token: H.clientToken(c.id), body: { module: 'text-gen', data: { text: 'Einladung', tile: 'email' }, followUp: { note: 'kürzer bitte', previousResult: 'Alt' } } });
+  // eine Überarbeitung wird gespeichert, ohne die 10 Texte zu verbrauchen
+  assert.equal((await rev()).status, 200);
+  let st = await abo.teststand(await abo.clientRow(c.id));
+  assert.equal(st.texteGenutzt, 0); assert.equal(st.ueberarbeitungen, 1);
+  // 10 echte Texte aufgebraucht: neue Texte gesperrt, Überarbeitung geht weiter
+  for (let i = 0; i < 10; i++) await pool.query(`INSERT INTO analyses (client_id, advisor_id, module, result) VALUES ($1,1,'text-gen','x')`, [c.id]);
+  assert.equal((await gen(H.clientToken(c.id))).body.grund, 'trial_texte');
+  assert.equal((await rev()).status, 200, 'Überarbeitung nach den 10 Texten weiterhin möglich');
+  // Obergrenze (3 je Text = 30)
+  for (let i = 0; i < 30; i++) await pool.query(`INSERT INTO analyses (client_id, advisor_id, module, result, ueberarbeitung) VALUES ($1,1,'text-gen','x',true)`, [c.id]);
+  const r = await rev();
+  assert.equal(r.status, 402); assert.equal(r.body.grund, 'trial_ueberarbeitungen');
+});
