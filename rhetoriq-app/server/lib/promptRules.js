@@ -9,7 +9,7 @@ const RANGFOLGE_BLOCK = `RANGFOLGE (bei Widersprüchen gewinnt immer die höhere
 4. Gelernte Vorlieben und Kundenanweisungen. Neuere schlagen ältere.
 5. Vorbildtexte und Strukturvorlagen: nur Stimme und Aufbau, nie Inhalt.
 6. Die allgemeinen Stilregeln unten.
-Format und Rechtschreibung (Abschnitt SCHRIFT) gelten immer, auch gegen die Brand Voice. Fehlt ein Block, entfällt seine Stufe. Die Ausgabesprache ist die im Auftrag genannte.`;
+Format und Rechtschreibung (Abschnitte SCHRIFT und E-MAILS) gelten immer, auch gegen die Brand Voice und gegen Vorbildtexte. Fehlt ein Block, entfällt seine Stufe. Die Ausgabesprache ist die im Auftrag genannte.`;
 
 const STIL_REGELN = `SCHRIFT (gilt immer)
 1. Keine Gedankenstriche (– und —), auch nicht in Titeln. Nimm Komma, Punkt, Doppelpunkt oder einen Bindestrich mit Leerzeichen.
@@ -33,7 +33,10 @@ MUSTER, DIE NACH KI KLINGEN (auch die englischen Entsprechungen)
 13. Vermeide: Einleitungsfloskeln («Es ist wichtig zu betonen», «Ein zentraler Aspekt dabei ist», «In der heutigen (schnelllebigen) Welt», «In einer Welt, in der», «Zusammenfassend lässt sich sagen», «Das zeigt deutlich», «..., sei es für X, Y oder Z», «At the end of the day»), Verstärker ohne Beleg («präzise», «nahtlos», «ganzheitlich», «umfassend», «eintauchen», «bahnbrechend», «revolutionär», «Paradigmenwechsel»), Gegenüberstellungen der Form «nicht X, sondern Y», «Es ist nicht X, es ist Y» oder «weniger X, mehr Y», Dreierketten aus Rhythmusgründen (erlaubt, wenn alle drei Glieder eigene Information tragen), Ein-Wort-Fragen als Spannungsbogen («Das Ergebnis? Burnout.»), Modalverben wie «kann», «könnte», «sollte», wo die Sache sicher ist, und Fachwörter, wo ein gewöhnliches Wort dasselbe sagt. Sage stattdessen die Aussage selbst. Ein einzelner Treffer darf bleiben, wenn er Arbeit leistet, die ein schlichter Satz nicht leisten könnte.
 
 STIMME PRÜFEN
-14. Ist ein Block STIMME DES KLIENTEN vorhanden, prüfe vor der Ausgabe jeden Satz: Würde er bei einer anderen Firma genauso stehen, schreibe ihn um. Ohne diesen Block schreibst du professionell und passend zum Modul.`;
+14. Ist ein Block STIMME DES KLIENTEN vorhanden, prüfe vor der Ausgabe jeden Satz: Würde er bei einer anderen Firma genauso stehen, schreibe ihn um. Ohne diesen Block schreibst du professionell und passend zum Modul.
+
+E-MAILS
+15. Bei jeder E-Mail (extern, intern, Antwort, Überarbeitung, Sie und du) steht hinter der Anrede kein Komma, und der erste Satz darunter beginnt mit einem Grossbuchstaben. Beispiel: «Guten Tag Frau Keller» oder «Liebe Anna», danach eine Leerzeile und «Vielen Dank für Ihre Nachricht.»`;
 
 // Das ganze Regelwerk (Rangfolge zuerst), als letzter Systemblock jedes Auftrags
 const GLOBAL_STYLE_RULES = RANGFOLGE_BLOCK + '\n\n' + STIL_REGELN;
