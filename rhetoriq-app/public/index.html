@@ -5701,7 +5701,7 @@ function buildTextGen(prefill,form){
   const rboxWrapHtml=tileData.map(t=>`
     <div class="tg-rbox-wrap" id="tg-rbox-wrap-${t.id}" style="display:none">
       <div class="rbox" id="text-gen-r-${t.id}"><div class="rhead"><span class="rlbl">${tl.tg_result}</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b-${t.id}')">${tl.btn_copy}</button>${t.id==='newsletter'?`<button class="exbtn" style="background:#f9f6ff;border-color:#e0d4f5;color:#7c3aed" onclick="klvSavePrompt('${t.id}')">→ Klaviyo</button>`:''}</div></div><div class="rbody" id="text-gen-b-${t.id}"></div>
-        ${t.id==='email'?`<div class="rq-mailfoot" style="display:flex;justify-content:flex-end;padding:10px 20px;border-top:1px solid var(--bd)"><button type="button" onclick="mailMenue(event,'${t.id}')" style="background:var(--tx);color:var(--bg,#fff);border:0;border-radius:6px;padding:9px 16px;font:inherit;font-size:13px;font-weight:600;cursor:pointer">In Mail öffnen &#9662;</button></div>`:''}
+        ${t.id==='email'?`<div class="rq-mailfoot" style="display:flex;justify-content:flex-end;padding:10px 20px;border-top:1px solid var(--bd)"><button type="button" class="rq-mailbtn" onclick="mailMenue(event,'${t.id}')">In Mail öffnen &#9662;</button></div>`:''}
         ${t.id==='newsletter'?`<div id="klv-save-area-${t.id}" style="display:none;padding:10px;border-top:1px solid #e0d4f5">
           <div class="fg2"><label class="fl2">${tl.klv_subject||'Email Subject'}</label><input type="text" id="klv-subject-${t.id}" placeholder="${tl.klv_subject_ph||'e.g. Our March Newsletter'}"></div>
           <button class="runbtn" style="margin-top:8px;background:#7c3aed;border-color:#7c3aed" onclick="sendToKlaviyo('${t.id}')">${tl.klv_send||'Save as Draft in Klaviyo'}</button>
@@ -10300,6 +10300,8 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
 .rq-quick .lbl{font-size:12px;color:var(--mu);margin-bottom:6px}
 .rq-quick button,.rq-fine button{border:1px solid var(--ac);background:#faf6ec;color:var(--ac);padding:7px 13px;margin:0 6px 6px 0;cursor:pointer;font-family:var(--sans);font-size:13px;min-height:36px}
 .rq-quick button:hover,.rq-fine button:hover{background:var(--ac);color:#fff}
+.rq-mailbtn{border:1px solid var(--ac);background:#faf6ec;color:var(--ac);padding:7px 13px;cursor:pointer;font-family:var(--sans);font-size:13px;min-height:36px}
+.rq-mailbtn:hover{background:var(--ac);color:#fff}
 .rq-fine{margin:12px 0 2px;display:flex;flex-wrap:wrap;align-items:center}
 .rq-fine .lbl{margin:0 12px 6px 0;font-size:12px;color:var(--mu)}
 .rq-fine .gen-rating-bar{margin:0 0 0 auto!important;gap:2px!important;flex-wrap:nowrap!important}
