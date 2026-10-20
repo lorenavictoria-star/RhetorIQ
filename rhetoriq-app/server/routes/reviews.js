@@ -219,6 +219,7 @@ router.put('/:id', requireAdvisor, async (req, res) => {
       learnFromReview(rows[0].id).catch(e => console.error('[learning] failed:', e.message));
       // Newsletter mit gemerktem Klaviyo-Ziel: nach der Freigabe automatisch als Entwurf ablegen (nie versenden)
       require('../lib/klaviyoAuto').nachFreigabe(rows[0], editedText);
+      require('../lib/integrationAuto').nachFreigabe(rows[0], editedText);   // Brevo und Mailchimp, wenn verbunden und gemerkt
     }
     res.json(rows[0]);
   } catch (e) {

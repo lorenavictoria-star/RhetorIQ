@@ -281,6 +281,35 @@ function ensureSchema() {
         absender_name TEXT,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
+    // Anbindungen Brevo, Mailchimp, WordPress (lib/integrationen.js): verschlüsselte Zugangsdaten, gemerkte Listen, Übertragungen
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS integration_zugang (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        anbieter TEXT NOT NULL,
+        secret_enc TEXT NOT NULL,
+        geprueft_am TIMESTAMPTZ,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS integration_zugang_idx ON integration_zugang (client_id, anbieter)`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS integration_voreinstellung (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        anbieter TEXT NOT NULL,
+        daten TEXT,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS integration_voreinstellung_idx ON integration_voreinstellung (client_id, anbieter)`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS integration_uebertragungen (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        anbieter TEXT NOT NULL,
+        review_id INTEGER,
+        externe_id TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
     // Finanzaufstellung der Beraterin (lib/finanzen.js): Fixkosten, Einstellungen, tatsächliche Anthropic-Rechnung je Monat
     await pool.query(`
       CREATE TABLE IF NOT EXISTS finanz_fixkosten (
