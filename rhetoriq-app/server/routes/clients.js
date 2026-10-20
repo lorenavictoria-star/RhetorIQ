@@ -478,6 +478,40 @@ router.put('/:id/token-limit', requireAdvisor, async (req, res) => {
   }
 });
 
+// GET /api/clients/:id/gratis-test: Schalter und Stand des Gratis-Tests (nur Beraterin)
+router.get('/:id/gratis-test', requireAdvisor, async (req, res) => {
+  try {
+    const abo = require('../lib/abo');
+    const { rows } = await pool.query('SELECT id FROM clients WHERE id = $1 AND advisor_id = $2', [req.params.id, req.user.id]);
+    if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
+    const row = await abo.clientRow(rows[0].id);
+    const st = await abo.teststand(row);
+    res.json({ an: row.gratis_test === true, status: row.subscription_status || 'trial', tage: abo.TEST_TAGE, texte: abo.TEST_TEXTE, ...st });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/clients/:id/gratis-test { an: true|false }: die Beraterin entscheidet je Klient zwischen Gratis-Test und direktem Abo.
+// Einschalten startet den Test neu (beginnt beim nächsten Login), Ausschalten verlangt sofort ein Abo.
+router.put('/:id/gratis-test', requireAdvisor, async (req, res) => {
+  try {
+    const an = req.body && (req.body.an === true || req.body.an === 'true');
+    await require('../lib/schemaRedesign').ensureSchema();
+    const { rows } = await pool.query(
+      `UPDATE clients SET gratis_test = $1, trial_start = CASE WHEN $1 THEN NULL ELSE trial_start END
+       WHERE id = $2 AND advisor_id = $3 RETURNING id`,
+      [an, req.params.id, req.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
+    res.json({ an });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // PUT /api/clients/:id/aufbewahrung — wie lange Eingaben und Ergebnisse gespeichert bleiben (Tage, leer = unbegrenzt).
 // Danach leert der tägliche Löschlauf (lib/retention.js) die Inhalte; Zähler, Bewertungen und Daten bleiben.
 router.put('/:id/aufbewahrung', requireAdvisor, async (req, res) => {

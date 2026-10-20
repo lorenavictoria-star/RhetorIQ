@@ -142,6 +142,9 @@ function ensureSchema() {
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trial'`);
     // Selbst verwaltetes Abo: Ende des Stimm-Audit-Zeitraums und Merker für bereits versendete Kontingent-Mails (lib/abo.js)
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS zugang_bis TIMESTAMPTZ`);
+    // Gratis-Test (Schalter pro Klient, von der Beraterin gesetzt): beginnt beim ersten Login (trial_start)
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS gratis_test BOOLEAN NOT NULL DEFAULT FALSE`);
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS trial_start TIMESTAMPTZ`);
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS abo_mail_log TEXT`);
     // Hinweis auf KI-Unterstützung unter exportierten Texten (Standard: aus)
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS ki_hinweis BOOLEAN NOT NULL DEFAULT FALSE`);

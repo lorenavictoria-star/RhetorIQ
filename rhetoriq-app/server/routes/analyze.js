@@ -47,12 +47,19 @@ const QUOTA_WARNING_THRESHOLD = 0.85;
 async function checkQuota(clientId, opts = {}) {
   if (!clientId) return { ok: true };
   await require('../lib/schemaRedesign').ensureSchema();
-  const { rows: cRows } = await pool.query('SELECT name, monthly_token_limit, subscription_status, zugang_bis, created_at FROM clients WHERE id=$1', [clientId]);
+  const { rows: cRows } = await pool.query('SELECT id, name, monthly_token_limit, subscription_status, zugang_bis, created_at, gratis_test, trial_start FROM clients WHERE id=$1', [clientId]);
   // Ein einziger Abo-Check vor jeder Textgenerierung (lib/abo.js); die Beraterin ist von den neuen Regeln ausgenommen
   const zg = require('../lib/abo').zugang(cRows[0], { advisor: !!opts.advisor });
   if (!zg.ok) return { ok: false, abo: zg, used: 0, limit: 0 };
+  // Gratis-Test (Schalter pro Klient): Textgrenze und Hinweis; die Beraterin ist ausgenommen
+  let testWarnung = null;
+  if (!opts.advisor) {
+    const tp = await require('../lib/abo').testPruefung(cRows[0]);
+    if (!tp.ok) return { ok: false, abo: tp.zg, used: 0, limit: 0 };
+    testWarnung = tp.warnung;
+  }
   const baseLimit = cRows[0]?.monthly_token_limit;
-  if (!baseLimit) return { ok: true }; // no limit set = unlimited
+  if (!baseLimit) return { ok: true, warning: testWarnung }; // no limit set = unlimited
   const { rows: topupRows } = await pool.query(
     `SELECT COALESCE(SUM(tokens), 0)::bigint AS topup
      FROM usage_topups WHERE client_id=$1 AND date_trunc('month', created_at) = date_trunc('month', NOW())`,
@@ -72,7 +79,7 @@ async function checkQuota(clientId, opts = {}) {
   const warning = used >= limit * QUOTA_WARNING_THRESHOLD
     ? `Liebe/r ${clientName}, Sie nutzen RhetorIQ diesen Monat richtig aktiv – schon ${Math.round(used / limit * 100)} % Ihres Kontingents sind ausgeschöpft.`
     : null;
-  return { ok: true, used, limit, warning };
+  return { ok: true, used, limit, warning: warning || testWarnung };
 }
 
 // Sanitize user-controlled text before injecting into system prompts.

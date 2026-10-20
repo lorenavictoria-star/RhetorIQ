@@ -67,6 +67,7 @@ router.post('/login-any', async (req, res) => {
     for (const client of cr) {
       if (!(await check(client.password_hash))) continue;
       lock.recordSuccess(lockKey);
+      require('../lib/abo').starteTest(client.id);   // Gratis-Test beginnt beim ersten Login (nur wenn die Beraterin ihn eingeschaltet hat)
       const token = jwt.sign(
         { clientId: client.id, clientName: client.name, role: 'client', advisorId: client.advisor_id, mustChangePassword: !!client.must_change_password, tokenVersion: client.token_version },
         process.env.JWT_SECRET, { expiresIn: CLIENT_SESSION });
@@ -84,6 +85,7 @@ router.post('/login-any', async (req, res) => {
     for (const cu of tr) {
       if (!(await check(cu.password_hash))) continue;
       lock.recordSuccess(lockKey);
+      require('../lib/abo').starteTest(cu.client_id);
       const token = jwt.sign(
         { clientId: cu.client_id, clientName: cu.client_name, role: 'client', advisorId: null,
           clientUserId: cu.id, clientUserName: cu.name, clientUserEmail: cu.email, clientUserRole: cu.role, tokenVersion: cu.token_version },
@@ -116,6 +118,7 @@ router.post('/client-login', async (req, res) => {
     const client = rows[0];
     if (!client) return res.status(401).json({ error: 'Invalid client token' });
 
+    require('../lib/abo').starteTest(client.id);
     const jwtToken = jwt.sign(
       { clientId: client.id, clientName: client.name, role: 'client', advisorId: client.advisor_id, tokenVersion: client.token_version },
       process.env.JWT_SECRET,
@@ -150,6 +153,7 @@ router.post('/client-password-login', async (req, res) => {
     const ok = await bcrypt.compare(password, client.password_hash);
     if (!ok) { lock.recordFailure(lockKey); return res.status(401).json({ error: 'Invalid credentials' }); }
     lock.recordSuccess(lockKey);
+    require('../lib/abo').starteTest(client.id);
 
     const jwtToken = jwt.sign(
       { clientId: client.id, clientName: client.name, role: 'client', advisorId: client.advisor_id, mustChangePassword: !!client.must_change_password, tokenVersion: client.token_version },
@@ -190,6 +194,7 @@ router.post('/client-user-login', async (req, res) => {
     const ok = await bcrypt.compare(password, cu.password_hash);
     if (!ok) { lock.recordFailure(lockKey); return res.status(401).json({ error: 'Invalid credentials' }); }
     lock.recordSuccess(lockKey);
+    require('../lib/abo').starteTest(cu.client_id);
 
     const jwtToken = jwt.sign(
       { clientId: cu.client_id, clientName: cu.client_name, role: 'client', advisorId: null,

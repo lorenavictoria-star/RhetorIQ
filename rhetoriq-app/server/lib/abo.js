@@ -11,12 +11,54 @@ function pflichtAb() {
   return isNaN(d.getTime()) ? new Date('2026-10-10T00:00:00Z') : d;
 }
 
+// Gratis-Test: Dauer und Anzahl Texte (Umgebungsvariablen GRATIS_TEST_TAGE und GRATIS_TEST_TEXTE)
+const TEST_TAGE = parseInt(process.env.GRATIS_TEST_TAGE, 10) || 14;
+const TEST_TEXTE = parseInt(process.env.GRATIS_TEST_TEXTE, 10) || 10;
+
 const MELDUNG = {
+  trial_abgelaufen: `Ihre Testzeit von ${TEST_TAGE} Tagen ist abgelaufen. Bitte schliessen Sie ein Abo ab, um weiterzuarbeiten.`,
+  trial_texte: `Sie haben alle ${TEST_TEXTE} Testtexte genutzt. Bitte schliessen Sie ein Abo ab, um weiterzuarbeiten.`,
   kein_abo: 'Bitte schliessen Sie zuerst ein Abo ab.',
   audit_abgelaufen: 'Ihr Stimm-Audit-Zeitraum ist abgelaufen. Bitte schliessen Sie ein Abo ab.',
   cancelled: 'Ihr Abo ist nicht mehr aktiv. Bitte schliessen Sie ein neues Abo ab.',
   pending_plan: 'Bitte schliessen Sie zuerst ein Abo ab.'
 };
+
+function testAktiv(row) { return !!(row && row.gratis_test === true && (row.subscription_status || 'trial') === 'trial'); }
+function testEnde(row) { return row && row.trial_start ? new Date(new Date(row.trial_start).getTime() + TEST_TAGE * 86400000) : null; }
+
+// Der Test beginnt beim ersten Login der Klientin oder des Klienten. Wirft nie.
+async function starteTest(clientId) {
+  try {
+    await ensureSchema();
+    await pool.query('UPDATE clients SET trial_start=NOW() WHERE id=$1 AND gratis_test=true AND trial_start IS NULL', [clientId]);
+  } catch (e) { console.error('[abo] Teststart:', e.message); }
+}
+
+// Stand des Gratis-Tests: { aktiv, gestartet, ende, tageRest, texteGenutzt, texteMax }
+async function teststand(row) {
+  if (!testAktiv(row)) return { aktiv: false };
+  const ende = testEnde(row);
+  let genutzt = 0;
+  if (row.trial_start) {
+    const { rows } = await pool.query('SELECT COUNT(*)::int AS n FROM analyses WHERE client_id=$1 AND created_at >= $2', [row.id, row.trial_start]);
+    genutzt = Number(rows[0].n) || 0;
+  }
+  const tageRest = ende ? Math.max(0, Math.ceil((ende - new Date()) / 86400000)) : TEST_TAGE;
+  return { aktiv: true, gestartet: !!row.trial_start, ende, tageRest, texteGenutzt: genutzt, texteMax: TEST_TEXTE };
+}
+
+// Vor jeder Textgenerierung für Klienten im Gratis-Test: startet den Test, falls noch nicht gestartet, prüft Textgrenze.
+// Rückgabe { ok:true, warnung } oder { ok:false, zg }
+async function testPruefung(row) {
+  if (!testAktiv(row)) return { ok: true, warnung: null };
+  let r = row;
+  if (!row.trial_start) { await starteTest(row.id); r = { ...row, trial_start: new Date() }; }
+  const st = await teststand(r);
+  if (st.texteGenutzt >= st.texteMax) return { ok: false, zg: { ok: false, grund: 'trial_texte', error: MELDUNG.trial_texte } };
+  const rest = st.texteMax - st.texteGenutzt - 1;   // nach dem Text, der jetzt erzeugt wird
+  return { ok: true, warnung: `Gratis-Test: noch ${rest} von ${st.texteMax} Texten und ${st.tageRest} Tage.` };
+}
 
 // Prüft, ob für diesen Klienten Texte erzeugt werden dürfen. row: Zeile aus clients. advisor: Zugriff der Beraterin (neue Regeln gelten nicht für sie).
 // Rückgabe: { ok:true } oder { ok:false, grund, error }
@@ -27,6 +69,12 @@ function zugang(row, { advisor = false, jetzt = new Date() } = {}) {
   if (st === 'pending_plan') return { ok: false, grund: 'pending_plan', error: MELDUNG.pending_plan };
   if (advisor) return { ok: true };
   if (row.zugang_bis && new Date(row.zugang_bis) < jetzt) return { ok: false, grund: 'audit_abgelaufen', error: MELDUNG.audit_abgelaufen };
+  if (st === 'trial' && row.gratis_test === true) {
+    // Gratis-Test: läuft ab dem ersten Login; die Textgrenze prüft testPruefung (braucht die Datenbank)
+    const ende = testEnde(row);
+    if (ende && ende < jetzt) return { ok: false, grund: 'trial_abgelaufen', error: MELDUNG.trial_abgelaufen };
+    return { ok: true };
+  }
   if (st === 'trial' && row.created_at && new Date(row.created_at) >= pflichtAb()) return { ok: false, grund: 'kein_abo', error: MELDUNG.kein_abo };
   return { ok: true };
 }
@@ -42,7 +90,7 @@ function antwort402(z, clientId) {
 
 async function clientRow(clientId) {
   await ensureSchema();
-  const { rows } = await pool.query('SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log FROM clients WHERE id=$1', [clientId]);
+  const { rows } = await pool.query('SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log, gratis_test, trial_start FROM clients WHERE id=$1', [clientId]);
   return rows[0] || null;
 }
 
@@ -115,4 +163,4 @@ async function pruefeSchwellen(clientId) {
   }
 }
 
-module.exports = { TOKENS_PRO_TEXT, MELDUNG, zugang, antwort402, clientRow, verbrauch, texte, hinweise, pruefeSchwellen, pflichtAb };
+module.exports = { TEST_TAGE, TEST_TEXTE, testAktiv, testEnde, starteTest, teststand, testPruefung, TOKENS_PRO_TEXT, MELDUNG, zugang, antwort402, clientRow, verbrauch, texte, hinweise, pruefeSchwellen, pflichtAb };
