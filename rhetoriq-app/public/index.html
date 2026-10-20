@@ -1075,25 +1075,6 @@ html[lang="en"] .legal-en-note{display:block}
       </div>
       <div style="font-size:11px;color:var(--mu);margin-top:6px" id="mc-token-usage"></div>
     </div>
-    <div style="padding:12px 20px;border-bottom:1px solid var(--bd);flex-shrink:0">
-      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-bottom:8px">Einstieg: Gratis-Test oder direkt Abo</div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <select id="mc-gratis" style="padding:7px 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg)">
-          <option value="aus">Direkt Abo (kein Test)</option>
-          <option value="an">Gratis-Test (14 Tage, 10 Texte)</option>
-        </select>
-        <button class="lbtn" style="padding:5px 12px;font-size:11px" onclick="saveGratisTest()">Speichern</button>
-      </div>
-      <div style="font-size:11px;color:var(--mu);margin-top:6px" id="mc-gratis-info"></div>
-    </div>
-    <div style="padding:12px 20px;border-bottom:1px solid var(--bd);flex-shrink:0">
-      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-bottom:8px">Aufbewahrung der Texte</div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <input type="number" id="mc-aufbewahrung" min="7" max="3650" step="1" placeholder="unbegrenzt" style="width:150px;padding:7px 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg)">
-        <span style="font-size:12px;color:var(--mu)">Tage &middot; danach werden Eingaben und Ergebnisse gelöscht &middot; leer lassen = unbegrenzt</span>
-        <button class="lbtn" style="padding:5px 12px;font-size:11px" onclick="saveAufbewahrung()">Speichern</button>
-      </div>
-    </div>
     <div id="mc-body" style="overflow-y:auto;flex:1;padding:8px 0"></div>
     <div style="padding:10px 20px;border-top:1px solid var(--bd);flex-shrink:0">
       <div id="mc-custom-form" style="display:none;margin-bottom:12px;padding:14px;background:var(--sf);border-radius:8px;border:1px solid var(--bd)">
@@ -4168,51 +4149,8 @@ async function saveTokenLimit(){
     loadTokenUsage(_mcClientId);
   }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
 }
-async function loadGratisTest(cid){
-  const sel=document.getElementById('mc-gratis'),info=document.getElementById('mc-gratis-info');
-  if(!sel||!info)return;
-  sel.value='aus';info.textContent='';
-  try{
-    const r=await api('/api/clients/'+cid+'/gratis-test');
-    const d=await r.json();if(!r.ok)throw new Error(d.error);
-    sel.value=d.an?'an':'aus';
-    if(d.status!=='trial'&&d.status!==undefined&&d.an)info.textContent='Dieser Klient hat bereits ein Abo, der Test spielt keine Rolle mehr.';
-    else if(d.an&&!d.gestartet)info.textContent='Der Test beginnt beim ersten Login des Klienten ('+d.tage+' Tage, '+d.texte+' Texte).';
-    else if(d.an)info.textContent='Test läuft: noch '+d.tageRest+' Tage, '+d.texteGenutzt+' von '+d.texteMax+' Texten genutzt. Danach ist ein Abo nötig.';
-    else info.textContent='Ohne Abo kann dieser Klient keine Texte erzeugen.';
-  }catch(e){console.error(e);}
-}
-async function saveGratisTest(){
-  if(!_mcClientId)return;
-  const an=document.getElementById('mc-gratis').value==='an';
-  try{
-    const r=await api('/api/clients/'+_mcClientId+'/gratis-test',{method:'PUT',body:JSON.stringify({an})});
-    const d=await r.json();if(!r.ok){alert(d.error||'Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');return;}
-    loadGratisTest(_mcClientId);
-  }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
-}
-async function loadAufbewahrung(cid){
-  const input=document.getElementById('mc-aufbewahrung');
-  input.value='';
-  try{
-    const r=await api('/api/clients/'+cid+'/aufbewahrung');
-    const d=await r.json();if(!r.ok)throw new Error(d.error);
-    if(d.tage)input.value=d.tage;
-  }catch(e){console.error(e);}
-}
-async function saveAufbewahrung(){
-  if(!_mcClientId)return;
-  const raw=document.getElementById('mc-aufbewahrung').value.trim();
-  try{
-    const r=await api('/api/clients/'+_mcClientId+'/aufbewahrung',{method:'PUT',body:JSON.stringify({tage:raw===''?null:raw})});
-    const d=await r.json();if(!r.ok){alert(d.error||'Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');return;}
-    loadAufbewahrung(_mcClientId);
-  }catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
-}
 function openModuleConfig(cid){
   _mcClientId=cid;
-  loadAufbewahrung(cid);
-  loadGratisTest(cid);
   const c=clients.find(x=>x.id==cid);if(!c)return;
   loadTokenUsage(cid);
   document.getElementById('mc-title').textContent='Module — '+c.name;
@@ -15038,6 +14976,54 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
       };
     }catch(e){console.error(e);}
   };
+  // ── Verwaltung: Gratis-Test oder direkt Abo, Aufbewahrung der Texte (nur Beraterin) ──
+  var raZ=window.wsRenderAdmin;
+  if(typeof raZ==='function')window.wsRenderAdmin=function(body){
+    raZ.apply(this,arguments);
+    try{
+      var cid=_wsClientId;if(!cid)return;
+      var lab='font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px';
+      var inp='padding:7px 10px;border:1px solid var(--bd);font-size:13px;font-family:inherit;background:var(--bg)';
+      var g=document.createElement('div');g.style.cssText='margin:0 0 18px;padding:14px 16px;border:1px solid var(--bd);background:#fff';
+      g.innerHTML='<div style="'+lab+'">Gratis-Test oder direkt Abo</div>'
+        +'<div style="font-size:12.5px;color:var(--mu);margin-bottom:8px">Du entscheidest je Klient. Der Gratis-Test beginnt beim ersten Login und gilt 14 Tage oder 10 Texte. Überarbeitungen nach Feedback zählen nicht als Text. Danach ist ein Abo nötig.</div>'
+        +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><select id="vw-gratis" style="'+inp+'"><option value="aus">Direkt Abo (kein Test)</option><option value="an">Gratis-Test (14 Tage, 10 Texte)</option></select>'
+        +'<button type="button" class="obtn" id="vw-gratis-save">Speichern</button></div>'
+        +'<div class="rq-hint" id="vw-gratis-info" style="font-size:12px;color:var(--mu);margin-top:6px"></div>';
+      var f=document.createElement('div');f.style.cssText=g.style.cssText;
+      f.innerHTML='<div style="'+lab+'">Aufbewahrung der Texte</div>'
+        +'<div style="font-size:12.5px;color:var(--mu);margin-bottom:8px">Nach dieser Zeit werden Eingaben und Ergebnisse dieses Klienten gelöscht. Leer lassen bedeutet unbegrenzt.</div>'
+        +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><input type="number" id="vw-aufb" min="7" max="3650" step="1" placeholder="unbegrenzt" style="width:150px;'+inp+'"> <span style="font-size:13px">Tage</span>'
+        +'<button type="button" class="obtn" id="vw-aufb-save">Speichern</button></div>'
+        +'<div class="rq-hint" id="vw-aufb-info" style="font-size:12px;color:var(--mu);margin-top:6px"></div>';
+      body.appendChild(g);body.appendChild(f);
+      var sel=g.querySelector('#vw-gratis'),gi=g.querySelector('#vw-gratis-info');
+      function ladeG(){
+        api('/api/clients/'+cid+'/gratis-test').then(function(r){return r.json();}).then(function(d){
+          sel.value=d.an?'an':'aus';
+          if(d.an&&d.status&&d.status!=='trial')gi.textContent='Dieser Klient hat bereits ein Abo, der Test spielt keine Rolle mehr.';
+          else if(d.an&&!d.gestartet)gi.textContent='Der Test beginnt beim ersten Login des Klienten ('+d.tage+' Tage, '+d.texte+' Texte).';
+          else if(d.an)gi.textContent='Test läuft: noch '+d.tageRest+' Tage, '+d.texteGenutzt+' von '+d.texteMax+' Texten genutzt, '+d.ueberarbeitungen+' Überarbeitungen. Danach ist ein Abo nötig.';
+          else gi.textContent='Ohne Abo kann dieser Klient keine Texte erzeugen.';
+        }).catch(function(){});
+      }
+      g.querySelector('#vw-gratis-save').onclick=function(){
+        gi.textContent='Speichert …';
+        api('/api/clients/'+cid+'/gratis-test',{method:'PUT',body:JSON.stringify({an:sel.value==='an'})}).then(function(r){
+          if(!r.ok)gi.textContent='Konnte nicht gespeichert werden.';else ladeG();
+        }).catch(function(){gi.textContent='Konnte nicht gespeichert werden.';});
+      };
+      ladeG();
+      var ai=f.querySelector('#vw-aufb'),fi=f.querySelector('#vw-aufb-info');
+      api('/api/clients/'+cid+'/aufbewahrung').then(function(r){return r.json();}).then(function(d){if(d&&d.tage)ai.value=d.tage;}).catch(function(){});
+      f.querySelector('#vw-aufb-save').onclick=function(){
+        var raw=ai.value.trim();fi.textContent='Speichert …';
+        api('/api/clients/'+cid+'/aufbewahrung',{method:'PUT',body:JSON.stringify({tage:raw===''?null:raw})}).then(function(r){return r.json().then(function(d){
+          fi.textContent=r.ok?(raw===''?'Gespeichert: unbegrenzt.':'Gespeichert: Löschung nach '+raw+' Tagen.'):(d.error||'Konnte nicht gespeichert werden.');
+        });}).catch(function(){fi.textContent='Konnte nicht gespeichert werden.';});
+      };
+    }catch(e){console.error(e);}
+  };
   // ── Umsatzanteil je Klient (Seite Nutzung, nur Beraterin) ──
   var LIM=40;
   function chf(n){return 'CHF '+Number(n).toLocaleString('de-CH',{maximumFractionDigits:0}).replace(/’/g,"'");}
@@ -16197,7 +16183,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
 (function(){
   // Verwaltung der Beraterin: Alltagsknöpfe oben, Optionen in klappbaren Gruppen, Zugang ganz unten
   var GROUPS=[
-    {id:'pakete',title:'Pakete und Zusatzleistungen',hint:'Empfohlenes Paket, Jahreszahlung, Zusatzmodul, Quartalsreview',keys:['Empfohlenes Paket','Jahreszahlung','Zu den Modulen','Quartalsreview']},
+    {id:'pakete',title:'Pakete und Zusatzleistungen',hint:'Gratis-Test oder Abo, Empfohlenes Paket, Jahreszahlung, Zusatzmodul, Quartalsreview, Aufbewahrung der Texte',keys:['Gratis-Test oder direkt Abo','Aufbewahrung der Texte','Empfohlenes Paket','Jahreszahlung','Zu den Modulen','Quartalsreview']},
     {id:'abrechnung',title:'Zeit und Mehraufwand',hint:'Zeiterfassung für Rechnungen',keys:['Zeit und Mehraufwand']},
     {id:'weitere',title:'Weitere Einstellungen und Unterlagen',hint:'KI-Hinweis, Stimmenmappe und Handbuch',keys:['Hinweis auf KI-Unterstützung','Stimmenmappe']}
   ];
