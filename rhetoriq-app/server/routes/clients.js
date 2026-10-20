@@ -498,13 +498,22 @@ router.get('/:id/gratis-test', requireAdvisor, async (req, res) => {
 router.put('/:id/gratis-test', requireAdvisor, async (req, res) => {
   try {
     const an = req.body && (req.body.an === true || req.body.an === 'true');
+    // zuruecksetzen: Abo-Status wieder auf «Test» stellen (nur wenn der Klient nicht über Stripe zahlt)
+    const reset = an && req.body && req.body.zuruecksetzen === true;
     await require('../lib/schemaRedesign').ensureSchema();
+    await pool.query('ALTER TABLE clients ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT');
     const { rows } = await pool.query(
-      `UPDATE clients SET gratis_test = $1, trial_start = CASE WHEN $1 THEN NULL ELSE trial_start END
-       WHERE id = $2 AND advisor_id = $3 RETURNING id`,
-      [an, req.params.id, req.user.id]
+      `UPDATE clients SET gratis_test = $1::boolean, trial_start = CASE WHEN $1::boolean THEN NULL ELSE trial_start END,
+         subscription_status = CASE WHEN $4::boolean THEN 'trial' ELSE subscription_status END,
+         zugang_bis = CASE WHEN $4::boolean THEN NULL ELSE zugang_bis END
+       WHERE id = $2 AND advisor_id = $3 AND ($4::boolean = false OR stripe_customer_id IS NULL) RETURNING id`,
+      [an, req.params.id, req.user.id, reset]
     );
-    if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
+    if (!rows[0]) {
+      const { rows: da } = await pool.query('SELECT id FROM clients WHERE id = $1 AND advisor_id = $2', [req.params.id, req.user.id]);
+      if (da[0] && reset) return res.status(409).json({ error: 'Dieser Klient hat ein Stripe-Abo. Bitte zuerst im Kundenportal oder in Stripe kündigen.' });
+      return res.status(404).json({ error: 'Client not found' });
+    }
     res.json({ an });
   } catch (e) {
     console.error(e);

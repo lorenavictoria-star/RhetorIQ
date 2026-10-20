@@ -15001,7 +15001,16 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
       function ladeG(){
         api('/api/clients/'+cid+'/gratis-test').then(function(r){return r.json();}).then(function(d){
           sel.value=d.an?'an':'aus';
-          if(d.an&&d.status&&d.status!=='trial')gi.textContent='Dieser Klient hat bereits ein Abo, der Test spielt keine Rolle mehr.';
+          var stT={active:'ein aktives Abo',past_due:'ein Abo mit fehlgeschlagener Zahlung',cancelled:'ein gekündigtes Abo',pending_plan:'den Status «Plan ausstehend»'};
+          if(d.an&&d.status&&d.status!=='trial'){
+            gi.innerHTML='Dieser Klient hat '+(stT[d.status]||'den Status «'+E(d.status)+'»')+', der Test greift deshalb nicht. <button type="button" class="obtn" id="vw-gratis-reset">Auf Gratis-Test zurücksetzen</button>';
+            gi.querySelector('#vw-gratis-reset').onclick=function(){
+              gi.textContent='Setzt zurück …';
+              api('/api/clients/'+cid+'/gratis-test',{method:'PUT',body:JSON.stringify({an:true,zuruecksetzen:true})}).then(function(r){return r.json().then(function(x){
+                if(!r.ok)gi.textContent=x.error||'Konnte nicht zurückgesetzt werden.';else ladeG();
+              });}).catch(function(){gi.textContent='Konnte nicht zurückgesetzt werden.';});
+            };
+          }
           else if(d.an&&!d.gestartet)gi.textContent='Der Test beginnt beim ersten Login des Klienten ('+d.tage+' Tage, '+d.texte+' Texte).';
           else if(d.an)gi.textContent='Test läuft: noch '+d.tageRest+' Tage, '+d.texteGenutzt+' von '+d.texteMax+' Texten genutzt, '+d.ueberarbeitungen+' Überarbeitungen. Danach ist ein Abo nötig.';
           else gi.textContent='Ohne Abo kann dieser Klient keine Texte erzeugen.';

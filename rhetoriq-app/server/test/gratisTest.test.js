@@ -111,3 +111,19 @@ test('Gratis-Test: Überarbeitung nach Feedback zählt nicht als Text, hat aber 
   const r = await rev();
   assert.equal(r.status, 402); assert.equal(r.body.grund, 'trial_ueberarbeitungen');
 });
+
+test('Gratis-Test zurücksetzen: Status wieder «trial», aber nicht bei Stripe-Abo', async () => {
+  const tok = H.advisorToken();
+  const a = await H.addClient('Reset AG');
+  await set(a.id, "subscription_status='pending_plan'");
+  let r = await srv.call('PUT', `/api/clients/${a.id}/gratis-test`, { token: tok, body: { an: true, zuruecksetzen: true } });
+  assert.equal(r.status, 200);
+  let row = (await pool.query('SELECT subscription_status, gratis_test FROM clients WHERE id=$1', [a.id])).rows[0];
+  assert.equal(row.subscription_status, 'trial'); assert.equal(row.gratis_test, true);
+  const b = await H.addClient('Stripe AG');
+  await set(b.id, "subscription_status='active', stripe_customer_id='cus_1'");
+  r = await srv.call('PUT', `/api/clients/${b.id}/gratis-test`, { token: tok, body: { an: true, zuruecksetzen: true } });
+  assert.equal(r.status, 409);
+  row = (await pool.query('SELECT subscription_status FROM clients WHERE id=$1', [b.id])).rows[0];
+  assert.equal(row.subscription_status, 'active', 'zahlende Klienten bleiben unverändert');
+});
