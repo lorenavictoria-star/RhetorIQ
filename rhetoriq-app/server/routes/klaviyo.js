@@ -7,6 +7,7 @@ const { ensureSchema } = require('../lib/schemaRedesign');
 const kl = require('../lib/klaviyoApi');
 const store = require('../lib/klaviyoStore');
 const secretBox = require('../lib/secretBox');
+const { uebertrage, voreinstellung, merkeVoreinstellung, kampagneGueltig } = require('../lib/klaviyoUebertragung');
 const { baueHtml } = require('../lib/newsletterHtml');
 const { scrubText } = require('../lib/scrub');
 
@@ -152,29 +153,38 @@ router.post('/senden/:clientId', requireAuth, requireRole('editor'), nichtNurLes
     const key = await store.lade('client', clientId);
     if (!key) return res.status(409).json({ nichtVerbunden: true, error: 'Klaviyo ist noch nicht verbunden. Die Admin-Person Ihres Unternehmens trägt den Schlüssel unter «Abo verwalten» ein.' });
     const text = rv.edited_text || rv.original_text;
-    const h = baueHtml(text, {});
-    const betreff = h.betreff || 'Newsletter';
-    const name = `${betreff.slice(0, 110)} (RhetorIQ ${new Date().toLocaleDateString('de-CH')})`;
-    const out = { ok: true, vorlageName: name };
-    out.vorlageId = await kl.legeVorlageAn(key, name, h.html, { du });
-    const k = req.body && req.body.kampagne;
-    if (k && typeof k === 'object') {
-      const listId = String(k.listId || '').trim(), mail = String(k.absenderEmail || '').trim();
-      if (!/^[A-Za-z0-9]{3,30}$/.test(listId) || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/.test(mail)) {
-        out.kampagneFehler = 'Für den Kampagnenentwurf braucht es eine Liste und eine gültige Absenderadresse. Die Vorlage ist angelegt.';
-      } else {
-        try {
-          const c = await kl.legeKampagnenentwurfAn(key, { name, listId, betreff, vorschau: h.vorschau, absenderEmail: mail, absenderName: String(k.absenderName || '').slice(0, 100), vorlageId: out.vorlageId }, { du });
-          out.kampagneId = c.kampagneId;
-        } catch (e) {
-          if (!(e instanceof kl.KlaviyoFehler)) throw e;
-          out.kampagneFehler = `Der Kampagnenentwurf konnte nicht angelegt werden: ${e.message} Die Vorlage ist angelegt.`;
-        }
-      }
-    }
-    await pool.query('INSERT INTO klaviyo_uebertragungen (client_id, review_id, vorlage_id, kampagne_id) VALUES ($1,$2,$3,$4)', [clientId, reviewId, out.vorlageId || null, out.kampagneId || null]);
-    out.hinweis = (out.kampagneId ? 'In Klaviyo liegen jetzt eine Vorlage und ein Kampagnenentwurf. ' : 'In Klaviyo liegt jetzt eine Vorlage. ') + 'Es wurde nichts versendet. Den Versand lösen Sie in Klaviyo selbst aus.';
+    const out = await uebertrage({ key, clientId, reviewId, text, kampagne: (req.body && req.body.kampagne) || null, du });
     res.json(out);
+  } catch (e) { return fehler(res, e, du); }
+});
+
+// GET /api/klaviyo/voreinstellung/:clientId: gemerkte Liste und Absender für den Kampagnenentwurf
+router.get('/voreinstellung/:clientId', requireAuth, requireRole('editor'), ownClient('clientId'), async (req, res) => {
+  try {
+    await ensureSchema();
+    res.json({ voreinstellung: await voreinstellung(Number(req.params.clientId)) });
+  } catch (e) { return fehler(res, e, req.user.role === 'advisor'); }
+});
+
+// POST /api/klaviyo/direkt/:clientId { text, kampagne?, merken? }
+// Legt den Text aus dem Newsletter-Modul als Vorlage und als Kampagnenentwurf in Klaviyo ab. Ohne «kampagne» gilt die gemerkte
+// Voreinstellung. Der Weg über «An Beraterin senden» bleibt davon unberührt. Es wird NIE versendet.
+router.post('/direkt/:clientId', requireAuth, requireRole('editor'), nichtNurLesend, ownClient('clientId'), async (req, res) => {
+  const du = req.user.role === 'advisor';
+  try {
+    await ensureSchema();
+    const clientId = Number(req.params.clientId);
+    const text = typeof (req.body && req.body.text) === 'string' ? req.body.text.trim() : '';
+    if (!text) return res.status(400).json({ error: 'Es gibt noch keinen Newsletter-Text.' });
+    if (text.length > 200000) return res.status(400).json({ error: 'Der Text ist zu lang.' });
+    const key = await store.lade('client', clientId);
+    if (!key) return res.status(409).json({ nichtVerbunden: true, error: du ? 'Klaviyo ist für diesen Klienten noch nicht verbunden.' : 'Klaviyo ist noch nicht verbunden. Die Admin-Person Ihres Unternehmens verbindet es unter «Abo verwalten».' });
+    let kampagne = req.body && req.body.kampagne;
+    if (kampagne && !kampagneGueltig(kampagne)) return res.status(400).json({ error: 'Bitte wählen Sie eine Liste und tragen Sie eine gültige Absenderadresse ein.' });
+    if (!kampagne) kampagne = await voreinstellung(clientId);
+    if (!kampagne) return res.status(409).json({ voreinstellungFehlt: true, error: 'Bitte wählen Sie einmal die Liste und den Absender für den Entwurf.' });
+    if (req.body && req.body.merken === true) await merkeVoreinstellung(clientId, kampagne);
+    res.json(await uebertrage({ key, clientId, reviewId: null, text, kampagne, du }));
   } catch (e) { return fehler(res, e, du); }
 });
 

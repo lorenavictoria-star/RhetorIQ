@@ -217,6 +217,8 @@ router.put('/:id', requireAdvisor, async (req, res) => {
       // Aus den Korrekturen lernen: im Hintergrund, höchstens ein günstiger Aufruf, nur bei echter Änderung
       saveGoldFromReview(rows[0].id).catch(e => console.error('[gold] failed:', e.message));
       learnFromReview(rows[0].id).catch(e => console.error('[learning] failed:', e.message));
+      // Newsletter mit gemerktem Klaviyo-Ziel: nach der Freigabe automatisch als Entwurf ablegen (nie versenden)
+      require('../lib/klaviyoAuto').nachFreigabe(rows[0], editedText);
     }
     res.json(rows[0]);
   } catch (e) {

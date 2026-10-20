@@ -294,3 +294,29 @@ test('Der Schlüssel taucht in keinem Log und keiner Fehlermeldung auf; Sentry u
   eh({ type: 'entity.parse.failed', message: `Unexpected token in JSON "${KEY}"` }, { method: 'PUT', url: '/x' }, { headersSent: false, status() { return this; }, json() {} });
   assert.ok(!out.join('').includes(KEY));
 });
+
+test('Direktweg /direkt und automatische Ablage nach der Freigabe: Voreinstellung, Entwurf, nie ein Versand', async () => {
+  kv = {};
+  const { nachFreigabe } = require('../lib/klaviyoAuto');
+  assert.equal((await call('PUT', `/api/klaviyo/schluessel/${a.id}`, { token: tok('admin'), body: { apiKey: KEY } })).status, 200);
+  const text = 'Betreff: Neu im Sortiment\n\nHallo Welt';
+  // ohne gemerkte Liste: Rückfrage statt Übertragung
+  let r = await call('POST', `/api/klaviyo/direkt/${a.id}`, { token: tok('editor'), body: { text } });
+  assert.equal(r.status, 409); assert.equal(r.body.voreinstellungFehlt, true);
+  // mit Liste und Absender, gemerkt
+  const kamp = { listId: 'LIST1', absenderEmail: 'info@klaviyo-ag.ch', absenderName: 'Klaviyo AG' };
+  r = await call('POST', `/api/klaviyo/direkt/${a.id}`, { token: tok('editor'), body: { text, kampagne: kamp, merken: true } });
+  assert.equal(r.status, 200); assert.equal(r.body.kampagneId, 'CAM1');
+  // ab jetzt genügt der Text
+  r = await call('POST', `/api/klaviyo/direkt/${a.id}`, { token: tok('editor'), body: { text } });
+  assert.equal(r.status, 200); assert.equal(r.body.kampagneId, 'CAM1');
+  assert.equal((await call('POST', `/api/klaviyo/direkt/${a.id}`, { token: tok('editor'), body: { text: '' } })).status, 400);
+  assert.equal((await call('POST', `/api/klaviyo/direkt/${a.id}`, { token: tok('editor'), body: { text, kampagne: { listId: 'x y', absenderEmail: 'kaputt' } } })).status, 400);
+  // automatische Ablage nach der Freigabe: nur Newsletter, nur einmal je Freigabe
+  assert.equal(await nachFreigabe({ id: 7001, client_id: a.id, module_tile: 'email' }, text), null);
+  const auto = await nachFreigabe({ id: 7001, client_id: a.id, module_tile: 'newsletter' }, text);
+  assert.ok(auto && auto.kampagneId === 'CAM1');
+  assert.equal(await nachFreigabe({ id: 7001, client_id: a.id, module_tile: 'newsletter' }, text), null, 'zweite Freigabe derselben Anfrage legt nichts doppelt an');
+  // Fremder Klient und kein Versandaufruf
+  for (const x of calls) assert.ok(!/send/i.test(x.url), 'Versandaufruf: ' + x.url);
+});

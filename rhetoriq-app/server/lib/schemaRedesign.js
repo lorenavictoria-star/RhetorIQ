@@ -272,6 +272,15 @@ function ensureSchema() {
         kampagne_id TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
+    // Klaviyo: gemerkte Liste und Absender je Klient für den Kampagnenentwurf (Direktweg und automatische Ablage nach der Freigabe)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS klaviyo_voreinstellung (
+        client_id INTEGER PRIMARY KEY,
+        liste_id TEXT,
+        absender_email TEXT,
+        absender_name TEXT,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
     // Finanzaufstellung der Beraterin (lib/finanzen.js): Fixkosten, Einstellungen, tatsächliche Anthropic-Rechnung je Monat
     await pool.query(`
       CREATE TABLE IF NOT EXISTS finanz_fixkosten (
