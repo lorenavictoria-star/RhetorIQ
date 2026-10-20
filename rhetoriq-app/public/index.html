@@ -10300,8 +10300,14 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
 .rq-quick .lbl{font-size:12px;color:var(--mu);margin-bottom:6px}
 .rq-quick button,.rq-fine button{border:1px solid var(--ac);background:#faf6ec;color:var(--ac);padding:7px 13px;margin:0 6px 6px 0;cursor:pointer;font-family:var(--sans);font-size:13px;min-height:36px}
 .rq-quick button:hover,.rq-fine button:hover{background:var(--ac);color:#fff}
-.rq-fine{margin:10px 0 2px}
-.rq-fine .lbl{font-size:12px;color:var(--mu);margin-bottom:6px}
+.rq-fine{margin:12px 0 2px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.rq-fine .lbl{display:none}
+.rq-fine button{margin:0!important;border-radius:16px}
+.rq-fine .gen-rating-bar{margin:0 0 0 auto!important;gap:2px!important;flex-wrap:nowrap!important}
+.rq-fine .gen-rating-bar>span:first-child{display:none}
+.rq-fine .gen-rating-bar button{border:0!important;background:none!important;filter:grayscale(1);opacity:.5;padding:3px 7px!important}
+.rq-fine .gen-rating-bar button:hover{opacity:.9;background:none!important;color:inherit}
+.rq-fine .gen-rating-status{font-size:11px;color:var(--mu);margin-left:6px}
 .rq-quick .msg{font-size:12px;color:#a33;margin-top:4px}
 .rq-pick{display:flex;gap:12px;margin:4px 0 22px;flex-wrap:wrap}
 .rq-pick button{flex:1 1 220px;text-align:left;padding:14px 16px;border:1px solid var(--bd);background:#fff;color:var(--tx);cursor:pointer;font-family:var(--sans);font-size:14px;min-height:64px}
@@ -10443,6 +10449,9 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
       var mic=document.createElement('button');mic.type='button';mic.className='vbtn-sm';mic.id='fu-voice-'+bid;mic.title='Änderungswunsch sprechen';mic.setAttribute('aria-label','Änderungswunsch sprechen');mic.innerHTML='<i class="ti ti-microphone"></i>';mic.style.margin='0 6px 6px 0';
       mic.addEventListener('click',function(){toggleVoiceFor(fta.id,mic.id);});f.appendChild(mic);
     }
+    // Bewertung leise rechts in dieselbe Zeile: zwei graue Daumen, der Hinweistext steht als Tooltip
+    var rb=f.previousElementSibling;
+    if(rb&&rb.classList&&rb.classList.contains('gen-rating-bar'))f.appendChild(rb);
   }
   function stepify(){
     clearOld();
@@ -16033,7 +16042,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
   function addHint(bar){
     if(!bar||bar.querySelector('.rq-rate-hint'))return;
     if(typeof isAdv!=='undefined'&&isAdv)return;
-    var h=document.createElement('span');h.className='rq-rate-hint';h.textContent=HINT;bar.appendChild(h);
+    bar.querySelectorAll('button').forEach(function(b){b.title=HINT;});
+    var h=document.createElement('span');h.className='rq-rate-hint';h.hidden=true;h.textContent=HINT;bar.appendChild(h);
   }
   function scan(root){(root.querySelectorAll?root.querySelectorAll('.gen-rating-bar'):[]).forEach(addHint);if(root.classList&&root.classList.contains('gen-rating-bar'))addHint(root);}
   new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(n){if(n.nodeType===1)scan(n);});});}).observe(document.body,{childList:true,subtree:true});
