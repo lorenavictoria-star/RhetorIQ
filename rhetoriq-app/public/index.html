@@ -5700,7 +5700,8 @@ function buildTextGen(prefill,form){
 
   const rboxWrapHtml=tileData.map(t=>`
     <div class="tg-rbox-wrap" id="tg-rbox-wrap-${t.id}" style="display:none">
-      <div class="rbox" id="text-gen-r-${t.id}"><div class="rhead"><span class="rlbl">${tl.tg_result}</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b-${t.id}')">${tl.btn_copy}</button>${t.id==='email'?`<button class="cpbtn" onclick="mailMenue(event,'${t.id}')">In Mail öffnen &#9662;</button>`:''}${t.id==='newsletter'?`<button class="exbtn" style="background:#f9f6ff;border-color:#e0d4f5;color:#7c3aed" onclick="klvSavePrompt('${t.id}')">→ Klaviyo</button>`:''}</div></div><div class="rbody" id="text-gen-b-${t.id}"></div>
+      <div class="rbox" id="text-gen-r-${t.id}"><div class="rhead"><span class="rlbl">${tl.tg_result}</span><div class="rbtns"><button class="cpbtn" onclick="cp('text-gen-b-${t.id}')">${tl.btn_copy}</button>${t.id==='newsletter'?`<button class="exbtn" style="background:#f9f6ff;border-color:#e0d4f5;color:#7c3aed" onclick="klvSavePrompt('${t.id}')">→ Klaviyo</button>`:''}</div></div><div class="rbody" id="text-gen-b-${t.id}"></div>
+        ${t.id==='email'?`<div class="rq-mailfoot" style="display:flex;justify-content:flex-end;padding:10px 20px;border-top:1px solid var(--bd)"><button type="button" onclick="mailMenue(event,'${t.id}')" style="background:var(--tx);color:var(--bg,#fff);border:0;border-radius:6px;padding:9px 16px;font:inherit;font-size:13px;font-weight:600;cursor:pointer">In Mail öffnen &#9662;</button></div>`:''}
         ${t.id==='newsletter'?`<div id="klv-save-area-${t.id}" style="display:none;padding:10px;border-top:1px solid #e0d4f5">
           <div class="fg2"><label class="fl2">${tl.klv_subject||'Email Subject'}</label><input type="text" id="klv-subject-${t.id}" placeholder="${tl.klv_subject_ph||'e.g. Our March Newsletter'}"></div>
           <button class="runbtn" style="margin-top:8px;background:#7c3aed;border-color:#7c3aed" onclick="sendToKlaviyo('${t.id}')">${tl.klv_send||'Save as Draft in Klaviyo'}</button>
@@ -6827,7 +6828,8 @@ function mailMenue(ev,id){
   const alt=document.getElementById('mail-menue');if(alt){alt.remove();return;}
   const b=ev.currentTarget.getBoundingClientRect();
   const m=document.createElement('div');m.id='mail-menue';
-  m.style.cssText='position:fixed;z-index:9999;top:'+(b.bottom+4)+'px;left:'+Math.max(8,Math.min(b.left,window.innerWidth-220))+'px;background:var(--bg,#fff);border:1px solid var(--bd,#ddd);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.12);padding:4px;min-width:200px';
+  const oben=(b.bottom+150>window.innerHeight);
+  m.style.cssText='position:fixed;z-index:9999;top:'+(oben?Math.max(8,b.top-4-132):b.bottom+4)+'px;left:'+Math.max(8,Math.min(b.left,window.innerWidth-220))+'px;background:var(--bg,#fff);border:1px solid var(--bd,#ddd);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.12);padding:4px;min-width:200px';
   [['mailto','In Mail öffnen'],['gmail','In Gmail öffnen'],['outlook','In Outlook öffnen']].forEach(([art,label])=>{
     const x=document.createElement('button');x.type='button';x.textContent=label;
     x.style.cssText='display:block;width:100%;text-align:left;background:none;border:0;padding:9px 12px;font:inherit;font-size:13px;cursor:pointer;border-radius:6px;color:inherit';
@@ -14938,7 +14940,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     var h=lines.length
       ?'<div><b style="font-weight:600;color:var(--tx)">Vor dem Versand prüfen:</b> '+lines.map(E).join(' &middot; ')+'</div>'
       :'<div>Bitte prüfen Sie Zahlen, Namen und Daten vor dem Versand.</div>';
-    if(!ex){ex=document.createElement('div');ex.className='rq-pruef';ex.style.cssText='padding:10px 20px;border-top:1px solid var(--bd);font-size:12px;line-height:1.5;color:var(--mu)';body.after(ex);}
+    if(!ex){ex=document.createElement('div');ex.className='rq-pruef';ex.style.cssText='padding:10px 20px;border-top:1px solid var(--bd);font-size:12px;line-height:1.5;color:var(--mu)';(body.nextElementSibling&&body.nextElementSibling.classList.contains('rq-mailfoot')?body.nextElementSibling:body).after(ex);}
     if(ex.getAttribute('data-h')!==h){ex.innerHTML=h;ex.setAttribute('data-h',h);}
   }
   function schedule(body){
