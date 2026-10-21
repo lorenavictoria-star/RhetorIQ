@@ -47,7 +47,7 @@ const QUOTA_WARNING_THRESHOLD = 0.85;
 async function checkQuota(clientId, opts = {}) {
   if (!clientId) return { ok: true };
   await require('../lib/schemaRedesign').ensureSchema();
-  const { rows: cRows } = await pool.query('SELECT id, name, monthly_token_limit, subscription_status, zugang_bis, created_at, gratis_test, trial_start FROM clients WHERE id=$1', [clientId]);
+  const { rows: cRows } = await pool.query('SELECT id, name, monthly_token_limit, subscription_status, zugang_bis, created_at, gratis_test, trial_start, bezahlt_bis FROM clients WHERE id=$1', [clientId]);
   // Ein einziger Abo-Check vor jeder Textgenerierung (lib/abo.js); die Beraterin ist von den neuen Regeln ausgenommen
   const zg = require('../lib/abo').zugang(cRows[0], { advisor: !!opts.advisor });
   if (!zg.ok) return { ok: false, abo: zg, used: 0, limit: 0 };

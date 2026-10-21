@@ -15,8 +15,11 @@ function pflichtAb() {
 const TEST_TAGE = parseInt(process.env.GRATIS_TEST_TAGE, 10) || 14;
 const TEST_TEXTE = parseInt(process.env.GRATIS_TEST_TEXTE, 10) || 10;
 
+const KULANZ_TAGE = () => { const n = parseInt(process.env.RECHNUNG_KULANZ_TAGE, 10); return Number.isFinite(n) && n >= 0 ? n : 10; };
+
 const MELDUNG = {
   trial_abgelaufen: `Ihre Testzeit von ${TEST_TAGE} Tagen ist abgelaufen. Bitte schliessen Sie ein Abo ab, um weiterzuarbeiten.`,
+  rechnung_offen: 'Die Rechnung für Ihr Abo ist noch offen. Bitte begleichen Sie sie, damit Sie weiterarbeiten können. Bei Fragen melden Sie sich bei Lorena.',
   trial_texte: `Sie haben alle ${TEST_TEXTE} Testtexte genutzt. Bitte schliessen Sie ein Abo ab, um weiterzuarbeiten.`,
   trial_ueberarbeitungen: 'Sie haben die Überarbeitungen des Gratis-Tests genutzt. Bitte schliessen Sie ein Abo ab, um weiterzuarbeiten.',
   kein_abo: 'Bitte schliessen Sie zuerst ein Abo ab.',
@@ -80,6 +83,11 @@ function zugang(row, { advisor = false, jetzt = new Date() } = {}) {
   if (st === 'cancelled') return { ok: false, grund: 'cancelled', error: MELDUNG.cancelled };
   if (st === 'pending_plan') return { ok: false, grund: 'pending_plan', error: MELDUNG.pending_plan };
   if (advisor) return { ok: true };
+  // Bezahlung per Rechnung: Zugang bis zum Ende der bezahlten Zeit plus Kulanz (nur Klienten mit gesetztem bezahlt_bis, Stripe-Abos nicht)
+  if (row.bezahlt_bis && st === 'active') {
+    const ende = new Date(new Date(row.bezahlt_bis).getTime() + KULANZ_TAGE() * 86400000);
+    if (ende < jetzt) return { ok: false, grund: 'rechnung_offen', error: MELDUNG.rechnung_offen };
+  }
   if (row.zugang_bis && new Date(row.zugang_bis) < jetzt) return { ok: false, grund: 'audit_abgelaufen', error: MELDUNG.audit_abgelaufen };
   if (st === 'trial' && row.gratis_test === true) {
     // Gratis-Test: läuft ab dem ersten Login; die Textgrenze prüft testPruefung (braucht die Datenbank)
@@ -102,7 +110,7 @@ function antwort402(z, clientId) {
 
 async function clientRow(clientId) {
   await ensureSchema();
-  const { rows } = await pool.query('SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log, gratis_test, trial_start FROM clients WHERE id=$1', [clientId]);
+  const { rows } = await pool.query('SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log, gratis_test, trial_start, bezahlt_bis FROM clients WHERE id=$1', [clientId]);
   return rows[0] || null;
 }
 
@@ -127,6 +135,10 @@ function hinweise(row, v, jetzt = new Date()) {
   const st = row.subscription_status || 'trial';
   if (!z.ok) out.push({ art: z.grund, stufe: 'stop', text: z.error });
   else if (st === 'past_due') out.push({ art: 'zahlung', stufe: 'stop', text: 'Die letzte Zahlung ist fehlgeschlagen. Bitte prüfen Sie Ihre Zahlungsmethode im Kundenportal.' });
+  else if (row.bezahlt_bis && st === 'active') {
+    const tage = Math.ceil((new Date(row.bezahlt_bis) - jetzt) / 86400000);
+    if (tage <= 7) out.push({ art: 'rechnung_bald', stufe: 'warn', text: tage >= 0 ? `Ihr Abo ist bis zum ${new Date(row.bezahlt_bis).toLocaleDateString('de-CH')} bezahlt. Die nächste Rechnung erhalten Sie von Lorena per E-Mail.` : 'Die bezahlte Zeit ist abgelaufen. Bitte begleichen Sie die offene Rechnung, damit Sie ohne Unterbruch weiterarbeiten können.' });
+  }
   else if (row.zugang_bis) {
     const tage = Math.ceil((new Date(row.zugang_bis) - jetzt) / 86400000);
     if (tage <= 7) out.push({ art: 'audit_ende', stufe: 'warn', text: `Ihr Stimm-Audit-Zeitraum endet in ${Math.max(tage, 0)} Tagen. Schliessen Sie jetzt Ihr Abo ab, damit Sie ohne Unterbruch weiterarbeiten.` });

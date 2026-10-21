@@ -265,6 +265,7 @@ app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/klaviyo', require('./routes/klaviyo'));
 app.use('/api/integrationen', require('./routes/integrationen'));
+app.use('/api/rechnungen', require('./routes/rechnungen'));
 app.use('/api/advisor', require('./routes/advisor'));
 app.use('/api/advisor', require('./routes/viewAs'));
 app.use('/api/fetch-website', require('./routes/fetchWebsite'));

@@ -694,6 +694,8 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         // and apply the matching monthly token quota. Renewals hit this too
         // (invoice.paid), so an upgrade/downgrade takes effect automatically
         // at the next billing cycle, not just at first signup.
+        // Zahlt der Klient jetzt über Stripe, entfällt die Frist einer früheren Rechnung per Überweisung (lib/rechnung.js)
+        await pool.query('UPDATE clients SET bezahlt_bis=NULL WHERE id=$1', [clientId]).catch(() => {});
         const amount = event.type === 'checkout.session.completed' ? obj.amount_total : obj.amount_paid;
         const tokenLimit = resolveTokenLimit(amount, obj.currency);
         if (tokenLimit !== undefined) {

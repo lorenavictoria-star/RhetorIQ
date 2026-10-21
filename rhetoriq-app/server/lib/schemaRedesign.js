@@ -281,6 +281,35 @@ function ensureSchema() {
         absender_name TEXT,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
+    // Rechnung per Überweisung mit QR-Einzahlungsschein (lib/rechnung.js)
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS bezahlt_bis TIMESTAMPTZ`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS rechnung_einstellungen (
+        id INTEGER PRIMARY KEY,
+        name TEXT, strasse TEXT, hausnr TEXT, plz TEXT, ort TEXT, land TEXT, iban TEXT, email TEXT, uid TEXT, mwst_hinweis TEXT,
+        zahlungsfrist_tage INTEGER
+      )`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS rechnungen (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        jahr INTEGER NOT NULL,
+        laufnr INTEGER NOT NULL,
+        nummer TEXT NOT NULL,
+        posten TEXT NOT NULL,
+        laufzeit TEXT,
+        beschreibung TEXT,
+        betrag_rappen INTEGER NOT NULL,
+        status TEXT NOT NULL DEFAULT 'offen',
+        referenz TEXT,
+        empfaenger TEXT,
+        bemerkung TEXT,
+        ausgestellt_am TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        faellig_am TIMESTAMPTZ,
+        gesendet_am TIMESTAMPTZ,
+        bezahlt_am TIMESTAMPTZ
+      )`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS rechnungen_nr_idx ON rechnungen (jahr, laufnr)`);
     // Anbindungen Brevo, Mailchimp, WordPress (lib/integrationen.js): verschlüsselte Zugangsdaten, gemerkte Listen, Übertragungen
     await pool.query(`
       CREATE TABLE IF NOT EXISTS integration_zugang (
