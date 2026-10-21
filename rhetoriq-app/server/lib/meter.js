@@ -8,10 +8,20 @@ const { pool } = require('../db');
 // Zwischenspeicher schreiben kostet das 1.25-fache des Eingabepreises, Lesen das 0.1-fache.
 const PRICES = {
   sonnet: { input: 3, output: 15, cacheWrite: 3.75, cacheRead: 0.30 },
-  haiku: { input: 1, output: 5, cacheWrite: 1.25, cacheRead: 0.10 }
+  haiku: { input: 1, output: 5, cacheWrite: 1.25, cacheRead: 0.10 },
+  // Generation 5 (Stand Preisliste Oktober 2026): Sonnet 5 und 5.5 je 2 und 10 Dollar, Zwischenspeicher lesen bei 5.5 nur 0.10;
+  // Haiku 5.5 bis 100'000 Tokens Eingabe 0.10 und 0.50 (darüber teurer, hier nicht gerechnet, die Plattform sendet weit weniger)
+  sonnet55: { input: 2, output: 10, cacheWrite: 2.5, cacheRead: 0.10 },
+  haiku55: { input: 0.10, output: 0.50, cacheWrite: 0.125, cacheRead: 0.01 }
 };
 // Unbekannte Modelle werden vorsichtig wie Sonnet gerechnet, damit Kosten nie unterschätzt werden.
-function tierOf(model) { return /haiku/i.test(String(model || '')) ? 'haiku' : 'sonnet'; }
+function tierOf(model) {
+  const m = String(model || '');
+  if (/haiku-5-5/i.test(m)) return 'haiku55';
+  if (/haiku/i.test(m)) return 'haiku';
+  if (/sonnet-5-5/i.test(m)) return 'sonnet55';
+  return 'sonnet';
+}
 
 function costUsd({ model, inputTokens = 0, outputTokens = 0, cacheCreationTokens = 0, cacheReadTokens = 0 }) {
   const p = PRICES[tierOf(model)];

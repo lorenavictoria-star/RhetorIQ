@@ -127,6 +127,26 @@ async function withKeys(fn, signal, networkRetries = Infinity) {
   throw lastErr;
 }
 
+// Modelle der Generation 5.5 (Sonnet und Haiku): Sampling-Parameter wie temperature führen zu einem Fehler (400), und adaptives
+// Denken ist standardmässig an. Texte brauchen kein langes Denken: Aufwand «low» (Umgebungsvariablen EFFORT_SONNET und EFFORT_HAIKU,
+// erlaubt low, medium, high), bei Sonnet zusätzlich thinking {type:'between_tools'} (das Abschalten mit 'disabled' lehnt Sonnet 5.5 ab).
+// Ältere Modelle bleiben unverändert.
+const NEUE_GENERATION = /^claude-(?:sonnet|haiku)-5-5$/;
+const EFFORT_OK = ['low', 'medium', 'high'];
+function neueGenerationAnpassen(model, body) {
+  if (!NEUE_GENERATION.test(String(model))) return body;
+  delete body.temperature;
+  const sonnet = /sonnet/.test(model);
+  const wunsch = String((sonnet ? process.env.EFFORT_SONNET : process.env.EFFORT_HAIKU) || 'low').toLowerCase();
+  body.output_config = { effort: EFFORT_OK.includes(wunsch) ? wunsch : 'low' };
+  if (sonnet) body.thinking = { type: 'between_tools' };
+  return body;
+}
+// Antworttext: alle Textblöcke, nie blind der erste Block (bei adaptivem Denken kann ein Denkblock vorangehen)
+function textAus(content) {
+  return (Array.isArray(content) ? content : []).filter(b => b && b.type !== 'thinking' && b.type !== 'redacted_thinking' && typeof b.text === 'string').map(b => b.text).join('');
+}
+
 function buildBody({ system, messages, maxTokens, model, temperature }, stream) {
   const body = { model, max_tokens: maxTokens, messages };
   if (stream) body.stream = true;
@@ -136,7 +156,7 @@ function buildBody({ system, messages, maxTokens, model, temperature }, stream) 
       : [{ type: 'text', text: typeof system === 'function' ? system({}) : system }];
   }
   if (temperature !== undefined) body.temperature = temperature;
-  return body;
+  return neueGenerationAnpassen(model, body);
 }
 
 function headers(key) {
@@ -173,7 +193,7 @@ async function anthropicGenerateOnce(opts, key) {
   if (!res.ok || (data && data.error)) throw apiError(res.status, data && data.error && data.error.message ? data.error.message : 'API error');
   if (!data) throw apiError(res.status, 'API error');
   return {
-    text: data.content?.[0]?.text || '',
+    text: textAus(data.content),
     inputTokens: data.usage?.input_tokens || 0,
     outputTokens: data.usage?.output_tokens || 0,
     cacheCreationTokens: data.usage?.cache_creation_input_tokens || 0,
@@ -419,4 +439,4 @@ function streamText(orig) {
   })();
 }
 
-module.exports = { generateText, streamText, resolveModelId, resetReserveCache, keyOrder, reportAiError, _cfg: cfg };
+module.exports = { generateText, streamText, resolveModelId, resetReserveCache, keyOrder, reportAiError, buildBody, textAus, _cfg: cfg };
