@@ -6336,7 +6336,7 @@ async function runPresentationWithPreflight(data,rid,bid){
   let sib=body.nextSibling;
   // Alles Übriggebliebene nach dem Ergebnis entfernen (Bewertung, Nachfrage, Anpassen-Zeile, Hinweise). Fusszeilen mit Knöpfen (In Mail öffnen usw.) bleiben stehen
   // und unterbrechen die Suche nicht, sonst häufen sich bei jeder Überarbeitung doppelte Zeilen und Eingabefelder mit derselben ID an.
-  while(sib){const rm=sib;sib=sib.nextSibling;if(rm.classList&&rm.classList.contains('rq-mailfoot'))continue;if(rm.classList&&(rm.classList.contains('gen-rating-bar')||rm.classList.contains('gen-followup-box')||rm.classList.contains('pres-qa-box')||rm.classList.contains('rq-fine')||rm.classList.contains('rq-note')||rm.classList.contains('rq-pruef'))||rm.tagName==='DETAILS')rm.remove();else break;}
+  while(sib){const rm=sib;sib=sib.nextSibling;if(rm.classList&&rm.classList.contains('rq-mailfoot'))continue;if(rm.classList&&(rm.classList.contains('gen-rating-bar')||rm.classList.contains('gen-followup-box')||rm.classList.contains('pres-qa-box')||rm.classList.contains('rq-fine')||rm.classList.contains('rq-note')||rm.classList.contains('rq-pruef')||rm.classList.contains('rq-quotawarn'))||rm.tagName==='DETAILS')rm.remove();else break;}
   body.innerHTML='<div class="spin"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:10px;font-size:13px;color:var(--mu)">Prüfe, ob die Notizen für eine überzeugende Präsentation ausreichen…</span></div>';
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
   try{
@@ -6372,6 +6372,18 @@ function renderPreflightQuestions(questions,data,rid,bid){
 // follow-up UI — no per-module special-casing.
 // Rating bar + follow-up box — shared by generateAndStream (fresh generation)
 // and openReviewInModule (replaying a client's submitted text for revision).
+// Endkontrolle: von einem Ergebnis steht jede Zeile nur einmal da (Anpassen-Reihe, Nachfragefeld, Bewertung, Hinweise). Gilt die zuerst stehende,
+// also die direkt unter dem aktuellen Text. Läuft kurz verzögert nochmals, weil die Anpassen-Reihe von einem Beobachter nachträglich entsteht.
+function rqEinzeln(body){
+  try{
+    const p=body&&body.parentNode;if(!p)return;
+    ['.rq-fine','.gen-followup-box','.gen-rating-bar','.rq-quotawarn'].forEach(function(sel){
+      const l=p.querySelectorAll(sel);for(let i=1;i<l.length;i++)l[i].remove();
+    });
+    const seen={};
+    p.querySelectorAll('.rq-note').forEach(function(n){const k=n.className+'|'+(n.getAttribute('data-for')||'');if(seen[k])n.remove();else seen[k]=1;});
+  }catch(e){}
+}
 function attachResultActions(body,bid,analysisId,hasBrandVoice){
   // Zweite Sicherung: Von diesem Ergebnis darf immer nur eine Bewertung, eine Anpassen-Reihe und ein Nachfragefeld stehen,
   // auch wenn beim Aufräumen etwas übrig geblieben ist (sonst entstehen bei jeder Überarbeitung doppelte Zeilen und doppelte IDs).
@@ -6475,7 +6487,7 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
   let sib=body.nextSibling;
   // Alles Übriggebliebene nach dem Ergebnis entfernen (Bewertung, Nachfrage, Anpassen-Zeile, Hinweise). Fusszeilen mit Knöpfen (In Mail öffnen usw.) bleiben stehen
   // und unterbrechen die Suche nicht, sonst häufen sich bei jeder Überarbeitung doppelte Zeilen und Eingabefelder mit derselben ID an.
-  while(sib){const rm=sib;sib=sib.nextSibling;if(rm.classList&&rm.classList.contains('rq-mailfoot'))continue;if(rm.classList&&(rm.classList.contains('gen-rating-bar')||rm.classList.contains('gen-followup-box')||rm.classList.contains('pres-qa-box')||rm.classList.contains('rq-fine')||rm.classList.contains('rq-note')||rm.classList.contains('rq-pruef'))||rm.tagName==='DETAILS')rm.remove();else break;}
+  while(sib){const rm=sib;sib=sib.nextSibling;if(rm.classList&&rm.classList.contains('rq-mailfoot'))continue;if(rm.classList&&(rm.classList.contains('gen-rating-bar')||rm.classList.contains('gen-followup-box')||rm.classList.contains('pres-qa-box')||rm.classList.contains('rq-fine')||rm.classList.contains('rq-note')||rm.classList.contains('rq-pruef')||rm.classList.contains('rq-quotawarn'))||rm.tagName==='DETAILS')rm.remove();else break;}
   body.textContent='';
   // Preserve the self-revision trail across follow-ups on this same result box
   // (clients often do 2-3 rounds themselves before sending to the advisor) —
@@ -6556,6 +6568,7 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
     }
     if(quotaWarning){
       const warnEl=document.createElement('div');
+      warnEl.className='rq-quotawarn';
       warnEl.style.cssText='margin:10px 0;padding:10px 14px;background:var(--acl);border:1px solid var(--ac);border-radius:8px;font-size:12.5px;color:var(--ac);line-height:1.5';
       warnEl.textContent=quotaWarning;
       body.parentNode.insertBefore(warnEl,body.nextSibling);
@@ -6564,6 +6577,7 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
     // Schmale Hinweise unter dem Ergebnis (Prüfhinweis, Faktenmarker, Gedächtnis): eigene Blöcke tragen sich in window.rqNoteHooks ein
     (window.rqNoteHooks||[]).forEach(function(h){try{h(body,doneEvt||{},fullText,module,data);}catch(_){}});
     if(analysisId)attachResultActions(body,bid,analysisId,hasBrandVoice);
+    rqEinzeln(body);setTimeout(function(){rqEinzeln(body);},400);setTimeout(function(){rqEinzeln(body);},1500);
     if(module==='presentation')renderPresentationQA(fullText,body);
     if(debugPrompt){
       const dbg=document.createElement('details');
