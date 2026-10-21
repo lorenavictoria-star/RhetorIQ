@@ -6334,7 +6334,9 @@ async function runPresentationWithPreflight(data,rid,bid){
   const box=document.getElementById(rid),body=document.getElementById(bid);
   box.classList.add('show');
   let sib=body.nextSibling;
-  while(sib){const rm=sib;sib=sib.nextSibling;if(rm.classList&&(rm.classList.contains('gen-rating-bar')||rm.classList.contains('gen-followup-box')||rm.classList.contains('pres-qa-box'))||rm.tagName==='DETAILS')rm.remove();else break;}
+  // Alles Übriggebliebene nach dem Ergebnis entfernen (Bewertung, Nachfrage, Anpassen-Zeile, Hinweise). Fusszeilen mit Knöpfen (In Mail öffnen usw.) bleiben stehen
+  // und unterbrechen die Suche nicht, sonst häufen sich bei jeder Überarbeitung doppelte Zeilen und Eingabefelder mit derselben ID an.
+  while(sib){const rm=sib;sib=sib.nextSibling;if(rm.classList&&rm.classList.contains('rq-mailfoot'))continue;if(rm.classList&&(rm.classList.contains('gen-rating-bar')||rm.classList.contains('gen-followup-box')||rm.classList.contains('pres-qa-box')||rm.classList.contains('rq-fine')||rm.classList.contains('rq-note')||rm.classList.contains('rq-pruef'))||rm.tagName==='DETAILS')rm.remove();else break;}
   body.innerHTML='<div class="spin"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span style="margin-left:10px;font-size:13px;color:var(--mu)">Prüfe, ob die Notizen für eine überzeugende Präsentation ausreichen…</span></div>';
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
   try{
@@ -6468,7 +6470,9 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
   box.classList.add('show');
   // clear any rating bar / follow-up box / QA checklist / debug panel left over from a previous run
   let sib=body.nextSibling;
-  while(sib){const rm=sib;sib=sib.nextSibling;if(rm.classList&&(rm.classList.contains('gen-rating-bar')||rm.classList.contains('gen-followup-box')||rm.classList.contains('pres-qa-box'))||rm.tagName==='DETAILS')rm.remove();else break;}
+  // Alles Übriggebliebene nach dem Ergebnis entfernen (Bewertung, Nachfrage, Anpassen-Zeile, Hinweise). Fusszeilen mit Knöpfen (In Mail öffnen usw.) bleiben stehen
+  // und unterbrechen die Suche nicht, sonst häufen sich bei jeder Überarbeitung doppelte Zeilen und Eingabefelder mit derselben ID an.
+  while(sib){const rm=sib;sib=sib.nextSibling;if(rm.classList&&rm.classList.contains('rq-mailfoot'))continue;if(rm.classList&&(rm.classList.contains('gen-rating-bar')||rm.classList.contains('gen-followup-box')||rm.classList.contains('pres-qa-box')||rm.classList.contains('rq-fine')||rm.classList.contains('rq-note')||rm.classList.contains('rq-pruef'))||rm.tagName==='DETAILS')rm.remove();else break;}
   body.textContent='';
   // Preserve the self-revision trail across follow-ups on this same result box
   // (clients often do 2-3 rounds themselves before sending to the advisor) —
