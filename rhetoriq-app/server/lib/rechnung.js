@@ -181,6 +181,34 @@ async function pdfErzeugen(rechnung, e) {
   return fertig;
 }
 
+// ── Mail mit PDF ──────────────────────────────────────────────────────────────
+// art: 'rechnung' (erste Zusendung), 'erinnerung1' oder 'erinnerung2'. Gibt die Adresse zurück. Wirft Fehler mit status 400, wenn keine Adresse da ist.
+async function sendeRechnung(r, { an, art = 'rechnung' } = {}) {
+  const { queueEmail } = require('./emailOutbox');
+  const { rows: c } = await pool.query('SELECT name, email FROM clients WHERE id=$1', [r.client_id]);
+  const adresse = String(an || (c[0] && c[0].email) || '').trim();
+  if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/.test(adresse)) throw Object.assign(new Error('Für diesen Klienten ist keine gültige E-Mail-Adresse hinterlegt.'), { status: 400 });
+  const e = await holeEinstellungen();
+  const pdf = await pdfErzeugen(r, e);
+  const betrag = `CHF ${chf(r.betrag_rappen)}`;
+  let betreff, text;
+  if (art === 'rechnung') {
+    betreff = `Rechnung ${r.nummer}`;
+    text = `Guten Tag\n\nIm Anhang erhalten Sie die Rechnung ${r.nummer} über ${betrag} für: ${r.beschreibung}.\n\n`
+      + `Zahlbar bis ${datum(r.faellig_am)}. Sie können mit dem QR-Code im E-Banking oder mit dem Einzahlungsschein auf der letzten Seite der Rechnung zahlen.\n\n`
+      + `Sobald die Zahlung bei mir eingegangen ist, schalte ich Ihren Zugang frei. Bei Fragen antworten Sie einfach auf diese Mail.\n\nFreundliche Grüsse\n${e.name}`;
+  } else {
+    betreff = `Zahlungserinnerung zur Rechnung ${r.nummer}`;
+    text = `Guten Tag\n\nZur Rechnung ${r.nummer} über ${betrag} (fällig am ${datum(r.faellig_am)}) habe ich noch keinen Zahlungseingang gesehen. `
+      + `Falls Sie bereits bezahlt haben, ist diese Mail gegenstandslos. Sonst finden Sie die Rechnung noch einmal im Anhang.\n\n`
+      + (art === 'erinnerung2' ? `Ihr Zugang bleibt bis zum Eingang der Zahlung eingeschränkt, sobald die bezahlte Zeit abgelaufen ist.\n\n` : '')
+      + `Bei Fragen antworten Sie einfach auf diese Mail.\n\nFreundliche Grüsse\n${e.name}`;
+  }
+  await queueEmail({ kind: 'rechnung', to: adresse, subject: betreff, text, senderName: e.name, attachments: [{ name: `Rechnung_${r.nummer}.pdf`, contentBase64: pdf.toString('base64') }] });
+  if (art === 'rechnung') await pool.query('UPDATE rechnungen SET gesendet_am=NOW() WHERE id=$1', [r.id]);
+  return adresse;
+}
+
 // ── Bezahlt: Abo freischalten ─────────────────────────────────────────────────
 function monateDazu(basis, n) { const d = new Date(basis); d.setMonth(d.getMonth() + n); return d; }
 
@@ -208,4 +236,4 @@ async function alsBezahltMarkieren(id, { bezahltAm } = {}) {
   return (await pool.query('SELECT * FROM rechnungen WHERE id=$1', [id])).rows[0];
 }
 
-module.exports = { POSTEN, KULANZ_TAGE, betragFuer, holeEinstellungen, pruefeEinstellungen, speichereEinstellungen, referenzFuer, adresseAusFreitext, legeAn, pdfErzeugen, alsBezahltMarkieren, chf, datum };
+module.exports = { sendeRechnung, POSTEN, KULANZ_TAGE, betragFuer, holeEinstellungen, pruefeEinstellungen, speichereEinstellungen, referenzFuer, adresseAusFreitext, legeAn, pdfErzeugen, alsBezahltMarkieren, chf, datum };

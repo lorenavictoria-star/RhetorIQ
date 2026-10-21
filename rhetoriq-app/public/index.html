@@ -15793,12 +15793,13 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
     var box=document.createElement('div');box.id='rqre-box';box.style.cssText='margin:0 0 18px;padding:14px 16px;border:1px solid var(--bd);background:#fff';
     box.textContent='Rechnung per Überweisung (QR-Rechnung) wird geladen …';
     host.appendChild(box);
-    var st={einst:null,voll:false,posten:[],liste:[],bis:null,vorschlag:null,offen:false,msg:''};
+    var st={einst:null,voll:false,posten:[],liste:[],bis:null,vorschlag:null,offen:false,msg:'',auto:null};
     async function lade(){
       try{var r=await api('/api/rechnungen/einstellungen'),d=await r.json();if(r.ok){st.einst=d.einstellungen;st.voll=d.vollstaendig;}}catch(e){}
       try{var r2=await api('/api/rechnungen/posten'),d2=await r2.json();if(r2.ok)st.posten=d2.posten;}catch(e){}
       try{var r3=await api('/api/rechnungen/client/'+cid),d3=await r3.json();if(r3.ok){st.liste=d3.rechnungen;st.bis=d3.bezahltBis;}}catch(e){}
       try{var r4=await api('/api/rechnungen/client/'+cid+'/vorschlag'),d4=await r4.json();if(r4.ok)st.vorschlag=d4;}catch(e){}
+      try{var r5=await api('/api/rechnungen/client/'+cid+'/auto'),d5=await r5.json();if(r5.ok)st.auto=d5.auto;}catch(e){}
     }
     function say(t,bad){st.msg=t;var m=box.querySelector('#rqre-msg');if(m){m.textContent=t||'';m.style.color=bad?'#a33':'var(--mu)';}}
     function zeichne(){
@@ -15824,7 +15825,18 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
             +'<div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="obtn" data-a="pdf">PDF</button>'
             +(r.status==='offen'?'<button type="button" class="obtn" data-a="senden">Per Mail senden</button><button type="button" class="obtn" data-a="bezahlt">Bezahlt</button><button type="button" class="obtn" data-a="storno">Stornieren</button>':'')+'</div></div>';
         }).join(''):'<div class="rq-hint">Noch keine Rechnung.</div>')+'</div>';
-      box.innerHTML=kopf+einst+neu+liste+'<div id="rqre-msg" class="rq-hint" role="status" style="margin-top:8px;font-size:12px"></div>';
+      var au=st.auto||{aktiv:false,posten:'',laufzeit:'monat',vorlaufTage:14};
+      var pakete=st.posten.filter(function(p){return p.laufzeit;});
+      var auto='<div style="border-top:1px solid var(--bd);margin-top:12px;padding-top:10px"><div style="font-size:13px;font-weight:600;margin-bottom:6px">Automatisch weiterverrechnen</div>'
+        +'<div class="rq-hint" style="font-size:12px;margin-bottom:6px">Die Plattform erstellt und sendet die nächste Rechnung selbst, wenn die bezahlte Zeit in '+E(String(au.vorlaufTage||14))+' Tagen endet. Das gilt erst, nachdem du die erste Rechnung als bezahlt markiert hast. Nach 7 und 21 Tagen ohne Zahlung geht eine Erinnerung hinaus. Du bekommst eine Zusammenfassung per Mail.</div>'
+        +'<label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="rqre-a-on"'+(au.aktiv?' checked':'')+'> Automatisch jede Periode eine neue Rechnung senden</label>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-top:6px"><label style="display:flex;flex-direction:column;font-size:12px;color:var(--mu);gap:3px">Paket<select id="rqre-a-posten" style="'+inp+'">'+pakete.map(function(p){return '<option value="'+E(p.key)+'"'+(p.key===au.posten?' selected':'')+'>'+E(p.label)+'</option>';}).join('')+'</select></label>'
+        +'<label style="display:flex;flex-direction:column;font-size:12px;color:var(--mu);gap:3px">Laufzeit<select id="rqre-a-lz" style="'+inp+'"><option value="monat"'+(au.laufzeit==='monat'?' selected':'')+'>1 Monat</option><option value="jahr"'+(au.laufzeit==='jahr'?' selected':'')+'>12 Monate</option></select></label>'
+        +'<button type="button" class="obtn" id="rqre-a-save">Speichern</button></div></div>';
+      var abgleich='<div style="border-top:1px solid var(--bd);margin-top:12px;padding-top:10px"><div style="font-size:13px;font-weight:600;margin-bottom:6px">Zahlungseingang abgleichen (für alle Klienten)</div>'
+        +'<div class="rq-hint" style="font-size:12px;margin-bottom:6px">Lade im E-Banking die Gutschriften als Datei herunter (Format camt.054 oder camt.053, meist «ISO 20022» oder «Kontoauszug XML») und wähle sie hier aus. Die Plattform ordnet jede Zahlung über die Referenz einer Rechnung zu, markiert sie als bezahlt und schaltet das Abo frei. Der Klient erhält eine Bestätigung. Weicht ein Betrag ab, passiert nichts, du bekommst nur einen Hinweis.</div>'
+        +'<input type="file" id="rqre-z-file" accept=".xml,text/xml,application/xml"> <button type="button" class="obtn" id="rqre-z-go">Datei abgleichen</button><div id="rqre-z-out" class="rq-hint" style="font-size:12px;margin-top:6px"></div></div>';
+      box.innerHTML=kopf+einst+neu+liste+auto+abgleich+'<div id="rqre-msg" class="rq-hint" role="status" style="margin-top:8px;font-size:12px"></div>';
       if(st.msg)say(st.msg);
       var g=function(id){return document.getElementById(id);};
       g('rqre-e-save').onclick=async function(){
@@ -15833,6 +15845,31 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
           if(!r.ok){say(d.error||'Konnte nicht gespeichert werden.',true);return;}
           st.einst=d.einstellungen;st.voll=true;say('Gespeichert.');zeichne();
         }catch(x){say('Konnte nicht gespeichert werden.',true);}
+      };
+      g('rqre-a-save').onclick=async function(){
+        var emp=st.vorschlag?st.vorschlag.empfaenger:{};
+        var letzte=st.liste.length?null:null;
+        var body={aktiv:g('rqre-a-on').checked,posten:g('rqre-a-posten').value,laufzeit:g('rqre-a-lz').value,empfaenger:{name:g('rqre-n-name').value||emp.name,strasse:g('rqre-n-strasse').value||emp.strasse,plz:g('rqre-n-plz').value||emp.plz,ort:g('rqre-n-ort').value||emp.ort}};
+        try{var r=await api('/api/rechnungen/client/'+cid+'/auto',{method:'PUT',body:JSON.stringify(body)}),d=await r.json();
+          if(!r.ok){say(d.error||'Konnte nicht gespeichert werden.',true);return;}
+          st.auto=d.auto;say(d.auto.aktiv?'Automatik ist eingeschaltet.':'Automatik ist ausgeschaltet.');zeichne();
+        }catch(x){say('Konnte nicht gespeichert werden.',true);}
+      };
+      g('rqre-z-go').onclick=async function(){
+        var f=g('rqre-z-file').files[0],out=g('rqre-z-out');
+        if(!f){out.textContent='Bitte zuerst eine Datei auswählen.';return;}
+        out.textContent='Wird gelesen …';this.disabled=true;
+        try{
+          var xml=await f.text();
+          var r=await api('/api/rechnungen/zahlungen',{method:'POST',body:JSON.stringify({xml:xml})}),d=await r.json();
+          if(!r.ok){out.textContent=d.error||'Die Datei konnte nicht gelesen werden.';this.disabled=false;return;}
+          var t='Gelesen: '+d.gelesen+' Gutschriften. Als bezahlt markiert: '+d.bezahlt.length+(d.bezahlt.length?' ('+d.bezahlt.map(function(x){return x.nummer;}).join(', ')+')':'')+'.';
+          if(d.bereitsBezahlt.length)t+=' Schon bezahlt: '+d.bereitsBezahlt.length+'.';
+          if(d.abweichend.length)t+=' Abweichender Betrag, bitte prüfen: '+d.abweichend.map(function(x){return x.nummer+' (erwartet CHF '+chf(x.erwartetRappen)+', erhalten CHF '+chf(x.erhaltenRappen)+')';}).join('; ')+'.';
+          if(d.unbekannt.length)t+=' Nicht zuzuordnen: '+d.unbekannt.length+' (andere Zahlungen oder fremde Referenz).';
+          out.textContent=t;
+          await lade();zeichne();var o2=document.getElementById('rqre-z-out');if(o2)o2.textContent=t;
+        }catch(x){out.textContent='Das hat nicht geklappt.';this.disabled=false;}
       };
       var sel=g('rqre-n-posten'),lz=g('rqre-n-lz'),bt=g('rqre-n-betrag');
       function vorbelegen(){

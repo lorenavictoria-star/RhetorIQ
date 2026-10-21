@@ -310,6 +310,21 @@ function ensureSchema() {
         bezahlt_am TIMESTAMPTZ
       )`);
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS rechnungen_nr_idx ON rechnungen (jahr, laufnr)`);
+    // Automatische Rechnungen, Erinnerungen und Zahlungsabgleich (lib/rechnungAuto.js)
+    await pool.query(`ALTER TABLE rechnungen ADD COLUMN IF NOT EXISTS mahnung_stufe INTEGER NOT NULL DEFAULT 0`);
+    await pool.query(`ALTER TABLE rechnungen ADD COLUMN IF NOT EXISTS mahnung_am TIMESTAMPTZ`);
+    await pool.query(`ALTER TABLE rechnungen ADD COLUMN IF NOT EXISTS auto BOOLEAN NOT NULL DEFAULT FALSE`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS rechnung_abo (
+        client_id INTEGER PRIMARY KEY,
+        aktiv BOOLEAN NOT NULL DEFAULT FALSE,
+        posten TEXT,
+        laufzeit TEXT,
+        empfaenger TEXT,
+        bemerkung TEXT,
+        vorlauf_tage INTEGER NOT NULL DEFAULT 14,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
     // Anbindungen Brevo, Mailchimp, WordPress (lib/integrationen.js): verschlüsselte Zugangsdaten, gemerkte Listen, Übertragungen
     await pool.query(`
       CREATE TABLE IF NOT EXISTS integration_zugang (

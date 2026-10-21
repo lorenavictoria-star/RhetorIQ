@@ -12,7 +12,7 @@ const { requireRole } = require('../middleware/roles');
 const { ownClient } = require('../middleware/ownership');
 const { ensureSchema } = require('../lib/schemaRedesign');
 const R = require('../lib/rechnung');
-const { queueEmail } = require('../lib/emailOutbox');
+const RA = require('../lib/rechnungAuto');
 
 const router = express.Router();
 
@@ -92,16 +92,7 @@ router.post('/client/:clientId/:id/senden', requireAdvisor, ownClient('clientId'
     const r = await laden(req);
     if (!r) return res.status(404).json({ error: 'Rechnung nicht gefunden.' });
     if (r.status === 'storniert') return res.status(409).json({ error: 'Eine stornierte Rechnung wird nicht gesendet.' });
-    const { rows: c } = await pool.query('SELECT name, email FROM clients WHERE id=$1', [r.client_id]);
-    const an = String((req.body && req.body.an) || (c[0] && c[0].email) || '').trim();
-    if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/.test(an)) return res.status(400).json({ error: 'Für diesen Klienten ist keine gültige E-Mail-Adresse hinterlegt.' });
-    const e = await R.holeEinstellungen();
-    const pdf = await R.pdfErzeugen(r, e);
-    const text = `Guten Tag\n\nIm Anhang erhalten Sie die Rechnung ${r.nummer} über CHF ${R.chf(r.betrag_rappen)} für: ${r.beschreibung}.\n\n`
-      + `Zahlbar bis ${R.datum(r.faellig_am)}. Sie können mit dem QR-Code im E-Banking oder mit dem Einzahlungsschein auf der letzten Seite der Rechnung zahlen.\n\n`
-      + `Sobald die Zahlung bei mir eingegangen ist, schalte ich Ihren Zugang frei. Bei Fragen antworten Sie einfach auf diese Mail.\n\nFreundliche Grüsse\n${e.name}`;
-    await queueEmail({ kind: 'rechnung', to: an, subject: `Rechnung ${r.nummer}`, text, senderName: e.name, attachments: [{ name: `Rechnung_${r.nummer}.pdf`, contentBase64: pdf.toString('base64') }] });
-    await pool.query('UPDATE rechnungen SET gesendet_am=NOW() WHERE id=$1', [r.id]);
+    const an = await R.sendeRechnung(r, { an: req.body && req.body.an });
     res.json({ ok: true, an });
   } catch (e) { return fehler(res, e); }
 });
@@ -123,6 +114,25 @@ router.post('/client/:clientId/:id/storno', requireAdvisor, ownClient('clientId'
     if (r.status === 'bezahlt') return res.status(409).json({ error: 'Eine bezahlte Rechnung lässt sich nicht stornieren.' });
     await pool.query(`UPDATE rechnungen SET status='storniert' WHERE id=$1`, [r.id]);
     res.json({ ok: true });
+  } catch (e) { return fehler(res, e); }
+});
+
+// Automatische Rechnungen je Klient
+router.get('/client/:clientId/auto', requireAdvisor, ownClient('clientId'), async (req, res) => {
+  try { res.json({ auto: await RA.holeAbo(Number(req.params.clientId)) }); } catch (e) { return fehler(res, e); }
+});
+router.put('/client/:clientId/auto', requireAdvisor, ownClient('clientId'), async (req, res) => {
+  try {
+    const b = req.body || {};
+    res.json({ auto: await RA.setzeAbo(Number(req.params.clientId), { aktiv: b.aktiv === true, posten: b.posten, laufzeit: b.laufzeit, empfaenger: b.empfaenger, bemerkung: b.bemerkung, vorlaufTage: b.vorlaufTage }) });
+  } catch (e) { return fehler(res, e); }
+});
+
+// Zahlungsabgleich: Bankdatei (camt.054 oder camt.053) als Text im Feld «xml»
+router.post('/zahlungen', requireAdvisor, async (req, res) => {
+  try {
+    const xml = req.body && typeof req.body.xml === 'string' ? req.body.xml : '';
+    res.json(await RA.abgleichen(xml));
   } catch (e) { return fehler(res, e); }
 });
 

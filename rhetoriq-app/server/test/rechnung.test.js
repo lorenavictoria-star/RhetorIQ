@@ -128,3 +128,84 @@ test('Storno nur bei offenen Rechnungen; bezahlte bleiben', async () => {
   const bez = (await pool.query(`SELECT id FROM rechnungen WHERE status='bezahlt' LIMIT 1`)).rows[0].id;
   assert.equal((await call('POST', `/api/rechnungen/client/${a.id}/${bez}/storno`, { token: adv() })).status, 409);
 });
+
+// ── Automatik: Bankdatei, neue Rechnungen, Erinnerungen ───────────────────────
+const RA = require('../lib/rechnungAuto');
+const camt = require('../lib/camt');
+const camtXml = (eintraege) => `<?xml version="1.0" encoding="UTF-8"?><Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.054.001.04"><BkToCstmrDbtCdtNtfctn><Ntfctn>`
+  + eintraege.map(e => `<Ntry><Amt Ccy="${e.w || 'CHF'}">${(e.betrag / 100).toFixed(2)}</Amt><CdtDbtInd>${e.art || 'CRDT'}</CdtDbtInd><Sts>BOOK</Sts><BookgDt><Dt>${e.datum || '2026-10-22'}</Dt></BookgDt>`
+    + `<NtryDtls><TxDtls><AmtDtls><TxAmt><Amt Ccy="${e.w || 'CHF'}">${(e.betrag / 100).toFixed(2)}</Amt></TxAmt></AmtDtls><RltdPties><Dbtr><Nm>Muster AG</Nm></Dbtr></RltdPties>`
+    + `<RmtInf><Strd><CdtrRefInf><Tp><CdOrPrtry><Prtry>${e.ref.length === 27 ? 'QRR' : 'SCOR'}</Prtry></CdOrPrtry></Tp><Ref>${e.ref}</Ref></CdtrRefInf></Strd></RmtInf></TxDtls></NtryDtls></Ntry>`).join('')
+  + `</Ntfctn></BkToCstmrDbtCdtNtfctn></Document>`;
+
+test('Bankdatei: Gutschriften mit Referenz werden gelesen, Belastungen, Stornos und gefährliche Dateien nicht', () => {
+  const xml = camtXml([{ ref: 'RF31202600010000012', betrag: 149000 }, { ref: 'RF00', betrag: 500, art: 'DBIT' }]);
+  const e = camt.lies(xml);
+  assert.equal(e.length, 1); assert.equal(e[0].referenz, 'RF31202600010000012'); assert.equal(e[0].betragRappen, 149000); assert.equal(e[0].datum, '2026-10-22'); assert.equal(e[0].zahler, 'Muster AG');
+  assert.throws(() => camt.lies('<!DOCTYPE x [<!ENTITY a "b">]><Ntry></Ntry>'), /DOCTYPE|ENTITY/);
+  assert.throws(() => camt.lies('hallo'), /keine camt/);
+  assert.throws(() => camt.lies(''), /leer/);
+  // Namespace-Vorsätze (ns2:) werden toleriert
+  const ns = camtXml([{ ref: 'RF31202600010000012', betrag: 100 }]).replace(/<(\/?)(Ntry|Amt|CdtDbtInd|BookgDt|Dt|NtryDtls|TxDtls|Ref|CdtrRefInf|Strd|RmtInf)\b/g, '<$1ns2:$2');
+  assert.equal(camt.lies(ns).length, 1);
+});
+
+test('Zahlungsabgleich: passende Zahlung schaltet frei und bestätigt, falscher Betrag, unbekannte Referenz und doppelte Datei ändern nichts', async () => {
+  const emp = { name: 'Rechnung AG', strasse: 'Bahnhofstrasse 12', plz: '8001', ort: 'Zürich' };
+  const n = await call('POST', `/api/rechnungen/client/${b.id}`, { token: adv(), body: { posten: 'team', empfaenger: emp } });
+  const rec = (await pool.query('SELECT * FROM rechnungen WHERE id=$1', [n.body.rechnung.id])).rows[0];
+  await pool.query(`UPDATE clients SET email='fremd@firma.ch' WHERE id=$1`, [b.id]);
+  const vorher = H.mails.length;
+  // falscher Betrag
+  let r = await call('POST', '/api/rechnungen/zahlungen', { token: adv(), body: { xml: camtXml([{ ref: rec.referenz, betrag: 50000 }]) } });
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  assert.equal(r.body.abweichend.length, 1); assert.equal(r.body.bezahlt.length, 0);
+  // unbekannte Referenz
+  r = await call('POST', '/api/rechnungen/zahlungen', { token: adv(), body: { xml: camtXml([{ ref: 'RF1234567890', betrag: 59000 }]) } });
+  assert.equal(r.body.unbekannt.length, 1);
+  assert.equal((await pool.query('SELECT status FROM rechnungen WHERE id=$1', [rec.id])).rows[0].status, 'offen');
+  // richtige Zahlung, Referenz mit Leerzeichen
+  const mitLeer = rec.referenz.replace(/(.{4})/g, '$1 ');
+  r = await call('POST', '/api/rechnungen/zahlungen', { token: adv(), body: { xml: camtXml([{ ref: mitLeer, betrag: 59000, datum: '2026-10-20' }]) } });
+  assert.equal(r.body.bezahlt.length, 1);
+  const c = (await pool.query('SELECT * FROM clients WHERE id=$1', [b.id])).rows[0];
+  assert.equal(c.subscription_status, 'active'); assert.equal(Number(c.monthly_token_limit), 750000); assert.ok(c.bezahlt_bis);
+  assert.ok(H.mails.slice(vorher).some(m => m.to === 'fremd@firma.ch' && /Zahlung zur Rechnung/.test(m.subject)), 'Bestätigung an den Klienten');
+  // dieselbe Datei noch einmal: nichts doppelt
+  r = await call('POST', '/api/rechnungen/zahlungen', { token: adv(), body: { xml: camtXml([{ ref: rec.referenz, betrag: 59000 }]) } });
+  assert.equal(r.body.bezahlt.length, 0); assert.equal(r.body.bereitsBezahlt.length, 1);
+  assert.equal((await call('POST', '/api/rechnungen/zahlungen', { token: adv(), body: { xml: 'kein xml' } })).status, 400);
+});
+
+test('Automatik: nur mit aktivem Abo und früherer Zahlung, nur kurz vor Ablauf, nicht doppelt; Erinnerungen nach 7 und 21 Tagen je einmal', async () => {
+  const emp = { name: 'Rechnung AG', strasse: 'Bahnhofstrasse 12', plz: '8001', ort: 'Zürich' };
+  const cfg = await call('PUT', `/api/rechnungen/client/${b.id}/auto`, { token: adv(), body: { aktiv: true, posten: 'team', laufzeit: 'monat', empfaenger: emp } });
+  assert.equal(cfg.status, 200); assert.equal(cfg.body.auto.aktiv, true);
+  assert.equal((await call('PUT', `/api/rechnungen/client/${b.id}/auto`, { token: adv(), body: { aktiv: true, posten: 'stimm-audit' } })).status, 400, 'nur Pakete');
+  const jetzt = new Date();
+  // bezahlt_bis liegt (nach dem Test oben) rund einen Monat in der Zukunft: noch keine neue Rechnung
+  assert.equal((await RA.neueRechnungen(jetzt)).length, 0);
+  // kurz vor Ablauf (10 Tage): Rechnung wird erstellt, gesendet und als automatisch markiert
+  await pool.query('UPDATE clients SET bezahlt_bis=$2 WHERE id=$1', [b.id, new Date(jetzt.getTime() + 10 * 86400000)]);
+  const vorher = H.mails.length;
+  const neu = await RA.neueRechnungen(jetzt);
+  assert.equal(neu.length, 1); assert.equal(neu[0].gesendet, true); assert.equal(neu[0].betragRappen, 59000);
+  assert.ok(H.mails.slice(vorher).some(m => m.to === 'fremd@firma.ch' && /^Rechnung /.test(m.subject)));
+  assert.equal((await pool.query(`SELECT auto FROM rechnungen WHERE nummer=$1`, [neu[0].nummer])).rows[0].auto, true);
+  // solange eine offene Rechnung existiert: keine weitere
+  assert.equal((await RA.neueRechnungen(jetzt)).length, 0);
+  // Erinnerung 1 nach 7 Tagen, Erinnerung 2 nach 21 Tagen, jeweils nur einmal
+  const faellig = (await pool.query('SELECT faellig_am FROM rechnungen WHERE nummer=$1', [neu[0].nummer])).rows[0].faellig_am;
+  assert.equal((await RA.erinnerungen(new Date(new Date(faellig).getTime() + 3 * 86400000))).length, 0);
+  const e1 = await RA.erinnerungen(new Date(new Date(faellig).getTime() + 8 * 86400000));
+  assert.equal(e1.length, 1); assert.equal(e1[0].stufe, 1);
+  assert.equal((await RA.erinnerungen(new Date(new Date(faellig).getTime() + 9 * 86400000))).length, 0, 'nicht doppelt');
+  const e2 = await RA.erinnerungen(new Date(new Date(faellig).getTime() + 22 * 86400000));
+  assert.equal(e2.length, 1); assert.equal(e2[0].stufe, 2);
+  assert.ok(H.mails.some(m => /Zahlungserinnerung/.test(m.subject)));
+  // Abo ausgeschaltet: keine Rechnung mehr
+  await call('PUT', `/api/rechnungen/client/${b.id}/auto`, { token: adv(), body: { aktiv: false, posten: 'team', laufzeit: 'monat', empfaenger: emp } });
+  await pool.query(`UPDATE rechnungen SET status='bezahlt' WHERE client_id=$1`, [b.id]);
+  await pool.query('UPDATE clients SET bezahlt_bis=$2 WHERE id=$1', [b.id, new Date(jetzt.getTime() + 2 * 86400000)]);
+  assert.equal((await RA.neueRechnungen(jetzt)).length, 0);
+});
