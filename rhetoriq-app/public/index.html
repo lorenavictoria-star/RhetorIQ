@@ -15773,6 +15773,138 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
   };
 })();
 </script>
+<script id="rq-rechnung-js">
+// Rechnung per Überweisung mit QR-Einzahlungsschein. Beraterin: in der Verwaltung des Klienten (erstellen, PDF, senden, bezahlt,
+// stornieren, eigene Absenderangaben mit IBAN). Klient (Rolle admin): unter «Abo verwalten» die eigenen Rechnungen als PDF.
+(function(){
+  var E=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
+  function chf(r){return (Math.round(r)/100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,"\u2019");}
+  function dat(d){if(!d)return '';var x=new Date(d);return ('0'+x.getDate()).slice(-2)+'.'+('0'+(x.getMonth()+1)).slice(-2)+'.'+x.getFullYear();}
+  var STAT={offen:'offen',bezahlt:'bezahlt',storniert:'storniert'};
+  function badge(r){
+    var t=r.ueberfaellig?'überfällig':STAT[r.status]||r.status;
+    var col=r.status==='bezahlt'?'#2a7':r.ueberfaellig?'#a33':r.status==='storniert'?'var(--mu)':'#85601f';
+    return '<span style="font-size:12px;color:'+col+';font-weight:600">'+E(t)+'</span>';
+  }
+  var inp='padding:7px 10px;border:1px solid var(--bd);font-size:13px;font-family:inherit;background:var(--bg)';
+  function feld(id,label,val,w){return '<label style="display:flex;flex-direction:column;font-size:12px;color:var(--mu);gap:3px;'+(w?'width:'+w+'px':'')+'">'+E(label)+'<input id="'+id+'" value="'+E(val||'')+'" style="'+inp+'"></label>';}
+
+  window.rqRechnungKarte=async function(cid,host){
+    var box=document.createElement('div');box.id='rqre-box';box.style.cssText='margin:0 0 18px;padding:14px 16px;border:1px solid var(--bd);background:#fff';
+    box.textContent='Rechnung per Überweisung (QR-Rechnung) wird geladen …';
+    host.appendChild(box);
+    var st={einst:null,voll:false,posten:[],liste:[],bis:null,vorschlag:null,offen:false,msg:''};
+    async function lade(){
+      try{var r=await api('/api/rechnungen/einstellungen'),d=await r.json();if(r.ok){st.einst=d.einstellungen;st.voll=d.vollstaendig;}}catch(e){}
+      try{var r2=await api('/api/rechnungen/posten'),d2=await r2.json();if(r2.ok)st.posten=d2.posten;}catch(e){}
+      try{var r3=await api('/api/rechnungen/client/'+cid),d3=await r3.json();if(r3.ok){st.liste=d3.rechnungen;st.bis=d3.bezahltBis;}}catch(e){}
+      try{var r4=await api('/api/rechnungen/client/'+cid+'/vorschlag'),d4=await r4.json();if(r4.ok)st.vorschlag=d4;}catch(e){}
+    }
+    function say(t,bad){st.msg=t;var m=box.querySelector('#rqre-msg');if(m){m.textContent=t||'';m.style.color=bad?'#a33':'var(--mu)';}}
+    function zeichne(){
+      var e=st.einst||{},v=st.vorschlag||{empfaenger:{}};
+      var kopf='<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Rechnung per Überweisung (QR-Rechnung)</div>'
+        +'<div style="font-size:12.5px;color:var(--mu);margin-bottom:8px">Statt Kartenzahlung über Stripe: Du erstellst die Rechnung, sendest sie als PDF und markierst sie nach dem Zahlungseingang als bezahlt. Dann wird das Abo freigeschaltet. '
+        +(st.bis?'<b style="color:var(--tx)">Bezahlt bis '+E(dat(st.bis))+'.</b> Nach Ablauf plus 10 Tage Kulanz sperrt die Plattform das Erzeugen von Texten.':'Dieser Klient hat keine Frist aus einer Rechnung (Stripe-Abo oder Test).')+'</div>';
+      var einst='<details'+(st.voll?'':' open')+' style="margin-bottom:10px"><summary style="cursor:pointer;font-size:13px;font-weight:600">Deine Absenderangaben und IBAN'+(st.voll?'':' (bitte zuerst ausfüllen)')+'</summary>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+feld('rqre-e-name','Name oder Firma',e.name,220)+feld('rqre-e-strasse','Strasse',e.strasse,180)+feld('rqre-e-hausnr','Nr.',e.hausnr,60)+feld('rqre-e-plz','PLZ',e.plz,70)+feld('rqre-e-ort','Ort',e.ort,150)
+        +feld('rqre-e-iban','IBAN (Schweiz oder Liechtenstein)',e.iban,260)+feld('rqre-e-email','E-Mail auf der Rechnung',e.email,220)+feld('rqre-e-mwst','Hinweis zur Mehrwertsteuer (frei)',e.mwst_hinweis,260)+feld('rqre-e-tage','Zahlungsfrist (Tage)',e.zahlungsfrist_tage||30,110)+'</div>'
+        +'<div style="margin-top:8px"><button type="button" class="obtn" id="rqre-e-save">Angaben speichern</button></div></details>';
+      var po=st.posten.map(function(p){return '<option value="'+E(p.key)+'">'+E(p.label)+'</option>';}).join('');
+      var neu='<div style="border-top:1px solid var(--bd);padding-top:10px"><div style="font-size:13px;font-weight:600;margin-bottom:6px">Neue Rechnung</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end"><label style="display:flex;flex-direction:column;font-size:12px;color:var(--mu);gap:3px">Posten<select id="rqre-n-posten" style="'+inp+'">'+po+'</select></label>'
+        +'<label id="rqre-n-lz-w" style="display:flex;flex-direction:column;font-size:12px;color:var(--mu);gap:3px">Laufzeit<select id="rqre-n-lz" style="'+inp+'"><option value="monat">1 Monat</option><option value="jahr">12 Monate (10 % Rabatt)</option></select></label>'
+        +feld('rqre-n-betrag','Betrag in CHF','',110)+feld('rqre-n-text','Beschreibung (leer = Standard)','',240)+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+feld('rqre-n-name','Empfänger',v.empfaenger.name,220)+feld('rqre-n-strasse','Strasse und Nr.',v.empfaenger.strasse,200)+feld('rqre-n-plz','PLZ',v.empfaenger.plz,70)+feld('rqre-n-ort','Ort',v.empfaenger.ort,150)+'</div>'
+        +'<div style="margin-top:8px"><button type="button" class="obtn" id="rqre-n-go">Rechnung erstellen</button></div></div>';
+      var liste='<div style="border-top:1px solid var(--bd);margin-top:12px;padding-top:10px"><div style="font-size:13px;font-weight:600;margin-bottom:6px">Rechnungen dieses Klienten</div>'
+        +(st.liste.length?st.liste.map(function(r){
+          return '<div data-r="'+r.id+'" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd)"><div style="min-width:240px;flex:1"><b style="font-weight:600">'+E(r.nummer)+'</b> · CHF '+E(chf(r.betragRappen))+' · '+badge(r)
+            +'<div class="rq-hint" style="font-size:12px">'+E(r.beschreibung||'')+' · fällig '+E(dat(r.faelligAm))+(r.gesendetAm?' · gesendet '+E(dat(r.gesendetAm)):'')+'</div></div>'
+            +'<div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="obtn" data-a="pdf">PDF</button>'
+            +(r.status==='offen'?'<button type="button" class="obtn" data-a="senden">Per Mail senden</button><button type="button" class="obtn" data-a="bezahlt">Bezahlt</button><button type="button" class="obtn" data-a="storno">Stornieren</button>':'')+'</div></div>';
+        }).join(''):'<div class="rq-hint">Noch keine Rechnung.</div>')+'</div>';
+      box.innerHTML=kopf+einst+neu+liste+'<div id="rqre-msg" class="rq-hint" role="status" style="margin-top:8px;font-size:12px"></div>';
+      if(st.msg)say(st.msg);
+      var g=function(id){return document.getElementById(id);};
+      g('rqre-e-save').onclick=async function(){
+        var body={name:g('rqre-e-name').value,strasse:g('rqre-e-strasse').value,hausnr:g('rqre-e-hausnr').value,plz:g('rqre-e-plz').value,ort:g('rqre-e-ort').value,land:'CH',iban:g('rqre-e-iban').value,email:g('rqre-e-email').value,mwst_hinweis:g('rqre-e-mwst').value,zahlungsfrist_tage:Number(g('rqre-e-tage').value)||30};
+        try{var r=await api('/api/rechnungen/einstellungen',{method:'PUT',body:JSON.stringify(body)}),d=await r.json();
+          if(!r.ok){say(d.error||'Konnte nicht gespeichert werden.',true);return;}
+          st.einst=d.einstellungen;st.voll=true;say('Gespeichert.');zeichne();
+        }catch(x){say('Konnte nicht gespeichert werden.',true);}
+      };
+      var sel=g('rqre-n-posten'),lz=g('rqre-n-lz'),bt=g('rqre-n-betrag');
+      function vorbelegen(){
+        var p=st.posten.filter(function(x){return x.key===sel.value;})[0];if(!p)return;
+        g('rqre-n-lz-w').style.display=p.laufzeit?'flex':'none';
+        var r=(p.laufzeit&&lz.value==='jahr')?p.jahrRappen:p.rappen;bt.value=r?(r/100).toFixed(2):'';
+        bt.dataset.std=bt.value;
+      }
+      sel.onchange=vorbelegen;lz.onchange=vorbelegen;vorbelegen();
+      g('rqre-n-go').onclick=async function(){
+        var p=st.posten.filter(function(x){return x.key===sel.value;})[0]||{};
+        var body={posten:sel.value,laufzeit:p.laufzeit?lz.value:'monat',beschreibung:g('rqre-n-text').value,empfaenger:{name:g('rqre-n-name').value,strasse:g('rqre-n-strasse').value,plz:g('rqre-n-plz').value,ort:g('rqre-n-ort').value}};
+        var b=(bt.value||'').replace(/[^0-9.]/g,'');if(b&&b!==bt.dataset.std)body.betragRappen=Math.round(parseFloat(b)*100);
+        if(p.freitext&&!body.betragRappen){say('Bitte einen Betrag eintragen.',true);return;}
+        this.disabled=true;
+        try{var r=await api('/api/rechnungen/client/'+cid,{method:'POST',body:JSON.stringify(body)}),d=await r.json();
+          if(!r.ok){say(d.error||'Konnte nicht erstellt werden.',true);this.disabled=false;return;}
+          await lade();say('Rechnung '+d.rechnung.nummer+' ist erstellt. Du kannst sie jetzt als PDF öffnen oder per Mail senden.');zeichne();
+        }catch(x){say('Konnte nicht erstellt werden.',true);this.disabled=false;}
+      };
+      box.querySelectorAll('[data-r]').forEach(function(row){
+        var id=row.getAttribute('data-r'),rec=st.liste.filter(function(x){return String(x.id)===id;})[0];
+        row.querySelectorAll('[data-a]').forEach(function(b){b.onclick=async function(){
+          var a=b.getAttribute('data-a'),base='/api/rechnungen/client/'+cid+'/'+id;
+          if(a==='pdf'){if(window.rqDownload)window.rqDownload(base+'/pdf','Rechnung_'+rec.nummer+'.pdf',box.querySelector('#rqre-msg'));return;}
+          if(a==='storno'&&!window.confirm('Rechnung '+rec.nummer+' wirklich stornieren?'))return;
+          if(a==='bezahlt'&&!window.confirm('Rechnung '+rec.nummer+' ist bezahlt? Das Abo wird freigeschaltet.'))return;
+          b.disabled=true;say('Einen Moment …');
+          try{var r=await api(base+'/'+a,{method:'POST',body:'{}'}),d=await r.json();
+            if(!r.ok){say(d.error||'Das hat nicht geklappt.',true);b.disabled=false;return;}
+            await lade();zeichne();
+            say(a==='senden'?'Per Mail gesendet an '+d.an+'.':a==='bezahlt'?'Als bezahlt markiert. Das Abo ist freigeschaltet'+(d.bezahltBis?' bis '+dat(d.bezahltBis):'')+'.':'Storniert.');
+          }catch(x){say('Das hat nicht geklappt.',true);b.disabled=false;}
+        };});
+      });
+    }
+    await lade();zeichne();
+    return box;
+  };
+
+  // Klient: eigene Rechnungen unter «Abo verwalten»
+  function payload(){try{return JSON.parse(atob(String(token).split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));}catch(e){return {};}}
+  var busy=false;
+  async function ergaenzeAbo(){
+    var pg=document.getElementById('page-abo');
+    if(!pg||busy||document.getElementById('rqre-client')||!(window.rqAboCan&&window.rqAboCan())||payload().readOnly||!pg.querySelector('#rq-abo-msg'))return;
+    busy=true;
+    try{
+      var r=await api('/api/rechnungen/client/'+clientId),d=await r.json();
+      if(r.ok&&d.rechnungen&&d.rechnungen.length&&!document.getElementById('rqre-client')){
+        var el=document.createElement('div');el.id='rqre-client';el.style.cssText='max-width:620px;margin-top:26px;padding:16px 18px;border:1px solid var(--bd);background:#fff';
+        el.innerHTML='<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--mu)">Rechnungen</div>'
+          +(d.bezahltBis?'<div style="font-size:14px;margin:6px 0">Ihr Abo ist bis zum '+E(dat(d.bezahltBis))+' bezahlt.</div>':'')
+          +d.rechnungen.map(function(x){return '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--bd);flex-wrap:wrap"><div><b style="font-weight:600">'+E(x.nummer)+'</b> · CHF '+E(chf(x.betragRappen))+' · '+badge(x)+'<div class="rq-hint">'+E(x.beschreibung||'')+' · zahlbar bis '+E(dat(x.faelligAm))+'</div></div><button type="button" class="rq-btn ghost sm" data-pdf="'+x.id+'" data-nr="'+E(x.nummer)+'">PDF</button></div>';}).join('')
+          +'<div id="rqre-cmsg" class="rq-hint" role="status" style="margin-top:6px"></div>';
+        var after=document.getElementById('rqint-box')||document.getElementById('rqkv-box'),anchor=pg.querySelector('#rq-abo-msg');
+        if(after&&after.parentNode)after.parentNode.insertBefore(el,after.nextSibling);else if(anchor)pg.insertBefore(el,anchor);else pg.appendChild(el);
+        el.querySelectorAll('[data-pdf]').forEach(function(b){b.onclick=function(){if(window.rqDownload)window.rqDownload('/api/rechnungen/client/'+clientId+'/'+b.getAttribute('data-pdf')+'/pdf','Rechnung_'+b.getAttribute('data-nr')+'.pdf',el.querySelector('#rqre-cmsg'));};});
+      }
+    }catch(e){}
+    busy=false;
+  }
+  var gp=window.goPage;
+  if(typeof gp==='function')window.goPage=function(name){var r=gp.apply(this,arguments);if(name==='abo'){[700,1500,3000].forEach(function(ms){setTimeout(ergaenzeAbo,ms);});}return r;};
+  // Beraterin: in der Verwaltung des Klienten
+  var ra=window.wsRenderAdmin;
+  if(typeof ra==='function')window.wsRenderAdmin=function(body){
+    ra.apply(this,arguments);
+    try{var cid=_wsClientId;if(!cid)return;window.rqRechnungKarte(cid,body);}catch(e){console.error(e);}
+  };
+})();
+</script>
 <script id="rq-selbsttest-js">
 (function(){
   var E=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');};
@@ -16394,7 +16526,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
 (function(){
   // Verwaltung der Beraterin: Alltagsknöpfe oben, Optionen in klappbaren Gruppen, Zugang ganz unten
   var GROUPS=[
-    {id:'pakete',title:'Pakete und Zusatzleistungen',hint:'Gratis-Test oder Abo, Empfohlenes Paket, Jahreszahlung, Zusatzmodul, Quartalsreview, Aufbewahrung der Texte',keys:['Gratis-Test oder direkt Abo','Aufbewahrung der Texte','Empfohlenes Paket','Jahreszahlung','Zu den Modulen','Quartalsreview']},
+    {id:'pakete',title:'Pakete und Zusatzleistungen',hint:'Gratis-Test oder Abo, Empfohlenes Paket, Jahreszahlung, Zusatzmodul, Quartalsreview, Aufbewahrung der Texte',keys:['Gratis-Test oder direkt Abo','Rechnung per Überweisung','Aufbewahrung der Texte','Empfohlenes Paket','Jahreszahlung','Zu den Modulen','Quartalsreview']},
     {id:'abrechnung',title:'Zeit und Mehraufwand',hint:'Zeiterfassung für Rechnungen',keys:['Zeit und Mehraufwand']},
     {id:'weitere',title:'Weitere Einstellungen und Unterlagen',hint:'KI-Hinweis, Stimmenmappe und Handbuch',keys:['Hinweis auf KI-Unterstützung','Stimmenmappe']}
   ];
