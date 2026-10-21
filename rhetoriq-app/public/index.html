@@ -6373,6 +6373,9 @@ function renderPreflightQuestions(questions,data,rid,bid){
 // Rating bar + follow-up box — shared by generateAndStream (fresh generation)
 // and openReviewInModule (replaying a client's submitted text for revision).
 function attachResultActions(body,bid,analysisId,hasBrandVoice){
+  // Zweite Sicherung: Von diesem Ergebnis darf immer nur eine Bewertung, eine Anpassen-Reihe und ein Nachfragefeld stehen,
+  // auch wenn beim Aufräumen etwas übrig geblieben ist (sonst entstehen bei jeder Überarbeitung doppelte Zeilen und doppelte IDs).
+  try{if(body.parentNode)body.parentNode.querySelectorAll('.gen-rating-bar,.gen-followup-box,.rq-fine').forEach(function(el){el.remove();});}catch(e){}
   let anchor=body;
   // analysisId is null when replaying a stored review (no fresh analyses row
   // to attach a rating to) — skip the rating buttons, keep the follow-up box.
