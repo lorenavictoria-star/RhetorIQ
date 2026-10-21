@@ -121,7 +121,7 @@ async function taeglich(jetzt = new Date()) {
           ...erinn.map(x => x.fehler ? `Fehler bei Erinnerung ${x.nummer}: ${x.fehler}` : `Zahlungserinnerung ${x.stufe} zu ${x.nummer} gesendet`)
         ];
         const { queueEmail } = require('./emailOutbox');
-        await queueEmail({ kind: 'rechnung-info', to: e.email, subject: 'RhetorIQ: Rechnungen heute', senderName: 'RhetorIQ', text: `Guten Tag\n\n${zeilen.join('\n')}\n\nDie Zahlungen gleichst du in der Verwaltung mit der Bankdatei ab.` });
+        await queueEmail({ kind: 'rechnung-info', to: e.email, subject: 'RhetorIQ: Rechnungen heute', senderName: 'RhetorIQ', text: `Guten Tag\n\n${zeilen.join('\n')}\n\nSobald eine Zahlung eingegangen ist, markierst du die Rechnung in der Verwaltung des Klienten als bezahlt.` });
       }
     } catch (err) { console.error('[rechnung] Zusammenfassung:', scrubText(err && err.message)); }
   }
