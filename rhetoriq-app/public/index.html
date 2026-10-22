@@ -3720,7 +3720,7 @@ async function trLoadModule(){
     count.textContent=visible.length
       ?`${visible.length} ${visible.length===1?'Beispiel':'Beispiele'}. Pro Text verwendet die Plattform bis zu drei passende.`
       :'Noch keine Beispiele. Das ist in Ordnung: Die Plattform lernt auch ohne sie automatisch aus dem Feedback deiner Klienten.';
-    const modName=ex=>safeText((ALL_MODULES.find(x=>x.key===ex.module_key)||{}).name||ex.module_key||'');
+    const modName=ex=>safeText((ALL_MODULES.find(x=>x.key===ex.module_key)||{}).name||(ex.module_key==='before-after'?'Vorher / Nachher':ex.module_key)||'');
     list.innerHTML=visible.length?visible.map(ex=>`
       <div id="tr-ex-${ex.id}" style="border:1px solid var(--bd);padding:16px;margin-bottom:10px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
