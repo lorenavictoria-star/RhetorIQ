@@ -31,10 +31,10 @@ router.get('/alle.zip', requireAdvisor, async (req, res) => {
 router.get('/:clientId/handbuch.docx', requireAdvisor, ownClient('clientId'), async (req, res) => {
   try {
     const buf = await sm.buildHandbuch(parseInt(req.params.clientId, 10));
-    send(res, buf, `Handbuch_${await nameOf(req.params.clientId)}.docx`, DOCX);
+    send(res, buf, `Kurzanleitung_${await nameOf(req.params.clientId)}.docx`, DOCX);
   } catch (e) {
     console.error('[stimmenmappe] Handbuch:', e.message);
-    res.status(500).json({ error: 'Das Handbuch konnte nicht erstellt werden.' });
+    res.status(500).json({ error: 'Die Kurzanleitung konnte nicht erstellt werden.' });
   }
 });
 

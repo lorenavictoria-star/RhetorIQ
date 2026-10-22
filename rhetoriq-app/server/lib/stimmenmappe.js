@@ -251,7 +251,7 @@ async function buildHandbuch(clientId) {
   const { donts } = doDont(bv);
   const m = metricsOf(d);
   const kids = [];
-  kids.push(p(`Handbuch: Texte von Hand für ${c.name}`, { size: 34, bold: true, after: 40 }));
+  kids.push(p(`Kurzanleitung: Texte von Hand für ${c.name}`, { size: 34, bold: true, after: 40 }));
   kids.push(hint(`Stand ${DATE(new Date())}. Eine Seite, brauchbar ohne Plattform.`));
 
   kids.push(h2('Ton'));
@@ -272,7 +272,7 @@ async function buildHandbuch(clientId) {
   kids.push(h2('Prüfliste vor dem Senden'));
   ['Passt die Anrede?', 'Steht die Kernaussage vorn?', 'Ist jede Zahl belegt?', 'Klingt der erste Satz wie der Klient?', 'Schweizer Rechtschreibung, keine Gedankenstriche?', 'Wer prüft gegen (Vier-Augen-Prinzip), wenn möglich?']
     .forEach(t => kids.push(bullet(t)));
-  return Packer.toBuffer(new Document({ creator: 'RhetorIQ', title: 'Handbuch ' + c.name, sections: [{ children: kids }] }));
+  return Packer.toBuffer(new Document({ creator: 'RhetorIQ', title: 'Kurzanleitung ' + c.name, sections: [{ children: kids }] }));
 }
 
 // ── ZIP über alle Klienten der Beraterin ────────────────────────────────────
@@ -287,7 +287,7 @@ async function buildZip(advisorId) {
     if (used.has(base)) base += '_' + r.id;
     used.add(base);
     zip.file(`${base}/Brand-Voice-Handbuch_${base}.docx`, await buildMappe(r.id));
-    zip.file(`${base}/Handbuch_${base}.docx`, await buildHandbuch(r.id));
+    zip.file(`${base}/Kurzanleitung_${base}.docx`, await buildHandbuch(r.id));
   }
   if (!rows.length) zip.file('LIES_MICH.txt', 'Es sind keine Klienten vorhanden.');
   return { buffer: await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }), count: rows.length };

@@ -69,7 +69,7 @@ test('Handbuch: Satzbau mit Zahlen, Anrede, Prüfliste', async () => {
   const r = await fetchBuf(`/api/stimmenmappe/${a.id}/handbuch.docx`, H.advisorToken());
   assert.equal(r.status, 200);
   const t = await wordText(r.buf);
-  assert.ok(t.includes('Handbuch'));
+  assert.ok(t.includes('Kurzanleitung'));
   assert.ok(t.includes('klar, warm, direkt'));
   assert.ok(t.includes('Du-Form'));
   assert.match(t, /Durchschnittlich \d+(\.\d)? Wörter pro Satz/);
@@ -84,7 +84,7 @@ test('ZIP über alle Klienten der Beraterin', async () => {
   const names = Object.keys(z.files).filter(n => n.endsWith('.docx'));
   assert.equal(names.length, 4);
   assert.ok(names.some(n => n.includes('Brand-Voice-Handbuch_Alpha_AG')));
-  assert.ok(names.some(n => n.includes('Handbuch_Beta_AG')));
+  assert.ok(names.some(n => n.includes('Kurzanleitung_Beta_AG')));
 });
 
 test('Zugriff nur für die Beraterin', async () => {
