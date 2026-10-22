@@ -41,3 +41,10 @@ test('«euch» und «eure» zählen als Du-Form', () => {
   const hits = lint.lintText('Das ist planbar auf eurer Seite, wir tragen es für euch.', { sprache: 'de', anrede: 'sie' });
   assert.equal(hits.filter(h => h.art === 'anrede').length, 2);
 });
+
+test('Gelernte Sätze werden nicht an Abkürzungen wie «z. B.» getrennt', () => {
+  const { sentences } = require('../lib/learnedMeta');
+  const s = sentences('Konkrete Leistungen (z. B. Biopropan) müssen genannt werden. Das bedeutet, d. h. ohne Floskeln, klare Aussagen. Letzter Satz.');
+  assert.equal(s.length, 3);
+  assert.ok(s[0].includes('z. B. Biopropan'));
+});

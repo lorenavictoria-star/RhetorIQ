@@ -10,8 +10,12 @@ function ensureMeta() {
 }
 
 const norm = s => String(s || '').replace(/\s+/g, ' ').trim().toLowerCase();
+// Nach Abkürzungen wie «z. B.», «d. h.», «ca.» oder «bzw.» beginnt kein neuer Satz
+const ABK = /(\b(?:z\.\s?B|d\.\s?h|u\.\s?a|s\.\s?o|s\.\s?u|i\.\s?d\.\s?R|v\.\s?a|ca|bzw|usw|etc|evtl|ggf|inkl|max|min|Nr|Mio|Mrd|vs|ev|resp|bspw|sog|ggfs|Tel|Std)\.)(\s)/g;
+const MEHRTEILIG = /\b(z\.|d\.|u\.|s\.|v\.|i\.)\s(B\.|h\.|a\.|o\.|u\.|d\.|R\.)(\s)?/g;
 function sentences(t) {
-  return String(t || '').replace(/\s+/g, ' ').split(/(?<=[.!?…])\s+/).map(x => x.trim()).filter(Boolean);
+  const geschuetzt = String(t || '').replace(/\s+/g, ' ').replace(MEHRTEILIG, (m, a, b, w) => a + '\u0001' + b + (w ? '\u0001' : '')).replace(ABK, (m, a) => a + '\u0001');
+  return geschuetzt.split(/(?<=[.!?…])\s+/).map(x => x.replace(/\u0001/g, ' ').trim()).filter(Boolean);
 }
 
 function listSentences(row) {

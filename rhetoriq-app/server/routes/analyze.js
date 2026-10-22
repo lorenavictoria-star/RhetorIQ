@@ -1274,6 +1274,12 @@ Kategorien (wähle GENAU eine):
 
 Du erhältst den bisherigen Stand aller 5 Kategorien (können leer sein) plus eine neue Feedback-Notiz mit Bewertung (BEIBEHALTEN = hat dem Nutzer gefallen, VERMEIDEN = hat dem Nutzer nicht gefallen). Bestimme, in welche der 5 Kategorien die neue Notiz am ehesten passt, und liefere eine aktualisierte, verfeinerte Zusammenfassung für GENAU DIESE eine Kategorie: bestätigt die neue Notiz das bisherige Verständnis, schärfe die Formulierung; widerspricht oder korrigiert sie es, aktualisiere es durchdacht — die alte, jetzt überholte Aussage wird ersetzt, nicht beide nebeneinander stehengelassen. Maximal 2-3 prägnante Sätze, konkret und direkt umsetzbar, keine Meta-Kommentare.
 
+Wichtige Regeln für die Zusammenfassung:
+- VERMEIDEN heisst nur, dass der Text so nicht gefallen hat. Die Notiz beschreibt, was der Nutzer stattdessen will. Formuliere das Gewünschte als positive Anweisung («Nenne in Texten dieser Art ...»). Bittet die Notiz darum, etwas zu ergänzen oder einzubauen («kannst du ... ergänzen», «bau ... ein»), lautet die Regel, dass dieser Inhalt vorkommen soll. Mache daraus nie ein Verbot des gewünschten Inhalts.
+- Schreibe allgemeingültige Muster und keine Einzelfälle: keine Namen, Daten, Zahlen oder Anlässe eines einzelnen Auftrags. Betrifft die Notiz nur einen einzelnen Fall, wähle die Kategorie FAKTEN.
+- Schweizer Rechtschreibung (ss statt ß), keine Gedankenstriche, kein Markdown.
+- Kurze, vollständige Sätze. Abkürzungen wie «z. B.» sind erlaubt.
+
 Antworte NUR in exakt diesem Format, nichts davor oder danach:
 KATEGORIE: <TON|STRUKTUR|FAKTEN|FORMAT|SONSTIGES>
 ZUSAMMENFASSUNG: <aktualisierte Zusammenfassung>`,
@@ -1581,7 +1587,7 @@ async function consolidateFeedback(clientId, moduleKey, rating, note) {
   const sumMatch = resp.text.match(/ZUSAMMENFASSUNG:\s*([\s\S]+)/i);
   let category = (catMatch?.[1] || 'SONSTIGES').toUpperCase();
   if (!FEEDBACK_CATEGORIES.includes(category)) category = 'SONSTIGES';
-  const summary = (sumMatch?.[1] || note).trim();
+  const summary = require('../lib/brandVoiceAuswahl').ohneGedankenstriche((sumMatch?.[1] || note).trim()).replace(/ß/g, 'ss');
 
   // Fehllernschutz: Fakten (Einzelfälle, Namen, Daten, Zahlen) werden nie automatisch gelernt, nur vorgeschlagen.
   if (category === 'FAKTEN') {
@@ -1620,7 +1626,7 @@ async function getFeedbackLearningsBlock(clientId, moduleKeys) {
   const rows = [...byCat.values()].sort((a, b) => String(a.category).localeCompare(String(b.category)));
   if (!rows.length) return '';
   return '\n\nGELERNTE PRÄFERENZEN DIESES KLIENTEN FÜR DIESES MODUL (aus früherem Feedback, kategorisiert und laufend verfeinert):\n'
-    + rows.map(r => `- ${r.category}: ${r.summary}`).join('\n');
+    + rows.map(r => `- ${r.category}: ${require('../lib/brandVoiceAuswahl').ohneGedankenstriche(r.summary).replace(/ß/g, 'ss')}`).join('\n');
 }
 
 // Universal follow-up mechanism (applies to every module): the user reacted to
