@@ -388,6 +388,14 @@ function ensureSchema() {
     // Indizes für die häufigsten Abfragen (Kundenliste, Verlauf, Nutzung)
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_client_created_idx ON analyses (client_id, created_at DESC)`);
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_advisor_created_idx ON analyses (advisor_id, created_at DESC)`);
+    // Mitgelieferte Beispiele: Gedankenstriche durch Komma oder Doppelpunkt ersetzen (die Beispiele sind Vorbilder für die KI)
+    try {
+      const { rows } = await pool.query(`SELECT id, label, input_text, output_text FROM module_examples WHERE source_client_id IS NULL AND (input_text LIKE '%—%' OR input_text LIKE '%–%' OR output_text LIKE '%—%' OR output_text LIKE '%–%' OR label LIKE '%—%' OR label LIKE '%–%')`);
+      const bereinige = (t, istLabel) => t == null ? t : String(t).split(' — ').join(istLabel ? ': ' : ', ').split(' – ').join(istLabel ? ': ' : ', ').split('—').join('-').split('–').join('-');
+      for (const r of rows) {
+        await pool.query('UPDATE module_examples SET label=$2, input_text=$3, output_text=$4 WHERE id=$1', [r.id, bereinige(r.label, true), bereinige(r.input_text), bereinige(r.output_text)]);
+      }
+    } catch (e) { console.error('[schema] Beispiele ohne Gedankenstriche:', e.message); }
   })().catch(e => { ensured = null; throw e; });
   return ensured;
 }

@@ -3729,11 +3729,11 @@ async function trLoadModule(){
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div>
-            <div style="font-size:11px;color:var(--mu);margin-bottom:4px">Eingabe</div>
+            <div style="font-size:11px;color:var(--mu);margin-bottom:4px">${ex.module_key==='before-after'?'Vorher (der Ausgangstext)':'Eingabe'}</div>
             <div style="font-size:12px;white-space:pre-wrap;border:1px solid var(--bd);padding:8px;max-height:120px;overflow-y:auto">${safeText(ex.input_text)}</div>
           </div>
           <div>
-            <div style="font-size:11px;color:var(--mu);margin-bottom:4px">Gelungener Aufbau</div>
+            <div style="font-size:11px;color:var(--mu);margin-bottom:4px">${ex.module_key==='before-after'?'Nachher (die verbesserte Fassung)':'Gelungener Aufbau'}</div>
             <div style="font-size:12px;white-space:pre-wrap;border:1px solid var(--bd);padding:8px;max-height:120px;overflow-y:auto">${safeText(ex.output_text)}</div>
           </div>
         </div>
