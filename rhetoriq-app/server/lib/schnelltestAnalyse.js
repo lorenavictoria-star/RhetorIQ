@@ -1,4 +1,4 @@
-// Stimmtest, zweite Ausbaustufe: tiefe Analyse im Hintergrund.
+// Test «Wie klingt Ihre Firma?», zweite Ausbaustufe: tiefe Analyse im Hintergrund.
 // Bausteine (alle einzeln testbar):
 //   htmlZuText, findeLinks         Text und interne Links einer Seite
 //   ladeSeiten                     bis zu 3 Seiten, gemeinsames Zeitbudget
@@ -8,7 +8,7 @@
 //   analysiere                     Ablauf: laden, rechnen, KI, prüfen, ergänzen
 const safeFetch = require('./safeFetch');
 
-const NEXT_STEP = 'Das wäre der nächste Schritt: Im Stimm-Audit werten wir zehn Ihrer Texte aus und halten Ihre Stimme in einem Stimmprofil fest.';
+const NEXT_STEP = 'Das wäre der nächste Schritt: In «Die Stimme finden» werten wir zehn Ihrer Texte aus und halten Ihre Stimme in einem Stimmprofil fest.';
 const KATEGORIEN = ['Satzbau', 'Ansprache', 'Floskeln', 'Fachsprache', 'Struktur', 'Ton', 'Wiederholung', 'Nominalstil', 'Perspektive'];
 const GESAMT_ZEIT_MS = 20000;
 const GESAMT_ZEICHEN = 12000;

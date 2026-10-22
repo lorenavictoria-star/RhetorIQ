@@ -1,5 +1,5 @@
 // Monatserinnerung (am 1. um 09:00): Mail an Lorena OHNE Anhang mit Link zur Seite Nutzung. Keine KI.
-// Die Stimmenmappen enthalten Klientendaten und gehören deshalb nicht in eine Mail.
+// Die Brand-Voice-Handbücher enthalten Klientendaten und gehören deshalb nicht in eine Mail.
 const { queueEmail } = require('../lib/emailOutbox');
 
 const NOTIFY = () => process.env.ADVISOR_EMAIL || 'contact@lorenalienhard.ch';
@@ -10,8 +10,8 @@ async function runErinnerung() {
   await queueEmail({
     kind: 'stimmenmappe-erinnerung',
     to: NOTIFY(),
-    subject: 'RhetorIQ: Zeit für den Monatsexport der Stimmenmappen',
-    text: `Hallo Lorena\n\nZeit für den Monatsexport der Stimmenmappen. Melde dich an, öffne im Menü die Seite Nutzung und lade mit einem Klick alle Stimmenmappen als ZIP herunter:\n${link}\n\nLege die Datei ausserhalb von RhetorIQ ab, zum Beispiel im verschlüsselten Ordner deines Notfallordners. Die Mail enthält bewusst keinen Anhang, weil die Mappen Klientendaten enthalten.\n\nRhetorIQ`
+    subject: 'RhetorIQ: Zeit für den Monatsexport der Brand-Voice-Handbücher',
+    text: `Hallo Lorena\n\nZeit für den Monatsexport der Brand-Voice-Handbücher. Melde dich an, öffne im Menü die Seite Nutzung und lade mit einem Klick alle Brand-Voice-Handbücher als ZIP herunter:\n${link}\n\nLege die Datei ausserhalb von RhetorIQ ab, zum Beispiel im verschlüsselten Ordner deines Notfallordners. Die Mail enthält bewusst keinen Anhang, weil die Mappen Klientendaten enthalten.\n\nRhetorIQ`
   });
   return { ok: true };
 }

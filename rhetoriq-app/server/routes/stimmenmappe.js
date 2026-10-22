@@ -1,4 +1,4 @@
-// Stimmenmappe und Handbuch als Word, ZIP über alle Klienten. Nur für die Beraterin, ohne KI.
+// Brand-Voice-Handbuch und Handbuch als Word, ZIP über alle Klienten. Nur für die Beraterin, ohne KI.
 const express = require('express');
 const { requireAdvisor } = require('../middleware/auth');
 const { ownClient } = require('../middleware/ownership');
@@ -21,10 +21,10 @@ function send(res, buf, filename, type) {
 router.get('/alle.zip', requireAdvisor, async (req, res) => {
   try {
     const { buffer } = await sm.buildZip(req.user.id);
-    send(res, buffer, `Stimmenmappen_${new Date().toISOString().slice(0, 10)}.zip`, 'application/zip');
+    send(res, buffer, `Brand-Voice-Handbücher_${new Date().toISOString().slice(0, 10)}.zip`, 'application/zip');
   } catch (e) {
     console.error('[stimmenmappe] ZIP:', e.message);
-    res.status(500).json({ error: 'Die Stimmenmappen konnten nicht erstellt werden.' });
+    res.status(500).json({ error: 'Die Brand-Voice-Handbücher konnten nicht erstellt werden.' });
   }
 });
 
@@ -41,10 +41,10 @@ router.get('/:clientId/handbuch.docx', requireAdvisor, ownClient('clientId'), as
 router.get('/:clientId.docx', requireAdvisor, ownClient('clientId'), async (req, res) => {
   try {
     const buf = await sm.buildMappe(parseInt(req.params.clientId, 10));
-    send(res, buf, `Stimmenmappe_${await nameOf(req.params.clientId)}.docx`, DOCX);
+    send(res, buf, `Brand-Voice-Handbuch_${await nameOf(req.params.clientId)}.docx`, DOCX);
   } catch (e) {
     console.error('[stimmenmappe] Mappe:', e.message);
-    res.status(500).json({ error: 'Die Stimmenmappe konnte nicht erstellt werden.' });
+    res.status(500).json({ error: 'Die Brand-Voice-Handbuch konnte nicht erstellt werden.' });
   }
 });
 

@@ -1,4 +1,4 @@
-// Stimmenmappe und Handbuch: Erzeugung, Zugriff nur für die Beraterin, Inhalt. Keine KI.
+// Brand-Voice-Handbuch und Handbuch: Erzeugung, Zugriff nur für die Beraterin, Inhalt. Keine KI.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const JSZip = require('jszip');
@@ -39,12 +39,12 @@ test.before(async () => {
 });
 test.after(async () => { await srv.close(); });
 
-test('Stimmenmappe: alle Abschnitte mit Inhalt des Klienten', async () => {
+test('Brand-Voice-Handbuch: alle Abschnitte mit Inhalt des Klienten', async () => {
   const r = await fetchBuf(`/api/stimmenmappe/${a.id}.docx`, H.advisorToken());
   assert.equal(r.status, 200);
   assert.match(r.type, /wordprocessingml/);
   const t = await wordText(r.buf);
-  for (const s of ['Stimmenmappe', 'Alpha AG', 'Maschinenbau', 'Frau Keller', 'Brand Voice vollständig', 'klar, warm, direkt',
+  for (const s of ['Brand-Voice-Handbuch', 'Alpha AG', 'Maschinenbau', 'Frau Keller', 'Brand Voice vollständig', 'klar, warm, direkt',
     'Die zehn Regeln', 'Referenztexte', 'Beispielmail Alpha', 'Gegründet 1998', 'Hans Muster', 'spricht in kurzen Sätzen',
     'Immer mit Vornamen anreden', 'Weniger Floskeln am Anfang', 'Mustertexte', 'Guten Tag Frau Keller', 'Stimmprofil mit Zielwerten']) {
     assert.ok(t.includes(s), 'fehlt: ' + s);
@@ -83,7 +83,7 @@ test('ZIP über alle Klienten der Beraterin', async () => {
   const z = await JSZip.loadAsync(r.buf);
   const names = Object.keys(z.files).filter(n => n.endsWith('.docx'));
   assert.equal(names.length, 4);
-  assert.ok(names.some(n => n.includes('Stimmenmappe_Alpha_AG')));
+  assert.ok(names.some(n => n.includes('Brand-Voice-Handbuch_Alpha_AG')));
   assert.ok(names.some(n => n.includes('Handbuch_Beta_AG')));
 });
 
@@ -100,6 +100,6 @@ test('Monatserinnerung: Mail ohne Anhang an Lorena', async () => {
   await require('../jobs/stimmenmappe-erinnerung').runErinnerung();
   assert.equal(H.mails.length, 1);
   assert.equal(H.mails[0].attachments, undefined);
-  assert.match(H.mails[0].subject, /Monatsexport der Stimmenmappen/);
+  assert.match(H.mails[0].subject, /Monatsexport der Brand-Voice-Handbücher/);
   assert.ok(!/[–—]/.test(H.mails[0].text));
 });

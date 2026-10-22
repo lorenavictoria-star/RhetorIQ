@@ -23,7 +23,7 @@ const MELDUNG = {
   trial_texte: `Sie haben alle ${TEST_TEXTE} Testtexte genutzt. Bitte schliessen Sie ein Abo ab, um weiterzuarbeiten.`,
   trial_ueberarbeitungen: 'Sie haben die Überarbeitungen des Gratis-Tests genutzt. Bitte schliessen Sie ein Abo ab, um weiterzuarbeiten.',
   kein_abo: 'Bitte schliessen Sie zuerst ein Abo ab.',
-  audit_abgelaufen: 'Ihr Stimm-Audit-Zeitraum ist abgelaufen. Bitte schliessen Sie ein Abo ab.',
+  audit_abgelaufen: 'Ihr Einrichtungszeitraum ist abgelaufen. Bitte schliessen Sie ein Abo ab.',
   cancelled: 'Ihr Abo ist nicht mehr aktiv. Bitte schliessen Sie ein neues Abo ab.',
   pending_plan: 'Bitte schliessen Sie zuerst ein Abo ab.'
 };
@@ -143,7 +143,7 @@ function hinweise(row, v, jetzt = new Date()) {
   }
   else if (row.zugang_bis) {
     const tage = Math.ceil((new Date(row.zugang_bis) - jetzt) / 86400000);
-    if (tage <= 7) out.push({ art: 'audit_ende', stufe: 'warn', text: `Ihr Stimm-Audit-Zeitraum endet in ${Math.max(tage, 0)} Tagen. Schliessen Sie jetzt Ihr Abo ab, damit Sie ohne Unterbruch weiterarbeiten.` });
+    if (tage <= 7) out.push({ art: 'audit_ende', stufe: 'warn', text: `Ihr Einrichtungszeitraum endet in ${Math.max(tage, 0)} Tagen. Schliessen Sie jetzt Ihr Abo ab, damit Sie ohne Unterbruch weiterarbeiten.` });
   }
   if (z.ok && !v.unbegrenzt) {
     if (v.used >= v.limit) out.push({ art: 'kontingent100', stufe: 'stop', text: 'Ihr Kontingent für diesen Monat ist aufgebraucht. Ein Zusatzpaket oder ein höheres Paket bringt Sie sofort weiter.' });

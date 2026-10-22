@@ -106,7 +106,7 @@ function ensureSchema() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
     await pool.query(`CREATE INDEX IF NOT EXISTS communication_profiles_client_idx ON communication_profiles (client_id, kind, created_at DESC)`);
-    // Kostenloser Stimmtest der Landingpage (Lead-Magnet)
+    // Kostenloser Test «Wie klingt Ihre Firma?» der Landingpage (Lead-Magnet)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS schnelltests (
         id SERIAL PRIMARY KEY,
@@ -140,7 +140,7 @@ function ensureSchema() {
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS quartalsreviews_client_q_idx ON quartalsreviews (client_id, quartal)`);
     // Abo-Status direkt am Klienten (derselbe Befehl wie in routes/subscriptions.js), damit die Kundenliste ihn mitladen kann
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trial'`);
-    // Selbst verwaltetes Abo: Ende des Stimm-Audit-Zeitraums und Merker für bereits versendete Kontingent-Mails (lib/abo.js)
+    // Selbst verwaltetes Abo: Ende des Einrichtungszeitraums und Merker für bereits versendete Kontingent-Mails (lib/abo.js)
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS zugang_bis TIMESTAMPTZ`);
     // Gratis-Test (Schalter pro Klient, von der Beraterin gesetzt): beginnt beim ersten Login (trial_start)
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS gratis_test BOOLEAN NOT NULL DEFAULT FALSE`);

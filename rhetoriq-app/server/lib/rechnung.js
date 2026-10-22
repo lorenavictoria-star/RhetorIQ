@@ -14,7 +14,7 @@ const POSTEN = {
   business: { label: 'Paket Business', cents: ANGEBOTE.business.amountCents, art: 'paket', tokens: 2000000, laufzeit: true },
   enterprise: { label: 'Paket Enterprise', cents: 249000, art: 'paket', tokens: null, laufzeit: true },
   quartalsreview: { label: 'Zusatz Quartalsreview (alle 3 Monate)', cents: ANGEBOTE.quartalsreview.amountCents, art: 'quartalsreview' },
-  'stimm-audit': { label: 'Stimm-Audit (30 Tage Zugang inklusive)', cents: ANGEBOTE['stimm-audit'].amountCents, art: 'audit' },
+  'stimm-audit': { label: '«Die Stimme finden» (30 Tage Zugang inklusive)', cents: ANGEBOTE['stimm-audit'].amountCents, art: 'audit' },
   'workshop-team': { label: 'Workshop «Die Stimme finden» (Team)', cents: ANGEBOTE['workshop-team'].amountCents, art: 'einmalig' },
   'workshop-business': { label: 'Workshop «Die Stimme finden» (Business)', cents: ANGEBOTE['workshop-business'].amountCents, art: 'einmalig' },
   andere: { label: 'Leistung nach Vereinbarung', cents: 0, art: 'einmalig', freitext: true }

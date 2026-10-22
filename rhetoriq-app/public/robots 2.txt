@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /index.html
+Disallow: /api
+Disallow: /login
+Disallow: /*?
+
+Sitemap: https://rhetoriq.ch/sitemap.xml

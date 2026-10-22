@@ -1,4 +1,4 @@
-// Monatlicher Stimmen-Check als Word-Bericht: Verlauf des Stilprofils seit der Ausgangslage, ohne KI-Aufruf.
+// Monatlicher Quartalsbericht als Word-Bericht: Verlauf des Stilprofils seit der Ausgangslage, ohne KI-Aufruf.
 const { pool } = require('../db');
 const {
   Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType
@@ -75,9 +75,9 @@ async function buildCheck(clientId) {
   const c = compare(profile);
   const month = new Date().toLocaleDateString('de-CH', { month: 'long', year: 'numeric' });
   const kids = [];
-  kids.push(new Paragraph({ spacing: { after: 60 }, children: [new TextRun({ text: 'Stimmen-Check', font: FONT, size: 52, bold: true })] }));
+  kids.push(new Paragraph({ spacing: { after: 60 }, children: [new TextRun({ text: 'Quartalsbericht Brand Voice', font: FONT, size: 52, bold: true })] }));
   kids.push(p(cr[0].name, { size: 30, after: 60 }));
-  kids.push(p(`${month} · Stimm-Audit von Lorena Lienhard`, { size: 20, color: '777777', after: 240 }));
+  kids.push(p(`${month} · Die Stimme finden mit Lorena Lienhard`, { size: 20, color: '777777', after: 240 }));
 
   kids.push(h1('1. Das Wichtigste'));
   if (c.mNow != null) {
@@ -126,7 +126,7 @@ async function buildCheck(clientId) {
   kids.push(p('Satzlänge und Wendungen werden exakt gezählt. Die sechs Stilwerte sind eine Einschätzung einer KI mit immer gleichem Auftrag, damit die Messungen vergleichbar bleiben. Sie ersetzen kein persönliches Urteil.', { size: 20, color: '555555' }));
 
   const doc = new Document({
-    creator: 'Lorena Lienhard', title: `Stimmen-Check ${cr[0].name}`, ...require('./kiHinweis').docMeta(),
+    creator: 'Lorena Lienhard', title: `Quartalsbericht Brand Voice ${cr[0].name}`, ...require('./kiHinweis').docMeta(),
     sections: [{ properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1134, bottom: 1134, left: 1417, right: 1417 } } }, children: kids }]
   });
   return { buffer: await Packer.toBuffer(doc), name: cr[0].name, match: c.mNow };

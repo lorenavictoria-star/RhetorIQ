@@ -489,7 +489,7 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
       <h1>Your voice, <span class="eq">polished by hand.</span></h1>
       <p class="hchips" aria-label="Zielgruppen"><span>SMEs</span><span>Business and finance</span><span>Management and teams</span></p>
       <p class="lead">RhetorIQ writes all your texts, from emails to talks. They sound like your company and like no generic AI. I capture your voice once. The AI then writes in it: that is the <span class="iq">IQ</span>. I check every text and polish it: that is the <span class="eq">EQ</span>.</p>
-      <div class="cta2"><a class="btn" href="#schnelltest" id="hst">Start the voice test</a><a class="btn ghost" href="#buchen">Request a call</a></div>
+      <div class="cta2"><a class="btn" href="#schnelltest" id="hst">How does your company sound? Test now</a><a class="btn ghost" href="#buchen">Request a call</a></div>
     </div>
     <div id="ball" role="img" aria-label="A golden and a silver thread wound into a ball"></div>
   </header>
@@ -588,7 +588,7 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
   </section>
 
   <section id="ausprobieren">
-    <div class="fin"><div><h3>Try for free</h3><div class="rows"><a href="#schnelltest" id="stlink">Voice test<span aria-hidden="true">&rarr;</span></a></div></div><div><h3>Confidential from the start</h3><p>Your company data stays yours. Before we begin, I put in writing which data RhetorIQ uses and how it is protected.</p></div></div>
+    <div class="fin"><div><h3>Try for free</h3><div class="rows"><a href="#schnelltest" id="stlink">How does your company sound?<span aria-hidden="true">&rarr;</span></a></div></div><div><h3>Confidential from the start</h3><p>Your company data stays yours. Before we begin, I put in writing which data RhetorIQ uses and how it is protected.</p></div></div>
     <section id="schnelltest" aria-label="Try for free">
       <details class="prd" id="stdet"><summary>Voice test: What does your website sound like? Three findings in one minute.<i aria-hidden="true">+</i></summary><div class="prdb">
       <p>Enter your website address and your email address. You receive a short evaluation of your site's language straight away. The test is free. I see your details and will get in touch personally if needed.</p>
@@ -610,7 +610,7 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
   busy=true;b.disabled=true;o.hidden=true;m.textContent="Your website is being read and analysed, which takes about half a minute …";
   fetch("/api/schnelltest",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:u,email:e,website2:f.stw.value,elapsed:Date.now()-t0})})
   .then(function(r){return r.json().catch(function(){return {}}).then(function(d){return {ok:r.ok,d:d}})})
-  .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=(x.d&&x.d.error)||"The voice test is currently unavailable. Please try again later.";return}
+  .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=(x.d&&x.d.error)||"The test «How does your company sound?» is currently unavailable. Please try again later.";return}
   m.textContent="";o.textContent="";var h=document.createElement("h3");h.textContent="Your three findings";o.appendChild(h);
   var ol=document.createElement("ol");x.d.ergebnis.befunde.forEach(function(s){var li=document.createElement("li");li.textContent=s;ol.appendChild(li)});o.appendChild(ol);
   var p=document.createElement("p");p.className="nx";p.textContent=x.d.ergebnis.naechsterSchritt;o.appendChild(p);

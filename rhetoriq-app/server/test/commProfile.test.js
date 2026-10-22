@@ -76,7 +76,7 @@ test('Stimmprofil als Word: nur Beraterin, enthält Firma und Übereinstimmung',
   assert.equal((await srv.call('GET', `/api/comm-profile/${c.id}/report.docx`, { token: H.clientToken(c.id) })).status, 403);
 });
 
-test('Stimmen-Check als Word: Inhalt, Zugriffsschutz', async () => {
+test('Quartalsbericht als Word: Inhalt, Zugriffsschutz', async () => {
   const c = await H.addClient('Check AG'), other = await H.addClient('Fremd AG');
   await srv.call('POST', `/api/comm-profile/${c.id}/baseline`, { token: H.advisorToken(), body: { texts: LONG } });
   await srv.call('PUT', `/api/comm-profile/${c.id}/target`, { token: H.advisorToken(), body: { scores: { klarheit: 80, waerme: 70, direktheit: 70, verstaendlichkeit: 80, kuerze: 70, verbindlichkeit: 75 } } });
@@ -87,7 +87,7 @@ test('Stimmen-Check als Word: Inhalt, Zugriffsschutz', async () => {
   const r = await buildCheck(c.id);
   const z = await require('jszip').loadAsync(r.buffer);
   const xml = await z.file('word/document.xml').async('string');
-  assert.ok(xml.includes('Stimmen-Check') && xml.includes('Check AG'));
+  assert.ok(xml.includes('Quartalsbericht Brand Voice') && xml.includes('Check AG'));
   assert.ok(xml.includes('Sätze kürzer'), 'Befund der letzten Messung');
   assert.ok(xml.includes('Ausgangslage') && xml.includes('Veränderung'));
   const cmp = compare(await require('../lib/commProfile').getProfile(c.id));

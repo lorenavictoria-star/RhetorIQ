@@ -464,7 +464,7 @@ const PORT = process.env.PORT || 3001;
   cron.schedule('30 3 * * *', () => runRetention().catch(e => console.error('[retention] failed:', e.message)), { timezone: 'Europe/Zurich' });
   console.log('[cron] Retention: daily 03:30 Zurich');
 
-  // Monatserinnerung an den Export der Stimmenmappen: am 1. um 09:00, nur eine Mail ohne Anhang
+  // Monatserinnerung an den Export der Brand-Voice-Handbücher: am 1. um 09:00, nur eine Mail ohne Anhang
   cron.schedule('0 9 1 * *', () => require('./jobs/stimmenmappe-erinnerung').runErinnerung().catch(e => console.error('[stimmenmappe] Erinnerung failed:', e.message)), { timezone: 'Europe/Zurich' });
 
   // Papierkorb: täglich um 03:40 Klienten endgültig löschen, die seit 30 Tagen im Papierkorb liegen

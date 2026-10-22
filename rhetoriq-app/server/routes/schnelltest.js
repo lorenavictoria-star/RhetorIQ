@@ -9,7 +9,7 @@ const A = require('../lib/schnelltestAnalyse');
 const MAILS = require('../lib/schnelltestMails');
 const { requireAdvisor } = require('../middleware/auth');
 
-// Kostenloser Stimmtest (Lead-Magnet auf der Landingpage).
+// Kostenloser Test «Wie klingt Ihre Firma?» (Lead-Magnet auf der Landingpage).
 //   POST /api/schnelltest  { url, email, website2 (Honeypot), elapsed (Zeitfalle) }  oeffentlich, nur von rhetoriq.ch
 //   Danach läuft im Hintergrund die tiefe Analyse (bis 3 Seiten, Kennzahlen, 6 bis 8 geprüfte Auffälligkeiten) und meldet sich bei Lorena.
 //   Beraterin (Auth): GET /api/schnelltests, GET/PUT /api/schnelltests/:id, GET /api/schnelltests/:id/pdf, POST /api/schnelltests/:id/senden
@@ -57,8 +57,8 @@ async function meldeBudget() {
   if (budgetMailTag === tag) return;
   budgetMailTag = tag;
   const notifyTo = process.env.ADVISOR_NOTIFY_EMAIL || process.env.SMTP_FROM || 'contact@lorenalienhard.ch';
-  await queueEmail({ kind: 'schnelltest_budget', to: notifyTo, subject: 'Stimmtest: Tagesbudget für die tiefe Analyse erreicht',
-    text: 'Hallo Lorena\n\nDas Tagesbudget für die tiefe Analyse des Stimmtests ist aufgebraucht. Bis morgen bekommen neue Tests nur die Kennzahlen und die automatischen Auffälligkeiten, ohne KI-Auswertung. Die Kurzbefunde auf der Webseite laufen weiter.\n\nWenn du mehr Tests pro Tag möchtest, erhöhst du auf Render die Variable BUDGET_SCHNELLTEST_TIEF_USD (heute 4 US-Dollar).' });
+  await queueEmail({ kind: 'schnelltest_budget', to: notifyTo, subject: 'Test «Wie klingt Ihre Firma?»: Tagesbudget für die tiefe Analyse erreicht',
+    text: 'Hallo Lorena\n\nDas Tagesbudget für die tiefe Analyse des Tests «Wie klingt Ihre Firma?» ist aufgebraucht. Bis morgen bekommen neue Tests nur die Kennzahlen und die automatischen Auffälligkeiten, ohne KI-Auswertung. Die Kurzbefunde auf der Webseite laufen weiter.\n\nWenn du mehr Tests pro Tag möchtest, erhöhst du auf Render die Variable BUDGET_SCHNELLTEST_TIEF_USD (heute 4 US-Dollar).' });
 }
 async function tiefenJob(j, deps) {
   try {
@@ -73,7 +73,7 @@ async function tiefenJob(j, deps) {
     await meldeLorena(MAILS.hinweisMail({ id: j.id, url: j.url, host: j.host, email: j.email, kennzahlen, kandidaten: a.kandidaten, mehrseiten: a.mehrseiten }));
   } catch (e) {
     console.error('[schnelltest] tiefe Analyse fehlgeschlagen:', e && e.message);
-    await meldeLorena({ subject: `Neuer Stimmtest: ${j.host}`, text: `Hallo Lorena\n\nEin Stimmtest wurde ausgefüllt. Die tiefe Analyse ist fehlgeschlagen.\n\nWebseite: ${j.url}\nE-Mail: ${j.email}\n\nRhetorIQ` }).catch(() => {});
+    await meldeLorena({ subject: `Neuer Test «Wie klingt Ihre Firma?»: ${j.host}`, text: `Hallo Lorena\n\nEin Test «Wie klingt Ihre Firma?» wurde ausgefüllt. Die tiefe Analyse ist fehlgeschlagen.\n\nWebseite: ${j.url}\nE-Mail: ${j.email}\n\nRhetorIQ` }).catch(() => {});
   }
 }
 function starteTiefenanalyse(j, deps) {
@@ -111,8 +111,8 @@ function makeRouter({ max = 5, fetchHtml = safeFetch.safeFetchHtml, deps: depsIn
 
       await ensureTable();
       const day = await pool.query(`SELECT COUNT(*)::int AS n FROM schnelltests WHERE created_at > NOW() - INTERVAL '24 hours'`);
-      if (day.rows[0].n >= DAILY_MAX) return res.status(429).json({ error: 'Der Stimmtest ist für heute ausgeschöpft. Bitte versuchen Sie es morgen erneut.' });
-      if (!(await require('../lib/budget').allow('schnelltest')).ok) return res.status(429).json({ error: 'Der Stimmtest ist für heute ausgeschöpft. Bitte versuchen Sie es morgen erneut.' });
+      if (day.rows[0].n >= DAILY_MAX) return res.status(429).json({ error: 'Der Test «Wie klingt Ihre Firma?» ist für heute ausgeschöpft. Bitte versuchen Sie es morgen erneut.' });
+      if (!(await require('../lib/budget').allow('schnelltest')).ok) return res.status(429).json({ error: 'Der Test «Wie klingt Ihre Firma?» ist für heute ausgeschöpft. Bitte versuchen Sie es morgen erneut.' });
       const dup = await pool.query(`SELECT id FROM schnelltests WHERE (host=$1 OR email=$2) AND created_at > NOW() - INTERVAL '24 hours' LIMIT 1`, [host, email]);
       if (dup.rows.length) return res.status(429).json({ error: 'Für diese Webseite oder E-Mail-Adresse wurde in den letzten 24 Stunden schon ein Test erstellt.' });
       // Platz reservieren, damit zwei gleichzeitige Anfragen nicht beide durchkommen
@@ -148,7 +148,7 @@ function makeRouter({ max = 5, fetchHtml = safeFetch.safeFetchHtml, deps: depsIn
       if (rowId) await pool.query('DELETE FROM schnelltests WHERE id=$1', [rowId]).catch(() => {});
       if (e.code === 'FETCH' || e.code === 'PARSE') return res.status(422).json({ error: e.message });
       console.error('[schnelltest]', e.message);
-      res.status(500).json({ error: 'Der Stimmtest ist gerade nicht verfügbar. Bitte versuchen Sie es später erneut.' });
+      res.status(500).json({ error: 'Der Test «Wie klingt Ihre Firma?» ist gerade nicht verfügbar. Bitte versuchen Sie es später erneut.' });
     }
   });
   return router;
@@ -207,15 +207,15 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
   });
 
   router.get('/:id', async (req, res) => {
-    try { const r = await holen(req.params.id); if (!r) return res.status(404).json({ error: 'Stimmtest nicht gefunden.' }); res.json(detail(r)); }
+    try { const r = await holen(req.params.id); if (!r) return res.status(404).json({ error: 'Test «Wie klingt Ihre Firma?» nicht gefunden.' }); res.json(detail(r)); }
     catch (e) { fehler(res, e); }
   });
 
   router.put('/:id', async (req, res) => {
     try {
       const r = await holen(req.params.id);
-      if (!r) return res.status(404).json({ error: 'Stimmtest nicht gefunden.' });
-      if (r.status === 'gesendet') return res.status(409).json({ error: 'Dieser Stimmtest wurde schon gesendet und lässt sich nicht mehr ändern.' });
+      if (!r) return res.status(404).json({ error: 'Test «Wie klingt Ihre Firma?» nicht gefunden.' });
+      if (r.status === 'gesendet') return res.status(409).json({ error: 'Dieser Test wurde schon gesendet und lässt sich nicht mehr ändern.' });
       const b = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
       let kand = jsonSpalte(r.kandidaten, null);
       if (!kand) return res.status(409).json({ error: 'Die Analyse ist noch nicht fertig. Bitte versuche es in einer Minute erneut.' });
@@ -260,7 +260,7 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
   router.get('/:id/pdf', async (req, res) => {
     try {
       const r = await holen(req.params.id);
-      if (!r) return res.status(404).json({ error: 'Stimmtest nicht gefunden.' });
+      if (!r) return res.status(404).json({ error: 'Test «Wie klingt Ihre Firma?» nicht gefunden.' });
       const d = pdfDaten(r);
       if (!d.kandidaten.length) return res.status(409).json({ error: 'Wähle zuerst mindestens eine Auffälligkeit aus und speichere die Auswahl.' });
       const pdf = await require('../lib/schnelltestPdf').erzeugePdf(d);
@@ -273,8 +273,8 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
     let beansprucht = null;
     try {
       const r = await holen(req.params.id);
-      if (!r) return res.status(404).json({ error: 'Stimmtest nicht gefunden.' });
-      if (r.status === 'gesendet') return res.status(409).json({ error: 'Dieser Stimmtest wurde schon gesendet.' });
+      if (!r) return res.status(404).json({ error: 'Test «Wie klingt Ihre Firma?» nicht gefunden.' });
+      if (r.status === 'gesendet') return res.status(409).json({ error: 'Dieser Test wurde schon gesendet.' });
       const d = pdfDaten(r);
       if (d.kandidaten.length !== 3) return res.status(400).json({ error: 'Wähle genau drei Auffälligkeiten aus und speichere die Auswahl, bevor Du sendest.' });
       if (!EMAIL_RE.test(String(r.email || ''))) return res.status(400).json({ error: 'Die E-Mail-Adresse dieses Schnelltests ist ungültig.' });
@@ -283,7 +283,7 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
       if (betreff.length < 3 || text.length < 20) return res.status(400).json({ error: 'Bitte gib Betreff und Text der Mail an.' });
       // Versand genau einmal: erst den Status setzen, dann senden
       beansprucht = (await pool.query(`UPDATE schnelltests SET status='gesendet', gesendet_am=NOW() WHERE id=$1 AND status<>'gesendet' RETURNING id`, [r.id])).rows[0];
-      if (!beansprucht) return res.status(409).json({ error: 'Dieser Stimmtest wurde schon gesendet.' });
+      if (!beansprucht) return res.status(409).json({ error: 'Dieser Test wurde schon gesendet.' });
       const pdf = await require('../lib/schnelltestPdf').erzeugePdf(d);
       if (pdf.seiten > 3) { await pool.query(`UPDATE schnelltests SET status='freigegeben', gesendet_am=NULL WHERE id=$1`, [r.id]); beansprucht = null; return res.status(409).json({ error: 'Die Texte sind zu lang für drei Seiten. Bitte kürze die gewählten Auffälligkeiten oder Deine Einschätzung.' }); }
       const buf = pdf.buf;
@@ -296,7 +296,7 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
   });
   return router;
 }
-function dateiname(host) { return 'RhetorIQ_Stimmtest_' + String(host || 'webseite').replace(/[^a-z0-9.-]/gi, '_').slice(0, 60) + '.pdf'; }
+function dateiname(host) { return 'RhetorIQ_Wie-klingt-Ihre-Firma_' + String(host || 'webseite').replace(/[^a-z0-9.-]/gi, '_').slice(0, 60) + '.pdf'; }
 
 module.exports = makeRouter();
 module.exports.makeRouter = makeRouter;

@@ -32,7 +32,7 @@ const KATS = [
   { key: 'branchen', g: 'module', label: 'Branchenpakete', immer: true },
   { key: 'topup', g: 'zusatz', label: '+20 Texte', immer: true },
   { key: 'karte', g: 'zusatz', label: '10er-Karte Überarbeitungen', immer: true },
-  { key: 'audit', g: 'einmalig', label: 'Stimm-Audit', immer: true },
+  { key: 'audit', g: 'einmalig', label: '«Die Stimme finden»', immer: true },
   { key: 'workshop_team', g: 'einmalig', label: 'Workshop Team', immer: true },
   { key: 'workshop_business', g: 'einmalig', label: 'Workshop Business', immer: true },
   { key: 'einrichtung_sonst', g: 'einmalig', label: 'Weitere Einrichtung' },

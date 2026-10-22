@@ -12,7 +12,7 @@ test('Besucherzähler: nur bekannte Namen, Berichtszeilen', async () => {
   assert.ok(calls.some(([s, p]) => /INSERT INTO site_events/.test(s) && p[0] === 'view_home'));
   assert.ok(ev.reportLines({}).join('\n').includes('Noch keine Zählung'));
   const t = ev.reportLines({ view_home: 12, test_submit: 3 }).join('\n');
-  assert.ok(t.includes('Besuche Startseite: 12') && t.includes('Stimmtest abgeschickt: 3'));
+  assert.ok(t.includes('Besuche Startseite: 12') && t.includes('Test «Wie klingt Ihre Firma?» abgeschickt: 3'));
 });
 
 test('Zähler: eigener Browser lässt sich ausnehmen (?ich=1)', () => {

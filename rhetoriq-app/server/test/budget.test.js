@@ -53,7 +53,7 @@ test('Mail an Lorena genau einmal pro Funktion und Tag, mit Hinweis auf die Umge
   await budget.allow('schnelltest'); await budget.allow('schnelltest'); await budget.allow('schnelltest');
   const m = H.brevoMails.filter(x => /Tagesbudget/.test(x.subject));
   assert.equal(m.length, 1);
-  assert.match(m[0].subject, /Stimmtest pausiert/);
+  assert.match(m[0].subject, /Test «Wie klingt Ihre Firma\?» pausiert/);
   assert.match(m[0].text, /BUDGET_SCHNELLTEST_USD/);
   assert.doesNotMatch(m[0].text, /[–—]/, 'keine Gedankenstriche');
   await log('comm-profile', 1.5);

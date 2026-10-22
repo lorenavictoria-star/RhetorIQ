@@ -76,7 +76,7 @@ router.post('/create-payment-link/:clientId', requireAdvisor, ownClient('clientI
     // For a recurring subscription: pass a Price ID with type=recurring.
     // For a one-time payment: pass a Price ID with type=one_time.
     const { priceId, angebot } = req.body;
-    // Eingebaute Angebote (Pakete, Stimm-Audit, Workshop): Preis direkt im Aufruf, keine Vorbereitung in Stripe nötig
+    // Eingebaute Angebote (Pakete, «Die Stimme finden», Workshop): Preis direkt im Aufruf, keine Vorbereitung in Stripe nötig
     const ang = angebot ? require('../lib/angebote').ANGEBOTE[String(angebot)] : null;
     if (angebot && !ang) return res.status(400).json({ error: 'Unbekanntes Angebot.' });
     if (!priceId && !ang) return res.status(400).json({ error: 'priceId oder angebot erforderlich' });
@@ -672,12 +672,12 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
           }
         }
       } else if (clientId && obj.metadata?.type === 'einrichtung') {
-        // Einrichtung (Stimm-Audit, Workshop): einmalige Zahlung. Das Stimm-Audit schaltet 30 Tage Zugang mit 40 Texten frei,
+        // Einrichtung («Die Stimme finden», Workshop): einmalige Zahlung. «Die Stimme finden» schaltet 30 Tage Zugang mit 40 Texten frei,
         // das Abo Stimme folgt danach mit eigenem Link. Workshops ändern nichts am Abo.
         if (event.type === 'checkout.session.completed' && obj.metadata.angebot === 'stimm-audit') {
           await ensureSchema();
           await pool.query(`UPDATE clients SET subscription_status='active', monthly_token_limit=200000, zugang_bis=NOW() + INTERVAL '30 days' WHERE id=$1`, [clientId]);
-          console.log(`[stripe] client ${clientId} → Stimm-Audit bezahlt, 30 Tage mit 40 Texten`);
+          console.log(`[stripe] client ${clientId} → «Die Stimme finden» bezahlt, 30 Tage mit 40 Texten`);
         } else {
           console.log(`[stripe] client ${clientId} → Einrichtung bezahlt (${obj.metadata.angebot || 'unbekannt'}), Abo unverändert`);
         }

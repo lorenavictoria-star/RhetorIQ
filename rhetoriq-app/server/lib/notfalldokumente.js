@@ -12,7 +12,7 @@ const KARTE = {
   tabelleKopf: ['Symptom', 'Zuerst prüfen', 'Dann tun'],
   tabelle: [
     ['Plattform lädt nicht', 'rhetoriq.ch/health im Browser; Statusseite von Render; Render-Konsole, Logs, letzter Deploy', 'Letzten Deploy zurückrollen; Klienten informieren (Textbaustein 1)'],
-    ['Plattform läuft, Texte werden nicht erzeugt', 'Statusseite von Anthropic; Guthaben und Karte im Anthropic-Konto; Fehlerliste (generation_errors)', 'Hinweis in der Plattform; Reservekonto einschalten (Seite Nutzung); sonst von Hand mit Stimmenmappe (Textbaustein 2)'],
+    ['Plattform läuft, Texte werden nicht erzeugt', 'Statusseite von Anthropic; Guthaben und Karte im Anthropic-Konto; Fehlerliste (generation_errors)', 'Hinweis in der Plattform; Reservekonto einschalten (Seite Nutzung); sonst von Hand mit Brand-Voice-Handbuch (Textbaustein 2)'],
     ['Mails kommen nicht an', 'Status von Brevo; Admin-Seite der E-Mail-Warteschlange; Spam-Ordner', 'Warteschlange erneut senden; dringende Mails von Hand'],
     ['Zahlung oder Abo stimmt nicht', 'Stripe-Dashboard, Webhook-Zustellungen', 'Klienten von Hand auf «aktiv» setzen (Funktion mark-active)'],
     ['Fremder Zugriff vermutet', 'Neue Konten, Zahlungslinks, Klienten, Rechnungen', 'Szenario 5: Geheimnis und Passwort in Render ändern, alle Schlüssel erneuern, Dienste prüfen'],
@@ -32,7 +32,7 @@ const KARTE = {
   bereitTitel: 'Vorbereitet halten (vierteljährlich abhaken)',
   bereit: [
     'Notfallordner vollständig und aktuell (Zugänge, Wiederherstellungscodes, Ansprechpersonen)',
-    'Letzte Stimmenmappe vom: ______ (Datum)',
+    'Letzte Brand-Voice-Handbuch vom: ______ (Datum)',
     'Letzter erfolgreicher Wiederherstellungstest vom: ______ (Datum)',
     'Wächter meldet: grün seit ______',
     'Anthropic: Guthaben, automatische Aufladung, Monatslimit gesetzt',
@@ -136,7 +136,7 @@ async function buildNotfallordner() {
   kids.push(h2('Checkliste'));
   DIENSTE.forEach(d => kids.push(check(`${d[0]}: eigener Zugang eingerichtet, Zwei-Faktor vorbereitet, Wiederherstellungscodes im Ordner`)));
   kids.push(check('Liste der Umgebungsvariablen (nur Namen und Ort der Werte) im Ordner'));
-  kids.push(check('Aktuelle Stimmenmappen aller Klienten (ZIP aus der Seite Nutzung) im Ordner'));
+  kids.push(check('Aktuelle Brand-Voice-Handbücher aller Klienten (ZIP aus der Seite Nutzung) im Ordner'));
   kids.push(check('Notfallkarte ausgedruckt im Ordner'));
   kids.push(check('Letzter Wiederherstellungstest des Backups mit Datum notiert'));
 
@@ -147,7 +147,7 @@ async function buildNotfallordner() {
   kids.push(bullet('Der private Schlüssel zum Entschlüsseln der Backups liegt an einem anderen Ort als die Backups.'));
 
   kids.push(h1('4. Was die Vertretung in den ersten 24 Stunden tut'));
-  ['Abwesenheitsmeldung an die Klienten senden (Textbaustein unten).', 'Auf rhetoriq.ch/health prüfen, ob die Plattform läuft.', 'Auf der Seite Nutzung den Hinweis zur Störung prüfen und bei Bedarf einschalten.', 'Statusseiten von Render, Anthropic und Stripe ansehen.', 'Bei einem Ausfall die Notfallkarte abarbeiten.', 'Eingehende Anfragen der Webseite sichten und eine Eingangsbestätigung mit Frist senden.', 'Dringende Aufträge mit den Stimmenmappen und dem Handbuch von Hand erledigen, soweit die Vertretung dazu in der Lage ist, sonst Fristen mit den Klienten verschieben.']
+  ['Abwesenheitsmeldung an die Klienten senden (Textbaustein unten).', 'Auf rhetoriq.ch/health prüfen, ob die Plattform läuft.', 'Auf der Seite Nutzung den Hinweis zur Störung prüfen und bei Bedarf einschalten.', 'Statusseiten von Render, Anthropic und Stripe ansehen.', 'Bei einem Ausfall die Notfallkarte abarbeiten.', 'Eingehende Anfragen der Webseite sichten und eine Eingangsbestätigung mit Frist senden.', 'Dringende Aufträge mit den Brand-Voice-Handbücher und dem Handbuch von Hand erledigen, soweit die Vertretung dazu in der Lage ist, sonst Fristen mit den Klienten verschieben.']
     .forEach((t, i) => kids.push(numbered(i + 1, t)));
 
   kids.push(h1('5. Abwesenheitsmeldung (Textbaustein)'));

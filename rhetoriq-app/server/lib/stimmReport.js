@@ -1,4 +1,4 @@
-// Stimmprofil als Word-Dokument (Ergebnis des Stimm-Audits), erzeugt aus den vorhandenen Daten ohne KI-Aufruf.
+// Stimmprofil als Word-Dokument (Ergebnis von «Die Stimme finden»), erzeugt aus den vorhandenen Daten ohne KI-Aufruf.
 const { pool } = require('../db');
 const {
   Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType
@@ -58,7 +58,7 @@ async function buildReport(clientId) {
 
   kids.push(new Paragraph({ spacing: { after: 60 }, children: [new TextRun({ text: 'Stimmprofil', font: FONT, size: 52, bold: true })] }));
   kids.push(p(cr[0].name, { size: 30, after: 60 }));
-  kids.push(p(`Stimm-Audit von Lorena Lienhard · ${date}`, { size: 20, color: '777777', after: 240 }));
+  kids.push(p(`Die Stimme finden mit Lorena Lienhard · ${date}`, { size: 20, color: '777777', after: 240 }));
 
   kids.push(h1('1. Das Wichtigste'));
   if (sum && sum.match != null) {

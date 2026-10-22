@@ -40,7 +40,7 @@ test('Zahlungslink aus eingebautem Angebot, ohne Preise in Stripe', async () => 
   assert.ok(list.body.some(a => a.key === 'stimm-audit' && a.amountCents === 95000));
 });
 
-test('Webhook: Stimm-Audit schaltet 30 Tage mit 40 Texten frei, Workshop ändert das Abo nicht', async () => {
+test('Webhook: «Die Stimme finden» schaltet 30 Tage mit 40 Texten frei, Workshop ändert das Abo nicht', async () => {
   const app = express();
   app.use('/api/subscriptions', require('../routes/subscriptions'));
   const s = await new Promise(r => { const x = app.listen(0, '127.0.0.1', () => r(x)); });

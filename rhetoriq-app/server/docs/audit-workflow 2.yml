@@ -1,0 +1,35 @@
+name: Wöchentliche Prüfung
+
+# Jeden Montag um 06:00 UTC: Tests laufen lassen und Sicherheitsmeldungen der Abhängigkeiten ausgeben.
+# Schlägt ein Test fehl, wird der Lauf rot und GitHub schickt eine Benachrichtigung.
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'rhetoriq-app/server/**'
+
+permissions:
+  contents: read
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rhetoriq-app/server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: rhetoriq-app/server/package-lock.json
+      - name: Abhängigkeiten installieren
+        run: npm ci
+      - name: Tests
+        run: node --test
+      - name: Sicherheitsmeldungen (npm audit)
+        # Meldet, bricht aber nicht ab: die Reste (tar über bcrypt beim Bauen, uuid über exceljs) brauchen einen grösseren Versionssprung.
+        run: npm audit --omit=dev || true

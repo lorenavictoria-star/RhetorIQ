@@ -46,7 +46,7 @@ test('Selbstbuchung: Pakete mit Preis, Metadaten und Abo-Daten', async () => {
   assert.equal(created.at(-1).line_items[0].price_data.recurring.interval, 'year');
 });
 
-test('Selbstbuchung: kein Enterprise, kein Stimm-Audit, kein Workshop', async () => {
+test('Selbstbuchung: kein Enterprise, kein «Die Stimme finden», kein Workshop', async () => {
   const t = H.clientToken(a.id), n = created.length;
   for (const k of ['enterprise', 'stimm-audit', 'workshop-team', 'workshop-business', 'gratis', '']) {
     assert.equal((await buche(a.id, { paket: k }, t)).status, 400, k);
@@ -110,7 +110,7 @@ test('Sperre 402: Status trial ohne Zahlung, neuer Klient', async () => {
   assert.equal(stream.status, 402);
 });
 
-test('Sperre 402: pending_plan, gekündigt, Stimm-Audit abgelaufen', async () => {
+test('Sperre 402: pending_plan, gekündigt, «Die Stimme finden» abgelaufen', async () => {
   const c = await H.addClient('Gesperrt AG');
   await set(c.id, "subscription_status='pending_plan'");
   assert.equal((await gen(H.clientToken(c.id))).status, 402);
@@ -124,13 +124,13 @@ test('Sperre 402: pending_plan, gekündigt, Stimm-Audit abgelaufen', async () =>
   assert.equal(ab.body.grund, 'audit_abgelaufen');
 });
 
-test('Kein 402: Abo aktiv, Stimm-Audit läuft, früherer Klient, Zahlung fehlgeschlagen, Beraterin', async () => {
+test('Kein 402: Abo aktiv, «Die Stimme finden» läuft, früherer Klient, Zahlung fehlgeschlagen, Beraterin', async () => {
   H.ai.reply = 'Ein Text.';
   const c = await H.addClient('Aktiv AG');
   await set(c.id, "subscription_status='active', monthly_token_limit=200000");
   assert.equal((await gen(H.clientToken(c.id))).status, 200);
   await set(c.id, "zugang_bis = NOW() + INTERVAL '10 days'");
-  assert.equal((await gen(H.clientToken(c.id))).status, 200, 'Stimm-Audit-Zeitraum');
+  assert.equal((await gen(H.clientToken(c.id))).status, 200, 'Einrichtungszeitraum');
   await set(c.id, "zugang_bis = NULL, subscription_status='past_due'");
   assert.equal((await gen(H.clientToken(c.id))).status, 200, 'Zugang bleibt bei fehlgeschlagener Zahlung');
   const alt = await H.addClient('Alt AG');

@@ -1,4 +1,4 @@
-// Stimmenmappe und Handbuch je Klient als Word, dazu ZIP über alle Klienten der Beraterin.
+// Brand-Voice-Handbuch und Handbuch je Klient als Word, dazu ZIP über alle Klienten der Beraterin.
 // Ohne KI: Alles wird regelbasiert aus der Datenbank zusammengestellt, damit die Beraterin auch bei einem
 // Ausfall der Plattform oder der KI in der Stimme jedes Klienten schreiben kann (Ausfallbericht, Rückfall ohne KI).
 const { pool } = require('../db');
@@ -148,13 +148,13 @@ function metricsOf(data) {
   return null;
 }
 
-// ── Stimmenmappe ────────────────────────────────────────────────────────────
+// ── Brand-Voice-Handbuch ────────────────────────────────────────────────────────────
 async function buildMappe(clientId) {
   const d = await collect(clientId);
   if (!d) throw new Error('Klient nicht gefunden.');
   const c = d.client;
   const kids = [];
-  kids.push(new Paragraph({ spacing: { after: 60 }, children: [run('Stimmenmappe', { size: 52, bold: true })] }));
+  kids.push(new Paragraph({ spacing: { after: 60 }, children: [run('Brand-Voice-Handbuch', { size: 52, bold: true })] }));
   kids.push(p(c.name, { size: 30, after: 60 }));
   kids.push(p(`Stand ${DATE(new Date())} · gesammelt aus RhetorIQ, lesbar ohne Plattform und ohne KI`, { size: 20, color: '777777', after: 200 }));
 
@@ -227,7 +227,7 @@ async function buildMappe(clientId) {
     if (m) kids.push(p(`Durchschnittliche Satzlänge ${m.avgSentenceLength} Wörter, ${m.longSentenceShare} Prozent der Sätze haben mehr als 25 Wörter.`));
   }
 
-  return Packer.toBuffer(new Document({ creator: 'RhetorIQ', title: 'Stimmenmappe ' + c.name, sections: [{ children: kids }] }));
+  return Packer.toBuffer(new Document({ creator: 'RhetorIQ', title: 'Brand-Voice-Handbuch ' + c.name, sections: [{ children: kids }] }));
 }
 
 // ── Handbuch (eine Seite) ───────────────────────────────────────────────────
@@ -255,7 +255,7 @@ async function buildHandbuch(clientId) {
   kids.push(hint(`Stand ${DATE(new Date())}. Eine Seite, brauchbar ohne Plattform.`));
 
   kids.push(h2('Ton'));
-  kids.push(p(tonLine(bv) || 'In der Brand Voice nicht ausdrücklich benannt. Lies die ersten Absätze der Stimmenmappe.'));
+  kids.push(p(tonLine(bv) || 'In der Brand Voice nicht ausdrücklich benannt. Lies die ersten Absätze der Brand-Voice-Handbuch.'));
   kids.push(h2('Anrede und Grussformel'));
   kids.push(p(anrede(bv, c, m)));
   kids.push(h2('Satzbau'));
@@ -286,7 +286,7 @@ async function buildZip(advisorId) {
     let base = safeName(r.name);
     if (used.has(base)) base += '_' + r.id;
     used.add(base);
-    zip.file(`${base}/Stimmenmappe_${base}.docx`, await buildMappe(r.id));
+    zip.file(`${base}/Brand-Voice-Handbuch_${base}.docx`, await buildMappe(r.id));
     zip.file(`${base}/Handbuch_${base}.docx`, await buildHandbuch(r.id));
   }
   if (!rows.length) zip.file('LIES_MICH.txt', 'Es sind keine Klienten vorhanden.');
