@@ -1,4 +1,4 @@
-const CACHE = 'rhetoriq-v107';
+const CACHE = 'rhetoriq-v108';
 const ASSETS = ['./index.html', './manifest.json', './onboarding.html'];
 
 self.addEventListener('install', e => {
@@ -14,7 +14,7 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  if (e.request.url.includes('api.anthropic.com') || e.request.url.includes('fonts.googleapis.com')) {
+  if (e.request.url.includes('api.anthropic.com')) {
     return;
   }
   // Always fetch index.html fresh from network

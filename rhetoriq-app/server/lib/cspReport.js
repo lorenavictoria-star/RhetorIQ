@@ -2,17 +2,17 @@
 const express = require('express');
 const { rateLimit } = require('express-rate-limit');
 
-// Richtlinie für die heutige Seite: Inline-Skripte und Inline-Handler sind nötig ('unsafe-inline'), externe Bibliotheken
-// kommen von cdnjs und jsDelivr, Schriften von Google Fonts.
+// Richtlinie für die heutige Seite: Inline-Skripte und Inline-Handler sind nötig ('unsafe-inline'), Bibliotheken und Schriften
+// werden selbst ausgeliefert (/vendor), es sind keine Drittserver eingetragen.
 const DIRECTIVES = {
   'default-src': ["'self'"],
-  'script-src': ["'self'", "'unsafe-inline'", 'https://cdnjs.cloudflare.com', 'https://cdn.jsdelivr.net'],
+  'script-src': ["'self'", "'unsafe-inline'"],
   'script-src-attr': ["'unsafe-inline'"],
-  'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
-  'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
+  'style-src': ["'self'", "'unsafe-inline'"],
+  'font-src': ["'self'", 'data:'],
   'img-src': ["'self'", 'data:', 'blob:', 'https:'],
-  'connect-src': ["'self'", 'wss:', 'ws://localhost:*', 'https://cdnjs.cloudflare.com', 'https://cdn.jsdelivr.net'],
-  'worker-src': ["'self'", 'blob:', 'https://cdnjs.cloudflare.com'],
+  'connect-src': ["'self'", 'wss:', 'ws://localhost:*'],
+  'worker-src': ["'self'", 'blob:'],
   'media-src': ["'self'", 'blob:', 'data:'],
   'object-src': ["'none'"],
   'base-uri': ["'self'"],

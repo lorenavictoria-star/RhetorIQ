@@ -379,7 +379,7 @@ app.use((req, res, next) => {
   if (!/^wissen\.lorenalienhard\.ch$/i.test(req.hostname || '')) return next();
   const f = WISSEN_SEITEN[req.path.replace(/(.)\/$/, '$1')];
   if (f) return res.sendFile(path.join(__dirname, 'wissen', f));
-  if (req.path === '/og-lorena.jpg') return next();
+  if (req.path === '/og-lorena.jpg' || req.path.startsWith('/vendor/')) return next();
   res.status(404).type('text/plain').send('Seite nicht gefunden');
 });
 // Landingpage auf "/", die App (mit Login) bleibt unter /index.html und /login erreichbar.
@@ -403,6 +403,10 @@ app.get('/termin', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.html'))
 // Warteliste «Platz sichern» und Geschenk-PDFs: dieselbe Landingpage, der passende Dialog öffnet sich selbst. Die PDFs liegen ausserhalb von public und werden nur per Mail verschickt.
 app.get('/platz', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.html')));
 app.get('/geschenk', (_, res) => res.sendFile(path.join(FRONTEND, 'landing.html')));
+// Selbst gehostete Schriften und Bibliotheken (Versionen fest gepinnt): lange Cache-Dauer, CSS-Dateien am Wurzelordner kürzer.
+app.use('/vendor', express.static(path.join(FRONTEND, 'vendor'), { index: false, setHeaders: (res, f) => {
+  res.setHeader('Cache-Control', /[\\/]vendor[\\/][^\\/]+\.css$/.test(f) ? 'public, max-age=86400' : 'public, max-age=31536000, immutable');
+} }));
 app.use(express.static(FRONTEND, { index: false }));
 app.get('*', (_, res) => res.sendFile(path.join(FRONTEND, 'index.html')));
 

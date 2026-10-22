@@ -16,9 +16,9 @@
 <meta property="og:description" content="RhetorIQ gibt Ihrem Unternehmen eine Stimme: KI-Texte in Ihrer Sprache, von einer Rhetorikerin von Hand geschärft.">
 <meta property="og:image" content="https://rhetoriq.ch/icon-512.png">
 <meta property="og:url" content="https://rhetoriq.ch/">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="/vendor/fonts.css">
+<link rel="stylesheet" href="/vendor/tabler/tabler-icons.min.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Inter+Tight:wght@300;400;500;600;700&display=swap');
 :root{
   /* Palette */
   --bg:#FFFFFF;--sf:#FFFFFF;--bg2:#FFFFFF;--bd:#E2E0DC;--tx:#0E0D0B;--mu:#6A665F;--dm:#6B665E;--red:#B42318;
@@ -1982,7 +1982,7 @@ html[lang="en"] .legal-en-note{display:block}
       <ul style="font-size:14px;line-height:1.9;color:var(--tx);margin:8px 0 0;padding-left:20px"><li><strong>Auskunft</strong> – welche Daten wir über Sie gespeichert haben</li><li><strong>Berichtigung</strong> – Korrektur unrichtiger Daten</li><li><strong>Löschung</strong> – Entfernung Ihrer Daten</li><li><strong>Datenherausgabe</strong> – Ihre Daten in einem gängigen Format</li><li><strong>Widerspruch</strong> – gegen bestimmte Verarbeitungen</li></ul>
       <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:8px 0 0">Anfragen richten Sie an <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a>. Wir beantworten sie innert 30 Tagen. Sie können sich ausserdem beim Eidgenössischen Datenschutz- und Öffentlichkeitsbeauftragten (EDÖB, www.edoeb.admin.ch) beschweren.</p>
       <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:22px 0 8px">Cookies, lokaler Speicher und Schriften</div>
-      <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">RhetorIQ setzt keine Analyse- und Werbe-Cookies ein. Für die Anmeldung speichert Ihr Browser ein Token im lokalen Speicher, ebenso Entwürfe und Einstellungen. Schriftarten (Google Fonts) und Programmbibliotheken laden wir von Google, jsDelivr und Cloudflare. Dabei wird Ihre IP-Adresse an diese Anbieter übermittelt.</p>
+      <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">RhetorIQ setzt keine Analyse- und Werbe-Cookies ein. Für die Anmeldung speichert Ihr Browser ein Token im lokalen Speicher, ebenso Entwürfe und Einstellungen. Schriftarten und Programmbibliotheken liefern wir von unserem eigenen Server aus, es werden keine Drittserver eingebunden.</p>
       <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:22px 0 8px">Aufbewahrung</div>
       <p style="font-size:14px;line-height:1.7;color:var(--tx);margin:0">Kontodaten bewahren wir für die Dauer des Vertragsverhältnisses plus 10 Jahre auf (gesetzliche Aufbewahrungspflicht). Kommunikationsinhalte löschen wir nach der Kündigung auf Ihre Anfrage unverzüglich. Sie können einzelne Analysen, Personenprofile und Dokumente jederzeit selbst in der Plattform löschen.</p>
       <div style="border-top:1px solid var(--bd);padding-top:20px;margin-top:24px;font-size:12px;color:var(--mu);line-height:1.7">Fragen zum Datenschutz? <a href="mailto:contact@lorenalienhard.ch" style="color:var(--tx);font-weight:600">contact@lorenalienhard.ch</a></div>
@@ -2298,11 +2298,11 @@ html[lang="en"] .legal-en-note{display:block}
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js" integrity="sha384-nFoSjZIoH3CCp8W639jJyQkuPHinJ2NHe7on1xvlUA7SuGfJAfvMldrsoAVm6ECz" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" integrity="sha384-+VfUPEb0PdtChMwmBcBmykRMDd+v6D/oFmB3rZM/puCMDYcIvF968OimRh4KQY9a" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js" integrity="sha384-Cck14aA9cifjYolcnjebXRfWGkz5ltHMBiG4px/j8GS+xQcb7OhNQWZYyWjQ+UwQ" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="/vendor/js/pdf.min.js"></script>
+<script src="/vendor/js/mammoth.browser.min.js"></script>
+<script src="/vendor/js/purify.min.js"></script>
+<script src="/vendor/js/pptxgen.bundle.js"></script>
+<script src="/vendor/js/jszip.min.js"></script>
 <script id="rq-viewas-boot">
 // Ansicht des Klienten: Zugang kommt über window.name (nicht über die Adresse) und lebt nur in diesem Tab (sessionStorage). Das Token der Beraterin bleibt unberührt.
 (function(){try{
@@ -2595,7 +2595,7 @@ function DLOC(){return (typeof LANG!=='undefined'&&LANG==='en')?'en-GB':'de-CH';
 function tr(key,fallback){var d=(typeof T!=='undefined'&&T[LANG])||{};return d[key]!==undefined?d[key]:(fallback!==undefined?fallback:key);}
 </script>
 <script>
-if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='/vendor/js/pdf.worker.min.js';
 
 // Live (rhetoriq.ch) und Dateiansicht nutzen den Live-Server. Jeder andere Aufrufort (Test-Dienst, localhost) nutzt den eigenen Server.
 const API=(location.protocol==='file:'||/(^|\.)rhetoriq\.ch$/.test(location.hostname))?'https://rhetoriq.ch':'';
@@ -9000,7 +9000,7 @@ tryAutoLogin();
   function boot(){
     if(!webgl())return;
     if(window.THREE){mount();return;}
-    var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.async=true;s.onload=mount;s.onerror=function(){};document.head.appendChild(s);
+    var s=document.createElement('script');s.src='/vendor/js/three.min.js';s.async=true;s.onload=mount;s.onerror=function(){};document.head.appendChild(s);
   }
   var rz=0;addEventListener('resize',function(){clearTimeout(rz);rz=setTimeout(thread,200);});
   var _sf=window.sf;window.sf=function(a,b){_sf(a,b);setTimeout(thread,30);};

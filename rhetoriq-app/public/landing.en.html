@@ -25,9 +25,7 @@
 <meta name="description" content="Client emails, speeches and more written by AI in your voice. Polished by hand by Lorena Lienhard. For companies in Switzerland.">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <link rel="apple-touch-icon" href="/icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&display=swap">
+<link rel="stylesheet" href="/vendor/fonts.css">
 <style>
 /* Layout: black stage, ball of thread in the hero, then calm bands with fine lines. Silver = IQ, gold = EQ. */
 :root{
@@ -757,7 +755,7 @@ loadSlots().then(function(){if(auf)op()});})();
   var fk=0;function loop(){if(!reduce)requestAnimationFrame(loop);if(document.hidden||!ballOn||(mob&&!reduce&&(fk^=1)))return;if(!reduce)g.rotation.z-=.004*(mob?2:1);g.rotation.x=.25;r.render(s,cam);if(calN<6){calibrate();calN++}}
   if(window.IntersectionObserver)new IntersectionObserver(function(en){ballOn=en[0].isIntersecting},{rootMargin:"100px"}).observe(el);
   loop();}
-  var tl=false;function loadThree(){if(tl)return;tl=true;var sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";sc.integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu";sc.crossOrigin="anonymous";sc.referrerPolicy="no-referrer";
+  var tl=false;function loadThree(){if(tl)return;tl=true;var sc=document.createElement("script");sc.src="/vendor/js/three.min.js";
     sc.onload=function(){try{initBall()}catch(e){}dispatchEvent(new Event("resize"))};document.head.appendChild(sc)}
   function idleThree(){if(window.requestIdleCallback)requestIdleCallback(loadThree,{timeout:2500});else setTimeout(loadThree,600)}
   if(document.readyState==="complete")idleThree();else addEventListener("load",idleThree);

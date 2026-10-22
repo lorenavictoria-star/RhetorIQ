@@ -26,16 +26,9 @@ test('CSP: nur Report-Only (blockiert nichts), mit report-uri', async () => {
   } finally { srv.closeAllConnections?.(); srv.close(); }
 });
 
-test('SRI: feste externe Skripte haben integrity und crossorigin; pdf.js ohne eval', () => {
+test('Bibliotheken: lokal ausgeliefert, pdf.js ohne eval', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', '..', 'public', 'index.html'), 'utf8');
-  const land = fs.readFileSync(path.join(__dirname, '..', '..', 'public', 'landing.html'), 'utf8');
-  for (const src of [html, land]) {
-    const tags = src.match(/<script src="https:[^>]*>/g) || [];
-    // Die Landingpage lädt three.js erst im Leerlauf per Skript; dort müssen integrity und crossorigin auf dem Element gesetzt sein.
-    if (src === land) { assert.ok(/sc\.integrity="sha384-[A-Za-z0-9+\/=]+"/.test(src) && /sc\.crossOrigin="anonymous"/.test(src)); continue; }
-    assert.ok(tags.length > 0);
-    for (const t of tags) assert.ok(/integrity="sha384-[A-Za-z0-9+/=]+"/.test(t) && /crossorigin="anonymous"/.test(t), t);
-  }
+  assert.ok(!/<script src="https:/.test(html), 'keine externen Skripte');
   assert.ok(/getDocument\(\{data:ab,isEvalSupported:false\}\)/.test(html));
   assert.ok(!/getDocument\(\{data:ab\}\)/.test(html));
 });

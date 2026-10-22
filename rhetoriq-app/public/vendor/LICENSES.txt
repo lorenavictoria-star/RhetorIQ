@@ -1,0 +1,20 @@
+Selbst gehostete Schriften und Bibliotheken (keine Drittserver beim Laden der Seiten)
+
+Schriften (alle SIL Open Font License 1.1, https://openfontlicense.org)
+- Instrument Serif (Regular), Version v5, fonts/instrument-serif-*.woff2, Quelle: Google Fonts (fonts.google.com/specimen/Instrument+Serif), Teilmengen latin und latin-ext
+- Newsreader (300 bis 500, normal und kursiv, variabel), Version v26, fonts/newsreader-*.woff2, Quelle: Google Fonts (fonts.google.com/specimen/Newsreader), Teilmengen latin und latin-ext
+- Inter Tight (300 bis 700, variabel), Version v9, fonts/inter-tight-*.woff2, Quelle: Google Fonts (fonts.google.com/specimen/Inter+Tight), Teilmengen latin und latin-ext
+- fonts.css: lokale @font-face-Regeln (font-display: swap), aus dem CSS von Google Fonts abgeleitet
+
+Icons
+- Tabler Icons Webfont 3.49.0, tabler/tabler-icons.min.css und tabler/fonts/tabler-icons.woff2, Lizenz MIT, Quelle: https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.49.0/dist/ (npm: @tabler/icons-webfont). Die CSS wurde auf den lokalen Pfad der woff2-Datei angepasst, woff und ttf entfallen.
+
+Bibliotheken (js/)
+- pdf.min.js und pdf.worker.min.js: pdf.js 3.11.174, Lizenz Apache-2.0, Quelle: https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/
+- mammoth.browser.min.js: mammoth 1.6.0, Lizenz BSD-2-Clause, Quelle: https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/
+- purify.min.js: DOMPurify 3.1.6, Lizenz Apache-2.0 oder MPL-2.0, Quelle: https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/
+- pptxgen.bundle.js: PptxGenJS 3.12.0, Lizenz MIT, Quelle: https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/
+- jszip.min.js: JSZip 3.10.1, Lizenz MIT oder GPL-3.0, Quelle: https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/
+- three.min.js: three.js r128, Lizenz MIT, Quelle: https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/
+
+Stand des Downloads: 22.10.2026. Neue Versionen nur bewusst und mit angepasster Versionsnummer in dieser Datei einspielen.
