@@ -16,7 +16,10 @@ const DELETE_TABLES = [
 // Nur Zahlen ohne Inhalt: der Klientenbezug fällt weg, die Kostensummen bleiben
 const ANONYMIZE_TABLES = ['usage_log', 'generation_errors'];
 // Tabellen für den Export (ohne Passwörter und Zugangscodes)
-const EXPORT_TABLES = DELETE_TABLES.filter(t => t !== 'client_files' && t !== 'onboarding_tokens' && t !== 'access_log');
+// Rechnungen sind Buchungsbelege: Sie bleiben beim Löschen eines Kundenbereichs bestehen (zehn Jahre Aufbewahrung, Art. 958f OR),
+// der Empfänger steht in der Rechnung selbst. Im Export der Kundendaten sind sie enthalten.
+const BEHALTEN_TABLES = ['rechnungen', 'rechnung_abo'];
+const EXPORT_TABLES = [...DELETE_TABLES.filter(t => t !== 'client_files' && t !== 'onboarding_tokens' && t !== 'access_log'), 'rechnungen'];
 const SECRET_COLS = new Set(['password_hash', 'token', 'token_version']);
 
 async function existingTables(db) {
@@ -80,7 +83,7 @@ async function deleteClientCompletely(clientId, advisorId) {
     }
     // Automatisch gefundene weitere Tabellen mit client_id
     if (tables) {
-      const known = new Set([...DELETE_TABLES, ...ANONYMIZE_TABLES, 'people_profiles']);
+      const known = new Set([...DELETE_TABLES, ...ANONYMIZE_TABLES, ...BEHALTEN_TABLES, 'people_profiles']);
       for (const t of await discoverClientTables(db, known)) {
         if (!/^[a-z_][a-z0-9_]*$/.test(t)) continue;
         const r = await db.query(`DELETE FROM ${t} WHERE client_id=$1`, [client.id]);
