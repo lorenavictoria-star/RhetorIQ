@@ -16647,7 +16647,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
   function dat(d){if(!d)return '';var x=new Date(d);return ('0'+x.getDate()).slice(-2)+'.'+('0'+(x.getMonth()+1)).slice(-2)+'.'+x.getFullYear();}
   function chf(r){return (Math.round(r)/100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,"’");}
   var FARBE={gruen:'#2a7',gelb:'#d98e04',rot:'#b91c1c',grau:'#999'};
-  function punkt(f){return '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+(FARBE[f]||FARBE.grau)+';margin-right:7px;flex:none"></span>';}
+  function punkt(f){if(f!=='rot')return '<span style="display:inline-block;width:9px;margin-right:7px;flex:none"></span>';return '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+FARBE.rot+';margin-right:7px;flex:none"></span>';}
 
   async function zustand(cid){
     var c=(typeof clients!=='undefined'?clients:[]).filter(function(x){return String(x.id)===String(cid);})[0]||{};
@@ -16771,7 +16771,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
 (function(){
   var E=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
   var FARBE={gruen:'#2a7',gelb:'#d98e04',rot:'#b91c1c',grau:'#999'};
-  function punkt(f){if(f==='')return '<span style="display:inline-block;width:9px;margin-right:8px;flex:none"></span>';return '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+(FARBE[f]||FARBE.grau)+';margin-right:8px;flex:none"></span>';}
+  function punkt(f){if(f!=='rot')return '<span style="display:inline-block;width:9px;margin-right:8px;flex:none"></span>';return '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+(FARBE[f]||FARBE.grau)+';margin-right:8px;flex:none"></span>';}
   function ueberschrift(t,m){return '<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin:'+(m||0)+'px 0 6px">'+t+'</div>';}
   function zeile(f,t,r,go){return '<div class="rq-vw-zeile" data-go="'+go+'"><span style="display:flex;align-items:center">'+punkt(f)+t+'</span><span style="color:var(--mu);font-size:13px">'+r+' ›</span></div>';}
   function tab(){
