@@ -6766,7 +6766,7 @@ function renderHistory(){
         return `<div class="hi" style="padding:10px 0">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer" onclick="toggleHistItem(${h.id})">
             <div style="min-width:0;flex:1">
-              <div class="hd">${safeText(d)}${who}${new Date(h.created_at)>=new Date('2026-10-21T12:00:00Z')?(h.ueberarbeitung?' <span style="font-size:11px;padding:1px 7px;border:1px solid var(--bd);color:var(--mu)">Überarbeitung</span>':' <span style="font-size:11px;padding:1px 7px;border:1px solid var(--bd);color:var(--mu)">Erstfassung</span>'):''}</div>
+              <div class="hd">${safeText(d)}${who}</div>
               <div style="font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="hist-preview-${h.id}">${safeText(preview)}${preview.length>=90?'…':''}</div>
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0">
