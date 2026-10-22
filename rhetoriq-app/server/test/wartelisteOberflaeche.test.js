@@ -111,5 +111,5 @@ test('Neue Startseite und Preise-Seiten: Struktur, Routen, Schreibregeln im sich
   const home = fs.readFileSync(path.join(pub, 'landing.html'), 'utf8');
   for (const t of ['Ihre Stimme, von Hand', 'Direkt im Postfach', 'id="so"', 'Effizienz gewinnt Zeit', 'href="/preise"', 'Kostenlos ausprobieren:', 'name="hp_ref_q7"']) assert.ok(home.includes(t), t);
   const pr = fs.readFileSync(path.join(pub, 'landing.preise.html'), 'utf8');
-  for (const t of ['Vier Pakete, monatlich kündbar.', 'CHF 1’490', 'ab CHF 2’490', 'Empfohlen', 'Pakete im Vergleich', 'id="go"']) assert.ok(pr.includes(t), t);
+  for (const t of ['Vier Pakete, monatlich kündbar.', 'CHF 1’490', 'Auf Anfrage', 'Empfohlen', 'Pakete im Vergleich', 'id="go"']) assert.ok(pr.includes(t), t);
 });

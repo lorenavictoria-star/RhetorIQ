@@ -33,11 +33,26 @@ function bereiteVor(opts, { einstellungen, kontext = {} } = {}) {
 
   const abbild = dw.neuesAbbild();
   const alle = [];
+  const fundeHinterlegt = [];
   const wende = (s) => {
     const r = dw.schuetze(s, modus, { typen: einstellungen.typen, abbild });
     alle.push(...r.funde);
     return r.text;
   };
+  // Hinterlegtes (Brand Voice, Referenzen, Gedächtnis) steht in den Systemanweisungen. Es wird zuerst bearbeitet (stabile Platzhalter
+  // für den Zwischenspeicher) und bei «ersetzen» und «sperren» ersetzt. Gesperrt wird dort nie: Der Nutzer kann hinterlegte Texte nicht im Moment ändern.
+  const wendeHinterlegt = (s) => {
+    const r = dw.schuetze(s, 'ersetzen', { typen: einstellungen.typen, abbild });
+    fundeHinterlegt.push(...r.funde);
+    return r.text;
+  };
+  let system = opts.system;
+  if (modus === 'ersetzen' || modus === 'sperren') {
+    const sys = typeof system === 'function' ? system({}) : system;
+    if (typeof sys === 'string') system = wendeHinterlegt(sys);
+    else if (Array.isArray(sys)) system = sys.map(b => (b && typeof b === 'object' && b.type === 'text' && typeof b.text === 'string') ? { ...b, text: wendeHinterlegt(b.text) } : b);
+    else system = sys;
+  }
   const messages = opts.messages.map((m) => {
     if (!m) return m;
     if (typeof m.content === 'string') return { ...m, content: wende(m.content) };
@@ -55,7 +70,9 @@ function bereiteVor(opts, { einstellungen, kontext = {} } = {}) {
     return m;
   });
   if (modus === 'sperren' && alle.length) throw sperrFehler([...new Set(alle.map(f => f.typ))], alle);
-  if (modus === 'ersetzen' && alle.length) return { opts: { ...opts, messages, system: systemMitHinweis(opts.system) }, abbild, modus, funde: alle };
+  if ((modus === 'ersetzen' || modus === 'sperren') && (alle.length || fundeHinterlegt.length)) {
+    return { opts: { ...opts, messages, system: systemMitHinweis(system) }, abbild, modus, funde: alle.concat(fundeHinterlegt) };
+  }
   return { opts, abbild: null, modus, funde: alle };
 }
 
