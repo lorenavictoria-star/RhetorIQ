@@ -493,7 +493,9 @@ Fasse alles in einem strukturierten, direkt verwendbaren Dokument zusammen:
 - Sprachliche Merkmale (komprimiert, operationalisierbar)
 - Do's & Don'ts
 - Leitsatz der Stimme
-- Stilmittel: Schliesse das Dokument mit genau einer Zeile in dieser Form ab: «Stilmittel erlaubt: ...» und nenne darin ausschliesslich Gegenüberstellungen («nicht X, sondern Y») und/oder Dreierketten, und nur dann, wenn sie im Quellmaterial (oder in den Antworten zu Schreibweise und Stilmitteln) deutlich und wiederkehrend als bewusstes Stilmittel der Marke vorkommen oder ausdrücklich erlaubt sind. Sonst lautet die Zeile «Stilmittel erlaubt: keine». Gedankenstriche, Floskeln und Füllwörter sind nie ein Stilmittel.`,
+- Gliederung: Beginne das Dokument mit einer Zeile «KERN» und fasse darunter das Wichtigste auf höchstens 4000 Zeichen zusammen (Stimm-Portrait, Kerncharakter, Kurzformel, Leitsatz, die zehn wichtigsten Regeln, Stilmittel). Danach folgen die ausführlichen Teile als Abschnitte mit Kopfzeile «DETAIL: Titel»; gilt ein Abschnitt nur für bestimmte Textarten, schreibe «DETAIL (Textarten: Webseite, LinkedIn): Titel». Die Tiefe bleibt vollständig erhalten, der Kern steht nur vorn.
+- Das Dokument selbst enthält keine Gedankenstriche (weder – noch —), auch nicht in Beispielsätzen.
+- Stilmittel: Schliesse das Dokument mit genau einer Zeile in dieser Form ab: «Stilmittel erlaubt: Dreierketten (Webseite, LinkedIn); Gegenüberstellungen (Webseite)». Nenne darin ausschliesslich Gegenüberstellungen («nicht X, sondern Y») und/oder Dreierketten, jeweils mit den Textarten in Klammern, für die sie passen (Webseite, LinkedIn, Newsletter, Mail, Medien, Rede, Brief; Marketing eher offen, geschäftliche Mails eher zurückhaltend), und nur dann, wenn sie im Quellmaterial (oder in den Antworten zu Schreibweise und Stilmitteln) deutlich und wiederkehrend als bewusstes Stilmittel der Marke vorkommen oder ausdrücklich erlaubt sind. Sonst lautet die Zeile «Stilmittel erlaubt: keine». Gedankenstriche, Floskeln und Füllwörter sind nie ein Stilmittel.`,
     build: (d) => `Company Brand Voice DNA Analysis\nCompany: ${d.company||'Not specified'}\nIndustry: ${d.industry||'Not specified'}\nTarget audiences: ${d.audiences||'Not specified'}\nCore values: ${d.values||'Not specified'}\n\nSource texts:\n${sanitizeForPrompt(d.text)}`
   },
   'brand-voice-ind': {
@@ -1548,6 +1550,7 @@ function buildGeoBlock(data) {
 const FEEDBACK_CATEGORIES = ['TON', 'STRUKTUR', 'FAKTEN', 'FORMAT', 'SONSTIGES'];
 const { getGoldBlock, queryTextOf } = require('../lib/goldtexte');
 const { ladeBeispiele, daumenAufBeispiel } = require('../lib/beispielAuswahl');
+const textartVon = (module, instructionsKey, data) => (data && typeof data.tile === 'string' && data.tile) || (module && instructionsKey && String(instructionsKey).startsWith(module + '-') ? String(instructionsKey).slice(module.length + 1) : null);
 const { proposeFromFollowUp, addSuggestion } = require('../lib/followupLearning');
 async function consolidateFeedback(clientId, moduleKey, rating, note) {
   // Tagesbudget (lib/budget.js): ist es erreicht, bleibt die Notiz im Rohprotokoll, der Lernstand wird nicht verfeinert
@@ -1767,7 +1770,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
         hasBrandVoice = true;
         brandVoiceBlock += BRAND_VOICE_HEAD;
         memRows.forEach(m => {
-          brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${fence(m.memory_type, sanitizeForPrompt(m.content))}\n\n`;
+          brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${fence(m.memory_type, sanitizeForPrompt(require('../lib/brandVoiceAuswahl').fuerAuftrag(m.content, textartVon(module, instructionsKey, data))))}\n\n`;
         });
         brandVoiceBlock += BRAND_VOICE_TAIL;
       }
@@ -1836,7 +1839,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     // a from-scratch draft — running a second full pass on top just doubles
     // latency (painfully so for long documents like a full speech) without
     // improving quality, and risks over-editing an already-finished text.
-    const erlaubt = await require('../lib/lintErlaubt').erlaubteMuster(pool, resolvedClientId);
+    const erlaubt = await require('../lib/lintErlaubt').erlaubteMuster(pool, resolvedClientId, textartVon(module, instructionsKey, data));
     if (willTwoPass) {
       const revisionResp = await callClaude(systemBlocks, cheapDraft ? buildRevisionPrompt(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module, erlaubt)) : revisionUserContent(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module)),MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module), temperaturFor(module));
       if (revisionResp.text) result = revisionResp.text;
@@ -1971,7 +1974,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       if (memRows.length) {
         hasBrandVoice = true;
         brandVoiceBlock += BRAND_VOICE_HEAD;
-        memRows.forEach(m => { brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${fence(m.memory_type, sanitizeForPrompt(m.content))}\n\n`; });
+        memRows.forEach(m => { brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${fence(m.memory_type, sanitizeForPrompt(require('../lib/brandVoiceAuswahl').fuerAuftrag(m.content, textartVon(module, instructionsKey, data))))}\n\n`; });
         brandVoiceBlock += BRAND_VOICE_TAIL;
       }
       const { rows: refRows } = await pool.query(
@@ -2027,7 +2030,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     // connection alive during this), then stream only the revised final pass.
     let streamUserMsg = userMsg;
     let draftInputTokens = 0, draftOutputTokens = 0, draftText = null;
-    const erlaubtS = await require('../lib/lintErlaubt').erlaubteMuster(pool, resolvedClientId);
+    const erlaubtS = await require('../lib/lintErlaubt').erlaubteMuster(pool, resolvedClientId, textartVon(module, instructionsKey, data));
     if (willTwoPassS && !aborted) {
       console.log(`[trace] ${module} starting draft pass, maxTokens=${maxTokens}`);
       const draftResp = await callClaude(streamSystemBlocks, cheapDraftS ? userMsg : draftUserContent(userMsg), maxTokens, draftModelFor(module), temperaturFor(module));
