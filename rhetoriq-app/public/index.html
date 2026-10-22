@@ -10186,6 +10186,11 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
   var wsStack=[],wsCur=null,wsGoing=false;
   function wsOffen(){var o=document.getElementById('ws-ov');return !!o&&o.style.display!=='none'&&(o.classList.contains('show')||o.classList.contains('full-page'))&&o.offsetParent!==null;}
   function wsZurueck(){
+    // Kommt man aus den Beispielen (eigene Seite), «Zurück» führt in den Workspace des Klienten zurück
+    if(window._rqWsRueck&&cur()==='training'){
+      var c=window._rqWsRueck;window._rqWsRueck=null;
+      if(typeof openWorkspace==='function'){openWorkspace(c,false);return true;}
+    }
     if(!wsOffen()||!wsStack.length||typeof wsSwitchTab!=='function')return false;
     var t=wsStack.pop();wsGoing=true;try{wsSwitchTab(t);}finally{wsGoing=false;}
     return true;
@@ -12245,7 +12250,7 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
       var body=document.getElementById('ws-body');return render(body);
     }
     if(tab==='beispiele'){
-      var cid=_wsClientId;closeModal('ws-ov');
+      var cid=_wsClientId;window._rqWsRueck=cid;closeModal('ws-ov');
       Promise.resolve(switchClient(String(cid))).then(function(){goPage('training');if(typeof loadTraining==='function')loadTraining();if(window.rqMarkRail)rqMarkRail('training');});
       return;
     }
