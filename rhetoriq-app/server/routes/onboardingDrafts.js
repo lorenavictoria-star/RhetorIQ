@@ -66,6 +66,7 @@ function validateFields(body, { partial }) {
     if (!['du', 'sie'].includes(b.anrede)) return { error: "Anrede muss 'du' oder 'sie' sein." };
     f.anrede = b.anrede;
   }
+  if (has('regulierung')) f.regulierung = ['keine', 'bank_versicherung', 'boersenkotiert', 'andere'].includes(b.regulierung) ? b.regulierung : '';
   if (has('titel')) f.titel = ['Frau', 'Herr'].includes(b.titel) ? b.titel : '';
   if (has('workshop_datum')) f.workshop_datum = clip(b.workshop_datum, 80);
   if (has('schritt')) {
@@ -358,6 +359,7 @@ router.post('/:id/finish', requireAdvisor, async (req, res) => {
       paket: d.paket
     });
     claimed = null;
+    if (d.regulierung) await pool.query('UPDATE clients SET regulierung=$1 WHERE id=$2', [d.regulierung, client.id]).catch(e => console.error('[onboarding] Regulierung:', e.message));
     if (['stimme', 'team', 'business', 'enterprise'].includes(d.paket)) {
       await pool.query('UPDATE clients SET recommended_plan=$1 WHERE id=$2', [d.paket, client.id]).catch(e => console.error('[onboarding] Paket:', e.message));
     }

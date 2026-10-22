@@ -9560,7 +9560,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
     if(d.vorschlaege!==undefined){var r=normRecs(d.vorschlaege);x.vorschlaege=r&&r.length?r:null;}
     x.sektor=RQ_SECTORS[x.sektor]?x.sektor:'kmu';x.anrede=x.anrede==='du'?'du':'sie';
   }
-  function body(){var d=W.d;return {paket:d.paket||'',groesse:d.groesse||{},firma:d.firma,kontakt:d.kontakt,email:d.email,webseite:d.webseite,sektor:d.sektor,anrede:d.anrede,titel:d.titel,workshop_datum:d.workshop_datum,schritt:d.schritt,module:d.module.map(rqModName),themenplan:d.themenplan===true,textarten:d.textarten,status:d.status};}
+  function body(){var d=W.d;return {paket:d.paket||'',groesse:d.groesse||{},firma:d.firma,kontakt:d.kontakt,email:d.email,webseite:d.webseite,sektor:d.sektor,anrede:d.anrede,titel:d.titel,workshop_datum:d.workshop_datum,regulierung:d.regulierung||'',schritt:d.schritt,module:d.module.map(rqModName),themenplan:d.themenplan===true,textarten:d.textarten,status:d.status};}
   function val(id){var el=document.getElementById(id);return el?el.value.trim():null;}
   function collect(){
     var m={firma:'rqw-firma',kontakt:'rqw-kontakt',email:'rqw-email',webseite:'rqw-web',workshop_datum:'rqw-datum'};
@@ -9663,6 +9663,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
     } else if(W.step===2){
       h=(W.saved?'<div class="rq-card gold"><span class="rq-eb g">Zwischengespeichert</span><span>'+E(d.firma)+' steht unter Kunden als «Workshop offen». Nach dem Workshop machst du hier weiter.</span><div class="rq-acts"><button type="button" class="rq-btn" data-a="go" data-v="3">Nach dem Workshop weiter mit den Modulen</button></div></div>':'')
        +'<div class="rq-two"><div><span class="rq-lab">Anrede</span>'+pills('anrede',[['sie','Sie'],['du','Du']])+'</div><div><span class="rq-lab">Frau oder Herr</span>'+pills('titel',[['Frau','Frau'],['Herr','Herr']])+'</div></div>'
+       +'<div><span class="rq-lab">Regulierung der Kundschaft</span>'+pills('regulierung',[['keine','Keine besondere'],['bank_versicherung','Bank oder Versicherung (FINMA)'],['boersenkotiert','Börsenkotiert'],['andere','Andere']])+'<div class="rq-hint" style="margin-top:4px">Bei Banken, Versicherungen und kotierten Unternehmen gelten Vorgaben zu Auslagerung und Insiderinformationen. Der Vertrag zur Auftragsverarbeitung hält fest, dass die Kundschaft diese selbst einhält.</div></div>'
        +'<div><label class="rq-lab" for="rqw-datum">Termin des Workshops</label><input id="rqw-datum" class="rq-in" placeholder="z. B. 14. Oktober 2026" value="'+E(d.workshop_datum)+'" style="max-width:360px"></div>'
        +'<div class="rq-card"><span class="rq-eb">Webseite prüfen</span><span class="rq-hint">Die KI liest '+E(d.webseite||'die Webseite')+' und empfiehlt Module mit Begründung.</span>'
        +'<div class="rq-acts"><button type="button" class="rq-btn" data-a="scan"'+(W.scanning||!d.webseite?' disabled':'')+'>'+(W.scanning?'<span class="rq-spin" style="border-top-color:#fff"></span>Die KI prüft die Webseite …':'Webseite prüfen')+'</button>'+(d.webseite?'':'<span class="rq-hint">Bitte zuerst im Schritt 1 eine Webseite eintragen.</span>')+'</div>'

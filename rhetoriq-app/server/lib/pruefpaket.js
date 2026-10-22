@@ -20,7 +20,7 @@ function table(rows, widths) {
 const textart = (module, key) => (module && key && String(key).startsWith(module + '-') ? String(key).slice(module.length + 1) : null);
 
 async function laden(clientId) {
-  const { rows: cl } = await pool.query('SELECT id, name, industry FROM clients WHERE id=$1', [clientId]);
+  const { rows: cl } = await pool.query('SELECT id, name, industry, regulierung FROM clients WHERE id=$1', [clientId]);
   const { rows: bv } = await pool.query(`SELECT memory_type, content FROM company_memory WHERE client_id=$1 AND memory_type LIKE 'brand_voice%' ORDER BY memory_type`, [clientId]);
   const { rows: an } = await pool.query(
     `SELECT id, module, module_label, feedback_key, input_data, result, created_at, ueberarbeitung, ueberarbeitung_hinweis, user_rating, feedback_note
@@ -92,6 +92,8 @@ async function buildPruefpaket(clientId) {
     zeilen.push([datum(a.created_at), a.module_label || a.module, fassung, Object.keys(arten).length ? Object.entries(arten).map(([k, v]) => k + ' ' + v).join(', ') : 'keine']);
     detail.push({ a, fassung, hits, f });
   }
+  const REG = { keine: 'keine besondere', bank_versicherung: 'Bank oder Versicherung (FINMA)', boersenkotiert: 'börsenkotiert', andere: 'andere' };
+  if (client.regulierung) kids.push(p('Regulierung der Kundschaft: ' + (REG[client.regulierung] || client.regulierung) + '.', { color: '5F6B63' }));
   kids.push(h1('Überblick'));
   kids.push(table(zeilen, [1900, 2100, 1700, 3400]));
 
