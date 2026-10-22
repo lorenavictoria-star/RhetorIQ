@@ -9,12 +9,21 @@ const ART_LABEL = {
   floskel: 'Floskel',
   fuellwort: 'Füllwort',
   gegenueberstellung: 'Gegenüberstellung',
+  alleinstellung: 'Behauptung ohne Beleg',
   anrede: 'gemischte Anrede',
   gendern: 'Gendern mit Sonderzeichen',
   markdown: 'Markdown'
 };
 
 // Floskeln aus den Regeln der Prompts (deutsch und englisch)
+const GEGENUEBERSTELLUNG_FREI = { speech: 3, linkedin: 1, website: 1, newsletter: 1 };
+const ALLEINSTELLUNG = [
+  /\bals\s+erste[rsn]?\s+(?:in|der|im|auf|Anbieter)\b/gi,
+  /\bals\s+einzige[rsnm]?\b/gi,
+  /\beinzige[rsnm]?\s+Anbieter\b/gi,
+  /\bMarktführer\w*|\bführende[rsnm]?\s+(?:Anbieter|Unternehmen)\b/gi,
+  /\bbeste[rsnm]?\s+(?:Service|Qualität|Anbieter|Preis)\w*|\bhöchste[rsnm]?\s+Qualität\b|\bNummer\s+(?:1|eins)\b/gi
+];
 const FLOSKELN = [
   /es ist wichtig,? zu (?:betonen|erwähnen|beachten)/gi,
   /ein zentraler aspekt dabei ist/gi,
@@ -116,7 +125,17 @@ function lintText(text, opts = {}) {
   if (!t) return [];
   const deutsch = isGerman(opts.sprache);
   let hits = [];
-  hits.push(...findAll(t, /[–—]/g, 'gedankenstrich'));
+  // Langer Gedankenstrich (—) nie. Kurzer Strich (–) nur in Titelzeilen und zwischen Zahlen (10–12).
+  for (const h of findAll(t, /[–—]/g, 'gedankenstrich')) {
+    if (h.text === '–') {
+      const von = t.lastIndexOf('\n', h.pos) + 1, bis = (t.indexOf('\n', h.pos) + 1 || t.length + 1) - 1;
+      const zeile = t.slice(von, bis).trim();
+      const zwischenZahlen = /\d$/.test(t.slice(0, h.pos)) && /^\d/.test(t.slice(h.pos + 1));
+      const titel = t.includes('\n') && zeile.length > 0 && zeile.length <= 100 && !/[.!?:;]/.test(zeile);
+      if (zwischenZahlen || titel) continue;
+    }
+    hits.push(h);
+  }
   if (deutsch) hits.push(...findAll(t, /ß/g, 'eszett'));
   for (const re of FLOSKELN) hits.push(...findAll(t, re, 'floskel'));
   for (const re of FUELLWOERTER) hits.push(...findAll(t, re, 'fuellwort', { weich: true }));
@@ -126,6 +145,14 @@ function lintText(text, opts = {}) {
   hits.push(...findAll(t, /\bkein(?:e|en|em|er|es)?\b[^.!?\n]{1,50}?\s[-–—]\s*(?:es|das)\s+\w+/gi, 'gegenueberstellung'));
   hits.push(...findAll(t, /(?:^|[.!?]\s+)Kein(?:e|en)?\s+[^.!?\n]{1,40}[.]\s+Ein(?:e|en)?\b/g, 'gegenueberstellung'));
   hits.push(...findAll(t, /,\s+nicht\s+(?:per|durch|als|mit|wegen|über|nur\s+noch)\s+\w+(?:\s+\w+){0,2}[.!]/gi, 'gegenueberstellung'));
+  // Alleinstellung und Superlative nur, wenn der Auftrag sie belegt (steht im Auftrag oder im Hinweis dieselbe Aussage, gilt sie als belegt)
+  for (const re of ALLEINSTELLUNG) {
+    for (const h of findAll(t, re, 'alleinstellung')) {
+      const kern = h.text.toLowerCase().replace(/\s+/g, ' ');
+      if (opts.belege && String(opts.belege).toLowerCase().includes(kern.split(' ')[0] === 'als' ? kern.split(' ').slice(0, 2).join(' ') : kern.split(' ')[0])) continue;
+      hits.push(h);
+    }
+  }
   hits.push(...gendernTreffer(t));
   hits.push(...markdownTreffer(t));
   if (deutsch) {
@@ -136,6 +163,10 @@ function lintText(text, opts = {}) {
     else if (sie.length && du.length) hits.push(...(sie.length <= du.length ? sie : du));
   }
   if (opts.erlaubt && opts.erlaubt.size) hits = hits.filter(h => !opts.erlaubt.has(h.art));
+  // Gegenüberstellungen je Textart: Rede und Präsentation dürfen einige setzen, Marketingtexte eine, Mails und Briefe keine
+  const frei = GEGENUEBERSTELLUNG_FREI[opts.textart] != null ? GEGENUEBERSTELLUNG_FREI[opts.textart] : 0;
+  const gg = hits.filter(h => h.art === 'gegenueberstellung');
+  if (gg.length && gg.length <= frei) hits = hits.filter(h => h.art !== 'gegenueberstellung');
   hits.sort((a, b) => a.pos - b.pos);
   // Zeile und kurzer Kontext für die Anzeige
   for (const h of hits) {
@@ -145,10 +176,12 @@ function lintText(text, opts = {}) {
 }
 
 // Optionen aus den Eingabedaten eines Auftrags
-function lintOptionenAusDaten(data, erlaubt) {
+function lintOptionenAusDaten(data, erlaubt, extra) {
   const d = data || {};
   const o = { sprache: d.language || null, anrede: normAnrede(d.anrede) || anredeAusTon(d.tone) };
   if (erlaubt && erlaubt.size) o.erlaubt = erlaubt;
+  if (extra && extra.textart) o.textart = extra.textart;
+  if (extra && extra.belege) o.belege = extra.belege;
   return o;
 }
 
@@ -177,13 +210,13 @@ function lintZusammenfassung(hits) {
 const LINT_SKIP = new Set(['router', 'route-fill', 'suggest-subject', 'suggest-title', 'consolidate-feedback', 'presentation-preflight', 'chat']);
 
 // Kurze Aufrufe für analyze.js: Liste für den zweiten Durchgang und Zusammenfassung für die Anzeige
-function lintFuerDurchgang(entwurf, data, module, erlaubt) {
+function lintFuerDurchgang(entwurf, data, module, erlaubt, extra) {
   if (LINT_SKIP.has(module)) return '';
-  return pruefAuftragAusTreffern(lintText(entwurf, lintOptionenAusDaten(data, erlaubt)));
+  return pruefAuftragAusTreffern(lintText(entwurf, lintOptionenAusDaten(data, erlaubt, extra)));
 }
-function lintErgebnis(text, data, module, erlaubt) {
+function lintErgebnis(text, data, module, erlaubt, extra) {
   if (LINT_SKIP.has(module)) return null;
-  return lintZusammenfassung(lintText(text, lintOptionenAusDaten(data, erlaubt)));
+  return lintZusammenfassung(lintText(text, lintOptionenAusDaten(data, erlaubt, extra)));
 }
 
 module.exports = { anredeTreffer, lintFuerDurchgang, lintErgebnis, LINT_SKIP, lintText, lintOptionenAusDaten, pruefAuftragAusTreffern, lintZusammenfassung, ART_LABEL, anredeAusTon };

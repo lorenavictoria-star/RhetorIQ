@@ -6555,6 +6555,7 @@ async function generateAndStream(module,data,rid,bid,instructionsKey,followUp){
               box._req.analysisId=analysisId;
               if(evt.systemPrompt)debugPrompt=evt.systemPrompt;
               if(evt.reserve){const rv=document.createElement('div');rv.style.cssText='margin:6px 0;font-size:11.5px;color:var(--mu)';rv.textContent='mit Reservekonto erstellt';body.parentNode.insertBefore(rv,body.nextSibling);}
+            } else if(evt.korrigiert!==undefined){fullText=evt.korrigiert;body.textContent=fullText;if(window.rqAddNote)try{rqAddNote(body,'rq-korrektur',evt.hinweis||'Automatisch korrigiert','Die Formprüfung hat nach dem Schreiben Verstösse gegen die Schreibregeln gefunden und im Text behoben.');}catch(e){}
             } else if(evt.text){if(thinkingInterval){clearInterval(thinkingInterval);thinkingInterval=null;}fullText+=evt.text;body.textContent=fullText;}
           }
           lastEventName='';

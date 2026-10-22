@@ -48,3 +48,18 @@ test('Gelernte Sätze werden nicht an Abkürzungen wie «z. B.» getrennt', () =
   assert.equal(s.length, 3);
   assert.ok(s[0].includes('z. B. Biopropan'));
 });
+
+test('Kurzer Strich nur in Titeln und zwischen Zahlen, langer Strich nie', () => {
+  const t = 'Neues Logo – neue Energie\n\nWir liefern 10–12 Tonnen. Das gilt – auch morgen. Er sagte — ja.';
+  const d = lint.lintText(t, { sprache: 'de' }).filter(h => h.art === 'gedankenstrich');
+  assert.equal(d.length, 2);   // der kurze Strich im Fliesstext und der lange Strich
+});
+
+test('Gegenüberstellungen: Rede darf drei, Mail keine, Behauptungen brauchen einen Beleg', () => {
+  const g = 'Das ist kein Slogan. Das ist Haltung. Das ist kein Kompromiss. Das ist Entscheidung.';
+  assert.equal(lint.lintText(g, { sprache: 'de', textart: 'speech' }).filter(h => h.art === 'gegenueberstellung').length, 0);
+  assert.ok(lint.lintText(g, { sprache: 'de', textart: 'email' }).some(h => h.art === 'gegenueberstellung'));
+  const b = 'Wir sind die Compositeflasche als erste in der Schweiz und einziger Anbieter.';
+  assert.ok(lint.lintText(b, { sprache: 'de' }).filter(h => h.art === 'alleinstellung').length >= 1);
+  assert.equal(lint.lintText(b, { sprache: 'de', belege: 'Wir sind als erste in der Schweiz mit einziger Anbieter' }).filter(h => h.art === 'alleinstellung').length, 0);
+});

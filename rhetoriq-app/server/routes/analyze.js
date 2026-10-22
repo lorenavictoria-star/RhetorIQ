@@ -1557,7 +1557,30 @@ function buildGeoBlock(data) {
 const FEEDBACK_CATEGORIES = ['TON', 'STRUKTUR', 'FAKTEN', 'FORMAT', 'SONSTIGES'];
 const { getGoldBlock, queryTextOf } = require('../lib/goldtexte');
 const { ladeBeispiele, daumenAufBeispiel } = require('../lib/beispielAuswahl');
-const textartVon = (module, instructionsKey, data) => (data && typeof data.tile === 'string' && data.tile) || (module && instructionsKey && String(instructionsKey).startsWith(module + '-') ? String(instructionsKey).slice(module.length + 1) : null);
+const textartVon = (module, instructionsKey, data) => (module === 'presentation' ? 'speech' : null) || (data && typeof data.tile === 'string' && data.tile) || (module && instructionsKey && String(instructionsKey).startsWith(module + '-') ? String(instructionsKey).slice(module.length + 1) : null);
+// Was der Auftrag belegt: alle Textfelder der Eingabe und der Hinweis der Überarbeitung
+const belegeVon = (data, followUp) => [...Object.values(data && typeof data === 'object' ? data : {}).filter(v => typeof v === 'string'), followUp && followUp.note ? String(followUp.note) : ''].join('\n');
+const lintExtra = (module, instructionsKey, data, followUp) => ({ textart: textartVon(module, instructionsKey, data), belege: belegeVon(data, followUp) });
+// Automatischer Korrekturlauf: findet die Prüfung nach dem Schreiben harte Verstösse (Gedankenstrich, Markdown, Gegenüberstellung,
+// Behauptung ohne Beleg, falsche Anrede), korrigiert ein einziger Aufruf genau diese Stellen. Gilt auch nach Überarbeitungen.
+async function korrekturlauf({ text, data, module, erlaubt, extra, systemBlocks, maxTokens, model, temp }) {
+  const L = require('../lib/lint');
+  if (!text || L.LINT_SKIP.has(module)) return null;
+  const opts = L.lintOptionenAusDaten(data, erlaubt, extra);
+  const hits = L.lintText(text, opts).filter(h => !h.weich);
+  if (!hits.length) return null;
+  const liste = L.pruefAuftragAusTreffern(hits);
+  const resp = await callClaude(systemBlocks,
+    `Korrigiere im folgenden Text genau die genannten Stellen. Alles andere bleibt Wort für Wort unverändert. Bei «Behauptung ohne Beleg» streichst du die Behauptung oder formulierst sie ohne Alleinstellung. Gib nur den korrigierten Text aus, ohne Einleitung.${liste}\n\nTEXT:\n${text}`,
+    maxTokens, model, temp);
+  if (!resp.text) return null;
+  const nachher = L.lintText(resp.text, opts).filter(h => !h.weich);
+  if (nachher.length >= hits.length) return null;
+  const arten = {};
+  hits.forEach(h => { const l = L.ART_LABEL[h.art] || h.art; arten[l] = (arten[l] || 0) + 1; });
+  return { text: resp.text, inputTokens: resp.inputTokens || 0, outputTokens: resp.outputTokens || 0,
+    hinweis: 'Automatisch korrigiert: ' + Object.entries(arten).map(([k, v]) => `${k} ${v}`).join(', ') };
+}
 const { proposeFromFollowUp, addSuggestion } = require('../lib/followupLearning');
 async function consolidateFeedback(clientId, moduleKey, rating, note) {
   // Tagesbudget (lib/budget.js): ist es erreicht, bleibt die Notiz im Rohprotokoll, der Lernstand wird nicht verfeinert
@@ -1848,10 +1871,18 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     // improving quality, and risks over-editing an already-finished text.
     const erlaubt = await require('../lib/lintErlaubt').erlaubteMuster(pool, resolvedClientId, textartVon(module, instructionsKey, data));
     if (willTwoPass) {
-      const revisionResp = await callClaude(systemBlocks, cheapDraft ? buildRevisionPrompt(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module, erlaubt)) : revisionUserContent(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module)),MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module), temperaturFor(module));
+      const revisionResp = await callClaude(systemBlocks, cheapDraft ? buildRevisionPrompt(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module, erlaubt, lintExtra(module, instructionsKey, data, followUp))) : revisionUserContent(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module)),MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module), temperaturFor(module));
       if (revisionResp.text) result = revisionResp.text;
       totalInputTokens += revisionResp.inputTokens;
       totalOutputTokens += revisionResp.outputTokens;
+    }
+    let korrigiertHinweis = null;
+    if (!dry && !willTwoPass) {   // nach dem zweiten Durchgang war die Prüfliste schon Teil des Auftrags
+      try {
+        const k = await korrekturlauf({ text: result, data, module, erlaubt, extra: lintExtra(module, instructionsKey, data, followUp), systemBlocks,
+          maxTokens: MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, model: resolveModel(module), temp: temperaturFor(module) });
+        if (k) { result = k.text; totalInputTokens += k.inputTokens; totalOutputTokens += k.outputTokens; korrigiertHinweis = k.hinweis; }
+      } catch (e) { console.error('[korrekturlauf]', e.message); }
     }
 
     // Log token usage (fire-and-forget) — Fix 11: also log for client-only analyses
@@ -1902,7 +1933,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
       if (resolvedClientId) req.app.locals.wss.toClient(resolvedClientId, note);
     }
 
-    res.json({ result, id: rows[0].id, quotaWarning, lint: lintErgebnis(result, data, module, erlaubt) });
+    res.json({ result, id: rows[0].id, quotaWarning, lint: lintErgebnis(result, data, module, erlaubt, lintExtra(module, instructionsKey, data, followUp)), korrigiert: korrigiertHinweis });
   } catch (e) {
     if (waechterSperre(e, res)) return;
     console.error(e);
@@ -2042,7 +2073,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       console.log(`[trace] ${module} starting draft pass, maxTokens=${maxTokens}`);
       const draftResp = await callClaude(streamSystemBlocks, cheapDraftS ? userMsg : draftUserContent(userMsg), maxTokens, draftModelFor(module), temperaturFor(module));
       console.log(`[trace] ${module} draft pass done, chars=${(draftResp.text || '').length}`);
-      if (draftResp.text) streamUserMsg = cheapDraftS ? buildRevisionPrompt(userMsg, draftResp.text, module, lintFuerDurchgang(draftResp.text, data, module, erlaubtS)) : revisionUserContent(userMsg, draftResp.text, module, lintFuerDurchgang(draftResp.text, data, module));
+      if (draftResp.text) streamUserMsg = cheapDraftS ? buildRevisionPrompt(userMsg, draftResp.text, module, lintFuerDurchgang(draftResp.text, data, module, erlaubtS, lintExtra(module, instructionsKey, data, followUp))) : revisionUserContent(userMsg, draftResp.text, module, lintFuerDurchgang(draftResp.text, data, module));
       draftInputTokens = draftResp.inputTokens;
       draftOutputTokens = draftResp.outputTokens;
       draftText = draftResp.text || null;
@@ -2078,6 +2109,17 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     // Fix 13: Skip DB writes if client disconnected
     if (aborted) return;
 
+    // Automatischer Korrekturlauf nach dem Schreiben (auch nach Überarbeitungen): ersetzt den angezeigten Text, wenn harte Verstösse behoben werden
+    let korrigiertHinweisS = null;
+    try {
+      const k = willTwoPassS ? null : await korrekturlauf({ text: fullText, data, module, erlaubt: erlaubtS, extra: lintExtra(module, instructionsKey, data, followUp), systemBlocks: streamSystemBlocks,
+        maxTokens, model: resolveModel(module), temp: temperaturFor(module) });
+      if (k) {
+        fullText = k.text; korrigiertHinweisS = k.hinweis;
+        res.write(`data: ${JSON.stringify({ korrigiert: k.text, hinweis: k.hinweis })}\n\n`);
+      }
+    } catch (e) { console.error('[korrekturlauf]', e.message); }
+
     // Persist + log after stream completes
     const generatedBy = req.user.role === 'advisor'
       ? (req.user.name || 'Advisor')
@@ -2103,7 +2145,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       ).catch(() => {});
     }
 
-    const donePayload = { id: rows[0].id, hasBrandVoice, quotaWarning, lint: lintErgebnis(fullText, data, module, erlaubtS) };
+    const donePayload = { id: rows[0].id, hasBrandVoice, quotaWarning, lint: lintErgebnis(fullText, data, module, erlaubtS, lintExtra(module, instructionsKey, data, followUp)), korrigiert: korrigiertHinweisS };
     // Nur für die Beraterin: Text wurde mit dem Reservekonto erstellt (lib/aiProvider.js)
     if (req.user.role === 'advisor' && require('../lib/meter').context().reserve) donePayload.reserve = true;
     if (isDebug) donePayload.systemPrompt = baseSystem + (brandVoiceBlock ? '\n\n[BRAND VOICE CACHED]\n' + brandVoiceBlock : '') + (restDynamicSystem ? '\n\n--- DYNAMIC ---\n' + restDynamicSystem : '');
