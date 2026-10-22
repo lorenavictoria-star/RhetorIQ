@@ -1272,10 +1272,10 @@ Kategorien (wähle GENAU eine):
 - FORMAT: äusseres Format, Anrede, Signatur, technische Formatvorgaben
 - SONSTIGES: passt in keine der obigen Kategorien
 
-Du erhältst den bisherigen Stand aller 5 Kategorien (können leer sein) plus eine neue Feedback-Notiz mit Bewertung (BEIBEHALTEN = hat dem Nutzer gefallen, VERMEIDEN = hat dem Nutzer nicht gefallen). Bestimme, in welche der 5 Kategorien die neue Notiz am ehesten passt, und liefere eine aktualisierte, verfeinerte Zusammenfassung für GENAU DIESE eine Kategorie: bestätigt die neue Notiz das bisherige Verständnis, schärfe die Formulierung; widerspricht oder korrigiert sie es, aktualisiere es durchdacht — die alte, jetzt überholte Aussage wird ersetzt, nicht beide nebeneinander stehengelassen. Maximal 2-3 prägnante Sätze, konkret und direkt umsetzbar, keine Meta-Kommentare.
+Du erhältst den bisherigen Stand aller 5 Kategorien (können leer sein) plus eine neue Feedback-Notiz mit Bewertung (BEIBEHALTEN = hat dem Nutzer gefallen, ÜBERARBEITEN = Daumen runter: der Nutzer lässt den Text mit der Notiz als Input nochmals überarbeiten (es ist kein Verbot)). Bestimme, in welche der 5 Kategorien die neue Notiz am ehesten passt, und liefere eine aktualisierte, verfeinerte Zusammenfassung für GENAU DIESE eine Kategorie: bestätigt die neue Notiz das bisherige Verständnis, schärfe die Formulierung; widerspricht oder korrigiert sie es, aktualisiere es durchdacht — die alte, jetzt überholte Aussage wird ersetzt, nicht beide nebeneinander stehengelassen. Maximal 2-3 prägnante Sätze, konkret und direkt umsetzbar, keine Meta-Kommentare.
 
 Wichtige Regeln für die Zusammenfassung:
-- VERMEIDEN heisst nur, dass der Text so nicht gefallen hat. Die Notiz beschreibt, was der Nutzer stattdessen will. Formuliere das Gewünschte als positive Anweisung («Nenne in Texten dieser Art ...»). Bittet die Notiz darum, etwas zu ergänzen oder einzubauen («kannst du ... ergänzen», «bau ... ein»), lautet die Regel, dass dieser Inhalt vorkommen soll. Mache daraus nie ein Verbot des gewünschten Inhalts.
+- ÜBERARBEITEN (Daumen runter) ist kein Verbot und keine Kritik an einem Inhalt. Es heisst: Der Text wird mit der Notiz als Input nochmals überarbeitet, und du lernst daraus, was in Texten dieser Art künftig anders oder zusätzlich sein soll. Formuliere das als positive Anweisung («Nenne in Texten dieser Art ...», «Beginne mit ...»). Bittet die Notiz darum, etwas zu ergänzen oder einzubauen («kannst du ... ergänzen»), lautet die Regel, dass dieser Inhalt vorkommen soll. Mache daraus nie ein Verbot des gewünschten Inhalts.
 - Schreibe allgemeingültige Muster und keine Einzelfälle: keine Namen, Daten, Zahlen oder Anlässe eines einzelnen Auftrags. Betrifft die Notiz nur einen einzelnen Fall, wähle die Kategorie FAKTEN.
 - Schweizer Rechtschreibung (ss statt ß), keine Gedankenstriche, kein Markdown.
 - Kurze, vollständige Sätze. Abkürzungen wie «z. B.» sind erlaubt.
@@ -1573,7 +1573,7 @@ async function consolidateFeedback(clientId, moduleKey, rating, note) {
   const existingSummaries = FEEDBACK_CATEGORIES
     .map(cat => `${cat}: ${byCategory[cat] || '(noch kein Stand)'}`)
     .join('\n');
-  const label = rating === 1 ? 'BEIBEHALTEN' : 'VERMEIDEN';
+  const label = rating === 1 ? 'BEIBEHALTEN' : 'ÜBERARBEITEN';
   const cfg = PROMPTS['consolidate-feedback'];
   const resp = await callClaude(
     cfg.system,
