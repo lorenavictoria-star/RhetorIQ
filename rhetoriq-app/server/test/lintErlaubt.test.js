@@ -29,3 +29,10 @@ test('Die Zeile wird auch mit Aufzählungszeichen oder Fettdruck erkannt, «kein
   assert.ok(stilmittelAusBrandVoice('- **Stilmittel erlaubt:** Gegenüberstellungen').has('gegenueberstellung'));
   assert.equal(stilmittelAusBrandVoice('Stilmittel erlaubt: keine').size, 0);
 });
+
+test('Gegenüberstellungen in weiteren Formen werden erkannt, normale Verneinung nicht', () => {
+  const ja = ['Das ist keine Zusatzleistung. Das ist, wie wir arbeiten.', 'Das ist kein Slogan - das beschreibt, was wir tun.', 'Kein Bruch. Ein sichtbares Bekenntnis.', 'Wir treffen uns persönlich, nicht per Mail.'];
+  const nein = ['Wir haben keine Zeit für Umwege.', 'Ein Wechsel ist nicht möglich.', 'Sie erhalten keine Mahnung, wenn Sie rechtzeitig zahlen.'];
+  for (const t of ja) assert.ok(lint.lintText(t, { sprache: 'de' }).some(h => h.art === 'gegenueberstellung'), t);
+  for (const t of nein) assert.ok(!lint.lintText(t, { sprache: 'de' }).some(h => h.art === 'gegenueberstellung'), t);
+});

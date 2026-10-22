@@ -121,6 +121,11 @@ function lintText(text, opts = {}) {
   for (const re of FLOSKELN) hits.push(...findAll(t, re, 'floskel'));
   for (const re of FUELLWOERTER) hits.push(...findAll(t, re, 'fuellwort', { weich: true }));
   hits.push(...findAll(t, /\bnicht\s+(?!nur\b)[^.,;:!?\n]{1,60}?,?\s+sondern\b/gi, 'gegenueberstellung'));
+  // weitere Formen der Gegenüberstellung: «Das ist kein X. Das ist Y.», «Kein X. Ein Y.», «kein X - sondern Y», «..., nicht per Mail.»
+  hits.push(...findAll(t, /\bkein(?:e|en|em|er|es)?\b[^.!?\n]{1,70}?(?:[.;:,]|\s[-–—])\s*(?:sondern|(?:es|das)\s+(?:ist|sind|war|waren|bleibt|bedeutet))\b/gi, 'gegenueberstellung'));
+  hits.push(...findAll(t, /\bkein(?:e|en|em|er|es)?\b[^.!?\n]{1,50}?\s[-–—]\s*(?:es|das)\s+\w+/gi, 'gegenueberstellung'));
+  hits.push(...findAll(t, /(?:^|[.!?]\s+)Kein(?:e|en)?\s+[^.!?\n]{1,40}[.]\s+Ein(?:e|en)?\b/g, 'gegenueberstellung'));
+  hits.push(...findAll(t, /,\s+nicht\s+(?:per|durch|als|mit|wegen|über|nur\s+noch)\s+\w+(?:\s+\w+){0,2}[.!]/gi, 'gegenueberstellung'));
   hits.push(...gendernTreffer(t));
   hits.push(...markdownTreffer(t));
   if (deutsch) {
