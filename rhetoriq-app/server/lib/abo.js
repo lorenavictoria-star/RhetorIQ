@@ -79,6 +79,8 @@ async function testPruefung(row, { ueberarbeitung = false } = {}) {
 // Rückgabe: { ok:true } oder { ok:false, grund, error }
 function zugang(row, { advisor = false, jetzt = new Date() } = {}) {
   if (!row) return { ok: true };
+  // Gratis-Zugang: von der Beraterin bewusst gesetzt (Partner, Sonderfälle), ohne Abo und ohne Fristen
+  if (row.gratis_zugang === true) return { ok: true };
   const st = row.subscription_status || 'trial';
   if (st === 'cancelled') return { ok: false, grund: 'cancelled', error: MELDUNG.cancelled };
   if (st === 'pending_plan') return { ok: false, grund: 'pending_plan', error: MELDUNG.pending_plan };
@@ -110,7 +112,7 @@ function antwort402(z, clientId) {
 
 async function clientRow(clientId) {
   await ensureSchema();
-  const { rows } = await pool.query('SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log, gratis_test, trial_start, bezahlt_bis FROM clients WHERE id=$1', [clientId]);
+  const { rows } = await pool.query('SELECT id, name, email, monthly_token_limit, subscription_status, stripe_customer_id, zugang_bis, created_at, abo_mail_log, gratis_test, trial_start, bezahlt_bis, gratis_zugang FROM clients WHERE id=$1', [clientId]);
   return rows[0] || null;
 }
 

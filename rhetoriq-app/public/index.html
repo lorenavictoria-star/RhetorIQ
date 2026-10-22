@@ -15107,7 +15107,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
       var g=document.createElement('div');g.style.cssText='margin:0 0 18px;padding:14px 16px;border:1px solid var(--bd);background:#fff';
       g.innerHTML='<div style="'+lab+'">Gratis-Test oder direkt Abo</div>'
         +'<div style="font-size:12.5px;color:var(--mu);margin-bottom:8px">Du entscheidest je Klient. Der Gratis-Test beginnt beim ersten Login und gilt 14 Tage oder 10 Texte. Überarbeitungen nach Feedback zählen nicht als Text. Danach ist ein Abo nötig.</div>'
-        +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><select id="vw-gratis" style="'+inp+'"><option value="aus">Direkt Abo (kein Test)</option><option value="an">Gratis-Test (14 Tage, 10 Texte)</option></select>'
+        +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><select id="vw-gratis" style="'+inp+'"><option value="aus">Direkt Abo (kein Test)</option><option value="an">Gratis-Test (14 Tage, 10 Texte)</option><option value="gratis">Gratis-Zugang (Partner, ohne Abo)</option></select>'
         +'<button type="button" class="obtn" id="vw-gratis-save">Speichern</button></div>'
         +'<div class="rq-hint" id="vw-gratis-info" style="font-size:12px;color:var(--mu);margin-top:6px"></div>';
       var f=document.createElement('div');f.style.cssText=g.style.cssText;
@@ -15120,7 +15120,8 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
       var sel=g.querySelector('#vw-gratis'),gi=g.querySelector('#vw-gratis-info');
       function ladeG(){
         api('/api/clients/'+cid+'/gratis-test').then(function(r){return r.json();}).then(function(d){
-          sel.value=d.an?'an':'aus';
+          sel.value=d.gratisZugang?'gratis':(d.an?'an':'aus');
+          if(d.gratisZugang){gi.textContent='Dieser Klient nutzt die Plattform gratis, ohne Abo und ohne Frist, bis du es änderst.';return;}
           var stT={active:'ein aktives Abo',past_due:'ein Abo mit fehlgeschlagener Zahlung',cancelled:'ein gekündigtes Abo',pending_plan:'den Status «Plan ausstehend»'};
           if(d.an&&d.status&&d.status!=='trial'){
             gi.innerHTML='Dieser Klient hat '+(stT[d.status]||'den Status «'+E(d.status)+'»')+', der Test greift deshalb nicht. <button type="button" class="obtn" id="vw-gratis-reset">Auf Gratis-Test zurücksetzen</button>';
@@ -15138,7 +15139,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
       }
       g.querySelector('#vw-gratis-save').onclick=function(){
         gi.textContent='Speichert …';
-        api('/api/clients/'+cid+'/gratis-test',{method:'PUT',body:JSON.stringify({an:sel.value==='an'})}).then(function(r){
+        api('/api/clients/'+cid+'/gratis-test',{method:'PUT',body:JSON.stringify({an:sel.value==='an',gratisZugang:sel.value==='gratis'})}).then(function(r){
           if(!r.ok)gi.textContent='Konnte nicht gespeichert werden.';else ladeG();
         }).catch(function(){gi.textContent='Konnte nicht gespeichert werden.';});
       };

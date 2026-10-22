@@ -486,7 +486,7 @@ router.get('/:id/gratis-test', requireAdvisor, async (req, res) => {
     if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
     const row = await abo.clientRow(rows[0].id);
     const st = await abo.teststand(row);
-    res.json({ an: row.gratis_test === true, status: row.subscription_status || 'trial', tage: abo.TEST_TAGE, texte: abo.TEST_TEXTE, ...st });
+    res.json({ an: row.gratis_test === true, gratisZugang: row.gratis_zugang === true, status: row.subscription_status || 'trial', tage: abo.TEST_TAGE, texte: abo.TEST_TEXTE, ...st });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
@@ -501,6 +501,12 @@ router.put('/:id/gratis-test', requireAdvisor, async (req, res) => {
     // zuruecksetzen: Abo-Status wieder auf «Test» stellen (nur wenn der Klient nicht über Stripe zahlt)
     const reset = an && req.body && req.body.zuruecksetzen === true;
     await require('../lib/schemaRedesign').ensureSchema();
+    // Gratis-Zugang: bewusst ohne Abo (Partner, Sonderfälle), schliesst Gratis-Test und Rechnungsfrist aus
+    if (req.body && typeof req.body.gratisZugang === 'boolean') {
+      const g = await pool.query('UPDATE clients SET gratis_zugang=$1 WHERE id=$2 AND advisor_id=$3 RETURNING id', [req.body.gratisZugang, req.params.id, req.user.id]);
+      if (!g.rows[0]) return res.status(404).json({ error: 'Client not found' });
+      if (req.body.gratisZugang) return res.json({ an: false, gratisZugang: true });
+    }
     await pool.query('ALTER TABLE clients ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT');
     const { rows } = await pool.query(
       `UPDATE clients SET gratis_test = $1::boolean, trial_start = CASE WHEN $1::boolean THEN NULL ELSE trial_start END,

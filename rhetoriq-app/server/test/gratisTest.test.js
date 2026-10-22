@@ -127,3 +127,19 @@ test('Gratis-Test zurücksetzen: Status wieder «trial», aber nicht bei Stripe-
   row = (await pool.query('SELECT subscription_status FROM clients WHERE id=$1', [b.id])).rows[0];
   assert.equal(row.subscription_status, 'active', 'zahlende Klienten bleiben unverändert');
 });
+
+test('Gratis-Zugang: Klient nutzt ohne Abo, auch bei «Plan ausstehend» oder gekündigt, bis die Beraterin es zurücknimmt', async () => {
+  H.ai.reply = 'Ein Text.';
+  await pool.query('ALTER TABLE clients ADD COLUMN gratis_zugang BOOLEAN NOT NULL DEFAULT FALSE').catch(() => {});
+  const c = await H.addClient('Partner AG');
+  await set(c.id, "subscription_status='pending_plan'");
+  assert.equal((await gen(H.clientToken(c.id))).status, 402, 'ohne Gratis-Zugang gesperrt');
+  const tok = H.advisorToken();
+  assert.equal((await srv.call('PUT', `/api/clients/${c.id}/gratis-test`, { token: tok, body: { gratisZugang: true } })).status, 200);
+  assert.equal((await gen(H.clientToken(c.id))).status, 200, 'mit Gratis-Zugang erlaubt');
+  assert.equal((await srv.call('GET', `/api/clients/${c.id}/gratis-test`, { token: tok })).body.gratisZugang, true);
+  await set(c.id, "subscription_status='cancelled'");
+  assert.equal((await gen(H.clientToken(c.id))).status, 200, 'auch gekündigt');
+  await srv.call('PUT', `/api/clients/${c.id}/gratis-test`, { token: tok, body: { gratisZugang: false, an: false } });
+  assert.equal((await gen(H.clientToken(c.id))).status, 402, 'zurückgenommen: wieder gesperrt');
+});
