@@ -1710,7 +1710,7 @@ html[lang="en"] .legal-en-note{display:block}
 
     <!-- TRAINING DATA -->
     <div class="page" id="page-training">
-      <div class="page-title" style="margin-bottom:4px">Beispiele für den Aufbau</div>
+      <div class="page-title" style="margin-bottom:4px">Beispiele für alle Kunden</div>
       <div style="font-size:14px;color:var(--mu);margin-bottom:16px">Optional. Hier legst du Musterbeispiele ab, die den Aufbau eines Moduls vorgeben.</div>
       <div style="border:1px solid var(--bd);padding:14px 16px;margin-bottom:22px;font-size:13.5px;line-height:1.7">
         <div style="margin-bottom:8px"><strong>Das passiert automatisch.</strong> Jeder Daumen hoch oder runter eines Klienten, mit oder ohne Stichwort, wird im Hintergrund ausgewertet und für genau diesen Klienten und dieses Modul gemerkt. Du musst nichts tun.</div>
@@ -9044,7 +9044,7 @@ tryAutoLogin();
     if(A){
       g[0].i.push({k:'onboarding',t:'Onboarding',ic:'ti-upload',go:function(){rqWizard();}});
       g[0].i.push({k:'clients',t:'Kunden',ic:'ti-users',go:function(){goPage('clients');loadAdvisorDashboard();}});
-      g[0].i.push({k:'training',t:'Beispiele',ic:'ti-files',go:function(){goPage('training');if(typeof loadTraining==='function')loadTraining();}});
+      g[0].i.push({k:'training',t:'Beispiele (alle Kunden)',ic:'ti-files',go:function(){goPage('training');if(typeof loadTraining==='function')loadTraining();}});
       g[0].i.push({k:'usage',t:'Nutzung',ic:'ti-chart-bar',go:function(){goPage('usage');loadUsage();}});
       g[0].i.push({k:'finanzen',t:'Finanzen',ic:'ti-coins',go:function(){goPage('finanzen');if(window.rqFinanzen)rqFinanzen.load();}});
       g[0].i.push({k:'reviews',t:'Freigaben',ic:'ti-checks',go:function(){openReviewPanel();},cnt:true});
@@ -16813,6 +16813,67 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
     try{window.wsSwitchTab('ue');}catch(e){console.error(e);}
     return r;
   };
+  tab();
+})();
+</script>
+<script id="rq-wsbsp-js">
+// Workspace, Reiter «Beispiele»: Musterbeispiele für diesen Klienten (Aufbau je Modul). Beispiele für alle Klienten stehen im Menü «Beispiele (alle Kunden)».
+(function(){
+  var E=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
+  function mname(k){try{var m=ALL_MODULES.filter(function(x){return x.key===k;})[0];return m?m.name:k;}catch(e){return k;}}
+  function tab(){
+    var wrap=document.getElementById('ws-tabs');if(!wrap)return null;
+    var b=document.getElementById('ws-tab-bsp');
+    if(!b){b=document.createElement('button');b.className='mlist-pill';b.id='ws-tab-bsp';b.textContent='Beispiele';b.onclick=function(){wsSwitchTab('bsp');};
+      var st=document.getElementById('ws-tab-store')||document.getElementById('ws-tab-admin');wrap.insertBefore(b,st);}
+    return b;
+  }
+  async function render(body){
+    var cid=_wsClientId,d={examples:[]};
+    body.innerHTML='<div class="rq-hint">Lädt …</div>';
+    try{var r=await api('/api/module-examples/client/'+cid);if(r.ok)d=await r.json();}catch(e){}
+    var opts=''; try{opts=ALL_MODULES.map(function(m){return '<option value="'+m.key+'">'+E(m.name)+'</option>';}).join('');}catch(e){}
+    var h='<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:4px">Beispiele</div>'
+      +'<div class="rq-hint" style="margin-bottom:12px">Musterbeispiele geben den Aufbau eines Moduls vor, den Ton bestimmt die Brand Voice. Hier siehst du die Beispiele dieses Kunden und die für alle Kunden geltenden. Daumen hoch und runter lernt die Plattform von selbst.</div>';
+    var ex=(d.examples||[]);
+    h+=ex.length?ex.map(function(x){
+      var fuerAlle=x.source_client_id==null;
+      return '<div class="rq-vw-zeile" style="cursor:default;align-items:flex-start"><span style="min-width:0"><b style="font-weight:600">'+E(mname(x.module_key))+'</b>'+(x.label?' · '+E(x.label):'')+' <span class="rq-hint">'+(fuerAlle?'für alle Kunden':'nur dieser Kunde')+'</span><div class="rq-hint" style="margin-top:2px;white-space:pre-wrap">'+E(String(x.output_text||'').slice(0,160))+(String(x.output_text||'').length>160?' …':'')+'</div></span>'
+        +(fuerAlle?'':'<button type="button" class="obtn" data-del="'+x.id+'">Löschen</button>')+'</div>';
+    }).join(''):'<div class="rq-hint">Noch keine Beispiele für diesen Kunden.</div>';
+    h+='<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin:18px 0 6px">Beispiel für diesen Kunden hinzufügen</div>'
+      +'<select id="wsb-mod" style="width:100%;margin-bottom:6px">'+opts+'</select>'
+      +'<input id="wsb-titel" type="text" placeholder="Bezeichnung (optional)" style="width:100%;margin-bottom:6px">'
+      +'<textarea id="wsb-text" rows="6" placeholder="Beispieltext einfügen" style="width:100%"></textarea>'
+      +'<div style="margin-top:8px"><button type="button" class="obtn" id="wsb-add">Beispiel speichern</button> <span class="rq-hint" id="wsb-msg"></span></div>'
+      +'<div class="rq-hint" style="margin-top:14px">Für alle Kunden gültige Beispiele legst du im Menü unter «Beispiele (alle Kunden)» ab.</div>';
+    body.innerHTML=h;
+    body.querySelectorAll('[data-del]').forEach(function(b){b.onclick=async function(){
+      if(!confirm('Dieses Beispiel löschen?'))return;
+      try{await api('/api/module-examples/client/'+cid+'/'+b.getAttribute('data-del'),{method:'DELETE'});}catch(e){}
+      render(body);};});
+    body.querySelector('#wsb-add').onclick=async function(){
+      var m=body.querySelector('#wsb-msg'),t=body.querySelector('#wsb-text').value;
+      try{
+        var r=await api('/api/module-examples/client/'+cid,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({module_key:body.querySelector('#wsb-mod').value,title:body.querySelector('#wsb-titel').value,text:t})});
+        var j=await r.json().catch(function(){return {};});
+        if(!r.ok){m.textContent=j.error||'Das Beispiel konnte nicht gespeichert werden.';return;}
+        render(body);
+      }catch(e){m.textContent='Das Beispiel konnte nicht gespeichert werden.';}
+    };
+  }
+  var ws=window.wsSwitchTab;
+  if(typeof ws==='function')window.wsSwitchTab=function(t){
+    if(t==='bsp'){
+      Array.prototype.forEach.call(document.querySelectorAll('#ws-tabs .mlist-pill'),function(x){x.classList.remove('active');});
+      var b=tab();if(b)b.classList.add('active');
+      return render(document.getElementById('ws-body'));
+    }
+    var u=document.getElementById('ws-tab-bsp');if(u)u.classList.remove('active');
+    return ws.apply(this,arguments);
+  };
+  var ow=window.openWorkspace;
+  if(typeof ow==='function')window.openWorkspace=async function(){var r=await ow.apply(this,arguments);tab();return r;};
   tab();
 })();
 </script>
