@@ -108,7 +108,7 @@ async function buildReport(clientId) {
 
   kids.push(h1('6. So geht es weiter'));
   kids.push(bullet('Paket Stimme (CHF 190 pro Monat): 40 Texte, 2 Überarbeitungen durch Lorena, Antwort innert 1 Werktag. Die ersten 30 Tage mit 40 Texten sind im Audit inbegriffen.'));
-  kids.push(bullet('Team (CHF 590) oder Business (CHF 1’490): Workshop «Die Stimme finden» (CHF 3’900 oder 5’000). Die CHF 950 des Audits werden angerechnet.'));
+  kids.push(bullet('Team (CHF 590) oder Business (CHF 1’490): Workshop «Die Stimme finden» (CHF 3’900 oder 5’000). Die CHF 950 für «Die Stimme finden» werden angerechnet.'));
   kids.push(bullet('Rückblick: Nach zwei Wochen messen wir erneut und sehen, wie sich Ihre Werte dem Ziel nähern.'));
 
   kids.push(h1('7. Methode und Grenzen'));
