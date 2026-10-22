@@ -28,6 +28,16 @@ router.get('/alle.zip', requireAdvisor, async (req, res) => {
   }
 });
 
+router.get('/:clientId/pruefpaket.docx', requireAdvisor, ownClient('clientId'), async (req, res) => {
+  try {
+    const buf = await require('../lib/pruefpaket').buildPruefpaket(parseInt(req.params.clientId, 10));
+    send(res, buf, `Pruefpaket_${await nameOf(req.params.clientId)}_${new Date().toISOString().slice(0, 10)}.docx`, DOCX);
+  } catch (e) {
+    console.error('[stimmenmappe] Prüfpaket:', e.message);
+    res.status(500).json({ error: 'Das Prüfpaket konnte nicht erstellt werden.' });
+  }
+});
+
 router.get('/:clientId/handbuch.docx', requireAdvisor, ownClient('clientId'), async (req, res) => {
   try {
     const buf = await sm.buildHandbuch(parseInt(req.params.clientId, 10));

@@ -77,6 +77,24 @@ test('Handbuch: Satzbau mit Zahlen, Anrede, Prüfliste', async () => {
   assert.ok(t.includes('Fachjargon'));
 });
 
+test('Prüfpaket: Brand Voice, Fassungen mit Hinweis und Befunde', async () => {
+  const { pool } = require('../db');
+  await require('../lib/schemaRedesign').ensureSchema();
+  const ein = { briefing: 'Mail zur Preisänderung' };
+  await pool.query(`INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, feedback_key, ueberarbeitung, ueberarbeitung_hinweis, created_at)
+    VALUES ($1,$2,'text-gen','Textgenerator',$3,$4,'text-gen-email',false,NULL,NOW() - INTERVAL '2 hours')`, [a.id, 1, JSON.stringify(ein), 'Das ist keine Mahnung. Das ist ein Hinweis \u2013 bitte lesen.']);
+  await pool.query(`INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, feedback_key, ueberarbeitung, ueberarbeitung_hinweis, created_at)
+    VALUES ($1,$2,'text-gen','Textgenerator',$3,$4,'text-gen-email',true,'Kürzer und freundlicher',NOW() - INTERVAL '1 hour')`, [a.id, 1, JSON.stringify(ein), 'Bitte beachten Sie den Hinweis zur Preisänderung.']);
+  const r = await fetchBuf(`/api/stimmenmappe/${a.id}/pruefpaket.docx`, H.advisorToken());
+  assert.equal(r.status, 200);
+  const t = await wordText(r.buf);
+  assert.ok(t.includes('Prüfpaket'));
+  assert.ok(t.includes('Erstfassung') && t.includes('Überarbeitung 1'));
+  assert.ok(t.includes('Hinweis für die Überarbeitung: Kürzer und freundlicher'));
+  assert.ok(t.includes('Gedankenstrich'));
+  assert.equal((await fetchBuf(`/api/stimmenmappe/${a.id}/pruefpaket.docx`, H.clientToken(a.id))).status, 403);
+});
+
 test('ZIP über alle Klienten der Beraterin', async () => {
   const r = await fetchBuf('/api/stimmenmappe/alle.zip', H.advisorToken());
   assert.equal(r.status, 200);
