@@ -16765,5 +16765,21 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
   };
 })();
 </script>
+<style id="rq-wsnav-css">
+/* Workspace im Design der Verwaltung: Themenliste links, Inhalt rechts */
+#ws-ov .modal{display:grid!important;grid-template-columns:210px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+#ws-ov .modal>div:first-child{grid-column:1 / -1}
+#ws-ov #ws-tabs{grid-column:1;grid-row:2;display:flex!important;flex-direction:column;flex-wrap:nowrap!important;gap:0!important;padding:10px 0!important;border-bottom:0!important;border-right:1px solid var(--bd);overflow-y:auto;background:#fcfbf7}
+#ws-ov #ws-tabs .mlist-pill{display:flex;align-items:center;width:100%;text-align:left;background:none!important;border:0!important;border-left:3px solid transparent!important;border-radius:0!important;padding:10px 14px!important;font:inherit;font-size:14px;cursor:pointer;color:var(--tx)!important;box-shadow:none!important}
+#ws-ov #ws-tabs .mlist-pill:hover{background:#f6f3ea!important}
+#ws-ov #ws-tabs .mlist-pill.active{background:#faf6ec!important;border-left-color:#85601f!important;color:#85601f!important;font-weight:600}
+#ws-ov #ws-split{grid-column:2;grid-row:2}
+@media(max-width:760px){
+#ws-ov .modal{grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr)}
+#ws-ov #ws-tabs{grid-column:1;grid-row:2;flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:0!important;border-right:0;border-bottom:1px solid var(--bd)}
+#ws-ov #ws-tabs .mlist-pill{width:auto;white-space:nowrap;border-left:0!important;border-bottom:3px solid transparent!important}
+#ws-ov #ws-tabs .mlist-pill.active{border-bottom-color:#85601f!important}
+#ws-ov #ws-split{grid-column:1;grid-row:3;flex-direction:column}}
+</style>
 </body>
 </html>
