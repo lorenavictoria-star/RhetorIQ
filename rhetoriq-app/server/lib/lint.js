@@ -130,6 +130,7 @@ function lintText(text, opts = {}) {
     else if (soll === 'du') hits.push(...sie);
     else if (sie.length && du.length) hits.push(...(sie.length <= du.length ? sie : du));
   }
+  if (opts.erlaubt && opts.erlaubt.size) hits = hits.filter(h => !opts.erlaubt.has(h.art));
   hits.sort((a, b) => a.pos - b.pos);
   // Zeile und kurzer Kontext für die Anzeige
   for (const h of hits) {
@@ -139,9 +140,11 @@ function lintText(text, opts = {}) {
 }
 
 // Optionen aus den Eingabedaten eines Auftrags
-function lintOptionenAusDaten(data) {
+function lintOptionenAusDaten(data, erlaubt) {
   const d = data || {};
-  return { sprache: d.language || null, anrede: normAnrede(d.anrede) || anredeAusTon(d.tone) };
+  const o = { sprache: d.language || null, anrede: normAnrede(d.anrede) || anredeAusTon(d.tone) };
+  if (erlaubt && erlaubt.size) o.erlaubt = erlaubt;
+  return o;
 }
 
 // Kurze, präzise Liste für den zweiten Durchgang («Behebe genau diese Punkte»). Weiche Treffer (Füllwörter) bleiben draussen.
@@ -169,13 +172,13 @@ function lintZusammenfassung(hits) {
 const LINT_SKIP = new Set(['router', 'route-fill', 'suggest-subject', 'suggest-title', 'consolidate-feedback', 'presentation-preflight', 'chat']);
 
 // Kurze Aufrufe für analyze.js: Liste für den zweiten Durchgang und Zusammenfassung für die Anzeige
-function lintFuerDurchgang(entwurf, data, module) {
+function lintFuerDurchgang(entwurf, data, module, erlaubt) {
   if (LINT_SKIP.has(module)) return '';
-  return pruefAuftragAusTreffern(lintText(entwurf, lintOptionenAusDaten(data)));
+  return pruefAuftragAusTreffern(lintText(entwurf, lintOptionenAusDaten(data, erlaubt)));
 }
-function lintErgebnis(text, data, module) {
+function lintErgebnis(text, data, module, erlaubt) {
   if (LINT_SKIP.has(module)) return null;
-  return lintZusammenfassung(lintText(text, lintOptionenAusDaten(data)));
+  return lintZusammenfassung(lintText(text, lintOptionenAusDaten(data, erlaubt)));
 }
 
 module.exports = { anredeTreffer, lintFuerDurchgang, lintErgebnis, LINT_SKIP, lintText, lintOptionenAusDaten, pruefAuftragAusTreffern, lintZusammenfassung, ART_LABEL, anredeAusTon };

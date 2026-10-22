@@ -1831,8 +1831,9 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     // a from-scratch draft — running a second full pass on top just doubles
     // latency (painfully so for long documents like a full speech) without
     // improving quality, and risks over-editing an already-finished text.
+    const erlaubt = await require('../lib/lintErlaubt').erlaubteMuster(pool, resolvedClientId);
     if (willTwoPass) {
-      const revisionResp = await callClaude(systemBlocks, cheapDraft ? buildRevisionPrompt(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module)) : revisionUserContent(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module)),MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module), temperaturFor(module));
+      const revisionResp = await callClaude(systemBlocks, cheapDraft ? buildRevisionPrompt(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module, erlaubt)) : revisionUserContent(userMsg, claudeResp.text, module, lintFuerDurchgang(claudeResp.text, data, module)),MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, resolveModel(module), temperaturFor(module));
       if (revisionResp.text) result = revisionResp.text;
       totalInputTokens += revisionResp.inputTokens;
       totalOutputTokens += revisionResp.outputTokens;
@@ -1886,7 +1887,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
       if (resolvedClientId) req.app.locals.wss.toClient(resolvedClientId, note);
     }
 
-    res.json({ result, id: rows[0].id, quotaWarning, lint: lintErgebnis(result, data, module) });
+    res.json({ result, id: rows[0].id, quotaWarning, lint: lintErgebnis(result, data, module, erlaubt) });
   } catch (e) {
     if (waechterSperre(e, res)) return;
     console.error(e);
@@ -2021,11 +2022,12 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     // connection alive during this), then stream only the revised final pass.
     let streamUserMsg = userMsg;
     let draftInputTokens = 0, draftOutputTokens = 0, draftText = null;
+    const erlaubtS = await require('../lib/lintErlaubt').erlaubteMuster(pool, resolvedClientId);
     if (willTwoPassS && !aborted) {
       console.log(`[trace] ${module} starting draft pass, maxTokens=${maxTokens}`);
       const draftResp = await callClaude(streamSystemBlocks, cheapDraftS ? userMsg : draftUserContent(userMsg), maxTokens, draftModelFor(module), temperaturFor(module));
       console.log(`[trace] ${module} draft pass done, chars=${(draftResp.text || '').length}`);
-      if (draftResp.text) streamUserMsg = cheapDraftS ? buildRevisionPrompt(userMsg, draftResp.text, module, lintFuerDurchgang(draftResp.text, data, module)) : revisionUserContent(userMsg, draftResp.text, module, lintFuerDurchgang(draftResp.text, data, module));
+      if (draftResp.text) streamUserMsg = cheapDraftS ? buildRevisionPrompt(userMsg, draftResp.text, module, lintFuerDurchgang(draftResp.text, data, module, erlaubtS)) : revisionUserContent(userMsg, draftResp.text, module, lintFuerDurchgang(draftResp.text, data, module));
       draftInputTokens = draftResp.inputTokens;
       draftOutputTokens = draftResp.outputTokens;
       draftText = draftResp.text || null;
@@ -2086,7 +2088,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       ).catch(() => {});
     }
 
-    const donePayload = { id: rows[0].id, hasBrandVoice, quotaWarning, lint: lintErgebnis(fullText, data, module) };
+    const donePayload = { id: rows[0].id, hasBrandVoice, quotaWarning, lint: lintErgebnis(fullText, data, module, erlaubtS) };
     // Nur für die Beraterin: Text wurde mit dem Reservekonto erstellt (lib/aiProvider.js)
     if (req.user.role === 'advisor' && require('../lib/meter').context().reserve) donePayload.reserve = true;
     if (isDebug) donePayload.systemPrompt = baseSystem + (brandVoiceBlock ? '\n\n[BRAND VOICE CACHED]\n' + brandVoiceBlock : '') + (restDynamicSystem ? '\n\n--- DYNAMIC ---\n' + restDynamicSystem : '');
