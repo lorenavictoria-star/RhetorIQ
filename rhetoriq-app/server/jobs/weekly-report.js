@@ -158,6 +158,12 @@ async function runWeeklyReport() {
       console.error('[weekly-report] Quartalsreview lines failed:', e.message);
     }
 
+    // Zahlungen und offene Rechnungen (Rechnung per Überweisung)
+    try {
+      const z = await require('../lib/rechnungAuto').wochenzeilen();
+      if (z.length) lines.push('', 'ZAHLUNGEN UND RECHNUNGEN:', ...z);
+    } catch (e) { console.error('[weekly-report] Rechnungen:', e.message); }
+
     if (lowRated.length > 0) {
       lines.push('', 'NEGATIV BEWERTET — BITTE PRÜFEN:');
       lowRated.forEach(r => {

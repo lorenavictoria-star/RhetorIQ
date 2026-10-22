@@ -16605,5 +16605,185 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
   };
 })();
 </script>
+<script id="rq-vwlayout-js">
+// Verwaltung eines Klienten: Themenliste links, rechts immer nur ein Thema (Übersicht, Abo und Rechnung, Zugang, Texte und Stimme,
+// Verbindungen, Daten). Die Übersicht zeigt den Zustand mit grünen, gelben und roten Punkten und das, was Aufmerksamkeit braucht.
+// Läuft als letzter Umbau von wsRenderAdmin und sortiert auch Karten ein, die erst später dazukommen (zum Beispiel Verbindungen).
+(function(){
+  var E=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
+  var THEMEN=[['uebersicht','Übersicht'],['abo','Abo und Rechnung'],['zugang','Zugang'],['texte','Texte und Stimme'],['verb','Verbindungen'],['daten','Daten']];
+  var SCHLUESSEL={
+    abo:['Gratis-Test oder direkt Abo','Rechnung per Überweisung','Empfohlenes Paket','Jahreszahlung','Quartalsreview','Zu den Modulen','Zeit und Mehraufwand'],
+    zugang:['Zugang und Sitzungen','Zugriffsprotokoll'],
+    verb:['Texte direkt ablegen','Verbindungen'],
+    daten:['Aufbewahrung der Texte'],
+    texte:['Hinweis auf KI-Unterstützung','Stimmenmappe','Feedback-Lernstand']
+  };
+  function txt(el){return (el.textContent||'').replace(/\s+/g,' ').trim().slice(0,220);}
+  function thema(el){
+    var t=txt(el);
+    if(el.id==='rqre-box')return 'abo';
+    if(el.id==='rqint-box')return 'verb';
+    var k=['abo','zugang','verb','daten','texte'];
+    for(var i=0;i<k.length;i++){var l=SCHLUESSEL[k[i]];for(var j=0;j<l.length;j++){if(t.indexOf(l[j])>=0)return k[i];}}
+    return 'texte';
+  }
+  function dat(d){if(!d)return '';var x=new Date(d);return ('0'+x.getDate()).slice(-2)+'.'+('0'+(x.getMonth()+1)).slice(-2)+'.'+x.getFullYear();}
+  function chf(r){return (Math.round(r)/100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,"’");}
+  var FARBE={gruen:'#2a7',gelb:'#d98e04',rot:'#b91c1c',grau:'#999'};
+  function punkt(f){return '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+(FARBE[f]||FARBE.grau)+';margin-right:7px;flex:none"></span>';}
+
+  async function zustand(cid){
+    var c=(typeof clients!=='undefined'?clients:[]).filter(function(x){return String(x.id)===String(cid);})[0]||{};
+    var z={abo:{f:'grau',t:'unbekannt'},rech:{f:'grau',t:'noch keine Rechnung'},verb:{f:'grau',t:'keine'},zug:{f:c.email?'gruen':'rot',t:c.email?E(c.email):'keine E-Mail-Adresse hinterlegt'},aufmerksam:[]};
+    try{
+      var r=await api('/api/clients/'+cid+'/gratis-test'),d=await r.json();
+      if(r.ok){
+        var bis=null;
+        try{var rb=await api('/api/rechnungen/client/'+cid),db=await rb.json();if(rb.ok){bis=db.bezahltBis;z._rech=db.rechnungen||[];}}catch(e){}
+        if(d.gratisZugang)z.abo={f:'gruen',t:'Kostenloser Gebrauch'};
+        else if(d.status==='active'){
+          if(bis&&new Date(bis)<new Date())z.abo={f:'rot',t:'bezahlte Zeit abgelaufen ('+dat(bis)+')'};
+          else z.abo={f:'gruen',t:bis?'bezahlt bis '+dat(bis):'Abo aktiv'};
+        }
+        else if(d.an){
+          if(!d.gestartet)z.abo={f:'gruen',t:'Gratis-Test beginnt beim ersten Login'};
+          else if(d.tageRest<=0||d.texteGenutzt>=d.texteMax)z.abo={f:'rot',t:'Gratis-Test abgelaufen'};
+          else z.abo={f:'gelb',t:'Gratis-Test: noch '+d.tageRest+' Tage, '+d.texteGenutzt+' von '+d.texteMax+' Texten'};
+        }
+        else if(d.status==='cancelled')z.abo={f:'rot',t:'Abo gekündigt'};
+        else if(d.status==='pending_plan')z.abo={f:'rot',t:'Plan ausstehend'};
+        else if(d.status==='past_due')z.abo={f:'rot',t:'Zahlung fehlgeschlagen'};
+        else{
+          var alt=c.created_at&&new Date(c.created_at)<new Date('2026-10-10T00:00:00Z');
+          z.abo=alt?{f:'gruen',t:'ohne Abo (älterer Klient, frei)'}:{f:'rot',t:'kein Abo, Texte gesperrt'};
+        }
+      }
+    }catch(e){}
+    var rl=z._rech||[];
+    if(rl.length){
+      var ueber=rl.filter(function(x){return x.ueberfaellig;}),offen=rl.filter(function(x){return x.status==='offen';});
+      if(ueber.length){z.rech={f:'rot',t:ueber.length+' überfällig'};}
+      else if(offen.length)z.rech={f:'gelb',t:offen.length+' offen'};
+      else z.rech={f:'gruen',t:'alle bezahlt'};
+      offen.forEach(function(x){z.aufmerksam.push({t:'Rechnung '+x.nummer+' (CHF '+chf(x.betragRappen)+') '+(x.ueberfaellig?'ist überfällig seit '+dat(x.faelligAm):'zahlbar bis '+dat(x.faelligAm)),f:x.ueberfaellig?'rot':'gelb',thema:'abo'});});
+    }
+    if(z.abo.f==='rot')z.aufmerksam.unshift({t:'Abo: '+z.abo.t,f:'rot',thema:'abo'});
+    try{
+      var n=0,total=4;
+      var r2=await api('/api/integrationen/status/'+cid),d2=await r2.json();
+      if(r2.ok)Object.keys(d2.anbieter||{}).forEach(function(k){if(d2.anbieter[k].verbunden)n++;});
+      var r3=await api('/api/klaviyo/status/'+cid),d3=await r3.json();if(r3.ok&&d3.verbunden)n++;
+      z.verb={f:n?'gruen':'grau',t:n+' von '+total+' verbunden'};
+    }catch(e){}
+    return z;
+  }
+
+  function stilen(){
+    if(document.getElementById('rq-vw-css'))return;
+    var st=document.createElement('style');st.id='rq-vw-css';
+    st.textContent='.rq-vw{display:flex;gap:20px;align-items:flex-start}.rq-vw-nav{width:200px;flex:none;position:sticky;top:0}'
+      +'.rq-vw-nav button{display:flex;align-items:center;width:100%;text-align:left;background:none;border:0;border-left:3px solid transparent;padding:10px 12px;font:inherit;font-size:14px;cursor:pointer;color:var(--tx)}'
+      +'.rq-vw-nav button.on{background:#faf6ec;border-left-color:#85601f;color:#85601f;font-weight:600}.rq-vw-nav button:hover{background:#f6f3ea}'
+      +'.rq-vw-main{flex:1;min-width:0}.rq-vw-main section{display:none}.rq-vw-main section.on{display:block}'
+      +'.rq-vw-zeile{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 4px;border-bottom:1px solid var(--bd);cursor:pointer;font-size:14px}.rq-vw-zeile:hover{background:#faf8f2}'
+      +'@media(max-width:760px){.rq-vw{flex-direction:column;gap:10px}.rq-vw-nav{width:100%;position:static;display:flex;overflow-x:auto}.rq-vw-nav button{width:auto;white-space:nowrap;border-left:0;border-bottom:3px solid transparent}.rq-vw-nav button.on{border-bottom-color:#85601f}}';
+    document.head.appendChild(st);
+  }
+
+  function umbauen(body){
+    var cid=(typeof _wsClientId!=='undefined')?_wsClientId:null;if(!cid||body.querySelector(':scope > .rq-vw'))return;
+    stilen();
+    // Alle Bausteine einsammeln (auch aus den klappbaren Gruppen)
+    var items=[];
+    Array.prototype.slice.call(body.children).forEach(function(ch){
+      if(ch.tagName==='DETAILS'&&ch.className.indexOf('rq-vgroup')>=0){var inner=ch.querySelector(':scope > div');if(inner)Array.prototype.slice.call(inner.children).forEach(function(x){items.push(x);});}
+      else items.push(ch);
+    });
+    body.textContent='';
+    var layout=document.createElement('div');layout.className='rq-vw';
+    var nav=document.createElement('nav');nav.className='rq-vw-nav';nav.setAttribute('aria-label','Themen der Verwaltung');
+    var main=document.createElement('div');main.className='rq-vw-main';
+    var secs={},navBtn={};
+    THEMEN.forEach(function(t){
+      var b=document.createElement('button');b.type='button';b.setAttribute('data-t',t[0]);b.innerHTML='<span class="rq-vw-dot"></span>'+E(t[1]);nav.appendChild(b);navBtn[t[0]]=b;
+      var sec=document.createElement('section');sec.setAttribute('data-t',t[0]);main.appendChild(sec);secs[t[0]]=sec;
+    });
+    function zeige(k){THEMEN.forEach(function(t){secs[t[0]].classList.toggle('on',t[0]===k);navBtn[t[0]].classList.toggle('on',t[0]===k);});}
+    THEMEN.forEach(function(t){navBtn[t[0]].onclick=function(){zeige(t[0]);};});
+    layout.appendChild(nav);layout.appendChild(main);body.appendChild(layout);
+    // Übersicht
+    var ue=secs.uebersicht;
+    ue.innerHTML='<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Auf einen Blick</div><div id="rq-vw-status" class="rq-hint">Lädt …</div>'
+      +'<div id="rq-vw-att" style="margin-top:16px"></div><div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin:18px 0 8px">Aktionen</div><div id="rq-vw-akt"></div>';
+    // Bausteine einsortieren
+    items.forEach(function(el){
+      if(/^Verwaltung\s/.test(txt(el)))return;                                  // Titel steht schon oben im Fenster
+      if(el.querySelector&&el.querySelector('[onclick*="sendWelcomeByEmail"]')||/^pay-link-row-/.test(el.id||'')||/^Feedback-Lernstand/.test(txt(el))){ue.querySelector('#rq-vw-akt').appendChild(el);return;}
+      el.style.margin='0 0 16px';secs[thema(el)].appendChild(el);
+    });
+    // Später dazukommende Karten (zum Beispiel Verbindungen) in das passende Thema schieben
+    new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(n){
+      if(n.nodeType!==1||n===layout||n.parentNode!==body)return;
+      n.style.margin='0 0 16px';secs[thema(n)].appendChild(n);
+    });});}).observe(body,{childList:true});
+    zeige('uebersicht');
+    zustand(cid).then(function(z){
+      var st=ue.querySelector('#rq-vw-status');if(!st)return;
+      var zeilen=[['abo','Abo',z.abo],['abo','Rechnungen',z.rech],['zugang','Zugang',z.zug],['verb','Verbindungen',z.verb]];
+      st.className='';st.innerHTML=zeilen.map(function(r){return '<div class="rq-vw-zeile" data-go="'+r[0]+'"><span style="display:flex;align-items:center">'+punkt(r[2].f)+E(r[1])+'</span><span style="color:var(--mu);font-size:13px">'+(r[1]==='Zugang'?r[2].t:E(r[2].t))+' ›</span></div>';}).join('');
+      st.querySelectorAll('[data-go]').forEach(function(x){x.onclick=function(){zeige(x.getAttribute('data-go'));};});
+      var att=ue.querySelector('#rq-vw-att');
+      att.innerHTML=z.aufmerksam.length?'<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Braucht Aufmerksamkeit</div>'+z.aufmerksam.map(function(a,i){return '<div class="rq-vw-zeile" data-go="'+a.thema+'">'+'<span style="display:flex;align-items:center">'+punkt(a.f)+E(a.t)+'</span><span style="color:var(--mu)">›</span></div>';}).join(''):'<div style="font-size:13px;color:var(--mu);display:flex;align-items:center">'+punkt('gruen')+'Nichts offen.</div>';
+      att.querySelectorAll('[data-go]').forEach(function(x){x.onclick=function(){zeige(x.getAttribute('data-go'));};});
+      // Punkte in der Themenliste
+      var farbeAbo=[z.abo.f,z.rech.f].indexOf('rot')>=0?'rot':([z.abo.f,z.rech.f].indexOf('gelb')>=0?'gelb':'gruen');
+      var map={uebersicht:z.aufmerksam.length?'rot':'gruen',abo:farbeAbo,zugang:z.zug.f,verb:z.verb.f};
+      Object.keys(map).forEach(function(k){var d=navBtn[k]&&navBtn[k].querySelector('.rq-vw-dot');if(d)d.innerHTML=punkt(map[k]);});
+    });
+  }
+  var ra=window.wsRenderAdmin;
+  if(typeof ra==='function')window.wsRenderAdmin=function(body){
+    ra.apply(this,arguments);
+    try{umbauen(body);}catch(e){console.error(e);}
+  };
+})();
+</script>
+<style id="rq-asbox-css">
+#rq-asbox{position:fixed;right:20px;bottom:calc(80px + var(--safe-bottom,0px));width:min(400px,calc(100vw - 32px));max-height:min(72vh,580px);display:none;flex-direction:column;background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.18);z-index:210;overflow:hidden}
+#rq-asbox.on{display:flex}
+#rq-asbox .rq-as-h{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--bd);font-size:14px}
+#rq-asbox .rq-as-h button{background:none;border:0;font-size:22px;line-height:1;cursor:pointer;color:var(--mu)}
+#rq-asbox .rq-as-b{overflow-y:auto;padding:10px 12px}
+#rq-asbox .eg-as{border:0!important;box-shadow:none!important;padding:0!important;margin:0!important;background:none!important}
+#rq-asbox .as-log{max-height:300px;overflow-y:auto}
+</style>
+<script id="rq-asbox-js">
+// Assistent der Beraterin als Chat rechts unten: runder Knopf (der vorhandene Knopf unten rechts) öffnet das Fenster, ein Klick auf ✕ schliesst es.
+// Das Chatfenster ist dieselbe Karte wie bisher auf der Startseite, sie wird nur hierher verschoben (Kennungen und Funktionen bleiben).
+(function(){
+  function isA(){try{return !!isAdv;}catch(e){return false;}}
+  var card=document.querySelector('#page-assistent .rq-card.eg-as');
+  if(!card)return;
+  var box=document.createElement('div');box.id='rq-asbox';box.setAttribute('role','dialog');box.setAttribute('aria-label','Assistent');
+  box.innerHTML='<div class="rq-as-h"><b>Assistent</b><button type="button" id="rq-as-x" aria-label="Schliessen">&times;</button></div><div class="rq-as-b"></div>';
+  box.querySelector('.rq-as-b').appendChild(card);
+  document.body.appendChild(box);
+  function offen(){return box.classList.contains('on');}
+  function toggle(f){
+    var on=typeof f==='boolean'?f:!offen();
+    box.classList.toggle('on',on);
+    var cb=document.getElementById('cbtn');if(cb)cb.setAttribute('aria-expanded',on?'true':'false');
+    if(on){var i=document.getElementById('as-in');if(i&&!/Mobi|Android/i.test(navigator.userAgent))setTimeout(function(){i.focus();},60);}
+  }
+  box.querySelector('#rq-as-x').onclick=function(){toggle(false);};
+  document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&offen())toggle(false);});
+  var orig=window.toggleChat;
+  window.toggleChat=function(){if(isA()){toggle();return;}return orig.apply(this,arguments);};
+  // Die Startseite der Beraterin zeigt nur noch Eingang, Heute und Kalender. Der Assistent öffnet sich auf Wunsch rechts unten.
+  window.rqAssistentOpen=function(){goPage('assistent');if(window.setMN)setMN('home');if(window.rqMarkRail)rqMarkRail('home');};
+  var t=document.querySelector('#page-assistent .page-title');if(t)t.textContent='Heute';
+})();
+</script>
 </body>
 </html>

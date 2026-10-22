@@ -209,3 +209,17 @@ test('Automatik: nur mit aktivem Abo und früherer Zahlung, nur kurz vor Ablauf,
   await pool.query('UPDATE clients SET bezahlt_bis=$2 WHERE id=$1', [b.id, new Date(jetzt.getTime() + 2 * 86400000)]);
   assert.equal((await RA.neueRechnungen(jetzt)).length, 0);
 });
+
+test('Wochenbericht: wer bezahlt hat, wer noch offen ist, bis wann bezahlt ist', async () => {
+  const jetzt = new Date();
+  const emp = { name: 'Bericht AG', strasse: 'Bahnhofstrasse 12', plz: '8001', ort: 'Zürich' };
+  const c = await H.addClient('Bericht AG');
+  const n1 = (await call('POST', `/api/rechnungen/client/${c.id}`, { token: adv(), body: { posten: 'stimme', empfaenger: emp } })).body.rechnung;
+  const n2 = (await call('POST', `/api/rechnungen/client/${c.id}`, { token: adv(), body: { posten: 'team', empfaenger: emp } })).body.rechnung;
+  await call('POST', `/api/rechnungen/client/${c.id}/${n1.id}/bezahlt`, { token: adv(), body: {} });
+  await pool.query('UPDATE rechnungen SET faellig_am=$2 WHERE id=$1', [n2.id, new Date(jetzt.getTime() - 5 * 86400000)]);
+  const z = (await RA.wochenzeilen(jetzt)).join('\n');
+  assert.match(z, /Bezahlt in den letzten 7 Tagen:[\s\S]*\+ Bericht AG: Rechnung \d{4}-\d{4}, CHF 190\.00/);
+  assert.match(z, /Noch offen:[\s\S]*- Bericht AG: Rechnung \d{4}-\d{4}, CHF 590\.00, ÜBERFÄLLIG seit 5 Tagen/);
+  assert.match(z, /Bezahlt bis \(Kunden mit Rechnung\):[\s\S]*- Bericht AG: \d{2}\.\d{2}\.\d{4}/);
+});

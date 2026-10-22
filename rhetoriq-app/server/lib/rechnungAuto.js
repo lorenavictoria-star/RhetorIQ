@@ -128,4 +128,38 @@ async function taeglich(jetzt = new Date()) {
   return { neu, erinnerungen: erinn };
 }
 
-module.exports = { holeAbo, setzeAbo, neueRechnungen, erinnerungen, abgleichen, taeglich, ERINNERUNG1_NACH_TAGEN, ERINNERUNG2_NACH_TAGEN };
+// Zeilen für den Wochenbericht: wer in den letzten 7 Tagen bezahlt hat, bei wem noch etwas offen ist, bis wann die Rechnungskunden bezahlt sind.
+// Leere Liste, wenn es noch keine Rechnungen gibt.
+async function wochenzeilen(jetzt = new Date()) {
+  await ensureSchema();
+  const { rows: alle } = await pool.query(`SELECT r.*, c.name AS kunde, c.bezahlt_bis FROM rechnungen r JOIN clients c ON c.id=r.client_id WHERE r.status <> 'storniert' ORDER BY c.name, r.id`);
+  if (!alle.length) return [];
+  const tage = (d) => Math.round((new Date(d) - jetzt) / 86400000);
+  const seit = new Date(jetzt.getTime() - 7 * 86400000);
+  const bezahlt = alle.filter(r => r.status === 'bezahlt' && r.bezahlt_am && new Date(r.bezahlt_am) >= seit);
+  const offen = alle.filter(r => r.status === 'offen');
+  const zeilen = [];
+  zeilen.push('Bezahlt in den letzten 7 Tagen:');
+  if (bezahlt.length) bezahlt.forEach(r => zeilen.push(`  + ${r.kunde}: Rechnung ${r.nummer}, CHF ${R.chf(r.betrag_rappen)}, bezahlt am ${R.datum(r.bezahlt_am)}`));
+  else zeilen.push('  (keine)');
+  zeilen.push('', 'Noch offen:');
+  if (offen.length) {
+    offen.forEach(r => {
+      const t = tage(r.faellig_am);
+      const status = t < 0 ? `ÜBERFÄLLIG seit ${-t} Tagen${r.mahnung_stufe ? ', Erinnerung ' + r.mahnung_stufe + ' gesendet' : ''}` : `fällig am ${R.datum(r.faellig_am)} (in ${t} Tagen)`;
+      zeilen.push(`  - ${r.kunde}: Rechnung ${r.nummer}, CHF ${R.chf(r.betrag_rappen)}, ${status}${r.gesendet_am ? '' : ', noch NICHT gesendet'}`);
+    });
+  } else zeilen.push('  (nichts offen)');
+  const mitFrist = new Map();
+  alle.forEach(r => { if (r.bezahlt_bis) mitFrist.set(r.kunde, r.bezahlt_bis); });
+  if (mitFrist.size) {
+    zeilen.push('', 'Bezahlt bis (Kunden mit Rechnung):');
+    [...mitFrist].sort((a, b) => new Date(a[1]) - new Date(b[1])).forEach(([k, bis]) => {
+      const t = tage(bis);
+      zeilen.push(`  - ${k}: ${R.datum(bis)}${t < 0 ? ' (ABGELAUFEN, seit ' + (-t) + ' Tagen)' : t <= 14 ? ' (läuft in ' + t + ' Tagen ab)' : ''}`);
+    });
+  }
+  return zeilen;
+}
+
+module.exports = { wochenzeilen, holeAbo, setzeAbo, neueRechnungen, erinnerungen, abgleichen, taeglich, ERINNERUNG1_NACH_TAGEN, ERINNERUNG2_NACH_TAGEN };
