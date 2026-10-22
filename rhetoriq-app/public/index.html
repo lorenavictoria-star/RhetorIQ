@@ -9040,7 +9040,7 @@ tryAutoLogin();
     var A=adv();
     var g=[];
     g.push({h:'',i:[
-      {k:'home',t:A?'Assistent':'Start',ic:A?'ti-microphone':'ti-home',go:function(){goHome();}}]});
+      {k:'home',t:A?'Heute':'Start',ic:'ti-home',go:function(){goHome();}}]});
     if(A){
       g[0].i.push({k:'onboarding',t:'Onboarding',ic:'ti-upload',go:function(){rqWizard();}});
       g[0].i.push({k:'clients',t:'Kunden',ic:'ti-users',go:function(){goPage('clients');loadAdvisorDashboard();}});
