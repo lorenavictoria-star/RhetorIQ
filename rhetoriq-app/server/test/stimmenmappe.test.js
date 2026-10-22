@@ -121,3 +121,14 @@ test('Monatserinnerung: Mail ohne Anhang an Lorena', async () => {
   assert.match(H.mails[0].subject, /Monatsexport der Brand-Voice-Handbücher/);
   assert.ok(!/[–—]/.test(H.mails[0].text));
 });
+
+test('Prüfpaket wählt Aufträge aus verschiedenen Textarten vor weiteren der gleichen Art', () => {
+  const { auswahl } = require('../lib/pruefpaket');
+  const mk = (id, mod, key, min, ein) => ({ id, module: mod, feedback_key: key, input_data: { briefing: ein }, created_at: new Date(Date.now() - min * 60000).toISOString(), result: 'x' });
+  const an = [
+    mk(1, 'text-gen', 'text-gen-email', 1, 'a'), mk(2, 'text-gen', 'text-gen-email', 2, 'b'), mk(3, 'text-gen', 'text-gen-email', 3, 'c'),
+    mk(4, 'text-gen', 'text-gen-linkedin', 50, 'd'), mk(5, 'brand-voice', 'brand-voice', 60, 'e'), mk(6, 'text-gen', 'text-gen-speech', 70, 'f')
+  ];
+  const ids = auswahl(an, 4).map(l => l[l.length - 1].id);
+  assert.deepEqual(ids.sort(), [1, 4, 5, 6]);
+});
