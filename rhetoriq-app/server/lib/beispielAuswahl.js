@@ -241,6 +241,11 @@ async function daumenAufBeispiel(pool, { analysis, rating }) {
     return 'vorhanden';
   }
   if (text.length <= MIN_LAENGE_BEISPIEL) return 'zu_kurz';
+  // Vorbilder müssen das Regelwerk einhalten: Texte mit Gedankenstrichen, Floskeln oder anderen KI-Mustern werden nicht gelernt
+  try {
+    const treffer = require('./lint').lintText(text, { sprache: 'de' }).filter(h => !h.weich);
+    if (treffer.length) return 'regelverstoss';
+  } catch { /* Prüfung darf das Lernen nicht verhindern */ }
   const tile = tileAusSchluessel(analysis.feedback_key, module);
   const label = bezeichnungAusAuftrag(analysis.input_data, tile, analysis.module_label || module);
   // Bei voller Grenze ersetzt das neue Beispiel das schwächste und älteste Daumen-hoch-Beispiel; Handbeispiele bleiben unangetastet

@@ -9044,7 +9044,6 @@ tryAutoLogin();
     if(A){
       g[0].i.push({k:'onboarding',t:'Onboarding',ic:'ti-upload',go:function(){rqWizard();}});
       g[0].i.push({k:'clients',t:'Kunden',ic:'ti-users',go:function(){goPage('clients');loadAdvisorDashboard();}});
-      g[0].i.push({k:'training',t:'Beispiele (alle Kunden)',ic:'ti-files',go:function(){goPage('training');if(typeof loadTraining==='function')loadTraining();}});
       g[0].i.push({k:'usage',t:'Nutzung',ic:'ti-chart-bar',go:function(){goPage('usage');loadUsage();}});
       g[0].i.push({k:'finanzen',t:'Finanzen',ic:'ti-coins',go:function(){goPage('finanzen');if(window.rqFinanzen)rqFinanzen.load();}});
       g[0].i.push({k:'reviews',t:'Freigaben',ic:'ti-checks',go:function(){openReviewPanel();},cnt:true});

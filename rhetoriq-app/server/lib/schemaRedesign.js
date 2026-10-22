@@ -388,6 +388,10 @@ function ensureSchema() {
     // Indizes für die häufigsten Abfragen (Kundenliste, Verlauf, Nutzung)
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_client_created_idx ON analyses (client_id, created_at DESC)`);
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_advisor_created_idx ON analyses (advisor_id, created_at DESC)`);
+    // Erfundene Schulungsbeispiele (ohne Klientenbezug und ohne Herkunft) stehen der KI nicht mehr als Vorbild zur Verfügung; gelöscht wird nichts
+    try {
+      await pool.query(`UPDATE module_examples SET status='inaktiv' WHERE source_client_id IS NULL AND origin IS NULL AND COALESCE(status,'active')='active' AND created_at < '2026-10-20T00:00:00Z'`);
+    } catch (e) { console.error('[schema] Schulungsbeispiele deaktivieren:', e.message); }
     // Mitgelieferte Beispiele: Gedankenstriche durch Komma oder Doppelpunkt ersetzen (die Beispiele sind Vorbilder für die KI)
     try {
       const { rows } = await pool.query(`SELECT id, label, input_text, output_text FROM module_examples WHERE source_client_id IS NULL AND (input_text LIKE '%—%' OR input_text LIKE '%–%' OR output_text LIKE '%—%' OR output_text LIKE '%–%' OR label LIKE '%—%' OR label LIKE '%–%')`);
