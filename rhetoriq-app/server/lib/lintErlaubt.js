@@ -1,4 +1,4 @@
-// Stilmittel, die zur Marke eines Klienten gehören, hält die Brand Voice selbst fest, in einer Zeile:
+// Stilmittel, die zur Marke eines Klienten gehören, hält die Brand Voice selbst fest (die Brand-Voice-Analyse legt die Zeile an, Grundlage ist der Workshop), in einer Zeile:
 //   Stilmittel erlaubt: Gegenüberstellungen, Dreierketten
 // Nur was dort ausdrücklich steht, ist für diesen Klienten erlaubt (Gegenüberstellungen «nicht X, sondern Y», Füllwörter).
 // Harte Regeln (Gedankenstriche, ß, Markdown, falsche Anrede, Floskeln) gelten immer.
@@ -12,7 +12,7 @@ const ZUORDNUNG = [
 
 function stilmittelAusBrandVoice(text) {
   const set = new Set();
-  const m = /^\s*stilmittel\s+erlaubt\s*:\s*(.+)$/gim;
+  const m = /^[\s\-*#•]*\**\s*stilmittel\s+erlaubt\s*:\s*\**\s*(.+)$/gim;
   let x;
   while ((x = m.exec(String(text || '')))) {
     for (const [re, art] of ZUORDNUNG) if (re.test(x[1])) set.add(art);

@@ -492,7 +492,8 @@ Fasse alles in einem strukturierten, direkt verwendbaren Dokument zusammen:
 - Tonalitätsskalen mit Positionierung
 - Sprachliche Merkmale (komprimiert, operationalisierbar)
 - Do's & Don'ts
-- Leitsatz der Stimme`,
+- Leitsatz der Stimme
+- Stilmittel: Schliesse das Dokument mit genau einer Zeile in dieser Form ab: «Stilmittel erlaubt: ...» und nenne darin ausschliesslich Gegenüberstellungen («nicht X, sondern Y») und/oder Dreierketten, und nur dann, wenn sie im Quellmaterial (oder in den Antworten zu Schreibweise und Stilmitteln) deutlich und wiederkehrend als bewusstes Stilmittel der Marke vorkommen oder ausdrücklich erlaubt sind. Sonst lautet die Zeile «Stilmittel erlaubt: keine». Gedankenstriche, Floskeln und Füllwörter sind nie ein Stilmittel.`,
     build: (d) => `Company Brand Voice DNA Analysis\nCompany: ${d.company||'Not specified'}\nIndustry: ${d.industry||'Not specified'}\nTarget audiences: ${d.audiences||'Not specified'}\nCore values: ${d.values||'Not specified'}\n\nSource texts:\n${sanitizeForPrompt(d.text)}`
   },
   'brand-voice-ind': {
@@ -533,7 +534,10 @@ How does their style change between formal and informal, internal and external, 
 8. VOICE PORTRAIT
 A paragraph of 5–8 sentences in prose that describes this voice vividly and specifically — so that someone who knows this person would immediately recognise them. Not a list. A living description.
 
-9. TEST TEXT
+9. STILMITTEL
+Eine einzige Zeile in der Form «Stilmittel erlaubt: ...». Nenne darin ausschliesslich Gegenüberstellungen («nicht X, sondern Y») und/oder Dreierketten, und nur wenn sie in den Quelltexten (oder in den Antworten zu Schreibweise und Stilmitteln) deutlich und wiederkehrend als bewusstes Stilmittel dieser Person vorkommen oder ausdrücklich erlaubt sind. Sonst lautet die Zeile «Stilmittel erlaubt: keine». Gedankenstriche, Floskeln und Füllwörter sind nie ein Stilmittel.
+
+10. TEST TEXT
 Write one short paragraph (3–5 sentences) on the topic "What I have learned about leadership communication" in this person's exact voice. This is an immediate verification — does it sound like them? Label it clearly as a test text.
 
 Base every finding on evidence from the source texts. Output in English.`,
@@ -548,6 +552,7 @@ FORMATIERUNGSREGELN – zwingend einzuhalten:
 - Abschnittsüberschriften in Grossbuchstaben, gefolgt von einem Doppelpunkt
 - Aufzählungen mit einem einfachen Bindestrich (-)
 - Fliessendes, lesbares Deutsch. Die Ausgabe wird als reiner Text angezeigt.
+- Die Zeile «Stilmittel erlaubt: ...» bleibt erhalten und wird nur angepasst, wenn die neuen Quelltexte ein Stilmittel (Gegenüberstellungen, Dreierketten) deutlich und wiederkehrend belegen oder ausdrücklich erlauben. Gibt es sie noch nicht, ergänze sie am Ende («Stilmittel erlaubt: keine», wenn nichts belegt ist)
 - Gib das VOLLSTÄNDIGE, aktualisierte Brand-Voice-Dokument aus (nicht nur die Änderungen) — es ersetzt das alte Dokument direkt und muss eigenständig vollständig nutzbar sein, mit derselben Struktur wie das Original (Stimm-Portrait, Kerncharakter, Tonalitätsskalen, Sprachliche Merkmale, Do's & Don'ts, Leitsatz).
 
 VORGEHEN:

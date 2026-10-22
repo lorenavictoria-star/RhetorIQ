@@ -358,17 +358,6 @@ router.post('/:id/finish', requireAdvisor, async (req, res) => {
       paket: d.paket
     });
     claimed = null;
-    // Stilmittel der Marke (aus dem Workshop): steht danach in der Brand Voice und gilt für Prompt und Prüfung
-    try {
-      const NAMEN = { gegenueberstellung: 'Gegenüberstellungen', dreierkette: 'Dreierketten', fuellwort: 'Füllwörter' };
-      const wahl = (Array.isArray(req.body.stilmittel) ? req.body.stilmittel : []).filter(k => NAMEN[k]);
-      if (wahl.length) {
-        await pool.query(
-          `INSERT INTO company_memory (client_id, memory_type, content) VALUES ($1,'brand_voice_stilmittel',$2)
-           ON CONFLICT (client_id, memory_type) DO UPDATE SET content=EXCLUDED.content, updated_at=NOW()`,
-          [client.id, 'Stilmittel erlaubt: ' + wahl.map(k => NAMEN[k]).join(', ')]);
-      }
-    } catch (e) { console.error('[onboarding] Stilmittel:', e.message); }
     if (['stimme', 'team', 'business', 'enterprise'].includes(d.paket)) {
       await pool.query('UPDATE clients SET recommended_plan=$1 WHERE id=$2', [d.paket, client.id]).catch(e => console.error('[onboarding] Paket:', e.message));
     }

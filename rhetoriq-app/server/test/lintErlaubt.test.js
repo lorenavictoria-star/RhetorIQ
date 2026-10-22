@@ -24,3 +24,8 @@ test('Harte Regeln gelten immer, auch wenn Stilmittel erlaubt sind', () => {
   assert.ok(hits.some(h => h.art === 'gedankenstrich'));
   assert.ok(hits.some(h => h.art === 'eszett'));
 });
+
+test('Die Zeile wird auch mit Aufzählungszeichen oder Fettdruck erkannt, «keine» erlaubt nichts', () => {
+  assert.ok(stilmittelAusBrandVoice('- **Stilmittel erlaubt:** Gegenüberstellungen').has('gegenueberstellung'));
+  assert.equal(stilmittelAusBrandVoice('Stilmittel erlaubt: keine').size, 0);
+});
