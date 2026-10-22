@@ -1669,6 +1669,11 @@ html[lang="en"] .legal-en-note{display:block}
     <div class="page" id="page-finanzen">
       <div class="page-title" style="margin-bottom:6px">Finanzen</div>
       <p class="rq-hint" style="margin-bottom:16px">Was kam rein, was ging raus, was bleibt. Alle Beträge in Franken, nur für dich sichtbar.</p>
+      <div id="rq-rexport" style="margin:0 0 18px;padding:14px 16px;border:1px solid var(--bd);background:#fff">
+        <div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Rechnungen zur Ablage</div>
+        <div class="rq-hint" style="margin-bottom:8px">Am 1. jedes Monats kommt eine ZIP-Datei mit den Rechnungen des Vormonats (PDF) und zwei Übersichten für die Steuern per E-Mail. Hier kannst du jeden Monat von Hand herunterladen.</div>
+        <input type="month" id="rq-rex-m" aria-label="Monat" style="padding:8px 10px;border:1px solid var(--bd);font:inherit"> <button type="button" class="obtn" id="rq-rex-b">Als ZIP herunterladen</button> <span class="rq-hint" id="rq-rex-msg" style="margin-left:8px"></span>
+      </div>
       <div id="fin-root"></div>
     </div>
 
@@ -16882,6 +16887,19 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
   var ow=window.openWorkspace;
   if(typeof ow==='function')window.openWorkspace=async function(){var r=await ow.apply(this,arguments);tab();return r;};
   tab();
+})();
+</script>
+<script id="rq-rexport-js">
+// Rechnungen eines Monats als ZIP (Finanzen). Standard ist der Vormonat.
+(function(){
+  var m=document.getElementById('rq-rex-m'),b=document.getElementById('rq-rex-b'),msg=document.getElementById('rq-rex-msg');
+  if(!m||!b)return;
+  var d=new Date();d.setDate(1);d.setMonth(d.getMonth()-1);
+  m.value=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);
+  b.onclick=function(){
+    if(!m.value){msg.textContent='Bitte einen Monat wählen.';return;}
+    if(typeof rqDownload==='function')rqDownload('/api/rechnungen/export/'+m.value+'.zip','Rechnungen_'+m.value+'.zip',msg);
+  };
 })();
 </script>
 <style id="rq-wsnav-css">

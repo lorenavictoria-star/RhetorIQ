@@ -223,3 +223,29 @@ test('Wochenbericht: wer bezahlt hat, wer noch offen ist, bis wann bezahlt ist',
   assert.match(z, /Noch offen:[\s\S]*- Bericht AG: Rechnung \d{4}-\d{4}, CHF 590\.00, ÜBERFÄLLIG seit 5 Tagen/);
   assert.match(z, /Bezahlt bis \(Kunden mit Rechnung\):[\s\S]*- Bericht AG: \d{2}\.\d{2}\.\d{4}/);
 });
+
+test('Monatsablage: ZIP mit Rechnungen und Zahlungen eines Monats, Vormonat, Grenzen', async () => {
+  const ex = require('../lib/rechnungExport');
+  assert.equal(ex.vormonat(new Date('2026-11-01T08:00:00Z')), '2026-10');
+  assert.equal(ex.vormonat(new Date('2027-01-01T08:00:00Z')), '2026-12');
+  assert.equal(ex.grenzen('2026-13'), null);
+  const z = await ex.monatsZip('2000-01');
+  assert.equal(z.ausgestellt, 0);
+  const JSZip = require('jszip');
+  const zip = await JSZip.loadAsync(z.buffer);
+  assert.ok(zip.file('Rechnungen_2000-01.csv') && zip.file('Zahlungseingaenge_2000-01.csv'));
+  await assert.rejects(() => ex.monatsZip('Mist'), /Ungültiger Monat/);
+});
+
+test('Monatsablage per E-Mail: eine Mail mit ZIP-Anhang an die Beraterin', async () => {
+  const ex = require('../lib/rechnungExport');
+  const vorher = H.mails.length;
+  const r = await ex.sendeMonatsablage('2000-02');
+  assert.equal(r.gesendet, true);
+  const m = H.mails[H.mails.length - 1];
+  assert.equal(H.mails.length, vorher + 1);
+  assert.equal(m.kind, 'rechnungen_monat');
+  assert.match(m.subject, /Rechnungen 2000-02 zur Ablage/);
+  assert.equal(m.attachments[0].name, 'Rechnungen_2000-02.zip');
+  assert.ok(m.attachments[0].contentBase64.length > 50);
+});

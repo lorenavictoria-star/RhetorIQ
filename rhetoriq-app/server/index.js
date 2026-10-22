@@ -471,6 +471,7 @@ const PORT = process.env.PORT || 3001;
   cron.schedule('40 3 * * *', () => require('./jobs/papierkorb').runPapierkorb().catch(e => console.error('[papierkorb] job failed:', e.message)), { timezone: 'Europe/Zurich' });
   // Rechnungen per Überweisung: neue Rechnung vor Ablauf, Zahlungserinnerungen (täglich 06:20 Zürich)
   cron.schedule('20 6 * * *', () => require('./jobs/rechnungen').runRechnungen().catch(e => console.error('[rechnungen] job failed:', e.message)), { timezone: 'Europe/Zurich' });
+  cron.schedule('0 7 1 * *', () => require('./jobs/rechnungsexport').runRechnungsexport().catch(e => console.error('[rechnungsexport] job failed:', e.message)), { timezone: 'Europe/Zurich' });
 
   // KI-Wächter: alle 5 Minuten ein kostenloser Prüfaufruf (count_tokens), alle 30 Minuten ein echter Aufruf (haiku, 1 Token),
   // sichtbar im Nutzungsprotokoll unter «waechter». Tagesbudget: lib/budget.js.

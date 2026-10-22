@@ -49,6 +49,19 @@ router.get('/posten', requireAdvisor, (req, res) => {
   res.json({ posten: Object.entries(R.POSTEN).map(([key, p]) => ({ key, label: p.label, rappen: p.cents, laufzeit: !!p.laufzeit, freitext: !!p.freitext, jahrRappen: p.laufzeit ? R.betragFuer(key, 'jahr') : null })) });
 });
 
+router.get('/export/:ym.zip', requireAdvisor, async (req, res) => {
+  try {
+    const ex = require('../lib/rechnungExport');
+    if (!ex.grenzen(req.params.ym)) return res.status(400).json({ error: 'Bitte einen Monat im Format JJJJ-MM angeben.' });
+    const z = await ex.monatsZip(req.params.ym);
+    res.set({ 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="Rechnungen_${req.params.ym}.zip"`, 'Cache-Control': 'no-store' });
+    res.send(z.buffer);
+  } catch (e) {
+    console.error('[rechnungen] Export:', e.message);
+    res.status(500).json({ error: 'Die Ablage konnte nicht erstellt werden.' });
+  }
+});
+
 router.get('/client/:clientId', requireAuth, requireRole('admin'), ownClient('clientId'), async (req, res) => {
   try {
     await ensureSchema();
