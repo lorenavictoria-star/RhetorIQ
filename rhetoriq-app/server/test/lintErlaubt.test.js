@@ -36,3 +36,8 @@ test('Gegenüberstellungen in weiteren Formen werden erkannt, normale Verneinung
   for (const t of ja) assert.ok(lint.lintText(t, { sprache: 'de' }).some(h => h.art === 'gegenueberstellung'), t);
   for (const t of nein) assert.ok(!lint.lintText(t, { sprache: 'de' }).some(h => h.art === 'gegenueberstellung'), t);
 });
+
+test('«euch» und «eure» zählen als Du-Form', () => {
+  const hits = lint.lintText('Das ist planbar auf eurer Seite, wir tragen es für euch.', { sprache: 'de', anrede: 'sie' });
+  assert.equal(hits.filter(h => h.art === 'anrede').length, 2);
+});

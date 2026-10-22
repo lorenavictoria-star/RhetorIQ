@@ -73,7 +73,7 @@ function anredeTreffer(text) {
   const sie = [];
   const du = [];
   const reSie = /\b(?:Sie|Ihnen|Ihr|Ihre|Ihrem|Ihren|Ihrer|Ihres)\b/g;
-  const reDu = /\b(?:du|dich|dir|dein|deine|deinem|deinen|deiner|deines)\b/gi;
+  const reDu = /\b(?:du|dich|dir|dein|deine|deinem|deinen|deiner|deines|euch|eure|eurem|euren|eurer|eures)\b/gi;
   let m;
   while ((m = reSie.exec(text))) {
     // Satzanfang oder Zeilenanfang ist mehrdeutig («Sie» kann auch «sie» heissen) und zählt nicht
