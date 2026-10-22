@@ -9651,6 +9651,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
     } else if(W.step===2){
       h=(W.saved?'<div class="rq-card gold"><span class="rq-eb g">Zwischengespeichert</span><span>'+E(d.firma)+' steht unter Kunden als «Workshop offen». Nach dem Workshop machst du hier weiter.</span><div class="rq-acts"><button type="button" class="rq-btn" data-a="go" data-v="3">Nach dem Workshop weiter mit den Modulen</button></div></div>':'')
        +'<div class="rq-two"><div><span class="rq-lab">Anrede</span>'+pills('anrede',[['sie','Sie'],['du','Du']])+'</div><div><span class="rq-lab">Frau oder Herr</span>'+pills('titel',[['Frau','Frau'],['Herr','Herr']])+'</div></div>'
+       +'<div><span class="rq-lab">Stilmittel der Marke</span>'+pills('stil',[['streng','Streng (Standard)'],['gegen','Gegenüberstellungen und Dreierketten erlaubt']])+'<div class="rq-hint" style="margin-top:4px">Frage im Workshop: Schreibt die Marke bewusst mit «nicht X, sondern Y» oder Dreierketten? Wird in der Brand Voice festgehalten. Gedankenstriche und Floskeln bleiben immer verboten.</div></div>'
        +'<div><label class="rq-lab" for="rqw-datum">Termin des Workshops</label><input id="rqw-datum" class="rq-in" placeholder="z. B. 14. Oktober 2026" value="'+E(d.workshop_datum)+'" style="max-width:360px"></div>'
        +'<div class="rq-card"><span class="rq-eb">Webseite prüfen</span><span class="rq-hint">Die KI liest '+E(d.webseite||'die Webseite')+' und empfiehlt Module mit Begründung.</span>'
        +'<div class="rq-acts"><button type="button" class="rq-btn" data-a="scan"'+(W.scanning||!d.webseite?' disabled':'')+'>'+(W.scanning?'<span class="rq-spin" style="border-top-color:#fff"></span>Die KI prüft die Webseite …':'Webseite prüfen')+'</button>'+(d.webseite?'':'<span class="rq-hint">Bitte zuerst im Schritt 1 eine Webseite eintragen.</span>')+'</div>'
@@ -9746,7 +9747,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
       if(!W.privacy){setMsg('','Bitte bestätigen, dass der Klient über die Datenverarbeitung informiert wurde.');return;}
       W.busy=true;render();setMsg('Klient wird angelegt …');
       try{await persist({schritt:5,status:'bereit'});
-        var r2=await rqJ('/api/onboarding-drafts/'+W.d.id+'/finish',{method:'POST',body:JSON.stringify({anrede:W.d.anrede,titel:W.d.titel,privacyAcknowledged:true})});
+        var r2=await rqJ('/api/onboarding-drafts/'+W.d.id+'/finish',{method:'POST',body:JSON.stringify({anrede:W.d.anrede,titel:W.d.titel,stilmittel:W.d.stil==='gegen'?['gegenueberstellung','dreierkette']:[],privacyAcknowledged:true})});
         W.invited=!(r2&&r2.inviteSent===false);
         var c=(r2&&(r2.client||{}))||{};if(!c.id)c.id=r2&&(r2.clientId||r2.client_id);
         W.done={id:c.id||null};W.busy=false;
