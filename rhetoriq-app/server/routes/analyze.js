@@ -2121,6 +2121,7 @@ router.get('/history', requireAuth, async (req, res) => {
   const isClientAdmin = req.user.role === 'client' && req.user.clientUserRole === 'admin' && !req.user.readOnly;
   if (!isAdvisor && !isClientAdmin) return res.status(403).json({ error: 'Nicht erlaubt' });
   try {
+    await require('../lib/schemaRedesign').ensureSchema();
     const clientId = isAdvisor ? (req.query.clientId || null) : req.user.clientId;
     let advisorId = isAdvisor ? req.user.id : req.user.advisorId;
     if (!advisorId && clientId) {
@@ -2133,10 +2134,10 @@ router.get('/history', requireAuth, async (req, res) => {
     const resultCol = req.query.preview === '1' ? 'LEFT(result, 100) AS result, LENGTH(result) AS result_length' : 'result';
     let query, params;
     if (clientId) {
-      query = `SELECT id, module, module_label, ${resultCol}, created_at FROM analyses WHERE client_id = $1 AND advisor_id = $2 ORDER BY created_at DESC LIMIT 50`;
+      query = `SELECT id, module, module_label, ${resultCol}, created_at, ueberarbeitung FROM analyses WHERE client_id = $1 AND advisor_id = $2 ORDER BY created_at DESC LIMIT 50`;
       params = [clientId, advisorId];
     } else {
-      query = `SELECT id, module, module_label, ${resultCol}, created_at, client_id FROM analyses WHERE advisor_id = $1 ORDER BY created_at DESC LIMIT 50`;
+      query = `SELECT id, module, module_label, ${resultCol}, created_at, client_id, ueberarbeitung FROM analyses WHERE advisor_id = $1 ORDER BY created_at DESC LIMIT 50`;
       params = [advisorId];
     }
 
