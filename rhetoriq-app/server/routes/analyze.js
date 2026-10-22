@@ -1859,12 +1859,12 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
       : (req.user.clientUserName || req.user.clientName || 'Klient');
 
     // Daten-Wächter «ersetzen»/«sperren»: in der Datenbank liegt die Fassung mit Platzhaltern (lib/speicherSchutz.js)
-    const [dataDb, resultDb] = await require('../lib/speicherSchutz').schuetzeAlle(data, result);
+    const [dataDb, resultDb, hinweisDb] = await require('../lib/speicherSchutz').schuetzeAlle(data, result, (followUp && followUp.note ? String(followUp.note).slice(0, 2000) : null));
     await require('../lib/schemaRedesign').ensureSchema();
     const { rows } = await pool.query(
-      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice, feedback_key, ueberarbeitung)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id, created_at`,
-      [resolvedClientId, advisorId, module, cfg.label, dataDb, resultDb, generatedBy, hasBrandVoice, instructionsKey || module, !!(followUp && followUp.note)]
+      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice, feedback_key, ueberarbeitung, ueberarbeitung_hinweis)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id, created_at`,
+      [resolvedClientId, advisorId, module, cfg.label, dataDb, resultDb, generatedBy, hasBrandVoice, instructionsKey || module, !!(followUp && followUp.note), hinweisDb]
     );
 
     const analysis = { id: rows[0].id, module, label: cfg.label, result, createdAt: rows[0].created_at, clientId: resolvedClientId };
@@ -2077,12 +2077,12 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       ? (req.user.name || 'Advisor')
       : (req.user.clientUserName || req.user.clientName || 'Klient');
     // Daten-Wächter «ersetzen»/«sperren»: in der Datenbank liegt die Fassung mit Platzhaltern (lib/speicherSchutz.js)
-    const [dataDb, fullTextDb] = await require('../lib/speicherSchutz').schuetzeAlle(data, fullText);
+    const [dataDb, fullTextDb, hinweisDb] = await require('../lib/speicherSchutz').schuetzeAlle(data, fullText, (followUp && followUp.note ? String(followUp.note).slice(0, 2000) : null));
     await require('../lib/schemaRedesign').ensureSchema();
     const { rows } = await pool.query(
-      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice, feedback_key, ueberarbeitung)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id, created_at`,
-      [resolvedClientId, advisorId, module, cfg.label, dataDb, fullTextDb, generatedBy, hasBrandVoice, instructionsKey || module, !!(followUp && followUp.note)]
+      `INSERT INTO analyses (client_id, advisor_id, module, module_label, input_data, result, generated_by, had_brand_voice, feedback_key, ueberarbeitung, ueberarbeitung_hinweis)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id, created_at`,
+      [resolvedClientId, advisorId, module, cfg.label, dataDb, fullTextDb, generatedBy, hasBrandVoice, instructionsKey || module, !!(followUp && followUp.note), hinweisDb]
     );
     require('../lib/stimmnaehe').fuerAnalyse(rows[0].id, resolvedClientId, module, fullText);   // lokale Messung, ohne KI, wirft nie
     if (draftText) require('../lib/durchgang').speichern({ analysisId: rows[0].id, clientId: resolvedClientId, advisorId, module, entwurf: draftText, endtext: fullText });   // Entwurf gegen Endtext, ohne KI
@@ -2134,14 +2134,20 @@ router.get('/history', requireAuth, async (req, res) => {
     const resultCol = req.query.preview === '1' ? 'LEFT(result, 100) AS result, LENGTH(result) AS result_length' : 'result';
     let query, params;
     if (clientId) {
-      query = `SELECT id, module, module_label, ${resultCol}, created_at, ueberarbeitung FROM analyses WHERE client_id = $1 AND advisor_id = $2 ORDER BY created_at DESC LIMIT 50`;
+      query = `SELECT id, module, module_label, ${resultCol}, created_at, ueberarbeitung, ueberarbeitung_hinweis, user_rating, feedback_note, input_data FROM analyses WHERE client_id = $1 AND advisor_id = $2 ORDER BY created_at DESC LIMIT 50`;
       params = [clientId, advisorId];
     } else {
-      query = `SELECT id, module, module_label, ${resultCol}, created_at, client_id, ueberarbeitung FROM analyses WHERE advisor_id = $1 ORDER BY created_at DESC LIMIT 50`;
+      query = `SELECT id, module, module_label, ${resultCol}, created_at, client_id, ueberarbeitung, ueberarbeitung_hinweis, user_rating, feedback_note, input_data FROM analyses WHERE advisor_id = $1 ORDER BY created_at DESC LIMIT 50`;
       params = [advisorId];
     }
 
     const { rows } = await pool.query(query, params);
+    // Texte zum selben Auftrag (gleiche Eingabe) gehören zusammen: der älteste ist die Erstfassung, spätere sind Überarbeitungen
+    const crypto = require('crypto');
+    for (const r of rows) {
+      r.eingabe_id = crypto.createHash('md5').update(JSON.stringify(r.input_data || null)).digest('hex').slice(0, 12);
+      delete r.input_data;
+    }
     res.json(rows);
   } catch (e) {
     res.status(500).json({ error: 'Server error' });

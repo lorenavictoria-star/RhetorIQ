@@ -6744,6 +6744,11 @@ function renderHistory(){
   if(!_histRows.length){el.innerHTML='<div class="empty"><div class="ei">&#128203;</div><div>Noch keine Texte.</div></div>';return;}
   if(!rows.length){el.innerHTML='<div class="empty"><div class="ei">&#128269;</div><div>Keine Treffer.</div></div>';return;}
   const showClient=isAdv&&!clientId;   // ohne gewählten Klienten: Name pro Eintrag zeigen
+  // Fassungen: Texte zum selben Auftrag (gleiche Eingabe) gehören zusammen. Der älteste ist die Erstfassung, spätere sind Überarbeitungen.
+  const fass={};
+  const nachEingabe={};
+  _histRows.forEach(h=>{const k=(h.client_id||'')+'|'+h.module+'|'+(h.eingabe_id||h.id);(nachEingabe[k]=nachEingabe[k]||[]).push(h);});
+  Object.values(nachEingabe).forEach(l=>{l.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));l.forEach((h,i)=>{fass[h.id]=l.length>1?{n:i,von:l.length}:null;});});
   const groups={};
   rows.forEach(h=>{const k=h.module_label||h.module;if(!groups[k])groups[k]=[];groups[k].push(h);});
   const fmt=(t,o)=>new Date(t).toLocaleString(DLOC(),o);
@@ -6766,8 +6771,9 @@ function renderHistory(){
         return `<div class="hi" style="padding:10px 0">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer" onclick="toggleHistItem(${h.id})">
             <div style="min-width:0;flex:1">
-              <div class="hd">${safeText(d)}${who}</div>
+              <div class="hd">${safeText(d)}${who}${fass[h.id]?` <span style="font-size:11px;padding:1px 7px;border:1px solid var(--bd);color:var(--mu)">${fass[h.id].n===0?'Erstfassung':'Überarbeitung '+fass[h.id].n}</span>`:''}${h.user_rating?` <span style="font-size:11px;color:var(--mu)">${h.user_rating===1?'Daumen hoch':'Daumen runter'}</span>`:''}</div>
               <div style="font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="hist-preview-${h.id}">${safeText(preview)}${preview.length>=90?'…':''}</div>
+              ${(fass[h.id]&&fass[h.id].n>0)||h.feedback_note?`<div style="font-size:12px;color:var(--tx);margin-top:3px">${fass[h.id]&&fass[h.id].n>0?'Hinweis für die Überarbeitung: '+(h.ueberarbeitung_hinweis?safeText(h.ueberarbeitung_hinweis):'nicht gespeichert (Text vor dem 22.10.)'):''}${h.feedback_note?(fass[h.id]&&fass[h.id].n>0?' · ':'')+'Feedback: '+safeText(h.feedback_note):''}</div>`:''}
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0">
               <button class="obtn" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();cpHistText(${h.id})">Kopieren</button>
