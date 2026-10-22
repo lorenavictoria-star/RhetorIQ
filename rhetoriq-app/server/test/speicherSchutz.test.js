@@ -41,8 +41,14 @@ test('Löschfrist je Klient: ältere Texte werden geleert, neuere und Klienten o
     [cid, JSON.stringify({ text: 'Geheim' }), day(alter)])).rows[0].id;
   await pool.query(`INSERT INTO module_examples (source_client_id, auto_generated, created_at) VALUES ($1,true,$2),($1,true,$3)`, [a, day(60), day(5)]);
   const alt = await an(a, 60), neu = await an(a, 5), frei = await an(b, 400);
+  await pool.query('ALTER TABLE analyses ADD COLUMN IF NOT EXISTS ueberarbeitung_hinweis TEXT');
+  await pool.query('ALTER TABLE analyses ADD COLUMN IF NOT EXISTS feedback_note TEXT');
+  for (const id of [alt, neu]) await pool.query(`UPDATE analyses SET ueberarbeitung_hinweis='Hinweis', feedback_note='Feedback' WHERE id=$1`, [id]);
   const n = await leereAlteTexte();
   const get = async (id) => (await pool.query('SELECT input_data, result FROM analyses WHERE id=$1', [id])).rows[0];
+  const notizen = async (id) => (await pool.query('SELECT ueberarbeitung_hinweis AS h, feedback_note AS f FROM analyses WHERE id=$1', [id])).rows[0];
+  assert.deepEqual(await notizen(alt), { h: null, f: null }, 'Hinweis und Feedback älterer Aufträge geleert');
+  assert.deepEqual(await notizen(neu), { h: 'Hinweis', f: 'Feedback' }, 'neuere bleiben');
   assert.equal(n, 1);
   assert.deepEqual(await get(alt), { input_data: null, result: null });
   assert.equal((await get(neu)).result, 'Geheim');
