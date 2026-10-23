@@ -27,19 +27,23 @@ test('Ohne Paket unbegrenzt, Stimme erlaubt nur den Hauptzugang, Zusatznutzer ö
   assert.equal(st.body.used, 1);
   const no = await add('b@x.ch');
   assert.equal(no.status, 409);
-  assert.ok(/Zusatznutzer/.test(no.body.error));
+  assert.ok(/Team/.test(no.body.error));
+  const stimmeUp = await srv.call('PUT', `/api/clients/${c.id}/extra-users`, { token: H.advisorToken(), body: { extra_users: 2 } });
+  assert.equal(stimmeUp.status, 409, 'Stimme erlaubt keine Zusatznutzer');
+  await pool.query('UPDATE clients SET monthly_token_limit=1000000 WHERE id=$1', [c.id]);
   const up = await srv.call('PUT', `/api/clients/${c.id}/extra-users`, { token: H.advisorToken(), body: { extra_users: 2 } });
-  assert.equal(up.body.limit, 3);
-  assert.equal((await add('b@x.ch')).status, 201);
-  assert.equal((await add('c@x.ch')).status, 201);
-  assert.equal((await add('d@x.ch')).status, 409);
+  assert.equal(up.body.limit, 7);
+  for (const n of ['b', 'c', 'd', 'e', 'f', 'g']) assert.equal((await add(n + '@x.ch')).status, 201);
+  assert.equal((await add('h@x.ch')).status, 409);
   assert.equal((await add('b@x.ch')).status, 201, 'bestehende Person darf aktualisiert werden');
 });
 
-test('Team erlaubt 5 Personen, Business 15, Enterprise unbegrenzt', async () => {
+test('Team erlaubt 5 Personen, Business 10, Enterprise unbegrenzt', async () => {
   const ul = require('../lib/userLimit');
+  assert.equal(ul.baseFor({ monthly_token_limit: 1000000 }).base, 5);
+  assert.equal(ul.baseFor({ monthly_token_limit: 2500000 }).base, 10);
   assert.equal(ul.baseFor({ monthly_token_limit: 750000 }).base, 5);
-  assert.equal(ul.baseFor({ monthly_token_limit: 2000000 }).base, 15);
+  assert.equal(ul.baseFor({ monthly_token_limit: 2000000 }).base, 15, 'altes Business-Kontingent bleibt');
   assert.equal(ul.baseFor({ recommended_plan: 'enterprise' }).base, null);
   assert.equal(ul.baseFor({}).base, null);
 });

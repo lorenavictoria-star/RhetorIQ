@@ -10,8 +10,8 @@ const U = require('swissqrbill/utils');
 // Posten, die sich in Rechnung stellen lassen. tokens: Monatskontingent nach der Zahlung (null = unbegrenzt), art: Wirkung bei «bezahlt»
 const POSTEN = {
   stimme:   { label: 'Paket Stimme', cents: ANGEBOTE.stimme.amountCents, art: 'paket', tokens: 200000, laufzeit: true },
-  team:     { label: 'Paket Team', cents: ANGEBOTE.team.amountCents, art: 'paket', tokens: 750000, laufzeit: true },
-  business: { label: 'Paket Business', cents: ANGEBOTE.business.amountCents, art: 'paket', tokens: 2000000, laufzeit: true },
+  team:     { label: 'Paket Team', cents: ANGEBOTE.team.amountCents, art: 'paket', tokens: 1000000, laufzeit: true },
+  business: { label: 'Paket Business', cents: ANGEBOTE.business.amountCents, art: 'paket', tokens: 2500000, laufzeit: true },
   enterprise: { label: 'Paket Enterprise', cents: 249000, art: 'paket', tokens: null, laufzeit: true },
   quartalsreview: { label: 'Zusatz Quartalsreview (alle 3 Monate)', cents: ANGEBOTE.quartalsreview.amountCents, art: 'quartalsreview' },
   'stimm-audit': { label: '«Die Stimme finden» (30 Tage Zugang inklusive)', cents: ANGEBOTE['stimm-audit'].amountCents, art: 'audit' },

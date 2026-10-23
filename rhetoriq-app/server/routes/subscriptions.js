@@ -159,12 +159,12 @@ router.post('/mark-active/:clientId', requireAdvisor, ownClient('clientId'), asy
 // presentations, not just short emails).
 const TIERS = [
   { name: 'Stimme', amountCents: 19000, tokens: 200000 },      // 40 Texte/Monat
-  { name: 'Team', amountCents: 59000, tokens: 750000 },        // 150 Texte/Monat
-  { name: 'Business', amountCents: 149000, tokens: 2000000 },  // 400 Texte/Monat
+  { name: 'Team', amountCents: 59000, tokens: 1000000 },       // 200 Texte/Monat
+  { name: 'Business', amountCents: 149000, tokens: 2500000 },  // 500 Texte/Monat
   { name: 'Enterprise', amountCents: 249000, tokens: null },   // unbegrenzt, auf Anfrage
 ];
 // Frühere Abos (Starter CHF 290, Team CHF 990) laufen mit ihrem bisherigen Kontingent weiter.
-const LEGACY_PRICE_LIMITS = { 29000: 300000, 99000: 1500000 };
+const LEGACY_PRICE_LIMITS = { 29000: 300000, 99000: 1500000 };   // Team bis Oktober 2026: 750000 (150 Texte), Business 2000000 (400 Texte): gelten für bestehende Abos weiter
 const PRICE_TIER_TOKEN_LIMITS = { ...LEGACY_PRICE_LIMITS, ...Object.fromEntries(TIERS.map(t => [t.amountCents, t.tokens])) };
 function resolveTokenLimit(amountInCents, currency) {
   if (!amountInCents || (currency || '').toLowerCase() !== 'chf') return undefined;
@@ -176,8 +176,8 @@ function resolveTokenLimit(amountInCents, currency) {
 // One-time self-serve top-up, offered to a client the moment they hit their
 // monthly quota — covers the current month only (see usage_topups table),
 // doesn't change their recurring plan.
-// +20 Texte für CHF 49 (20 Texte zu 5'000 Tokens, wie das Kontingent der Pakete gerechnet ist)
-const TOPUP = { amountCents: 4900, tokens: 100000, label: 'Zusatzpaket +20 Texte' };
+// +20 Texte für CHF 99 (20 Texte zu 5'000 Tokens, wie das Kontingent der Pakete gerechnet ist)
+const TOPUP = { amountCents: 9900, tokens: 100000, label: 'Zusatzpaket +20 Texte' };
 
 // ── POST /api/subscriptions/skip-plan/:clientId ─────────────────
 // Client chose "Später entscheiden" on the setup page instead of paying
@@ -275,7 +275,9 @@ router.post('/upgrade-link/:clientId', requireAuth, requireRole('admin'), async 
     // gets offered Starter as the next tier, instead of being treated as
     // already on Enterprise and blocked from upgrading at all.
     // Nächste Stufe = die erste mit grösserem Kontingent (so greift es auch für frühere Abos)
-    const nextTier = currentLimit ? TIERS.find(t => t.tokens === null || t.tokens > currentLimit) : TIERS[0];
+    // Bestehende Abos mit dem alten Kontingent (Team 750000, Business 2000000) zählen wie die heutigen Pakete
+    const normLimit = currentLimit ? ({ 750000: 1000000, 2000000: 2500000 }[Number(currentLimit)] || Number(currentLimit)) : currentLimit;
+    const nextTier = currentLimit ? TIERS.find(t => t.tokens === null || t.tokens > normLimit) : TIERS[0];
     if (!nextTier) {
       return res.status(400).json({ error: 'Bereits auf der höchsten Stufe — bitte direkt bei der Beraterin melden.' });
     }
@@ -447,7 +449,7 @@ router.get('/abo/:clientId', requireAuth, nurKlientenAdmin, ownClient('clientId'
       hinweise: abo.hinweise(row, v),
       pakete: SELBST_PAKETE.map(k => {
         const t = TIERS.find(x => x.name.toLowerCase() === k);
-        return { key: k, name: t.name, amountCents: t.amountCents, texte: t.tokens / abo.TOKENS_PRO_TEXT, nutzer: { stimme: 1, team: 5, business: 15 }[k], jahrCents: yearly.YEARLY.find(y => y.name === t.name).yearlyCents };
+        return { key: k, name: t.name, amountCents: t.amountCents, texte: t.tokens / abo.TOKENS_PRO_TEXT, nutzer: { stimme: 1, team: 5, business: 10 }[k], jahrCents: yearly.YEARLY.find(y => y.name === t.name).yearlyCents };
       }),
       enterprise: { aufAnfrage: true },
       jahresabo: o ? { verfuegbar: true, paket: o.name, jahrCents: o.yearlyCents, monatCents: o.monthlyCents } : { verfuegbar: false },

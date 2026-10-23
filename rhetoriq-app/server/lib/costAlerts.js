@@ -12,7 +12,7 @@ const USD_PER_CHF = parseFloat(process.env.USD_PER_CHF) || 1.10;
 const NOTIFY = process.env.ADVISOR_EMAIL || 'contact@lorenalienhard.ch';
 
 // Abopreis in Franken je Monatskontingent (wie routes/subscriptions.js, Enterprise ohne Limit; 300000 und 1500000 sind frühere Abos)
-const PRICE_BY_LIMIT = { 200000: 190, 300000: 290, 750000: 590, 1500000: 990, 2000000: 1490 };
+const PRICE_BY_LIMIT = { 200000: 190, 300000: 290, 750000: 590, 1000000: 590, 1500000: 990, 2000000: 1490, 2500000: 1490 };
 function planPriceChf(limit) { return limit ? (PRICE_BY_LIMIT[Number(limit)] || null) : 2490; }
 
 const sent = new Set();

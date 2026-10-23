@@ -289,6 +289,11 @@ router.put('/:id/extra-users', requireAdvisor, async (req, res) => {
     const n = Math.round(Number(req.body.extra_users));
     if (!Number.isFinite(n) || n < 0 || n > 50) return res.status(400).json({ error: 'Zusatznutzer müssen zwischen 0 und 50 liegen.' });
     await require('../lib/schemaRedesign').ensureSchema();
+    // Im Paket Stimme ist genau eine Person enthalten: Zusatznutzer gibt es erst ab Team
+    if (n > 0) {
+      const st0 = await require('../lib/userLimit').status(req.params.id);
+      if (st0 && st0.plan === 'stimme') return res.status(409).json({ error: 'Das Paket Stimme enthält eine Person. Für weitere Personen wechselt die Kundschaft auf das Paket Team.' });
+    }
     await pool.query('UPDATE clients SET extra_users=$1 WHERE id=$2', [n, req.params.id]);
     res.json(await require('../lib/userLimit').status(req.params.id));
   } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
@@ -307,6 +312,9 @@ router.post('/:id/users', requireAdvisor, async (req, res) => {
     const ul = require('../lib/userLimit');
     const st = await ul.status(req.params.id);
     const { rows: ex } = await pool.query('SELECT 1 FROM client_users WHERE client_id=$1 AND email=$2', [req.params.id, String(email).toLowerCase()]);
+    if (st && st.full && !ex.length && st.plan === 'stimme') {
+      return res.status(409).json({ error: 'Das Paket Stimme enthält eine Person. Für weitere Personen wechselt die Kundschaft auf das Paket Team.' });
+    }
     if (st && st.full && !ex.length) {
       return res.status(409).json({ error: `Das Paket ${st.planName} enthält ${st.limit} ${st.limit === 1 ? 'Nutzer' : 'Nutzer'} (Hauptzugang inklusive). Weitere Personen sind als Zusatznutzer für CHF 49 pro Monat möglich: Zusatznutzer erhöhen oder das Paket wechseln.`, limit: st.limit, used: st.used });
     }

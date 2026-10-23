@@ -9,7 +9,7 @@ const cp = require('./commProfile');
 const rt = require('./reviewTime');
 const { summarize } = require('./stimmReport');
 
-const BUSINESS_TOKENS = 2000000;
+const BUSINESS_TOKENS = [2000000, 2500000];   // bestehende und neue Business-Abos
 const STATUS = ['geplant', 'versendet', 'erledigt'];
 
 function quartalOf(d = new Date()) {
@@ -18,7 +18,7 @@ function quartalOf(d = new Date()) {
 }
 function validQuartal(q) { return /^\d{4}-Q[1-4]$/.test(String(q || '')); }
 function isBusiness(c) {
-  return Number(c.monthly_token_limit) === BUSINESS_TOKENS || (!c.monthly_token_limit && c.recommended_plan === 'business');
+  return BUSINESS_TOKENS.includes(Number(c.monthly_token_limit)) || (!c.monthly_token_limit && c.recommended_plan === 'business');
 }
 
 // Pro Klient mit Paket Business: ist der Review dieses Quartals noch offen?

@@ -2,8 +2,8 @@
 // Frühere Abos (300000 und 1500000) und Enterprise werden nicht angeboten.
 const YEARLY = [
   { name: 'Stimme', tokens: 200000, monthlyCents: 19000, yearlyCents: Math.round(19000 * 12 * 0.9) },   // CHF 2'052
-  { name: 'Team', tokens: 750000, monthlyCents: 59000, yearlyCents: Math.round(59000 * 12 * 0.9) },     // CHF 6'372
-  { name: 'Business', tokens: 2000000, monthlyCents: 149000, yearlyCents: Math.round(149000 * 12 * 0.9) }, // CHF 16'092
+  { name: 'Team', tokens: 1000000, monthlyCents: 59000, yearlyCents: Math.round(59000 * 12 * 0.9) },     // CHF 6'372
+  { name: 'Business', tokens: 2500000, monthlyCents: 149000, yearlyCents: Math.round(149000 * 12 * 0.9) }, // CHF 16'092
 ];
 
 function yearlyOfferFor(monthlyTokenLimit) {

@@ -1,12 +1,12 @@
-// Nutzerlimit je Paket: Stimme 1, Team 5, Business 15, Enterprise unbegrenzt. Zusatznutzer (CHF 49 pro Monat) erhöhen das Limit.
+// Nutzerlimit je Paket: Stimme 1, Team 5, Business 10 (bestehende Business-Abos mit altem Kontingent: 15), Enterprise unbegrenzt. Zusatznutzer (CHF 49 pro Monat) erhöhen das Limit.
 // Der Hauptzugang der Firma zählt als erste Person, Teammitglieder (client_users) kommen dazu.
 const { pool } = require('../db');
 const { ensureSchema } = require('./schemaRedesign');
 
 const NAMES = { stimme: 'Stimme', team: 'Team', business: 'Business', enterprise: 'Enterprise' };
 // Nach gebuchtem Monatskontingent (wie lib/costAlerts.js und routes/subscriptions.js)
-const BY_TOKENS = { 200000: ['stimme', 1], 300000: ['stimme', 1], 750000: ['team', 5], 1500000: ['business', null], 2000000: ['business', 15] };
-const BY_PLAN = { stimme: 1, team: 5, business: 15, enterprise: null };
+const BY_TOKENS = { 200000: ['stimme', 1], 300000: ['stimme', 1], 750000: ['team', 5], 1000000: ['team', 5], 1500000: ['business', null], 2000000: ['business', 15], 2500000: ['business', 10] };
+const BY_PLAN = { stimme: 1, team: 5, business: 10, enterprise: null };
 
 // Liefert { plan, base } mit base = erlaubte Personen ohne Zusatznutzer (null = unbegrenzt, auch wenn noch kein Paket gesetzt ist)
 function baseFor(c) {

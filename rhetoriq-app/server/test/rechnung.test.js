@@ -96,7 +96,7 @@ test('Bezahlt: Abo wird aktiv mit Kontingent und bezahlt_bis; nach Ablauf plus K
   assert.equal(r.status, 200); assert.equal(r.body.status, 'active'); assert.ok(r.body.bezahltBis);
   const row = async () => (await pool.query('SELECT * FROM clients WHERE id=$1', [a.id])).rows[0];
   let c = await row();
-  assert.equal(Number(c.monthly_token_limit), 2000000); assert.equal(c.subscription_status, 'active');
+  assert.equal(Number(c.monthly_token_limit), 2500000); assert.equal(c.subscription_status, 'active');
   assert.equal(abo.zugang(c, {}).ok, true);
   // Ende der bezahlten Zeit überschritten: erst nach der Kulanz gesperrt
   const tage = (n) => new Date(Date.now() - n * 86400000);
@@ -116,7 +116,7 @@ test('Bezahlt: Abo wird aktiv mit Kontingent und bezahlt_bis; nach Ablauf plus K
   await call('POST', `/api/rechnungen/client/${a.id}/${r2}/bezahlt`, { token: adv(), body: {} });
   const bis1 = new Date((await row()).bezahlt_bis);
   assert.ok(bis1 > new Date(bis0.getTime() + 300 * 86400000), 'Jahresrechnung verlängert um 12 Monate');
-  assert.equal(Number((await row()).monthly_token_limit), 750000, 'Kontingent des neuen Pakets');
+  assert.equal(Number((await row()).monthly_token_limit), 1000000, 'Kontingent des neuen Pakets');
 });
 
 test('Storno nur bei offenen Rechnungen; bezahlte bleiben', async () => {
@@ -169,7 +169,7 @@ test('Zahlungsabgleich: passende Zahlung schaltet frei und bestätigt, falscher 
   r = await call('POST', '/api/rechnungen/zahlungen', { token: adv(), body: { xml: camtXml([{ ref: mitLeer, betrag: 59000, datum: '2026-10-20' }]) } });
   assert.equal(r.body.bezahlt.length, 1);
   const c = (await pool.query('SELECT * FROM clients WHERE id=$1', [b.id])).rows[0];
-  assert.equal(c.subscription_status, 'active'); assert.equal(Number(c.monthly_token_limit), 750000); assert.ok(c.bezahlt_bis);
+  assert.equal(c.subscription_status, 'active'); assert.equal(Number(c.monthly_token_limit), 1000000); assert.ok(c.bezahlt_bis);
   assert.ok(H.mails.slice(vorher).some(m => m.to === 'fremd@firma.ch' && /Zahlung zur Rechnung/.test(m.subject)), 'Bestätigung an den Klienten');
   // dieselbe Datei noch einmal: nichts doppelt
   r = await call('POST', '/api/rechnungen/zahlungen', { token: adv(), body: { xml: camtXml([{ ref: rec.referenz, betrag: 59000 }]) } });

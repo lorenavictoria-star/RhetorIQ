@@ -85,7 +85,7 @@ test('Webhook: Abschluss der Selbstbuchung bucht active und Kontingent, fehlgesc
   const ev = (id, type, o) => ({ id, type, data: { object: o } });
   assert.equal((await post(ev('e1', 'checkout.session.completed', { metadata: { clientId: String(c.id), type: 'selbstbuchung', angebot: 'team' }, amount_total: 59000, currency: 'chf', customer: 'cus_1' }))).status, 200);
   let r = (await pool.query('SELECT subscription_status s, monthly_token_limit l, stripe_customer_id c FROM clients WHERE id=$1', [c.id])).rows[0];
-  assert.deepEqual([r.s, Number(r.l), r.c], ['active', 750000, 'cus_1']);
+  assert.deepEqual([r.s, Number(r.l), r.c], ['active', 1000000, 'cus_1']);
   assert.equal((await post(ev('e2', 'invoice.payment_failed', { customer: 'cus_1', subscription_details: { metadata: { clientId: String(c.id) } } }))).status, 200);
   r = (await pool.query('SELECT subscription_status s FROM clients WHERE id=$1', [c.id])).rows[0];
   assert.equal(r.s, 'past_due');
@@ -161,7 +161,7 @@ test('Übersicht: Nutzung in Texten und Hinweise bei 80 und 100 Prozent', async 
   assert.equal(r.body.nutzung.verbraucht, 0);
   assert.equal(r.body.nutzung.verbleibend, 40);
   assert.equal(r.body.hinweise.length, 0);
-  assert.deepEqual(r.body.pakete.map(p => [p.key, p.amountCents, p.texte, p.nutzer]), [['stimme', 19000, 40, 1], ['team', 59000, 150, 5], ['business', 149000, 400, 15]]);
+  assert.deepEqual(r.body.pakete.map(p => [p.key, p.amountCents, p.texte, p.nutzer]), [['stimme', 19000, 40, 1], ['team', 59000, 200, 5], ['business', 149000, 500, 10]]);
   assert.equal(r.body.paket.name, 'Stimme');
   await pool.query('INSERT INTO usage_log (client_id, input_tokens, output_tokens) VALUES ($1,150000,20000)', [c.id]);
   r = await get();
