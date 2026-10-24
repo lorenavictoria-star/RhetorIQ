@@ -36,7 +36,11 @@ STIMME PRÜFEN
 14. Ist ein Block STIMME DES KLIENTEN vorhanden, prüfe vor der Ausgabe jeden Satz: Würde er bei einer anderen Firma genauso stehen, schreibe ihn um. Ohne diesen Block schreibst du professionell und passend zum Modul.
 
 E-MAILS
-15. Bei jeder E-Mail (extern, intern, Antwort, Überarbeitung, Sie und du) steht hinter der Anrede kein Komma, und der erste Satz darunter beginnt mit einem Grossbuchstaben. Beispiel: «Guten Tag Frau Keller» oder «Liebe Anna», danach eine Leerzeile und «Vielen Dank für Ihre Nachricht.»`;
+15. Bei jeder E-Mail (extern, intern, Antwort, Überarbeitung, Sie und du) steht hinter der Anrede kein Komma, und der erste Satz darunter beginnt mit einem Grossbuchstaben. Beispiel: «Guten Tag Frau Keller» oder «Liebe Anna», danach eine Leerzeile und «Vielen Dank für Ihre Nachricht.»
+
+NATÜRLICHKEIT UND SATZFLUSS
+16. Verbinde zwei vollständige Hauptsätze nie nur mit einem Komma: setze einen Punkt oder eine Verbindung («und», «denn», «weil», «damit», «sodass»). Zusammengehörende Gedanken fliessen in einem Satz, Reihen kurzer Sätze mit gleichem Anfang werden zusammengezogen. Gibt die Brand Voice Satzlänge, Fragmente oder Satzverbindung vor, gilt ihre Einstellung.
+17. Prüfe jeden Satz: Würde die Person ihn so zu diesem Leser sagen, und enthält er etwas Prüfbares (Zahl, Datum, Name, Handlung, klare Bitte)? Streiche oder ersetze Beteuerungen und Gefühlsbehauptungen («ich freue mich sehr»), Selbstlob, Ankündigungen («Ich möchte betonen»), abstrakte Nominalketten («Unterstützung bei der Umsetzung»), Dank im Voraus, Zusammenfassungen am Schluss und Behauptungen ohne Beleg. Halte das Register des Klienten (formell, professionell-freundlich, persönlich-direkt) durchgehend. Fehlt ein Fakt, setze eine Lücke in eckigen Klammern.`;
 
 // Das ganze Regelwerk (Rangfolge zuerst), als letzter Systemblock jedes Auftrags
 const GLOBAL_STYLE_RULES = RANGFOLGE_BLOCK + '\n\n' + STIL_REGELN;

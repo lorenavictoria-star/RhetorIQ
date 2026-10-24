@@ -14,8 +14,8 @@ test('Rangfolge-Block ist vorhanden, nur einmal und hat sechs Stufen', () => {
   assert.ok(/6\. Die allgemeinen Stilregeln/.test(R.RANGFOLGE_BLOCK));
 });
 
-test('Regelwerk liegt unter 7000 Zeichen und die alten Vorrangsätze sind weg', () => {
-  assert.ok(GLOBAL_STYLE_RULES.length < 7000, 'Länge ' + GLOBAL_STYLE_RULES.length);
+test('Regelwerk liegt unter 8000 Zeichen und die alten Vorrangsätze sind weg', () => {
+  assert.ok(GLOBAL_STYLE_RULES.length < 8000, 'Länge ' + GLOBAL_STYLE_RULES.length);
   for (const alt of ['ABSOLUT VERBINDLICH', 'TAKES PRECEDENCE', 'ALWAYS OUTRANKS', 'override any conflicting']) {
     assert.ok(!GLOBAL_STYLE_RULES.includes(alt), alt);
     assert.ok(!R.BRAND_VOICE_HEAD.includes(alt), alt);
@@ -24,7 +24,7 @@ test('Regelwerk liegt unter 7000 Zeichen und die alten Vorrangsätze sind weg', 
 
 test('Kernverbote und Schutz vor erfundenen Fakten bleiben im Regelwerk', () => {
   for (const muss of ['Gedankenstriche', '«ss»', '«ß»', 'Umlaute', 'Kein Markdown', 'Gendern mit Sonderzeichen', 'Floskel',
-    'Erfinde nie', 'eckigen Klammern', 'nicht X, sondern Y', 'Formulierungen aus dem Gedächtnis', 'nie wörtlich']) {
+    'Erfinde nie', 'eckigen Klammern', 'NATÜRLICHKEIT UND SATZFLUSS', 'nur mit einem Komma', 'nicht X, sondern Y', 'Formulierungen aus dem Gedächtnis', 'nie wörtlich']) {
     assert.ok(GLOBAL_STYLE_RULES.includes(muss), 'fehlt: ' + muss);
   }
 });
