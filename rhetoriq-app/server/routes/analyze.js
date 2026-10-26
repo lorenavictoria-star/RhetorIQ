@@ -2268,6 +2268,27 @@ router.delete('/client/:clientId', requireAuth, async (req, res) => {
   }
 });
 
+// POST /api/analyze/delete-many — mehrere Texte des Verlaufs löschen (gleiche Rechte wie das Einzel-Löschen)
+router.post('/delete-many', requireAuth, async (req, res) => {
+  try {
+    const ids = [...new Set((Array.isArray(req.body && req.body.ids) ? req.body.ids : []).map(Number).filter(n => Number.isInteger(n) && n > 0))];
+    if (!ids.length) return res.status(400).json({ error: 'Keine Texte ausgewählt.' });
+    if (ids.length > 500) return res.status(400).json({ error: 'Höchstens 500 Texte auf einmal.' });
+    let r;
+    if (req.user.role === 'advisor') {
+      r = await pool.query(`DELETE FROM analyses WHERE advisor_id = $1 AND id IN (${ids.map((_, i) => '$' + (i + 2)).join(',')})`, [req.user.id, ...ids]);
+    } else if (req.user.role === 'client' && req.user.clientUserRole === 'admin' && !req.user.readOnly) {
+      r = await pool.query(`DELETE FROM analyses WHERE client_id = $1 AND id IN (${ids.map((_, i) => '$' + (i + 2)).join(',')})`, [req.user.clientId, ...ids]);
+    } else {
+      return res.status(403).json({ error: 'Nicht erlaubt' });
+    }
+    res.json({ deleted: r.rowCount });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // DELETE /api/analyze/:id — delete single analysis
 router.delete('/:id', requireAuth, async (req, res) => {
   try {

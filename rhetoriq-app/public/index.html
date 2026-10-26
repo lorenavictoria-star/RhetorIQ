@@ -1681,6 +1681,7 @@ html[lang="en"] .legal-en-note{display:block}
       <div class="page-title" id="hist-title" style="margin-bottom:6px">History</div>
       <p id="hist-sub" style="font-size:12px;color:var(--mu);margin-bottom:10px">Grouped by module. Delete entries manually.</p>
       <input type="text" id="hist-search" placeholder="Suchen…" oninput="renderHistory()" style="width:100%;padding:9px 12px;border:1px solid var(--bd);border-radius:8px;font-size:13px;margin-bottom:18px;box-sizing:border-box;background:var(--bg);color:var(--tx)">
+      <div id="hist-tools" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-8px 0 14px"><button class="obtn" id="hist-selbtn" style="font-size:12px;padding:6px 12px" onclick="histSelToggle()">Mehrere auswählen</button><span id="hist-selbar" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px"><span id="hist-selcount">0 ausgewählt</span><button class="obtn" style="font-size:12px;padding:6px 12px" onclick="histSelAll()">Alle sichtbaren</button><button class="obtn" style="font-size:12px;padding:6px 12px;color:var(--red);border-color:var(--red)" id="hist-seldel" onclick="histSelDelete()" disabled>Auswahl löschen</button></span></div>
       <div id="hist-list"><div class="empty"><div class="ei">◤</div><div id="hist-empty">No analyses yet.</div></div></div>
     </div>
 
@@ -6742,6 +6743,30 @@ async function loadHistory(){
 const HIST_SHOW=5; // pro Gruppe zuerst sichtbare Einträge
 let _histMore={};
 function histMore(label){_histMore[label]=true;renderHistory();}
+// Mehrfachauswahl: Texte ankreuzen und gemeinsam löschen
+let _histSelMode=false;const _histSel=new Set();
+function histSelUpdate(){
+  const n=_histSel.size;
+  const c=document.getElementById('hist-selcount');if(c)c.textContent=n+(n===1?' Text ausgewählt':' Texte ausgewählt');
+  const d=document.getElementById('hist-seldel');if(d)d.disabled=n===0;
+  const b=document.getElementById('hist-selbtn');if(b)b.textContent=_histSelMode?'Auswahl beenden':'Mehrere auswählen';
+  const bar=document.getElementById('hist-selbar');if(bar)bar.style.display=_histSelMode?'flex':'none';
+}
+function histSelToggle(){_histSelMode=!_histSelMode;if(!_histSelMode)_histSel.clear();renderHistory();histSelUpdate();}
+function histSelOne(id,on){if(on)_histSel.add(id);else _histSel.delete(id);histSelUpdate();}
+function histSelGroup(gi,on){
+  document.querySelectorAll('input.hist-cb[data-group="'+gi+'"]').forEach(cb=>{cb.checked=on;histSelOne(Number(cb.dataset.id),on);});
+}
+function histSelAll(){document.querySelectorAll('input.hist-cb').forEach(cb=>{cb.checked=true;_histSel.add(Number(cb.dataset.id));});histSelUpdate();}
+async function histSelDelete(){
+  const ids=[..._histSel];if(!ids.length)return;
+  if(!await rqConfirm(ids.length===1?'Diesen Text löschen? Das Löschen ist endgültig.':ids.length+' Texte löschen? Das Löschen ist endgültig.',{ok:'Löschen',danger:true}))return;
+  try{
+    const r=await api('/api/analyze/delete-many',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})});
+    if(!r.ok)throw new Error();
+    _histSel.clear();_histSelMode=false;await loadHistory();histSelUpdate();
+  }catch{alert('Löschen nicht möglich. Bitte erneut versuchen.');}
+}
 function renderHistory(){
   const el=document.getElementById('hist-list');
   const q=(document.getElementById('hist-search')?.value||'').trim().toLowerCase();
@@ -6768,7 +6793,7 @@ function renderHistory(){
     return `<details ${open?'open':''} style="border-top:1px solid var(--bd);padding:4px 0">
       <summary style="cursor:pointer;padding:12px 0;display:flex;justify-content:space-between;gap:12px;align-items:baseline;list-style:none">
         <span style="font-weight:600">${safeText(label)} <span style="font-weight:400;color:var(--mu)">(${items.length})</span></span>
-        <span style="font-size:12px;color:var(--mu)">zuletzt ${safeText(latest)}</span>
+        <span style="font-size:12px;color:var(--mu)">${_histSelMode?`<label onclick="event.stopPropagation()" style="margin-right:12px;cursor:pointer"><input type="checkbox" onclick="event.stopPropagation();histSelGroup(${gi},this.checked)" style="vertical-align:middle"> alle dieser Gruppe</label>`:''}zuletzt ${safeText(latest)}</span>
       </summary>
       ${vis.map(h=>{
         const d=fmt(h.created_at,{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -6776,6 +6801,7 @@ function renderHistory(){
         const who=showClient&&cname(h)?` · ${safeText(cname(h))}`:'';
         return `<div class="hi" style="padding:10px 0">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer" onclick="toggleHistItem(${h.id})">
+            ${_histSelMode?`<input type="checkbox" class="hist-cb" data-id="${h.id}" data-group="${gi}" ${_histSel.has(h.id)?'checked':''} onclick="event.stopPropagation();histSelOne(${h.id},this.checked)" style="width:18px;height:18px;flex-shrink:0;cursor:pointer" aria-label="Text auswählen">`:''}
             <div style="min-width:0;flex:1">
               <div class="hd">${safeText(d)}${who}${fass[h.id]?` <span style="font-size:11px;padding:1px 7px;border:1px solid var(--bd);color:var(--mu)">${fass[h.id].n===0?'Erstfassung':'Überarbeitung '+fass[h.id].n}</span>`:''}${h.user_rating?` <span style="font-size:11px;color:var(--mu)">${h.user_rating===1?'Daumen hoch':'Daumen runter'}</span>`:''}</div>
               <div style="font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="hist-preview-${h.id}">${safeText(preview)}${preview.length>=90?'…':''}</div>

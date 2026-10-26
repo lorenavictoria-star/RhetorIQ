@@ -49,3 +49,17 @@ test('F-01 Auswertung und Löschen: Klient nur eigener Bereich', async () => {
   assert.equal((await srv.call('DELETE', `/api/analyze/${rows[0].id}`, { token: H.clientToken(a.id) })).status, 403);
   assert.equal((await srv.call('DELETE', `/api/analyze/${rows[0].id}`, { token: H.clientToken(b.id, { clientUserRole: 'admin' }) })).status, 200);
 });
+
+test('Verlauf: mehrere Texte auf einmal löschen, nur im eigenen Bereich', async () => {
+  const mk = async (c) => (await pool.query(`INSERT INTO analyses (client_id, advisor_id, module) VALUES ($1,1,'x') RETURNING id`, [c.id])).rows[0].id;
+  const [a1, a2, a3, b1] = [await mk(a), await mk(a), await mk(a), await mk(b)];
+  assert.equal((await srv.call('POST', '/api/analyze/delete-many', { token: H.advisorToken(), body: { ids: [] } })).status, 400, 'leere Auswahl');
+  assert.equal((await srv.call('POST', '/api/analyze/delete-many', { token: H.clientToken(a.id), body: { ids: [a1] } })).status, 403, 'Klient ohne Admin-Rolle');
+  const own = await srv.call('POST', '/api/analyze/delete-many', { token: H.clientToken(a.id, { clientUserRole: 'admin' }), body: { ids: [a1, a2, b1, 'x', -3] } });
+  assert.equal(own.status, 200);
+  assert.equal(own.body.deleted, 2, 'fremder Text bleibt');
+  const { rows } = await pool.query('SELECT id FROM analyses WHERE id IN ($1,$2,$3)', [a3, b1, a1]);
+  assert.deepEqual(rows.map(r => r.id).sort((x, y) => x - y), [a3, b1].sort((x, y) => x - y));
+  const adv = await srv.call('POST', '/api/analyze/delete-many', { token: H.advisorToken(), body: { ids: [a3, b1] } });
+  assert.equal(adv.body.deleted, 2);
+});
