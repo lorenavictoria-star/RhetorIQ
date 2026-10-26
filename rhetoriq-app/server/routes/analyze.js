@@ -1673,6 +1673,8 @@ async function einheitBlock(clientId, einheitId) {
   if (!clientId || !Number.isInteger(id)) return '';
   try {
     await require('../lib/schemaRedesign').ensureSchema();
+    const { rows: cm } = await pool.query('SELECT enabled_modules FROM clients WHERE id=$1', [clientId]);
+    if (!(cm[0] && Array.isArray(cm[0].enabled_modules) && cm[0].enabled_modules.includes('restaurants'))) return '';
     const { rows } = await pool.query('SELECT name, ort, stimme, fakten FROM einheiten WHERE id=$1 AND client_id=$2', [id, clientId]);
     const e = rows[0];
     if (!e) return '';

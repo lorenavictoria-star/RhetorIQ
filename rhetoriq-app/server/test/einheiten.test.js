@@ -6,7 +6,7 @@ const H = require('../test-support/harness');
 const { setupGenerate } = require('../test-support/genSetup');
 const { pool } = H;
 
-let srv, a, b;
+let srv, a, b, c;
 const adv = () => H.advisorToken();
 test.before(async () => {
   await H.setupBase();
@@ -16,6 +16,8 @@ test.before(async () => {
   for (const col of ['capital_markets_enabled BOOLEAN DEFAULT FALSE', 'hotel_enabled BOOLEAN DEFAULT FALSE']) await pool.query(`ALTER TABLE clients ADD COLUMN ${col}`).catch(() => {});
   a = await H.addClient('Segmüller Collection');
   b = await H.addClient('Andere AG');
+  c = await H.addClient('Ohne Restaurants AG');
+  for (const k of [a, b]) await pool.query('UPDATE clients SET enabled_modules=$1 WHERE id=$2', [['brand-voice', 'text-gen', 'restaurants'], k.id]);
   srv = await H.startApp([
     ['/api/einheiten', require('../routes/einheiten')],
     ['/api/analyze', require('../routes/analyze')]
@@ -66,4 +68,27 @@ test('Das Stimmprofil und die Fakten des Restaurants fliessen in den Auftrag, nu
   H.ai.calls.length = 0;
   await srv.call('POST', '/api/analyze', { token: H.clientToken(a.id), body: { module: 'text-gen', data: { text: 'Einladung', einheitId: fremd.id }, instructionsKey: 'text-gen-social' } });
   assert.ok(!JSON.stringify(H.ai.calls.map(c => c.system)).includes('GEHEIM FREMD'), 'Restaurant eines anderen Klienten wird nie geladen');
+});
+
+test('Ohne ausdrückliche Freischaltung gibt es keine Restaurants: weder Liste noch Anlegen noch Wirkung im Auftrag', async () => {
+  for (const modules of [null, ['brand-voice', 'text-gen']]) {
+    await pool.query('UPDATE clients SET enabled_modules=$1 WHERE id=$2', [modules, c.id]);
+    assert.deepEqual((await srv.call('GET', `/api/einheiten?clientId=${c.id}`, { token: adv() })).body, []);
+    assert.equal((await srv.call('POST', '/api/einheiten', { token: adv(), body: { clientId: c.id, name: 'X' } })).status, 403);
+    assert.equal((await srv.call('POST', '/api/einheiten/bulk', { token: adv(), body: { clientId: c.id, zeilen: 'X' } })).status, 403);
+  }
+  // Eintrag, der vor dem Abschalten angelegt wurde, bleibt ohne Wirkung
+  await pool.query('UPDATE clients SET enabled_modules=$1 WHERE id=$2', [['brand-voice', 'text-gen', 'restaurants'], c.id]);
+  const e = (await srv.call('POST', '/api/einheiten', { token: adv(), body: { clientId: c.id, name: 'Altlast', stimme: 'GEHEIM ALT' } })).body;
+  await pool.query('UPDATE clients SET enabled_modules=$1 WHERE id=$2', [['brand-voice', 'text-gen'], c.id]);
+  H.ai.calls.length = 0;
+  await srv.call('POST', '/api/analyze', { token: H.clientToken(c.id), body: { module: 'text-gen', data: { text: 'Einladung', einheitId: e.id }, instructionsKey: 'text-gen-social' } });
+  assert.ok(!JSON.stringify(H.ai.calls.map(x => x.system)).includes('GEHEIM ALT'));
+});
+
+test('Onboarding: «Mehrere Restaurants oder Betriebe» schaltet das Modul frei, andere Wahl nicht', () => {
+  const { toEnabledModules, ALLE_MODULE } = require('../lib/moduleCatalog');
+  assert.ok(ALLE_MODULE.includes('Mehrere Restaurants oder Betriebe'));
+  assert.ok(toEnabledModules(['Text Generator', 'Mehrere Restaurants oder Betriebe']).includes('restaurants'));
+  assert.ok(!toEnabledModules(['Text Generator', 'Gespräch']).includes('restaurants'));
 });

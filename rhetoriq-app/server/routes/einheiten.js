@@ -15,6 +15,13 @@ const router = express.Router();
 const MAX_PRO_KLIENT = 100;
 const NAME_MAX = 120, ORT_MAX = 120, TEXT_MAX = 8000;
 
+// Opt-in-Modul «restaurants»: nur wenn es ausdrücklich in enabled_modules steht (null bedeutet alle anderen Module, aber nicht dieses)
+async function aktiv(clientId) {
+  const { rows } = await pool.query('SELECT enabled_modules FROM clients WHERE id=$1', [clientId]);
+  return !!(rows[0] && Array.isArray(rows[0].enabled_modules) && rows[0].enabled_modules.includes('restaurants'));
+}
+const NICHT_AKTIV = { error: 'Mehrere Restaurants oder Betriebe sind für diesen Kunden nicht freigeschaltet.' };
+
 const text = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
 async function eigene(req, id) {
@@ -29,7 +36,7 @@ router.get('/', requireAuth, async (req, res) => {
   try {
     await ensureSchema();
     const clientId = await allowedClientId(req, req.query.clientId);
-    if (!clientId) return res.json([]);
+    if (!clientId || !(await aktiv(clientId))) return res.json([]);
     const { rows } = await pool.query('SELECT id, client_id, name, ort, stimme, fakten, updated_at FROM einheiten WHERE client_id=$1 ORDER BY LOWER(name)', [clientId]);
     res.json(rows);
   } catch (e) {
@@ -43,6 +50,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     await ensureSchema();
     const clientId = await allowedClientId(req, req.body && req.body.clientId);
     if (!clientId) return res.status(403).json({ error: 'Kein Zugriff auf diesen Klienten.' });
+    if (!(await aktiv(clientId))) return res.status(403).json(NICHT_AKTIV);
     const name = text(req.body.name, NAME_MAX);
     if (!name) return res.status(400).json({ error: 'Bitte einen Namen eintragen.' });
     const { rows: cnt } = await pool.query('SELECT COUNT(*)::int AS n FROM einheiten WHERE client_id=$1', [clientId]);
@@ -64,6 +72,7 @@ router.post('/bulk', requireAuth, requireRole('editor'), async (req, res) => {
     await ensureSchema();
     const clientId = await allowedClientId(req, req.body && req.body.clientId);
     if (!clientId) return res.status(403).json({ error: 'Kein Zugriff auf diesen Klienten.' });
+    if (!(await aktiv(clientId))) return res.status(403).json(NICHT_AKTIV);
     const zeilen = String(req.body.zeilen || '').split(/\r?\n/).map(z => z.trim()).filter(Boolean);
     if (!zeilen.length) return res.status(400).json({ error: 'Bitte mindestens eine Zeile eintragen.' });
     const { rows: cnt } = await pool.query('SELECT COUNT(*)::int AS n FROM einheiten WHERE client_id=$1', [clientId]);

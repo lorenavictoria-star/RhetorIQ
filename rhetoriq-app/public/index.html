@@ -4121,8 +4121,10 @@ const MC_SECTIONS=[
 const MC_SUITES=[
   {label:'Capital Markets Suite',color:'#0369a1',bg:'#f0f9ff',border:'#bae6fd',prefix:'cm-',keys:['cm-qa-trainer','cm-equity-story','cm-earnings-analyzer','cm-board-coach','cm-roadshow']},
   {label:'Hotel Suite',color:'#92400e',bg:'#fffbeb',border:'#fde68a',prefix:'ht-',keys:['ht-guest-letter','ht-review-response','ht-crisis-comm','ht-positioning','ht-sales-pitch']},
+  {label:'Gruppen und Restaurants',color:'#166534',bg:'#f0fdf4',border:'#bbf7d0',prefix:'restaurants',keys:['restaurants']},
 ];
 function _mcModuleName(key){
+  if(key==='restaurants')return 'Mehrere Restaurants oder Betriebe';
   const m=ALL_MODULES.find(x=>x.key===key);
   if(m)return m.name.replace(/^[^\w\s]+\s*/,'');
   const def=MDEFS[key];return def?.title||key;
@@ -9438,7 +9440,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
   // Module: Anzeigename, Schlüssel (enabled_modules)
   window.RQ_MODS=[['brand-voice','Brand Voice'],['text-gen','Text Generator'],['vs-gen','Varianten-Generator'],['vs-cal','Situations-Variante'],['profiling','Kommunikations-Profil'],['review','Feedback Writer'],['recognition','Wertschätzung'],['pre-meeting','Meeting-Vorbereitung'],['risk','Risiko-Scan'],['actionability','Klarheits-Check'],['thread','Notizen zu Aufgaben'],['sparring','Einwand-Training'],['debrief','Debrief']];
   // Gebündelte Module im Onboarding: eine Wahl schaltet mehrere Einzelschlüssel frei (Server: toEnabledModules).
-  window.RQ_WBUND=[['bundle-gespraech','Gespräch'],['bundle-rede','Rede und Auftritt'],['bundle-bewertungen','Bewertungen beantworten'],['bundle-hotel','Branchenpaket Hotellerie'],['bundle-capital','Branchenpaket Capital Markets']];
+  window.RQ_WBUND=[['bundle-gespraech','Gespräch'],['bundle-rede','Rede und Auftritt'],['bundle-bewertungen','Bewertungen beantworten'],['bundle-hotel','Branchenpaket Hotellerie'],['bundle-capital','Branchenpaket Capital Markets'],['bundle-restaurants','Mehrere Restaurants oder Betriebe']];
   var WMAP={'pre-meeting':'bundle-gespraech','arg-reaction':'bundle-gespraech','sparring':'bundle-gespraech','debrief':'bundle-gespraech','presentation':'bundle-rede','customer-review':'bundle-bewertungen'};
   window.rqWiz=function(k){return WMAP[k]||k;};
   window.rqWizKeys=function(a){var o=[];(a||[]).forEach(function(k){k=rqWiz(k);if(o.indexOf(k)<0)o.push(k);});return o;};
@@ -16963,9 +16965,11 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
   if(typeof tgo==='function')window.tgOpenTile=function(id){var r=tgo.apply(this,arguments);waehlerEinsetzen(id);return r;};
 
   // ── Reiter «Restaurants» im Workspace ────────────────────────────────────
+  function aktivFuer(cid){var c=null;try{c=clients.filter(function(x){return x.id==cid;})[0];}catch(e){}return !!(c&&Array.isArray(c.enabled_modules)&&c.enabled_modules.indexOf('restaurants')>=0);}
   function tab(){
     var wrap=document.getElementById('ws-tabs');if(!wrap)return null;
     var b=document.getElementById('ws-tab-einh');
+    if(!aktivFuer(_wsClientId)){if(b)b.remove();return null;}
     if(!b){b=document.createElement('button');b.className='mlist-pill';b.id='ws-tab-einh';b.textContent='Restaurants';b.onclick=function(){wsSwitchTab('einh');};
       var st=document.getElementById('ws-tab-bsp')||document.getElementById('ws-tab-store')||document.getElementById('ws-tab-admin');wrap.insertBefore(b,st);}
     return b;
@@ -17038,7 +17042,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
       return render(document.getElementById('ws-body'));
     }
     var u=document.getElementById('ws-tab-einh');if(u)u.classList.remove('active');
-    return ws.apply(this,arguments);
+    var r=ws.apply(this,arguments);tab();return r;
   };
   var ow=window.openWorkspace;
   if(typeof ow==='function')window.openWorkspace=async function(){var r=await ow.apply(this,arguments);tab();return r;};

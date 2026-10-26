@@ -6,7 +6,7 @@ const ALLE_MODULE = [
   'Kommunikations-Profil', 'Feedback Writer', 'Wertschätzung', 'Meeting-Vorbereitung', 'Risiko-Scan',
   'Klarheits-Check', 'Notizen zu Aufgaben', 'Einwand-Training', 'Debrief',
   'Gespräch', 'Rede und Auftritt', 'Bewertungen beantworten',
-  'Branchenpaket Hotellerie', 'Branchenpaket Capital Markets'
+  'Branchenpaket Hotellerie', 'Branchenpaket Capital Markets', 'Mehrere Restaurants oder Betriebe'
 ];
 
 const SEKTOR_NAME = {
@@ -54,7 +54,9 @@ const BUENDEL_SCHLUESSEL = {
   'Rede und Auftritt': ['text-gen', 'presentation'],
   'Bewertungen beantworten': ['customer-review'],
   'Branchenpaket Hotellerie': ['ht-guest-letter', 'ht-review-response', 'ht-crisis-comm', 'ht-positioning', 'ht-sales-pitch'],
-  'Branchenpaket Capital Markets': ['cm-qa-trainer', 'cm-equity-story', 'cm-earnings-analyzer', 'cm-board-coach', 'cm-roadshow']
+  'Branchenpaket Capital Markets': ['cm-qa-trainer', 'cm-equity-story', 'cm-earnings-analyzer', 'cm-board-coach', 'cm-roadshow'],
+  // Opt-in: gilt nur, wenn der Schlüssel ausdrücklich in enabled_modules steht (null = alle Module schliesst ihn nicht ein)
+  'Mehrere Restaurants oder Betriebe': ['restaurants']
 };
 
 // Wandelt gewählte Modulnamen in enabled_modules um. Brand Voice ist immer dabei.
