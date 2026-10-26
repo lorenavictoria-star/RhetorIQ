@@ -140,6 +140,7 @@ router.post('/generate-starters', requireAuth, ownClientBody('clientId'), async 
     { key: 'text-gen-speech', label: 'speeches' },
     { key: 'text-gen-press', label: 'press releases' },
     { key: 'text-gen-website', label: 'website copy' },
+    { key: 'text-gen-social', label: 'social media posts (Instagram, Facebook, TikTok)' },
     { key: 'text-gen-custom', label: 'custom formats (proposals, announcements)' },
     { key: 'profiling', label: 'rhetoric profiling analysis' },
     { key: 'risk', label: 'communication risk scan' },

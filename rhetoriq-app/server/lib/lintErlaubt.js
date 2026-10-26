@@ -12,7 +12,7 @@ const ZUORDNUNG = [
   [/dreierkette|dreier/i, 'dreierkette']
 ];
 const TEXTART = [
-  [/webseite|website|web\b/i, 'website'], [/linkedin|social/i, 'linkedin'], [/newsletter/i, 'newsletter'],
+  [/webseite|website|web\b/i, 'website'], [/social media|instagram|facebook|tiktok|\breel/i, 'social'], [/linkedin|social/i, 'linkedin'], [/newsletter/i, 'newsletter'],
   [/mail/i, 'email'], [/presse|medien/i, 'press'], [/rede|auftritt/i, 'speech'], [/brief/i, 'brief']
 ];
 

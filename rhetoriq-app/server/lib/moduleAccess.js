@@ -4,7 +4,7 @@
 const { pool } = require('../db');
 const { ensureSchema } = require('./schemaRedesign');
 
-const TEXTARTEN = ['linkedin', 'newsletter', 'email', 'speech', 'press', 'website', 'brief', 'custom'];
+const TEXTARTEN = ['linkedin', 'newsletter', 'email', 'speech', 'press', 'website', 'social', 'brief', 'custom'];
 
 const SPERR_MODUL = 'Dieses Modul ist für Ihr Konto nicht freigeschaltet. Bitte wenden Sie sich an Ihre Beraterin.';
 const SPERR_TEXTART = 'Diese Textart ist für Ihr Konto nicht freigeschaltet. Bitte wenden Sie sich an Ihre Beraterin.';

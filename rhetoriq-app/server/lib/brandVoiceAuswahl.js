@@ -6,7 +6,7 @@
 // Ein Abschnitt reicht bis zur nächsten Zeile, die mit KERN oder DETAIL beginnt. Dokumente ohne diese Gliederung bleiben unverändert.
 const { stilmittelRegeln } = require('./lintErlaubt');
 const TEXTART = [
-  [/webseite|website|web\b/i, 'website'], [/linkedin|social/i, 'linkedin'], [/newsletter/i, 'newsletter'],
+  [/webseite|website|web\b/i, 'website'], [/social media|instagram|facebook|tiktok|\breel/i, 'social'], [/linkedin|social/i, 'linkedin'], [/newsletter/i, 'newsletter'],
   [/mail/i, 'email'], [/presse|medien/i, 'press'], [/rede|auftritt/i, 'speech'], [/brief/i, 'brief']
 ];
 const KOPF = /^\s*(KERN|DETAIL)\b(.*)$/;

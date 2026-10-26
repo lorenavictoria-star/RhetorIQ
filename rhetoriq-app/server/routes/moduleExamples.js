@@ -184,7 +184,7 @@ router.post('/import-client', requireAdvisor, async (req, res) => {
 });
 
 // ── Beispiele pro Klient: Anzeige, eigene Beispiele der Klienten, Onboarding-Vorschläge ───────────────────────────
-const TILES = ['linkedin', 'newsletter', 'email', 'speech', 'press', 'website', 'custom', 'brief'];
+const TILES = ['linkedin', 'newsletter', 'email', 'speech', 'press', 'website', 'social', 'custom', 'brief'];
 const MIN_LAENGE = beispielLib.MIN_LAENGE_BEISPIEL;
 const MAX_LAENGE = 12000;
 const MAX_PRO_MODUL = beispielLib.MAX_PRO_MODUL;

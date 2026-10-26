@@ -4492,6 +4492,7 @@ const MEM_REF_TYPES=[
   {type:'ref_tg_speech',label:'Beispieltexte: Rede'},
   {type:'ref_tg_press',label:'Beispieltexte: Medienmitteilung'},
   {type:'ref_tg_website',label:'Beispieltexte: Webseite'},
+  {type:'ref_tg_social',label:'Beispieltexte: Social Media'},
   {type:'structural_reference',label:'Aufbau-Vorlage (gilt für alle Module)'},
 ];
 function renderMemUploadTypes(){
@@ -4585,7 +4586,7 @@ function renderMemory(){
   const list=document.getElementById('memory-list');
   if(!clientId){list.innerHTML='<div class="empty"><div class="ei">&#129504;</div><div>Bitte zuerst einen Klienten auswählen.</div></div>';return;}
   if(!memory.length){list.innerHTML='<div class="empty"><div class="ei">&#129504;</div><div>Ihr Gedächtnis ist noch leer.<br>Laden Sie oben ein Dokument hoch, damit es bei jedem Text berücksichtigt wird.</div></div>';return;}
-  const LABELS={brand_voice:'Brand Voice',rhetoric_summary:'Zusammenfassung der Rhetorik',key_facts:'Kernfakten',culture_notes:'Hinweise zur Kultur',ref_tg_linkedin:'Beispieltexte: LinkedIn',ref_tg_email:'Beispieltexte: E-Mail',ref_tg_speech:'Beispieltexte: Rede',ref_tg_newsletter:'Beispieltexte: Newsletter',ref_tg_press:'Beispieltexte: Medienmitteilung',ref_tg_website:'Beispieltexte: Webseite',ref_brand_voice_source:'Quelltexte für die Brand Voice',structural_reference:'Aufbau-Vorlage'};
+  const LABELS={brand_voice:'Brand Voice',rhetoric_summary:'Zusammenfassung der Rhetorik',key_facts:'Kernfakten',culture_notes:'Hinweise zur Kultur',ref_tg_linkedin:'Beispieltexte: LinkedIn',ref_tg_email:'Beispieltexte: E-Mail',ref_tg_speech:'Beispieltexte: Rede',ref_tg_newsletter:'Beispieltexte: Newsletter',ref_tg_press:'Beispieltexte: Medienmitteilung',ref_tg_website:'Beispieltexte: Webseite',ref_tg_social:'Beispieltexte: Social Media',ref_brand_voice_source:'Quelltexte für die Brand Voice',structural_reference:'Aufbau-Vorlage'};
   list.innerHTML=memory.map((m,i)=>{
     const d=new Date(m.updated_at).toLocaleDateString(DLOC());
     const label=safeText(LABELS[m.memory_type]||m.memory_type);
@@ -5029,12 +5030,13 @@ async function routePrompt(){
       s.textContent='';document.getElementById('router-input').value='';
       if(mod==='brand-voice'){goPage('brand-voice');}
       else if(mod==='text-gen'){
-        const validTiles=['linkedin','newsletter','email','speech','press','website','custom','brief'];
+        const validTiles=['linkedin','newsletter','email','speech','press','website','social','custom','brief'];
         let fmt=(d.tile||'').trim().toLowerCase();
         if(!validTiles.includes(fmt)){
           const low=text.toLowerCase();
           fmt='custom';
           if(/linkedin/i.test(low))fmt='linkedin';
+          else if(/instagram|facebook|tiktok|\breel\b|social media/i.test(low))fmt='social';
           else if(/newsletter/i.test(low))fmt='newsletter';
           else if(/\bemail\b|\bmail\b/i.test(low))fmt='email';
           else if(/\bspeech\b|\brede\b|\bkeynote\b|\bvortrag\b/i.test(low))fmt='speech';
@@ -5570,6 +5572,7 @@ function buildTextGen(prefill,form){
     {id:'speech',abbr:'SP',label:'Speech',sub:'Keynote · Opening · Town Hall',fmtLabel:'Speech Format',fmtOpts:['Keynote / Conference Speech','Opening Remarks','Town Hall Address','Award Ceremony Speech','Closing Statement','Other Speech'],hasSubscription:false},
     {id:'press',abbr:'PR',label:'Press Release',sub:'Launch · Crisis · Strategy',fmtLabel:'Press Release Type',fmtOpts:['Product / Service Launch','Strategy Announcement','Leadership / Personnel Change','Partnership / Acquisition','Crisis / Correction','Financial Results'],hasSubscription:false},
     {id:'website',abbr:'WB',label:'Website',sub:'Homepage · Landing Page · SEO · KI-Suche',fmtLabel:'Page Type',fmtOpts:['Homepage Hero','About Us / Team','Service / Product Page','Landing Page','FAQ','SEO — Seite für Suchmaschinen','SEO — Standort- oder Restaurantseite (lokal)','SEO — Blogartikel','SEO — Titel und Beschreibung (Meta)','KI-Suche — Antwortseite für KI-Modelle','KI-Suche — FAQ für KI-Modelle','Other'],hasSubscription:false},
+    {id:'social',abbr:'SM',label:'Social Media',sub:'Instagram · Facebook · TikTok',fmtLabel:'Format',fmtOpts:['Instagram-Post','Instagram — Reel-Skript','Instagram — Story-Folge','Facebook-Beitrag','TikTok-Skript','Other'],hasSubscription:false},
     {id:'brief',abbr:'BR',label:'Brief',sub:'Privatbrief · Geschäftsbrief · Amtliches Schreiben',fmtLabel:'Briefart',fmtOpts:['Privatbrief — persönlich, an Einzelperson','Geschäftsbrief — formal, an Unternehmen/Partner','Behördenbrief / Amtliches Schreiben — sehr formal, rechtlich/behördlich'],hasSubscription:false},
     {id:'custom',abbr:'EF',label:'Custom',sub:'Proposal · Announcement · Other',fmtLabel:'Format',fmtOpts:['Talking Points','B2B Proposal','Internal Announcement','Other / Custom'],hasSubscription:false},
   ];
@@ -5674,7 +5677,7 @@ function buildTextGen(prefill,form){
           <div id="klv-tpl-preview-${t.id}" style="font-size:11px;color:var(--mu);margin-top:4px;max-height:60px;overflow:hidden"></div>
         </div>
       </div>`:''}
-      <div class="tone-cal-box" style="${['linkedin','speech','press','website'].includes(t.id)?'':'display:none'}">
+      <div class="tone-cal-box" style="${['linkedin','speech','press','website','social'].includes(t.id)?'':'display:none'}">
         <div class="tone-cal-hdr" onclick="toggleVorbild('${t.id}')">
           <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)">Vorbild-Accounts</span>
           <span id="vorbild-arrow-${t.id}" style="font-size:16px;color:var(--mu);line-height:1">+</span>
@@ -5780,7 +5783,7 @@ function loadTgRef(id){
   const line=document.getElementById('tg-ref-line-'+id);
   if(line)line.textContent=(m&&m.content)?'✓ Referenzmaterial hinterlegt':'Kein Referenzmaterial hinterlegt';
 }
-function loadTgRefs(){['linkedin','newsletter','email','speech','press','website','custom'].forEach(id=>loadTgRef(id));}
+function loadTgRefs(){['linkedin','newsletter','email','speech','press','website','social','custom'].forEach(id=>loadTgRef(id));}
 async function saveLiProfile(){
   if(!clientId)return;
   const val=document.getElementById('tg-li-profile')?.value?.trim();
@@ -7649,6 +7652,7 @@ const ALL_MODULES=[
   {key:'text-gen-speech',name:'Rede schreiben',bundle:'rede',cat:'text-gen',tag:'Texten',tile:'speech',enableKey:'text-gen',desc:'Keynote, Townhall, Award',icon:'ti-microphone'},
   {key:'text-gen-press',name:'Presse & Medien',cat:'text-gen',tag:'Texten',tile:'press',enableKey:'text-gen',desc:'Launch, Strategie, Krise',icon:'ti-speakerphone'},
   {key:'text-gen-website',name:'Website-Texte',cat:'text-gen',tag:'Texten',tile:'website',enableKey:'text-gen',desc:'Homepage, About, Landing Page',icon:'ti-world'},
+  {key:'text-gen-social',name:'Social Media',cat:'text-gen',tag:'Texten',tile:'social',enableKey:'text-gen',desc:'Instagram, Facebook, TikTok',icon:'ti-brand-instagram'},
   {key:'text-gen-brief',name:'Brief',cat:'text-gen',tag:'Texten',tile:'brief',enableKey:'text-gen',desc:'Formeller Geschäftsbrief',icon:'ti-file-text'},
   {key:'text-gen-custom',name:'Frei / Sonstiges',cat:'text-gen',tag:'Texten',tile:'custom',enableKey:'text-gen',desc:'Talking Points, Proposal, Ankündigung',icon:'ti-sparkles'},
   {key:'review',name:'Feedback-Schreiber',cat:'creation',tag:'Schreiben & Antworten — HR',icon:'ti-message-2'},
@@ -9146,7 +9150,7 @@ tryAutoLogin();
 <script id="rq-home-js">
 // ═══ Start: Klient minimalistisch, Advisor mit Tagesübersicht ═══
 (function(){
-  var FALL=[['text-gen-email','E-Mail'],['text-gen-speech','Rede'],['text-gen-linkedin','LinkedIn'],['text-gen-newsletter','Newsletter'],['text-gen-press','Medienmitteilung'],['text-gen-website','Website'],['text-gen-brief','Brief'],['text-gen-custom','Freie Textart']];
+  var FALL=[['text-gen-email','E-Mail'],['text-gen-speech','Rede'],['text-gen-linkedin','LinkedIn'],['text-gen-newsletter','Newsletter'],['text-gen-press','Medienmitteilung'],['text-gen-website','Website'],['text-gen-social','Social Media'],['text-gen-brief','Brief'],['text-gen-custom','Freie Textart']];
   function ukey(){return 'rq-uses-'+((typeof clientId!=='undefined'&&clientId)||'global');}
   function uses(){try{return JSON.parse(localStorage.getItem(ukey())||'{}');}catch(e){return {};}}
   function bump(k){if(!k||k==='text-gen')return;try{var u=uses();u[k]=(u[k]||0)+1;localStorage.setItem(ukey(),JSON.stringify(u));}catch(e){}}
@@ -10543,7 +10547,7 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     var b=document.getElementById('rq-mstep');if(b)b.style.display='none';
     if(obs){obs.disconnect();obs=null;}if(rbObs){rbObs.disconnect();rbObs=null;}
   }
-  var NOUN={linkedin:'LinkedIn-Beitrag',newsletter:'Newsletter',email:'E-Mail',speech:'Rede',press:'Medienmitteilung',website:'Webseitentext',brief:'Brief',custom:'Text'};
+  var NOUN={linkedin:'LinkedIn-Beitrag',newsletter:'Newsletter',email:'E-Mail',speech:'Rede',press:'Medienmitteilung',website:'Webseitentext',social:'Social-Media-Beitrag',brief:'Brief',custom:'Text'};
   var EX={
     linkedin:'Beispiel: Wir eröffnen im Mai eine zweite Niederlassung in Winterthur. Der Beitrag richtet sich an Geschäftspartner und soll die Verbundenheit zur Region zeigen.',
     newsletter:'Beispiel: Quartalsausgabe mit drei Themen: neue Geschäftsleitung, Projektabschluss Areal Nord, Termine im Herbst. Leserschaft sind Kundschaft und Partner.',
@@ -10551,6 +10555,7 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
     speech:'Beispiel: Eröffnungsrede zur Jahresversammlung vor 120 Mitgliedern, 8 Minuten. Rückblick auf das Jahr und Ausblick auf die Investitionen.',
     press:'Beispiel: Mitteilung zur Übernahme der Firma X per 1. Juli. Zielgruppe sind Fachmedien. Kernaussage: Standorte und Arbeitsplätze bleiben erhalten.',
     website:'Beispiel: Startseite für ein Treuhandunternehmen mit Fokus auf KMU. Hauptaussage: persönliche Beratung und klare Preise.',
+    social:'Beispiel: Instagram-Post zum Gericht der Woche im Restaurant am See. Hauptbegriff: Fondue in Luzern. Zeiten und Preis stehen im Auftrag. Ziel: Tischreservationen für das Wochenende.',
     brief:'Beispiel: Antwort an einen Kunden auf eine Reklamation wegen verspäteter Lieferung. Entschuldigung, Lösung bis Freitag anbieten.',
     custom:'Beispiel: Ansprache an der Mitarbeiterversammlung. Anlass, Zielgruppe und Kernaussage nennen.'
   };
@@ -12305,7 +12310,7 @@ body.rq-ro .rq-wrobtn,body.rq-ro .runbtn,body.rq-ro .advbtn,body.rq-ro .lbtn,bod
 // ═══ Module und Textarten pro Klient: Auswahl in «Module anpassen» und im Onboarding, Sperre im Frontend des Klienten ═══
 (function(){
   var E=typeof rqEsc==='function'?rqEsc:function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-  var LIST=[['linkedin','LinkedIn'],['newsletter','Newsletter'],['email','E-Mail'],['speech','Rede'],['press','Medienmitteilung'],['website','Website'],['brief','Brief'],['custom','Freie Textart']];
+  var LIST=[['linkedin','LinkedIn'],['newsletter','Newsletter'],['email','E-Mail'],['speech','Rede'],['press','Medienmitteilung'],['website','Website'],['social','Social Media'],['brief','Brief'],['custom','Freie Textart']];
   var IDS=LIST.map(function(x){return x[0];});
   window.RQ_TEXTARTEN=LIST;
   function norm(arr){return Array.isArray(arr)?IDS.filter(function(i){return arr.indexOf(i)>=0;}):IDS.slice();}

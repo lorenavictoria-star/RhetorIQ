@@ -58,7 +58,7 @@ Return: {"category":"<one of the category keys>","personName":"<only if people_v
 // Vorschlag, welchem Modul ein fertiger Mustertext als Beispiel dient. Wird als Vorschlag (status proposed) abgelegt und
 // fliesst erst in die Auswahl ein, wenn die Beraterin ihn bestätigt (POST /api/module-examples/:id/confirm).
 const TILE_AUS_KATEGORIE = { ref_speech: 'speech', ref_linkedin: 'linkedin', ref_email: 'email', ref_newsletter: 'newsletter', ref_press: 'press', ref_website: 'website' };
-const TILES = ['speech', 'linkedin', 'email', 'newsletter', 'press', 'website', 'brief', 'custom'];
+const TILES = ['speech', 'linkedin', 'email', 'newsletter', 'press', 'website', 'social', 'brief', 'custom'];
 async function schlageBeispielVor({ clientId, advisorId, filename, summary, category, sampleTile, text }) {
   const tile = TILES.includes(sampleTile) ? sampleTile : (TILE_AUS_KATEGORIE[category] || null);
   const body = String(text || '').trim().slice(0, 12000);

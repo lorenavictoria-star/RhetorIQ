@@ -71,7 +71,7 @@ const isReference = m => /^ref_tg_/.test(m.memory_type) || m.memory_type === 'st
 
 const REF_LABEL = {
   ref_tg_email: 'E-Mail', ref_tg_linkedin: 'LinkedIn', ref_tg_newsletter: 'Newsletter', ref_tg_speech: 'Rede',
-  ref_tg_press: 'Pressemitteilung', ref_tg_website: 'Webseite', structural_reference: 'Aufbau (Strukturvorlage)', key_facts: 'Eckdaten und Fakten'
+  ref_tg_press: 'Pressemitteilung', ref_tg_website: 'Webseite', ref_tg_social: 'Social Media', structural_reference: 'Aufbau (Strukturvorlage)', key_facts: 'Eckdaten und Fakten'
 };
 const refLabel = t => REF_LABEL[t] || t.replace(/^ref_tg_/, '').replace(/_/g, ' ');
 

@@ -16,6 +16,7 @@ const TYPES = {
   ref_tg_speech: 'Reden und Präsentationen (Referenz für Reden)',
   ref_tg_press: 'Medienmitteilungen (Referenz für Pressemitteilungen)',
   ref_tg_website: 'Webseitentexte (Referenz für Website-Texte)',
+  ref_tg_social: 'Social-Media-Beiträge (Referenz für Instagram, Facebook, TikTok)',
   ref_brand_voice_source: 'Gemischte eigene Texte, Leitbild, Berichte, Interviews: Quellmaterial für die Brand Voice',
   structural_reference: 'Vorlage, Aufbau oder Struktur, die für alle Textarten gilt'
 };
@@ -26,6 +27,7 @@ const LABELS = {
   ref_tg_speech: 'Referenz Rede',
   ref_tg_press: 'Referenz Pressemitteilung',
   ref_tg_website: 'Referenz Website',
+  ref_tg_social: 'Referenz Social Media',
   ref_brand_voice_source: 'Brand Voice Quellmaterial',
   structural_reference: 'Struktur-Referenz'
 };
