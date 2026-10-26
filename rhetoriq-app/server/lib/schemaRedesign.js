@@ -62,6 +62,8 @@ function ensureSchema() {
         client_id INTEGER,
         started_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
+    // Strukturiertes Faktenblatt des Betriebs (JSON als Text)
+    await pool.query(`ALTER TABLE einheiten ADD COLUMN IF NOT EXISTS fakten_json TEXT`);
     await pool.query(`ALTER TABLE onboarding_drafts ADD COLUMN IF NOT EXISTS advisor_id INTEGER`);
     // Regulierung der Kundschaft (Bank, Versicherung, börsenkotiert): wird im Onboarding erfragt und beim Anlegen übernommen
     await pool.query(`ALTER TABLE onboarding_drafts ADD COLUMN IF NOT EXISTS regulierung TEXT`);

@@ -4,12 +4,16 @@
 //   POST   /bulk              mehrere auf einmal { clientId, zeilen: "Name, Ort\nName, Ort" }
 //   PUT    /:id               ändern
 //   DELETE /:id               löschen
+//   GET    /:id/auf-einen-blick  Zeilen {label, wert} aus dem Faktenblatt
+//   GET    /:id/json-ld          schema.org-Strukturdaten als String
+// faktenStruktur (Objekt) bei POST/PUT ist das strukturierte Faktenblatt, GET liefert es als fakten_struktur.
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
 const { allowedClientId, canAccessClient } = require('../middleware/ownership');
 const { ensureSchema } = require('../lib/schemaRedesign');
+const EF = require('../lib/einheitFakten');
 
 const router = express.Router();
 const MAX_PRO_KLIENT = 100;
@@ -21,6 +25,18 @@ async function aktiv(clientId) {
   return !!(rows[0] && Array.isArray(rows[0].enabled_modules) && rows[0].enabled_modules.includes('restaurants'));
 }
 const NICHT_AKTIV = { error: 'Mehrere Restaurants oder Betriebe sind für diesen Kunden nicht freigeschaltet.' };
+
+const parse = j => { try { const o = j ? JSON.parse(j) : {}; return o && typeof o === 'object' ? o : {}; } catch { return {}; } };
+// Zeile für die Antwort: fakten_json bleibt intern, fakten_struktur ist das geparste Objekt
+const ausgabe = r => { const { fakten_json, ...rest } = r; return { ...rest, fakten_struktur: parse(fakten_json) }; };
+// Prüft faktenStruktur aus dem Body; liefert { json } oder { fehler }
+function strukturAusBody(b) {
+  if (!b || b.faktenStruktur === undefined) return {};
+  if (!b.faktenStruktur || typeof b.faktenStruktur !== 'object' || Array.isArray(b.faktenStruktur)) return { fehler: 'Das Faktenblatt muss ein Objekt sein.' };
+  const n = EF.normalisiere(b.faktenStruktur);
+  if (n.fehler.length) return { fehler: n.fehler.join(' ') };
+  return { json: JSON.stringify(n.fakten) };
+}
 
 const text = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
@@ -37,8 +53,8 @@ router.get('/', requireAuth, async (req, res) => {
     await ensureSchema();
     const clientId = await allowedClientId(req, req.query.clientId);
     if (!clientId || !(await aktiv(clientId))) return res.json([]);
-    const { rows } = await pool.query('SELECT id, client_id, name, ort, stimme, fakten, updated_at FROM einheiten WHERE client_id=$1 ORDER BY LOWER(name)', [clientId]);
-    res.json(rows);
+    const { rows } = await pool.query('SELECT id, client_id, name, ort, stimme, fakten, updated_at, fakten_json FROM einheiten WHERE client_id=$1 ORDER BY LOWER(name)', [clientId]);
+    res.json(rows.map(ausgabe));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
@@ -53,13 +69,15 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     if (!(await aktiv(clientId))) return res.status(403).json(NICHT_AKTIV);
     const name = text(req.body.name, NAME_MAX);
     if (!name) return res.status(400).json({ error: 'Bitte einen Namen eintragen.' });
+    const st = strukturAusBody(req.body);
+    if (st.fehler) return res.status(400).json({ error: st.fehler });
     const { rows: cnt } = await pool.query('SELECT COUNT(*)::int AS n FROM einheiten WHERE client_id=$1', [clientId]);
     if (cnt[0].n >= MAX_PRO_KLIENT) return res.status(400).json({ error: 'Höchstens ' + MAX_PRO_KLIENT + ' Restaurants pro Kunde.' });
     const { rows } = await pool.query(
-      'INSERT INTO einheiten (client_id, name, ort, stimme, fakten) VALUES ($1,$2,$3,$4,$5) RETURNING id, client_id, name, ort, stimme, fakten, updated_at',
-      [clientId, name, text(req.body.ort, ORT_MAX), text(req.body.stimme, TEXT_MAX), text(req.body.fakten, TEXT_MAX)]
+      'INSERT INTO einheiten (client_id, name, ort, stimme, fakten, fakten_json) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, client_id, name, ort, stimme, fakten, updated_at, fakten_json',
+      [clientId, name, text(req.body.ort, ORT_MAX), text(req.body.stimme, TEXT_MAX), text(req.body.fakten, TEXT_MAX), st.json || null]
     );
-    res.status(201).json(rows[0]);
+    res.status(201).json(ausgabe(rows[0]));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
@@ -83,8 +101,8 @@ router.post('/bulk', requireAuth, requireRole('editor'), async (req, res) => {
       const name = text(i < 0 ? z : z.slice(0, i), NAME_MAX);
       const ort = i < 0 ? '' : text(z.slice(i + 1), ORT_MAX);
       if (!name) continue;
-      const { rows } = await pool.query('INSERT INTO einheiten (client_id, name, ort) VALUES ($1,$2,$3) RETURNING id, client_id, name, ort, stimme, fakten, updated_at', [clientId, name, ort]);
-      neu.push(rows[0]);
+      const { rows } = await pool.query('INSERT INTO einheiten (client_id, name, ort) VALUES ($1,$2,$3) RETURNING id, client_id, name, ort, stimme, fakten, updated_at, fakten_json', [clientId, name, ort]);
+      neu.push(ausgabe(rows[0]));
     }
     res.status(201).json({ angelegt: neu.length, einheiten: neu });
   } catch (e) {
@@ -100,11 +118,39 @@ router.put('/:id', requireAuth, requireRole('editor'), async (req, res) => {
     const b = req.body || {};
     const name = b.name !== undefined ? text(b.name, NAME_MAX) : e0.name;
     if (!name) return res.status(400).json({ error: 'Bitte einen Namen eintragen.' });
+    const st = strukturAusBody(b);
+    if (st.fehler) return res.status(400).json({ error: st.fehler });
     const { rows } = await pool.query(
-      'UPDATE einheiten SET name=$1, ort=$2, stimme=$3, fakten=$4, updated_at=NOW() WHERE id=$5 RETURNING id, client_id, name, ort, stimme, fakten, updated_at',
-      [name, b.ort !== undefined ? text(b.ort, ORT_MAX) : e0.ort, b.stimme !== undefined ? text(b.stimme, TEXT_MAX) : e0.stimme, b.fakten !== undefined ? text(b.fakten, TEXT_MAX) : e0.fakten, e0.id]
+      'UPDATE einheiten SET name=$1, ort=$2, stimme=$3, fakten=$4, fakten_json=$6, updated_at=NOW() WHERE id=$5 RETURNING id, client_id, name, ort, stimme, fakten, updated_at, fakten_json',
+      [name, b.ort !== undefined ? text(b.ort, ORT_MAX) : e0.ort, b.stimme !== undefined ? text(b.stimme, TEXT_MAX) : e0.stimme, b.fakten !== undefined ? text(b.fakten, TEXT_MAX) : e0.fakten, e0.id, st.json !== undefined ? st.json : e0.fakten_json]
     );
-    res.json(rows[0]);
+    res.json(ausgabe(rows[0]));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Auf einen Blick: Zeilen aus dem Faktenblatt, ohne KI
+router.get('/:id/auf-einen-blick', requireAuth, async (req, res) => {
+  try {
+    await ensureSchema();
+    const e0 = await eigene(req, req.params.id);
+    if (!e0 || !(await aktiv(e0.client_id))) return res.status(403).json({ error: 'Kein Zugriff auf dieses Restaurant.' });
+    res.json(EF.aufEinenBlick(e0, parse(e0.fakten_json)));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// schema.org-Strukturdaten als JSON-String
+router.get('/:id/json-ld', requireAuth, async (req, res) => {
+  try {
+    await ensureSchema();
+    const e0 = await eigene(req, req.params.id);
+    if (!e0 || !(await aktiv(e0.client_id))) return res.status(403).json({ error: 'Kein Zugriff auf dieses Restaurant.' });
+    res.type('application/ld+json').send(EF.jsonLd(e0, parse(e0.fakten_json)));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });

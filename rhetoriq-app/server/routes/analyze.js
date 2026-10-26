@@ -1675,14 +1675,18 @@ async function einheitBlock(clientId, einheitId) {
     await require('../lib/schemaRedesign').ensureSchema();
     const { rows: cm } = await pool.query('SELECT enabled_modules FROM clients WHERE id=$1', [clientId]);
     if (!(cm[0] && Array.isArray(cm[0].enabled_modules) && cm[0].enabled_modules.includes('restaurants'))) return '';
-    const { rows } = await pool.query('SELECT name, ort, stimme, fakten FROM einheiten WHERE id=$1 AND client_id=$2', [id, clientId]);
+    const { rows } = await pool.query('SELECT name, ort, stimme, fakten, fakten_json FROM einheiten WHERE id=$1 AND client_id=$2', [id, clientId]);
     const e = rows[0];
     if (!e) return '';
     const titel = e.name + (e.ort ? ', ' + e.ort : '');
     let b = '\n\n════════════════════════════════════════\nBETRIEB: ' + sanitizeForPrompt(titel) + '\n════════════════════════════════════════\n'
       + 'Dieser Auftrag gehört zum Betrieb «' + sanitizeForPrompt(e.name) + '». Rangfolge: Die Brand Voice oben (STIMME DES KLIENTEN) ist die Gruppenstimme. Sie gibt Werte, Verbote, Anrede und die Schreibweise der Marke vor. Dieser Betrieb prägt Ton, Wortwahl und Themen. Bei Widerspruch gewinnen die Verbote und die Anrede der Gruppenstimme.\n';
     if (e.stimme && e.stimme.trim()) b += '\nSTIMMPROFIL DES BETRIEBS:\n' + fence('betrieb-stimme', sanitizeForPrompt(e.stimme)) + '\n';
-    if (e.fakten && e.fakten.trim()) b += '\nFAKTEN DES BETRIEBS (verbindlich: nenne nur diese Angaben zu Adresse, Zeiten, Preisen, Küche und Allergenen; fehlt eine Angabe, setze eine Lücke in eckigen Klammern):\n' + fence('betrieb-fakten', sanitizeForPrompt(e.fakten)) + '\n';
+    // Strukturierte Fakten zuerst, danach der Freitext
+    let strukt = '';
+    try { strukt = require('../lib/einheitFakten').faktenText(e, e.fakten_json ? JSON.parse(e.fakten_json) : {}); } catch { strukt = ''; }
+    const frei = e.fakten && e.fakten.trim() ? e.fakten : '';
+    if (strukt || frei) b += '\nFAKTEN DES BETRIEBS (verbindlich: nenne nur diese Angaben zu Adresse, Zeiten, Preisen, Küche und Allergenen; fehlt eine Angabe, setze eine Lücke in eckigen Klammern):\n' + fence('betrieb-fakten', sanitizeForPrompt([strukt, frei].filter(Boolean).join('\n\n'))) + '\n';
     return b + '════════════════════════════════════════\nENDE BETRIEB\n════════════════════════════════════════';
   } catch (err) { console.error('[einheit]', err.message); return ''; }
 }
