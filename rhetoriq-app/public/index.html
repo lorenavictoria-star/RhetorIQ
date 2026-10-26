@@ -15901,7 +15901,10 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
       var neu='<div style="border-top:1px solid var(--bd);padding-top:10px"><div style="font-size:13px;font-weight:600;margin-bottom:6px">Neue Rechnung</div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end"><label style="display:flex;flex-direction:column;font-size:12px;color:var(--mu);gap:3px">Posten<select id="rqre-n-posten" style="'+inp+'">'+po+'</select></label>'
         +'<label id="rqre-n-lz-w" style="display:flex;flex-direction:column;font-size:12px;color:var(--mu);gap:3px">Laufzeit<select id="rqre-n-lz" style="'+inp+'"><option value="monat">1 Monat</option><option value="jahr">12 Monate (10 % Rabatt)</option></select></label>'
+        +'<label id="rqre-n-mon-w" style="display:none;flex-direction:column;font-size:12px;color:var(--mu);gap:3px">Zugang für<select id="rqre-n-mon" style="'+inp+'">'+[1,2,3,4,5,6,7,8,9,10,11,12].map(function(n){return '<option value="'+n+'"'+(n===3?' selected':'')+'>'+n+(n===1?' Monat':' Monate')+'</option>';}).join('')+'<option value="0">0 (nur Rechnung, zum Beispiel zweite Rate)</option></select></label>'
+        +'<span id="rqre-n-txt-w" style="display:none">'+feld('rqre-n-txt','Texte pro Monat','100',110)+'</span>'
         +feld('rqre-n-betrag','Betrag in CHF','',110)+feld('rqre-n-text','Beschreibung (leer = Standard)','',240)+'</div>'
+        +'<div id="rqre-n-pjhint" class="rq-hint" style="display:none;font-size:12px;margin-top:6px">Projekt-Paket: Bei «Bezahlt» läuft der Zugang für die gewählten Monate mit diesem Textkontingent, danach endet er ohne Verlängerung (plus 10 Tage Kulanz). Bei 0 Monaten ändert sich der Zugang nicht.</div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+feld('rqre-n-name','Empfänger',v.empfaenger.name,220)+feld('rqre-n-strasse','Strasse und Nr.',v.empfaenger.strasse,200)+feld('rqre-n-plz','PLZ',v.empfaenger.plz,70)+feld('rqre-n-ort','Ort',v.empfaenger.ort,150)+'</div>'
         +'<div style="margin-top:8px"><button type="button" class="obtn" id="rqre-n-go">Rechnung erstellen</button></div></div>';
       var liste='<div style="border-top:1px solid var(--bd);margin-top:12px;padding-top:10px"><div style="font-size:13px;font-weight:600;margin-bottom:6px">Rechnungen dieses Klienten</div>'
@@ -15942,6 +15945,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
       function vorbelegen(){
         var p=st.posten.filter(function(x){return x.key===sel.value;})[0];if(!p)return;
         g('rqre-n-lz-w').style.display=p.laufzeit?'flex':'none';
+        g('rqre-n-mon-w').style.display=p.projekt?'flex':'none';g('rqre-n-txt-w').style.display=p.projekt?'block':'none';g('rqre-n-pjhint').style.display=p.projekt?'block':'none';
         var r=(p.laufzeit&&lz.value==='jahr')?p.jahrRappen:p.rappen;bt.value=r?(r/100).toFixed(2):'';
         bt.dataset.std=bt.value;
       }
@@ -15950,6 +15954,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
         var p=st.posten.filter(function(x){return x.key===sel.value;})[0]||{};
         var body={posten:sel.value,laufzeit:p.laufzeit?lz.value:'monat',beschreibung:g('rqre-n-text').value,empfaenger:{name:g('rqre-n-name').value,strasse:g('rqre-n-strasse').value,plz:g('rqre-n-plz').value,ort:g('rqre-n-ort').value}};
         var b=(bt.value||'').replace(/[^0-9.]/g,'');if(b&&b!==bt.dataset.std)body.betragRappen=Math.round(parseFloat(b)*100);
+        if(p.projekt){body.monate=Number(g('rqre-n-mon').value);body.texteProMonat=Number(g('rqre-n-txt').value);if(body.monate>0&&!(body.texteProMonat>=1)){say('Bitte die Texte pro Monat angeben.',true);return;}}
         if(p.freitext&&!body.betragRappen){say('Bitte einen Betrag eintragen.',true);return;}
         this.disabled=true;
         try{var r=await api('/api/rechnungen/client/'+cid,{method:'POST',body:JSON.stringify(body)}),d=await r.json();

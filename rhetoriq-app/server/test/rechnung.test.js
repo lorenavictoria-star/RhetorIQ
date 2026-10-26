@@ -249,3 +249,42 @@ test('Monatsablage per E-Mail: eine Mail mit ZIP-Anhang an die Beraterin', async
   assert.equal(m.attachments[0].name, 'Rechnungen_2000-02.zip');
   assert.ok(m.attachments[0].contentBase64.length > 50);
 });
+
+test('Projekt-Paket: Monate und Texte pro Monat, Zugang auf Zeit bei «bezahlt», Teilrechnung ohne Zugang', async () => {
+  const emp = { name: 'Rechnung AG', strasse: 'Bahnhofstrasse 12', plz: '8001', ort: 'Zürich' };
+  await pool.query(`UPDATE clients SET subscription_status='trial', monthly_token_limit=200000, bezahlt_bis=NULL WHERE id=$1`, [a.id]);
+  const neu = (body) => call('POST', `/api/rechnungen/client/${a.id}`, { token: adv(), body: { posten: 'projekt', empfaenger: emp, ...body } });
+  // Prüfungen
+  assert.equal((await neu({ betragRappen: 500000, monate: 13, texteProMonat: 100 })).status, 400, 'höchstens 12 Monate');
+  assert.equal((await neu({ betragRappen: 500000, monate: 3 })).status, 400, 'Texte pro Monat fehlen');
+  assert.equal((await neu({ monate: 3, texteProMonat: 100 })).status, 400, 'Betrag fehlt');
+  // Rate 1: 3 Monate mit 100 Texten pro Monat
+  const r1 = await neu({ betragRappen: 475000, monate: 3, texteProMonat: 100 });
+  assert.equal(r1.status, 200);
+  assert.equal(r1.body.rechnung.monate, 3); assert.equal(r1.body.rechnung.texteProMonat, 100);
+  assert.match(r1.body.rechnung.beschreibung, /3 Monate Plattformzugang mit 100 Texten pro Monat/);
+  let c = (await pool.query('SELECT subscription_status, monthly_token_limit, bezahlt_bis FROM clients WHERE id=$1', [a.id])).rows[0];
+  assert.equal(c.subscription_status, 'trial', 'offene Rechnung schaltet nichts frei');
+  assert.equal((await call('POST', `/api/rechnungen/client/${a.id}/${r1.body.rechnung.id}/bezahlt`, { token: adv(), body: {} })).status, 200);
+  c = (await pool.query('SELECT subscription_status, monthly_token_limit, bezahlt_bis FROM clients WHERE id=$1', [a.id])).rows[0];
+  assert.equal(c.subscription_status, 'active');
+  assert.equal(Number(c.monthly_token_limit), 500000, '100 Texte × 5000 Tokens');
+  const tage = Math.round((new Date(c.bezahlt_bis) - new Date()) / 86400000);
+  assert.ok(tage >= 88 && tage <= 93, 'etwa 3 Monate, war ' + tage);
+  const bis1 = new Date(c.bezahlt_bis).getTime();
+  // Rate 2 ohne Zugang (0 Monate): Zugang und Kontingent bleiben
+  const r2 = await neu({ betragRappen: 475000, monate: 0 });
+  assert.equal(r2.status, 200); assert.equal(r2.body.rechnung.monate, 0);
+  await call('POST', `/api/rechnungen/client/${a.id}/${r2.body.rechnung.id}/bezahlt`, { token: adv(), body: {} });
+  c = (await pool.query('SELECT monthly_token_limit, bezahlt_bis FROM clients WHERE id=$1', [a.id])).rows[0];
+  assert.equal(Number(c.monthly_token_limit), 500000); assert.equal(new Date(c.bezahlt_bis).getTime(), bis1);
+  // Verlängerung: weitere 2 Monate schliessen an das bisherige Ende an
+  const r3 = await neu({ betragRappen: 100000, monate: 2, texteProMonat: 60 });
+  await call('POST', `/api/rechnungen/client/${a.id}/${r3.body.rechnung.id}/bezahlt`, { token: adv(), body: {} });
+  c = (await pool.query('SELECT monthly_token_limit, bezahlt_bis FROM clients WHERE id=$1', [a.id])).rows[0];
+  assert.equal(Number(c.monthly_token_limit), 300000);
+  assert.ok(new Date(c.bezahlt_bis) > new Date(bis1 + 55 * 86400000), 'schliesst an das Ende der bisherigen Zeit an');
+  // Liste der Posten kennt das Projekt-Paket
+  const po = (await call('GET', '/api/rechnungen/posten', { token: adv() })).body.posten.find(p => p.key === 'projekt');
+  assert.ok(po && po.projekt === true && po.freitext === true);
+});

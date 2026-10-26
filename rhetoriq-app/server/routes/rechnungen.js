@@ -23,7 +23,7 @@ function fehler(res, e) {
   return res.status(500).json({ error: 'Internal server error' });
 }
 const oeffentlich = (r) => ({
-  id: r.id, nummer: r.nummer, posten: r.posten, laufzeit: r.laufzeit, beschreibung: r.beschreibung, betragRappen: r.betrag_rappen,
+  id: r.id, nummer: r.nummer, posten: r.posten, laufzeit: r.laufzeit, monate: r.monate === undefined ? null : r.monate, texteProMonat: r.texte_pro_monat === undefined ? null : r.texte_pro_monat, beschreibung: r.beschreibung, betragRappen: r.betrag_rappen,
   status: r.status, ausgestelltAm: r.ausgestellt_am, faelligAm: r.faellig_am, gesendetAm: r.gesendet_am, bezahltAm: r.bezahlt_am,
   ueberfaellig: r.status === 'offen' && r.faellig_am && new Date(r.faellig_am) < new Date()
 });
@@ -46,7 +46,7 @@ router.put('/einstellungen', requireAdvisor, async (req, res) => {
 });
 
 router.get('/posten', requireAdvisor, (req, res) => {
-  res.json({ posten: Object.entries(R.POSTEN).map(([key, p]) => ({ key, label: p.label, rappen: p.cents, laufzeit: !!p.laufzeit, freitext: !!p.freitext, jahrRappen: p.laufzeit ? R.betragFuer(key, 'jahr') : null })) });
+  res.json({ posten: Object.entries(R.POSTEN).map(([key, p]) => ({ key, label: p.label, rappen: p.cents, laufzeit: !!p.laufzeit, freitext: !!p.freitext, projekt: !!p.projekt, jahrRappen: p.laufzeit ? R.betragFuer(key, 'jahr') : null })) });
 });
 
 router.get('/export/:ym.zip', requireAdvisor, async (req, res) => {
@@ -83,7 +83,7 @@ router.get('/client/:clientId/vorschlag', requireAdvisor, ownClient('clientId'),
 router.post('/client/:clientId', requireAdvisor, ownClient('clientId'), async (req, res) => {
   try {
     const b = req.body || {};
-    const r = await R.legeAn({ clientId: Number(req.params.clientId), posten: b.posten, laufzeit: b.laufzeit, betragRappen: Number.isInteger(b.betragRappen) ? b.betragRappen : undefined, beschreibung: b.beschreibung, empfaenger: b.empfaenger || {}, bemerkung: b.bemerkung });
+    const r = await R.legeAn({ clientId: Number(req.params.clientId), posten: b.posten, laufzeit: b.laufzeit, betragRappen: Number.isInteger(b.betragRappen) ? b.betragRappen : undefined, monate: b.monate, texteProMonat: b.texteProMonat, beschreibung: b.beschreibung, empfaenger: b.empfaenger || {}, bemerkung: b.bemerkung });
     res.json({ rechnung: oeffentlich(r) });
   } catch (e) { return fehler(res, e); }
 });

@@ -329,6 +329,8 @@ function ensureSchema() {
       )`);
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS rechnungen_nr_idx ON rechnungen (jahr, laufnr)`);
     // Automatische Rechnungen, Erinnerungen und Zahlungsabgleich (lib/rechnungAuto.js)
+    await pool.query(`ALTER TABLE rechnungen ADD COLUMN IF NOT EXISTS monate INTEGER`);
+    await pool.query(`ALTER TABLE rechnungen ADD COLUMN IF NOT EXISTS texte_pro_monat INTEGER`);
     await pool.query(`ALTER TABLE rechnungen ADD COLUMN IF NOT EXISTS mahnung_stufe INTEGER NOT NULL DEFAULT 0`);
     await pool.query(`ALTER TABLE rechnungen ADD COLUMN IF NOT EXISTS mahnung_am TIMESTAMPTZ`);
     await pool.query(`ALTER TABLE rechnungen ADD COLUMN IF NOT EXISTS auto BOOLEAN NOT NULL DEFAULT FALSE`);

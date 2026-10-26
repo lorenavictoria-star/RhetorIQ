@@ -17,6 +17,9 @@ const POSTEN = {
   'stimm-audit': { label: '«Die Stimme finden» (30 Tage Zugang inklusive)', cents: ANGEBOTE['stimm-audit'].amountCents, art: 'audit' },
   'workshop-team': { label: 'Workshop «Die Stimme finden» (Team)', cents: ANGEBOTE['workshop-team'].amountCents, art: 'einmalig' },
   'workshop-business': { label: 'Workshop «Die Stimme finden» (Business)', cents: ANGEBOTE['workshop-business'].amountCents, art: 'einmalig' },
+  // Projekt-Paket: Betrag, Monate (0 bis 12) und Texte pro Monat gibt die Beraterin an. Bei «bezahlt» läuft der Zugang für die gewählten Monate
+  // mit dem Textkontingent, ohne automatische Verlängerung. 0 Monate: Teilrechnung (zum Beispiel die zweite Rate), der Zugang bleibt unverändert.
+  projekt: { label: 'Projekt-Paket (Zugang auf Zeit)', cents: 0, art: 'projekt', freitext: true, projekt: true },
   andere: { label: 'Leistung nach Vereinbarung', cents: 0, art: 'einmalig', freitext: true }
 };
 const JAHRESRABATT = 0.9;   // wie lib/yearlyPlan.js: Jahreszahlung mit 10 Prozent Rabatt
@@ -90,10 +93,20 @@ function adresseAusFreitext(text) {
   return { strasse, plz, ort };
 }
 
-async function legeAn({ clientId, posten, laufzeit = 'monat', betragRappen, beschreibung, empfaenger = {}, bemerkung }) {
+async function legeAn({ clientId, posten, laufzeit = 'monat', betragRappen, beschreibung, empfaenger = {}, bemerkung, monate, texteProMonat }) {
   const p = POSTEN[posten];
   if (!p) throw Object.assign(new Error('Unbekannter Posten.'), { status: 400 });
-  const lz = p.laufzeit && laufzeit === 'jahr' ? 'jahr' : 'monat';
+  let lz = p.laufzeit && laufzeit === 'jahr' ? 'jahr' : 'monat';
+  let mon = null, texte = null;
+  if (p.projekt) {
+    lz = 'projekt';
+    mon = Number(monate === undefined || monate === null || monate === '' ? 3 : monate);
+    if (!Number.isInteger(mon) || mon < 0 || mon > 12) throw Object.assign(new Error('Die Dauer muss zwischen 0 und 12 Monaten liegen.'), { status: 400 });
+    if (mon > 0) {
+      texte = Number(texteProMonat);
+      if (!Number.isInteger(texte) || texte < 1 || texte > 5000) throw Object.assign(new Error('Bitte die Texte pro Monat angeben (1 bis 5000).'), { status: 400 });
+    }
+  }
   let betrag = Number.isInteger(betragRappen) && betragRappen > 0 ? betragRappen : betragFuer(posten, lz);
   if (!betrag || betrag < 100 || betrag > 100000000) throw Object.assign(new Error('Der Betrag fehlt oder ist ungültig.'), { status: 400 });
   const e = await holeEinstellungen();
@@ -110,11 +123,12 @@ async function legeAn({ clientId, posten, laufzeit = 'monat', betragRappen, besc
     name: String(empfaenger.name || '').trim().slice(0, 70), strasse: String(empfaenger.strasse || '').trim().slice(0, 70),
     plz: String(empfaenger.plz || '').trim().slice(0, 16), ort: String(empfaenger.ort || '').trim().slice(0, 35)
   };
-  const text = (beschreibung && String(beschreibung).trim()) || (p.label + (p.laufzeit ? (lz === 'jahr' ? ', 12 Monate (Jahreszahlung, 10 Prozent Rabatt)' : ', 1 Monat') : ''));
+  const projektText = p.projekt ? (p.label.replace(' (Zugang auf Zeit)', '') + (mon > 0 ? `, ${mon} ${mon === 1 ? 'Monat' : 'Monate'} Plattformzugang mit ${texte} Texten pro Monat` : '')) : null;
+  const text = (beschreibung && String(beschreibung).trim()) || projektText || (p.label + (p.laufzeit ? (lz === 'jahr' ? ', 12 Monate (Jahreszahlung, 10 Prozent Rabatt)' : ', 1 Monat') : ''));
   const { rows } = await pool.query(
-    `INSERT INTO rechnungen (client_id, jahr, laufnr, nummer, posten, laufzeit, beschreibung, betrag_rappen, status, referenz, empfaenger, bemerkung, faellig_am)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'offen',$9,$10,$11,$12) RETURNING *`,
-    [clientId, jahr, laufnr, nummer, posten, lz, text.slice(0, 300), betrag, referenz, JSON.stringify(emp), bemerkung ? String(bemerkung).slice(0, 300) : null, faellig]);
+    `INSERT INTO rechnungen (client_id, jahr, laufnr, nummer, posten, laufzeit, beschreibung, betrag_rappen, status, referenz, empfaenger, bemerkung, faellig_am, monate, texte_pro_monat)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'offen',$9,$10,$11,$12,$13,$14) RETURNING *`,
+    [clientId, jahr, laufnr, nummer, posten, lz, text.slice(0, 300), betrag, referenz, JSON.stringify(emp), bemerkung ? String(bemerkung).slice(0, 300) : null, faellig, mon, texte]);
   return rows[0];
 }
 
@@ -228,6 +242,15 @@ async function alsBezahltMarkieren(id, { bezahltAm } = {}) {
     const start = c[0] && c[0].bezahlt_bis && new Date(c[0].bezahlt_bis) > heute ? new Date(c[0].bezahlt_bis) : heute;
     const bis = monateDazu(start, r.laufzeit === 'jahr' ? 12 : 1);
     await pool.query(`UPDATE clients SET subscription_status='active', monthly_token_limit=$2, zugang_bis=NULL, bezahlt_bis=$3 WHERE id=$1`, [r.client_id, p.tokens, bis]);
+  } else if (p.art === 'projekt') {
+    const mon = Number(r.monate) || 0;
+    if (mon > 0) {
+      const { TOKENS_PRO_TEXT } = require('./abo');
+      const { rows: c } = await pool.query('SELECT bezahlt_bis FROM clients WHERE id=$1', [r.client_id]);
+      const heute = new Date();
+      const start = c[0] && c[0].bezahlt_bis && new Date(c[0].bezahlt_bis) > heute ? new Date(c[0].bezahlt_bis) : heute;
+      await pool.query(`UPDATE clients SET subscription_status='active', monthly_token_limit=$2, zugang_bis=NULL, bezahlt_bis=$3 WHERE id=$1`, [r.client_id, (Number(r.texte_pro_monat) || 1) * TOKENS_PRO_TEXT, monateDazu(start, mon)]);
+    }
   } else if (p.art === 'audit') {
     await pool.query(`UPDATE clients SET subscription_status='active', monthly_token_limit=200000, zugang_bis=NOW() + INTERVAL '30 days' WHERE id=$1`, [r.client_id]);
   } else if (p.art === 'quartalsreview') {
