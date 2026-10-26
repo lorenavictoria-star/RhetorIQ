@@ -104,7 +104,7 @@ async function legeAn({ clientId, posten, laufzeit = 'monat', betragRappen, besc
     if (!Number.isInteger(mon) || mon < 0 || mon > 12) throw Object.assign(new Error('Die Dauer muss zwischen 0 und 12 Monaten liegen.'), { status: 400 });
     if (mon > 0) {
       texte = Number(texteProMonat);
-      if (!Number.isInteger(texte) || texte < 1 || texte > 5000) throw Object.assign(new Error('Bitte die Texte pro Monat angeben (1 bis 5000).'), { status: 400 });
+      if (texteProMonat === undefined || texteProMonat === null || texteProMonat === '' || !Number.isInteger(texte) || texte < 0 || texte > 5000) throw Object.assign(new Error('Bitte die Texte pro Monat angeben (1 bis 5000, 0 für unbegrenzt).'), { status: 400 });
     }
   }
   let betrag = Number.isInteger(betragRappen) && betragRappen > 0 ? betragRappen : betragFuer(posten, lz);
@@ -123,7 +123,7 @@ async function legeAn({ clientId, posten, laufzeit = 'monat', betragRappen, besc
     name: String(empfaenger.name || '').trim().slice(0, 70), strasse: String(empfaenger.strasse || '').trim().slice(0, 70),
     plz: String(empfaenger.plz || '').trim().slice(0, 16), ort: String(empfaenger.ort || '').trim().slice(0, 35)
   };
-  const projektText = p.projekt ? (p.label.replace(' (Zugang auf Zeit)', '') + (mon > 0 ? `, ${mon} ${mon === 1 ? 'Monat' : 'Monate'} Plattformzugang mit ${texte} Texten pro Monat` : '')) : null;
+  const projektText = p.projekt ? (p.label.replace(' (Zugang auf Zeit)', '') + (mon > 0 ? `, ${mon} ${mon === 1 ? 'Monat' : 'Monate'} Plattformzugang ${texte === 0 ? 'mit unbegrenzten Texten (Fair Use)' : 'mit ' + texte + ' Texten pro Monat'}` : '')) : null;
   const text = (beschreibung && String(beschreibung).trim()) || projektText || (p.label + (p.laufzeit ? (lz === 'jahr' ? ', 12 Monate (Jahreszahlung, 10 Prozent Rabatt)' : ', 1 Monat') : ''));
   const { rows } = await pool.query(
     `INSERT INTO rechnungen (client_id, jahr, laufnr, nummer, posten, laufzeit, beschreibung, betrag_rappen, status, referenz, empfaenger, bemerkung, faellig_am, monate, texte_pro_monat)
@@ -249,7 +249,7 @@ async function alsBezahltMarkieren(id, { bezahltAm } = {}) {
       const { rows: c } = await pool.query('SELECT bezahlt_bis FROM clients WHERE id=$1', [r.client_id]);
       const heute = new Date();
       const start = c[0] && c[0].bezahlt_bis && new Date(c[0].bezahlt_bis) > heute ? new Date(c[0].bezahlt_bis) : heute;
-      await pool.query(`UPDATE clients SET subscription_status='active', monthly_token_limit=$2, zugang_bis=NULL, bezahlt_bis=$3 WHERE id=$1`, [r.client_id, (Number(r.texte_pro_monat) || 1) * TOKENS_PRO_TEXT, monateDazu(start, mon)]);
+      await pool.query(`UPDATE clients SET subscription_status='active', monthly_token_limit=$2, zugang_bis=NULL, bezahlt_bis=$3 WHERE id=$1`, [r.client_id, Number(r.texte_pro_monat) > 0 ? Number(r.texte_pro_monat) * TOKENS_PRO_TEXT : null, monateDazu(start, mon)]);
     }
   } else if (p.art === 'audit') {
     await pool.query(`UPDATE clients SET subscription_status='active', monthly_token_limit=200000, zugang_bis=NOW() + INTERVAL '30 days' WHERE id=$1`, [r.client_id]);

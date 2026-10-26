@@ -284,6 +284,12 @@ test('Projekt-Paket: Monate und Texte pro Monat, Zugang auf Zeit bei «bezahlt»
   c = (await pool.query('SELECT monthly_token_limit, bezahlt_bis FROM clients WHERE id=$1', [a.id])).rows[0];
   assert.equal(Number(c.monthly_token_limit), 300000);
   assert.ok(new Date(c.bezahlt_bis) > new Date(bis1 + 55 * 86400000), 'schliesst an das Ende der bisherigen Zeit an');
+  // Unbegrenzt: 0 Texte pro Monat setzt das Kontingent auf «ohne Limit»
+  const ru = await neu({ betragRappen: 354000, monate: 6, texteProMonat: 0 });
+  assert.equal(ru.status, 200); assert.match(ru.body.rechnung.beschreibung, /unbegrenzten Texten/);
+  await call('POST', `/api/rechnungen/client/${a.id}/${ru.body.rechnung.id}/bezahlt`, { token: adv(), body: {} });
+  c = (await pool.query('SELECT monthly_token_limit, subscription_status FROM clients WHERE id=$1', [a.id])).rows[0];
+  assert.equal(c.monthly_token_limit, null, 'kein Limit'); assert.equal(c.subscription_status, 'active');
   // Liste der Posten kennt das Projekt-Paket
   const po = (await call('GET', '/api/rechnungen/posten', { token: adv() })).body.posten.find(p => p.key === 'projekt');
   assert.ok(po && po.projekt === true && po.freitext === true);
