@@ -2729,7 +2729,7 @@ router.post('/:id/rate', requireAuth, requireRole('editor'), async (req, res) =>
 
 // Exposed for tests only — doesn't change Express behavior, since routers are
 // callable objects and consumers only ever use `require(...)` as the router.
-router._internal = { sanitizeForPrompt, capText, capFields, PROMPTS, MODULE_MAX_TOKENS, HAIKU_MODULES, GLOBAL_STYLE_RULES, checkQuota, getFeedbackLearningsBlock, tuneCache, assembleSystemBlocks, shouldTuneCache, draftUserContent, revisionUserContent, buildRevisionPrompt, draftModelFor };
+router._internal = { sanitizeForPrompt, capText, capFields, PROMPTS, MODULE_MAX_TOKENS, HAIKU_MODULES, GLOBAL_STYLE_RULES, checkQuota, getFeedbackLearningsBlock, tuneCache, assembleSystemBlocks, shouldTuneCache, draftUserContent, revisionUserContent, buildRevisionPrompt, draftModelFor, einheitBlock };
 
 module.exports = router;
 module.exports.useTwoPass = useTwoPass;

@@ -17028,6 +17028,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
     body.querySelectorAll('[data-edit]').forEach(function(b){b.onclick=function(){var z=body.querySelector('[data-id="'+b.getAttribute('data-edit')+'"] .einh-edit');z.style.display=z.style.display==='none'?'block':'none';};});
     body.querySelectorAll('.rq-vw-zeile[data-id]').forEach(function(z){
       var box=z.querySelector('.einh-edit');if(!box)return;
+      if(window.rqFaktenblatt)window.rqFaktenblatt.einhaengen(box,cache.list.filter(function(x){return x.id==z.getAttribute('data-id');})[0]||{id:z.getAttribute('data-id')});
       box.querySelector('.einh-cancel').onclick=function(){box.style.display='none';};
       box.querySelector('.einh-save').onclick=async function(){
         var m=box.querySelector('.einh-msg');m.textContent='';
@@ -17051,6 +17052,503 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
   };
   var ow=window.openWorkspace;
   if(typeof ow==='function')window.openWorkspace=async function(){var r=await ow.apply(this,arguments);tab();return r;};
+  tab();
+})();
+</script>
+<script id="rq-faktenblatt-js">
+// Strukturiertes Faktenblatt je Restaurant (im Bearbeiten-Bereich des Reiters «Restaurants»).
+(function(){
+  var TAGE=['Mo','Di','Mi','Do','Fr','Sa','So'];
+  var PFLICHT=['strasse','plz','ort','telefon','oeffnungszeiten','kueche','reservation_url'];
+  var FELDER=[
+    {key:'strasse',label:'Strasse und Nummer',typ:'text',hinweis:'zum Beispiel Seestrasse 12'},
+    {key:'plz',label:'PLZ',typ:'text',hinweis:'vierstellig'},
+    {key:'ort',label:'Ort',typ:'text',hinweis:'zum Beispiel Luzern'},
+    {key:'telefon',label:'Telefon',typ:'text',hinweis:'zum Beispiel +41 41 123 45 67'},
+    {key:'email',label:'E-Mail',typ:'text',hinweis:'Adresse für Anfragen'},
+    {key:'reservation_url',label:'Reservation (Link)',typ:'text',hinweis:'Link zur Online-Reservation, beginnt mit https://'},
+    {key:'webseite_url',label:'Webseite',typ:'text',hinweis:'beginnt mit https://'},
+    {key:'kueche',label:'Küche',typ:'text',hinweis:'zum Beispiel Saisonale Schweizer Küche'},
+    {key:'preisklasse',label:'Preisklasse',typ:'text',hinweis:'zum Beispiel CHF 30 bis 60 oder $$'},
+    {key:'kapazitaet_innen',label:'Plätze innen',typ:'zahl',hinweis:'Anzahl Sitzplätze'},
+    {key:'kapazitaet_terrasse',label:'Plätze Terrasse',typ:'zahl',hinweis:'Anzahl Sitzplätze'},
+    {key:'terrasse',label:'Terrasse',typ:'bool',hinweis:'ja oder nein'},
+    {key:'kinderfreundlich',label:'Kinderfreundlich',typ:'bool',hinweis:'ja oder nein'},
+    {key:'barrierefrei',label:'Barrierefrei',typ:'bool',hinweis:'ja oder nein'},
+    {key:'parkplatz_anreise',label:'Parkplatz und Anreise',typ:'text',hinweis:'zum Beispiel Parkhaus 200 m, Bus 12'},
+    {key:'oeffnungszeiten',label:'Öffnungszeiten',typ:'zeiten',hinweis:'Tage mit Von und Bis; Ruhetage ohne Eintrag lassen'},
+    {key:'besonderheiten',label:'Besonderheiten',typ:'liste',hinweis:'je ein Punkt pro Zeile'},
+    {key:'auszeichnungen',label:'Auszeichnungen',typ:'liste',hinweis:'je eine Auszeichnung pro Zeile'},
+    {key:'anlaesse',label:'Anlässe',typ:'liste',hinweis:'je ein Anlass pro Zeile'},
+    {key:'kuechenchef',label:'Küchenchef',typ:'text',hinweis:'Name'},
+    {key:'gruendungsjahr',label:'Gründungsjahr',typ:'zahl',hinweis:'vierstellig'}
+  ];
+  var felderCache=null;
+  async function felder(){
+    if(felderCache)return felderCache;
+    try{var r=await api('/api/webseiten/seitentypen');if(r.ok){var j=await r.json();if(j&&Array.isArray(j.faktenFelder)&&j.faktenFelder.length){felderCache=j.faktenFelder;return felderCache;}}}catch(e){}
+    felderCache=FELDER;return felderCache;
+  }
+  function el(tag,attrs,kids){
+    var e=document.createElement(tag);
+    Object.keys(attrs||{}).forEach(function(k){
+      if(k==='text')e.textContent=attrs[k];else if(k==='style')e.style.cssText=attrs[k];else if(k==='cls')e.className=attrs[k];else e.setAttribute(k,attrs[k]);});
+    (kids||[]).forEach(function(c){if(c)e.appendChild(c);});
+    return e;
+  }
+  function zeitenZeile(wrap,z){
+    z=z||{};
+    var row=el('div',{cls:'fb-zeit',style:'display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px;padding:6px;border:1px solid var(--bd);border-radius:6px'});
+    var tg=el('span',{style:'display:flex;gap:4px;flex-wrap:wrap'});
+    TAGE.forEach(function(t){
+      var cb=el('input',{type:'checkbox','data-tag':t,'aria-label':t});
+      cb.checked=(z.tage||[]).indexOf(t)>=0;
+      tg.appendChild(el('label',{style:'font-size:12px;display:inline-flex;align-items:center;gap:2px'},[cb,el('span',{text:t})]));
+    });
+    var von=el('input',{type:'time',cls:'fb-von','aria-label':'Von',style:'padding:5px'});von.value=z.von||'';
+    var bis=el('input',{type:'time',cls:'fb-bis','aria-label':'Bis',style:'padding:5px'});bis.value=z.bis||'';
+    var bem=el('input',{type:'text',cls:'fb-bem',placeholder:'Bemerkung (optional)','aria-label':'Bemerkung',style:'flex:1;min-width:120px;padding:5px'});bem.value=z.bemerkung||'';
+    var del=el('button',{type:'button',cls:'obtn',text:'Entfernen'});
+    del.onclick=function(){row.remove();};
+    [tg,el('span',{text:'von',cls:'rq-hint'}),von,el('span',{text:'bis',cls:'rq-hint'}),bis,bem,del].forEach(function(x){row.appendChild(x);});
+    wrap.appendChild(row);
+  }
+  function lesen(box,fl){
+    var out={};
+    fl.forEach(function(f){
+      var inp=box.querySelector('[data-fk="'+f.key+'"]');if(!inp)return;
+      if(f.typ==='text'){var v=inp.value.trim();if(v)out[f.key]=v;}
+      else if(f.typ==='zahl'){var n=inp.value.trim();if(n!=='')out[f.key]=Number(n);}
+      else if(f.typ==='bool'){if(inp.value==='ja')out[f.key]=true;else if(inp.value==='nein')out[f.key]=false;}
+      else if(f.typ==='liste'){var l=inp.value.split(/\r?\n/).map(function(s){return s.trim();}).filter(Boolean);if(l.length)out[f.key]=l;}
+      else if(f.typ==='zeiten'){
+        var z=[];inp.querySelectorAll('.fb-zeit').forEach(function(r){
+          var tage=[];r.querySelectorAll('[data-tag]').forEach(function(c){if(c.checked)tage.push(c.getAttribute('data-tag'));});
+          var von=r.querySelector('.fb-von').value,bis=r.querySelector('.fb-bis').value,bem=r.querySelector('.fb-bem').value.trim();
+          if(!tage.length&&!von&&!bis)return;
+          var o={tage:tage,von:von,bis:bis};if(bem)o.bemerkung=bem;z.push(o);});
+        if(z.length)out[f.key]=z;
+      }
+    });
+    return out;
+  }
+  function fehlend(werte,fl){
+    var m=[];
+    PFLICHT.forEach(function(k){
+      var v=werte[k];var f=fl.filter(function(x){return x.key===k;})[0];
+      var leer=v==null||v===''||(Array.isArray(v)&&!v.length)||(k==='oeffnungszeiten'&&Array.isArray(v)&&!v.some(function(z){return z.tage&&z.tage.length&&z.von&&z.bis;}));
+      if(leer)m.push(f?f.label:k);
+    });
+    return m;
+  }
+  async function kopieren(text){
+    try{await navigator.clipboard.writeText(text);return true;}catch(e){
+      try{var t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();var ok=document.execCommand('copy');t.remove();return ok;}catch(e2){return false;}}
+  }
+  async function einhaengen(box,einheit){
+    if(!box||box.querySelector('.fb-blatt'))return;
+    var fl=await felder();
+    var wert=(einheit&&einheit.fakten_struktur&&typeof einheit.fakten_struktur==='object')?einheit.fakten_struktur:{};
+    var blatt=el('div',{cls:'fb-blatt',id:'fb-blatt-'+(einheit.id||''),style:'margin-top:14px;padding:12px;border:1px solid var(--bd);border-radius:8px'});
+    blatt.appendChild(el('div',{text:'Faktenblatt',style:'font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:4px'}));
+    blatt.appendChild(el('div',{cls:'rq-hint',text:'Strukturierte Angaben. Daraus entstehen «Auf einen Blick», Strukturdaten und die Fakten in jedem Text. Was hier fehlt, bleibt im Text eine Lücke.',style:'margin-bottom:10px'}));
+    var fehl=el('div',{cls:'fb-fehlt',id:'fb-fehlt-'+(einheit.id||''),style:'margin-bottom:10px;font-size:13px'});
+    blatt.appendChild(fehl);
+    var grid=el('div',{style:'display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px'});
+    fl.forEach(function(f){
+      var w=wert[f.key],inp;
+      var wrapper=el('div',{style:(f.typ==='zeiten'||f.typ==='liste')?'grid-column:1 / -1':''});
+      wrapper.appendChild(el('label',{cls:'rq-hint',text:f.label+(PFLICHT.indexOf(f.key)>=0?' *':''),style:'display:block;margin-bottom:2px'}));
+      if(f.typ==='text'||f.typ==='zahl'){
+        inp=el('input',{type:f.typ==='zahl'?'number':'text',cls:'fi',placeholder:f.hinweis||'','data-fk':f.key,style:'padding:8px 10px;font-size:14px'});
+        inp.value=w==null?'':String(w);
+      }else if(f.typ==='bool'){
+        inp=el('select',{'data-fk':f.key,style:'width:100%;padding:8px'});
+        [['','Keine Angabe'],['ja','Ja'],['nein','Nein']].forEach(function(o){var op=el('option',{value:o[0],text:o[1]});inp.appendChild(op);});
+        inp.value=w===true?'ja':w===false?'nein':'';
+      }else if(f.typ==='liste'){
+        inp=el('textarea',{rows:'3','data-fk':f.key,placeholder:(f.hinweis||'')+' (ein Eintrag pro Zeile)',style:'width:100%'});
+        inp.value=Array.isArray(w)?w.join('\n'):'';
+      }else{
+        inp=el('div',{'data-fk':f.key,id:'fb-zeiten-'+(einheit.id||'')});
+        (Array.isArray(w)?w:[]).forEach(function(z){zeitenZeile(inp,z);});
+        var add=el('button',{type:'button',cls:'obtn',text:'Zeile hinzufügen'});
+        add.onclick=function(){zeitenZeile(inp,{});aktualisieren();};
+        wrapper.appendChild(inp);wrapper.appendChild(add);
+        wrapper.appendChild(el('div',{cls:'rq-hint',text:f.hinweis||'',style:'margin-top:2px'}));
+        grid.appendChild(wrapper);return;
+      }
+      wrapper.appendChild(inp);grid.appendChild(wrapper);
+    });
+    blatt.appendChild(grid);
+    var aktionen=el('div',{style:'margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center'});
+    var bSave=el('button',{type:'button',cls:'obtn',id:'fb-save-'+(einheit.id||''),text:'Faktenblatt speichern'});
+    var bVor=el('button',{type:'button',cls:'obtn',id:'fb-vorschau-'+(einheit.id||''),text:'Vorschau: Auf einen Blick'});
+    var bJs=el('button',{type:'button',cls:'obtn',id:'fb-jsonld-'+(einheit.id||''),text:'Strukturdaten kopieren'});
+    var msg=el('span',{cls:'rq-hint'});
+    [bSave,bVor,bJs,msg].forEach(function(x){aktionen.appendChild(x);});
+    blatt.appendChild(aktionen);
+    var vor=el('div',{id:'fb-vorschau-box-'+(einheit.id||''),style:'display:none;margin-top:10px;padding:10px;border:1px solid var(--bd);border-radius:6px'});
+    blatt.appendChild(vor);
+    function aktualisieren(){
+      var m=fehlend(lesen(blatt,fl),fl);
+      fehl.textContent='';
+      if(!m.length){fehl.appendChild(el('span',{text:'Alle Pflichtangaben sind vorhanden.',style:'color:#166534'}));}
+      else{fehl.appendChild(el('b',{text:'Fehlende Angaben: ',style:'font-weight:600'}));fehl.appendChild(document.createTextNode(m.join(', ')));}
+    }
+    blatt.addEventListener('input',aktualisieren);blatt.addEventListener('change',aktualisieren);
+    aktualisieren();
+    async function speichern(){
+      var e=box.closest('.rq-vw-zeile')||box;
+      var name=(box.querySelector('.einh-name')||{}).value||einheit.name||'',ort=(box.querySelector('.einh-ort')||{}).value||'',
+          stimme=(box.querySelector('.einh-stimme')||{}).value||'',fakten=(box.querySelector('.einh-fakten')||{}).value||'';
+      try{
+        var r=await api('/api/einheiten/'+einheit.id,{method:'PUT',body:JSON.stringify({name:name,ort:ort,stimme:stimme,fakten:fakten,faktenStruktur:lesen(blatt,fl)})});
+        var j=await r.json().catch(function(){return {};});
+        if(!r.ok){msg.textContent=j.error||'Das Faktenblatt konnte nicht gespeichert werden.';return false;}
+        msg.textContent=(j.fehler&&j.fehler.length)?('Gespeichert. Hinweis: '+[].concat(j.fehler).join(' ')):'Gespeichert.';
+        return true;
+      }catch(x){msg.textContent='Das Faktenblatt konnte nicht gespeichert werden.';return false;}
+    }
+    bSave.onclick=function(){msg.textContent='';speichern();};
+    bVor.onclick=async function(){
+      msg.textContent='';if(!await speichern())return;
+      try{var r=await api('/api/einheiten/'+einheit.id+'/auf-einen-blick');var j=await r.json().catch(function(){return [];});
+        if(!r.ok){msg.textContent=(j&&j.error)||'Die Vorschau ist nicht verfügbar.';return;}
+        vor.textContent='';vor.style.display='block';
+        vor.appendChild(el('div',{text:'Auf einen Blick',style:'font-weight:600;margin-bottom:6px'}));
+        if(!Array.isArray(j)||!j.length)vor.appendChild(el('div',{cls:'rq-hint',text:'Noch keine Angaben vorhanden.'}));
+        (Array.isArray(j)?j:[]).forEach(function(p){vor.appendChild(el('div',{style:'display:flex;gap:8px;padding:3px 0;border-bottom:1px solid var(--bd);font-size:13px'},[el('span',{text:p.label,style:'min-width:130px;color:var(--mu)'}),el('span',{text:p.wert,style:'min-width:0;overflow-wrap:anywhere'})]));});
+      }catch(x){msg.textContent='Die Vorschau ist nicht verfügbar.';}
+    };
+    bJs.onclick=async function(){
+      msg.textContent='';if(!await speichern())return;
+      try{var r=await api('/api/einheiten/'+einheit.id+'/json-ld');var t=await r.text();
+        if(!r.ok){msg.textContent='Die Strukturdaten sind nicht verfügbar.';return;}
+        msg.textContent=(await kopieren(t))?'Strukturdaten kopiert.':'Kopieren war nicht möglich.';
+      }catch(x){msg.textContent='Die Strukturdaten sind nicht verfügbar.';}
+    };
+    box.appendChild(blatt);
+  }
+  window.rqFaktenblatt={einhaengen:einhaengen,fehlend:fehlend,PFLICHT:PFLICHT};
+})();
+</script>
+<script id="rq-webseiten-js">
+// Workspace, Reiter «Webseiten»: Seitenpaket für ein Restaurant erstellen, Ergebnis prüfen, Konsistenz über alle Webseiten.
+(function(){
+  var timer=null,st={typen:null,sets:{},fakten:[],einheiten:[],einheitId:'',satz:'',sel:{},stich:{},urls:{},paket:null};
+  function el(tag,attrs,kids){
+    var e=document.createElement(tag);
+    Object.keys(attrs||{}).forEach(function(k){
+      if(k==='text')e.textContent=attrs[k];else if(k==='style')e.style.cssText=attrs[k];else if(k==='cls')e.className=attrs[k];else e.setAttribute(k,attrs[k]);});
+    (kids||[]).forEach(function(c){if(c)e.appendChild(c);});
+    return e;
+  }
+  function kopf(t){return el('div',{text:t,style:'font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin:18px 0 6px'});}
+  function hint(t,st2){return el('div',{cls:'rq-hint',text:t,style:st2||''});}
+  function stoppen(){if(timer){clearInterval(timer);timer=null;}}
+  function aktivFuer(cid){var c=null;try{c=clients.filter(function(x){return x.id==cid;})[0];}catch(e){}return !!(c&&Array.isArray(c.enabled_modules)&&c.enabled_modules.indexOf('restaurants')>=0);}
+  function tab(){
+    var wrap=document.getElementById('ws-tabs');if(!wrap)return null;
+    var b=document.getElementById('ws-tab-web');
+    if(!aktivFuer(_wsClientId)){if(b)b.remove();return null;}
+    if(!b){b=document.createElement('button');b.className='mlist-pill';b.id='ws-tab-web';b.textContent='Webseiten';b.onclick=function(){wsSwitchTab('web');};
+      var ref=document.getElementById('ws-tab-einh');
+      var nach=ref?ref.nextSibling:(document.getElementById('ws-tab-bsp')||document.getElementById('ws-tab-store')||document.getElementById('ws-tab-admin'));
+      wrap.insertBefore(b,nach);}
+    return b;
+  }
+  async function fehlerText(r,std){var j=await r.json().catch(function(){return {};});return (j&&j.error)||(r.status===402?'Das Kontingent ist aufgebraucht.':std);}
+  async function kopieren(text){
+    try{await navigator.clipboard.writeText(text);return true;}catch(e){
+      try{var t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();var ok=document.execCommand('copy');t.remove();return ok;}catch(e2){return false;}}
+  }
+  function kopierFeld(titel,text,extra){
+    var box=el('div',{style:'margin:8px 0'});
+    var kopfz=el('div',{style:'display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap'},[el('b',{text:titel,style:'font-weight:600;font-size:13px'})]);
+    var info=el('span',{cls:'rq-hint'});
+    var b=el('button',{type:'button',cls:'obtn',text:'Kopieren'});
+    b.onclick=async function(){info.textContent=(await kopieren(text))?'Kopiert.':'Kopieren war nicht möglich.';};
+    var rechts=el('span',{style:'display:flex;gap:8px;align-items:center'},[info,b]);
+    kopfz.appendChild(rechts);
+    box.appendChild(kopfz);
+    box.appendChild(el('div',{text:text,style:'white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;padding:8px;border:1px solid var(--bd);border-radius:6px;margin-top:4px'}));
+    if(extra)box.appendChild(hint(extra,'margin-top:2px'));
+    return box;
+  }
+  async function start(body){
+    stoppen();
+    var cid=_wsClientId;
+    body.textContent='';body.appendChild(hint('Lädt …'));
+    try{
+      if(!st.typen){var r=await api('/api/webseiten/seitentypen');if(r.ok){var j=await r.json();st.typen=j.seitentypen||[];st.sets=j.seitensaetze||{};st.fakten=j.faktenFelder||[];}else{body.textContent='';body.appendChild(hint(await fehlerText(r,'Die Seitentypen konnten nicht geladen werden.')));return;}}
+      st.einheiten=(window.rqEinheiten?await window.rqEinheiten.lade(cid):[]);
+    }catch(e){body.textContent='';body.appendChild(hint('Die Seitentypen konnten nicht geladen werden.'));return;}
+    zeichne(body);
+  }
+  function gewaehlt(){return Object.keys(st.sel).filter(function(k){return st.sel[k];});}
+  function zeichne(body){
+    var cid=_wsClientId;
+    body.textContent='';
+    var root=el('div',{id:'wsw-root',style:'max-width:100%;overflow-wrap:anywhere'});
+    body.appendChild(root);
+    root.appendChild(el('div',{text:'Webseiten',style:'font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:4px'}));
+    root.appendChild(hint('Erstellen Sie in vier Schritten ein ganzes Seitenpaket für ein Restaurant. Die Texte stützen sich auf das Faktenblatt und die Stimme des Restaurants.','margin-bottom:12px'));
+    if(!st.einheiten.length){root.appendChild(hint('Legen Sie zuerst im Reiter «Restaurants» ein Restaurant an.'));return;}
+    // Schritt 1
+    root.appendChild(kopf('1. Restaurant und Seitensatz'));
+    var selR=el('select',{id:'wsw-einheit','aria-label':'Restaurant',style:'width:100%;margin-bottom:6px'});
+    selR.appendChild(el('option',{value:'',text:'Restaurant wählen'}));
+    st.einheiten.forEach(function(e){selR.appendChild(el('option',{value:String(e.id),text:e.name+(e.ort?' ('+e.ort+')':'')}));});
+    selR.value=st.einheitId;selR.onchange=function(){st.einheitId=selR.value;};
+    root.appendChild(selR);
+    var selS=el('select',{id:'wsw-satz','aria-label':'Seitensatz',style:'width:100%;margin-bottom:6px'});
+    selS.appendChild(el('option',{value:'',text:'Seitensatz wählen'}));
+    Object.keys(st.sets).forEach(function(n){selS.appendChild(el('option',{value:n,text:n+' ('+st.sets[n].length+' Seiten)'}));});
+    selS.value=st.satz;
+    root.appendChild(selS);
+    var liste=el('div',{id:'wsw-typen',style:'margin:6px 0'});
+    root.appendChild(liste);
+    var zaehl=hint('','margin-bottom:4px');zaehl.id='wsw-zaehler';
+    root.appendChild(zaehl);
+    function zaehler(){var n=gewaehlt().length;zaehl.textContent=n+' Seiten ausgewählt. Jede Seite zählt als ein Text im Kontingent.';}
+    // Schritt 2 Container
+    var s2=el('div',{id:'wsw-schritt2'});
+    function typZeilen(){
+      liste.textContent='';s2.textContent='';
+      var gruppen={};(st.typen||[]).forEach(function(t){(gruppen[t.gruppe||'Weitere']=gruppen[t.gruppe||'Weitere']||[]).push(t);});
+      Object.keys(gruppen).forEach(function(g){
+        liste.appendChild(el('div',{text:g,style:'font-weight:600;font-size:12px;margin:8px 0 2px;color:var(--mu)'}));
+        gruppen[g].forEach(function(t){
+          var cb=el('input',{type:'checkbox','data-typ':t.key});cb.checked=!!st.sel[t.key];
+          cb.onchange=function(){st.sel[t.key]=cb.checked;zaehler();s2zeichnen();};
+          liste.appendChild(el('label',{style:'display:flex;gap:8px;align-items:center;padding:3px 0;font-size:14px'},[cb,el('span',{text:t.label+(t.laengeWoerter?' (ca. '+t.laengeWoerter+' Wörter)':'')})]));
+        });
+      });
+      zaehler();s2zeichnen();
+    }
+    selS.onchange=function(){
+      st.satz=selS.value;
+      if(st.satz){st.sel={};(st.sets[st.satz]||[]).forEach(function(k){st.sel[k]=true;});}
+      typZeilen();
+    };
+    // Schritt 2
+    root.appendChild(kopf('2. Stichworte und bestehende Seiten (optional)'));
+    root.appendChild(hint('Pro Seite können Sie Stichworte mitgeben und die Webadresse einer bestehenden Seite angeben. Deren Inhalt dient als Ausgangslage.','margin-bottom:8px'));
+    var imp=el('div',{style:'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px'});
+    var impUrl=el('input',{type:'url',id:'wsw-import-url',placeholder:'https://www.restaurant.ch','aria-label':'Webadresse des Restaurants',style:'flex:1;min-width:200px;padding:8px'});
+    var impBtn=el('button',{type:'button',cls:'obtn',id:'wsw-import-btn',text:'Seiten von Webadresse laden'});
+    var impMsg=hint('');impMsg.id='wsw-import-msg';
+    imp.appendChild(impUrl);imp.appendChild(impBtn);root.appendChild(imp);root.appendChild(impMsg);
+    var gefunden=[];
+    impBtn.onclick=async function(){
+      impMsg.textContent='';var u=impUrl.value.trim();
+      if(!/^https?:\/\//i.test(u)){impMsg.textContent='Bitte eine Webadresse mit https:// eingeben.';return;}
+      impBtn.disabled=true;impMsg.textContent='Seiten werden gesucht …';
+      try{
+        var r=await api('/api/webseiten/import/liste',{method:'POST',body:JSON.stringify({url:u})});
+        if(!r.ok){impMsg.textContent=await fehlerText(r,'Die Seiten konnten nicht geladen werden.');return;}
+        var j=await r.json();gefunden=j.seiten||[];
+        gefunden.forEach(function(s){if(s.typ&&!st.urls[s.typ])st.urls[s.typ]=s.url;});
+        impMsg.textContent=gefunden.length+' Seiten gefunden und den Seitentypen zugeordnet. Bitte kontrollieren Sie die Zuordnung.';
+        s2zeichnen();
+      }catch(e){impMsg.textContent='Die Seiten konnten nicht geladen werden.';}
+      finally{impBtn.disabled=false;}
+    };
+    root.appendChild(s2);
+    function s2zeichnen(){
+      s2.textContent='';
+      (st.typen||[]).filter(function(t){return st.sel[t.key];}).forEach(function(t){
+        var box=el('div',{style:'padding:8px 0;border-top:1px solid var(--bd)'});
+        box.appendChild(el('b',{text:t.label,style:'font-weight:600;font-size:13px'}));
+        var sw=el('input',{type:'text',cls:'wsw-stich','data-typ':t.key,placeholder:'Stichworte, zum Beispiel Seesicht, Sonntagsbrunch','aria-label':'Stichworte für '+t.label,style:'width:100%;margin-top:4px;padding:6px'});
+        sw.value=st.stich[t.key]||'';sw.oninput=function(){st.stich[t.key]=sw.value;};
+        box.appendChild(sw);
+        var row=el('div',{style:'display:flex;gap:6px;flex-wrap:wrap;margin-top:4px'});
+        var ur=el('input',{type:'url',cls:'wsw-url','data-typ':t.key,placeholder:'Bestehende Seite (Webadresse)','aria-label':'Bestehende Seite für '+t.label,style:'flex:1;min-width:180px;padding:6px'});
+        ur.value=st.urls[t.key]||'';ur.oninput=function(){st.urls[t.key]=ur.value;};
+        row.appendChild(ur);
+        if(gefunden.length){
+          var zu=el('select',{'aria-label':'Gefundene Seite zuordnen für '+t.label,style:'max-width:100%;padding:6px'});
+          zu.appendChild(el('option',{value:'',text:'Gefundene Seite wählen'}));
+          gefunden.forEach(function(s){zu.appendChild(el('option',{value:s.url,text:(s.pfad||s.url)+(s.label?' ('+s.label+')':'')}));});
+          zu.value=gefunden.some(function(s){return s.url===st.urls[t.key];})?st.urls[t.key]:'';
+          zu.onchange=function(){if(zu.value){st.urls[t.key]=zu.value;ur.value=zu.value;}};
+          row.appendChild(zu);
+        }
+        box.appendChild(row);s2.appendChild(box);
+      });
+    }
+    typZeilen();
+    // Schritt 3
+    root.appendChild(kopf('3. Seitenpaket erstellen'));
+    var go=el('button',{type:'button',cls:'obtn',id:'wsw-go',text:'Seitenpaket erstellen'});
+    var goMsg=hint('','margin-top:6px');goMsg.id='wsw-go-msg';
+    root.appendChild(go);root.appendChild(goMsg);
+    var fort=el('div',{id:'wsw-fortschritt',style:'display:none;margin-top:10px'});
+    var balken=el('div',{style:'height:10px;background:var(--bd);border-radius:6px;overflow:hidden'});
+    var fuell=el('div',{id:'wsw-balken',style:'height:100%;width:0;background:#85601f;transition:width .3s'});
+    balken.appendChild(fuell);
+    var ftext=hint('','margin-top:4px');ftext.id='wsw-fortschritt-text';
+    fort.appendChild(balken);fort.appendChild(ftext);root.appendChild(fort);
+    go.onclick=async function(){
+      goMsg.textContent='';
+      if(!st.einheitId){goMsg.textContent='Bitte wählen Sie ein Restaurant.';return;}
+      var typen=gewaehlt();if(!typen.length){goMsg.textContent='Bitte wählen Sie mindestens einen Seitentyp.';return;}
+      var stich={},urls={};
+      typen.forEach(function(k){if((st.stich[k]||'').trim())stich[k]=st.stich[k].trim();if((st.urls[k]||'').trim())urls[k]=st.urls[k].trim();});
+      go.disabled=true;
+      try{
+        var r=await api('/api/webseiten/paket',{method:'POST',body:JSON.stringify({clientId:cid,einheitId:Number(st.einheitId),seitensatz:st.satz||undefined,seitentypen:typen,stichworte:stich,importUrls:urls})});
+        if(!r.ok){goMsg.textContent=await fehlerText(r,'Das Seitenpaket konnte nicht erstellt werden.');return;}
+        var j=await r.json();
+        fort.style.display='block';
+        beobachten(j.id,fort,fuell,ftext,erg);
+      }catch(e){goMsg.textContent='Das Seitenpaket konnte nicht erstellt werden.';}
+      finally{go.disabled=false;}
+    };
+    // Schritt 4
+    root.appendChild(kopf('4. Ergebnis'));
+    var erg=el('div',{id:'wsw-ergebnis'});erg.appendChild(hint('Noch kein Seitenpaket geöffnet.'));
+    root.appendChild(erg);
+    // Prüfung
+    root.appendChild(kopf('Prüfung über alle Webseiten'));
+    root.appendChild(hint('Prüft alle Texte dieses Kunden auf doppelte Inhalte, wiederkehrende Wendungen, widersprüchliche Fakten und offene Lücken.','margin-bottom:6px'));
+    var cb=el('button',{type:'button',cls:'obtn',id:'wsw-check',text:'Konsistenz prüfen'});
+    var cres=el('div',{id:'wsw-check-ergebnis',style:'margin-top:8px'});
+    root.appendChild(cb);root.appendChild(cres);
+    cb.onclick=async function(){
+      cres.textContent='';cres.appendChild(hint('Prüfung läuft …'));cb.disabled=true;
+      try{
+        var r=await api('/api/webseiten/check?clientId='+encodeURIComponent(cid));
+        if(!r.ok){cres.textContent='';cres.appendChild(hint(await fehlerText(r,'Die Prüfung ist fehlgeschlagen.')));return;}
+        checkZeigen(cres,await r.json());
+      }catch(e){cres.textContent='';cres.appendChild(hint('Die Prüfung ist fehlgeschlagen.'));}
+      finally{cb.disabled=false;}
+    };
+    // Frühere Pakete
+    root.appendChild(kopf('Frühere Pakete'));
+    var fr=el('div',{id:'wsw-frueher'});root.appendChild(fr);
+    paketeLaden(fr,erg);
+  }
+  async function paketeLaden(fr,erg){
+    fr.textContent='';
+    try{
+      var r=await api('/api/webseiten/pakete?clientId='+encodeURIComponent(_wsClientId));
+      var l=r.ok?await r.json():[];
+      if(!Array.isArray(l)||!l.length){fr.appendChild(hint('Noch keine Pakete erstellt.'));return;}
+      l.forEach(function(p){
+        var b=el('button',{type:'button',cls:'obtn','data-paket':String(p.id),text:'Öffnen'});
+        b.onclick=function(){
+          var fort=document.getElementById('wsw-fortschritt');
+          beobachten(p.id,fort,document.getElementById('wsw-balken'),document.getElementById('wsw-fortschritt-text'),erg);
+          erg.scrollIntoView&&erg.scrollIntoView({behavior:'smooth',block:'start'});
+        };
+        var d=p.erstelltAm?new Date(p.erstelltAm).toLocaleString('de-CH'):'';
+        fr.appendChild(el('div',{cls:'rq-vw-zeile',style:'cursor:default;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap'},[
+          el('span',{style:'min-width:0'},[el('b',{text:p.einheitName||'Restaurant',style:'font-weight:600'}),el('span',{cls:'rq-hint',text:' · '+d+' · '+statusText(p.status)+' · '+p.fertig+' von '+p.gesamt+' Seiten'})]),b]));
+      });
+    }catch(e){fr.appendChild(hint('Die früheren Pakete konnten nicht geladen werden.'));}
+  }
+  function statusText(s){return {laeuft:'läuft',fertig:'fertig',teilweise:'teilweise fertig',fehler:'Fehler',unterbrochen:'unterbrochen',offen:'offen'}[s]||String(s||'');}
+  function beobachten(id,fort,fuell,ftext,erg){
+    stoppen();
+    if(fort)fort.style.display='block';
+    async function tick(){
+      if(!document.getElementById('wsw-root')){stoppen();return;}
+      try{
+        var r=await api('/api/webseiten/paket/'+id);
+        if(!r.ok){stoppen();ftext.textContent=await fehlerText(r,'Das Paket konnte nicht geladen werden.');return;}
+        var p=await r.json();
+        if(!document.getElementById('wsw-root')){stoppen();return;}
+        var pct=p.gesamt?Math.round(100*p.fertig/p.gesamt):0;
+        fuell.style.width=pct+'%';
+        ftext.textContent=p.fertig+' von '+p.gesamt+' Seiten'+(p.status==='laeuft'?'':' ('+statusText(p.status)+')');
+        ergebnis(erg,p);
+        if(p.status!=='laeuft'){stoppen();var fr=document.getElementById('wsw-frueher');if(fr)paketeLaden(fr,erg);}
+      }catch(e){stoppen();ftext.textContent='Die Verbindung wurde unterbrochen. Öffnen Sie das Paket unter «Frühere Pakete» erneut.';}
+    }
+    tick();
+    timer=setInterval(tick,3000);
+  }
+  function badge(text,farbe){return el('span',{text:text,style:'font-size:11px;padding:2px 8px;border-radius:10px;border:1px solid '+farbe+';color:'+farbe});}
+  function marke(s){
+    if(s.status==='fehler')return badge('Fehler','var(--red,#b91c1c)');
+    if(s.status!=='fertig')return badge(statusText(s.status),'var(--mu)');
+    var q=s.qualitaet||{};var h=q.hinweise||[];
+    if(q.ok===false||h.some(function(x){return x.stufe==='fehler';}))return badge('Prüfen','var(--red,#b91c1c)');
+    if(h.length||(q.luecken||[]).length)return badge('Hinweise','#a16207');
+    return badge('In Ordnung','#166534');
+  }
+  function ergebnis(erg,p){
+    var offen={};erg.querySelectorAll('details[data-typ]').forEach(function(d){offen[d.getAttribute('data-typ')]=d.open;});
+    erg.textContent='';
+    var kopfz=el('div',{style:'display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px'});
+    kopfz.appendChild(el('b',{text:(p.einheitName||'Restaurant')+' · '+statusText(p.status),style:'font-weight:600'}));
+    var dl=el('button',{type:'button',cls:'obtn',id:'wsw-word',text:'Word herunterladen'});
+    var dmsg=hint('');
+    dl.onclick=function(){if(typeof rqDownload==='function')rqDownload('/api/webseiten/paket/'+p.id+'/export.docx','Seitenpaket_'+String(p.einheitName||'Restaurant').replace(/[^\wäöüÄÖÜ-]+/g,'_')+'.docx',dmsg);};
+    kopfz.appendChild(el('span',{style:'display:flex;gap:8px;align-items:center'},[dmsg,dl]));
+    erg.appendChild(kopfz);
+    (p.seiten||[]).forEach(function(s){
+      var d=el('details',{'data-typ':s.typ,cls:'wsw-seite',style:'border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin-bottom:6px'});
+      if(offen[s.typ])d.open=true;
+      d.appendChild(el('summary',{style:'cursor:pointer;display:flex;gap:8px;align-items:center;flex-wrap:wrap'},[el('b',{text:s.label||s.typ,style:'font-weight:600'}),badge(statusText(s.status),'var(--mu)'),marke(s)]));
+      if(s.status==='fehler'){d.appendChild(hint(s.fehler||'Diese Seite konnte nicht erstellt werden.','color:var(--red,#b91c1c);margin-top:6px'));}
+      if(s.status==='fertig'){
+        if(s.titel)d.appendChild(kopierFeld('Titel',s.titel,s.titel.length+' Zeichen'));
+        if(s.beschreibung)d.appendChild(kopierFeld('Beschreibung',s.beschreibung,s.beschreibung.length+' Zeichen (empfohlen bis 160)'));
+        if(s.h1)d.appendChild(kopierFeld('H1',s.h1));
+        if(s.text){var t=(s.h2&&s.h2.length&&!/^\s*H2:/m.test(s.text)?'Zwischentitel (H2): '+s.h2.join(' | ')+'\n\n':'')+s.text;d.appendChild(kopierFeld('Text',t));}
+        if((s.aufEinenBlick||[]).length)d.appendChild(kopierFeld('Auf einen Blick',s.aufEinenBlick.map(function(a){return a.label+': '+a.wert;}).join('\n')));
+        if((s.faq||[]).length)d.appendChild(kopierFeld('Häufige Fragen',s.faq.map(function(f){return f.frage+'\n'+f.antwort;}).join('\n\n')));
+        if(s.jsonld)d.appendChild(kopierFeld('Strukturdaten (JSON-LD)',s.jsonld));
+        var q=s.qualitaet||{};
+        if((q.hinweise||[]).length||(q.luecken||[]).length){
+          var hb=el('div',{style:'margin-top:8px'});hb.appendChild(el('b',{text:'Hinweise',style:'font-weight:600;font-size:13px'}));
+          (q.hinweise||[]).forEach(function(x){hb.appendChild(hint((x.stufe==='fehler'?'Fehler: ':x.stufe==='warnung'?'Warnung: ':'')+x.text,'margin-top:2px'));});
+          if((q.luecken||[]).length)hb.appendChild(hint('Offene Lücken: '+q.luecken.map(function(l){return typeof l==='string'?l:(l.platzhalter||l.text||'');}).join(', '),'margin-top:4px'));
+          d.appendChild(hb);
+        }
+      }
+      erg.appendChild(d);
+    });
+  }
+  function abschnitt(root,titel,leer,items){
+    root.appendChild(el('b',{text:titel,style:'display:block;font-weight:600;margin:10px 0 2px'}));
+    if(!items.length)root.appendChild(hint(leer));
+    items.forEach(function(i){root.appendChild(i);});
+  }
+  function checkZeigen(root,c){
+    root.textContent='';
+    root.appendChild(hint(c.anzahlSeiten+' Seiten geprüft'+(c.fehler?', '+c.fehler+' mit Fehler':'')+'.'));
+    (c.hinweise||[]).forEach(function(h){root.appendChild(hint(typeof h==='string'?h:(h.text||''),'margin-top:2px'));});
+    abschnitt(root,'Doppelte Inhalte','Keine auffälligen Duplikate.',(c.duplikate||[]).map(function(d){
+      return el('div',{style:'padding:6px 0;border-top:1px solid var(--bd);font-size:13px'},[
+        el('div',{text:d.siteA+' und '+d.siteB+' (Seitentyp '+d.typ+'): '+Math.round((d.aehnlichkeit||0)*(d.aehnlichkeit>1?1:100))+' Prozent ähnlich'}),
+        hint((d.gemeinsameSaetze||[]).slice(0,2).map(function(s){return '«'+s+'»';}).join(' '),'margin-top:2px')]);}));
+    abschnitt(root,'Wiederkehrende Wendungen','Keine auffälligen Wiederholungen.',(c.wiederholungen||[]).map(function(w){
+      return el('div',{text:'«'+w.phrase+'» auf '+w.anzahlSeiten+' Seiten'+((w.sites||[]).length?' ('+w.sites.join(', ')+')':''),style:'padding:4px 0;border-top:1px solid var(--bd);font-size:13px'});}));
+    abschnitt(root,'Fakten-Konflikte','Keine Widersprüche zum Faktenblatt.',(c.konflikte||[]).map(function(k){
+      return el('div',{text:k.site+': '+k.art+'. Im Text steht «'+k.gefunden+'», im Faktenblatt «'+k.erwartet+'».',style:'padding:4px 0;border-top:1px solid var(--bd);font-size:13px'});}));
+    var lk=Object.keys(c.luecken||{});
+    abschnitt(root,'Offene Lücken je Restaurant','Keine offenen Lücken.',lk.map(function(site){
+      var l=c.luecken[site]||[];
+      return el('div',{text:site+': '+l.map(function(x){return x.platzhalter||'';}).filter(Boolean).join(', '),style:'padding:4px 0;border-top:1px solid var(--bd);font-size:13px'});}));
+  }
+  var ws=window.wsSwitchTab;
+  if(typeof ws==='function')window.wsSwitchTab=function(t){
+    if(t==='web'){
+      Array.prototype.forEach.call(document.querySelectorAll('#ws-tabs .mlist-pill'),function(x){x.classList.remove('active');});
+      var b=tab();if(b)b.classList.add('active');
+      return start(document.getElementById('ws-body'));
+    }
+    stoppen();
+    var u=document.getElementById('ws-tab-web');if(u)u.classList.remove('active');
+    var r=ws.apply(this,arguments);tab();return r;
+  };
+  var ow=window.openWorkspace;
+  if(typeof ow==='function')window.openWorkspace=async function(){stoppen();var r=await ow.apply(this,arguments);tab();return r;};
   tab();
 })();
 </script>

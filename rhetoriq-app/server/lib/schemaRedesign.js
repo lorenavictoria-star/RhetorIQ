@@ -405,6 +405,26 @@ function ensureSchema() {
         anthropic_chf NUMERIC(12,2),
         PRIMARY KEY (advisor_id, monat)
       )`);
+    // Seitenpakete für Restaurant-Webseiten (routes/webseiten.js): ein Lauf erzeugt mehrere Seitentexte, Stand als JSON in seiten
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS webseiten_pakete (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        einheit_id INTEGER NOT NULL,
+        advisor_id INTEGER,
+        user_ref TEXT,
+        status TEXT NOT NULL DEFAULT 'laeuft',
+        seiten TEXT,
+        gesamt INTEGER NOT NULL DEFAULT 0,
+        fertig INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS webseiten_pakete_client_idx ON webseiten_pakete (client_id, created_at DESC)`);
+    // Läufe, die ein Neustart des Servers abgebrochen hat, gelten nach 30 Minuten ohne Fortschritt als unterbrochen
+    try {
+      await pool.query(`UPDATE webseiten_pakete SET status='unterbrochen' WHERE status='laeuft' AND updated_at < NOW() - INTERVAL '30 minutes'`);
+    } catch (e) { console.error('[schema] Seitenpakete unterbrochen setzen:', e.message); }
     // Indizes für die häufigsten Abfragen (Kundenliste, Verlauf, Nutzung)
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_client_created_idx ON analyses (client_id, created_at DESC)`);
     await pool.query(`CREATE INDEX IF NOT EXISTS analyses_advisor_created_idx ON analyses (advisor_id, created_at DESC)`);

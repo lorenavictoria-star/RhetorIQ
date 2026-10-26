@@ -260,6 +260,7 @@ app.use('/api/clients', require('./routes/kiHinweis'));
 app.use('/api/analyze', require('./routes/analyze'));
 app.use('/api/people', require('./routes/people'));
 app.use('/api/einheiten', require('./routes/einheiten'));
+app.use('/api/webseiten', require('./routes/webseiten'));
 app.use('/api/memory', require('./routes/memory'));
 app.use('/api/subscriptions', require('./routes/subscriptions'));
 app.use('/api/reviews', require('./routes/reviews'));
