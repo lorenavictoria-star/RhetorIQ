@@ -118,3 +118,15 @@ test('POST /: ohne Treffer kein Prüfauftrag und kein Hinweis', async () => {
   assert.ok(!JSON.stringify(H.ai.calls[1].messages).includes('Behebe genau diese Punkte'));
   assert.equal(r.body.lint, null);
 });
+
+test('Komma vor «und»: sichere Fälle werden gemeldet, Nebensatz-Ende nicht', () => {
+  const { lintText } = require('../lib/lint');
+  const arten = (t) => lintText(t).filter(h => h.art === 'komma_und').length;
+  assert.equal(arten('Wir liefern das Propangas, und wir prüfen die Anlage.'), 1);
+  assert.equal(arten('Wir liefern das Propangas und prüfen die Anlage.'), 0);
+  assert.equal(arten('Er sagt, dass die Anlage läuft, und geht.'), 0, 'Komma schliesst den Nebensatz');
+  assert.equal(arten('Wenn es regnet, und wir drinnen sitzen, bleibt der Grill an.'), 0);
+  assert.equal(arten('Das ist der Wirt, der kocht, und er serviert.'), 0);
+  assert.equal(arten('Der Sonnenberg ist offen,\nund der Grill brennt.'), 0, 'Zeilenumbruch trennt');
+  assert.equal(arten('Carlton, und Sablier'), 1);
+});

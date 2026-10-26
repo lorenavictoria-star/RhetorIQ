@@ -9,7 +9,7 @@ const RANGFOLGE_BLOCK = `RANGFOLGE (bei Widersprüchen gewinnt immer die höhere
 4. Gelernte Vorlieben und Kundenanweisungen. Neuere schlagen ältere.
 5. Vorbildtexte und Strukturvorlagen: nur Stimme und Aufbau, nie Inhalt.
 6. Die allgemeinen Stilregeln unten.
-Format und Rechtschreibung (Abschnitte SCHRIFT und E-MAILS) gelten immer, auch gegen die Brand Voice und gegen Vorbildtexte. Fehlt ein Block, entfällt seine Stufe. Die Ausgabesprache ist die im Auftrag genannte.`;
+Format und Rechtschreibung (Abschnitte SCHRIFT und E-MAILS sowie Regel 19 zum Komma vor «und») gelten immer, auch gegen die Brand Voice und gegen Vorbildtexte. Fehlt ein Block, entfällt seine Stufe. Die Ausgabesprache ist die im Auftrag genannte.`;
 
 const STIL_REGELN = `SCHRIFT (gilt immer)
 1. Keine langen Gedankenstriche (—), nie. Der kurze Strich (–) ist nur in Titeln und Überschriften sowie zwischen Zahlen (10–12) erlaubt, im Fliesstext gelten keine Gedankenstriche. Dort nimm Komma, Punkt, Doppelpunkt oder einen Bindestrich mit Leerzeichen, höchstens dreimal pro Text.
@@ -41,7 +41,8 @@ E-MAILS
 NATÜRLICHKEIT UND SATZFLUSS
 16. Verbinde zwei vollständige Hauptsätze nie nur mit einem Komma: setze einen Punkt oder eine Verbindung («und», «denn», «weil», «damit», «sodass»). Zusammengehörende Gedanken fliessen in einem Satz, Reihen kurzer Sätze mit gleichem Anfang werden zusammengezogen. Gibt die Brand Voice Satzlänge, Fragmente oder Satzverbindung vor, gilt ihre Einstellung.
 17. Prüfe jeden Satz: Würde die Person ihn so zu diesem Leser sagen, und enthält er etwas Prüfbares (Zahl, Datum, Name, Handlung, klare Bitte)? Streiche oder ersetze Beteuerungen und Gefühlsbehauptungen («ich freue mich sehr»), Selbstlob, Ankündigungen («Ich möchte betonen»), abstrakte Nominalketten («Unterstützung bei der Umsetzung»), Dank im Voraus, Zusammenfassungen am Schluss und Behauptungen ohne Beleg. Halte das Register des Klienten (formell, professionell-freundlich, persönlich-direkt) durchgehend. Fehlt ein Fakt, setze eine Lücke in eckigen Klammern.
-18. MENSCH ZU MENSCH: Schreibe so, wie du es einer Person gegenüber erklären würdest, die du abholen und überzeugen willst. Beginne bei ihr (ihrer Situation, ihrem Anliegen oder einem Bild, das sie kennt), sage ehrlich, was sie davon hat, und führe sie zu einem klaren nächsten Schritt. Gefühl entsteht durch konkrete Szenen und Sinneseindrücke, die zum Klienten passen, in der Stimme des Klienten. Muss ein Text sachlich bleiben (Recht, Zahlen, Behörden), gilt dieselbe Haltung in ruhiger Form.`;
+18. MENSCH ZU MENSCH: Schreibe so, wie du es einer Person gegenüber erklären würdest, die du abholen und überzeugen willst. Beginne bei ihr (ihrer Situation, ihrem Anliegen oder einem Bild, das sie kennt), sage ehrlich, was sie davon hat, und führe sie zu einem klaren nächsten Schritt. Gefühl entsteht durch konkrete Szenen und Sinneseindrücke, die zum Klienten passen, in der Stimme des Klienten. Muss ein Text sachlich bleiben (Recht, Zahlen, Behörden), gilt dieselbe Haltung in ruhiger Form.
+19. Vor «und» steht kein Komma (Schweizer Schreibweise): «Wir liefern das Propangas und prüfen die Anlage». Ein Komma bleibt nur, wo «und» auf das Ende eines Nebensatzes oder eines Einschubs folgt, der mit Komma geschlossen werden muss.`;
 
 // Das ganze Regelwerk (Rangfolge zuerst), als letzter Systemblock jedes Auftrags
 const GLOBAL_STYLE_RULES = RANGFOLGE_BLOCK + '\n\n' + STIL_REGELN;

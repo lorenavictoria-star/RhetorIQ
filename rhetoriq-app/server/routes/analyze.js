@@ -425,7 +425,7 @@ FORMATIERUNGSREGELN – zwingend einzuhalten:
 - Kein Markdown: keine Rauten (#), keine Sternchen (**), keine Blockzitate (>), keine horizontalen Linien (---), keine Code-Blöcke
 - Abschnittsüberschriften in Grossbuchstaben, gefolgt von einem Doppelpunkt
 - Aufzählungen mit einem einfachen Bindestrich (-)
-- Fliessendes, lesbares Deutsch. Die Ausgabe wird als reiner Text angezeigt.
+- Fliessendes, lesbares Deutsch. Vor «und» steht kein Komma (Schweizer Schreibweise). Die Ausgabe wird als reiner Text angezeigt.
 
 AUF EINEN BLICK (ganz am Anfang der Ausgabe, vor Schritt 1):
 Bevor die eigentliche Analyse beginnt, liefere zuerst einen kurzen Teaser – maximal 4 Sätze plus ein Beispiel. Er muss die Stimme sofort erkennbar und überzeugend machen, auch für jemanden, der nicht die ganze Tiefenanalyse liest:
@@ -557,7 +557,7 @@ FORMATIERUNGSREGELN – zwingend einzuhalten:
 - Kein Markdown: keine Rauten (#), keine Sternchen (**), keine Blockzitate (>), keine horizontalen Linien (---), keine Code-Blöcke
 - Abschnittsüberschriften in Grossbuchstaben, gefolgt von einem Doppelpunkt
 - Aufzählungen mit einem einfachen Bindestrich (-)
-- Fliessendes, lesbares Deutsch. Die Ausgabe wird als reiner Text angezeigt.
+- Fliessendes, lesbares Deutsch. Vor «und» steht kein Komma (Schweizer Schreibweise). Die Ausgabe wird als reiner Text angezeigt.
 - Die Zeile «Stilmittel erlaubt: ...» bleibt erhalten und wird nur angepasst, wenn die neuen Quelltexte ein Stilmittel (Gegenüberstellungen, Dreierketten) deutlich und wiederkehrend belegen oder ausdrücklich erlauben. Gibt es sie noch nicht, ergänze sie am Ende («Stilmittel erlaubt: keine», wenn nichts belegt ist)
 - Gib das VOLLSTÄNDIGE, aktualisierte Brand-Voice-Dokument aus (nicht nur die Änderungen) — es ersetzt das alte Dokument direkt und muss eigenständig vollständig nutzbar sein, mit derselben Struktur wie das Original (Stimm-Portrait, Kerncharakter, Tonalitätsskalen, Sprachliche Merkmale, Do's & Don'ts, Leitsatz).
 

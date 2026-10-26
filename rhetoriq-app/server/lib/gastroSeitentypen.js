@@ -445,6 +445,7 @@ function promptFuer(seitentypKey, ctx = {}) {
   L.push('- Schweizer Schreibweise: immer ss (Strasse, Grösse), Umlaute als ä, ö, ü.');
   L.push('- Sprich die Gäste mit Sie an, sofern der Auftrag nichts anderes verlangt.');
   L.push('- Sätze fliessen: verbinde zwei vollständige Hauptsätze nie nur mit einem Komma, setze einen Punkt oder «und», «denn», «weil», «damit».');
+  L.push('- Vor «und» steht kein Komma (Schweizer Schreibweise), ausser wo ein Nebensatz oder Einschub endet.');
   L.push('- Kein Markdown ausser den unten genannten Kopfzeilen.');
   L.push('');
   L.push('AUSGABEFORMAT (strikt, genau diese Kopfzeilen in dieser Reihenfolge):');

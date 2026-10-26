@@ -12,6 +12,7 @@ const ART_LABEL = {
   alleinstellung: 'Behauptung ohne Beleg',
   anrede: 'gemischte Anrede',
   gendern: 'Gendern mit Sonderzeichen',
+  komma_und: 'Komma vor «und»',
   markdown: 'Markdown'
 };
 
@@ -120,6 +121,28 @@ function markdownTreffer(text) {
   return res;
 }
 
+// Komma vor «und»: Schweizer Schreibweise setzt dort keines. Ein Komma bleibt, wo «und» auf das Ende eines Nebensatzes folgt.
+// Die Prüfung meldet nur sichere Fälle: Steht im selben Satzteil vor dem Komma ein Einleiter eines Nebensatzes oder ein Relativwort,
+// oder folgt auf «und» ein solcher Einleiter, bleibt das Komma unbeanstandet.
+const NEBENSATZ_EINLEITER = /\b(?:dass|weil|wenn|ob|obwohl|damit|sodass|so\s+dass|während|bevor|nachdem|falls|sobald|solange|indem|ehe|seit|seitdem|bis|wie|welche[rsnm]?|dessen|deren|wo|womit|wodurch|wofür|worauf|woran|wobei|wonach|weshalb|warum|wann|wer|was)\b/i;
+function kommaUndTreffer(t) {
+  const res = [];
+  const re = /,[ \t]+und\b(?=[ \t]+(\S+))/gi;
+  let m;
+  while ((m = re.exec(t))) {
+    const pos = m.index;
+    // Satzteil vor dem Komma: ab dem letzten Satzende oder Zeilenanfang
+    const von = Math.max(t.lastIndexOf('.', pos), t.lastIndexOf('!', pos), t.lastIndexOf('?', pos), t.lastIndexOf('\n', pos), t.lastIndexOf(':', pos)) + 1;
+    const davor = t.slice(von, pos);
+    const danach = (m[1] || '').replace(/[^A-Za-zÄÖÜäöüß]/g, '');
+    if (NEBENSATZ_EINLEITER.test(davor)) continue;           // Komma schliesst vermutlich einen Nebensatz oder Einschub
+    if (/^(?:dass|weil|wenn|ob|damit|obwohl|sodass|während|falls)$/i.test(danach)) continue;
+    if (davor.includes(',')) continue;                       // früheres Komma im Satzteil: Nebensatz, Einschub oder Reihung, nicht eindeutig
+    res.push({ art: 'komma_und', pos, len: m[0].length, text: m[0] });
+  }
+  return res;
+}
+
 function lintText(text, opts = {}) {
   const t = String(text || '');
   if (!t) return [];
@@ -137,6 +160,7 @@ function lintText(text, opts = {}) {
     hits.push(h);
   }
   if (deutsch) hits.push(...findAll(t, /ß/g, 'eszett'));
+  if (deutsch) hits.push(...kommaUndTreffer(t));
   for (const re of FLOSKELN) hits.push(...findAll(t, re, 'floskel'));
   for (const re of FUELLWOERTER) hits.push(...findAll(t, re, 'fuellwort', { weich: true }));
   hits.push(...findAll(t, /\bnicht\s+(?!nur\b)[^.,;:!?\n]{1,60}?,?\s+sondern\b/gi, 'gegenueberstellung'));
