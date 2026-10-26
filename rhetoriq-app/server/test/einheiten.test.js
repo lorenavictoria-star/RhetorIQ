@@ -1,0 +1,69 @@
+// Restaurants (Betriebe) eines Klienten: anlegen, ändern, Rechte, und das Stimmprofil fliesst in die Texterstellung ein.
+process.env.ABO_PFLICHT_AB = '2099-01-01T00:00:00Z';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const H = require('../test-support/harness');
+const { setupGenerate } = require('../test-support/genSetup');
+const { pool } = H;
+
+let srv, a, b;
+const adv = () => H.advisorToken();
+test.before(async () => {
+  await H.setupBase();
+  await setupGenerate(H);
+  await require('../lib/schemaRedesign').ensureSchema();
+  await pool.query('CREATE TABLE IF NOT EXISTS usage_log (id SERIAL PRIMARY KEY, advisor_id INTEGER, client_id INTEGER, module TEXT, input_tokens INTEGER DEFAULT 0, output_tokens INTEGER DEFAULT 0, model TEXT, cache_creation_tokens INTEGER DEFAULT 0, cache_read_tokens INTEGER DEFAULT 0, created_at TIMESTAMPTZ DEFAULT NOW())').catch(() => {});
+  for (const col of ['capital_markets_enabled BOOLEAN DEFAULT FALSE', 'hotel_enabled BOOLEAN DEFAULT FALSE']) await pool.query(`ALTER TABLE clients ADD COLUMN ${col}`).catch(() => {});
+  a = await H.addClient('Segmüller Collection');
+  b = await H.addClient('Andere AG');
+  srv = await H.startApp([
+    ['/api/einheiten', require('../routes/einheiten')],
+    ['/api/analyze', require('../routes/analyze')]
+  ]);
+  H.ai.reply = 'Ein kurzer Text.';
+});
+test.after(async () => { await srv.close(); });
+
+test('Anlegen, mehrere auf einmal, ändern, löschen', async () => {
+  const neu = await srv.call('POST', '/api/einheiten', { token: adv(), body: { clientId: a.id, name: 'Restaurant Seeblick', ort: 'Luzern', stimme: 'Herzlich und gradlinig.', fakten: 'Offen Di bis So ab 11 Uhr.' } });
+  assert.equal(neu.status, 201);
+  assert.equal(neu.body.ort, 'Luzern');
+  const bulk = await srv.call('POST', '/api/einheiten/bulk', { token: adv(), body: { clientId: a.id, zeilen: 'Gasthof Rössli, Zug\nBar Nord;Bern\n\nTrattoria Sole' } });
+  assert.equal(bulk.status, 201);
+  assert.equal(bulk.body.angelegt, 3);
+  const liste = await srv.call('GET', `/api/einheiten?clientId=${a.id}`, { token: adv() });
+  assert.deepEqual(liste.body.map(x => x.name), ['Bar Nord', 'Gasthof Rössli', 'Restaurant Seeblick', 'Trattoria Sole']);
+  const put = await srv.call('PUT', `/api/einheiten/${neu.body.id}`, { token: adv(), body: { fakten: 'Offen täglich.' } });
+  assert.equal(put.body.fakten, 'Offen täglich.');
+  assert.equal(put.body.stimme, 'Herzlich und gradlinig.', 'nicht genannte Felder bleiben');
+  assert.equal((await srv.call('POST', '/api/einheiten', { token: adv(), body: { clientId: a.id, name: '  ' } })).status, 400);
+  assert.equal((await srv.call('DELETE', `/api/einheiten/${bulk.body.einheiten[2].id}`, { token: adv() })).status, 200);
+  assert.equal((await srv.call('GET', `/api/einheiten?clientId=${a.id}`, { token: adv() })).body.length, 3);
+});
+
+test('Klienten sehen und ändern nur die eigenen Restaurants', async () => {
+  const eigenes = (await srv.call('GET', `/api/einheiten?clientId=${a.id}`, { token: adv() })).body[0];
+  assert.equal((await srv.call('GET', `/api/einheiten?clientId=${a.id}`, { token: H.clientToken(b.id) })).body.length, 0, 'fremde Liste bleibt leer');
+  assert.equal((await srv.call('PUT', `/api/einheiten/${eigenes.id}`, { token: H.clientToken(b.id), body: { name: 'X' } })).status, 403);
+  assert.equal((await srv.call('DELETE', `/api/einheiten/${eigenes.id}`, { token: H.clientToken(b.id) })).status, 403);
+  assert.equal((await srv.call('GET', `/api/einheiten`, { token: H.clientToken(a.id) })).body.length, 3, 'eigene Liste ohne Angabe der Nummer');
+  assert.equal((await srv.call('GET', `/api/einheiten?clientId=${a.id}`)).status, 401);
+});
+
+test('Das Stimmprofil und die Fakten des Restaurants fliessen in den Auftrag, nur für das eigene Restaurant', async () => {
+  const see = (await srv.call('GET', `/api/einheiten?clientId=${a.id}`, { token: adv() })).body.find(x => x.name === 'Restaurant Seeblick');
+  const fremd = (await srv.call('POST', '/api/einheiten', { token: H.advisorToken(), body: { clientId: b.id, name: 'Fremdes Lokal', stimme: 'GEHEIM FREMD' } })).body;
+  H.ai.calls.length = 0;
+  const ok = await srv.call('POST', '/api/analyze', { token: H.clientToken(a.id), body: { module: 'text-gen', data: { text: 'Einladung', einheitId: see.id }, instructionsKey: 'text-gen-social' } });
+  assert.equal(ok.status, 200);
+  const sys = JSON.stringify(H.ai.calls.map(c => c.system));
+  assert.ok(sys.includes('BETRIEB: Restaurant Seeblick, Luzern'));
+  assert.ok(sys.includes('Herzlich und gradlinig.'));
+  assert.ok(sys.includes('Offen täglich.'));
+  const verlauf = await srv.call('GET', `/api/analyze/history?clientId=${a.id}&preview=1`, { token: adv() });
+  assert.ok(verlauf.body.some(r => r.einheit_id === see.id), 'der Verlauf kennt das Restaurant eines Textes');
+  assert.ok(verlauf.body.every(r => r.input_data === undefined), 'Eingaben bleiben im Verlauf verborgen');
+  H.ai.calls.length = 0;
+  await srv.call('POST', '/api/analyze', { token: H.clientToken(a.id), body: { module: 'text-gen', data: { text: 'Einladung', einheitId: fremd.id }, instructionsKey: 'text-gen-social' } });
+  assert.ok(!JSON.stringify(H.ai.calls.map(c => c.system)).includes('GEHEIM FREMD'), 'Restaurant eines anderen Klienten wird nie geladen');
+});

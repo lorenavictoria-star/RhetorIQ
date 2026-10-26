@@ -30,6 +30,18 @@ function ensureSchema() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
+    // Restaurants und andere Betriebe eines Klienten (zum Beispiel die Betriebe einer Gruppe): eigenes Stimmprofil und eigene Fakten
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS einheiten (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        ort TEXT,
+        stimme TEXT,
+        fakten TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
     await pool.query(`
       CREATE TABLE IF NOT EXISTS client_files (
         id SERIAL PRIMARY KEY,

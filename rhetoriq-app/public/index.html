@@ -6329,6 +6329,7 @@ else if(name==='crisis-toolkit'){module='crisis-toolkit';rid='crisis-toolkit-r';
   }
   else return;
 
+  if((module==='text-gen'||module==='brief')&&window._einheitId&&data&&typeof data==='object')data.einheitId=Number(window._einheitId);
   const instructionsKey=module==='text-gen'?('text-gen-'+(arguments[1]||'custom')):undefined;
   await generateAndStream(module,data,rid,bid,instructionsKey);
 }
@@ -6740,6 +6741,7 @@ async function loadHistory(){
     const r=await api('/api/analyze/history?preview=1'+(clientId?'&clientId='+clientId:''));
     _histRows=await r.json();
     if(!Array.isArray(_histRows))_histRows=[];
+    try{if(window.rqEinheiten&&clientId)await rqEinheiten.lade(clientId);}catch(e){}
     renderHistory();
   }catch{el.innerHTML='<div class="empty"><div class="ei">&#9888;</div><div>Could not load.</div></div>';}
 }
@@ -6806,7 +6808,7 @@ function renderHistory(){
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer" onclick="toggleHistItem(${h.id})">
             ${_histSelMode?`<input type="checkbox" class="hist-cb" data-id="${h.id}" data-group="${gi}" ${_histSel.has(h.id)?'checked':''} onclick="event.stopPropagation();histSelOne(${h.id},this.checked)" style="width:18px;height:18px;flex-shrink:0;cursor:pointer;align-self:flex-start;margin-top:2px" aria-label="Text auswählen">`:''}
             <div style="min-width:0;flex:1">
-              <div class="hd">${safeText(d)}${who}${fass[h.id]?` <span style="font-size:11px;padding:1px 7px;border:1px solid var(--bd);color:var(--mu)">${fass[h.id].n===0?'Erstfassung':'Überarbeitung '+fass[h.id].n}</span>`:''}${h.user_rating?` <span style="font-size:11px;color:var(--mu)">${h.user_rating===1?'Daumen hoch':'Daumen runter'}</span>`:''}</div>
+              <div class="hd">${safeText(d)}${who}${(h.einheit_id&&window.rqEinheiten&&rqEinheiten.name(h.einheit_id))?` <span style="font-size:11px;padding:1px 7px;border:1px solid var(--bd);color:var(--tx)">${safeText(rqEinheiten.name(h.einheit_id))}</span>`:''}${fass[h.id]?` <span style="font-size:11px;padding:1px 7px;border:1px solid var(--bd);color:var(--mu)">${fass[h.id].n===0?'Erstfassung':'Überarbeitung '+fass[h.id].n}</span>`:''}${h.user_rating?` <span style="font-size:11px;color:var(--mu)">${h.user_rating===1?'Daumen hoch':'Daumen runter'}</span>`:''}</div>
               <div style="font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="hist-preview-${h.id}">${safeText(preview)}${preview.length>=90?'…':''}</div>
               ${(fass[h.id]&&fass[h.id].n>0)||h.feedback_note?`<div style="font-size:12px;color:var(--tx);margin-top:3px">${fass[h.id]&&fass[h.id].n>0?'Hinweis für die Überarbeitung: '+(h.ueberarbeitung_hinweis?safeText(h.ueberarbeitung_hinweis):'nicht gespeichert (Text vor dem 22.10.)'):''}${h.feedback_note?(fass[h.id]&&fass[h.id].n>0?' · ':'')+'Feedback: '+safeText(h.feedback_note):''}</div>`:''}
             </div>
@@ -16914,6 +16916,128 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
       return render(document.getElementById('ws-body'));
     }
     var u=document.getElementById('ws-tab-bsp');if(u)u.classList.remove('active');
+    return ws.apply(this,arguments);
+  };
+  var ow=window.openWorkspace;
+  if(typeof ow==='function')window.openWorkspace=async function(){var r=await ow.apply(this,arguments);tab();return r;};
+  tab();
+})();
+</script>
+<script id="rq-einheiten-js">
+// Restaurants (Betriebe) eines Kunden: Reiter «Restaurants» im Workspace und Auswahl «Für welches Restaurant?» in allen Textarten.
+(function(){
+  var E=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
+  var cache={cid:null,list:[]};
+  function aktuellerKunde(){try{return typeof clientId!=='undefined'?clientId:null;}catch(e){return null;}}
+  async function lade(cid){
+    if(!cid){cache={cid:null,list:[]};return [];}
+    try{var r=await api('/api/einheiten?clientId='+cid);var j=r.ok?await r.json():[];cache={cid:cid,list:Array.isArray(j)?j:[]};}catch(e){cache={cid:cid,list:[]};}
+    return cache.list;
+  }
+  window.rqEinheiten={lade:lade,liste:function(){return cache.list;},name:function(id){var x=cache.list.filter(function(e){return e.id==id;})[0];return x?x.name:'';}};
+
+  // ── Auswahl im Textgenerator ─────────────────────────────────────────────
+  window._einheitId=null;
+  async function waehlerEinsetzen(tileId){
+    var panel=document.getElementById('tg-panel-'+tileId);if(!panel)return;
+    var cid=aktuellerKunde();
+    var list=cache.cid===cid&&cache.list.length?cache.list:await lade(cid);
+    var box=panel.querySelector('.rq-einh');
+    if(!list.length){if(box)box.remove();window._einheitId=null;return;}
+    if(!box){
+      box=document.createElement('div');box.className='fg2 rq-einh';box.style.marginBottom='12px';
+      var kopf=panel.children[1];if(kopf&&kopf.after)kopf.after(box);else panel.insertBefore(box,panel.firstChild);
+    }
+    var opts=list.map(function(e){return '<option value="'+e.id+'">'+E(e.name)+(e.ort?' ('+E(e.ort)+')':'')+'</option>';}).join('');
+    box.innerHTML='<label class="fl2">Für welches Restaurant?</label><select class="rq-einh-sel"><option value="">Ganze Gruppe (nur Gruppenstimme)</option>'+opts+'</select>'
+      +'<div class="rq-hint" style="margin-top:4px">Die Gruppenstimme gilt immer. Das Restaurant ergänzt Ton, Wortwahl, Themen und Fakten.</div>';
+    var sel=box.querySelector('select');
+    if(window._einheitId&&list.some(function(e){return e.id==window._einheitId;}))sel.value=String(window._einheitId);
+    else window._einheitId=null;
+    sel.onchange=function(){
+      window._einheitId=sel.value?Number(sel.value):null;
+      Array.prototype.forEach.call(document.querySelectorAll('.rq-einh-sel'),function(s){if(s!==sel)s.value=sel.value;});
+    };
+  }
+  var tgo=window.tgOpenTile;
+  if(typeof tgo==='function')window.tgOpenTile=function(id){var r=tgo.apply(this,arguments);waehlerEinsetzen(id);return r;};
+
+  // ── Reiter «Restaurants» im Workspace ────────────────────────────────────
+  function tab(){
+    var wrap=document.getElementById('ws-tabs');if(!wrap)return null;
+    var b=document.getElementById('ws-tab-einh');
+    if(!b){b=document.createElement('button');b.className='mlist-pill';b.id='ws-tab-einh';b.textContent='Restaurants';b.onclick=function(){wsSwitchTab('einh');};
+      var st=document.getElementById('ws-tab-bsp')||document.getElementById('ws-tab-store')||document.getElementById('ws-tab-admin');wrap.insertBefore(b,st);}
+    return b;
+  }
+  function chip(ok,text){return '<span style="font-size:11px;padding:2px 8px;border:1px solid var(--bd);border-radius:10px;color:'+(ok?'#166534':'var(--mu)')+';background:'+(ok?'#f0fdf4':'transparent')+'">'+(ok?'✓ ':'')+E(text)+'</span>';}
+  async function render(body){
+    var cid=_wsClientId;
+    body.innerHTML='<div class="rq-hint">Lädt …</div>';
+    var list=await lade(cid);
+    var h='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">'
+      +'<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700">Restaurants ('+list.length+')</div>'
+      +'<div style="display:flex;gap:8px"><button type="button" class="obtn" id="einh-neu">+ Restaurant anlegen</button><button type="button" class="obtn" id="einh-bulk-btn">Mehrere auf einmal</button></div></div>'
+      +'<div class="rq-hint" style="margin-bottom:14px">Jedes Restaurant hat ein eigenes Stimmprofil und eigene Fakten. Die Gruppenstimme (Brand Voice dieses Kunden) gilt für alle: Sie gibt Werte, Verbote und Anrede vor, das Restaurant prägt Ton, Wortwahl und Themen. Beim Texten wählt das Team das Restaurant aus.</div>'
+      +'<div id="einh-bulk" style="display:none;margin-bottom:14px;padding:12px;border:1px solid var(--bd);border-radius:8px"><div class="rq-hint" style="margin-bottom:6px">Eine Zeile pro Restaurant, «Name, Ort». Den Ort kannst du weglassen.</div><textarea id="einh-bulk-t" rows="6" style="width:100%" placeholder="Restaurant Seeblick, Luzern&#10;Gasthof Rössli, Zug&#10;Trattoria Sole, Bern"></textarea><div style="margin-top:8px"><button type="button" class="obtn" id="einh-bulk-ok">Alle anlegen</button> <span class="rq-hint" id="einh-bulk-msg"></span></div></div>'
+      +'<div id="einh-neu-form" style="display:none;margin-bottom:14px">'+formular({id:'',name:'',ort:'',stimme:'',fakten:''})+'</div>';
+    h+=list.length?list.map(function(e){
+      return '<div class="rq-vw-zeile" data-id="'+e.id+'" style="display:block;cursor:default;padding:12px 0">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'
+        +'<div style="min-width:0"><b style="font-weight:600">'+E(e.name)+'</b>'+(e.ort?' <span class="rq-hint">'+E(e.ort)+'</span>':'')+'<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'+chip(e.stimme&&e.stimme.trim(),'Stimmprofil')+chip(e.fakten&&e.fakten.trim(),'Fakten')+'</div></div>'
+        +'<div style="display:flex;gap:8px"><button type="button" class="obtn" data-edit="'+e.id+'">Bearbeiten</button><button type="button" class="obtn" style="color:var(--red);border-color:var(--red)" data-del="'+e.id+'">Löschen</button></div></div>'
+        +'<div class="einh-edit" style="display:none;margin-top:12px">'+formular(e)+'</div></div>';
+    }).join(''):'<div class="rq-hint">Noch keine Restaurants. Lege das erste an oder füge mehrere auf einmal ein.</div>';
+    body.innerHTML=h;
+    function formular(e){
+      return '<div style="display:grid;gap:8px">'
+        +'<div style="display:grid;grid-template-columns:2fr 1fr;gap:8px"><input class="einh-name" type="text" placeholder="Name des Restaurants" value="'+E(e.name)+'"><input class="einh-ort" type="text" placeholder="Ort" value="'+E(e.ort)+'"></div>'
+        +'<label class="rq-hint">Stimmprofil: Wie klingt dieses Restaurant? Zum Beispiel Ton, typische Wörter, wie Gäste angesprochen werden, Themen. Die Gruppenstimme gilt zusätzlich.</label>'
+        +'<textarea class="einh-stimme" rows="5" style="width:100%" placeholder="z. B. herzlich und bodenständig, Gäste werden mit Sie angesprochen, Themen: Saison, Region, Familie">'+E(e.stimme)+'</textarea>'
+        +'<label class="rq-hint">Fakten: Adresse, Öffnungszeiten, Küche, Reservation, Allergene, Besonderheiten. Nur diese Angaben nennt die Plattform, alles andere bleibt eine Lücke.</label>'
+        +'<textarea class="einh-fakten" rows="5" style="width:100%" placeholder="z. B. Dienstag bis Sonntag ab 11 Uhr, Reservation unter 041 ...">'+E(e.fakten)+'</textarea>'
+        +'<div><button type="button" class="obtn einh-save" data-id="'+(e.id||'')+'">Speichern</button> <button type="button" class="obtn einh-cancel">Abbrechen</button> <span class="rq-hint einh-msg"></span></div></div>';
+    }
+    function lesen(box){return {name:box.querySelector('.einh-name').value,ort:box.querySelector('.einh-ort').value,stimme:box.querySelector('.einh-stimme').value,fakten:box.querySelector('.einh-fakten').value};}
+    async function senden(url,method,payload,msg){
+      try{var r=await api(url,{method:method,body:JSON.stringify(payload)});var j=await r.json().catch(function(){return {};});
+        if(!r.ok){msg.textContent=j.error||'Das hat nicht geklappt.';return false;}return true;}
+      catch(e){msg.textContent='Das hat nicht geklappt.';return false;}
+    }
+    body.querySelector('#einh-neu').onclick=function(){var f=body.querySelector('#einh-neu-form');f.style.display=f.style.display==='none'?'block':'none';};
+    body.querySelector('#einh-bulk-btn').onclick=function(){var f=body.querySelector('#einh-bulk');f.style.display=f.style.display==='none'?'block':'none';};
+    body.querySelector('#einh-bulk-ok').onclick=async function(){
+      var m=body.querySelector('#einh-bulk-msg');m.textContent='';
+      if(await senden('/api/einheiten/bulk','POST',{clientId:cid,zeilen:body.querySelector('#einh-bulk-t').value},m))render(body);
+    };
+    var nf=body.querySelector('#einh-neu-form');
+    nf.querySelector('.einh-cancel').onclick=function(){nf.style.display='none';};
+    nf.querySelector('.einh-save').onclick=async function(){
+      var m=nf.querySelector('.einh-msg');m.textContent='';var p=lesen(nf);p.clientId=cid;
+      if(await senden('/api/einheiten','POST',p,m))render(body);
+    };
+    body.querySelectorAll('[data-edit]').forEach(function(b){b.onclick=function(){var z=body.querySelector('[data-id="'+b.getAttribute('data-edit')+'"] .einh-edit');z.style.display=z.style.display==='none'?'block':'none';};});
+    body.querySelectorAll('.rq-vw-zeile[data-id]').forEach(function(z){
+      var box=z.querySelector('.einh-edit');if(!box)return;
+      box.querySelector('.einh-cancel').onclick=function(){box.style.display='none';};
+      box.querySelector('.einh-save').onclick=async function(){
+        var m=box.querySelector('.einh-msg');m.textContent='';
+        if(await senden('/api/einheiten/'+z.getAttribute('data-id'),'PUT',lesen(box),m))render(body);
+      };
+    });
+    body.querySelectorAll('[data-del]').forEach(function(b){b.onclick=async function(){
+      if(!await rqConfirm('Dieses Restaurant löschen? Das Stimmprofil und die Fakten gehen verloren. Bereits erstellte Texte bleiben.',{ok:'Löschen',danger:true}))return;
+      try{await api('/api/einheiten/'+b.getAttribute('data-del'),{method:'DELETE'});}catch(e){}
+      render(body);};});
+  }
+  var ws=window.wsSwitchTab;
+  if(typeof ws==='function')window.wsSwitchTab=function(t){
+    if(t==='einh'){
+      Array.prototype.forEach.call(document.querySelectorAll('#ws-tabs .mlist-pill'),function(x){x.classList.remove('active');});
+      var b=tab();if(b)b.classList.add('active');
+      return render(document.getElementById('ws-body'));
+    }
+    var u=document.getElementById('ws-tab-einh');if(u)u.classList.remove('active');
     return ws.apply(this,arguments);
   };
   var ow=window.openWorkspace;

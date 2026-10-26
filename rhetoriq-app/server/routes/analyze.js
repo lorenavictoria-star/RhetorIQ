@@ -1666,6 +1666,24 @@ function buildFollowUpPrompt(originalUserMsg, previousResult, note) {
 // Regelwerk jedes Auftrags (Rangfolge-Block plus Stilregeln) steht in lib/promptRules.js, als letzter Systemblock angehängt.
 const { GLOBAL_STYLE_RULES, BRAND_VOICE_HEAD, BRAND_VOICE_TAIL } = require('../lib/promptRules');
 const { fence, DATEN_REGEL } = require('../lib/dataFence');
+// Restaurant (Betrieb) eines Klienten: Stimmprofil und Fakten als eigener Block hinter der Brand Voice des Klienten (der Gruppenstimme).
+// Rangfolge: Die Gruppenstimme gibt Werte, Verbote und Anrede vor, der Betrieb prägt Ton, Wortwahl und Themen.
+async function einheitBlock(clientId, einheitId) {
+  const id = parseInt(einheitId, 10);
+  if (!clientId || !Number.isInteger(id)) return '';
+  try {
+    await require('../lib/schemaRedesign').ensureSchema();
+    const { rows } = await pool.query('SELECT name, ort, stimme, fakten FROM einheiten WHERE id=$1 AND client_id=$2', [id, clientId]);
+    const e = rows[0];
+    if (!e) return '';
+    const titel = e.name + (e.ort ? ', ' + e.ort : '');
+    let b = '\n\n════════════════════════════════════════\nBETRIEB: ' + sanitizeForPrompt(titel) + '\n════════════════════════════════════════\n'
+      + 'Dieser Auftrag gehört zum Betrieb «' + sanitizeForPrompt(e.name) + '». Rangfolge: Die Brand Voice oben (STIMME DES KLIENTEN) ist die Gruppenstimme. Sie gibt Werte, Verbote, Anrede und die Schreibweise der Marke vor. Dieser Betrieb prägt Ton, Wortwahl und Themen. Bei Widerspruch gewinnen die Verbote und die Anrede der Gruppenstimme.\n';
+    if (e.stimme && e.stimme.trim()) b += '\nSTIMMPROFIL DES BETRIEBS:\n' + fence('betrieb-stimme', sanitizeForPrompt(e.stimme)) + '\n';
+    if (e.fakten && e.fakten.trim()) b += '\nFAKTEN DES BETRIEBS (verbindlich: nenne nur diese Angaben zu Adresse, Zeiten, Preisen, Küche und Allergenen; fehlt eine Angabe, setze eine Lücke in eckigen Klammern):\n' + fence('betrieb-fakten', sanitizeForPrompt(e.fakten)) + '\n';
+    return b + '════════════════════════════════════════\nENDE BETRIEB\n════════════════════════════════════════';
+  } catch (err) { console.error('[einheit]', err.message); return ''; }
+}
 const { heuteBlock } = require('../lib/heute');
 const { temperaturFor } = require('../lib/temperaturen');
 const lernquellen = require('../lib/lernquellen');
@@ -1807,6 +1825,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
         });
         brandVoiceBlock += BRAND_VOICE_TAIL;
       }
+      if (data && data.einheitId) brandVoiceBlock += await einheitBlock(resolvedClientId, data.einheitId);
     }
 
     // ── REFERENZ-DOKUMENTE (gelten für ALLE Module dieses Klienten) ──────────
@@ -2018,6 +2037,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
         memRows.forEach(m => { brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${fence(m.memory_type, sanitizeForPrompt(require('../lib/brandVoiceAuswahl').fuerAuftrag(m.content, textartVon(module, instructionsKey, data))))}\n\n`; });
         brandVoiceBlock += BRAND_VOICE_TAIL;
       }
+      if (data && data.einheitId) brandVoiceBlock += await einheitBlock(resolvedClientId, data.einheitId);
       const { rows: refRows } = await pool.query(
         `SELECT content FROM company_memory WHERE client_id=$1 AND memory_type='structural_reference'`,
         [resolvedClientId]
@@ -2197,6 +2217,7 @@ router.get('/history', requireAuth, async (req, res) => {
     const crypto = require('crypto');
     for (const r of rows) {
       r.eingabe_id = crypto.createHash('md5').update(JSON.stringify(r.input_data || null)).digest('hex').slice(0, 12);
+      r.einheit_id = r.input_data && Number.isInteger(Number(r.input_data.einheitId)) && Number(r.input_data.einheitId) > 0 ? Number(r.input_data.einheitId) : null;
       delete r.input_data;
     }
     res.json(rows);
