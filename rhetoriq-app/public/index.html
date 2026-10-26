@@ -6799,9 +6799,9 @@ function renderHistory(){
         const d=fmt(h.created_at,{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
         const preview=(h.result||'').replace(/\s+/g,' ').trim().slice(0,90);
         const who=showClient&&cname(h)?` · ${safeText(cname(h))}`:'';
-        return `<div class="hi" style="padding:10px 0">
+        return `<div class="hi" style="padding:10px 0;display:block">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer" onclick="toggleHistItem(${h.id})">
-            ${_histSelMode?`<input type="checkbox" class="hist-cb" data-id="${h.id}" data-group="${gi}" ${_histSel.has(h.id)?'checked':''} onclick="event.stopPropagation();histSelOne(${h.id},this.checked)" style="width:18px;height:18px;flex-shrink:0;cursor:pointer" aria-label="Text auswählen">`:''}
+            ${_histSelMode?`<input type="checkbox" class="hist-cb" data-id="${h.id}" data-group="${gi}" ${_histSel.has(h.id)?'checked':''} onclick="event.stopPropagation();histSelOne(${h.id},this.checked)" style="width:18px;height:18px;flex-shrink:0;cursor:pointer;align-self:flex-start;margin-top:2px" aria-label="Text auswählen">`:''}
             <div style="min-width:0;flex:1">
               <div class="hd">${safeText(d)}${who}${fass[h.id]?` <span style="font-size:11px;padding:1px 7px;border:1px solid var(--bd);color:var(--mu)">${fass[h.id].n===0?'Erstfassung':'Überarbeitung '+fass[h.id].n}</span>`:''}${h.user_rating?` <span style="font-size:11px;color:var(--mu)">${h.user_rating===1?'Daumen hoch':'Daumen runter'}</span>`:''}</div>
               <div style="font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="hist-preview-${h.id}">${safeText(preview)}${preview.length>=90?'…':''}</div>
