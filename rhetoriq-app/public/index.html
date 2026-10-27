@@ -10051,7 +10051,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
     M.cid=_wsClientId;M.form=false;M.msg='';M.err='';M.custom=null;
     M.sec=RQ_SECTORS[wc.sector||c.sector]?(wc.sector||c.sector):'kmu';
     var em=(c.enabled_modules!==undefined?c.enabled_modules:wc.enabled_modules),known=RQ_MODS.map(function(m){return m[0];});
-    if(em===undefined||em===null){M.sel=known.slice();M.rest=[];(typeof MC_SECTIONS!=='undefined'?MC_SECTIONS:[]).forEach(function(s){s.keys.forEach(function(k){if(known.indexOf(k)<0&&M.rest.indexOf(k)<0)M.rest.push(k);});});}
+    if(em===undefined||em===null){M.sel=known.slice();M.rest=[];(typeof MC_SECTIONS!=='undefined'?MC_SECTIONS:[]).forEach(function(s){s.keys.forEach(function(k){if(k!=='restaurants'&&known.indexOf(k)<0&&M.rest.indexOf(k)<0)M.rest.push(k);});});}
     else{M.sel=em.filter(function(k){return known.indexOf(k)>=0;});M.rest=em.filter(function(k){return known.indexOf(k)<0;});}
     if(M.sel.indexOf('brand-voice')<0)M.sel.unshift('brand-voice');
     if(window.rqTaWsInit)rqTaWsInit(_wsClientId,c.enabled_textarten!==undefined?c.enabled_textarten:wc.enabled_textarten);
@@ -10061,8 +10061,10 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
   }
   function chips(){
     var list=['brand-voice'].concat((RQ_SECMODS[M.sec]||[]));M.sel.forEach(function(k){if(list.indexOf(k)<0)list.push(k);});
-    return list.map(function(k){var fixed=k==='brand-voice',on=M.sel.indexOf(k)>=0;
+    var h=list.map(function(k){var fixed=k==='brand-voice',on=M.sel.indexOf(k)>=0;
       return '<button type="button" class="rq-chip'+(on?' on':'')+(fixed?' fix':'')+'"'+(fixed?'':' data-mm="'+k+'"')+'>'+(on?'✓ ':'+ ')+E(rqModName(k))+'</button>';}).join('');
+    var ron=M.rest.indexOf('restaurants')>=0;
+    return h+'<button type="button" class="rq-chip'+(ron?' on':'')+'" data-mm="restaurants">'+(ron?'✓ ':'+ ')+'Mehrere Restaurants oder Betriebe</button>';
   }
   function builder(){
     var nm=E(client().name||'dem Kunden');
@@ -10086,9 +10088,16 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
      +'<div><span class="rq-lab">Module für '+E(client().name||'')+'</span><div class="rq-chips">'+chips()+'</div><div class="rq-hint" style="margin-top:8px">Das Häkchen blendet das Modul für den Klienten ein oder aus. Brand Voice ist immer dabei.</div></div>'
      +(window.rqTaWsHtml?rqTaWsHtml(M.sel.indexOf('text-gen')>=0):'')
      +'<div class="rq-acts"><button type="button" class="rq-btn" data-mm-saveall="1"'+(M.busy?' disabled':'')+'>Auswahl speichern</button>'+(M.msg?'<span class="rq-ok">'+E(M.msg)+'</span>':'')+(M.err?'<span class="rq-err">'+E(M.err)+'</span>':'')+'</div>'
+     +'<div id="rq-mod-einh"></div>'
      +'<div><div class="rq-qa-h" style="margin-top:4px">Eigene Module · '+M.custom.length+'</div>'+(M.custom.length?M.custom.map(function(m){return '<div class="rq-li" style="cursor:default"><i class="ti ti-puzzle"></i><div><b>'+E((m.icon&&m.icon!=='◆'?m.icon+' ':'')+m.name)+'</b><small>'+E(m.description||'von dir erstellt')+'</small></div><span class="rq-pill">aktiv</span></div>';}).join(''):'<div class="rq-empty">Noch keine eigenen Module für diesen Klienten.</div>')+'</div>'
      +'<details><summary class="rq-hint" style="cursor:pointer;min-height:44px;display:flex;align-items:center">Anweisungen und Feedback pro Modul</summary><div id="rq-mod-prompts" style="margin-top:8px"></div></details></div>';
     _orig(document.getElementById('rq-mod-prompts'));
+    var eb=document.getElementById('rq-mod-einh');
+    if(eb&&window.rqEinheitenInModule){
+      var gesp=client().enabled_modules,aktiv=Array.isArray(gesp)&&gesp.indexOf('restaurants')>=0;
+      if(aktiv)window.rqEinheitenInModule(eb);
+      else if(M.rest.indexOf('restaurants')>=0)eb.innerHTML='<div class="rq-hint">Mit «Auswahl speichern» wird der Bereich Restaurants freigeschaltet.</div>';
+    }
   }
   window.wsRenderPrompts=function(body){
     if(body&&body.id==='ws-body'){var cid=_wsClientId;M.msg='';render(body);return;}
@@ -10126,7 +10135,9 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
     var t=e.target.closest&&e.target.closest('#ws-body [data-mm],#ws-body [data-msec],#ws-body [data-mm-new],#ws-body [data-mm-saveall],#ws-body [data-mm-add],#ws-body [data-mm-rm],#ws-body [data-mm-save],#ws-body [data-mm-cancel]');
     if(!t||!document.getElementById('rq-mod-main')&&!document.querySelector('#ws-body [data-mm-new]'))return;
     var body=document.getElementById('ws-body');
-    if(t.hasAttribute('data-mm')){var k=t.getAttribute('data-mm'),i=M.sel.indexOf(k);if(i>=0)M.sel.splice(i,1);else M.sel.push(k);M.msg='';return render(body);}
+    if(t.hasAttribute('data-mm')){var k=t.getAttribute('data-mm');
+      if(k==='restaurants'){var j=M.rest.indexOf(k);if(j>=0)M.rest.splice(j,1);else M.rest.push(k);M.msg='';return render(body);}
+      var i=M.sel.indexOf(k);if(i>=0)M.sel.splice(i,1);else M.sel.push(k);M.msg='';return render(body);}
     if(t.hasAttribute('data-msec')){M.sec=t.getAttribute('data-msec');M.secOpen=true;return render(body);}
     if(t.hasAttribute('data-mm-new')){M.form=true;M.err='';M.msg='';return render(body);}
     if(t.hasAttribute('data-mm-saveall'))return saveSel(body);
@@ -16931,7 +16942,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
 })();
 </script>
 <script id="rq-einheiten-js">
-// Restaurants (Betriebe) eines Kunden: Reiter «Restaurants» im Workspace und Auswahl «Für welches Restaurant?» in allen Textarten.
+// Restaurants (Betriebe) eines Kunden: Abschnitt im Workspace-Reiter «Module» und Auswahl «Für welches Restaurant?» in allen Textarten.
 (function(){
   var E=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
   var cache={cid:null,list:[]};
@@ -16969,16 +16980,14 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
   var tgo=window.tgOpenTile;
   if(typeof tgo==='function')window.tgOpenTile=function(id){var r=tgo.apply(this,arguments);waehlerEinsetzen(id);return r;};
 
-  // ── Reiter «Restaurants» im Workspace ────────────────────────────────────
+  // ── Restaurants im Reiter «Module» ────────────────────────────────────
   function aktivFuer(cid){var c=null;try{c=clients.filter(function(x){return x.id==cid;})[0];}catch(e){}return !!(c&&Array.isArray(c.enabled_modules)&&c.enabled_modules.indexOf('restaurants')>=0);}
   function tab(){
-    var wrap=document.getElementById('ws-tabs');if(!wrap)return null;
-    var b=document.getElementById('ws-tab-einh');
-    if(!aktivFuer(_wsClientId)){if(b)b.remove();return null;}
-    if(!b){b=document.createElement('button');b.className='mlist-pill';b.id='ws-tab-einh';b.textContent='Restaurants';b.onclick=function(){wsSwitchTab('einh');};
-      var st=document.getElementById('ws-tab-bsp')||document.getElementById('ws-tab-store')||document.getElementById('ws-tab-admin');wrap.insertBefore(b,st);}
-    return b;
+    // Kein eigener Reiter mehr: Die Restaurants stehen im Reiter «Module» (rq-mod-js ruft rqEinheitenInModule auf).
+    var b=document.getElementById('ws-tab-einh');if(b)b.remove();
+    return null;
   }
+  window.rqEinheitenInModule=function(box){if(box&&aktivFuer(_wsClientId))return render(box);};
   function chip(ok,text){return '<span style="font-size:11px;padding:2px 8px;border:1px solid var(--bd);border-radius:10px;color:'+(ok?'#166534':'var(--mu)')+';background:'+(ok?'#f0fdf4':'transparent')+'">'+(ok?'✓ ':'')+E(text)+'</span>';}
   async function render(body){
     var cid=_wsClientId;
@@ -17056,7 +17065,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
 })();
 </script>
 <script id="rq-faktenblatt-js">
-// Strukturiertes Faktenblatt je Restaurant (im Bearbeiten-Bereich des Reiters «Restaurants»).
+// Strukturiertes Faktenblatt je Restaurant (im Bearbeiten-Bereich der Restaurants unter «Module»).
 (function(){
   var TAGE=['Mo','Di','Mi','Do','Fr','Sa','So'];
   var PFLICHT=['strasse','plz','ort','telefon','oeffnungszeiten','kueche','reservation_url'];
@@ -17294,7 +17303,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
     body.appendChild(root);
     root.appendChild(el('div',{text:'Webseiten',style:'font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:4px'}));
     root.appendChild(hint('Erstellen Sie in vier Schritten ein ganzes Seitenpaket für ein Restaurant. Die Texte stützen sich auf das Faktenblatt und die Stimme des Restaurants.','margin-bottom:12px'));
-    if(!st.einheiten.length){root.appendChild(hint('Legen Sie zuerst im Reiter «Restaurants» ein Restaurant an.'));return;}
+    if(!st.einheiten.length){root.appendChild(hint('Legen Sie zuerst unter «Module» ein Restaurant an.'));return;}
     // Schritt 1
     root.appendChild(kopf('1. Restaurant und Seitensatz'));
     var selR=el('select',{id:'wsw-einheit','aria-label':'Restaurant',style:'width:100%;margin-bottom:6px'});
