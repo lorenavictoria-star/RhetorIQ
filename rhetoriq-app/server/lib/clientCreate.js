@@ -26,7 +26,7 @@ function guessLastName(name) {
 
 // Legt einen Klienten an (gemeinsame Logik für POST /api/clients und den Abschluss eines Onboarding-Entwurfs).
 // Prüfungen (Name, E-Mail, Datenschutz) und der Versand von Mails bleiben bei den Aufrufern.
-async function createClientRecord({ advisorId, name, industry, contact, email, clientType, salutation, lastName, enabledModules, paket }) {
+async function createClientRecord({ advisorId, name, industry, contact, email, clientType, salutation, lastName, enabledModules, paket, nurBeratung }) {
   const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') + '-' + Date.now().toString(36);
   const token = crypto.randomBytes(24).toString('hex');
 
@@ -39,8 +39,13 @@ async function createClientRecord({ advisorId, name, industry, contact, email, c
   const resolvedLastName = lastName || (resolvedType === 'individual' ? guessLastName(name) : '');
   const { rows } = await pool.query(
     'INSERT INTO clients (advisor_id, name, industry, contact, slug, token, email, must_change_password, privacy_acknowledged_at, enabled_modules, client_type, salutation, last_name) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),$9,$10,$11,$12) RETURNING *',
-    [advisorId, name, industry || '', contact || '', slug, token, email || null, !!email, mods, resolvedType, salutation || 'Frau', resolvedLastName]
+    [advisorId, name, industry || '', contact || '', slug, token, email || null, !!email && !nurBeratung, mods, resolvedType, salutation || 'Frau', resolvedLastName]
   );
+  // Nur Beratung: Der Klient hat keinen Zugang. Das Merkmal wird getrennt gesetzt, damit die Anlage auch ohne die neue Spalte funktioniert.
+  if (nurBeratung) {
+    await pool.query('UPDATE clients SET nur_beratung=TRUE WHERE id=$1', [rows[0].id]);
+    rows[0].nur_beratung = true;
+  }
   // Standardkontingent für NEU angelegte Klienten (Befund F-07): ohne gesetztes Limit und ausser im Paket Enterprise
   // gelten monatlich 200000 Tokens (per DEFAULT_MONTHLY_TOKENS änderbar). Das Paket per Zahlung ersetzt den Wert später.
   if (paket !== 'enterprise' && !rows[0].monthly_token_limit) {

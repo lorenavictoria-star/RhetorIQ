@@ -56,6 +56,8 @@ async function init() {
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS monthly_token_limit BIGINT;
     -- Aufbewahrung der Texte in Tagen (NULL = unbegrenzt). Danach werden Eingaben und Ergebnisse geleert (lib/retention.js).
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS aufbewahrung_tage INTEGER;
+    -- Nur Beratung: Klient ohne Zugang, nur von der Beraterin betreut (Freischaltung über /api/clients/:id/zugang-freischalten)
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS nur_beratung BOOLEAN NOT NULL DEFAULT FALSE;
 
     -- One-time token top-ups a client bought via Stripe (self-serve "Zusatzpaket"
     -- when they hit their monthly quota). Kept separate from monthly_token_limit

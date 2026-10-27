@@ -66,6 +66,7 @@ router.post('/login-any', async (req, res) => {
       [mail]);
     for (const client of cr) {
       if (!(await check(client.password_hash))) continue;
+      if (client.nur_beratung) continue;   // Beratungsklienten haben keinen Zugang bis zur Freischaltung
       lock.recordSuccess(lockKey);
       require('../lib/abo').starteTest(client.id);   // Gratis-Test beginnt beim ersten Login (nur wenn die Beraterin ihn eingeschaltet hat)
       const token = jwt.sign(
@@ -117,6 +118,7 @@ router.post('/client-login', async (req, res) => {
     );
     const client = rows[0];
     if (!client) return res.status(401).json({ error: 'Invalid client token' });
+    if (client.nur_beratung) return res.status(403).json({ error: 'Der Zugang für dieses Konto ist noch nicht freigeschaltet.' });
 
     require('../lib/abo').starteTest(client.id);
     const jwtToken = jwt.sign(
@@ -153,6 +155,7 @@ router.post('/client-password-login', async (req, res) => {
     const ok = await bcrypt.compare(password, client.password_hash);
     if (!ok) { lock.recordFailure(lockKey); return res.status(401).json({ error: 'Invalid credentials' }); }
     lock.recordSuccess(lockKey);
+    if (client.nur_beratung) return res.status(403).json({ error: 'Der Zugang für dieses Konto ist noch nicht freigeschaltet.' });
     require('../lib/abo').starteTest(client.id);
 
     const jwtToken = jwt.sign(

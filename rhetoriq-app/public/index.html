@@ -1231,6 +1231,12 @@ html[lang="en"] .legal-en-note{display:block}
     </div>
     <div style="margin-top:14px;padding:12px;background:var(--sf);border-radius:8px;border:1px solid var(--bd)">
       <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:12px;color:var(--tx)">
+        <input type="checkbox" id="nc-beratung" style="margin-top:2px;flex-shrink:0">
+        <span><b>Nur Beratung</b>: Der Kunde hat keinen Zugang zu RhetorIQ. Er bekommt keine E-Mail, keinen Test und kein Abo. Du arbeitest für ihn im Workspace. Den Zugang schaltest du später mit einem Klick frei.</span>
+      </label>
+    </div>
+    <div style="margin-top:10px;padding:12px;background:var(--sf);border-radius:8px;border:1px solid var(--bd)">
+      <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:12px;color:var(--tx)">
         <input type="checkbox" id="nc-privacy" style="margin-top:2px;flex-shrink:0">
         <span>Ich bestätige, dass ich den Klienten über die Datenverarbeitung durch Anthropic informiert habe. Texteingaben werden zur Generierung an die Anthropic API übermittelt und nicht für das Training verwendet. <a href="https://www.anthropic.com/legal/privacy" target="_blank" style="color:var(--ac)">Anthropic Privacy Policy</a></span>
       </label>
@@ -4322,12 +4328,23 @@ async function addClient(){
   const checkedMods=[...document.querySelectorAll('.nc-mod-cb:checked')].map(cb=>cb.dataset.mod);
   const enabledModules=checkedMods.length?[...new Set([...NC_ALWAYS,...checkedMods])]:null;
   const body={name,industry:document.getElementById('nc-industry').value,contact:document.getElementById('nc-contact').value.trim(),clientType,emailLang,privacyAcknowledged:true};
+  const ncB=document.getElementById('nc-beratung');if(ncB&&ncB.checked)body.nurBeratung=true;
   if(sector)body.sector=sector;
   if(enabledModules)body.enabled_modules=enabledModules;
   if(clientType==='individual'){body.salutation=salutation;body.lastName=lastName;}if(email&&initpw){body.email=email;body.initialPassword=initpw;}
   try{const r=await api('/api/clients',{method:'POST',body:JSON.stringify(body)});const c=await r.json();if(!r.ok)throw new Error(c.error);
   if(c.id&&enabledModules){await api('/api/clients/'+c.id+'/modules',{method:'POST',body:JSON.stringify({enabled_modules:enabledModules})}).catch(()=>{});}
-  loadAdvisorDashboard();closeModal('nc-ov');['nc-name','nc-contact','nc-email','nc-initpw','nc-lastname'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('nc-privacy').checked=false;document.getElementById('nc-sector').value='';ncUpdateModules();ncSetType('company');ncSetLang('de');goPage('clients');}catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
+  loadAdvisorDashboard();closeModal('nc-ov');['nc-name','nc-contact','nc-email','nc-initpw','nc-lastname'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('nc-privacy').checked=false;const ncB2=document.getElementById('nc-beratung');if(ncB2)ncB2.checked=false;document.getElementById('nc-sector').value='';ncUpdateModules();ncSetType('company');ncSetLang('de');goPage('clients');}catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
+}
+
+async function zugangFreischalten(cid){
+  const c=(clients||[]).find(x=>x.id==cid)||{};
+  if(!await rqConfirm('Zugang für «'+(c.name||'diesen Kunden')+'» freischalten? Der Kunde wird danach wie ein normaler Kunde behandelt (Test, Abo, Zugang).',{ok:'Freischalten'}))return;
+  let send=false;
+  if(c.email)send=await rqConfirm('Soll die Willkommens-E-Mail mit dem Einrichtungslink an '+c.email+' gehen?',{ok:'Mail senden',cancel:'Ohne Mail'});
+  try{const r=await api('/api/clients/'+cid+'/zugang-freischalten',{method:'POST',body:JSON.stringify({sendWelcome:send})});const j=await r.json();if(!r.ok)throw new Error(j.error||'Fehler');
+    if(c)c.nur_beratung=false;if(typeof loadClients==='function')await loadClients();if(typeof loadAdvisorDashboard==='function')loadAdvisorDashboard();if(typeof openWorkspace==='function')openWorkspace(cid);
+  }catch(e){alert('Das hat nicht geklappt: '+e.message);}
 }
 
 // PEOPLE DIRECTORY
@@ -7346,7 +7363,9 @@ async function loadAdvisorDashboard(){
         const tok=tokMap[String(c.id)]||'';
         const tokShort=tok?tok.substring(0,24)+'…':'—';
         const subSt=subStatuses[c.id]||'trial';
-        const subBadge=subSt==='active'
+        const subBadge=c.nur_beratung
+          ?'<span style="font-size:11px;font-weight:600;color:#4b5563">&#9679; Beratung</span>'
+          :subSt==='active'
           ?'<span style="font-size:11px;font-weight:600;color:#047857">&#9679; Aktiv</span>'
           :subSt==='cancelled'
           ?'<span style="font-size:11px;font-weight:600;color:#b91c1c">&#9679; Abgelaufen</span>'
@@ -8479,6 +8498,7 @@ function wsRenderAdmin(body){
       <button class="obtn" style="color:#166534;border-color:#bbf7d0;background:#f0fdf4" onclick="sendWelcomeByEmail(_wsClientId)">Willkommens-E-Mail senden</button>
       <button class="obtn" onclick="openSetPassword(_wsClientId,(clients.find(x=>x.id==_wsClientId)||{}).name)">Set Password</button>
       <button class="obtn" onclick="openTeamModal(_wsClientId,(clients.find(x=>x.id==_wsClientId)||{}).name)">Team</button>
+      ${(clients.find(x=>x.id==_wsClientId)||{}).nur_beratung?`<button class="obtn" style="color:#166534;border-color:#bbf7d0;background:#f0fdf4;font-weight:600" onclick="zugangFreischalten(_wsClientId)">Zugang freischalten</button>`:''}
       <button class="obtn" style="color:#5b21b6;border-color:#c4b5fd;background:#f5f3ff;font-weight:500" onclick="openModuleConfig(_wsClientId)"><i class="ti ti-layout-grid" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Module anpassen</button>
       <button class="obtn" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-weight:500" onclick="sendPaymentLink(_wsClientId,this)">Zahlungslink senden</button>
       <button class="obtn" style="color:#b91c1c;border-color:#fecaca;background:#fef2f2" onclick="wsDeleteClient()"><i class="ti ti-trash" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Kunde löschen</button>

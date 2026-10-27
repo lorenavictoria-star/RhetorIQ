@@ -58,7 +58,7 @@ router.get('/dashboard', requireAdvisor, async (req, res) => {
 
     const [clientsRes, statsRes, recentRes] = await Promise.all([
       pool.query(
-        `SELECT c.id, c.name, c.industry, c.created_at, c.token,
+        `SELECT c.id, c.name, c.industry, c.created_at, c.token, COALESCE(BOOL_OR(c.nur_beratung), FALSE) AS nur_beratung,
           COUNT(a.id) AS total_analyses,
           MAX(a.created_at) AS last_activity,
           COUNT(CASE WHEN a.created_at > NOW() - INTERVAL '7 days' THEN 1 END) AS analyses_7d

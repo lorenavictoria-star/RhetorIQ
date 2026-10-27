@@ -76,7 +76,7 @@ router.get('/', requireAdvisor, async (req, res) => {
     await ensureClientAddressColumn();
     await ensureSchema();
     const { rows } = await pool.query(
-      'SELECT id, name, industry, contact, slug, token, capital_markets_enabled, hotel_enabled, enabled_modules, enabled_textarten, address, created_at, email, client_type, salutation, last_name FROM clients WHERE advisor_id = $1 AND geloescht_am IS NULL ORDER BY created_at DESC',
+      'SELECT id, name, industry, contact, slug, token, capital_markets_enabled, hotel_enabled, enabled_modules, enabled_textarten, address, created_at, email, client_type, salutation, last_name, nur_beratung FROM clients WHERE advisor_id = $1 AND geloescht_am IS NULL ORDER BY created_at DESC',
       [req.user.id]
     );
     res.json(rows);
@@ -89,7 +89,7 @@ router.get('/', requireAdvisor, async (req, res) => {
 // POST /api/clients
 router.post('/', requireAdvisor, async (req, res) => {
   try {
-    const { name, industry, contact, email, initialPassword, clientType, salutation, lastName, emailLang, privacyAcknowledged, sector, enabled_modules } = req.body;
+    const { name, industry, contact, email, initialPassword, clientType, salutation, lastName, emailLang, privacyAcknowledged, sector, enabled_modules, nurBeratung } = req.body;
     if (!name || name.length > 200) return res.status(400).json({ error: 'Name required (max 200 chars)' });
     if (email && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
       return res.status(400).json({ error: 'Invalid email address' });
@@ -97,13 +97,16 @@ router.post('/', requireAdvisor, async (req, res) => {
     if (industry && industry.length > 200) return res.status(400).json({ error: 'Industry max 200 chars' });
     if (contact && contact.length > 500) return res.status(400).json({ error: 'Contact max 500 chars' });
     if (!privacyAcknowledged) return res.status(400).json({ error: 'Datenschutz-Bestätigung erforderlich' });
+    if (nurBeratung === true) await ensureSchema();
 
     const { row: client, resolvedType, resolvedLastName } = await createClientRecord({
-      advisorId: req.user.id, name, industry, contact, email, clientType, salutation, lastName, enabledModules: enabled_modules
+      advisorId: req.user.id, name, industry, contact, email, clientType, salutation, lastName, enabledModules: enabled_modules, nurBeratung: nurBeratung === true
     });
     const rows = [client];
 
-    if (email) {
+    if (nurBeratung === true) {
+      // Nur Beratung: keine Mail an den Klienten und keine Zugangsmail. Der Zugang lässt sich später freischalten.
+    } else if (email) {
       // Send secure setup link — no password in email
       sendWelcomeEmail({
         clientType: resolvedType,
@@ -230,6 +233,31 @@ router.post('/:id/set-password', requireAdvisor, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+// POST /api/clients/:id/zugang-freischalten — macht aus einem Beratungsklienten einen normalen Klienten.
+// Mit { sendWelcome: true } und hinterlegter E-Mail-Adresse geht zusätzlich die Willkommens-E-Mail raus.
+router.post('/:id/zugang-freischalten', requireAdvisor, async (req, res) => {
+  try {
+    await ensureSchema();
+    const { rows } = await pool.query(
+      'UPDATE clients SET nur_beratung=FALSE, must_change_password=(email IS NOT NULL) WHERE id=$1 AND advisor_id=$2 AND geloescht_am IS NULL RETURNING id, name, email, client_type, salutation, last_name',
+      [req.params.id, req.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
+    const c = rows[0];
+    let willkommen = false;
+    if (req.body && req.body.sendWelcome === true && c.email) {
+      sendWelcomeEmail({ clientType: c.client_type || 'company', salutation: c.salutation || 'Frau', lastName: c.last_name || '', companyName: c.name, email: c.email, clientId: c.id, lang: (req.body.emailLang || 'de') })
+        .catch(e => console.error('Welcome email error:', e.message));
+      willkommen = true;
+    }
+    res.json({ ok: true, nur_beratung: false, willkommenGesendet: willkommen });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
