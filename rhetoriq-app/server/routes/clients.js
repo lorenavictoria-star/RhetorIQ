@@ -76,7 +76,7 @@ router.get('/', requireAdvisor, async (req, res) => {
     await ensureClientAddressColumn();
     await ensureSchema();
     const { rows } = await pool.query(
-      'SELECT id, name, industry, contact, slug, token, capital_markets_enabled, hotel_enabled, enabled_modules, enabled_textarten, address, created_at, email, client_type, salutation, last_name, nur_beratung FROM clients WHERE advisor_id = $1 AND geloescht_am IS NULL ORDER BY created_at DESC',
+      'SELECT id, name, industry, contact, slug, token, capital_markets_enabled, hotel_enabled, enabled_modules, enabled_textarten, address, created_at, email, client_type, salutation, last_name, nur_beratung, arbeitssprache FROM clients WHERE advisor_id = $1 AND geloescht_am IS NULL ORDER BY created_at DESC',
       [req.user.id]
     );
     res.json(rows);
@@ -89,7 +89,7 @@ router.get('/', requireAdvisor, async (req, res) => {
 // POST /api/clients
 router.post('/', requireAdvisor, async (req, res) => {
   try {
-    const { name, industry, contact, email, initialPassword, clientType, salutation, lastName, emailLang, privacyAcknowledged, sector, enabled_modules, nurBeratung } = req.body;
+    const { name, industry, contact, email, initialPassword, clientType, salutation, lastName, emailLang, privacyAcknowledged, sector, enabled_modules, nurBeratung, arbeitssprache } = req.body;
     if (!name || name.length > 200) return res.status(400).json({ error: 'Name required (max 200 chars)' });
     if (email && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
       return res.status(400).json({ error: 'Invalid email address' });
@@ -97,10 +97,10 @@ router.post('/', requireAdvisor, async (req, res) => {
     if (industry && industry.length > 200) return res.status(400).json({ error: 'Industry max 200 chars' });
     if (contact && contact.length > 500) return res.status(400).json({ error: 'Contact max 500 chars' });
     if (!privacyAcknowledged) return res.status(400).json({ error: 'Datenschutz-Bestätigung erforderlich' });
-    if (nurBeratung === true) await ensureSchema();
+    if (nurBeratung === true || arbeitssprache === 'en') await ensureSchema();
 
     const { row: client, resolvedType, resolvedLastName } = await createClientRecord({
-      advisorId: req.user.id, name, industry, contact, email, clientType, salutation, lastName, enabledModules: enabled_modules, nurBeratung: nurBeratung === true
+      advisorId: req.user.id, name, industry, contact, email, clientType, salutation, lastName, enabledModules: enabled_modules, nurBeratung: nurBeratung === true, arbeitssprache: arbeitssprache === 'en' ? 'en' : 'de'
     });
     const rows = [client];
 
@@ -236,6 +236,25 @@ router.post('/:id/set-password', requireAdvisor, async (req, res) => {
   }
 });
 
+
+// PUT /api/clients/:id/arbeitssprache  { sprache: 'de' | 'en' }
+// Arbeitssprache des Klienten: 'en' schaltet British English im Corporate-Stil ein (Regelwerk, Prüfung, Brand-Voice-Analyse, Standardsprache der Texte).
+router.put('/:id/arbeitssprache', requireAdvisor, async (req, res) => {
+  try {
+    const sprache = require('../lib/arbeitssprache').gueltig(req.body && req.body.sprache);
+    if (!sprache) return res.status(400).json({ error: "sprache muss 'de' oder 'en' sein" });
+    await ensureSchema();
+    const { rows } = await pool.query(
+      'UPDATE clients SET arbeitssprache=$1 WHERE id=$2 AND advisor_id=$3 AND geloescht_am IS NULL RETURNING id, arbeitssprache',
+      [sprache, req.params.id, req.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Client not found' });
+    res.json({ ok: true, arbeitssprache: rows[0].arbeitssprache });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // POST /api/clients/:id/zugang-freischalten — macht aus einem Beratungsklienten einen normalen Klienten.
 // Mit { sendWelcome: true } und hinterlegter E-Mail-Adresse geht zusätzlich die Willkommens-E-Mail raus.
@@ -434,7 +453,7 @@ router.get('/:id/cm-status', requireAuth, async (req, res) => {
     }
     await ensureSchema();
     const { rows } = await pool.query(
-      'SELECT capital_markets_enabled, hotel_enabled, enabled_modules, enabled_textarten FROM clients WHERE id = $1',
+      'SELECT capital_markets_enabled, hotel_enabled, enabled_modules, enabled_textarten, arbeitssprache FROM clients WHERE id = $1',
       [req.params.id]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });
@@ -442,7 +461,8 @@ router.get('/:id/cm-status', requireAuth, async (req, res) => {
       capital_markets_enabled: rows[0].capital_markets_enabled,
       hotel_enabled: rows[0].hotel_enabled,
       enabled_modules: rows[0].enabled_modules || null,
-      enabled_textarten: rows[0].enabled_textarten || null
+      enabled_textarten: rows[0].enabled_textarten || null,
+      arbeitssprache: rows[0].arbeitssprache === 'en' ? 'en' : 'de'
     });
   } catch (e) {
     console.error(e);

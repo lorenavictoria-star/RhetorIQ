@@ -1230,6 +1230,14 @@ html[lang="en"] .legal-en-note{display:block}
       </div>
     </div>
     <div style="margin-top:14px;padding:12px;background:var(--sf);border-radius:8px;border:1px solid var(--bd)">
+      <label for="nc-arbsprache" style="display:block;font-size:12px;color:var(--tx);margin-bottom:6px"><b>Arbeitssprache</b></label>
+      <select id="nc-arbsprache" style="width:100%;padding:8px;font-size:13px;border:1px solid var(--bd);border-radius:6px;background:var(--bg2);color:var(--tx)">
+        <option value="de">Deutsch (Schweizer Schreibweise)</option>
+        <option value="en">English (British, Corporate)</option>
+      </select>
+      <div style="font-size:11px;color:var(--mu);margin-top:6px">Steuert Regelwerk, Brand-Voice-Analyse, Prüfung und die Standardsprache der Texte. Du kannst sie später im Workspace unter «Verwaltung» ändern.</div>
+    </div>
+    <div style="margin-top:10px;padding:12px;background:var(--sf);border-radius:8px;border:1px solid var(--bd)">
       <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:12px;color:var(--tx)">
         <input type="checkbox" id="nc-beratung" style="margin-top:2px;flex-shrink:0">
         <span><b>Nur Beratung</b>: Der Kunde hat keinen Zugang zu RhetorIQ. Er bekommt keine E-Mail, keinen Test und kein Abo. Du arbeitest für ihn im Workspace. Den Zugang schaltest du später mit einem Klick frei.</span>
@@ -3961,7 +3969,7 @@ async function boot(user,role){
   } else {
     clientId=user.id||null;
     if(clientId){
-      try{const r=await fetch(API+'/api/clients/'+clientId+'/cm-status');const d=await r.json();enabledModules=d.enabled_modules||null;enabledTextarten=d.enabled_textarten||null;}catch{}
+      try{const r=await fetch(API+'/api/clients/'+clientId+'/cm-status');const d=await r.json();enabledModules=d.enabled_modules||null;enabledTextarten=d.enabled_textarten||null;window._arbSprache=d.arbeitssprache||'de';}catch{}
       await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);
     }
   }
@@ -4329,14 +4337,34 @@ async function addClient(){
   const enabledModules=checkedMods.length?[...new Set([...NC_ALWAYS,...checkedMods])]:null;
   const body={name,industry:document.getElementById('nc-industry').value,contact:document.getElementById('nc-contact').value.trim(),clientType,emailLang,privacyAcknowledged:true};
   const ncB=document.getElementById('nc-beratung');if(ncB&&ncB.checked)body.nurBeratung=true;
+  const ncS=document.getElementById('nc-arbsprache');if(ncS&&ncS.value==='en')body.arbeitssprache='en';
   if(sector)body.sector=sector;
   if(enabledModules)body.enabled_modules=enabledModules;
   if(clientType==='individual'){body.salutation=salutation;body.lastName=lastName;}if(email&&initpw){body.email=email;body.initialPassword=initpw;}
   try{const r=await api('/api/clients',{method:'POST',body:JSON.stringify(body)});const c=await r.json();if(!r.ok)throw new Error(c.error);
   if(c.id&&enabledModules){await api('/api/clients/'+c.id+'/modules',{method:'POST',body:JSON.stringify({enabled_modules:enabledModules})}).catch(()=>{});}
-  loadAdvisorDashboard();closeModal('nc-ov');['nc-name','nc-contact','nc-email','nc-initpw','nc-lastname'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('nc-privacy').checked=false;const ncB2=document.getElementById('nc-beratung');if(ncB2)ncB2.checked=false;document.getElementById('nc-sector').value='';ncUpdateModules();ncSetType('company');ncSetLang('de');goPage('clients');}catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
+  loadAdvisorDashboard();closeModal('nc-ov');['nc-name','nc-contact','nc-email','nc-initpw','nc-lastname'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('nc-privacy').checked=false;const ncB2=document.getElementById('nc-beratung');if(ncB2)ncB2.checked=false;const ncS2=document.getElementById('nc-arbsprache');if(ncS2)ncS2.value='de';document.getElementById('nc-sector').value='';ncUpdateModules();ncSetType('company');ncSetLang('de');goPage('clients');}catch(e){alert('Etwas ist schiefgelaufen. Bitte kurz erneut versuchen.');console.error(e);}
 }
 
+// Arbeitssprache eines Kunden: 'en' schaltet British English im Corporate-Stil ein (Regelwerk, Brand-Voice-Analyse, Prüfung, Standardsprache der Texte)
+function rqArbEn(){
+  try{
+    if(window._arbSprache==='en')return true;
+    const c=(typeof clients!=='undefined'?clients:[]).find(x=>String(x.id)===String(typeof clientId!=='undefined'?clientId:''));
+    return !!(c&&c.arbeitssprache==='en');
+  }catch(e){return false;}
+}
+async function setArbeitssprache(cid,sprache){
+  const c=(clients||[]).find(x=>x.id==cid)||{};
+  if((c.arbeitssprache||'de')===sprache)return;
+  const hinweis=sprache==='en'
+    ?'Arbeitssprache für «'+(c.name||'diesen Kunden')+'» auf English (British, Corporate) umstellen? Neue Texte, die Brand-Voice-Analyse und die Prüfung laufen dann auf Englisch. Die bestehende Brand Voice bleibt, wie sie ist. Für eine englische Brand Voice analysierst du das Material neu.'
+    :'Arbeitssprache für «'+(c.name||'diesen Kunden')+'» zurück auf Deutsch stellen?';
+  if(!await rqConfirm(hinweis,{ok:'Umstellen'}))return;
+  try{const r=await api('/api/clients/'+cid+'/arbeitssprache',{method:'PUT',body:JSON.stringify({sprache})});const j=await r.json();if(!r.ok)throw new Error(j.error||'Fehler');
+    c.arbeitssprache=j.arbeitssprache;if(typeof wsRenderAdmin==='function'&&document.getElementById('ws-body'))wsRenderAdmin(document.getElementById('ws-body'));if(typeof loadAdvisorDashboard==='function')loadAdvisorDashboard();
+  }catch(e){alert('Das hat nicht geklappt: '+e.message);}
+}
 async function zugangFreischalten(cid){
   const c=(clients||[]).find(x=>x.id==cid)||{};
   if(!await rqConfirm('Zugang für «'+(c.name||'diesen Kunden')+'» freischalten? Der Kunde wird danach wie ein normaler Kunde behandelt (Test, Abo, Zugang).',{ok:'Freischalten'}))return;
@@ -5670,7 +5698,7 @@ function buildTextGen(prefill,form){
         <div class="fg2" style="${(t.id==='email'||t.id==='brief')?'grid-column:1 / -1':''}"><label class="fl2">${tl.tg_tone}</label><select id="tg-tone-${t.id}">${(t.id==='email'||t.id==='brief')?TONE_PRESETS.map(o=>`<option>${o}</option>`).join(''):`<option>Aus Voice Profile</option><option>Authoritative &amp; Direct</option><option>Visionary &amp; Inspiring</option><option>Warm &amp; Human</option><option>Precise &amp; Data-driven</option><option>Swiss / European — understated</option>`}</select>${(t.id==='email'||t.id==='brief')?`<div style="font-size:11px;color:var(--mu);margin-top:4px">Bleibt immer Geschäftspartner — "Du" ändert nur die Anrede, nie die Höflichkeit. Die Ton-Variante bestimmt bereits Zielgruppe und Kontext.</div>`:''}</div>
       </div>
       <div class="row2">
-        <div class="fg2"><label class="fl2">${tl.tg_language}</label><select id="tg-lang-${t.id}"><option>Deutsch</option><option>English</option><option>Français</option><option>Italiano</option></select></div>
+        <div class="fg2"><label class="fl2">${tl.tg_language}</label><select id="tg-lang-${t.id}">${rqArbEn()?'<option>English</option><option>Deutsch</option>':'<option>Deutsch</option><option>English</option>'}<option>Français</option><option>Italiano</option></select></div>
         <div class="fg2"><label class="fl2">${tl.tg_length}</label><input type="text" id="tg-len-${t.id}" placeholder="${tl.tg_length_ph}"></div>
       </div>
       ${t.id==='linkedin'?`<div class="fg2" style="margin-top:4px"><label class="fl2">${tl.li_profile_lbl||'LinkedIn Profile / About (optional)'}</label><textarea id="tg-li-profile" placeholder="${tl.li_profile_ph||'Paste the About section and the last 3–5 posts of the LinkedIn profile here — so the output matches the person\'s authentic voice.'}" style="min-height:80px;font-size:12px"></textarea><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><button type="button" class="tg-save-ref" onclick="saveLiProfile()" style="font-size:11px;padding:5px 12px;border:1px solid var(--bd);border-radius:6px;background:var(--sf);cursor:pointer">Dauerhaft speichern</button><div id="tg-li-profile-status" style="font-size:11px;color:var(--mu)"></div></div></div>`:''}
@@ -7363,13 +7391,14 @@ async function loadAdvisorDashboard(){
         const tok=tokMap[String(c.id)]||'';
         const tokShort=tok?tok.substring(0,24)+'…':'—';
         const subSt=subStatuses[c.id]||'trial';
-        const subBadge=c.nur_beratung
+        const enBadge=c.arbeitssprache==='en'?' <span style="font-size:11px;font-weight:600;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:4px;padding:0 5px">EN</span>':'';
+        const subBadge=enBadge+(c.nur_beratung
           ?'<span style="font-size:11px;font-weight:600;color:#4b5563">&#9679; Beratung</span>'
           :subSt==='active'
           ?'<span style="font-size:11px;font-weight:600;color:#047857">&#9679; Aktiv</span>'
           :subSt==='cancelled'
           ?'<span style="font-size:11px;font-weight:600;color:#b91c1c">&#9679; Abgelaufen</span>'
-          :'<span style="font-size:11px;font-weight:600;color:#92400e">&#9679; Trial</span>';
+          :'<span style="font-size:11px;font-weight:600;color:#92400e">&#9679; Trial</span>');
         return`<div class="adv-client-card" data-client-name="${safeText(c.name).toLowerCase()}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
@@ -8498,6 +8527,10 @@ function wsRenderAdmin(body){
       <button class="obtn" style="color:#166534;border-color:#bbf7d0;background:#f0fdf4" onclick="sendWelcomeByEmail(_wsClientId)">Willkommens-E-Mail senden</button>
       <button class="obtn" onclick="openSetPassword(_wsClientId,(clients.find(x=>x.id==_wsClientId)||{}).name)">Set Password</button>
       <button class="obtn" onclick="openTeamModal(_wsClientId,(clients.find(x=>x.id==_wsClientId)||{}).name)">Team</button>
+      <span style="display:inline-flex;align-items:center;gap:6px;border:1px solid #bfdbfe;border-radius:6px;padding:2px 4px 2px 8px;background:#eff6ff;font-size:12px;color:#1d4ed8">Arbeitssprache
+        <button type="button" class="obtn" style="${(c.arbeitssprache||'de')==='de'?'background:#1d4ed8;color:#fff;border-color:#1d4ed8;':''}padding:3px 9px" onclick="setArbeitssprache(_wsClientId,'de')" aria-pressed="${(c.arbeitssprache||'de')==='de'}">Deutsch</button>
+        <button type="button" class="obtn" style="${c.arbeitssprache==='en'?'background:#1d4ed8;color:#fff;border-color:#1d4ed8;':''}padding:3px 9px" onclick="setArbeitssprache(_wsClientId,'en')" aria-pressed="${c.arbeitssprache==='en'}">English</button>
+      </span>
       ${(clients.find(x=>x.id==_wsClientId)||{}).nur_beratung?`<button class="obtn" style="color:#166534;border-color:#bbf7d0;background:#f0fdf4;font-weight:600" onclick="zugangFreischalten(_wsClientId)">Zugang freischalten</button>`:''}
       <button class="obtn" style="color:#5b21b6;border-color:#c4b5fd;background:#f5f3ff;font-weight:500" onclick="openModuleConfig(_wsClientId)"><i class="ti ti-layout-grid" aria-hidden="true" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Module anpassen</button>
       <button class="obtn" style="color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff;font-weight:500" onclick="sendPaymentLink(_wsClientId,this)">Zahlungslink senden</button>

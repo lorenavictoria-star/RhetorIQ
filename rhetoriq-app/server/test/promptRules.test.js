@@ -31,6 +31,6 @@ test('Kernverbote und Schutz vor erfundenen Fakten bleiben im Regelwerk', () => 
 
 test('Brand-Voice-Kopf ist für beide Pfade derselbe Baustein', () => {
   const src = require('fs').readFileSync(require.resolve('../routes/analyze'), 'utf8');
-  assert.equal(count(src, 'BRAND_VOICE_HEAD;'), 2);
+  assert.equal(count(src, 'RG.head;'), 2, 'beide Pfade nehmen den Kopf aus dem Regelwerk der Arbeitssprache');
   assert.ok(R.BRAND_VOICE_HEAD.includes('STIMME DES KLIENTEN'));
 });

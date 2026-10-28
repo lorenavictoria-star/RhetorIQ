@@ -13,6 +13,8 @@ const ART_LABEL = {
   anrede: 'gemischte Anrede',
   gendern: 'Gendern mit Sonderzeichen',
   komma_und: 'Komma vor «und»',
+  amerikanisch: 'American spelling (British English required)',
+  buerosprech_en: 'corporate filler',
   markdown: 'Markdown'
 };
 
@@ -143,6 +145,45 @@ function kommaUndTreffer(t) {
   return res;
 }
 
+
+// ── Englisch (British English, Corporate): eigene Prüfung, nur wenn der Auftrag auf Englisch ist ──
+function isEnglish(sprache) { return /^(en|eng|english|englisch)/i.test(String(sprache || '').trim()); }
+const US_WOERTER = /\b(?:colors?|colored|coloring|favorites?|favorite|behaviors?|neighbors?|honors?|labor|flavors?|harbors?|centers?|defense|traveling|traveled|catalog(?:s|ed)?|gray|fulfillment|enrollment|skillful|licen[cs]ing|analy[sz]e[sd]?|analyzing|organi[sz]ation(?:s|al)?|(?:organi|recogni|realiz|optimi|summari|prioriti|finali|customi|utili|minimi|maximi|speciali|standardi|authori|categori|capitali|emphasi|apologi|criticiz|civiliz|memori|mobili|modern|normal|personal|visual|digital|energi|harmoni|synchroni|legali|localiz|centrali)[sz](?:e|es|ed|ing|ation|ations)?)\b/gi;
+const BRITISCH_OK = /^(?:organis|recognis|realis|optimis|summaris|prioritis|finalis|customis|utilis|minimis|maximis|specialis|standardis|authoris|categoris|capitalis|emphasis|apologis|criticis|civilis|memoris|mobilis|modernis|normalis|personalis|visualis|digitalis|energis|harmonis|synchronis|legalis|localis|centralis|analys|colour|favour|behaviour|neighbour|honour|labour|flavour|harbour|centre|defence|travelling|travelled|catalogue|grey|licens|fulfil)/i;
+function amerikanischTreffer(t) {
+  const res = [];
+  let m;
+  US_WOERTER.lastIndex = 0;
+  while ((m = US_WOERTER.exec(t))) {
+    const w = m[0];
+    if (BRITISCH_OK.test(w) && !/^(?:analyz|center|color|favorite|behavior|neighbor|honor|labor|flavor|harbor|defense|traveling|traveled|catalog|gray|fulfillment|enrollment)/i.test(w)) continue;
+    // «-ise»-Wörter sind britisch; nur die «-ize»-Formen und die genannten amerikanischen Wörter treffen
+    if (/(?:iz|yz)(?:e|es|ed|ing|ation|ations)?$/i.test(w) || /^(?:colors?|colored|coloring|favorites?|behaviors?|neighbors?|honors?|labor|flavors?|harbors?|centers?|defense|traveling|traveled|catalog(?:s|ed)?|gray|fulfillment|enrollment|skillful|analyzing|analyzed|analyzes)$/i.test(w)) {
+      res.push({ art: 'amerikanisch', pos: m.index, len: w.length, text: w });
+    }
+  }
+  return res;
+}
+const BUEROSPRECH_EN = [
+  /\bleverag(?:e|es|ed|ing)\b/gi, /\bsynerg(?:y|ies)\b/gi, /\bcircle back\b/gi, /\btouch base\b/gi, /\bgoing forward\b/gi,
+  /\bbest-in-class\b/gi, /\bdelv(?:e|es|ed|ing) into\b/gi, /\bgame-?chang(?:er|ing)\b/gi, /\bcutting-edge\b/gi, /\bseamless(?:ly)?\b/gi,
+  /\bholistic(?:ally)?\b/gi, /\butili[sz](?:e|es|ed|ing)\b/gi, /\bfacilitat(?:e|es|ed|ing)\b/gi, /\bcommenc(?:e|es|ed|ing)\b/gi,
+  /\bI am writing to (?:inform|let) you\b/gi, /\bplease do not hesitate to\b/gi, /\bdo not hesitate to (?:reach out|contact)\b/gi,
+  /\bit(?:'|’)?s important to (?:note|remember)\b/gi, /\bin conclusion\b/gi
+];
+const GEGENUEBER_EN = [
+  /\b(?:it|this|that)(?:'|’)?s\s+not\s+(?:just\s+|only\s+|about\s+)?[^.,;:!?\n]{1,60}?[,;.]?\s+(?:it|this|that)(?:'|’)?s\b/gi,
+  /\bnot\s+(?:just|merely|simply)\s+[^.!?\n]{1,60}?,?\s+but\b/gi,
+  /\bless\s+[a-z]+(?:\s+[a-z]+)?,\s+more\s+[a-z]+/gi
+];
+function englischTreffer(t) {
+  let hits = [];
+  hits.push(...amerikanischTreffer(t));
+  for (const re of BUEROSPRECH_EN) hits.push(...findAll(t, re, 'buerosprech_en'));
+  for (const re of GEGENUEBER_EN) hits.push(...findAll(t, re, 'gegenueberstellung'));
+  return hits;
+}
+
 function lintText(text, opts = {}) {
   const t = String(text || '');
   if (!t) return [];
@@ -177,6 +218,7 @@ function lintText(text, opts = {}) {
       hits.push(h);
     }
   }
+  if (isEnglish(opts.sprache)) hits.push(...englischTreffer(t));
   hits.push(...gendernTreffer(t));
   hits.push(...markdownTreffer(t));
   if (deutsch) {
@@ -243,4 +285,4 @@ function lintErgebnis(text, data, module, erlaubt, extra) {
   return lintZusammenfassung(lintText(text, lintOptionenAusDaten(data, erlaubt, extra)));
 }
 
-module.exports = { anredeTreffer, lintFuerDurchgang, lintErgebnis, LINT_SKIP, lintText, lintOptionenAusDaten, pruefAuftragAusTreffern, lintZusammenfassung, ART_LABEL, anredeAusTon };
+module.exports = { englischTreffer, isEnglish, anredeTreffer, lintFuerDurchgang, lintErgebnis, LINT_SKIP, lintText, lintOptionenAusDaten, pruefAuftragAusTreffern, lintZusammenfassung, ART_LABEL, anredeAusTon };

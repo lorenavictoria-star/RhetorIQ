@@ -61,6 +61,8 @@ function kalenderBlock(y, month) {
 async function kontext(clientId, monat) {
   const q = async (sql, p) => (await pool.query(sql, p).catch(() => ({ rows: [] }))).rows;
   const [c] = await q('SELECT id, name, industry, contact, salutation FROM clients WHERE id=$1', [clientId]);
+  const zeileSprache = await require('./arbeitssprache').zeile(pool, clientId);
+  if (c && zeileSprache) c.arbeitssprache = zeileSprache.arbeitssprache;
   if (!c) return null;
   const voice = await q(`SELECT memory_type, content FROM company_memory WHERE client_id=$1 AND memory_type LIKE 'brand_voice%' ORDER BY updated_at DESC`, [clientId]);
   const facts = await q(`SELECT memory_type, content FROM company_memory WHERE client_id=$1 AND memory_type NOT LIKE 'brand_voice%' AND memory_type<>'structural_reference' ORDER BY updated_at DESC LIMIT 6`, [clientId]);
@@ -75,14 +77,15 @@ async function kontext(clientId, monat) {
 
 function systemBlocks(k, y, month) {
   const blocks = [];
-  if (k.voice.length) blocks.push({ type: 'text', text: BRAND_VOICE_HEAD + k.voice.map(m => `${m.memory_type.toUpperCase()}:\n${require('./dataFence').fence(m.memory_type, clean(m.content, 6000))}\n\n`).join('') + BRAND_VOICE_TAIL, cache_control: { type: 'ephemeral' } });
+  const RG = require('./arbeitssprache').regeln(require('./arbeitssprache').ausgabeSprache(null, k.c));
+  if (k.voice.length) blocks.push({ type: 'text', text: RG.head + k.voice.map(m => `${m.memory_type.toUpperCase()}:\n${require('./dataFence').fence(m.memory_type, clean(m.content, 6000))}\n\n`).join('') + RG.tail, cache_control: { type: 'ephemeral' } });
   let dyn = '';
   if (k.facts.length) dyn += '\n\nHINTERLEGTE FIRMENDATEN:\n' + k.facts.map(m => `- ${m.memory_type}: ${clean(m.content, 800)}`).join('\n');
   if (k.learned.length) dyn += '\n\nGELERNTE PRÄFERENZEN DIESES KLIENTEN (aus früherem Feedback):\n' + k.learned.map(r => `- ${r.category}: ${clean(r.summary, 300)}`).join('\n');
   dyn += '\n\n' + kalenderBlock(y, month) + heuteBlock();
   blocks.push({ type: 'text', text: dyn.trim() });
   blocks.push({ type: 'text', text: require('./dataFence').DATEN_REGEL });
-  blocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
+  blocks.push({ type: 'text', text: RG.rules });
   return blocks;
 }
 

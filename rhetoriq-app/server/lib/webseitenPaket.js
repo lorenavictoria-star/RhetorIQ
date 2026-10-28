@@ -101,7 +101,10 @@ async function kontingentPruefen(clientId, advisor, gesamt) {
 async function systemFuer(clientId, einheitId) {
   const analyze = require('../routes/analyze');
   const { sanitizeForPrompt, assembleSystemBlocks, einheitBlock } = analyze._internal;
-  const { BRAND_VOICE_HEAD, BRAND_VOICE_TAIL } = require('./promptRules');
+  const AS = require('./arbeitssprache');
+  const spracheZeile = await AS.zeile(pool, clientId);
+  const sprache = AS.ausgabeSprache(null, spracheZeile);
+  const RG = AS.regeln(sprache);
   const { fence } = require('./dataFence');
   const baseSystem = 'Du schreibst Webseitentexte für ein Restaurant: Suchmaschinen-tauglich, konkret, aus Gästesicht, in der Stimme des Betriebs. '
     + 'Fakten (Adresse, Zeiten, Preise, Telefon, Links) stammen ausschliesslich aus den Angaben des Auftrags. Du erfindest nichts und schreibst den Block «Auf einen Blick» nicht selbst. '
@@ -111,13 +114,13 @@ async function systemFuer(clientId, einheitId) {
   const { rows } = await pool.query(`SELECT memory_type, content FROM company_memory WHERE client_id=$1 AND memory_type LIKE 'brand_voice%' ORDER BY updated_at DESC`, [clientId]).catch(() => ({ rows: [] }));
   if (rows.length) {
     hat = true;
-    brandVoiceBlock += BRAND_VOICE_HEAD;
+    brandVoiceBlock += RG.head;
     const auswahl = require('./brandVoiceAuswahl');
     rows.forEach(m => { brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${fence(m.memory_type, sanitizeForPrompt(auswahl.fuerAuftrag(m.content, 'website')))}\n\n`; });
-    brandVoiceBlock += BRAND_VOICE_TAIL;
+    brandVoiceBlock += RG.tail;
   }
   brandVoiceBlock += await einheitBlock(clientId, einheitId);
-  return { blocks: assembleSystemBlocks({ baseSystem, brandVoiceBlock, structuralRefBlock: '', geoBlock: '', restDynamicSystem: '' }), hatBrandVoice: hat };
+  return { blocks: assembleSystemBlocks({ baseSystem, brandVoiceBlock, structuralRefBlock: '', geoBlock: '', restDynamicSystem: '', sprache }), hatBrandVoice: hat };
 }
 
 // Eine Seite als lesbarer Text für den Verlauf (analyses.result)

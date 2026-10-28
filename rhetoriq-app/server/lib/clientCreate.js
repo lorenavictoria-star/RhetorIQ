@@ -26,7 +26,7 @@ function guessLastName(name) {
 
 // Legt einen Klienten an (gemeinsame Logik für POST /api/clients und den Abschluss eines Onboarding-Entwurfs).
 // Prüfungen (Name, E-Mail, Datenschutz) und der Versand von Mails bleiben bei den Aufrufern.
-async function createClientRecord({ advisorId, name, industry, contact, email, clientType, salutation, lastName, enabledModules, paket, nurBeratung }) {
+async function createClientRecord({ advisorId, name, industry, contact, email, clientType, salutation, lastName, enabledModules, paket, nurBeratung, arbeitssprache }) {
   const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') + '-' + Date.now().toString(36);
   const token = crypto.randomBytes(24).toString('hex');
 
@@ -42,6 +42,10 @@ async function createClientRecord({ advisorId, name, industry, contact, email, c
     [advisorId, name, industry || '', contact || '', slug, token, email || null, !!email && !nurBeratung, mods, resolvedType, salutation || 'Frau', resolvedLastName]
   );
   // Nur Beratung: Der Klient hat keinen Zugang. Das Merkmal wird getrennt gesetzt, damit die Anlage auch ohne die neue Spalte funktioniert.
+  if (arbeitssprache === 'en') {
+    await pool.query("UPDATE clients SET arbeitssprache='en' WHERE id=$1", [rows[0].id]);
+    rows[0].arbeitssprache = 'en';
+  }
   if (nurBeratung) {
     await pool.query('UPDATE clients SET nur_beratung=TRUE WHERE id=$1', [rows[0].id]);
     rows[0].nur_beratung = true;

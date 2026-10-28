@@ -1500,7 +1500,7 @@ function tuneCache(blocks) {
 //   Stilkarte, heutiges Datum), 6 Datenregel, 7 Regelwerk (beide zuletzt, wie vom Prompt-Aufbau vorgesehen).
 // Vor einer Markierung steht nur Stabiles, ausser bei der letzten Markierung des zweiten Durchgangs (tuneCache): sie schliesst
 // das ganze System ein, weil Durchgang 2 dasselbe System erneut liest. Der Test test/zwischenspeicher.test.js prüft die Reihenfolge.
-function assembleSystemBlocks({ baseSystem, brandVoiceBlock, structuralRefBlock, geoBlock, restDynamicSystem, tune }) {
+function assembleSystemBlocks({ baseSystem, brandVoiceBlock, structuralRefBlock, geoBlock, restDynamicSystem, tune, sprache }) {
   const blocks = [];
   const mark = (text) => ({ type: 'text', text, cache_control: { type: 'ephemeral' } });
   if (baseSystem) blocks.push(mark(baseSystem));
@@ -1510,7 +1510,7 @@ function assembleSystemBlocks({ baseSystem, brandVoiceBlock, structuralRefBlock,
   if (restDynamicSystem) blocks.push({ type: 'text', text: restDynamicSystem });
   if (!blocks.length) blocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
   blocks.push({ type: 'text', text: DATEN_REGEL });
-  blocks.push({ type: 'text', text: GLOBAL_STYLE_RULES });
+  blocks.push({ type: 'text', text: require('../lib/arbeitssprache').regeln(sprache).rules });
   if (tune) tuneCache(blocks);
   return blocks;
 }
@@ -1808,11 +1808,21 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
 
     // Resolve advisor + industry early (needed for both brand voice and examples)
     const advisorId = req.user.role === 'advisor' ? req.user.id : req.user.advisorId;
+    const AS = require('../lib/arbeitssprache');
+    let sprache = AS.ausgabeSprache(data, null);
+    let RG = AS.regeln(sprache);
     let clientIndustry = null;
     let hasBrandVoice = false;
     if (resolvedClientId) {
       const { rows: cRows } = await pool.query('SELECT industry FROM clients WHERE id=$1', [resolvedClientId]);
       clientIndustry = cRows[0]?.industry?.toLowerCase().trim() || null;
+      sprache = AS.ausgabeSprache(data, await AS.zeile(pool, resolvedClientId));
+      RG = AS.regeln(sprache);
+      if (sprache === 'en' && data && typeof data === 'object' && !data.language) {
+        data.language = 'English';
+        restDynamicSystem += '\n\nOUTPUT LANGUAGE: This client works in English. Write the text in British English even if the briefing is in German, unless the request names another language.';
+      }
+      if (sprache === 'en' && /^brand-voice/.test(module)) restDynamicSystem += require('../lib/arbeitssprache').BRAND_VOICE_ENGLISCH;
     }
 
     // ── BRAND VOICE (highest priority — injected as absolute override) ──────────
@@ -1825,11 +1835,11 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
       );
       if (memRows.length) {
         hasBrandVoice = true;
-        brandVoiceBlock += BRAND_VOICE_HEAD;
+        brandVoiceBlock += RG.head;
         memRows.forEach(m => {
           brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${fence(m.memory_type, sanitizeForPrompt(require('../lib/brandVoiceAuswahl').fuerAuftrag(m.content, textartVon(module, instructionsKey, data))))}\n\n`;
         });
-        brandVoiceBlock += BRAND_VOICE_TAIL;
+        brandVoiceBlock += RG.tail;
       }
       if (data && data.einheitId) brandVoiceBlock += await einheitBlock(resolvedClientId, data.einheitId);
     }
@@ -1884,7 +1894,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     const willTwoPass = useTwoPass(module, req.body) && !(followUp && followUp.note) && !hasLargeInput(data);
     const cheapDraft = willTwoPass && draftModelFor(module) !== resolveModel(module);
     const systemBlocks = assembleSystemBlocks({ baseSystem, brandVoiceBlock, structuralRefBlock, geoBlock: buildGeoBlock(data), restDynamicSystem,
-      tune: shouldTuneCache(module, willTwoPass, cheapDraft, followUp) });
+      tune: shouldTuneCache(module, willTwoPass, cheapDraft, followUp), sprache });
     const claudeResp = await callClaude(systemBlocks, willTwoPass && !cheapDraft ? draftUserContent(userMsg) : userMsg, MODULE_MAX_TOKENS[module] || DEFAULT_MAX_TOKENS, willTwoPass ? draftModelFor(module) : resolveModel(module), temperaturFor(module));
     let result = claudeResp.text;
     let totalInputTokens = claudeResp.inputTokens, totalOutputTokens = claudeResp.outputTokens;
@@ -2027,21 +2037,31 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
       restDynamicSystem += await getFeedbackLearningsBlock(resolvedClientId, instructionsKey && instructionsKey !== module ? [module, instructionsKey] : [module]);
       restDynamicSystem += await getGoldBlock(resolvedClientId, keys, queryTextOf(data));
     }
+    const AS = require('../lib/arbeitssprache');
+    let sprache = AS.ausgabeSprache(data, null);
+    let RG = AS.regeln(sprache);
     let clientIndustry = null;
     let hasBrandVoice = false;
     let structuralRefBlock = '';
     if (resolvedClientId) {
       const { rows: cRows } = await pool.query('SELECT industry FROM clients WHERE id=$1', [resolvedClientId]);
       clientIndustry = cRows[0]?.industry?.toLowerCase().trim() || null;
+      sprache = AS.ausgabeSprache(data, await AS.zeile(pool, resolvedClientId));
+      RG = AS.regeln(sprache);
+      if (sprache === 'en' && data && typeof data === 'object' && !data.language) {
+        data.language = 'English';
+        restDynamicSystem += '\n\nOUTPUT LANGUAGE: This client works in English. Write the text in British English even if the briefing is in German, unless the request names another language.';
+      }
+      if (sprache === 'en' && /^brand-voice/.test(module)) restDynamicSystem += require('../lib/arbeitssprache').BRAND_VOICE_ENGLISCH;
       const { rows: memRows } = await pool.query(
         `SELECT memory_type, content FROM company_memory WHERE client_id=$1 AND memory_type LIKE 'brand_voice%' ORDER BY updated_at DESC`,
         [resolvedClientId]
       );
       if (memRows.length) {
         hasBrandVoice = true;
-        brandVoiceBlock += BRAND_VOICE_HEAD;
+        brandVoiceBlock += RG.head;
         memRows.forEach(m => { brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${fence(m.memory_type, sanitizeForPrompt(require('../lib/brandVoiceAuswahl').fuerAuftrag(m.content, textartVon(module, instructionsKey, data))))}\n\n`; });
-        brandVoiceBlock += BRAND_VOICE_TAIL;
+        brandVoiceBlock += RG.tail;
       }
       if (data && data.einheitId) brandVoiceBlock += await einheitBlock(resolvedClientId, data.einheitId);
       const { rows: refRows } = await pool.query(
@@ -2091,7 +2111,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     const willTwoPassS = useTwoPass(module, req.body) && !(followUp && followUp.note) && !hasLargeInput(data);
     const cheapDraftS = willTwoPassS && draftModelFor(module) !== resolveModel(module);
     const streamSystemBlocks = assembleSystemBlocks({ baseSystem, brandVoiceBlock, structuralRefBlock, geoBlock: buildGeoBlock(data), restDynamicSystem,
-      tune: shouldTuneCache(module, willTwoPassS, cheapDraftS, followUp) });
+      tune: shouldTuneCache(module, willTwoPassS, cheapDraftS, followUp), sprache });
 
     // Two-pass modules: draft silently first (keepalive pings keep the SSE
     // connection alive during this), then stream only the revised final pass.

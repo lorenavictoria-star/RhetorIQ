@@ -164,6 +164,7 @@ function ensureSchema() {
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS trial_start TIMESTAMPTZ`);
     // Nur Beratung: Klient ohne Zugang zur Plattform, nur von der Beraterin betreut (keine Mails, kein Test, kein Abo)
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS nur_beratung BOOLEAN NOT NULL DEFAULT FALSE`);
+    await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS arbeitssprache TEXT NOT NULL DEFAULT 'de'`);
     // Gratis-Zugang (bewusst, ohne Abo, zum Beispiel für Partner): von der Beraterin gesetzt
     await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS gratis_zugang BOOLEAN NOT NULL DEFAULT FALSE`);
     // Überarbeitungen nach Feedback (followUp) zählen im Gratis-Test nicht als Text

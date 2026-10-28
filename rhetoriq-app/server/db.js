@@ -58,6 +58,8 @@ async function init() {
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS aufbewahrung_tage INTEGER;
     -- Nur Beratung: Klient ohne Zugang, nur von der Beraterin betreut (Freischaltung über /api/clients/:id/zugang-freischalten)
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS nur_beratung BOOLEAN NOT NULL DEFAULT FALSE;
+    -- Arbeitssprache des Klienten: 'de' (Standard) oder 'en' (British English, Corporate). Steuert Regelwerk, Brand-Voice-Vorlagen und die Standardsprache der Texte.
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS arbeitssprache TEXT NOT NULL DEFAULT 'de';
 
     -- One-time token top-ups a client bought via Stripe (self-serve "Zusatzpaket"
     -- when they hit their monthly quota). Kept separate from monthly_token_limit
