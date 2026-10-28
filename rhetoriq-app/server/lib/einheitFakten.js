@@ -3,6 +3,14 @@
 // Gespeichert wird als JSON in einheiten.fakten_json.
 
 const TAGE = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+const TAGE_DE = TAGE;
+const TAGE_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+// Beschriftungen der Zeilen: Deutsch (Standard) und English
+const LBL = {
+  de: { adresse: 'Adresse', telefon: 'Telefon', email: 'E-Mail', webseite: 'Webseite', reservation: 'Reservation', zeiten: 'Öffnungszeiten', ruhetag: 'Ruhetag', kueche: 'Küche', preis: 'Preisklasse', chef: 'Küchenchef', gegruendet: 'Gegründet', innen: 'Plätze innen', terrasseN: 'Plätze Terrasse', terrasse: 'Terrasse', kinder: 'Kinderfreundlich', barriere: 'Barrierefrei', ja: 'ja', nein: 'nein', parkplatz: 'Parkplatz und Anreise', anlaesse: 'Anlässe', besonderheiten: 'Besonderheiten', auszeichnungen: 'Auszeichnungen', bis: 'bis', und: 'und', uhr: ' Uhr' },
+  en: { adresse: 'Address', telefon: 'Telephone', email: 'Email', webseite: 'Website', reservation: 'Reservations', zeiten: 'Opening hours', ruhetag: 'Closed', kueche: 'Cuisine', preis: 'Price range', chef: 'Head chef', gegruendet: 'Founded', innen: 'Seats inside', terrasseN: 'Seats on the terrace', terrasse: 'Terrace', kinder: 'Child-friendly', barriere: 'Step-free access', ja: 'yes', nein: 'no', parkplatz: 'Parking and directions', anlaesse: 'Events', besonderheiten: 'Features', auszeichnungen: 'Awards', bis: 'to', und: 'and', uhr: '' }
+};
+const lbl = opt => (opt && /^en/i.test(String(opt.sprache || ''))) ? LBL.en : LBL.de;
 const SCHEMA_TAGE = { Mo: 'Monday', Di: 'Tuesday', Mi: 'Wednesday', Do: 'Thursday', Fr: 'Friday', Sa: 'Saturday', So: 'Sunday' };
 
 const FAKTEN_FELDER = [
@@ -102,50 +110,56 @@ const vorhanden = v => v !== undefined && v !== null && !(typeof v === 'string' 
 const ladeFakten = f => normalisiere(f).fakten;
 
 // Tage lesbar: «Di bis So», «Mo und Di», «Mo, Mi und Fr»
-function tageText(tage) {
-  const idx = TAGE.map((t, i) => tage.includes(t) ? i : -1).filter(i => i >= 0);
+function tageText(tage, en) {
+  const L = en ? LBL.en : LBL.de;
+  const TAGE = en ? TAGE_EN : TAGE_DE;
+  const idx = TAGE_DE.map((t, i) => tage.includes(t) ? i : -1).filter(i => i >= 0);
   const runs = [];
   for (const i of idx) {
     const l = runs[runs.length - 1];
     if (l && l[l.length - 1] === i - 1) l.push(i); else runs.push([i]);
   }
-  const teile = runs.map(r => r.length >= 3 ? TAGE[r[0]] + ' bis ' + TAGE[r[r.length - 1]] : r.map(i => TAGE[i]).join(' und '));
-  const alle = runs.length === 1 && runs[0].length >= 3 ? teile : runs.flatMap(r => r.length >= 3 ? [TAGE[r[0]] + ' bis ' + TAGE[r[r.length - 1]]] : r.map(i => TAGE[i]));
+  const teile = runs.map(r => r.length >= 3 ? TAGE[r[0]] + ' ' + L.bis + ' ' + TAGE[r[r.length - 1]] : r.map(i => TAGE[i]).join(' ' + L.und + ' '));
+  const alle = runs.length === 1 && runs[0].length >= 3 ? teile : runs.flatMap(r => r.length >= 3 ? [TAGE[r[0]] + ' ' + L.bis + ' ' + TAGE[r[r.length - 1]]] : r.map(i => TAGE[i]));
   if (alle.length <= 1) return alle[0] || '';
-  return alle.slice(0, -1).join(', ') + ' und ' + alle[alle.length - 1];
+  return alle.slice(0, -1).join(', ') + ' ' + L.und + ' ' + alle[alle.length - 1];
 }
-function zeitenText(zeiten) {
-  return zeiten.map(z => tageText(z.tage) + ' ' + z.von + ' bis ' + z.bis + ' Uhr' + (z.bemerkung ? ' (' + z.bemerkung + ')' : '')).join(', ');
+function zeitenText(zeiten, en) {
+  const L = en ? LBL.en : LBL.de;
+  return zeiten.map(z => tageText(z.tage, en) + ' ' + z.von + ' ' + L.bis + ' ' + z.bis + L.uhr + (z.bemerkung ? ' (' + z.bemerkung + ')' : '')).join(', ');
 }
-function ruhetage(zeiten) {
+function ruhetage(zeiten, en) {
   const offen = new Set(zeiten.flatMap(z => z.tage));
-  const zu = TAGE.filter(t => !offen.has(t));
-  return zu.length && zu.length < 7 ? zu : [];
+  const zu = TAGE_DE.filter(t => !offen.has(t));
+  const r = zu.length && zu.length < 7 ? zu : [];
+  return en ? r.map(t => TAGE_EN[TAGE_DE.indexOf(t)]) : r;
 }
 const adresse = f => [f.strasse, [f.plz, f.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ');
 
 // Zeilen für «Auf einen Blick» in fester Reihenfolge, rein deterministisch
-function aufEinenBlick(einheit, fakten) {
+function aufEinenBlick(einheit, fakten, opt) {
+  const L = lbl(opt), en = L === LBL.en;
   const f = ladeFakten(fakten);
   const e = einheit || {};
   const z = [];
   const adr = adresse(f) || (e.ort ? String(e.ort) : '');
-  if (adr) z.push({ label: 'Adresse', wert: adr });
-  if (f.telefon) z.push({ label: 'Telefon', wert: f.telefon });
+  if (adr) z.push({ label: L.adresse, wert: adr });
+  if (f.telefon) z.push({ label: L.telefon, wert: f.telefon });
   if (f.oeffnungszeiten) {
-    let w = zeitenText(f.oeffnungszeiten);
-    const rt = ruhetage(f.oeffnungszeiten);
-    if (rt.length) w += '. Ruhetag: ' + rt.join(', ');
-    z.push({ label: 'Öffnungszeiten', wert: w });
+    let w = zeitenText(f.oeffnungszeiten, en);
+    const rt = ruhetage(f.oeffnungszeiten, en);
+    if (rt.length) w += '. ' + L.ruhetag + ': ' + rt.join(', ');
+    z.push({ label: L.zeiten, wert: w });
   }
-  if (f.kueche) z.push({ label: 'Küche', wert: f.kueche });
-  if (f.reservation_url) z.push({ label: 'Reservation', wert: f.reservation_url });
-  if (f.besonderheiten) z.push({ label: 'Besonderheiten', wert: f.besonderheiten.join(', ') });
+  if (f.kueche) z.push({ label: L.kueche, wert: f.kueche });
+  if (f.reservation_url) z.push({ label: L.reservation, wert: f.reservation_url });
+  if (f.besonderheiten) z.push({ label: L.besonderheiten, wert: f.besonderheiten.join(', ') });
   return z.map(r => ({ label: r.label, wert: ohneStriche(r.wert) }));
 }
 
 // schema.org-Strukturdaten als JSON-String. Nur vorhandene Angaben, nichts erfunden.
 function jsonLd(einheit, fakten, opt) {
+  const L = lbl(opt);
   const f = ladeFakten(fakten);
   const e = einheit || {};
   const r = { '@type': 'Restaurant' };
@@ -164,7 +178,7 @@ function jsonLd(einheit, fakten, opt) {
   if (f.reservation_url) r.acceptsReservations = f.reservation_url;
   if (f.kapazitaet_innen || f.kapazitaet_terrasse) r.maximumAttendeeCapacity = (f.kapazitaet_innen || 0) + (f.kapazitaet_terrasse || 0);
   if (f.gruendungsjahr) r.foundingDate = String(f.gruendungsjahr);
-  if (f.kuechenchef) r.employee = { '@type': 'Person', name: f.kuechenchef, jobTitle: 'Küchenchef' };
+  if (f.kuechenchef) r.employee = { '@type': 'Person', name: f.kuechenchef, jobTitle: L.chef };
   if (f.oeffnungszeiten) {
     r.openingHoursSpecification = f.oeffnungszeiten.map(o => ({
       '@type': 'OpeningHoursSpecification',
@@ -174,7 +188,7 @@ function jsonLd(einheit, fakten, opt) {
     }));
   }
   const am = [];
-  for (const [k, n] of [['terrasse', 'Terrasse'], ['kinderfreundlich', 'Kinderfreundlich'], ['barrierefrei', 'Barrierefrei']]) {
+  for (const [k, n] of [['terrasse', L.terrasse], ['kinderfreundlich', L.kinder], ['barrierefrei', L.barriere]]) {
     if (typeof f[k] === 'boolean') am.push({ '@type': 'LocationFeatureSpecification', name: n, value: f[k] });
   }
   if (am.length) r.amenityFeature = am;
@@ -198,35 +212,36 @@ function fehlendeFakten(fakten, pflichtKeys) {
     .map(k => ({ key: k, label: FELD[k].label }));
 }
 
-// Kompakter deutscher Text für den KI-Auftrag
-function faktenText(einheit, fakten) {
+// Kompakter Text für den KI-Auftrag (Deutsch, oder English bei opt.sprache)
+function faktenText(einheit, fakten, opt) {
+  const L = lbl(opt), en = L === LBL.en;
   const f = ladeFakten(fakten);
   const zeilen = [];
   const add = (l, w) => { if (w) zeilen.push(l + ': ' + w); };
-  add('Adresse', adresse(f));
-  add('Telefon', f.telefon);
-  add('E-Mail', f.email);
-  add('Webseite', f.webseite_url);
-  add('Reservation', f.reservation_url);
+  add(L.adresse, adresse(f));
+  add(L.telefon, f.telefon);
+  add(L.email, f.email);
+  add(L.webseite, f.webseite_url);
+  add(L.reservation, f.reservation_url);
   if (f.oeffnungszeiten) {
-    let w = zeitenText(f.oeffnungszeiten);
-    const rt = ruhetage(f.oeffnungszeiten);
-    if (rt.length) w += '. Ruhetag: ' + rt.join(', ');
-    add('Öffnungszeiten', w);
+    let w = zeitenText(f.oeffnungszeiten, en);
+    const rt = ruhetage(f.oeffnungszeiten, en);
+    if (rt.length) w += '. ' + L.ruhetag + ': ' + rt.join(', ');
+    add(L.zeiten, w);
   }
-  add('Küche', f.kueche);
-  add('Preisklasse', f.preisklasse);
-  add('Küchenchef', f.kuechenchef);
-  if (f.gruendungsjahr) add('Gegründet', String(f.gruendungsjahr));
-  if (f.kapazitaet_innen) add('Plätze innen', String(f.kapazitaet_innen));
-  if (f.kapazitaet_terrasse) add('Plätze Terrasse', String(f.kapazitaet_terrasse));
-  for (const [k, n] of [['terrasse', 'Terrasse'], ['kinderfreundlich', 'Kinderfreundlich'], ['barrierefrei', 'Barrierefrei']]) {
-    if (typeof f[k] === 'boolean') add(n, f[k] ? 'ja' : 'nein');
+  add(L.kueche, f.kueche);
+  add(L.preis, f.preisklasse);
+  add(L.chef, f.kuechenchef);
+  if (f.gruendungsjahr) add(L.gegruendet, String(f.gruendungsjahr));
+  if (f.kapazitaet_innen) add(L.innen, String(f.kapazitaet_innen));
+  if (f.kapazitaet_terrasse) add(L.terrasseN, String(f.kapazitaet_terrasse));
+  for (const [k, n] of [['terrasse', L.terrasse], ['kinderfreundlich', L.kinder], ['barrierefrei', L.barriere]]) {
+    if (typeof f[k] === 'boolean') add(n, f[k] ? L.ja : L.nein);
   }
-  add('Parkplatz und Anreise', f.parkplatz_anreise);
-  if (f.anlaesse) add('Anlässe', f.anlaesse.join(', '));
-  if (f.besonderheiten) add('Besonderheiten', f.besonderheiten.join(', '));
-  if (f.auszeichnungen) add('Auszeichnungen', f.auszeichnungen.join(', '));
+  add(L.parkplatz, f.parkplatz_anreise);
+  if (f.anlaesse) add(L.anlaesse, f.anlaesse.join(', '));
+  if (f.besonderheiten) add(L.besonderheiten, f.besonderheiten.join(', '));
+  if (f.auszeichnungen) add(L.auszeichnungen, f.auszeichnungen.join(', '));
   return zeilen.join('\n');
 }
 

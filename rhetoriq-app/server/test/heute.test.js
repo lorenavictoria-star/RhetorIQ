@@ -39,5 +39,5 @@ test('Datum steht im ungecachten Teil des Auftrags, in POST / und /stream', asyn
   }
   // Stream-Pfad: Quelltext enthält denselben Aufruf vor dem Aufbau der Systemblöcke
   const src = require('fs').readFileSync(require.resolve('../routes/analyze'), 'utf8');
-  assert.equal((src.match(/restDynamicSystem \+= heuteBlock\(\)/g) || []).length, 2);
+  assert.equal((src.match(/restDynamicSystem \+= heuteBlock\(undefined, sprache\)/g) || []).length, 2);
 });

@@ -1,0 +1,25 @@
+// Englische Fassungen der Format-Regeln, die im Code deutsch formuliert sind (Social Media, KI-Suche, SEO) sowie die englischen Beispiele für den Mail-Schluss.
+// Gelten, wenn der Auftrag auf Englisch ist (British English, Corporate).
+
+const SOCIAL = `\n\nSOCIAL-MEDIA-SPECIFIC RULES: Write for exactly the chosen platform and format. The first sentence stands alone and carries the core message, because Instagram and Facebook cut off after a few lines with "more" and TikTok is decided in the first 2 seconds. The main term guests search for (dish, place, occasion) appears in plain words in the first sentence, because search on Instagram and TikTok reads the caption, the subtitles and the spoken word. Hashtags: Instagram at most 3 to 5 fitting ones (place, topic, brand), TikTok 3 to 5, Facebook at most 2, at the end, no hashtag chains. The format "Instagram post" delivers text, hashtags and a suggested alt text for the image (one sentence describing what can be seen). The format "Reel or TikTok script" delivers a HOOK (first 2 seconds, spoken and as on-screen text), a SEQUENCE in numbered scenes with an image idea and spoken text, SUBTITLES (short lines) and a caption with hashtags. The format "Story sequence" delivers 3 to 5 frames, each with one line of text and one interaction (question, poll). The format "Facebook post" is somewhat longer and more narrative, with a clear action at the end (booking, call, link) only if it is in the request. Facts such as opening hours, prices, allergens, dates and addresses only from the request, otherwise a gap in square brackets. No stock phrases ("We are delighted", "Let us enchant you"), no superlatives without evidence, emojis only if the Brand Voice names them (then at most 1 to 2). The Brand Voice stays in force.`;
+
+const KI_SUCHE = `\n\nAI-SEARCH-SPECIFIC RULES (the text should be cited as a source by AI models and AI search): Begin every section with the direct answer in one or two complete sentences, followed by the details. Every heading is a real question or a clear statement that someone would type into an AI in exactly this form ("How do I book a table at Restaurant X?"). Write self-contained sentences that stay understandable without the context of the page: name company, restaurant and place names in full every time and use no "we" or "here" without a reference. State facts exactly and verifiably (address, opening hours, prices, cuisine, features) and only if they are in the request, otherwise insert a gap in square brackets. Arrange facts in short lists or paragraphs, each detail in one place, without contradictions. No promotional language and no superlatives without evidence, because AI systems prefer verifiable statements. At the end give a short field "Structured data" with the details suitable for schema.org (Restaurant, FAQPage). The Brand Voice stays in force.\n\nNOW WHAT: Close with one concrete next step (booking, call, link) if it is in the request.`;
+
+const SEO = `\n\nSEO-SPECIFIC RULES: Ask in the request for the main term (search query) and the place if they are missing, and work with [main term] as a placeholder if none is given. The main term appears in the title, in the first heading, in the first paragraph and naturally spread through the text, without stuffing. Use related terms and questions that guests really search for. Structure with clear subheadings (one H1, several H2). Format by type: for "Title and description (meta)" deliver 3 variants with a title of up to 60 characters and a description of up to 155 characters and state the character count; for "Location or restaurant page (local)" state name, address, place, opening hours, cuisine, reservations and directions only from the request, otherwise a gap in square brackets; for "Blog article" deliver a title, a short introduction with the answer, sections and a conclusion with a next step. Be useful and concrete, never for search engines alone: the text must stay easy for guests to read. Do not put placeholder keywords into sentences if the main term is missing. Invent no data or reviews. The Brand Voice stays in force.`;
+
+const EMAIL_BEISPIELE_DE = '(e.g. "Bitte bestätigen Sie bis Freitag per Antwort auf diese Mail" / "Ich rufe Sie am Montag um 10 Uhr an, um die Details zu klären")';
+const EMAIL_BEISPIELE_EN = '(e.g. "Please confirm by Friday by replying to this email" / "I will call you on Monday at 10 am to clarify the details")';
+
+function istEnglisch(l) { return /^(en|eng|english|englisch)/i.test(String(l || '').trim()); }
+
+// de: Ergebnis der deutschen Funktion getFormatBlock. Gibt die englische Fassung zurück, wenn der Auftrag auf Englisch ist.
+function fuerSprache(de, format, language) {
+  if (!istEnglisch(language) || !de) return de;
+  const f = format || '';
+  if (/instagram|facebook|tiktok|\breel\b|\bstory\b|social media/i.test(f) && !/linkedin|newsletter/i.test(f)) return SOCIAL;
+  if (/KI-Suche/i.test(f)) return KI_SUCHE;
+  if (/\bSEO\b/i.test(f)) return SEO;
+  return de.split(EMAIL_BEISPIELE_DE).join(EMAIL_BEISPIELE_EN);
+}
+
+module.exports = { fuerSprache, SOCIAL, KI_SUCHE, SEO };

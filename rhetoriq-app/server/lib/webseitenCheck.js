@@ -20,6 +20,12 @@ const FLOSKELN_WEB = [
   /wir freuen uns/gi
 ];
 
+const FLOSKELN_WEB_EN = [
+  /\bwelcome to\b/gi, /\bunforgettable\b/gi, /\bculinary (?:delights|journey|gems|experience)\b/gi, /\btaste sensation\b/gi,
+  /\bindulge\b/gi, /\bpamper yourself\b/gi, /\bwe look forward to (?:welcoming|seeing) you\b/gi, /\bfeast for the senses\b/gi
+];
+const SUPERLATIV_EN = /\b(?:best|finest|greatest|most beautiful|most popular|unique|unrivalled|unrivaled|unmatched|number one)\b/gi;
+
 // ---------- Hilfen ----------
 
 function norm(s) {
@@ -270,6 +276,7 @@ function kommaVerbunden(text) {
 
 function seitenQualitaet(seite, opts = {}) {
   const s = seite || {};
+  const en = /^(en|eng)/i.test(String(opts.sprache || ''));
   const ziel = opts.ziel || {};
   const hinweise = [];
   const add = (art, stufe, text) => hinweise.push({ art, stufe, text });
@@ -324,8 +331,8 @@ function seitenQualitaet(seite, opts = {}) {
 
   // Floskeln (eigene Liste und lint.js)
   const floskeln = new Set();
-  for (const r of FLOSKELN_WEB) { const rr = new RegExp(r.source, r.flags); let x; while ((x = rr.exec(alles))) floskeln.add(x[0].toLowerCase()); }
-  const lint = lintText(alles, { textart: 'website' });
+  for (const r of (en ? FLOSKELN_WEB_EN : FLOSKELN_WEB)) { const rr = new RegExp(r.source, r.flags); let x; while ((x = rr.exec(alles))) floskeln.add(x[0].toLowerCase()); }
+  const lint = lintText(alles, { textart: 'website', sprache: en ? 'English' : null });
   for (const h of lint) if (h.art === 'floskel') floskeln.add(h.text.toLowerCase());
   for (const f of floskeln) add('floskel', 'fehler', `Floskel gefunden: «${f}».`);
 
@@ -333,12 +340,12 @@ function seitenQualitaet(seite, opts = {}) {
   for (const h of lint) if (h.art === 'gegenueberstellung') add('gegenueberstellung', 'hinweis', `Gegenüberstellung: «${h.kontext}».`);
 
   // Hauptsätze nur mit Komma verbunden (Heuristik)
-  for (const satz of kommaVerbunden(alles)) add('komma', 'hinweis', `Möglicherweise zwei Hauptsätze nur mit Komma verbunden: «${satz}».`);
+  if (!en) for (const satz of kommaVerbunden(alles)) add('komma', 'hinweis', `Möglicherweise zwei Hauptsätze nur mit Komma verbunden: «${satz}».`);
 
   // Superlative ohne Beleg
   const belegtFuer = (satz) => BELEG.test(satz);
   for (const satz of saetze(alles)) {
-    const r = new RegExp(SUPERLATIV.source, 'gi');
+    const r = new RegExp((en ? SUPERLATIV_EN : SUPERLATIV).source, 'gi');
     const x = r.exec(satz);
     if (x && !belegtFuer(satz)) add('superlativ', 'hinweis', `Behauptung ohne Beleg: «${x[0]}».`);
   }

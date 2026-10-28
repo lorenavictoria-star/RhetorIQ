@@ -352,6 +352,7 @@ router.post('/:id/finish', requireAdvisor, async (req, res) => {
       industry: SEKTOR_NAME[d.sektor] || '',
       contact: clip(d.kontakt, 500),
       email: d.email,
+      arbeitssprache: req.body && req.body.arbeitssprache === 'en' ? 'en' : 'de',
       clientType,
       salutation: d.titel === 'Herr' ? 'Herr' : 'Frau',
       lastName: clip(req.body.lastName, 120) || (kontaktTeile.length ? kontaktTeile[kontaktTeile.length - 1] : ''),
@@ -386,7 +387,7 @@ router.post('/:id/finish', requireAdvisor, async (req, res) => {
       const setupToken = crypto.randomBytes(32).toString('hex');
       await pool.query('INSERT INTO onboarding_tokens (client_id, token, expires_at) VALUES ($1,$2,$3)', [client.id, setupToken, expires]);
       const link = `${process.env.APP_URL || 'https://rhetoriq.ch'}/setup?t=${setupToken}`;
-      const mail = einladungMail({ kontakt: d.kontakt || d.firma, anrede: d.anrede === 'du' ? 'du' : 'sie', titel: d.titel, link });
+      const mail = einladungMail({ kontakt: d.kontakt || d.firma, anrede: d.anrede === 'du' ? 'du' : 'sie', titel: d.titel, link, sprache: req.body && req.body.arbeitssprache === 'en' ? 'en' : 'de' });
       await queueEmail({ kind: 'client_invite', to: d.email, subject: mail.subject, text: mail.text, senderName: 'Lorena Lienhard' });
       inviteSent = true;
     } catch (e) {

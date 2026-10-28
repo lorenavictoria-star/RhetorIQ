@@ -106,9 +106,14 @@ async function systemFuer(clientId, einheitId) {
   const sprache = AS.ausgabeSprache(null, spracheZeile);
   const RG = AS.regeln(sprache);
   const { fence } = require('./dataFence');
-  const baseSystem = 'Du schreibst Webseitentexte für ein Restaurant: Suchmaschinen-tauglich, konkret, aus Gästesicht, in der Stimme des Betriebs. '
+  const baseSystemDe = 'Du schreibst Webseitentexte für ein Restaurant: Suchmaschinen-tauglich, konkret, aus Gästesicht, in der Stimme des Betriebs. '
     + 'Fakten (Adresse, Zeiten, Preise, Telefon, Links) stammen ausschliesslich aus den Angaben des Auftrags. Du erfindest nichts und schreibst den Block «Auf einen Blick» nicht selbst. '
     + 'Antworte nur im verlangten Ausgabeformat, ohne Vorrede und ohne Erklärung.';
+  const baseSystem = sprache === 'en'
+    ? 'You write website copy for a restaurant in British English: search-engine friendly, concrete, from the guest\'s point of view, in the voice of the venue. '
+      + 'Facts (address, hours, prices, telephone, links) come exclusively from the details of the request. You invent nothing and you do not write the block "At a glance" yourself. '
+      + 'Answer only in the requested output format, without preamble and without explanation.'
+    : baseSystemDe;
   let brandVoiceBlock = '';
   let hat = false;
   const { rows } = await pool.query(`SELECT memory_type, content FROM company_memory WHERE client_id=$1 AND memory_type LIKE 'brand_voice%' ORDER BY updated_at DESC`, [clientId]).catch(() => ({ rows: [] }));
@@ -119,8 +124,8 @@ async function systemFuer(clientId, einheitId) {
     rows.forEach(m => { brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${fence(m.memory_type, sanitizeForPrompt(auswahl.fuerAuftrag(m.content, 'website')))}\n\n`; });
     brandVoiceBlock += RG.tail;
   }
-  brandVoiceBlock += await einheitBlock(clientId, einheitId);
-  return { blocks: assembleSystemBlocks({ baseSystem, brandVoiceBlock, structuralRefBlock: '', geoBlock: '', restDynamicSystem: '', sprache }), hatBrandVoice: hat };
+  brandVoiceBlock += await einheitBlock(clientId, einheitId, sprache);
+  return { blocks: assembleSystemBlocks({ baseSystem, brandVoiceBlock, structuralRefBlock: '', geoBlock: '', restDynamicSystem: '', sprache }), hatBrandVoice: hat, sprache };
 }
 
 // Eine Seite als lesbarer Text für den Verlauf (analyses.result)
@@ -155,8 +160,9 @@ async function seiteErzeugen(job, typKey, i) {
     restaurantName: e.name,
     ort: fakten.ort || e.ort || '',
     kueche: fakten.kueche || '',
-    faktenText: EF.faktenText(e, fakten),
-    aufEinenBlickZeilen: EF.aufEinenBlick(e, fakten).map(z => z.label + ': ' + z.wert),
+    sprache: job.system.sprache === 'en' ? 'English' : undefined,
+    faktenText: EF.faktenText(e, fakten, { sprache: job.system.sprache }),
+    aufEinenBlickZeilen: EF.aufEinenBlick(e, fakten, { sprache: job.system.sprache }).map(z => z.label + ': ' + z.wert),
     stichworte: job.stichworte[typKey] ? sanitizeForPrompt(job.stichworte[typKey]) : '',
     bestehenderText
   });
@@ -177,15 +183,15 @@ async function seiteErzeugen(job, typKey, i) {
 
   // Fakten, Auf einen Blick und JSON-LD kommen nie aus der KI
   const seite = { titel: p.titel, beschreibung: p.beschreibung, h1: p.h1, h2: p.h2, text: p.text, faq: p.faq.filter(f => f.frage && f.antwort) };
-  const q = WC.seitenQualitaet(seite, { ziel: { laengeWoerter: typ.laengeWoerter, faqNoetig: typ.faqFragen.length > 0 } });
+  const q = WC.seitenQualitaet(seite, { sprache: job.system.sprache, ziel: { laengeWoerter: typ.laengeWoerter, faqNoetig: typ.faqFragen.length > 0 } });
   const konflikte = WC.faktenKonflikte([{ ...seite, id: typKey, site: 'x', typ: typKey }], { x: fakten });
   for (const k of konflikte) q.hinweise.push({ art: 'fakten', stufe: 'fehler', text: ohneStriche(`Der Text weicht von den Fakten ab (${k.art}): im Text «${k.gefunden}», in den Fakten «${k.erwartet}».`) });
   q.ok = !q.hinweise.some(h => h.stufe === 'fehler');
 
   const fertig = {
     typ: typKey, label: typ.label, status: 'fertig', ...seite,
-    aufEinenBlick: EF.aufEinenBlick(e, fakten),
-    jsonld: EF.jsonLd(e, fakten, { faq: seite.faq }),
+    aufEinenBlick: EF.aufEinenBlick(e, fakten, { sprache: job.system.sprache }),
+    jsonld: EF.jsonLd(e, fakten, { faq: seite.faq, sprache: job.system.sprache }),
     qualitaet: q
   };
   if (job.importUrls[typKey]) fertig.importUrl = job.importUrls[typKey];

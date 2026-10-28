@@ -82,7 +82,7 @@ function systemBlocks(k, y, month) {
   let dyn = '';
   if (k.facts.length) dyn += '\n\nHINTERLEGTE FIRMENDATEN:\n' + k.facts.map(m => `- ${m.memory_type}: ${clean(m.content, 800)}`).join('\n');
   if (k.learned.length) dyn += '\n\nGELERNTE PRÄFERENZEN DIESES KLIENTEN (aus früherem Feedback):\n' + k.learned.map(r => `- ${r.category}: ${clean(r.summary, 300)}`).join('\n');
-  dyn += '\n\n' + kalenderBlock(y, month) + heuteBlock();
+  dyn += '\n\n' + kalenderBlock(y, month) + heuteBlock(undefined, require('./arbeitssprache').ausgabeSprache(null, k.c));
   blocks.push({ type: 'text', text: dyn.trim() });
   blocks.push({ type: 'text', text: require('./dataFence').DATEN_REGEL });
   blocks.push({ type: 'text', text: RG.rules });

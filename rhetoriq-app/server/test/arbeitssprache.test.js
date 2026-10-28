@@ -100,3 +100,66 @@ test('Auftrag eines englisch arbeitenden Klienten: englisches Regelwerk, Brand-V
   assert.ok(sysDe.includes('RANGFOLGE (bei Widersprüchen'));
   assert.ok(!sysDe.includes('OUTPUT LANGUAGE: This client works in English'));
 });
+
+test('Fakten und «Auf einen Blick» auf Englisch: Beschriftungen, Tage, Ruhetage; Deutsch bleibt unverändert', () => {
+  const EF = require('../lib/einheitFakten');
+  const f = { strasse: 'Seestrasse 1', plz: '6003', ort: 'Luzern', telefon: '+41 41 000 00 00', kueche: 'Swiss', terrasse: true,
+    oeffnungszeiten: [{ tage: ['Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'], von: '11:00', bis: '23:00' }] };
+  const en = EF.aufEinenBlick({ name: 'X' }, f, { sprache: 'English' });
+  assert.deepEqual(en.map(z => z.label), ['Address', 'Telephone', 'Opening hours', 'Cuisine']);
+  assert.equal(en[2].wert, 'Tue to Sun 11:00 to 23:00. Closed: Mon');
+  const de = EF.aufEinenBlick({ name: 'X' }, f);
+  assert.equal(de[2].wert, 'Di bis So 11:00 bis 23:00 Uhr. Ruhetag: Mo');
+  assert.match(EF.faktenText({ name: 'X' }, f, { sprache: 'en' }), /Terrace: yes/);
+  assert.match(EF.faktenText({ name: 'X' }, f), /Terrasse: ja/);
+  const ld = JSON.parse(EF.jsonLd({ name: 'X' }, { ...f, kuechenchef: 'Anna Keller' }, { sprache: 'en' }));
+  assert.equal(ld.employee.jobTitle, 'Head chef');
+  assert.equal(ld.amenityFeature[0].name, 'Terrace');
+});
+
+test('Webseiten-Seitentyp auf Englisch: englische Anweisung mit unveränderten Kopfzeilen; Qualitätsprüfung auf Englisch', () => {
+  const GS = require('../lib/gastroSeitentypen');
+  const p = GS.promptFuer('startseite', { restaurantName: 'Seeblick', ort: 'Luzern', sprache: 'English' });
+  assert.match(p, /OUTPUT LANGUAGE: British English/);
+  assert.match(p, /TITEL: <at most 60 characters>/);
+  assert.ok(!/Schweizer Schreibweise/.test(p));
+  const alt = GS.promptFuer('startseite', { restaurantName: 'Seeblick', ort: 'Luzern' });
+  assert.match(alt, /Schweizer Schreibweise/);
+  const parsed = GS.parseAusgabe('TITEL: A\nBESCHREIBUNG: B\nH1: Heading\nTEXT:\nOpening.\nH2: Part\nBody.\nFAQ:\nF: Where?\nA: Here.');
+  assert.equal(parsed.h1, 'Heading');
+  assert.equal(parsed.faq.length, 1);
+  const WC = require('../lib/webseitenCheck');
+  const q = WC.seitenQualitaet({ titel: 'Seeblick Luzern', beschreibung: 'x'.repeat(130), h1: 'Seeblick', h2: [], text: 'Welcome to our unforgettable restaurant, the best in town. ' + 'word '.repeat(200), faq: [] }, { sprache: 'en', ziel: { laengeWoerter: [180, 320] } });
+  const arten = q.hinweise.map(h => h.art);
+  assert.ok(arten.includes('floskel'), 'englische Floskeln werden erkannt');
+  assert.ok(arten.includes('superlativ'), 'Superlativ ohne Beleg wird erkannt');
+});
+
+test('Format-Regeln, Datum, Datenregel und Einladungsmail auf Englisch', () => {
+  const F = require('../lib/formatBloeckeEn');
+  assert.match(F.fuerSprache('de-text', 'Instagram-Post', 'English'), /SOCIAL-MEDIA-SPECIFIC RULES: Write for exactly/);
+  assert.match(F.fuerSprache('de-text', 'KI-Suche: Seite', 'English'), /AI-SEARCH-SPECIFIC/);
+  assert.match(F.fuerSprache('de-text', 'SEO: Blogartikel', 'en'), /SEO-SPECIFIC RULES: Ask in the request/);
+  assert.equal(F.fuerSprache('de-text', 'Instagram-Post', 'Deutsch'), 'de-text');
+  assert.match(require('../lib/heute').heuteZeile(new Date('2026-10-28T09:00:00Z'), 'en'), /^Today is Wednesday, 28 October 2026/);
+  assert.match(require('../lib/dataFence').DATEN_REGEL_EN, /^DATA AND INSTRUCTIONS/);
+  const m = require('../lib/onboardingMails').einladungMail({ kontakt: 'Anna Keller', anrede: 'sie', titel: 'Frau', link: 'https://x/setup?t=1', sprache: 'en' });
+  assert.equal(m.subject, 'Your access to RhetorIQ');
+  assert.match(m.text, /^Dear Ms Keller/);
+  assert.match(m.text, /https:\/\/x\/setup\?t=1/);
+  assert.equal(require('../lib/onboardingMails').einladungMail({ kontakt: 'Anna Keller', anrede: 'sie', titel: 'Frau', link: 'l' }).subject, 'Ihr Zugang zu RhetorIQ');
+});
+
+test('Brand-Voice-Analyse eines englisch arbeitenden Klienten bekommt die englische Vorgabe; Deutsch bekommt sie nicht', async () => {
+  await srv.call('PUT', `/api/clients/${en.id}/arbeitssprache`, { token: adv(), body: { sprache: 'en' } });
+  H.ai.calls.length = 0;
+  const r = await srv.call('POST', '/api/analyze', { token: adv(), body: { module: 'brand-voice-co', clientId: en.id, data: { company: 'Corporate AG', text: 'We build bridges between teams and customers every day.' } } });
+  assert.equal(r.status, 200);
+  const sys = JSON.stringify(H.ai.calls.map(c => c.system));
+  assert.ok(sys.includes('OUTPUT LANGUAGE (overrides the language of the instructions above)'));
+  assert.ok(sys.includes('KERN'), 'die maschinell gelesenen Marker bleiben im Auftrag genannt');
+  const d3 = await H.addClient('Deutsch Voice AG');
+  H.ai.calls.length = 0;
+  await srv.call('POST', '/api/analyze', { token: adv(), body: { module: 'brand-voice-co', clientId: d3.id, data: { company: 'Deutsch Voice AG', text: 'Wir bauen jeden Tag Brücken.' } } });
+  assert.ok(!JSON.stringify(H.ai.calls.map(c => c.system)).includes('OUTPUT LANGUAGE (overrides'));
+});

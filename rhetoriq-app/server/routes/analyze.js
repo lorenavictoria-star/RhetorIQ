@@ -123,7 +123,10 @@ function capFields(data) {
 
 // Format-specific structural guidance for the Text Generator module, based on
 // what actually drives engagement/conversion in each channel — not just tone.
-function getFormatBlock(format) {
+function getFormatBlock(format, language) {
+  return require('../lib/formatBloeckeEn').fuerSprache(getFormatBlockDe(format), format, language);
+}
+function getFormatBlockDe(format) {
   const f = format || '';
   if (/linkedin/i.test(f)) return `\n\nLINKEDIN-SPECIFIC RULES: The first line must stand alone as a scroll-stopping hook — a concrete claim, number, or contrarian statement. Never open with a question, greeting, or scene-setter ("I was sitting in a meeting when..."); it must work before the "see more" cutoff (~140 characters). Write in short stanzas: 1-2 sentences per paragraph, frequent line breaks — no dense blocks of text. Target 150-300 words unless the briefing specifies otherwise. Do not include URLs or external links in the body text. Ground the point in one concrete, specific example (a number, a name, a scene) before generalising to the takeaway — never stay purely abstract. End with exactly one CTA: a specific, answerable question relevant to the topic — never a generic "thoughts?" or "let me know".`;
   if (/newsletter/i.test(f)) return `\n\nNEWSLETTER-SPECIFIC RULES: Generate a subject line (30-50 characters, specific and value-forward, not clickbait) and a one-line preview/preheader text that extends rather than repeats the subject — both as a labeled block before the body. Structure the body with short subheads or bolded lead-ins per section; no unbroken paragraphs longer than 3 sentences. Include exactly one primary CTA, stated clearly near the top and restated once at the close — do not stack multiple competing CTAs. Weight content toward useful information over the sales ask — the reader should feel informed first, sold to second.\n\nNOW WHAT: only add a closing action step where a genuine one exists for the reader (e.g. "read the article", "book the slot") — do not force one onto a purely informational section that has none.`;
@@ -405,12 +408,12 @@ Adjust register to the context: board-level conversations require gravitas and e
   },
   'text-gen': {
     label: 'Text Generator',
-    system: (d) => d.existingDraft ? `You are a precision editor and communication strategist specialised in executive and corporate communication. You are given an EXISTING DRAFT written by the user, plus optional instructions on what to change. Your job is to REVISE this draft, not to write a new text from scratch: preserve the user's core content, structure, and intent, and only rewrite the wording, tone, and phrasing so it fully matches the defined voice/style and reads as publication-ready. Do not add new claims, arguments, or sections the draft didn't already contain unless the instructions explicitly ask for that. Do not shorten or restructure beyond what is needed to fix weak, generic, or off-brand phrasing.${getFormatBlock(d.format)}
+    system: (d) => d.existingDraft ? `You are a precision editor and communication strategist specialised in executive and corporate communication. You are given an EXISTING DRAFT written by the user, plus optional instructions on what to change. Your job is to REVISE this draft, not to write a new text from scratch: preserve the user's core content, structure, and intent, and only rewrite the wording, tone, and phrasing so it fully matches the defined voice/style and reads as publication-ready. Do not add new claims, arguments, or sections the draft didn't already contain unless the instructions explicitly ask for that. Do not shorten or restructure beyond what is needed to fix weak, generic, or off-brand phrasing.${getFormatBlock(d.format, d.language)}
 
 WORD COMMENTS SECTION: If the draft ends with a section titled "--- Kommentare im Dokument ---" (or similar), that section is NOT part of the document body — it is a list of the client's own Word review comments, each naming the exact passage it was left on and what the client wants changed there. Treat every line in that section as a specific, binding instruction: locate the referenced passage in the draft above and apply that exact change to it, in addition to any instructions given separately below. The finished output must never include that comments section itself, and never reference "comments" or "the document" — it is a clean, final piece of text with the requested changes already applied.
 
 ANTI-HALLUCINATION: Only revise wording and tone. Never invent metrics, company names, dates, or concrete examples that were not in the original draft or instructions. If the instructions ask for a fact the draft doesn't contain, use an explicit bracketed placeholder instead of inventing one.${d.voiceProfile?'\n\nVoice/Brand Profile:\n'+d.voiceProfile:''}${toneGuidance(d.tone)}`
-      : `You are a precision ghostwriter and communication strategist specialised in executive and corporate communication. Write exclusively in the defined voice/style. Output must be publication-ready — no placeholders, no generic filler. Adapt register, length, and argumentation to the specific format and audience.${getFormatBlock(d.format)}
+      : `You are a precision ghostwriter and communication strategist specialised in executive and corporate communication. Write exclusively in the defined voice/style. Output must be publication-ready — no placeholders, no generic filler. Adapt register, length, and argumentation to the specific format and audience.${getFormatBlock(d.format, d.language)}
 
 ANTI-HALLUCINATION: The "no placeholders" rule above is about polish, not about inventing facts. If the provided briefing is too thin to meet the requested length or format requirements, do not invent metrics, company names, dates, or concrete examples to fill the gap. Instead use explicit bracketed placeholders (e.g. [Insert specific metric on X here]) at exactly the points where a real fact is missing, so the structural requirement is met without fabricating content.${d.replyTo?'\n\nThis is a REPLY to an existing email. Write a direct, on-point response: address every question or request raised in the original email, reference it naturally where appropriate, and match a register consistent with the original sender\'s tone unless the briefing says otherwise. Do not repeat the original email back verbatim — respond to it.':''}${d.voiceProfile?'\n\nVoice/Brand Profile:\n'+d.voiceProfile:''}${toneGuidance(d.tone)}`,
     build: (d) => d.existingDraft
@@ -1509,7 +1512,7 @@ function assembleSystemBlocks({ baseSystem, brandVoiceBlock, structuralRefBlock,
   if (geoBlock) blocks.push({ type: 'text', text: geoBlock });
   if (restDynamicSystem) blocks.push({ type: 'text', text: restDynamicSystem });
   if (!blocks.length) blocks.push({ type: 'text', text: 'You are a helpful communication assistant.' });
-  blocks.push({ type: 'text', text: DATEN_REGEL });
+  blocks.push({ type: 'text', text: sprache === 'en' ? require('../lib/dataFence').DATEN_REGEL_EN : DATEN_REGEL });
   blocks.push({ type: 'text', text: require('../lib/arbeitssprache').regeln(sprache).rules });
   if (tune) tuneCache(blocks);
   return blocks;
@@ -1668,7 +1671,8 @@ const { GLOBAL_STYLE_RULES, BRAND_VOICE_HEAD, BRAND_VOICE_TAIL } = require('../l
 const { fence, DATEN_REGEL } = require('../lib/dataFence');
 // Restaurant (Betrieb) eines Klienten: Stimmprofil und Fakten als eigener Block hinter der Brand Voice des Klienten (der Gruppenstimme).
 // Rangfolge: Die Gruppenstimme gibt Werte, Verbote und Anrede vor, der Betrieb prägt Ton, Wortwahl und Themen.
-async function einheitBlock(clientId, einheitId) {
+async function einheitBlock(clientId, einheitId, sprache) {
+  const en = sprache === 'en';
   const id = parseInt(einheitId, 10);
   if (!clientId || !Number.isInteger(id)) return '';
   try {
@@ -1679,15 +1683,18 @@ async function einheitBlock(clientId, einheitId) {
     const e = rows[0];
     if (!e) return '';
     const titel = e.name + (e.ort ? ', ' + e.ort : '');
-    let b = '\n\n════════════════════════════════════════\nBETRIEB: ' + sanitizeForPrompt(titel) + '\n════════════════════════════════════════\n'
+    let b = en
+      ? '\n\n════════════════════════════════════════\nVENUE: ' + sanitizeForPrompt(titel) + '\n════════════════════════════════════════\n'
+        + 'This request belongs to the venue "' + sanitizeForPrompt(e.name) + '". Order of precedence: the Brand Voice above (CLIENT VOICE) is the group voice. It sets the values, bans, register and spelling of the brand. This venue shapes tone, wording and topics. In case of conflict, the bans and register of the group voice win.\n'
+      : '\n\n════════════════════════════════════════\nBETRIEB: ' + sanitizeForPrompt(titel) + '\n════════════════════════════════════════\n'
       + 'Dieser Auftrag gehört zum Betrieb «' + sanitizeForPrompt(e.name) + '». Rangfolge: Die Brand Voice oben (STIMME DES KLIENTEN) ist die Gruppenstimme. Sie gibt Werte, Verbote, Anrede und die Schreibweise der Marke vor. Dieser Betrieb prägt Ton, Wortwahl und Themen. Bei Widerspruch gewinnen die Verbote und die Anrede der Gruppenstimme.\n';
-    if (e.stimme && e.stimme.trim()) b += '\nSTIMMPROFIL DES BETRIEBS:\n' + fence('betrieb-stimme', sanitizeForPrompt(e.stimme)) + '\n';
+    if (e.stimme && e.stimme.trim()) b += (en ? '\nVOICE PROFILE OF THE VENUE:\n' : '\nSTIMMPROFIL DES BETRIEBS:\n') + fence('betrieb-stimme', sanitizeForPrompt(e.stimme)) + '\n';
     // Strukturierte Fakten zuerst, danach der Freitext
     let strukt = '';
-    try { strukt = require('../lib/einheitFakten').faktenText(e, e.fakten_json ? JSON.parse(e.fakten_json) : {}); } catch { strukt = ''; }
+    try { strukt = require('../lib/einheitFakten').faktenText(e, e.fakten_json ? JSON.parse(e.fakten_json) : {}, { sprache: en ? 'en' : 'de' }); } catch { strukt = ''; }
     const frei = e.fakten && e.fakten.trim() ? e.fakten : '';
-    if (strukt || frei) b += '\nFAKTEN DES BETRIEBS (verbindlich: nenne nur diese Angaben zu Adresse, Zeiten, Preisen, Küche und Allergenen; fehlt eine Angabe, setze eine Lücke in eckigen Klammern):\n' + fence('betrieb-fakten', sanitizeForPrompt([strukt, frei].filter(Boolean).join('\n\n'))) + '\n';
-    return b + '════════════════════════════════════════\nENDE BETRIEB\n════════════════════════════════════════';
+    if (strukt || frei) b += (en ? '\nFACTS OF THE VENUE (binding: name only these details on address, hours, prices, cuisine and allergens; if a detail is missing, insert a gap in square brackets):\n' : '\nFAKTEN DES BETRIEBS (verbindlich: nenne nur diese Angaben zu Adresse, Zeiten, Preisen, Küche und Allergenen; fehlt eine Angabe, setze eine Lücke in eckigen Klammern):\n') + fence('betrieb-fakten', sanitizeForPrompt([strukt, frei].filter(Boolean).join('\n\n'))) + '\n';
+    return b + (en ? '════════════════════════════════════════\nEND VENUE\n════════════════════════════════════════' : '════════════════════════════════════════\nENDE BETRIEB\n════════════════════════════════════════');
   } catch (err) { console.error('[einheit]', err.message); return ''; }
 }
 const { heuteBlock } = require('../lib/heute');
@@ -1841,7 +1848,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
         });
         brandVoiceBlock += RG.tail;
       }
-      if (data && data.einheitId) brandVoiceBlock += await einheitBlock(resolvedClientId, data.einheitId);
+      if (data && data.einheitId) brandVoiceBlock += await einheitBlock(resolvedClientId, data.einheitId, sprache);
     }
 
     // ── REFERENZ-DOKUMENTE (gelten für ALLE Module dieses Klienten) ──────────
@@ -1886,7 +1893,7 @@ router.post('/', requireAuth, requireRole('editor'), async (req, res) => {
     }
 
     restDynamicSystem += await stilkarteBlock(resolvedClientId, module);   // Stilkarte des Klienten (drei Zeilen, höchstens 400 Zeichen)
-    restDynamicSystem += heuteBlock();   // heutiges Datum im dynamischen Teil (nicht im gecachten)
+    restDynamicSystem += heuteBlock(undefined, sprache);   // heutiges Datum im dynamischen Teil (nicht im gecachten)
     // Build system array: 3 tiers of caching
     // Block 1: static module prompt → cached (same across all clients for this module)
     // Block 2: brand voice → cached (same for this client across many calls, rarely changes)
@@ -2063,7 +2070,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
         memRows.forEach(m => { brandVoiceBlock += `${m.memory_type.toUpperCase()}:\n${fence(m.memory_type, sanitizeForPrompt(require('../lib/brandVoiceAuswahl').fuerAuftrag(m.content, textartVon(module, instructionsKey, data))))}\n\n`; });
         brandVoiceBlock += RG.tail;
       }
-      if (data && data.einheitId) brandVoiceBlock += await einheitBlock(resolvedClientId, data.einheitId);
+      if (data && data.einheitId) brandVoiceBlock += await einheitBlock(resolvedClientId, data.einheitId, sprache);
       const { rows: refRows } = await pool.query(
         `SELECT content FROM company_memory WHERE client_id=$1 AND memory_type='structural_reference'`,
         [resolvedClientId]
@@ -2091,7 +2098,7 @@ router.post('/stream', requireAuth, requireRole('editor'), async (req, res) => {
     }
 
     restDynamicSystem += await stilkarteBlock(resolvedClientId, module);   // Stilkarte des Klienten (drei Zeilen, höchstens 400 Zeichen)
-    restDynamicSystem += heuteBlock();   // heutiges Datum im dynamischen Teil (nicht im gecachten)
+    restDynamicSystem += heuteBlock(undefined, sprache);   // heutiges Datum im dynamischen Teil (nicht im gecachten)
     // Set up SSE
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');

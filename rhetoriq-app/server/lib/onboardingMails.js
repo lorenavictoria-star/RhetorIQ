@@ -5,10 +5,17 @@ const FRIST_TAGE = 7;
 
 // Einladung mit Zugangslink nach dem Workshop. anrede: 'du' oder 'sie'.
 // titel: 'Frau', 'Herr' oder ''. kontakt: vollständiger Name der Ansprechperson.
-function einladungMail({ kontakt, anrede, titel, link }) {
+function einladungMail({ kontakt, anrede, titel, link, sprache }) {
   const teile = String(kontakt || '').trim().split(/\s+/).filter(Boolean);
   const vor = teile[0] || '';
   const nach = teile[teile.length - 1] || '';
+  if (sprache === 'en') {
+    const hello = titel && nach ? `Dear ${titel === 'Herr' ? 'Mr' : 'Ms'} ${nach}` : `Dear ${kontakt || ''}`.trim();
+    return {
+      subject: 'Your access to RhetorIQ',
+      text: `${hello}\n\nThank you for the workshop. Your platform is ready, with your own brand voice and the text types we chose together.\n\nUse this link to choose your password and sign in for the first time:\n${link}\n\nThe link is valid for ${FRIST_TAGE} days. If you have any questions, simply reply to this email.\n\nKind regards\nLorena Lienhard\ncontact@lorenalienhard.ch`
+    };
+  }
   if (anrede === 'du') {
     const gruss = titel === 'Herr' ? `Lieber ${vor}` : titel === 'Frau' ? `Liebe ${vor}` : `Hallo ${vor}`;
     return {

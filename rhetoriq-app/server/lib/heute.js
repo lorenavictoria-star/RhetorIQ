@@ -11,14 +11,21 @@ function datumZuerich(now = new Date()) {
   return { y, m, d, wochentag, monat: MONATE[m - 1] };
 }
 
-function heuteZeile(now = new Date()) {
-  const { y, d, wochentag, monat } = datumZuerich(now);
+const TAGE_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MONATE_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+function heuteZeile(now = new Date(), sprache) {
+  const { y, m, d, wochentag, monat } = datumZuerich(now);
+  if (sprache === 'en') {
+    const wd = TAGE_EN[TAGE.indexOf(wochentag)];
+    return `Today is ${wd}, ${d} ${MONATE_EN[m - 1]} ${y} (time zone Europe/Zurich). Work out relative dates (tomorrow, next Friday) from this date.`;
+  }
   return `Heute ist ${wochentag}, ${d}. ${monat} ${y} (Zeitzone Europe/Zurich). Relative Datumsangaben (morgen, nächsten Freitag) aus diesem Datum berechnen.`;
 }
 
 // Als Block für den dynamischen Teil des Systems
-function heuteBlock(now = new Date()) {
-  return '\n\n' + heuteZeile(now);
+function heuteBlock(now = new Date(), sprache) {
+  return '\n\n' + heuteZeile(now, sprache);
 }
 
 module.exports = { heuteZeile, heuteBlock, datumZuerich };

@@ -392,10 +392,78 @@ function ohneGedankenstriche(s) {
 }
 
 // Anweisung für den KI-Auftrag zu einem Seitentyp (Deutsch)
+
+// Englische Fassung der Anweisung (British English, Corporate). Die Daten des Seitentyps sind deutsch; das Modell übersetzt Überschriften und Suchbegriffe sinngemäss.
+function promptFuerEn(t, c) {
+  const L = [];
+  L.push(`PAGE TYPE: ${t.label} (German type name)`);
+  L.push(`Restaurant: ${c.restaurantName || '[restaurant name]'}${c.ort ? ', ' + c.ort : ''}${c.kueche ? ', cuisine: ' + c.kueche : ''}`);
+  L.push('OUTPUT LANGUAGE: British English. Write the whole page in natural British English. The structure data below is in German: translate the H2 headings, search terms and FAQ questions into natural English equivalents. The header lines (TITEL:, BESCHREIBUNG:, H1:, TEXT:, H2:, FAQ:, F:, A:) stay exactly as written, because a program reads them.');
+  L.push('');
+  L.push(`GOAL OF THE PAGE: ${t.ziel}`);
+  L.push('');
+  L.push('STRUCTURE (one H1, then the H2 sections in this order):');
+  L.push('H1: contains the main search term and names the place or the restaurant.');
+  t.aufbau.forEach(a => L.push(`H2: ${ersetzePlatzhalter(a.h2, c)}  (content: ${a.inhalt})`));
+  L.push('');
+  L.push(`LENGTH: ${t.laengeWoerter[0]} to ${t.laengeWoerter[1]} words in the TEXT part (without the FAQ).`);
+  L.push('');
+  L.push(`OPENING: ${t.einstieg} The first paragraph begins as a scene from the guest\'s point of view with one concrete sensory detail: personal, from one person to another, free of stock phrases. The main search term appears in the first paragraph.`);
+  L.push('');
+  L.push('AT A GLANCE: You do NOT write this block. It is generated from the structured facts. Do not repeat the data it contains (address, opening hours, telephone) as a list in the text.');
+  if (c.aufEinenBlickZeilen && c.aufEinenBlickZeilen.length) {
+    L.push('The block will later contain these lines (for orientation, do not copy):');
+    c.aufEinenBlickZeilen.forEach(z => L.push('- ' + z));
+  }
+  L.push('');
+  L.push('SEARCH TERMS (choose the best fit as the main term, work the others in naturally):');
+  t.suchbegriffe.forEach(x => L.push('- ' + ersetzePlatzhalter(x, c)));
+  L.push('');
+  L.push('FAQ: Answer these questions in one to three sentences each, starting directly with the answer. Add at most two more questions that guests of this page really ask.');
+  t.faqFragen.forEach(f => L.push('- ' + f));
+  L.push('');
+  L.push(`CALL TO ACTION: The text ends with one clear next step: ${t.cta}. Name the way (link, telephone) only if it is in the facts, otherwise leave a gap.`);
+  L.push('');
+  L.push('SEARCH ENGINE: TITEL at most 60 characters. BESCHREIBUNG between 120 and 155 characters. Both contain the main search term and make people want to visit. Count the characters.');
+  L.push('');
+  L.push('FACTS NEEDED FOR THIS PAGE: ' + t.pflichtFakten.map(k => FAKTEN_NAMEN[k] || k).join(', ') + '.');
+  if (c.faktenText) { L.push('FACTS FROM THE REQUEST (the only source for facts):'); L.push(c.faktenText); }
+  else L.push('FACTS FROM THE REQUEST: none given. For every fact you need, insert a [gap: what is missing] in square brackets.');
+  if (c.stichworte) { L.push('KEYWORDS AND WISHES:'); L.push(Array.isArray(c.stichworte) ? c.stichworte.join(', ') : c.stichworte); }
+  L.push('');
+  if (c.bestehenderText && String(c.bestehenderText).trim()) {
+    L.push('EXISTING TEXT (revise instead of rewriting: keep what is good and accurate, adapt structure and style to the instructions above, take facts only from the facts of the request, mark anything in the existing text that differs as [gap]):');
+    L.push('"""'); L.push(String(c.bestehenderText).trim()); L.push('"""');
+    L.push('');
+  }
+  L.push('RULES:');
+  L.push('- Only facts from the request. If a fact is missing, write [gap: what is missing] in square brackets. Invent nothing.');
+  L.push('- No superlatives without evidence.');
+  L.push('- No stock phrases such as "welcome to", "unforgettable", "culinary delights", "pure indulgence", "pamper yourself".');
+  L.push('- No em dashes and no en dashes in running text. Use a comma, a full stop or a colon.');
+  L.push('- British English spelling (-ise, colour, programme). Address guests as "you".');
+  L.push('- Sentences flow: never join two complete main clauses with a comma alone; use a full stop or a conjunction.');
+  L.push('- No Markdown except the header lines named below.');
+  L.push('');
+  L.push('OUTPUT FORMAT (strict, exactly these header lines in this order):');
+  L.push('TITEL: <at most 60 characters>');
+  L.push('BESCHREIBUNG: <120 to 155 characters>');
+  L.push('H1: <heading>');
+  L.push('TEXT:');
+  L.push('<opening paragraph>');
+  L.push('H2: <subheading>');
+  L.push('<paragraphs>');
+  L.push('FAQ:');
+  L.push('F: <question>');
+  L.push('A: <answer>');
+  return ohneGedankenstriche(L.join('\n'));
+}
+
 function promptFuer(seitentypKey, ctx = {}) {
   const t = SEITENTYPEN[seitentypKey];
   if (!t) throw new Error('Unbekannter Seitentyp: ' + seitentypKey);
   const c = ctx || {};
+  if (c.sprache && /^en/i.test(c.sprache)) return promptFuerEn(t, c);
   const L = [];
   L.push(`SEITENTYP: ${t.label}`);
   L.push(`Restaurant: ${c.restaurantName || '[Restaurantname]'}${c.ort ? ', ' + c.ort : ''}${c.kueche ? ', Küche: ' + c.kueche : ''}`);

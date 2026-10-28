@@ -115,7 +115,7 @@ router.post('/', requireAdvisor, async (req, res) => {
         companyName: name,
         email,
         clientId: rows[0].id,
-        lang: emailLang || 'de'
+        lang: emailLang || (arbeitssprache === 'en' ? 'en' : 'de')
       }).catch(e => console.error('Welcome email error:', e.message));
     } else {
       sendTokenEmail(name, client.token).catch(e => console.error('Token email error:', e.message));
@@ -208,7 +208,7 @@ router.post('/:id/send-welcome', requireAdvisor, async (req, res) => {
       companyName: client.name,
       email,
       clientId: client.id,
-      lang: req.body.lang || 'de'
+      lang: req.body.lang || (client.arbeitssprache === 'en' ? 'en' : 'de')
     });
 
     res.json({ ok: true, sentTo: email });

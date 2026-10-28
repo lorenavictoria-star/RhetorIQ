@@ -137,7 +137,8 @@ router.get('/:id/auf-einen-blick', requireAuth, async (req, res) => {
     await ensureSchema();
     const e0 = await eigene(req, req.params.id);
     if (!e0 || !(await aktiv(e0.client_id))) return res.status(403).json({ error: 'Kein Zugriff auf dieses Restaurant.' });
-    res.json(EF.aufEinenBlick(e0, parse(e0.fakten_json)));
+    const sp = await require('../lib/arbeitssprache').zeile(pool, e0.client_id);
+    res.json(EF.aufEinenBlick(e0, parse(e0.fakten_json), { sprache: sp && sp.arbeitssprache }));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });
@@ -150,7 +151,8 @@ router.get('/:id/json-ld', requireAuth, async (req, res) => {
     await ensureSchema();
     const e0 = await eigene(req, req.params.id);
     if (!e0 || !(await aktiv(e0.client_id))) return res.status(403).json({ error: 'Kein Zugriff auf dieses Restaurant.' });
-    res.type('application/ld+json').send(EF.jsonLd(e0, parse(e0.fakten_json)));
+    const sp = await require('../lib/arbeitssprache').zeile(pool, e0.client_id);
+    res.type('application/ld+json').send(EF.jsonLd(e0, parse(e0.fakten_json), { sprache: sp && sp.arbeitssprache }));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Internal server error' });

@@ -1231,7 +1231,7 @@ html[lang="en"] .legal-en-note{display:block}
     </div>
     <div style="margin-top:14px;padding:12px;background:var(--sf);border-radius:8px;border:1px solid var(--bd)">
       <label for="nc-arbsprache" style="display:block;font-size:12px;color:var(--tx);margin-bottom:6px"><b>Arbeitssprache</b></label>
-      <select id="nc-arbsprache" style="width:100%;padding:8px;font-size:13px;border:1px solid var(--bd);border-radius:6px;background:var(--bg2);color:var(--tx)">
+      <select id="nc-arbsprache" onchange="ncSetLang(this.value)" style="width:100%;padding:8px;font-size:13px;border:1px solid var(--bd);border-radius:6px;background:var(--bg2);color:var(--tx)">
         <option value="de">Deutsch (Schweizer Schreibweise)</option>
         <option value="en">English (British, Corporate)</option>
       </select>
@@ -3969,7 +3969,7 @@ async function boot(user,role){
   } else {
     clientId=user.id||null;
     if(clientId){
-      try{const r=await fetch(API+'/api/clients/'+clientId+'/cm-status');const d=await r.json();enabledModules=d.enabled_modules||null;enabledTextarten=d.enabled_textarten||null;window._arbSprache=d.arbeitssprache||'de';}catch{}
+      try{const r=await fetch(API+'/api/clients/'+clientId+'/cm-status');const d=await r.json();enabledModules=d.enabled_modules||null;enabledTextarten=d.enabled_textarten||null;window._arbSprache=d.arbeitssprache||'de';if(window._arbSprache==='en'&&!localStorage.getItem('riq-lang')&&LANG!=='en'){LANG='en';localStorage.setItem('riq-lang','en');if(typeof applyLang==='function')applyLang();}}catch{}
       await loadPeople();await loadMemory();await loadCustomModules();setTimeout(()=>checkDueSubscriptions(),800);
     }
   }
@@ -9784,6 +9784,7 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
       h='<p class="rq-hint" style="max-width:64ch">Prüfe die Angaben. Beim Bestätigen wird '+E(d.firma)+' angelegt und die Ansprechperson eingeladen.</p>'
        +'<div class="rq-list">'+row('ti-user','Klient',E(d.firma)+(d.kontakt?' · '+E(d.kontakt):'')+(d.email?' · '+E(d.email):''))+row('ti-world','Webseite',E(d.webseite||'keine Angabe'))+row('ti-layout-grid','Module','Brand Voice'+(d.module.filter(function(k){return k!=='brand-voice';}).length?', '+d.module.filter(function(k){return k!=='brand-voice';}).map(rqModName).map(E).join(', '):'')+(d.themenplan?', Automatisch Themen und Ideen senden':''))+row('ti-file-text','Dokumente',nf?nf+(nf===1?' Datei':' Dateien'):'keine hochgeladen')+row('ti-calendar','Workshop',E(d.workshop_datum||'kein Termin eingetragen'))+'</div>'
        +'<div class="rq-card"><span class="rq-eb">Einladung mit Zugangslink an '+E(d.kontakt||d.firma)+'</span><div><span class="rq-lab">Anrede</span>'+pills('anrede',[['sie','Sie'],['du','Du']])+'</div></div>'
+       +'<div class="rq-card"><label for="rqw-arb" style="font-weight:500">Arbeitssprache</label><select id="rqw-arb" class="rq-in" style="margin-top:6px"><option value="de"'+(W.arb==='en'?'':' selected')+'>Deutsch (Schweizer Schreibweise)</option><option value="en"'+(W.arb==='en'?' selected':'')+'>English (British, Corporate)</option></select><div class="rq-hint" style="margin-top:6px">Steuert Regelwerk, Brand-Voice-Analyse, Prüfung und die Standardsprache der Texte. Später änderbar unter «Verwaltung».</div></div>'
        +'<label class="rq-card" style="flex-direction:row;align-items:flex-start;gap:12px;cursor:pointer"><input type="checkbox" id="rqw-priv" style="width:22px;height:22px;accent-color:var(--ac);flex-shrink:0;margin-top:2px"'+(W.privacy?' checked':'')+'><span>Der Klient wurde über die Datenverarbeitung durch Anthropic informiert.</span></label>'+msg()+acts(4,['finish','Bestätigen und Klienten einladen'])+'<span class="rq-hint">Beim Bestätigen geht die Einladung mit dem persönlichen Zugangslink raus.</span>';
     }
     b.innerHTML=h;
@@ -9842,11 +9843,11 @@ textarea.rq-in{min-height:96px;line-height:1.55;resize:vertical}
       }catch(er){W.err='Die Mappe konnte nicht erstellt werden. '+er.message;}
       W.docs=false;render();return;}
     if(a==='finish'){
-      var pv=document.getElementById('rqw-priv');W.privacy=!!(pv&&pv.checked);
+      var pv=document.getElementById('rqw-priv');W.privacy=!!(pv&&pv.checked);var arbEl=document.getElementById('rqw-arb');W.arb=arbEl&&arbEl.value==='en'?'en':'de';
       if(!W.privacy){setMsg('','Bitte bestätigen, dass der Klient über die Datenverarbeitung informiert wurde.');return;}
       W.busy=true;render();setMsg('Klient wird angelegt …');
       try{await persist({schritt:5,status:'bereit'});
-        var r2=await rqJ('/api/onboarding-drafts/'+W.d.id+'/finish',{method:'POST',body:JSON.stringify({anrede:W.d.anrede,titel:W.d.titel,privacyAcknowledged:true})});
+        var r2=await rqJ('/api/onboarding-drafts/'+W.d.id+'/finish',{method:'POST',body:JSON.stringify({anrede:W.d.anrede,titel:W.d.titel,arbeitssprache:W.arb==='en'?'en':'de',privacyAcknowledged:true})});
         W.invited=!(r2&&r2.inviteSent===false);
         var c=(r2&&(r2.client||{}))||{};if(!c.id)c.id=r2&&(r2.clientId||r2.client_id);
         W.done={id:c.id||null};W.busy=false;
