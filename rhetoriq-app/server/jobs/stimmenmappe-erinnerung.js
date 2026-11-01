@@ -6,6 +6,8 @@ const NOTIFY = () => process.env.ADVISOR_EMAIL || 'contact@lorenalienhard.ch';
 const APP = () => (process.env.APP_URL || 'https://rhetoriq.ch').replace(/\/$/, '');
 
 async function runErinnerung() {
+  const { ersterLauf, monatsSchluessel } = require('../lib/einmalig');
+  if (!(await ersterLauf('stimmenmappe-erinnerung-' + monatsSchluessel()))) return { ok: true, uebersprungen: true };
   const link = `${APP()}/index.html`;
   await queueEmail({
     kind: 'stimmenmappe-erinnerung',
