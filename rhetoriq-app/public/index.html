@@ -4096,6 +4096,7 @@ async function switchClient(id){
   if(typeof renderModulesList==='function')renderModulesList();
   const hw=document.getElementById('hs-widget');
   if(hw)hw.style.display=clientId?'block':'none';
+  if(document.getElementById('page-history')?.classList.contains('active')&&typeof loadHistory==='function'){try{loadHistory();}catch(e){}}
 }
 function copyTok(t){navigator.clipboard.writeText(t).catch(()=>{});alert('Token kopiert.');}
 async function sendTokenByEmail(clientId){
