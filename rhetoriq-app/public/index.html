@@ -2161,7 +2161,7 @@ html[lang="en"] .legal-en-note{display:block}
 <!-- Advisor Review Panel -->
 <div class="rev-panel" id="rev-panel">
   <div class="rev-panel-hd">
-    <span class="rev-panel-title" id="rev-panel-title">Review Queue</span>
+    <span class="rev-panel-title" id="rev-panel-title">Prüfliste</span>
     <button class="rev-close" onclick="document.getElementById('rev-panel').classList.remove('open')">&times;</button>
   </div>
   <div class="rev-list" id="rev-list"><div style="padding:20px;color:var(--mu);font-size:13px" id="rev-empty">No pending reviews.</div></div>
@@ -15345,6 +15345,164 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
   }
   var gp=window.goPage;
   if(typeof gp==='function')window.goPage=function(name){var r=gp.apply(this,arguments);if(name==='usage'&&isAdvisor())setTimeout(usageShare,250);return r;};
+})();
+</script>
+<script id="rq-pv-js">
+// ═══ Prüfliste und Prüfansicht (Beraterin): klar gruppiert, ein Bildschirm je Text, Prüfzeit läuft mit ═══
+(function(){
+  var E=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');};
+  var OEFF=['website','linkedin','social','newsletter','press','speech'];
+  var p2=function(n){return String(n).padStart(2,'0');};
+  var uhr=function(d){return p2(d.getHours())+':'+p2(d.getMinutes());};
+  function fristVon(rv){
+    if(rv.due_at){var d=new Date(rv.due_at);if(!isNaN(d))return d;}
+    return new Date(new Date(rv.created_at).getTime()+(rv.sla_hours||3)*3600000);
+  }
+  function fristText(d){var heute=d.toDateString()===new Date().toDateString();return 'bis '+(heute?'':p2(d.getDate())+'.'+p2(d.getMonth()+1)+'. ')+uhr(d);}
+  function gruppe(rv){var t=fristVon(rv).getTime();if(t<=Date.now()+3600000)return 0;return new Date(t).toDateString()===new Date().toDateString()?1:2;}
+  var GRUPPEN=[['Jetzt fällig','#b91c1c'],['Heute','#92400e'],['Später','#047857']];
+  function kundenName(rv){var cs=(typeof clients!=='undefined'&&clients)||[];return (cs.find(function(c){return c.id===rv.client_id;})||{}).name||'Unbekannt';}
+  function alter(rv){var m=Math.max(1,Math.round((Date.now()-new Date(rv.created_at).getTime())/60000));return m<60?m+' Min.':(m/60).toFixed(1).replace('.',',')+' Std.';}
+  function auftrag(rv){return String(rv.instruction||rv.client_note||'').replace(/\s+/g,' ').trim();}
+  function toast(m){(window.rqToast||alert)(m);}
+
+  // ── Liste ──
+  window.loadAdvisorReviews=async function(){
+    var list=document.getElementById('rev-list');if(!list)return;
+    try{
+      var r=await api('/api/reviews');var reviews=await r.json();
+      if(!Array.isArray(reviews))reviews=[];
+      var offen=reviews.filter(function(x){return x.status==='pending'||x.status==='edited';});
+      var neu=offen.filter(function(x){return x.status==='pending';});
+      var badge=document.getElementById('rev-badge');
+      if(badge){badge.textContent=neu.length;badge.classList.toggle('show',neu.length>0);}
+      if(window.rqSyncRev)window.rqSyncRev();
+      window._advisorReviews=reviews;
+      var tt=document.getElementById('rev-panel-title');if(tt)tt.textContent='Prüfliste';
+      if(!offen.length){list.innerHTML='<div style="padding:24px 20px;color:var(--mu);font-size:14px">Alles geprüft. Es wartet nichts.</div>';return;}
+      var gr=[[],[],[]];
+      offen.slice().sort(function(a,b){return fristVon(a)-fristVon(b);}).forEach(function(rv){gr[gruppe(rv)].push(rv);});
+      var faellig=gr[0].length;
+      var h='<div style="padding:14px 18px;border-bottom:1px solid var(--bd);font-size:13px;color:var(--mu)"><b style="color:var(--tx)">'+offen.length+' '+(offen.length===1?'Text wartet':'Texte warten')+'</b>'+(faellig?' · <b style="color:#b91c1c">'+faellig+' jetzt fällig</b>':'')+'</div>';
+      gr.forEach(function(rows,gi){
+        if(!rows.length)return;
+        h+='<div style="padding:14px 18px 6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:'+GRUPPEN[gi][1]+'">'+GRUPPEN[gi][0]+' <span style="color:var(--mu);font-weight:400">('+rows.length+')</span></div>';
+        rows.forEach(function(rv){
+          var a=auftrag(rv);
+          h+='<div class="rq-pl-row" id="rvc-'+rv.id+'" onclick="rqPruefen('+rv.id+')" style="display:flex;gap:12px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--bd);cursor:pointer">'
+            +'<span style="width:9px;height:9px;border-radius:50%;flex-shrink:0;background:'+GRUPPEN[gi][1]+'"></span>'
+            +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+E(kundenName(rv))+' <span style="font-weight:400;color:var(--mu)">· '+E(rv.module_label||'Text')+'</span>'+(rv.status==='edited'?' <span style="font-size:11px;color:var(--mu);border:1px solid var(--bd);padding:1px 6px">Entwurf</span>':'')+'</div>'
+            +'<div style="font-size:12px;color:var(--mu)">'+E(fristText(fristVon(rv)))+' · gesendet vor '+E(alter(rv))+'</div>'
+            +(a?'<div style="font-size:12px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">'+E(a)+'</div>':'')+'</div>'
+            +'<button type="button" class="rev-savebtn" style="flex-shrink:0" onclick="event.stopPropagation();rqPruefen('+rv.id+')">Prüfen</button></div>';
+        });
+      });
+      list.innerHTML=h;
+    }catch(e){}
+  };
+
+  // ── Prüfansicht ──
+  var ST={id:null,t0:0,zeit:null,vorher:0};
+  function sekKey(id){return 'riq-pv-sek-'+id;}
+  function gespeicherteSek(id){try{return Number(localStorage.getItem(sekKey(id)))||0;}catch(e){return 0;}}
+  function sekSpeichern(id,s){try{if(s>0)localStorage.setItem(sekKey(id),String(Math.round(s)));else localStorage.removeItem(sekKey(id));}catch(e){}}
+  function laufSek(){return ST.vorher+Math.round((Date.now()-ST.t0)/1000);}
+  function schliessen(){
+    var ov=document.getElementById('rq-pv-ov');
+    if(ST.id!=null&&ov)sekSpeichern(ST.id,laufSek());
+    if(ST.zeit){clearInterval(ST.zeit);ST.zeit=null;}
+    if(ov)ov.remove();
+    document.removeEventListener('keydown',onKey);
+    ST.id=null;
+  }
+  function onKey(e){if(e.key==='Escape')schliessen();}
+  function hinweise(rv){
+    var ta=document.getElementById('pv-text'),box=document.getElementById('pv-hinweise');if(!ta||!box)return;
+    var lines=[];
+    try{var P=window.RQPruef;if(P)lines=P.summary(P.find(ta.value));}catch(e){}
+    var items=(lines&&lines.length?lines:['Keine Zahlen, Beträge oder Daten im Text.']).map(function(l){return '<div class="pv-h">'+E(l)+'</div>';});
+    var extra=box.getAttribute('data-extra')||'';
+    box.innerHTML=items.join('')+extra;
+  }
+  function etikett(rv){
+    var ta=document.getElementById('pv-text'),b=document.getElementById('pv-send');if(!ta||!b)return;
+    var gleich=ta.value.trim()===String(rv.original_text||'').trim();
+    b.textContent=gleich?'Geprüft und senden':'Mit Änderungen senden';
+  }
+  window.rqPruefen=async function(id){
+    var rv=(window._advisorReviews||[]).find(function(x){return x.id===id;});if(!rv)return;
+    schliessen();
+    ST.id=id;ST.vorher=gespeicherteSek(id);ST.t0=Date.now();
+    var d=fristVon(rv),a=auftrag(rv);
+    var imModul=!!(rv.module_key&&rv.review_context);
+    var ov=document.createElement('div');ov.id='rq-pv-ov';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(14,13,11,.45);z-index:900;display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto';
+    ov.innerHTML='<div role="dialog" aria-modal="true" aria-label="Prüfansicht" style="background:#fff;width:100%;max-width:980px;border:1px solid var(--bd);padding:22px 26px">'
+      +'<style>.pv-h{font-size:13px;border:1px solid var(--bd);padding:8px 10px;margin-bottom:6px;line-height:1.4}.pv-b{padding:9px 16px;font-size:14px;font-family:inherit;cursor:pointer;border:1px solid var(--bd);background:#fff}.pv-b.p{background:var(--ac,#1a3d2e);color:#fff;border-color:var(--ac,#1a3d2e)}.pv-b:disabled{opacity:.5;cursor:default}</style>'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px">'
+        +'<div><div style="font-size:18px;font-weight:600">'+E(kundenName(rv))+' <span style="font-weight:400;color:var(--mu)">· '+E(rv.module_label||'Text')+'</span></div>'
+        +'<div style="font-size:13px;color:var(--mu);margin-top:2px">Gesendet '+E(uhr(new Date(rv.created_at)))+' · <b style="color:var(--tx)">Antwort '+E(fristText(d))+'</b></div></div>'
+        +'<div style="display:flex;align-items:center;gap:12px"><span id="pv-timer" style="font-size:13px;padding:4px 12px;background:var(--sf,#f4f1ea);font-variant-numeric:tabular-nums">Prüfzeit 00:00</span>'
+        +'<button type="button" class="pv-b" id="pv-close" aria-label="Schliessen">&times;</button></div></div>'
+      +'<div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:20px" id="pv-grid">'
+        +'<div>'+(a?'<div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);font-weight:700;margin-bottom:4px">Auftrag des Kunden</div><div style="font-size:14px;border:1px solid var(--bd);border-left:3px solid var(--ac,#1a3d2e);padding:8px 12px;margin-bottom:14px;line-height:1.5">'+E(a)+'</div>':'')
+          +'<div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);font-weight:700;margin-bottom:4px">Text, direkt bearbeitbar</div>'
+          +'<textarea id="pv-text" style="width:100%;min-height:300px;box-sizing:border-box;padding:12px 14px;font-size:15px;line-height:1.6;font-family:inherit;border:1px solid var(--bd);resize:vertical">'+E(rv.edited_text||rv.original_text||'')+'</textarea></div>'
+        +'<div><div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);font-weight:700;margin-bottom:4px">Hinweise für dich</div><div id="pv-hinweise"></div></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--bd)">'
+        +'<button type="button" class="pv-b p" id="pv-send">Geprüft und senden</button>'
+        +'<button type="button" class="pv-b" id="pv-draft">Als Entwurf speichern</button>'
+        +(imModul?'<button type="button" class="pv-b" id="pv-modul">Im Modul bearbeiten</button>':'')
+        +'<button type="button" class="pv-b" id="pv-del" style="margin-left:auto;color:var(--red,#b91c1c)">Löschen</button></div>'
+      +'<div style="font-size:12px;color:var(--mu);margin-top:10px">Beim Senden werden Datum und Prüfzeit als Prüfnachweis gespeichert. Von dir geprüfte Texte erscheinen ohne KI-Hinweis.</div></div>';
+    document.body.appendChild(ov);
+    document.addEventListener('keydown',onKey);
+    var ta=document.getElementById('pv-text');
+    if(window.innerWidth<760)document.getElementById('pv-grid').style.gridTemplateColumns='1fr';
+    // Hinweis zum KI-Hinweis des Kunden (nur bei öffentlichen Textarten)
+    if(OEFF.indexOf(String(rv.module_tile||'').toLowerCase())>=0&&rv.client_id){
+      api('/api/clients/'+rv.client_id+'/ki-hinweis').then(function(r){return r.json();}).then(function(j){
+        var box=document.getElementById('pv-hinweise');if(!box||ST.id!==id)return;
+        if(j&&j.kiHinweis){box.setAttribute('data-extra','<div class="pv-h">Der Kunde hat den KI-Hinweis eingeschaltet. Nach deiner Prüfung erscheint dieser Text ohne Hinweis.</div>');hinweise(rv);}
+      }).catch(function(){});
+    }
+    hinweise(rv);etikett(rv);
+    var deb=null;ta.addEventListener('input',function(){etikett(rv);clearTimeout(deb);deb=setTimeout(function(){hinweise(rv);},400);});
+    var timerEl=document.getElementById('pv-timer');
+    var tick=function(){var s=laufSek();timerEl.textContent='Prüfzeit '+p2(Math.floor(s/60))+':'+p2(s%60);};
+    tick();ST.zeit=setInterval(tick,1000);
+    document.getElementById('pv-close').onclick=function(){
+      if(ta.value.trim()!==String(rv.edited_text||rv.original_text||'').trim()&&!confirm('Es gibt Änderungen, die nicht gespeichert sind. Trotzdem schliessen?'))return;
+      schliessen();
+    };
+    function sperren(an){['pv-send','pv-draft','pv-modul','pv-del'].forEach(function(k){var b=document.getElementById(k);if(b)b.disabled=an;});}
+    async function senden(send){
+      var text=ta.value.trim();if(!text){toast('Der Text ist leer.');return;}
+      sperren(true);
+      try{
+        var r=await api('/api/reviews/'+id,{method:'PUT',body:JSON.stringify({editedText:text,send:send})});
+        if(!r.ok)throw new Error('Fehler');
+        if(send){
+          var min=Math.max(1,Math.min(600,Math.ceil(laufSek()/60)));
+          try{await api('/api/review-time/review/'+id,{method:'PUT',body:JSON.stringify({minutes:min})});}catch(e){}
+          sekSpeichern(id,0);ST.vorher=0;ST.t0=Date.now();
+          toast('Gesendet. Prüfzeit '+min+' Min. gespeichert.');
+        }else toast('Entwurf gespeichert.');
+        var wasSent=send;schliessen();
+        loadAdvisorReviews();if(typeof wsRefresh==='function')wsRefresh();
+        return wasSent;
+      }catch(e){sperren(false);toast('Das hat nicht geklappt. Bitte noch einmal versuchen.');}
+    }
+    document.getElementById('pv-send').onclick=function(){senden(true);};
+    document.getElementById('pv-draft').onclick=function(){senden(false);};
+    var bm=document.getElementById('pv-modul');if(bm)bm.onclick=function(){sekSpeichern(id,laufSek());schliessen();openReviewInModule(id);};
+    document.getElementById('pv-del').onclick=async function(){
+      if(!confirm('Diese Anfrage löschen? Der Kunde wird nicht benachrichtigt. Das Löschen ist endgültig.'))return;
+      try{await api('/api/reviews/'+id,{method:'DELETE'});sekSpeichern(id,0);schliessen();loadAdvisorReviews();if(typeof wsRefresh==='function')wsRefresh();}
+      catch(e){toast('Löschen nicht möglich.');}
+    };
+  };
 })();
 </script>
 <script id="rq-quartal-js">

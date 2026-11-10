@@ -2,12 +2,18 @@
 // darf trotzdem nur eine Instanz die Mail schicken. Wer den Schlüssel zuerst einträgt, darf senden.
 const { pool } = require('../db');
 
+let angelegt = false;   // Tabelle nur einmal je Prozess anlegen
+
 async function ersterLauf(schluessel, db = pool) {
   try {
-    await db.query('CREATE TABLE IF NOT EXISTS job_laeufe (schluessel TEXT PRIMARY KEY, created_at TIMESTAMPTZ DEFAULT NOW())');
-    const { rows } = await db.query('INSERT INTO job_laeufe (schluessel) VALUES ($1) ON CONFLICT (schluessel) DO NOTHING RETURNING schluessel', [schluessel]);
-    return rows.length > 0;
+    if (!angelegt) {
+      await db.query('CREATE TABLE IF NOT EXISTS job_laeufe (schluessel TEXT PRIMARY KEY, created_at TIMESTAMPTZ DEFAULT NOW())');
+      angelegt = true;
+    }
+    await db.query('INSERT INTO job_laeufe (schluessel) VALUES ($1)', [schluessel]);
+    return true;
   } catch (e) {
+    if (e && (e.code === '23505' || /duplicate key|unique/i.test(String(e.message)))) return false;   // Schlüssel gibt es schon: eine andere Instanz war schneller
     console.error('[einmalig] Prüfung fehlgeschlagen, Job läuft trotzdem:', e.message);
     return true;   // lieber doppelt als gar nicht
   }

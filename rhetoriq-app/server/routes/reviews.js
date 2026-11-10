@@ -93,6 +93,12 @@ router.post('/', auth, requireRole('editor'), async (req, res) => {
     req.app.locals.wss.toAdvisors({ type: 'review_new', id: rows[0].id });
     res.json(rows[0]);
 
+    // Mischform: Der Text steht sofort in der Prüfliste. Die Mail kommt sofort nur bei Fristen unter einer Stunde,
+    // sonst gebündelt (lib/pruefMeldung.js).
+    const pm = require('../lib/pruefMeldung');
+    if (!pm.sofortNoetig(rows[0].due_at || dueAt)) return;
+    pool.query('UPDATE review_requests SET notified_at = NOW() WHERE id = $1', [rows[0].id]).catch(() => {});
+
     // Notify the advisor by email so she can act even without the app open.
     // Fire-and-forget: never let email delivery affect the client-facing response.
     (async () => {

@@ -269,9 +269,13 @@ test('S6 Review-Anfrage: Altverhalten ohne neue Felder, Standardfrist 3 Stunden'
   const due = new Date(r.body.due_at).getTime();
   assert.ok(Math.abs(due - (before + 3 * 3600 * 1000)) < 60 * 1000);
   await new Promise(x => setTimeout(x, 100));
-  const mail = H.mails.find(m => m.kind === 'review-request');
+  // Mischform: Frist in 3 Stunden, also keine Einzelmail, sondern die Sammelmail
+  assert.ok(!H.mails.find(m => m.kind === 'review-request'));
+  await H.pool.query('DELETE FROM job_laeufe').catch(() => {});
+  assert.ok(await require('../lib/pruefMeldung').sammelmeldung(new Date('2027-03-09T09:00:00Z')) >= 1);
+  const mail = H.mails.find(m => m.kind === 'review-sammel');
   assert.ok(mail);
-  assert.ok(!mail.text.includes('Bis spätestens'));
+  assert.ok(mail.text.includes('Auftrag AG'));
   assert.ok(mail.text.includes('Bitte kürzen'));
 });
 
@@ -284,9 +288,12 @@ test('S6 Review-Anfrage mit Auftrag und Frist: gespeichert, in GET und in der Ma
   assert.equal(r.body.instruction, 'Bitte freundlicher im Ton');
   assert.equal(new Date(r.body.due_at).toISOString(), dueIso);
   await new Promise(x => setTimeout(x, 100));
-  const mail = H.mails.find(m => m.kind === 'review-request' && m.text.includes('Auftrag'));
-  assert.match(mail.text, /Bitte freundlicher im Ton/);
-  assert.match(mail.text, /Bis spätestens: /);
+  assert.ok(!H.mails.find(m => m.kind === 'review-request'));   // Frist in 26 Stunden: gebündelt
+  await H.pool.query('DELETE FROM job_laeufe').catch(() => {});
+  await require('../lib/pruefMeldung').sammelmeldung(new Date('2027-03-10T09:00:00Z'));
+  const mail = H.mails.find(m => m.kind === 'review-sammel' && m.text.includes('Auftrag2 AG'));
+  assert.match(mail.text, /Auftrag: Bitte freundlicher im Ton/);
+  assert.match(mail.text, /bis \d\d:\d\d/);
   const list = await srv.call('GET', '/api/reviews', { token: A() });
   const row = list.body.find(x => x.id === r.body.id);
   assert.equal(row.instruction, 'Bitte freundlicher im Ton');

@@ -34,14 +34,14 @@ router.get('/:id/pruefnachweis', requireAuth, requireRole('admin'), ownClient('i
   try {
     await ensureSchema();
     const { rows } = await pool.query(
-      `SELECT id, module_label, module_tile, updated_at AS geprueft_am, minutes
+      `SELECT id, module_label, module_tile, updated_at AS geprueft_am, minutes, (edited_text IS NOT NULL AND edited_text <> original_text) AS geaendert
        FROM review_requests WHERE client_id=$1 AND status='approved' ORDER BY updated_at DESC LIMIT 1000`, [req.params.id]);
-    const liste = rows.map(r => ({ id: r.id, textart: r.module_label || '', kachel: r.module_tile || '', geprueftAm: r.geprueft_am, minuten: r.minutes == null ? null : Number(r.minutes) }));
+    const liste = rows.map(r => ({ id: r.id, textart: r.module_label || '', kachel: r.module_tile || '', geprueftAm: r.geprueft_am, minuten: r.minutes == null ? null : Number(r.minutes), geaendert: !!r.geaendert }));
     if (String(req.query.format || '').toLowerCase() === 'csv') {
       const { csvCell } = require('../lib/csvSafe');
       const datum = d => new Date(d).toLocaleString('de-CH', { timeZone: 'Europe/Zurich', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-      const zeilen = [['Nr', 'Textart', 'Geprüft am', 'Minuten'].map(csvCell).join(';')]
-        .concat(liste.map(r => [r.id, r.textart, datum(r.geprueftAm), r.minuten == null ? '' : r.minuten].map(csvCell).join(';')));
+      const zeilen = [['Nr', 'Textart', 'Geprüft am', 'Minuten', 'Geändert'].map(csvCell).join(';')]
+        .concat(liste.map(r => [r.id, r.textart, datum(r.geprueftAm), r.minuten == null ? '' : r.minuten, r.geaendert ? 'ja' : 'nein'].map(csvCell).join(';')));
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
       res.setHeader('Content-Disposition', 'attachment; filename="Pruefnachweis.csv"');
       return res.send('\ufeff' + zeilen.join('\r\n') + '\r\n');

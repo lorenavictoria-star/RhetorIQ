@@ -141,6 +141,8 @@ function ensureSchema() {
       await pool.query(`ALTER TABLE schnelltests ADD COLUMN IF NOT EXISTS ${c}`);
     }
     await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS learned_at TIMESTAMPTZ`);
+    await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ`);
+    await pool.query(`ALTER TABLE review_requests ADD COLUMN IF NOT EXISTS reminded_at TIMESTAMPTZ`);
     // Quartalsreview (Business: ein Gespräch pro Quartal)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS quartalsreviews (

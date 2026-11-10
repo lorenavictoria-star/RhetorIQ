@@ -435,6 +435,10 @@ const PORT = process.env.PORT || 3001;
   // Monthly: 1st of each month at 08:07
   cron.schedule('7 8 1 * *', () => runMonthlyReport(), { timezone: 'Europe/Zurich' });
 
+  // Prüfliste: alle 15 Minuten zwischen 07:00 und 19:45 nachsehen, ob eine Sammelmail oder eine Erinnerung fällig ist
+  // (Sammelmail höchstens alle 90 Minuten, Fristen unter einer Stunde melden sich sofort beim Eingang)
+  cron.schedule('*/15 7-19 * * *', () => require('./lib/pruefMeldung').runPruefMeldung().catch(e => console.error('[pruef-meldung]', e.message)), { timezone: 'Europe/Zurich' });
+
   // Kommunikationsprofil: am 1. und 15. jedes Monats um 09:30
   cron.schedule('30 9 1,15 * *', () => require('./jobs/comm-profile').runCommProfileJob().catch(e => console.error('[comm-profile] job failed:', e.message)), { timezone: 'Europe/Zurich' });
   // Themenplan und Newsletter-Entwurf: am 1. jedes Monats um 06:00 (abschaltbar mit THEMENPLAN=aus)
