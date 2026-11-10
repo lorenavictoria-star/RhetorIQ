@@ -2612,14 +2612,15 @@ router.post('/presentation-preflight', requireAuth, async (req, res) => {
 // a raw web page. This produces a genuine binary .docx.
 router.post('/export-docx', requireAuth, async (req, res) => {
   try {
-    const { content, title, presentation, clientId: reqClientId } = req.body;
+    const { content, title, presentation, clientId: reqClientId, tile: reqTile, geprueft } = req.body;
     if (!content || typeof content !== 'string' || !content.trim()) {
       return res.status(400).json({ error: 'No content provided' });
     }
     const docxLib = require('docx');
     const { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, BorderStyle } = docxLib;
     const kiH = require('../lib/kiHinweis');
-    const mitHinweis = await kiH.flagForRequest(req, reqClientId);
+    // Der Hinweis erscheint nur bei öffentlichen Textarten und nur bei Texten, die nicht von der Beraterin geprüft wurden.
+    const mitHinweis = kiH.istOeffentlich(reqTile) && geprueft !== true && await kiH.flagForRequest(req, reqClientId);
     const docTitle = (title && String(title).trim()) || 'RhetorIQ Dokument';
     const date = new Date().toLocaleDateString('de-CH');
 

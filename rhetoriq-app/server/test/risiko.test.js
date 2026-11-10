@@ -7,11 +7,13 @@ const P = require('../../public/pruefhinweise.js');
 const { shares } = require('../lib/revenueShare');
 const { KI_SATZ, KI_FELD } = require('../lib/kiHinweis');
 
-let srv, a, b;
+let srv, a, b, tm = {};
 test.before(async () => {
   await H.setupBase();
   await pool.query('ALTER TABLE clients ADD COLUMN monthly_token_limit INTEGER').catch(() => {});
   a = await H.addClient('Alpha AG'); b = await H.addClient('Beta AG');
+  for (const col of ['email TEXT', 'name TEXT', 'password_hash TEXT', 'role TEXT']) await pool.query(`ALTER TABLE client_users ADD COLUMN ${col}`).catch(() => {});
+  for (const role of ['admin', 'editor']) tm[role] = (await pool.query('INSERT INTO client_users (client_id, email, name, role) VALUES ($1,$2,$3,$4) RETURNING id', [a.id, role + '@ki.ch', role, role])).rows[0].id;
   srv = await H.startApp([
     ['/api/clients', require('../routes/kiHinweis')],
     ['/api/analyze', require('../routes/analyze')],
@@ -31,31 +33,64 @@ async function docxParts(token, body) {
   };
 }
 
-test('KI-Hinweis: Standard aus, nur Beraterin schaltet, Klient liest nur das Eigene', async () => {
+test('KI-Hinweis: Standard aus, Hauptzugang und Admin schalten selbst, Betrachter nicht, Klient liest nur das Eigene', async () => {
   const get = (id, t) => srv.call('GET', `/api/clients/${id}/ki-hinweis`, { token: t });
+  const put = (id, t, v) => srv.call('PUT', `/api/clients/${id}/ki-hinweis`, { token: t, body: { kiHinweis: v } });
+  const editor = H.clientToken(a.id, { clientUserId: tm.editor, clientUserRole: 'editor' });
+  const admin = H.clientToken(a.id, { clientUserId: tm.admin, clientUserRole: 'admin' });
   assert.equal((await get(a.id, H.clientToken(a.id))).body.kiHinweis, false);
-  assert.equal((await srv.call('PUT', `/api/clients/${a.id}/ki-hinweis`, { token: H.clientToken(a.id), body: { kiHinweis: true } })).status, 403);
+  assert.deepEqual((await get(a.id, H.clientToken(a.id))).body.textarten, ['website', 'linkedin', 'social', 'newsletter', 'press', 'speech']);
+  assert.equal((await put(a.id, editor, true)).status, 403);
   assert.equal((await srv.call('PUT', `/api/clients/${a.id}/ki-hinweis`, { token: H.advisorToken(), body: { kiHinweis: 'ja' } })).status, 400);
-  assert.equal((await srv.call('PUT', `/api/clients/${a.id}/ki-hinweis`, { token: H.advisorToken(), body: { kiHinweis: true } })).body.kiHinweis, true);
+  assert.equal((await put(b.id, H.clientToken(a.id), true)).status, 403);   // nicht für einen anderen Klienten
+  assert.equal((await put(a.id, H.clientToken(a.id), true)).body.kiHinweis, true);   // Hauptzugang
   assert.equal((await get(a.id, H.clientToken(a.id))).body.kiHinweis, true);
+  assert.equal((await put(a.id, admin, false)).body.kiHinweis, false);   // Rolle Admin
+  assert.equal((await put(a.id, H.advisorToken(), true)).body.kiHinweis, true);   // Beraterin
   assert.equal((await get(a.id, H.clientToken(b.id))).status, 403);
   assert.equal((await get(b.id, H.advisorToken())).body.kiHinweis, false);
 });
 
-test('Word-Export: Metadaten immer, Hinweis-Satz nur bei eingeschaltetem Schalter', async () => {
+test('Prüfnachweis: freigegebene Texte mit Datum und Minuten, nur für Hauptzugang, Admin und Beraterin', async () => {
+  await pool.query('DELETE FROM review_requests');
+  await pool.query(`INSERT INTO review_requests (client_id, module_label, module_tile, original_text, status, minutes) VALUES ($1,'LinkedIn','linkedin','a','approved',8), ($1,'E-Mail','email','b','pending',NULL), ($2,'Webseite','website','c','approved',5)`, [a.id, b.id]);
+  const r = await srv.call('GET', `/api/clients/${a.id}/pruefnachweis`, { token: H.clientToken(a.id) });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.pruefungen.length, 1);
+  assert.equal(r.body.pruefungen[0].textart, 'LinkedIn');
+  assert.equal(r.body.pruefungen[0].minuten, 8);
+  assert.ok(!JSON.stringify(r.body).includes('"a"'));   // kein Textinhalt
+  assert.equal((await srv.call('GET', `/api/clients/${a.id}/pruefnachweis`, { token: H.clientToken(a.id, { clientUserId: tm.editor, clientUserRole: 'editor' }) })).status, 403);
+  assert.equal((await srv.call('GET', `/api/clients/${a.id}/pruefnachweis`, { token: H.clientToken(b.id) })).status, 403);
+  const csv = await srv.call('GET', `/api/clients/${a.id}/pruefnachweis?format=csv`, { token: H.advisorToken(), raw: true });
+  assert.equal(csv.status, 200);
+  const text = await csv.text();
+  assert.ok(text.includes('LinkedIn') && text.includes('Geprüft am') && !text.includes('Webseite'));
+});
+
+test('Word-Export: Metadaten immer, Hinweis-Satz nur bei eingeschaltetem Schalter, öffentlicher Textart und ungeprüftem Text', async () => {
   await srv.call('PUT', `/api/clients/${b.id}/ki-hinweis`, { token: H.advisorToken(), body: { kiHinweis: false } });
-  const aus = await docxParts(H.clientToken(b.id), { content: 'Hallo Welt.', title: 'Test' });
+  await srv.call('PUT', `/api/clients/${a.id}/ki-hinweis`, { token: H.advisorToken(), body: { kiHinweis: true } });
+  const aus = await docxParts(H.clientToken(b.id), { content: 'Hallo Welt.', title: 'Test', tile: 'website' });
   assert.ok(aus.custom.includes(KI_FELD));
   assert.ok(aus.core.includes(KI_FELD));
   assert.ok(!aus.doc.includes(KI_SATZ));
-  const an = await docxParts(H.clientToken(a.id), { content: 'Hallo Welt.', title: 'Test' });
+  const an = await docxParts(H.clientToken(a.id), { content: 'Hallo Welt.', title: 'Test', tile: 'website' });
   assert.ok(an.doc.includes(KI_SATZ));
+  assert.ok(!KI_SATZ.includes('geprüft'));   // behauptet nur die KI-Unterstützung
+  for (const tile of ['website', 'linkedin', 'social', 'newsletter', 'press', 'speech'])
+    assert.ok((await docxParts(H.clientToken(a.id), { content: 'x.', title: 'T', tile })).doc.includes(KI_SATZ), tile);
+  // nicht öffentlich oder ohne Angabe: kein Hinweis
+  for (const tile of ['email', 'brief', 'custom', undefined])
+    assert.ok(!(await docxParts(H.clientToken(a.id), { content: 'x.', title: 'T', tile })).doc.includes(KI_SATZ), String(tile));
+  // von der Beraterin geprüft: kein Hinweis
+  assert.ok(!(await docxParts(H.clientToken(a.id), { content: 'x.', title: 'T', tile: 'website', geprueft: true })).doc.includes(KI_SATZ));
   // Beraterin mit Klienten-Nummer: Einstellung dieses Klienten
-  assert.ok((await docxParts(H.advisorToken(), { content: 'Hallo.', title: 'T', clientId: a.id })).doc.includes(KI_SATZ));
-  assert.ok(!(await docxParts(H.advisorToken(), { content: 'Hallo.', title: 'T', clientId: b.id })).doc.includes(KI_SATZ));
-  assert.ok(!(await docxParts(H.advisorToken(), { content: 'Hallo.', title: 'T' })).doc.includes(KI_SATZ));
+  assert.ok((await docxParts(H.advisorToken(), { content: 'Hallo.', title: 'T', tile: 'website', clientId: a.id })).doc.includes(KI_SATZ));
+  assert.ok(!(await docxParts(H.advisorToken(), { content: 'Hallo.', title: 'T', tile: 'website', clientId: b.id })).doc.includes(KI_SATZ));
+  assert.ok(!(await docxParts(H.advisorToken(), { content: 'Hallo.', title: 'T', tile: 'website' })).doc.includes(KI_SATZ));
   // Ein Klient kann die Einstellung eines anderen nicht über die Anfrage erzwingen
-  assert.ok(!(await docxParts(H.clientToken(b.id), { content: 'Hallo.', title: 'T', clientId: a.id })).doc.includes(KI_SATZ));
+  assert.ok(!(await docxParts(H.clientToken(b.id), { content: 'Hallo.', title: 'T', tile: 'website', clientId: a.id })).doc.includes(KI_SATZ));
 });
 
 test('Prüfhilfe erkennt Zahlen, Prozente, Beträge, Daten und Eigennamen', () => {

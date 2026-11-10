@@ -2938,7 +2938,7 @@ async function exportDoc(bodyId, fallbackTitle, btn, presentation){
     const resp=await fetch(API+'/api/analyze/export-docx',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({content,title,presentation:!!presentation})
+      body:JSON.stringify({content,title,presentation:!!presentation,tile:(/^text-gen-b-(.+)$/.exec(bodyId)||[])[1]})
     });
     if(!resp.ok)throw new Error('Export failed');
     const blob=await resp.blob();
@@ -5762,6 +5762,7 @@ function buildTextGen(prefill,form){
         ${(t.id==='website'||t.id==='press'||t.id==='custom')?`<div class="rq-mailfoot" style="padding:10px 20px;border-top:1px solid var(--bd)"><div style="display:flex;justify-content:flex-end"><button type="button" class="rq-mailbtn" onclick="wordpressAblegen('${t.id}')">In WordPress speichern</button></div><div id="wp-msg-${t.id}" role="status" style="font-size:12px;color:var(--mu);margin-top:8px;text-align:right"></div></div>`:''}
         ${t.id==='linkedin'?`<div class="rq-mailfoot" style="display:flex;justify-content:flex-end;padding:10px 20px;border-top:1px solid var(--bd)"><button type="button" class="rq-mailbtn" onclick="linkedinOeffnen('${t.id}')">In LinkedIn öffnen</button></div>`:''}
         ${t.id==='newsletter'?`<div class="rq-mailfoot" style="padding:10px 20px;border-top:1px solid var(--bd)"><div style="display:flex;justify-content:flex-end"><button type="button" class="rq-mailbtn" onclick="ablegenMenue(event,'${t.id}')">In Newsletter-Tool speichern &#9662;</button></div><div id="klv-panel-${t.id}" style="display:none;margin-top:10px"></div><div id="klv-msg-${t.id}" role="status" style="font-size:12px;color:var(--mu);margin-top:8px;text-align:right"></div></div>`:''}
+        ${['website','linkedin','social','newsletter','press','speech'].indexOf(t.id)>=0?`<div class="rq-kirow" style="padding:10px 20px;border-top:1px solid var(--bd);font-size:12px;color:var(--mu);display:flex;gap:10px;align-items:center;flex-wrap:wrap"><label style="display:flex;gap:6px;align-items:center;cursor:pointer;color:var(--tx)"><input type="checkbox" class="rq-ki-cb" onchange="rqKiSet(this)"> KI-Hinweis anfügen</label><span>Von der Beraterin geprüfte Texte erscheinen ohne Hinweis.</span><a href="#" onclick="rqPruefnachweis();return false" style="margin-left:auto;color:var(--mu)">Prüfnachweis</a><span class="rq-ki-msg"></span></div>`:''}
       </div>
     </div>`).join('');
 
@@ -6908,7 +6909,7 @@ function cp(id){navigator.clipboard.writeText(document.getElementById(id).textCo
 function mailTeile(id){
   const el=document.getElementById('text-gen-b-'+id);if(!el)return null;
   let t=(el.innerText||el.textContent||'').replace(/\r/g,'').trim();
-  if(window.rqWithSatz)t=window.rqWithSatz(t);
+  // E-Mail ist nicht öffentlich: kein KI-Hinweis
   const lines=t.split('\n');let i=0;while(i<lines.length&&!lines[i].trim())i++;
   const m=lines[i]&&lines[i].replace(/\*+/g,'').trim().match(/^(Betreff|Subject|Objet|Oggetto)\s*:\s*(.+)$/i);
   if(m)return{betreff:m[2].trim(),body:lines.slice(i+1).join('\n').replace(/^\s*\n/,'').trim()};
@@ -7016,7 +7017,7 @@ function linkedinOeffnen(id){
   const el=document.getElementById('text-gen-b-'+id);if(!el)return;
   let t=(el.innerText||el.textContent||'').replace(/\r/g,'').trim();
   if(!t){alert('Bitte zuerst einen Text erzeugen.');return;}
-  if(window.rqWithSatz)t=window.rqWithSatz(t);
+  if(window.rqWithSatz)t=window.rqWithSatz(t,'linkedin');
   try{navigator.clipboard.writeText(t).catch(()=>{});}catch(e){}
   let url='https://www.linkedin.com/feed/?shareActive=true&text='+encodeURIComponent(t);
   if(url.length>6000)url='https://www.linkedin.com/feed/?shareActive=true';
@@ -15135,7 +15136,10 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
 <script id="rq-ki-js">
 (function(){
   var E=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');};
-  var SATZ='Dieser Text wurde mit KI-Unterstützung erstellt und von Menschen geprüft.';
+  var SATZ='Dieser Text wurde mit KI-Unterstützung erstellt.';
+  var OEFF=['website','linkedin','social','newsletter','press','speech'];
+  function oeffentlich(tile){return OEFF.indexOf(String(tile||'').toLowerCase())>=0;}
+  function tileAusLabel(l){l=String(l||'').toLowerCase();return /website|webseite/.test(l)?'website':/linkedin/.test(l)?'linkedin':/social/.test(l)?'social':/newsletter/.test(l)?'newsletter':/presse|press/.test(l)?'press':/rede|speech/.test(l)?'speech':'';}
   var KI={on:false,cid:null};
   function curCid(){try{return (typeof clientId!=='undefined')?clientId:null;}catch(e){return null;}}
   function isAdvisor(){try{return typeof isAdv!=='undefined'&&!!isAdv;}catch(e){return false;}}
@@ -15145,8 +15149,29 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     if(!cid){KI.on=false;return;}
     try{var r=await api('/api/clients/'+cid+'/ki-hinweis');var d=await r.json();KI.on=!!(r.ok&&d.kiHinweis);}catch(e){KI.on=false;}
   }
-  setTimeout(refreshFlag,2500);
-  setInterval(function(){if(curCid()!==KI.cid)refreshFlag();},4000);
+  // Kästchen unter den öffentlichen Ergebnisfeldern mit der Einstellung abgleichen
+  function syncCbs(){document.querySelectorAll('.rq-ki-cb').forEach(function(cb){cb.checked=!!KI.on;});}
+  window.rqKiSet=function(cb){
+    var cid=curCid(),row=cb.closest('.rq-kirow'),msg=row&&row.querySelector('.rq-ki-msg');
+    if(!cid){cb.checked=!cb.checked;return;}
+    if(msg)msg.textContent='Speichert …';
+    api('/api/clients/'+cid+'/ki-hinweis',{method:'PUT',body:JSON.stringify({kiHinweis:cb.checked})}).then(function(r){
+      if(r.ok){KI.on=cb.checked;syncCbs();if(msg)msg.textContent='Gespeichert.';}
+      else{cb.checked=!cb.checked;if(msg)msg.textContent=r.status===403?'Das darf nur die Rolle Admin.':'Konnte nicht gespeichert werden.';}
+    }).catch(function(){cb.checked=!cb.checked;if(msg)msg.textContent='Konnte nicht gespeichert werden.';});
+  };
+  // Prüfnachweis als CSV: welche Texte die Beraterin geprüft hat (ohne Textinhalt)
+  window.rqPruefnachweis=function(){
+    var cid=curCid();if(!cid)return;
+    api('/api/clients/'+cid+'/pruefnachweis?format=csv').then(function(r){
+      if(!r.ok)throw new Error(r.status);return r.blob();
+    }).then(function(b){
+      var u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='Pruefnachweis.csv';document.body.appendChild(a);a.click();
+      setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(u);},100);
+    }).catch(function(){alert('Der Prüfnachweis konnte nicht geladen werden. Er steht dem Hauptzugang und der Rolle Admin zur Verfügung.');});
+  };
+  setTimeout(function(){refreshFlag().then(syncCbs);},2500);
+  setInterval(function(){if(curCid()!==KI.cid)refreshFlag().then(syncCbs);else syncCbs();},4000);
   // ── Word-Export: Beraterin schickt die Klienten-Nummer mit, damit der Server die richtige Einstellung liest ──
   var _fetch=window.fetch;
   window.fetch=function(url,opts){
@@ -15158,19 +15183,22 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     return _fetch.call(this,url,opts);
   };
   // ── Kopieren: Satz anhängen, wenn der Schalter an ist ──
-  function withSatz(t){return KI.on&&t?String(t).replace(/\s+$/,'')+'\n\n'+SATZ:t;}
+  // Der Hinweis steht nur bei öffentlichen Textarten (Website, LinkedIn, Social Media, Newsletter, Presse, Rede). Ohne Angabe der Textart gibt es keinen Hinweis.
+  function withSatz(t,tile){return KI.on&&t&&oeffentlich(tile)?String(t).replace(/\s+$/,'')+'\n\n'+SATZ:t;}
   window.rqWithSatz=withSatz;
   var _cp=window.cp;
   if(typeof _cp==='function')window.cp=function(id){
-    if(!KI.on)return _cp.apply(this,arguments);
+    var m=/^text-gen-b-(.+)$/.exec(String(id));
+    if(!KI.on||!m||!oeffentlich(m[1]))return _cp.apply(this,arguments);
     var el=document.getElementById(id);if(!el)return;
-    navigator.clipboard.writeText(withSatz(el.textContent)).catch(function(){});
+    navigator.clipboard.writeText(withSatz(el.textContent,m[1])).catch(function(){});
   };
   var _ch=window.cpHistText;
   if(typeof _ch==='function')window.cpHistText=async function(id){
     if(!KI.on)return _ch.apply(this,arguments);
     var h=await histEnsureFull(id);
-    if(h)navigator.clipboard.writeText(withSatz(h.result||'')).catch(function(){});
+    if(h&&oeffentlich(tileAusLabel(h.module_label)))navigator.clipboard.writeText(withSatz(h.result||'',tileAusLabel(h.module_label))).catch(function(){});
+    else return _ch.apply(this,arguments);
   };
   // ── Prüfhinweis unter jedem Ergebnis, regelbasiert, ohne Pop-up ──
   var timers=new WeakMap();
@@ -15211,8 +15239,8 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
       var cid=_wsClientId;if(!cid)return;
       var box=document.createElement('div');box.style.cssText='margin:0 0 18px;padding:14px 16px;border:1px solid var(--bd);background:#fff';
       box.innerHTML='<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin-bottom:6px">Hinweis auf KI-Unterstützung</div>'
-        +'<div style="font-size:12.5px;color:var(--mu);margin-bottom:8px">Standardmässig aus. Wenn aktiv, hängen die Word-Exporte und die Funktion Kopieren diesen Satz an: «'+E(SATZ)+'» In den Word-Dokumenteigenschaften steht der KI-Hinweis immer.</div>'
-        +'<label style="font-size:14px;display:flex;gap:8px;align-items:center"><input type="checkbox" id="rqki-on"> Hinweis auf KI-Unterstützung unter exportierten Texten anfügen</label> <span class="rq-hint" id="rqki-msg" style="font-size:12px;color:var(--mu)"></span>';
+        +'<div style="font-size:12.5px;color:var(--mu);margin-bottom:8px">Standardmässig aus. Der Kunde kann den Schalter auch selbst setzen. Wenn aktiv, hängen Word-Export und Kopieren diesen Satz an: «'+E(SATZ)+'» Das gilt nur für öffentliche Textarten (Website, LinkedIn, Social Media, Newsletter, Presse, Rede). Von der Beraterin geprüfte Texte erscheinen ohne Hinweis. In den Word-Dokumenteigenschaften steht der KI-Hinweis immer.</div>'
+        +'<label style="font-size:14px;display:flex;gap:8px;align-items:center"><input type="checkbox" id="rqki-on"> Hinweis auf KI-Unterstützung unter öffentlichen Texten anfügen</label> <span class="rq-hint" id="rqki-msg" style="font-size:12px;color:var(--mu)"></span>';
       body.insertBefore(box,body.firstChild);
       var cb=box.querySelector('#rqki-on'),msg=box.querySelector('#rqki-msg');
       api('/api/clients/'+cid+'/ki-hinweis').then(function(r){return r.json();}).then(function(d){cb.checked=!!(d&&d.kiHinweis);}).catch(function(){});

@@ -4,7 +4,14 @@ const { pool } = require('../db');
 const { ensureSchema } = require('./schemaRedesign');
 
 const KI_FELD = 'Erstellt mit KI-Unterstützung (RhetorIQ)';
-const KI_SATZ = 'Dieser Text wurde mit KI-Unterstützung erstellt und von Menschen geprüft.';
+// Der Satz steht nur unter ungeprüften Texten. Er behauptet deshalb nur die KI-Unterstützung. Von der Beraterin geprüfte Texte
+// erscheinen ohne Hinweis (der Nachweis der Prüfung liegt in der Plattform, siehe routes/kiHinweis.js).
+const KI_SATZ = 'Dieser Text wurde mit KI-Unterstützung erstellt.';
+
+// Öffentliche Textarten (Kennzeichnung ist dort ein Thema). Interne und persönliche Texte wie E-Mail und Brief bleiben ohne Hinweis.
+// Die Namen sind die Kacheln des Text-Generators (tile).
+const OEFFENTLICHE_TEXTARTEN = ['website', 'linkedin', 'social', 'newsletter', 'press', 'speech'];
+function istOeffentlich(tile) { return OEFFENTLICHE_TEXTARTEN.includes(String(tile || '').toLowerCase()); }
 
 // Zusätzliche Optionen für new Document(...) der docx-Bibliothek
 function docMeta() {
@@ -39,4 +46,4 @@ async function flagForRequest(req, requestedClientId) {
   return false;
 }
 
-module.exports = { KI_FELD, KI_SATZ, docMeta, hinweisParagraph, getFlag, flagForRequest };
+module.exports = { KI_FELD, KI_SATZ, OEFFENTLICHE_TEXTARTEN, istOeffentlich, docMeta, hinweisParagraph, getFlag, flagForRequest };
