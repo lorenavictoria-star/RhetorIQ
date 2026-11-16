@@ -282,6 +282,16 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
     } catch (e) { fehler(res, e); }
   });
 
+  // Test löschen (zum Beispiel eigene Testläufe). Der Platz für die Webseite wird dadurch wieder frei.
+  router.delete('/:id', async (req, res) => {
+    try {
+      const r = await holen(req.params.id);
+      if (!r) return res.status(404).json({ error: 'Test «Wie klingt Ihre Firma?» nicht gefunden.' });
+      await pool.query('DELETE FROM schnelltests WHERE id=$1', [r.id]);
+      res.json({ ok: true });
+    } catch (e) { fehler(res, e); }
+  });
+
   router.get('/:id/pdf', async (req, res) => {
     try {
       const r = await holen(req.params.id);

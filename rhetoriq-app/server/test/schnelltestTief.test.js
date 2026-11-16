@@ -304,3 +304,16 @@ test('Hinweis-Mail an Lorena nennt Firma, Kennzahlen, Kandidaten und den Link', 
   for (const w of ['https://muster.ch/', 'a@b.ch', 'Wörter pro Satz', 'Floskeln:', '1. [Satzbau]', '2. [Satzbau, automatisch]', '/#schnelltest-7', 'Hallo Lorena', 'schaust du die Auswahl durch']) assert.ok(m.text.includes(w), w);
   assert.ok(!/[–—]/.test(m.text));
 });
+
+test('Beraterin kann einen Test löschen, Gäste nicht', async () => {
+  const app = await H.startApp([['/api/schnelltests', require('../routes/schnelltest').advisorRouter]]);
+  try {
+    const tok = H.advisorToken();
+    const { rows } = await pool.query(`INSERT INTO schnelltests (url, host, email) VALUES ('https://loesch.ch','loesch.ch','l@test.ch') RETURNING id`);
+    const id = rows[0].id;
+    assert.equal((await app.call('DELETE', '/api/schnelltests/' + id, {})).status, 401, 'ohne Anmeldung');
+    assert.equal((await app.call('DELETE', '/api/schnelltests/' + id, { token: tok })).status, 200);
+    assert.equal((await pool.query('SELECT 1 FROM schnelltests WHERE id=$1', [id])).rows.length, 0);
+    assert.equal((await app.call('DELETE', '/api/schnelltests/' + id, { token: tok })).status, 404, 'zweimal löschen');
+  } finally { await app.close(); }
+});

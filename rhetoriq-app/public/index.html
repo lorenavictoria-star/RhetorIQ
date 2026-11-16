@@ -14343,6 +14343,17 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
   }
 
   // ── Liste ──
+  async function loesche(x){
+    var frage='Den Test für '+(x.firma||x.host)+' endgültig löschen? Webseite, E-Mail-Adresse und Auswertung werden entfernt.';
+    var ok=typeof window.rqConfirm==='function'?await window.rqConfirm(frage,{ok:'Löschen'}):confirm(frage);
+    if(!ok)return;
+    try{
+      await call('/api/schnelltests/'+x.id,'DELETE');
+      if(st.d&&st.d.id===x.id)st.d=null;
+      await laden();
+      meldung('Der Test für '+(x.firma||x.host)+' wurde gelöscht.');
+    }catch(e){meldung(e.message,true);}
+  }
   function zeichneListe(){
     var box=$('st-body');if(!box)return;box.textContent='';
     if(!st.liste.length){box.appendChild(h('p',{class:'rq-hint',text:'Noch keine Tests «Wie klingt Ihre Firma?». Sobald jemand auf der Webseite den Test «Wie klingt Ihre Firma?» ausfüllt, erscheint er hier.'}));return;}
@@ -14353,7 +14364,8 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
         h('span',{class:'st-meta',text:datum(x.created_at)+(x.bereit?'':', Analyse läuft')}),
         h('span',{class:'st-chip st-'+x.status,text:STATUS[x.status]||x.status})
       ]);
-      ul.appendChild(h('li',null,[b]));
+      var del=h('button',{type:'button',class:'rq-btn ghost st-del','aria-label':'Test '+x.host+' löschen',onclick:function(){loesche(x);}},['Löschen']);
+      ul.appendChild(h('li',{class:'st-li'},[b,del]));
     });
     box.appendChild(ul);
   }
@@ -14499,6 +14511,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
   function zeichneDetail(){
     var box=$('st-body');if(!box||!st.d)return;box.textContent='';var d=st.d,ro=gesendet();
     box.appendChild(h('button',{type:'button',class:'rq-btn ghost sm',text:'Zurück zur Liste',onclick:schliesse}));
+    box.appendChild(h('button',{type:'button',class:'rq-btn ghost sm st-del',text:'Test löschen',onclick:function(){loesche({id:d.id,host:d.host,firma:d.firma});}}));
     box.appendChild(h('div',{class:'st-kopf'},[h('div',{class:'ks-h2',text:d.host}),h('span',{class:'st-chip st-'+d.status,text:STATUS[d.status]||d.status})]));
     box.appendChild(h('p',{class:'rq-hint',text:d.url+'  ·  '+d.email+'  ·  '+datum(d.created_at)+'  ·  gelesene Seiten: '+(d.mehrseiten_gelesen||1)+(ro&&d.gesendet_am?'  ·  gesendet am '+datum(d.gesendet_am):'')}));
     if(!d.kandidaten){box.appendChild(h('p',{class:'rq-hint',text:'Die tiefe Analyse läuft noch oder ist fehlgeschlagen. Bitte öffne diese Seite in ein bis zwei Minuten erneut.'}));return;}
@@ -14561,6 +14574,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
 .st-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .st-row{width:100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:48px;padding:8px 12px;border:1px solid var(--bd);background:#fff;font:inherit;color:var(--tx);cursor:pointer;text-align:left}
 .st-row:hover{border-color:var(--ac)}
+.st-li{display:flex;gap:8px;align-items:stretch}.st-li .st-row{flex:1;width:auto}.st-del{white-space:nowrap}
 .st-row:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 .st-firma{font-weight:600;flex:1;min-width:140px}
 .st-meta{font-size:13.5px;color:var(--mu)}
