@@ -270,15 +270,14 @@ test('Versand: genau drei nötig, sendet PDF-Anhang an die Firma, setzt gesendet
 });
 
 test('mit vier Auffälligkeiten darf das PDF vier Seiten haben', async () => {
-  const put = (x) => app.call('PUT', '/api/schnelltests/' + id, { token: tok, body: x });
-  await put({ auswahl: ['k1', 'k2', 'k3', 'k4'] });
-  const r = await app.call('GET', '/api/schnelltests/' + id + '/pdf', { token: tok, raw: true });
+  const kand = [1, 2, 3, 4].map(KAND);
+  const r0 = await pool.query(`INSERT INTO schnelltests (url, host, email, kandidaten, auswahl, status) VALUES ('https://vier.ch','vier.ch','v@vier.ch',$1,$2,'freigegeben') RETURNING id`, [JSON.stringify(kand), JSON.stringify(['k1', 'k2', 'k3', 'k4'])]);
+  const r = await app.call('GET', '/api/schnelltests/' + r0.rows[0].id + '/pdf', { token: tok, raw: true });
   assert.equal(r.status, 200);
   assert.equal(r.headers.get('x-seiten-max'), '4');
   assert.ok(Number(r.headers.get('x-seiten')) <= 4);
   assert.equal(require('../lib/schnelltestPdf').seitenLimit(3), 3);
   assert.equal(require('../lib/schnelltestPdf').seitenLimit(6), 5);
-  await put({ auswahl: ['k1', 'k2', 'k3'] });
 });
 
 test('Zu lange Texte: Vorschau meldet mehr als drei Seiten, Versand wird abgelehnt und der Status bleibt', async () => {
