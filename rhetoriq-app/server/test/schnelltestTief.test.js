@@ -317,3 +317,17 @@ test('Beraterin kann einen Test löschen, Gäste nicht', async () => {
     assert.equal((await app.call('DELETE', '/api/schnelltests/' + id, { token: tok })).status, 404, 'zweimal löschen');
   } finally { await app.close(); }
 });
+
+test('Begleitmail gibt es in Sie- und du-Form, du klein geschrieben', () => {
+  const M = require('../lib/schnelltestMails');
+  const sie = M.begleitMail('muster.ch'), du = M.begleitMail('muster.ch', 'du');
+  assert.match(sie.text, /Ich habe mir die Texte auf muster\.ch/);
+  assert.ok(!/\bdu\b|\bdir\b/.test(sie.text));
+  assert.match(du.text, /danke, dass du den Test/);
+  assert.match(du.text, /findest du die Auswertung/);
+  assert.ok(!/\b(Du|Dir|Dein|Deine)\b/.test(du.text.replace(/^Deine Auswertung/, '')), 'Anrede klein');
+  assert.match(du.betreff, /muster\.ch/);
+  assert.match(sie.text, /Antworten Sie dazu einfach auf diese Mail/);
+  assert.match(du.text, /Antworte dazu einfach auf diese Mail/);
+  assert.ok(!/Ich melde mich dazu/.test(sie.text + du.text), 'die Person meldet sich, nicht Lorena');
+});

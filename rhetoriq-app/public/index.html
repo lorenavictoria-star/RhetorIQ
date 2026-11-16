@@ -14394,13 +14394,22 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
   function zaehlerText(){return st.auswahl.length+' von 3 ausgewählt';}
   function aktualisiereZaehler(){
     var z=$('st-zaehler');if(z)z.textContent=zaehlerText();
-    document.querySelectorAll('.st-cb').forEach(function(cb){cb.disabled=gesendet()||(!cb.checked&&st.auswahl.length>=3);});
+    document.querySelectorAll('.st-cb').forEach(function(cb){cb.disabled=gesendet();});
   }
   function kandidatKarte(c){
     var cb=h('input',{type:'checkbox',class:'st-cb','aria-label':'Auffälligkeit auswählen: '+c.titel,'data-id':c.id});
     cb.checked=st.auswahl.indexOf(c.id)>=0;
     cb.addEventListener('change',function(){
-      if(cb.checked){if(st.auswahl.length>=3){cb.checked=false;meldung('Du kannst höchstens drei Auffälligkeiten auswählen.',true);return;}st.auswahl.push(c.id);}
+      if(cb.checked){
+        if(st.auswahl.length>=3){
+          // Drei sind schon gewählt: das älteste Häkchen wird getauscht, so lässt sich die Vorauswahl mit einem Klick ändern
+          var raus=st.auswahl.shift();
+          var box=document.querySelector('.st-cb[data-id="'+raus+'"]');if(box)box.checked=false;
+          var ct=(st.d&&st.d.kandidaten||[]).filter(function(k){return k.id===raus;})[0];
+          st.auswahl.push(c.id);
+          meldung('Es sind höchstens drei möglich. «'+(ct?ct.titel:'Die erste Auswahl')+'» ist nicht mehr gewählt.');aktualisiereZaehler();return;
+        }
+        st.auswahl.push(c.id);}
       else st.auswahl=st.auswahl.filter(function(x){return x!==c.id;});
       meldung('');aktualisiereZaehler();
     });
@@ -14548,6 +14557,19 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     box.appendChild(tb);
     box.appendChild(h('div',{class:'ks-h2',text:'Begleitmail an die Firma'}));
     var bm=d.begleitmail||{betreff:'',text:''};
+    var bmDu=d.begleitmail_du||null;
+    if(bmDu&&!ro){
+      var anr=h('select',{class:'rq-in',id:'st-anrede','aria-label':'Anrede in der Mail'},[h('option',{value:'sie',text:'Sie'}),h('option',{value:'du',text:'du'})]);
+      anr.dataset.vorher='sie';
+      anr.addEventListener('change',function(){
+        var neu=anr.value==='du'?bmDu:bm,alt=anr.dataset.vorher==='du'?bmDu:bm;
+        var be=$('st-betreff'),tx=$('st-mail');
+        var geaendert=(be&&be.value!==alt.betreff)||(tx&&tx.value!==alt.text);
+        if(geaendert&&!confirm('Betreff und Text wurden geändert. Durch die Auswahl werden sie ersetzt. Fortfahren?')){anr.value=anr.dataset.vorher;return;}
+        if(be)be.value=neu.betreff;if(tx)tx.value=neu.text;anr.dataset.vorher=anr.value;
+      });
+      box.appendChild(h('label',{class:'st-feld'},[h('span',{class:'st-fl',text:'Anrede in der Mail'}),anr]));
+    }
     box.appendChild(h('label',{class:'st-feld'},[h('span',{class:'st-fl',text:'Betreff'}),h('input',{type:'text',class:'rq-in',id:'st-betreff',maxlength:200,value:bm.betreff,disabled:ro||false})]));
     box.appendChild(feld('Text der Mail (das PDF hängt automatisch an)','st-mail',bm.text,10,6000));
     box.appendChild(h('div',{class:'tp-bar'},[h('button',{type:'button',class:'rq-btn ghost tp-sm',text:'In Mail öffnen',onclick:function(){mailOeffnen(d.id,true);}}),h('button',{type:'button',class:'rq-btn ghost tp-sm',text:'In Gmail öffnen',onclick:gmailOeffnen}),h('button',{type:'button',class:'rq-btn tp-sm',text:ro?'Schon gesendet':'An Kunden senden',disabled:ro,onclick:senden})]));

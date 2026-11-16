@@ -206,7 +206,7 @@ function detail(r) {
   return {
     ...zeile(r), befunde: jsonSpalte(r.befunde, []), kandidaten: jsonSpalte(r.kandidaten, null), kennzahlen: jsonSpalte(r.kennzahlen, null),
     gesamteindruck: r.gesamteindruck || '', staerken: jsonSpalte(r.staerken, []), auswahl: jsonSpalte(r.auswahl, []) || [], lorena_notiz: r.lorena_notiz || '',
-    begleitmail: MAILS.begleitMail(r.host), naechsterSchritt: NEXT_STEP
+    begleitmail: MAILS.begleitMail(r.host), begleitmail_du: MAILS.begleitMail(r.host, 'du'), naechsterSchritt: NEXT_STEP
   };
 }
 function pdfDaten(r) {
