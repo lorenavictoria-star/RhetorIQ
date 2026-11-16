@@ -14430,7 +14430,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
       var blob=await r.blob(),u=URL.createObjectURL(blob),a=document.createElement('a');
       a.href=u;a.download='Test «Wie klingt Ihre Firma?»_'+st.d.host+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},1000);
       var n=parseInt(r.headers.get('X-Seiten'),10);
-      if(n>3)meldung('Das PDF hat '+n+' Seiten, weil die Texte sehr lang sind. Kürze die gewählten Auffälligkeiten oder Deine Einschätzung, sonst lässt es sich nicht senden.',true);
+      if(n>3)meldung('Das PDF hat '+n+' Seiten, weil die Texte sehr lang sind. Kürze die gewählten Auffälligkeiten oder deine Einschätzung, sonst lässt es sich nicht senden.',true);
       else meldung('Das PDF wurde heruntergeladen.');
     }catch(e){meldung(e.message,true);}
   }
@@ -14485,7 +14485,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     }catch(e){alert(e.message||'Der Mail-Entwurf konnte nicht erstellt werden.');}
   };
   async function senden(){
-    if(st.auswahl.length!==3){meldung('Wähle genau drei Auffälligkeiten aus, bevor Du sendest.',true);return;}
+    if(st.auswahl.length!==3){meldung('Wähle genau drei Auffälligkeiten aus, bevor du sendest.',true);return;}
     var ok=typeof window.rqConfirm==='function'?await window.rqConfirm('Das PDF jetzt an '+st.d.email+' senden? Das Senden lässt sich nicht zurücknehmen.',{ok:'Senden'}):confirm('Das PDF jetzt an '+st.d.email+' senden?');
     if(!ok)return;
     if(!(await speichern(true)))return;
@@ -14514,7 +14514,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
       box.appendChild(h('ul',{class:'st-kz'},d.staerken.map(function(s){return h('li',null,[h('span',{text:s.titel}),h('span',{class:'st-plain',text:s.text})]);})));
     }
     box.appendChild(h('div',{class:'st-kopf'},[h('div',{class:'ks-h2',text:'Auffälligkeiten'}),h('span',{class:'rq-hint',id:'st-zaehler',text:zaehlerText()})]));
-    box.appendChild(h('p',{class:'rq-hint',text:'Wähle genau drei aus. Die Reihenfolge im PDF folgt der Reihenfolge, in der Du sie anklickst.'}));
+    box.appendChild(h('p',{class:'rq-hint',text:'Wähle genau drei aus. Die Reihenfolge im PDF folgt der Reihenfolge, in der du sie anklickst.'}));
     box.appendChild(h('ul',{class:'st-karten'},d.kandidaten.map(kandidatKarte)));
     box.appendChild(feld('Lorenas Einschätzung (erscheint im PDF)','st-notiz',d.lorena_notiz,5,1500));
     var tb=h('div',{class:'tp-bar'},[

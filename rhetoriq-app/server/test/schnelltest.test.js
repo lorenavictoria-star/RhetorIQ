@@ -75,7 +75,7 @@ test('nach der tiefen Analyse stehen die stärksten Auffälligkeiten (bis drei) 
   assert.ok(auswahl.every(id => kand.some(c => c.id === id)));
   assert.equal(rows[0].status || 'entwurf', 'entwurf', 'Lorena gibt selbst frei');
   const m = H.mails.find(x => x.kind === 'schnelltest_notify');
-  assert.ok(m && m.text.includes('schon für Dich vorgewählt'));
+  assert.ok(m && m.text.includes('schon für dich vorgewählt'));
 });
 
 test('Herkunft, Honeypot und Zeitfalle', async () => {

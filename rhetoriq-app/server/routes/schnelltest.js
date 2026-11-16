@@ -294,7 +294,7 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
       if (!r) return res.status(404).json({ error: 'Test «Wie klingt Ihre Firma?» nicht gefunden.' });
       if (r.status === 'gesendet') return res.status(409).json({ error: 'Dieser Test wurde schon gesendet.' });
       const d = pdfDaten(r);
-      if (d.kandidaten.length !== 3) return res.status(400).json({ error: 'Wähle genau drei Auffälligkeiten aus und speichere die Auswahl, bevor Du sendest.' });
+      if (d.kandidaten.length !== 3) return res.status(400).json({ error: 'Wähle genau drei Auffälligkeiten aus und speichere die Auswahl, bevor du sendest.' });
       if (!EMAIL_RE.test(String(r.email || ''))) return res.status(400).json({ error: 'Die E-Mail-Adresse dieses Schnelltests ist ungültig.' });
       const b = req.body && typeof req.body === 'object' ? req.body : {};
       const betreff = String(b.betreff || '').trim().slice(0, 200), text = String(b.text || '').trim().slice(0, 6000);
@@ -303,7 +303,7 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
       beansprucht = (await pool.query(`UPDATE schnelltests SET status='gesendet', gesendet_am=NOW() WHERE id=$1 AND status<>'gesendet' RETURNING id`, [r.id])).rows[0];
       if (!beansprucht) return res.status(409).json({ error: 'Dieser Test wurde schon gesendet.' });
       const pdf = await require('../lib/schnelltestPdf').erzeugePdf(d);
-      if (pdf.seiten > 3) { await pool.query(`UPDATE schnelltests SET status='freigegeben', gesendet_am=NULL WHERE id=$1`, [r.id]); beansprucht = null; return res.status(409).json({ error: 'Die Texte sind zu lang für drei Seiten. Bitte kürze die gewählten Auffälligkeiten oder Deine Einschätzung.' }); }
+      if (pdf.seiten > 3) { await pool.query(`UPDATE schnelltests SET status='freigegeben', gesendet_am=NULL WHERE id=$1`, [r.id]); beansprucht = null; return res.status(409).json({ error: 'Die Texte sind zu lang für drei Seiten. Bitte kürze die gewählten Auffälligkeiten oder deine Einschätzung.' }); }
       const buf = pdf.buf;
       await queue({ kind: 'schnelltest_kunde', to: r.email, subject: betreff, text, senderName: 'Lorena Lienhard', attachments: [{ name: dateiname(r.host), contentBase64: buf.toString('base64') }] });
       res.json(detail(await holen(r.id)));
