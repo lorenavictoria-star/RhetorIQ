@@ -41,7 +41,7 @@ function begleitMail(host) {
       'Guten Tag', '',
       `vielen Dank für Ihr Interesse am Test «Wie klingt Ihre Firma?». Ich habe mir die Texte auf ${host} in Ruhe angesehen und drei Auffälligkeiten ausgewählt, die mir besonders aufgefallen sind.`, '',
       'Im Anhang finden Sie die Auswertung als PDF. Zu jeder Auffälligkeit zeige ich Ihnen, was ich gelesen habe, warum es so wirkt und wie es sich anders sagen liesse.', '',
-      'Wenn Sie darüber sprechen möchten, melden Sie sich gern direkt bei mir. Ich freue mich auf Ihre Rückmeldung.', '',
+      'Gern bespreche ich die Auswertung in einem kurzen Gespräch mit Ihnen. Ich melde mich dazu in den nächsten Tagen bei Ihnen.', '',
       'Herzlich', 'Lorena Lienhard'
     ].join('\n')
   };

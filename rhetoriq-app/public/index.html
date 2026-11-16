@@ -14434,6 +14434,56 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
       else meldung('Das PDF wurde heruntergeladen.');
     }catch(e){meldung(e.message,true);}
   }
+  // «In Mail öffnen»: baut einen Mail-Entwurf (.eml) an die Firma mit Betreff, Text und dem passenden PDF im Anhang. Ein Doppelklick auf die Datei öffnet ihn im Mailprogramm.
+  function b64Bytes(bytes){var bin='',i,n=bytes.length;for(i=0;i<n;i+=0x8000)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));return btoa(bin);}
+  function b64Zeilen(b){return (b.match(/.{1,76}/g)||[]).join('\r\n');}
+  function b64Text(t){return b64Bytes(new TextEncoder().encode(t));}
+  function mailDatei(an,betreff,text,pdfBytes,pdfName){
+    var gr='----=_RhetorIQ_'+Date.now().toString(36);
+    var k=['X-Unsent: 1','From: Lorena Lienhard <contact@lorenalienhard.ch>','To: '+an,'Subject: =?UTF-8?B?'+b64Text(betreff)+'?=','MIME-Version: 1.0','Content-Type: multipart/mixed; boundary="'+gr+'"','',
+      '--'+gr,'Content-Type: text/plain; charset=UTF-8','Content-Transfer-Encoding: base64','',b64Zeilen(b64Text(text)),'',
+      '--'+gr,'Content-Type: application/pdf; name="'+pdfName+'"','Content-Transfer-Encoding: base64','Content-Disposition: attachment; filename="'+pdfName+'"','',b64Zeilen(b64Bytes(pdfBytes)),'',
+      '--'+gr+'--',''];
+    return new Blob([k.join('\r\n')],{type:'message/rfc822'});
+  }
+  async function mailOeffnen(id,ausDetail){
+    if(st.busy)return;
+    try{
+      var d=(st.d&&st.d.id===id)?st.d:await call('/api/schnelltests/'+id);
+      if(ausDetail&&!gesendet()&&!(await speichern(true)))return;
+      if(ausDetail)d=st.d;
+      if(!d.kandidaten){meldung('Die Analyse läuft noch. Bitte versuche es in einer Minute erneut.',true);return;}
+      if(!(d.auswahl||[]).length){meldung('Wähle zuerst Auffälligkeiten aus, damit das PDF erstellt werden kann.',true);return;}
+      var r=await api('/api/schnelltests/'+id+'/pdf');
+      if(!r.ok){var j=await r.json().catch(function(){return null;});throw new Error((j&&j.error)||'Das PDF konnte nicht erstellt werden.');}
+      var bytes=new Uint8Array(await r.arrayBuffer());
+      var bm=d.begleitmail||{betreff:'',text:''};
+      var bet=(ausDetail&&$('st-betreff')&&$('st-betreff').value)||bm.betreff, txt=(ausDetail&&$('st-mail')&&$('st-mail').value)||bm.text;
+      var name='Auswertung_'+String(d.host||'webseite').replace(/[^A-Za-z0-9._-]/g,'_')+'.pdf';
+      var blob=mailDatei(d.email,bet,txt,bytes,name),u=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=u;a.download='Mail_an_'+String(d.host||'firma').replace(/[^A-Za-z0-9._-]/g,'_')+'.eml';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},1500);
+      var m='Der Mail-Entwurf an '+d.email+' wurde geladen. Öffne die Datei mit einem Doppelklick, dann erscheint die Mail mit dem PDF im Mailprogramm.';
+      if(ausDetail)meldung(m);else alert(m);
+    }catch(e){if(ausDetail)meldung(e.message,true);else alert(e.message||'Der Mail-Entwurf konnte nicht erstellt werden.');}
+  }
+  // «In Gmail öffnen»: Empfänger, Betreff und Text sind vorbereitet, das PDF wird geladen und lässt sich in die Mail ziehen (Gmail nimmt keine Anhänge über Links an).
+  async function gmailOeffnen(){
+    if(st.busy||!st.d)return;
+    if(!(st.auswahl||[]).length){meldung('Wähle zuerst Auffälligkeiten aus, damit das PDF erstellt werden kann.',true);return;}
+    if(!gesendet()&&!(await speichern(true)))return;
+    var d=st.d,bet=($('st-betreff')&&$('st-betreff').value)||'',txt=($('st-mail')&&$('st-mail').value)||'';
+    var fenster=window.open('https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(d.email)+'&su='+encodeURIComponent(bet)+'&body='+encodeURIComponent(txt),'_blank');
+    await vorschau();
+    meldung(fenster?'Gmail ist offen. Das PDF wurde heruntergeladen: Ziehe es in die Mail oder klicke auf die Büroklammer.':'Dein Browser hat das Gmail-Fenster blockiert. Erlaube Pop-ups für diese Seite und klicke erneut.',!fenster);
+  }
+  // Aus dem Eingang: die Hinweis-Mail «Neuer Test …: webseite» führt zum passenden Test
+  window.rqSchnelltestMailAusTitel=async function(titel){
+    var host=String(titel||'').split(':').pop().trim().toLowerCase().replace(/^www\./,'');
+    try{var r=await call('/api/schnelltests');var t=(r.schnelltests||[]).filter(function(x){return String(x.host||'').toLowerCase().replace(/^www\./,'')===host;})[0];
+      if(!t){alert('Zu dieser Webseite habe ich keinen Test gefunden.');return;}
+      await mailOeffnen(t.id,false);
+    }catch(e){alert(e.message||'Der Mail-Entwurf konnte nicht erstellt werden.');}
+  };
   async function senden(){
     if(st.auswahl.length!==3){meldung('Wähle genau drei Auffälligkeiten aus, bevor Du sendest.',true);return;}
     var ok=typeof window.rqConfirm==='function'?await window.rqConfirm('Das PDF jetzt an '+st.d.email+' senden? Das Senden lässt sich nicht zurücknehmen.',{ok:'Senden'}):confirm('Das PDF jetzt an '+st.d.email+' senden?');
@@ -14476,7 +14526,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     var bm=d.begleitmail||{betreff:'',text:''};
     box.appendChild(h('label',{class:'st-feld'},[h('span',{class:'st-fl',text:'Betreff'}),h('input',{type:'text',class:'rq-in',id:'st-betreff',maxlength:200,value:bm.betreff,disabled:ro||false})]));
     box.appendChild(feld('Text der Mail (das PDF hängt automatisch an)','st-mail',bm.text,10,6000));
-    box.appendChild(h('div',{class:'tp-bar'},[h('button',{type:'button',class:'rq-btn tp-sm',text:ro?'Schon gesendet':'An Kunden senden',disabled:ro,onclick:senden})]));
+    box.appendChild(h('div',{class:'tp-bar'},[h('button',{type:'button',class:'rq-btn ghost tp-sm',text:'In Mail öffnen',onclick:function(){mailOeffnen(d.id,true);}}),h('button',{type:'button',class:'rq-btn ghost tp-sm',text:'In Gmail öffnen',onclick:gmailOeffnen}),h('button',{type:'button',class:'rq-btn tp-sm',text:ro?'Schon gesendet':'An Kunden senden',disabled:ro,onclick:senden})]));
     aktualisiereZaehler();
   }
 
@@ -14654,6 +14704,11 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     li.appendChild(h('i',{class:'ti '+(ICON[e.typ]||'ti-bell')+' eg-ic','aria-hidden':'true'}));
     li.appendChild(h('div',{class:'eg-mid'},[dot,haupt]));
     var knoepfe=[btn];
+    if(e.typ==='mail'&&/^Neuer Test «Wie klingt Ihre Firma\?»/.test(e.titel||'')&&typeof window.rqSchnelltestMailAusTitel==='function'){
+      var im=h('button',{type:'button',class:'rq-btn eg-btn','aria-label':'In Mail öffnen: '+(e.titel||'')},['In Mail öffnen']);
+      im.addEventListener('click',function(){im.disabled=true;window.rqSchnelltestMailAusTitel(e.titel).then(function(){im.disabled=false;},function(){im.disabled=false;});});
+      knoepfe.unshift(im);
+    }
     if(LOESCH[e.typ]&&z.id!=null){
       var del=h('button',{type:'button',class:'rq-btn ghost eg-btn eg-del','aria-label':'Löschen: '+(e.titel||'')},['Löschen']);
       del.addEventListener('click',function(){loeschen(e,del);});
