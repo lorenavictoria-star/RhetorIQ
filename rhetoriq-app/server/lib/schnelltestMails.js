@@ -28,6 +28,8 @@ function hinweisMail(a) {
         ? [a.vorauswahl.length === 3 ? 'Die drei stärksten Auffälligkeiten habe ich schon für dich vorgewählt:' : 'Die stärksten Auffälligkeiten habe ich schon für dich vorgewählt (es fehlen noch welche bis drei):', ...a.vorauswahl.map(id => { const c = (a.kandidaten || []).find(x => x.id === id); return c ? '  ' + (1 + (a.kandidaten || []).indexOf(c)) + '. ' + c.titel : null; }).filter(Boolean), '']
         : []),
       `Hier schaust du die Auswahl durch, ergänzt deine Einschätzung und sendest das PDF: ${appUrl()}/#schnelltest-${a.id}`, '',
+      ...(a.mitPdf ? ['Die erste Auswertung hängt als PDF an dieser Mail (mit den vorgewählten Auffälligkeiten).', ''] : []),
+      'Vorbereitete Mail an die Firma:', `An: ${a.email}`, `Betreff: ${begleitMail(a.host).betreff}`, '', begleitMail(a.host).text, '',
       'RhetorIQ'
     ].join('\n')
   };

@@ -49,9 +49,9 @@ function standardDeps() {
   return { generateText: ai.generateText, resolveModelId: ai.resolveModelId, extractJson, fetchHtml: safeFetch.safeFetchHtml, erlaubt: () => require('../lib/budget').allow('schnelltest_tief') };
 }
 // Hinweis-Mail an Lorena (kind schnelltest_notify) mit allem, was die Analyse gefunden hat
-async function meldeLorena(m) {
+async function meldeLorena(m, attachments) {
   const notifyTo = process.env.ADVISOR_NOTIFY_EMAIL || process.env.SMTP_FROM || 'contact@lorenalienhard.ch';
-  await queueEmail({ kind: 'schnelltest_notify', to: notifyTo, subject: m.subject, text: m.text });
+  await queueEmail({ kind: 'schnelltest_notify', to: notifyTo, subject: m.subject, text: m.text, ...(attachments && attachments.length ? { attachments } : {}) });
 }
 // Mail an Lorena, wenn ein Test nicht durchläuft. So kann sie die Person persönlich anschreiben.
 async function meldeFehler({ url, email, grund, art }) {
@@ -84,7 +84,14 @@ async function tiefenJob(j, deps) {
     if (vorauswahl.length) await pool.query(`UPDATE schnelltests SET auswahl=$1 WHERE id=$2 AND auswahl IS NULL`, [JSON.stringify(vorauswahl), j.id]);
     if (a.kiFehler) console.error('[schnelltest] tiefe Analyse ohne KI-Ergebnis:', a.kiFehler);
     if (a.kiFehler === 'Tagesbudget erreicht') await meldeBudget().catch(e => console.error('[schnelltest] Budget-Mail fehlgeschlagen:', e && e.message));
-    await meldeLorena(MAILS.hinweisMail({ id: j.id, url: j.url, host: j.host, email: j.email, kennzahlen, kandidaten: a.kandidaten, mehrseiten: a.mehrseiten, vorauswahl }));
+    // Die erste Auswertung (mit den vorgewählten Auffälligkeiten) hängt als PDF direkt an der Mail an Lorena
+    let anhang = [];
+    try {
+      const row = (await pool.query('SELECT * FROM schnelltests WHERE id=$1', [j.id])).rows[0];
+      const dd = row && pdfDaten(row);
+      if (dd && dd.kandidaten.length) { const pdf = await require('../lib/schnelltestPdf').erzeugePdf(dd); anhang = [{ name: dateiname(j.host), contentBase64: pdf.buf.toString('base64') }]; }
+    } catch (e) { console.error('[schnelltest] PDF für Hinweis-Mail fehlgeschlagen:', e && e.message); }
+    await meldeLorena(MAILS.hinweisMail({ id: j.id, url: j.url, host: j.host, email: j.email, kennzahlen, kandidaten: a.kandidaten, mehrseiten: a.mehrseiten, vorauswahl, mitPdf: anhang.length > 0 }), anhang);
   } catch (e) {
     console.error('[schnelltest] tiefe Analyse fehlgeschlagen:', e && e.message);
     await meldeLorena({ subject: `Neuer Test «Wie klingt Ihre Firma?»: ${j.host}`, text: `Hallo Lorena\n\nEin Test «Wie klingt Ihre Firma?» wurde ausgefüllt. Die tiefe Analyse ist fehlgeschlagen.\n\nWebseite: ${j.url}\nE-Mail: ${j.email}\n\nRhetorIQ` }).catch(() => {});

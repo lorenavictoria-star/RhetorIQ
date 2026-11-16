@@ -76,6 +76,8 @@ test('nach der tiefen Analyse stehen die stärksten Auffälligkeiten (bis drei) 
   assert.equal(rows[0].status || 'entwurf', 'entwurf', 'Lorena gibt selbst frei');
   const m = H.mails.find(x => x.kind === 'schnelltest_notify');
   assert.ok(m && m.text.includes('schon für dich vorgewählt'));
+  assert.ok(m.attachments && m.attachments.length === 1 && Buffer.from(m.attachments[0].contentBase64, 'base64').slice(0, 4).toString() === '%PDF', 'PDF hängt an der Mail an Lorena');
+  assert.ok(m.text.includes('hängt als PDF an dieser Mail') && m.text.includes('An: vw@test.ch') && m.text.includes('Betreff: Ihr Test'), 'vorbereitete Mail steht im Text');
 });
 
 test('Herkunft, Honeypot und Zeitfalle', async () => {
