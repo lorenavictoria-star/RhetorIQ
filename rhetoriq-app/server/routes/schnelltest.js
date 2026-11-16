@@ -335,7 +335,8 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
       await queue({ kind: 'schnelltest_kunde', to: r.email, subject: betreff, text, senderName: 'Lorena Lienhard', attachments: [{ name: dateiname(r.host), contentBase64: buf.toString('base64') }] });
       // Kopie an Lorena mit demselben PDF: landet in ihrem Mailprogramm und lässt sich dort weiterleiten
       const kopieAn = process.env.ADVISOR_NOTIFY_EMAIL || process.env.SMTP_FROM || 'contact@lorenalienhard.ch';
-      queue({ kind: 'schnelltest_kopie', to: kopieAn, subject: 'Kopie: ' + betreff, text: `Kopie der Mail an ${r.email}:\n\n${text}`, senderName: 'RhetorIQ', attachments: [{ name: dateiname(r.host), contentBase64: buf.toString('base64') }] }).catch(e => console.error('[schnelltest] Kopie fehlgeschlagen:', e && e.message));
+      // Ist die Firma-Adresse zugleich Lorenas eigene (Testlauf), käme sonst dieselbe Mail doppelt an
+      if (String(r.email).toLowerCase() !== String(kopieAn).toLowerCase()) queue({ kind: 'schnelltest_kopie', to: kopieAn, subject: 'Kopie: ' + betreff, text: `Kopie der Mail an ${r.email}:\n\n${text}`, senderName: 'RhetorIQ', attachments: [{ name: dateiname(r.host), contentBase64: buf.toString('base64') }] }).catch(e => console.error('[schnelltest] Kopie fehlgeschlagen:', e && e.message));
       res.json(detail(await holen(r.id)));
     } catch (e) {
       if (beansprucht) await pool.query(`UPDATE schnelltests SET status='freigegeben', gesendet_am=NULL WHERE id=$1`, [beansprucht.id]).catch(() => {});
