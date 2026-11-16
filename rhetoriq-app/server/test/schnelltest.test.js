@@ -92,6 +92,22 @@ test('gescheiterter Test meldet Webseite, E-Mail und Grund an Lorena', async () 
   assert.match(m.subject, /nicht durchgelaufen/);
 });
 
+test('technischer Fehler: Person sieht nie «nicht verfügbar», Lorena bekommt die Angaben', async () => {
+  const { makeRouter } = require('../routes/schnelltest');
+  const kaputt = await H.startApp([['/api/schnelltest', makeRouter({ max: 1000, fetchHtml, deps: { generateText: async () => { throw new Error('KI weg'); } } })]]);
+  try {
+    H.mails.length = 0;
+    const r = await post(kaputt, { url: 'fehler.ch', email: 'Wartet2@Test.ch' });
+    assert.equal(r.status, 202);
+    assert.match(r.body.nachricht, /Ihre Angaben sind bei mir angekommen/);
+    assert.ok(!JSON.stringify(r.body).includes('nicht verfügbar'));
+    await new Promise(x => setTimeout(x, 50));
+    const m = H.mails.find(x => x.kind === 'schnelltest_fehler');
+    assert.ok(m && m.text.includes('fehler.ch') && m.text.includes('Wartet2@Test.ch') && m.text.includes('KI weg'));
+    assert.equal((await pool.query(`SELECT 1 FROM schnelltests WHERE host='fehler.ch'`)).rows.length, 0);
+  } finally { await kaputt.close(); }
+});
+
 test('unlesbare KI-Antwort gibt 422 ohne Eintrag', async () => {
   H.ai.reply = 'Keine JSON-Antwort';
   assert.equal((await post(big, { url: 'parse.ch', email: 'p1@test.ch' })).status, 422);
@@ -104,7 +120,8 @@ test('höchstens 150 Tests pro Tag insgesamt', async () => {
   for (let i = 0; i < 150; i++) await pool.query(`INSERT INTO schnelltests (url, host, email) VALUES ($1,$2,$3)`, ['https://x' + i + '.ch', 'x' + i + '.ch', 'x' + i + '@t.ch']);
   const r = await post(big, { url: 'tag.ch', email: 'tag@test.ch' });
   assert.equal(r.status, 429);
-  assert.match(r.body.error, /heute/);
+  assert.match(r.body.error, /Heute sind alle kostenlosen Tests vergeben/);
+  assert.match(r.body.error, /contact@lorenalienhard\.ch/);
   await pool.query(`DELETE FROM schnelltests`);
 });
 

@@ -610,12 +610,12 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
     .then(function(r){return r.json().catch(function(){return {}}).then(function(d){return {ok:r.ok,s:r.status,d:d}})})
     .catch(function(){return {ok:false,s:0,d:{}}})
     .then(function(x){if(!x.ok&&(x.s===0||x.s>=500)&&n<1){m.textContent="One moment, trying once more …";return new Promise(function(r){setTimeout(r,4000)}).then(function(){return go(n+1)})}return x})})(0)
-    .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=((x.s>0&&x.s<500&&x.d&&x.d.error)||"The test «How does your company sound?» is currently unavailable. Please try again later.")+" If it still does not work, write to me at contact@lorenalienhard.ch and I will review your website by hand.";return}
+    .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=(x.d&&x.d.nachricht)||(x.s>0&&x.s<500&&x.d&&x.d.error)||"Thank you for your interest. Please write to me at contact@lorenalienhard.ch and I will review your website personally.";return}
   m.textContent="";o.textContent="";var h=document.createElement("h3");h.textContent="Your three findings";o.appendChild(h);
   var ol=document.createElement("ol");x.d.ergebnis.befunde.forEach(function(s){var li=document.createElement("li");li.textContent=s;ol.appendChild(li)});o.appendChild(ol);
   var p=document.createElement("p");p.className="nx";p.textContent=x.d.ergebnis.naechsterSchritt;o.appendChild(p);
   var a=document.createElement("button");a.type="button";a.className="btn";a.textContent=window.rqGespraechText||"Request a call";a.addEventListener("click",function(){var g=document.getElementById("go");if(g)g.click()});o.appendChild(a);o.hidden=false;f.reset()})
-  .catch(function(){m.textContent="No connection. Please try again. If it still does not work, write to me at contact@lorenalienhard.ch and I will review your website by hand."})
+  .catch(function(){m.textContent="Thank you for your interest. Please write to me at contact@lorenalienhard.ch and I will review your website personally."})
   .then(function(){busy=false;b.disabled=false})})})();
   </script>
   </main>

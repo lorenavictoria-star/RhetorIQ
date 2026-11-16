@@ -18,6 +18,8 @@ const { requireAdvisor } = require('../middleware/auth');
 const ALLOWED_ORIGINS = ['https://rhetoriq.ch', 'https://www.rhetoriq.ch'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const DAILY_MAX = 150;
+const KONTAKT = 'Schreiben Sie mir an contact@lorenalienhard.ch, ich werte Ihre Webseite gern persönlich aus.';
+const ANGEKOMMEN = 'Vielen Dank, Ihre Angaben sind bei mir angekommen. Ich werte Ihre Webseite persönlich aus und melde mich in Kürze per E-Mail bei Ihnen.';
 const clip = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
 
 let tableEnsured = false;
@@ -118,8 +120,8 @@ function makeRouter({ max = 5, fetchHtml = safeFetch.safeFetchHtml, deps: depsIn
 
       await ensureTable();
       const day = await pool.query(`SELECT COUNT(*)::int AS n FROM schnelltests WHERE created_at > NOW() - INTERVAL '24 hours'`);
-      if (day.rows[0].n >= DAILY_MAX) return res.status(429).json({ error: 'Der Test «Wie klingt Ihre Firma?» ist für heute ausgeschöpft. Bitte versuchen Sie es morgen erneut.' });
-      if (!(await require('../lib/budget').allow('schnelltest')).ok) return res.status(429).json({ error: 'Der Test «Wie klingt Ihre Firma?» ist für heute ausgeschöpft. Bitte versuchen Sie es morgen erneut.' });
+      if (day.rows[0].n >= DAILY_MAX) { meldeFehler({ url: req.body.url, email, grund: 'Tageslimit erreicht', art: 'LIMIT' }).catch(() => {}); return res.status(429).json({ error: 'Heute sind alle kostenlosen Tests vergeben. ' + KONTAKT }); }
+      if (!(await require('../lib/budget').allow('schnelltest')).ok) { meldeFehler({ url: req.body.url, email, grund: 'Tagesbudget erreicht', art: 'LIMIT' }).catch(() => {}); return res.status(429).json({ error: 'Heute sind alle kostenlosen Tests vergeben. ' + KONTAKT }); }
       const dup = await pool.query(`SELECT id FROM schnelltests WHERE (host=$1 OR email=$2) AND created_at > NOW() - INTERVAL '24 hours' LIMIT 1`, [host, email]);
       if (dup.rows.length) return res.status(429).json({ error: 'Für diese Webseite oder E-Mail-Adresse wurde in den letzten 24 Stunden schon ein Test erstellt.' });
       // Platz reservieren, damit zwei gleichzeitige Anfragen nicht beide durchkommen
@@ -157,7 +159,8 @@ function makeRouter({ max = 5, fetchHtml = safeFetch.safeFetchHtml, deps: depsIn
       meldeFehler({ url: req.body && req.body.url, email: req.body && req.body.email, grund: e && e.message, art: e && e.code }).catch(() => {});
       if (e.code === 'FETCH' || e.code === 'PARSE') return res.status(422).json({ error: e.message });
       console.error('[schnelltest]', (e && e.stack) || e.message);
-      res.status(500).json({ error: 'Der Test «Wie klingt Ihre Firma?» ist gerade nicht verfügbar. Bitte versuchen Sie es später erneut.' });
+      // Die Person sieht nie eine Fehlermeldung: Lorena hat die Angaben per Mail und meldet sich persönlich
+      res.status(202).json({ ok: true, ergebnis: null, nachricht: ANGEKOMMEN });
     }
   });
   return router;
