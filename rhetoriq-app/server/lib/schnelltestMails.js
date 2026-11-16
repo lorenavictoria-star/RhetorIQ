@@ -42,7 +42,7 @@ function begleitMail(host, anrede) {
     betreff: `Deine Auswertung «Wie klingt Ihre Firma?» für ${host}`,
     text: [
       'Hallo', '',
-      `danke, dass du den Test «Wie klingt Ihre Firma?» gemacht hast. Ich habe mir die Texte auf ${host} in Ruhe angesehen und drei Auffälligkeiten ausgewählt, die mir besonders aufgefallen sind.`, '',
+      `danke, dass du den Test «Wie klingt Ihre Firma?» gemacht hast. Ich habe mir die Texte auf ${host} in Ruhe angesehen und einige Auffälligkeiten ausgewählt, die mir besonders aufgefallen sind.`, '',
       'Im Anhang findest du die Auswertung als PDF. Zu jeder Auffälligkeit zeige ich dir, was ich gelesen habe, warum es so wirkt und wie es sich anders sagen liesse.', '',
       'Gern bespreche ich die Auswertung in einem kurzen Gespräch mit dir. Antworte dazu einfach auf diese Mail, dann finden wir einen Termin.', '',
       'Herzlich', 'Lorena'
@@ -52,7 +52,7 @@ function begleitMail(host, anrede) {
     betreff: `Ihr Test «Wie klingt Ihre Firma?» für ${host}`,
     text: [
       'Guten Tag', '',
-      `vielen Dank für Ihr Interesse am Test «Wie klingt Ihre Firma?». Ich habe mir die Texte auf ${host} in Ruhe angesehen und drei Auffälligkeiten ausgewählt, die mir besonders aufgefallen sind.`, '',
+      `vielen Dank für Ihr Interesse am Test «Wie klingt Ihre Firma?». Ich habe mir die Texte auf ${host} in Ruhe angesehen und einige Auffälligkeiten ausgewählt, die mir besonders aufgefallen sind.`, '',
       'Im Anhang finden Sie die Auswertung als PDF. Zu jeder Auffälligkeit zeige ich Ihnen, was ich gelesen habe, warum es so wirkt und wie es sich anders sagen liesse.', '',
       'Gern bespreche ich die Auswertung in einem kurzen Gespräch mit Ihnen. Antworten Sie dazu einfach auf diese Mail, dann finden wir einen Termin.', '',
       'Herzlich', 'Lorena Lienhard'

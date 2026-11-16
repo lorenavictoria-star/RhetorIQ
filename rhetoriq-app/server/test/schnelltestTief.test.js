@@ -204,9 +204,12 @@ test('Detail enthält Kandidaten, Kennzahlen und eine Begleitmail im Du-freien S
   assert.equal((await app.call('GET', '/api/schnelltests/99999', { token: tok })).status, 404);
 });
 
-test('Auswahl: höchstens drei, nur vorhandene, Status wechselt zwischen entwurf und freigegeben', async () => {
+test('Auswahl: mindestens drei für den Versand, nach oben offen, nur vorhandene, Status wechselt zwischen entwurf und freigegeben', async () => {
   const put = (b) => app.call('PUT', '/api/schnelltests/' + id, { token: tok, body: b });
-  assert.equal((await put({ auswahl: ['k1', 'k2', 'k3', 'k4'] })).status, 400);
+  const vier = await put({ auswahl: ['k1', 'k2', 'k3', 'k4'] });
+  assert.equal(vier.status, 200, 'mehr als drei sind erlaubt');
+  assert.equal(vier.body.status, 'freigegeben');
+  assert.equal(vier.body.auswahl.length, 4);
   assert.equal((await put({ auswahl: ['k1', 'zz'] })).status, 400);
   let r = await put({ auswahl: ['k1', 'k2'] });
   assert.equal(r.status, 200); assert.equal(r.body.status, 'entwurf');
@@ -264,6 +267,18 @@ test('Versand: genau drei nötig, sendet PDF-Anhang an die Firma, setzt gesendet
   assert.equal((await app.call('POST', '/api/schnelltests/' + id + '/senden', { token: tok, body: mail })).status, 409, 'kein zweiter Versand');
   assert.equal(H.mails.length, 2);
   assert.equal((await app.call('PUT', '/api/schnelltests/' + id, { token: tok, body: { auswahl: ['k1'] } })).status, 409, 'nach dem Senden gesperrt');
+});
+
+test('mit vier Auffälligkeiten darf das PDF vier Seiten haben', async () => {
+  const put = (x) => app.call('PUT', '/api/schnelltests/' + id, { token: tok, body: x });
+  await put({ auswahl: ['k1', 'k2', 'k3', 'k4'] });
+  const r = await app.call('GET', '/api/schnelltests/' + id + '/pdf', { token: tok, raw: true });
+  assert.equal(r.status, 200);
+  assert.equal(r.headers.get('x-seiten-max'), '4');
+  assert.ok(Number(r.headers.get('x-seiten')) <= 4);
+  assert.equal(require('../lib/schnelltestPdf').seitenLimit(3), 3);
+  assert.equal(require('../lib/schnelltestPdf').seitenLimit(6), 5);
+  await put({ auswahl: ['k1', 'k2', 'k3'] });
 });
 
 test('Zu lange Texte: Vorschau meldet mehr als drei Seiten, Versand wird abgelehnt und der Status bleibt', async () => {

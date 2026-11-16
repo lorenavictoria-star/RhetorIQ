@@ -14391,7 +14391,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     if(gesendet())ta.disabled=true;
     return h('label',{class:'st-feld'},[h('span',{class:'st-fl',text:label}),ta]);
   }
-  function zaehlerText(){return st.auswahl.length+' von 3 ausgewählt';}
+  function zaehlerText(){return st.auswahl.length+' ausgewählt (mindestens 3, nach oben offen)';}
   function aktualisiereZaehler(){
     var z=$('st-zaehler');if(z)z.textContent=zaehlerText();
     document.querySelectorAll('.st-cb').forEach(function(cb){cb.disabled=gesendet();});
@@ -14400,16 +14400,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     var cb=h('input',{type:'checkbox',class:'st-cb','aria-label':'Auffälligkeit auswählen: '+c.titel,'data-id':c.id});
     cb.checked=st.auswahl.indexOf(c.id)>=0;
     cb.addEventListener('change',function(){
-      if(cb.checked){
-        if(st.auswahl.length>=3){
-          // Drei sind schon gewählt: das älteste Häkchen wird getauscht, so lässt sich die Vorauswahl mit einem Klick ändern
-          var raus=st.auswahl.shift();
-          var box=document.querySelector('.st-cb[data-id="'+raus+'"]');if(box)box.checked=false;
-          var ct=(st.d&&st.d.kandidaten||[]).filter(function(k){return k.id===raus;})[0];
-          st.auswahl.push(c.id);
-          meldung('Es sind höchstens drei möglich. «'+(ct?ct.titel:'Die erste Auswahl')+'» ist nicht mehr gewählt.');aktualisiereZaehler();return;
-        }
-        st.auswahl.push(c.id);}
+      if(cb.checked){st.auswahl.push(c.id);}
       else st.auswahl=st.auswahl.filter(function(x){return x!==c.id;});
       meldung('');aktualisiereZaehler();
     });
@@ -14450,8 +14441,8 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
       if(!r.ok){var j=await r.json().catch(function(){return null;});throw new Error((j&&j.error)||'Das PDF konnte nicht erstellt werden.');}
       var blob=await r.blob(),u=URL.createObjectURL(blob),a=document.createElement('a');
       a.href=u;a.download='Test «Wie klingt Ihre Firma?»_'+st.d.host+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},1000);
-      var n=parseInt(r.headers.get('X-Seiten'),10);
-      if(n>3)meldung('Das PDF hat '+n+' Seiten, weil die Texte sehr lang sind. Kürze die gewählten Auffälligkeiten oder deine Einschätzung, sonst lässt es sich nicht senden.',true);
+      var n=parseInt(r.headers.get('X-Seiten'),10),nmax=parseInt(r.headers.get('X-Seiten-Max'),10)||3;
+      if(n>nmax)meldung('Das PDF hat '+n+' Seiten, erlaubt sind '+nmax+', weil die Texte sehr lang sind. Kürze die gewählten Auffälligkeiten oder deine Einschätzung, sonst lässt es sich nicht senden.',true);
       else meldung('Das PDF wurde heruntergeladen.');
     }catch(e){meldung(e.message,true);}
   }
@@ -14517,7 +14508,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     }catch(e){alert(e.message||'Der Mail-Entwurf konnte nicht erstellt werden.');}
   };
   async function senden(){
-    if(st.auswahl.length!==3){meldung('Wähle genau drei Auffälligkeiten aus, bevor du sendest.',true);return;}
+    if(st.auswahl.length<3){meldung('Wähle mindestens drei Auffälligkeiten aus, bevor du sendest.',true);return;}
     var ok=typeof window.rqConfirm==='function'?await window.rqConfirm('Das PDF jetzt an '+st.d.email+' senden? Das Senden lässt sich nicht zurücknehmen.',{ok:'Senden'}):confirm('Das PDF jetzt an '+st.d.email+' senden?');
     if(!ok)return;
     if(!(await speichern(true)))return;

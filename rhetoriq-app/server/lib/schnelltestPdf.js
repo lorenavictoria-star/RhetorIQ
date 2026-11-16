@@ -173,13 +173,16 @@ function render(daten, g) {
 // daten: { host, url, firma, datum, gesamteindruck, kennzahlen, mehrseiten, staerken, kandidaten (gewählte, bearbeitet), notiz }
 // Ergebnis: { buf, seiten }. Passt der Inhalt auch in der kleinsten Schrift nicht auf drei Seiten, ist seiten grösser als 3,
 // dann darf das PDF nicht versendet werden (nichts wird stillschweigend gekürzt).
+// Erlaubte Seitenzahl: drei Seiten bis drei Auffälligkeiten, danach kommt etwa eine Seite je zwei Auffälligkeiten dazu
+function seitenLimit(n) { return n <= 3 ? 3 : 2 + Math.ceil(n / 2); }
 async function erzeugePdf(daten) {
   let letzte = null;
+  const limit = seitenLimit((daten.kandidaten || []).length);
   for (const g of GRAD) {
     letzte = await render(daten, g);
-    if (letzte.seiten <= 3) return letzte;
+    if (letzte.seiten <= limit) break;
   }
-  return letzte;
+  return { ...letzte, limit };
 }
 
-module.exports = { erzeugePdf, kennzeilen, sauber };
+module.exports = { erzeugePdf, kennzeilen, sauber, seitenLimit };
