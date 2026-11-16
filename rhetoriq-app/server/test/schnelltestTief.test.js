@@ -299,6 +299,6 @@ test('Hinweis-Mail an Lorena nennt Firma, Kennzahlen, Kandidaten und den Link', 
   const k = A.berechneKennzahlen(TEXT);
   const m = M.hinweisMail({ id: 7, url: 'https://muster.ch/', host: 'muster.ch', email: 'a@b.ch', kennzahlen: k, kandidaten: [KAND(1), { ...KAND(2), automatisch: true }], mehrseiten: 3 });
   assert.match(m.subject, /muster\.ch/);
-  for (const w of ['https://muster.ch/', 'a@b.ch', 'Wörter pro Satz', 'Floskeln:', '1. [Satzbau]', '2. [Satzbau, automatisch]', '/#schnelltest-7', 'Hallo Lorena', 'Du']) assert.ok(m.text.includes(w), w);
+  for (const w of ['https://muster.ch/', 'a@b.ch', 'Wörter pro Satz', 'Floskeln:', '1. [Satzbau]', '2. [Satzbau, automatisch]', '/#schnelltest-7', 'Hallo Lorena', 'schaust du die Auswahl durch']) assert.ok(m.text.includes(w), w);
   assert.ok(!/[–—]/.test(m.text));
 });
