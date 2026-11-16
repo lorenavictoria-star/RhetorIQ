@@ -139,7 +139,8 @@ function makeRouter({ max = 5, fetchHtml = safeFetch.safeFetchHtml, deps: depsIn
       const dup = await pool.query(`SELECT COUNT(*)::int AS n FROM schnelltests WHERE (host=$1 OR email=$2) AND created_at > NOW() - INTERVAL '24 hours'`, [host, email]);
       if (dup.rows[0].n >= PRO_ADRESSE_MAX) return res.status(429).json({ error: 'Für diese Webseite oder E-Mail-Adresse wurden in den letzten 24 Stunden schon drei Tests erstellt. Bitte versuchen Sie es morgen erneut.' });
       // Platz reservieren, damit zwei gleichzeitige Anfragen nicht beide durchkommen
-      rowId = (await pool.query(`INSERT INTO schnelltests (url, host, email) VALUES ($1,$2,$3) RETURNING id`, [target.toString(), host, email])).rows[0].id;
+      const nm = require('../lib/namenAusMail').namenAusMail(email);
+      rowId = (await pool.query(`INSERT INTO schnelltests (url, host, email, kontakt_vorname, kontakt_nachname) VALUES ($1,$2,$3,$4,$5) RETURNING id`, [target.toString(), host, email, nm.vorname, nm.nachname])).rows[0].id;
 
       let page;
       try { page = await fetchHtml(target.toString(), { timeoutMs: 8000, maxBytes: 600 * 1024 }); }
@@ -206,7 +207,7 @@ function detail(r) {
   return {
     ...zeile(r), befunde: jsonSpalte(r.befunde, []), kandidaten: jsonSpalte(r.kandidaten, null), kennzahlen: jsonSpalte(r.kennzahlen, null),
     gesamteindruck: r.gesamteindruck || '', staerken: jsonSpalte(r.staerken, []), auswahl: jsonSpalte(r.auswahl, []) || [], lorena_notiz: r.lorena_notiz || '',
-    begleitmail: MAILS.begleitMail(r.host), begleitmail_du: MAILS.begleitMail(r.host, 'du'), naechsterSchritt: NEXT_STEP
+    kontakt_vorname: r.kontakt_vorname || '', kontakt_nachname: r.kontakt_nachname || '', begleitmail: MAILS.begleitMail(r.host, 'sie', { vorname: r.kontakt_vorname, nachname: r.kontakt_nachname }), begleitmail_du: MAILS.begleitMail(r.host, 'du', { vorname: r.kontakt_vorname, nachname: r.kontakt_nachname }), naechsterSchritt: NEXT_STEP
   };
 }
 function pdfDaten(r) {
@@ -282,9 +283,11 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
       }
       const notiz = b.lorena_notiz !== undefined ? String(b.lorena_notiz).slice(0, NOTIZ_MAX) : (r.lorena_notiz || '');
       const eindruck = b.gesamteindruck !== undefined ? String(b.gesamteindruck).trim().slice(0, 700) : (r.gesamteindruck || '');
+      const vor = b.kontakt_vorname !== undefined ? String(b.kontakt_vorname).trim().slice(0, 60) : (r.kontakt_vorname || '');
+      const nach = b.kontakt_nachname !== undefined ? String(b.kontakt_nachname).trim().slice(0, 60) : (r.kontakt_nachname || '');
       const status = auswahl.length >= 3 ? 'freigegeben' : 'entwurf';
-      await pool.query(`UPDATE schnelltests SET kandidaten=$1, auswahl=$2, lorena_notiz=$3, gesamteindruck=$4, kennzahlen=$5, status=$6 WHERE id=$7 AND status<>'gesendet'`,
-        [JSON.stringify(kand), JSON.stringify(auswahl), notiz, eindruck, kennzahlen == null ? null : JSON.stringify(kennzahlen), status, r.id]);
+      await pool.query(`UPDATE schnelltests SET kandidaten=$1, auswahl=$2, lorena_notiz=$3, gesamteindruck=$4, kennzahlen=$5, status=$6, kontakt_vorname=$8, kontakt_nachname=$9 WHERE id=$7 AND status<>'gesendet'`,
+        [JSON.stringify(kand), JSON.stringify(auswahl), notiz, eindruck, kennzahlen == null ? null : JSON.stringify(kennzahlen), status, r.id, vor, nach]);
       res.json(detail(await holen(r.id)));
     } catch (e) { fehler(res, e); }
   });

@@ -136,7 +136,7 @@ function ensureSchema() {
       )`);
     await pool.query(`CREATE INDEX IF NOT EXISTS schnelltests_created_idx ON schnelltests (created_at DESC)`);
     // Zweite Ausbaustufe: tiefe Analyse, Auswahl durch Lorena, Versandstatus (entwurf, freigegeben, gesendet)
-    for (const c of ['kandidaten jsonb', 'kennzahlen jsonb', 'gesamteindruck text', 'staerken jsonb', 'auswahl jsonb', 'lorena_notiz text',
+    for (const c of ['kandidaten jsonb', 'kennzahlen jsonb', 'gesamteindruck text', 'staerken jsonb', 'auswahl jsonb', 'lorena_notiz text', 'kontakt_vorname text', 'kontakt_nachname text',
       `status text DEFAULT 'entwurf'`, 'gesendet_am timestamptz', 'mehrseiten_gelesen int', 'analyse_fertig_am timestamptz']) {
       await pool.query(`ALTER TABLE schnelltests ADD COLUMN IF NOT EXISTS ${c}`);
     }

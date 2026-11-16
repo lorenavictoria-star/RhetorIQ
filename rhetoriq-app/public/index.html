@@ -14425,7 +14425,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     var kand=(st.d.kandidaten||[]).map(function(c){
       var o={id:c.id};['titel','beobachtung','warum','aha','nachher','wirkung'].forEach(function(f){var e=$('st-f-'+c.id+'-'+f);if(e)o[f]=e.value;});return o;
     });
-    return {kandidaten:kand,auswahl:st.auswahl,lorena_notiz:$('st-notiz').value,gesamteindruck:$('st-eindruck').value,firma:$('st-firma-in').value};
+    return {kandidaten:kand,auswahl:st.auswahl,lorena_notiz:$('st-notiz').value,gesamteindruck:$('st-eindruck').value,firma:$('st-firma-in').value,kontakt_vorname:($('st-vorname')?$('st-vorname').value:undefined),kontakt_nachname:($('st-nachname')?$('st-nachname').value:undefined)};
   }
   async function speichern(still){
     if(st.busy)return false;st.busy=true;
@@ -14549,6 +14549,23 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     box.appendChild(h('div',{class:'ks-h2',text:'Begleitmail an die Firma'}));
     var bm=d.begleitmail||{betreff:'',text:''};
     var bmDu=d.begleitmail_du||null;
+    function anredeZeile(){
+      var v=($('st-vorname')&&$('st-vorname').value.trim())||'',n=($('st-nachname')&&$('st-nachname').value.trim())||'',du=$('st-anrede')&&$('st-anrede').value==='du';
+      return du?(v?'Hallo '+v:'Hallo'):((v&&n)?'Guten Tag '+v+' '+n:'Guten Tag');
+    }
+    function anredeSetzen(){
+      var tx=$('st-mail');if(!tx)return;
+      var zeilen=tx.value.split('\n');
+      if(/^(Guten Tag|Hallo)\b/.test(zeilen[0]||''))zeilen[0]=anredeZeile();
+      tx.value=zeilen.join('\n');
+    }
+    if(!ro){
+      box.appendChild(h('div',{class:'st-namen'},[
+        h('label',{class:'st-feld'},[h('span',{class:'st-fl',text:'Vorname (für die Anrede)'}),h('input',{type:'text',class:'rq-in',id:'st-vorname',maxlength:60,value:d.kontakt_vorname||'',oninput:anredeSetzen})]),
+        h('label',{class:'st-feld'},[h('span',{class:'st-fl',text:'Nachname'}),h('input',{type:'text',class:'rq-in',id:'st-nachname',maxlength:60,value:d.kontakt_nachname||'',oninput:anredeSetzen})])
+      ]));
+      box.appendChild(h('p',{class:'rq-hint',text:'Der Name stammt aus der E-Mail-Adresse, soweit erkennbar. Du kannst ihn ändern. Die Anrede steht ohne Herr oder Frau, damit nichts geraten wird.'}));
+    }
     if(bmDu&&!ro){
       var anr=h('select',{class:'rq-in',id:'st-anrede','aria-label':'Anrede in der Mail'},[h('option',{value:'sie',text:'Sie'}),h('option',{value:'du',text:'du'})]);
       anr.dataset.vorher='sie';
@@ -14557,7 +14574,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
         var be=$('st-betreff'),tx=$('st-mail');
         var geaendert=(be&&be.value!==alt.betreff)||(tx&&tx.value!==alt.text);
         if(geaendert&&!confirm('Betreff und Text wurden geändert. Durch die Auswahl werden sie ersetzt. Fortfahren?')){anr.value=anr.dataset.vorher;return;}
-        if(be)be.value=neu.betreff;if(tx)tx.value=neu.text;anr.dataset.vorher=anr.value;
+        if(be)be.value=neu.betreff;if(tx)tx.value=neu.text;anr.dataset.vorher=anr.value;anredeSetzen();
       });
       box.appendChild(h('label',{class:'st-feld'},[h('span',{class:'st-fl',text:'Anrede in der Mail'}),anr]));
     }
@@ -14598,7 +14615,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
 .st-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .st-row{width:100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:48px;padding:8px 12px;border:1px solid var(--bd);background:#fff;font:inherit;color:var(--tx);cursor:pointer;text-align:left}
 .st-row:hover{border-color:var(--ac)}
-.st-li{display:flex;gap:8px;align-items:stretch}.st-li .st-row{flex:1;width:auto}.st-del{white-space:nowrap}
+.st-namen{display:grid;grid-template-columns:1fr 1fr;gap:10px}.st-li{display:flex;gap:8px;align-items:stretch}.st-li .st-row{flex:1;width:auto}.st-del{white-space:nowrap}
 .st-row:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 .st-firma{font-weight:600;flex:1;min-width:140px}
 .st-meta{font-size:13.5px;color:var(--mu)}

@@ -345,3 +345,36 @@ test('Begleitmail gibt es in Sie- und du-Form, du klein geschrieben', () => {
   assert.match(du.text, /Antworte dazu einfach auf diese Mail/);
   assert.ok(!/Ich melde mich dazu/.test(sie.text + du.text), 'die Person meldet sich, nicht Lorena');
 });
+
+test('Namen aus der E-Mail-Adresse und Anrede ohne Herr oder Frau', () => {
+  const { namenAusMail } = require('../lib/namenAusMail');
+  assert.deepEqual(namenAusMail('anna.muster@firma.ch'), { vorname: 'Anna', nachname: 'Muster' });
+  assert.deepEqual(namenAusMail('Hans-Peter_Meier@firma.ch'), { vorname: 'Hans-Peter', nachname: 'Meier' });
+  assert.deepEqual(namenAusMail('froschauer@alporto.ch'), { vorname: '', nachname: 'Froschauer' });
+  assert.deepEqual(namenAusMail('info@firma.ch'), { vorname: '', nachname: '' });
+  assert.deepEqual(namenAusMail('contact@lorenalienhard.ch'), { vorname: '', nachname: '' });
+  assert.deepEqual(namenAusMail('a.mueller2@firma.ch'), { vorname: '', nachname: '' });
+  assert.deepEqual(namenAusMail('kaputt'), { vorname: '', nachname: 'Kaputt' });
+  const M = require('../lib/schnelltestMails');
+  assert.match(M.begleitMail('x.ch', 'sie', { vorname: 'Anna', nachname: 'Muster' }).text, /^Guten Tag Anna Muster\n/);
+  assert.match(M.begleitMail('x.ch', 'sie', { vorname: '', nachname: 'Muster' }).text, /^Guten Tag\n/);
+  assert.match(M.begleitMail('x.ch', 'du', { vorname: 'Anna', nachname: 'Muster' }).text, /^Hallo Anna\n/);
+  assert.ok(!/Herr|Frau/.test(M.begleitMail('x.ch', 'sie', { vorname: 'Anna', nachname: 'Muster' }).text));
+});
+
+test('Test speichert Vor- und Nachnamen aus der Adresse und lässt sie ändern', async () => {
+  const app2 = await H.startApp([['/api/schnelltests', require('../routes/schnelltest').advisorRouter]]);
+  try {
+    const tok2 = H.advisorToken();
+    const r0 = await pool.query(`INSERT INTO schnelltests (url, host, email, kontakt_vorname, kontakt_nachname, kandidaten) VALUES ('https://n.ch','n.ch','toni.froschauer@n.ch','Toni','Froschauer',$1) RETURNING id`, [JSON.stringify([KAND(1)])]);
+    const id2 = r0.rows[0].id;
+    let r = await app2.call('GET', '/api/schnelltests/' + id2, { token: tok2 });
+    assert.equal(r.body.kontakt_vorname, 'Toni');
+    assert.match(r.body.begleitmail.text, /^Guten Tag Toni Froschauer\n/);
+    assert.match(r.body.begleitmail_du.text, /^Hallo Toni\n/);
+    r = await app2.call('PUT', '/api/schnelltests/' + id2, { token: tok2, body: { kontakt_vorname: 'Anton', kontakt_nachname: 'Froschauer' } });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.kontakt_vorname, 'Anton');
+    assert.match(r.body.begleitmail_du.text, /^Hallo Anton\n/);
+  } finally { await app2.close(); }
+});
