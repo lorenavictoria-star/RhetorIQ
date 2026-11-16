@@ -19,7 +19,7 @@ const ALLOWED_ORIGINS = ['https://rhetoriq.ch', 'https://www.rhetoriq.ch'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const DAILY_MAX = 150;
 const PRO_ADRESSE_MAX = 3;
-const KONTAKT = 'Schreiben Sie mir an contact@lorenalienhard.ch, ich werte Ihre Webseite gern persönlich aus.';
+const KONTAKT = 'Ich werte Ihre Webseite gern persönlich aus und melde mich in Kürze per E-Mail bei Ihnen.';
 const ANGEKOMMEN = 'Vielen Dank, Ihre Angaben sind bei mir angekommen. Ich werte Ihre Webseite persönlich aus und melde mich in Kürze per E-Mail bei Ihnen.';
 const clip = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
 

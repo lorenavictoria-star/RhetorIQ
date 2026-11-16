@@ -143,7 +143,7 @@ test('höchstens 150 Tests pro Tag insgesamt', async () => {
   const r = await post(big, { url: 'tag.ch', email: 'tag@test.ch' });
   assert.equal(r.status, 429);
   assert.match(r.body.error, /Heute sind alle kostenlosen Tests vergeben/);
-  assert.match(r.body.error, /contact@lorenalienhard\.ch/);
+  assert.match(r.body.error, /melde mich in Kürze per E-Mail bei Ihnen/);
   await pool.query(`DELETE FROM schnelltests`);
 });
 

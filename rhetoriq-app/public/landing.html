@@ -621,12 +621,12 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
     .then(function(r){return r.json().catch(function(){return {}}).then(function(d){return {ok:r.ok,s:r.status,d:d}})})
     .catch(function(){return {ok:false,s:0,d:{}}})
     .then(function(x){if(!x.ok&&(x.s===0||x.s>=500)&&n<1){m.textContent="Einen Moment, ich versuche es noch einmal …";return new Promise(function(r){setTimeout(r,4000)}).then(function(){return go(n+1)})}return x})})(0)
-    .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=(x.d&&x.d.nachricht)||(x.s>0&&x.s<500&&x.d&&x.d.error)||"Vielen Dank für Ihr Interesse. Schreiben Sie mir kurz an contact@lorenalienhard.ch, ich werte Ihre Webseite gern persönlich aus.";return}
+    .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=(x.d&&x.d.nachricht)||(x.s>0&&x.s<500&&x.d&&x.d.error)||"Vielen Dank für Ihr Interesse. Ich werte Ihre Webseite persönlich aus und melde mich in Kürze per E-Mail bei Ihnen.";return}
   m.textContent="";o.textContent="";var h=document.createElement("h3");h.textContent="Ihre drei Befunde";o.appendChild(h);
   var ol=document.createElement("ol");x.d.ergebnis.befunde.forEach(function(s){var li=document.createElement("li");li.textContent=s;ol.appendChild(li)});o.appendChild(ol);
   var p=document.createElement("p");p.className="nx";p.textContent=x.d.ergebnis.naechsterSchritt;o.appendChild(p);
   var a=document.createElement("button");a.type="button";a.className="btn";a.textContent=window.rqGespraechText||"Gespräch anfragen";a.addEventListener("click",function(){var g=document.getElementById("go");if(g)g.click()});o.appendChild(a);o.hidden=false;f.reset()})
-  .catch(function(){m.textContent="Vielen Dank für Ihr Interesse. Schreiben Sie mir kurz an contact@lorenalienhard.ch, ich werte Ihre Webseite gern persönlich aus."})
+  .catch(function(){m.textContent="Vielen Dank für Ihr Interesse. Ich werte Ihre Webseite persönlich aus und melde mich in Kürze per E-Mail bei Ihnen."})
   .then(function(){busy=false;b.disabled=false})})})();
   </script>
   </main>
