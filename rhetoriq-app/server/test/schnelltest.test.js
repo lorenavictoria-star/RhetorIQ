@@ -19,6 +19,7 @@ async function post(s, body, { origin = 'https://rhetoriq.ch' } = {}) {
 }
 
 test.before(async () => {
+  process.env.SCHNELLTEST_SOFORT = 'an';
   await H.setupBase();
   const { makeRouter } = require('../routes/schnelltest');
   big = await H.startApp([['/api/schnelltest', makeRouter({ max: 1000, fetchHtml })]]);
@@ -162,4 +163,21 @@ test('Brevo-Inhalt: Antwortadresse nur bei gültiger Adresse', () => {
   assert.deepEqual(buildPayload({ to: 'a@b.ch', subject: 'S', text: 'T', senderName: 'X', replyTo: 'firma@muster.ch' }).replyTo, { email: 'firma@muster.ch' });
   assert.equal(buildPayload({ to: 'a@b.ch', subject: 'S', text: 'T', senderName: 'X', replyTo: 'kaputt' }).replyTo, undefined);
   assert.equal(buildPayload({ to: 'a@b.ch', subject: 'S', text: 'T', senderName: 'X' }).replyTo, undefined);
+});
+
+test('ohne Schalter: nur Bestätigung, keine Befunde, keine Ergebnis-Mail, Analyse läuft für Lorena', async () => {
+  delete process.env.SCHNELLTEST_SOFORT;
+  try {
+    H.mails.length = 0; H.ai.calls.length = 0;
+    const r = await post(big, { url: 'ohnesofort.ch', email: 'os@test.ch' });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.ergebnis, null);
+    assert.match(r.body.nachricht, /melde mich in Kürze per E-Mail bei Ihnen/);
+    await require('../routes/schnelltest').drain();
+    assert.ok(!H.mails.some(x => x.kind === 'schnelltest_ergebnis'), 'keine Kurzauswertung an die Person');
+    assert.ok(H.mails.some(x => x.kind === 'schnelltest_notify' && x.to !== 'os@test.ch'), 'Hinweis-Mail an Lorena');
+    assert.ok(H.ai.calls.every(c => c.meter.module !== 'schnelltest'), 'keine Sofort-KI-Abfrage');
+    const { rows } = await pool.query(`SELECT befunde FROM schnelltests WHERE host='ohnesofort.ch'`);
+    assert.equal(rows.length, 1);
+  } finally { process.env.SCHNELLTEST_SOFORT = 'an'; }
 });

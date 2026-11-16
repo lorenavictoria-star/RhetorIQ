@@ -9,6 +9,7 @@ const A = require('../lib/schnelltestAnalyse');
 const MAILS = require('../lib/schnelltestMails');
 const { requireAdvisor } = require('../middleware/auth');
 
+// Schalter SCHNELLTEST_SOFORT=an: zeigt der Person die drei Befunde sofort und schickt sie per Mail. Ohne Schalter (Standard) bekommt sie nur die Bestätigung.
 // Kostenloser Test «Wie klingt Ihre Firma?» (Lead-Magnet auf der Landingpage).
 //   POST /api/schnelltest  { url, email, website2 (Honeypot), elapsed (Zeitfalle) }  oeffentlich, nur von rhetoriq.ch
 //   Danach läuft im Hintergrund die tiefe Analyse (bis 3 Seiten, Kennzahlen, 6 bis 8 geprüfte Auffälligkeiten) und meldet sich bei Lorena.
@@ -145,6 +146,13 @@ function makeRouter({ max = 5, fetchHtml = safeFetch.safeFetchHtml, deps: depsIn
       catch (e) { throw Object.assign(new Error('Die Webseite konnte nicht geladen werden.'), { code: 'FETCH' }); }
       const text = safeFetch.htmlToText(page.html, 6000);
       if (text.length < 200) throw Object.assign(new Error('Auf der Webseite war zu wenig Text für eine Auswertung zu finden.'), { code: 'FETCH' });
+
+      // Ohne Schalter SCHNELLTEST_SOFORT=an gibt es keine Sofort-Auswertung: Die Person bekommt nur die Bestätigung, Lorena wertet aus und meldet sich
+      if (String(process.env.SCHNELLTEST_SOFORT || '').toLowerCase() !== 'an') {
+        res.json({ ok: true, ergebnis: null, nachricht: ANGEKOMMEN });
+        starteTiefenanalyse({ id: rowId, url: target.toString(), host, email, html: page.html, finalUrl: page.url || target.toString() }, deps);
+        return;
+      }
 
       const resp = await generateText({
         system: SYSTEM,

@@ -588,8 +588,8 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
   <section id="ausprobieren">
     <div class="fin"><div><h3>Try for free</h3><div class="rows"><a href="#schnelltest" id="stlink">How does your company sound?<span aria-hidden="true">&rarr;</span></a></div></div><div><h3>Confidential from the start</h3><p>Your company data stays yours. Before we begin, I put in writing which data RhetorIQ uses and how it is protected.</p></div></div>
     <section id="schnelltest" aria-label="Try for free">
-      <details class="prd" id="stdet"><summary>Voice test: What does your website sound like? Three findings in one minute.<i aria-hidden="true">+</i></summary><div class="prdb">
-      <p>Enter your website address and your email address. You receive a short evaluation of your site's language straight away. The test is free. I see your details and will get in touch personally if needed.</p>
+      <details class="prd" id="stdet"><summary>Voice test: What does your website sound like? Personally reviewed.<i aria-hidden="true">+</i></summary><div class="prdb">
+      <p>Enter your website address and your email address. I will read your texts and get back to you personally with an evaluation of your site's language. The test is free.</p>
       <form class="stf" id="stf" novalidate>
         <label>Website<input id="stu" type="text" inputmode="url" autocomplete="url" placeholder="www.yourcompany.ch" required></label>
         <label>Email<input id="ste" type="email" autocomplete="email" placeholder="name@company.ch" required></label>
@@ -605,12 +605,12 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
   (function(){var f=document.getElementById("stf"),m=document.getElementById("stm"),o=document.getElementById("str"),b=document.getElementById("stb"),t0=Date.now(),busy=false;
   f.addEventListener("submit",function(ev){ev.preventDefault();if(busy)return;var u=f.stu.value.trim(),e=f.ste.value.trim();
   if(!u||!/^\S+@\S+\.\S+$/.test(e)){m.textContent="Please enter your website address and a valid email address.";return}
-  busy=true;b.disabled=true;o.hidden=true;m.textContent="Your website is being read and analysed, which takes about half a minute …";
+  busy=true;b.disabled=true;o.hidden=true;m.textContent="Your details are being sent …";
   (function go(n){return fetch("/api/schnelltest",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:u,email:e,website2:f.stw.value,elapsed:Date.now()-t0})})
     .then(function(r){return r.json().catch(function(){return {}}).then(function(d){return {ok:r.ok,s:r.status,d:d}})})
     .catch(function(){return {ok:false,s:0,d:{}}})
     .then(function(x){if(!x.ok&&(x.s===0||x.s>=500)&&n<1){m.textContent="One moment, trying once more …";return new Promise(function(r){setTimeout(r,4000)}).then(function(){return go(n+1)})}return x})})(0)
-    .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=(x.d&&x.d.nachricht)||(x.s>0&&x.s<500&&x.d&&x.d.error)||"Thank you for your interest. I will review your website personally and get back to you by email shortly.";return}
+    .then(function(x){if(!x.ok||!x.d.ergebnis){if(x.ok)f.reset();m.textContent=(x.d&&x.d.nachricht)||(x.s>0&&x.s<500&&x.d&&x.d.error)||"Thank you for your interest. I will review your website personally and get back to you by email shortly.";return}
   m.textContent="";o.textContent="";var h=document.createElement("h3");h.textContent="Your three findings";o.appendChild(h);
   var ol=document.createElement("ol");x.d.ergebnis.befunde.forEach(function(s){var li=document.createElement("li");li.textContent=s;ol.appendChild(li)});o.appendChild(ol);
   var p=document.createElement("p");p.className="nx";p.textContent=x.d.ergebnis.naechsterSchritt;o.appendChild(p);
