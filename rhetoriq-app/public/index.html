@@ -14489,6 +14489,17 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     meldung(fenster?'Gmail ist offen. Das PDF wurde heruntergeladen: Ziehe es in die Mail oder klicke auf die Büroklammer.':'Dein Browser hat das Gmail-Fenster blockiert. Erlaube Pop-ups für diese Seite und klicke erneut.',!fenster);
   }
   // Aus dem Eingang: die Hinweis-Mail «Neuer Test …: webseite» führt zum passenden Test
+  window.rqSchnelltestOeffneAusTitel=async function(titel){
+    var host=String(titel||'').split(':').pop().trim().toLowerCase().replace(/^www\./,'');
+    try{
+      var r=await call('/api/schnelltests');var x=(r.schnelltests||[]).filter(function(y){return String(y.host||'').toLowerCase().replace(/^www\./,'')===host;})[0];
+      if(!x){alert('Zu dieser Webseite habe ich keinen Test gefunden.');return;}
+      var root=$('st-root');if(root){root.open=true;}
+      st.liste=r.schnelltests||[];
+      await oeffne(x.id);
+      if(root&&root.scrollIntoView)setTimeout(function(){root.scrollIntoView({behavior:'smooth',block:'start'});},150);
+    }catch(e){alert(e.message||'Der Test konnte nicht geöffnet werden.');}
+  };
   window.rqSchnelltestMailAusTitel=async function(titel){
     var host=String(titel||'').split(':').pop().trim().toLowerCase().replace(/^www\./,'');
     try{var r=await call('/api/schnelltests');var t=(r.schnelltests||[]).filter(function(x){return String(x.host||'').toLowerCase().replace(/^www\./,'')===host;})[0];
@@ -14722,6 +14733,9 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
       var im=h('button',{type:'button',class:'rq-btn eg-btn','aria-label':'In Mail öffnen: '+(e.titel||'')},['In Mail öffnen']);
       im.addEventListener('click',function(){im.disabled=true;window.rqSchnelltestMailAusTitel(e.titel).then(function(){im.disabled=false;},function(){im.disabled=false;});});
       knoepfe.unshift(im);
+      var zt=h('button',{type:'button',class:'rq-btn ghost eg-btn','aria-label':'Test öffnen und senden: '+(e.titel||'')},['Test öffnen und senden']);
+      zt.addEventListener('click',function(){window.rqSchnelltestOeffneAusTitel(e.titel);});
+      knoepfe.unshift(zt);
     }
     if(LOESCH[e.typ]&&z.id!=null){
       var del=h('button',{type:'button',class:'rq-btn ghost eg-btn eg-del','aria-label':'Löschen: '+(e.titel||'')},['Löschen']);
