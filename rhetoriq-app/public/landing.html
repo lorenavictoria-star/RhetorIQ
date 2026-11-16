@@ -617,14 +617,16 @@ footer .fl{display:flex;gap:18px;flex-wrap:wrap}
   f.addEventListener("submit",function(ev){ev.preventDefault();if(busy)return;var u=f.stu.value.trim(),e=f.ste.value.trim();
   if(!u||!/^\S+@\S+\.\S+$/.test(e)){m.textContent="Bitte geben Sie die Adresse Ihrer Webseite und eine gültige E-Mail-Adresse an.";return}
   busy=true;b.disabled=true;o.hidden=true;m.textContent="Ihre Webseite wird gelesen und ausgewertet, das dauert etwa eine halbe Minute …";
-  fetch("/api/schnelltest",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:u,email:e,website2:f.stw.value,elapsed:Date.now()-t0})})
-  .then(function(r){return r.json().catch(function(){return {}}).then(function(d){return {ok:r.ok,d:d}})})
-  .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=(x.d&&x.d.error)||"Der Test «Wie klingt Ihre Firma?» ist gerade nicht verfügbar. Bitte versuchen Sie es später erneut.";return}
+  (function go(n){return fetch("/api/schnelltest",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:u,email:e,website2:f.stw.value,elapsed:Date.now()-t0})})
+    .then(function(r){return r.json().catch(function(){return {}}).then(function(d){return {ok:r.ok,s:r.status,d:d}})})
+    .catch(function(){return {ok:false,s:0,d:{}}})
+    .then(function(x){if(!x.ok&&(x.s===0||x.s>=500)&&n<1){m.textContent="Einen Moment, ich versuche es noch einmal …";return new Promise(function(r){setTimeout(r,4000)}).then(function(){return go(n+1)})}return x})})(0)
+    .then(function(x){if(!x.ok||!x.d.ergebnis){m.textContent=((x.s>0&&x.s<500&&x.d&&x.d.error)||"Der Test «Wie klingt Ihre Firma?» ist gerade nicht verfügbar. Bitte versuchen Sie es später erneut.")+" Falls es nicht klappt, schreiben Sie mir an contact@lorenalienhard.ch. Ich werte Ihre Webseite dann von Hand aus.";return}
   m.textContent="";o.textContent="";var h=document.createElement("h3");h.textContent="Ihre drei Befunde";o.appendChild(h);
   var ol=document.createElement("ol");x.d.ergebnis.befunde.forEach(function(s){var li=document.createElement("li");li.textContent=s;ol.appendChild(li)});o.appendChild(ol);
   var p=document.createElement("p");p.className="nx";p.textContent=x.d.ergebnis.naechsterSchritt;o.appendChild(p);
   var a=document.createElement("button");a.type="button";a.className="btn";a.textContent=window.rqGespraechText||"Gespräch anfragen";a.addEventListener("click",function(){var g=document.getElementById("go");if(g)g.click()});o.appendChild(a);o.hidden=false;f.reset()})
-  .catch(function(){m.textContent="Keine Verbindung. Bitte versuchen Sie es erneut."})
+  .catch(function(){m.textContent="Keine Verbindung. Bitte versuchen Sie es erneut. Falls es nicht klappt, schreiben Sie mir an contact@lorenalienhard.ch. Ich werte Ihre Webseite dann von Hand aus."})
   .then(function(){busy=false;b.disabled=false})})})();
   </script>
   </main>

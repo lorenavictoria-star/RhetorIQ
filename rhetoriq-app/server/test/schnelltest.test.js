@@ -82,6 +82,16 @@ test('Webseite nicht ladbar oder leer gibt Fehler und gibt den Platz wieder frei
   assert.equal(rows.length, 0);
 });
 
+test('gescheiterter Test meldet Webseite, E-Mail und Grund an Lorena', async () => {
+  H.mails.length = 0;
+  assert.equal((await post(big, { url: 'kaputt.ch', email: 'Wartet@Test.ch' })).status, 422);
+  await new Promise(r => setTimeout(r, 50));
+  const m = H.mails.find(x => x.kind === 'schnelltest_fehler');
+  assert.ok(m, 'Fehler-Mail an Lorena');
+  assert.ok(m.text.includes('kaputt.ch') && m.text.includes('Wartet@Test.ch') && m.text.includes('Die Webseite konnte nicht geladen werden'), 'Webseite, E-Mail und Grund stehen drin');
+  assert.match(m.subject, /nicht durchgelaufen/);
+});
+
 test('unlesbare KI-Antwort gibt 422 ohne Eintrag', async () => {
   H.ai.reply = 'Keine JSON-Antwort';
   assert.equal((await post(big, { url: 'parse.ch', email: 'p1@test.ch' })).status, 422);

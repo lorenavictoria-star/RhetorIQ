@@ -50,6 +50,13 @@ async function meldeLorena(m) {
   const notifyTo = process.env.ADVISOR_NOTIFY_EMAIL || process.env.SMTP_FROM || 'contact@lorenalienhard.ch';
   await queueEmail({ kind: 'schnelltest_notify', to: notifyTo, subject: m.subject, text: m.text });
 }
+// Mail an Lorena, wenn ein Test nicht durchläuft. So kann sie die Person persönlich anschreiben.
+async function meldeFehler({ url, email, grund, art }) {
+  const notifyTo = process.env.ADVISOR_NOTIFY_EMAIL || process.env.SMTP_FROM || 'contact@lorenalienhard.ch';
+  const u = clip(url, 300), em = clip(email, 200);
+  await queueEmail({ kind: 'schnelltest_fehler', to: notifyTo, subject: `Test «Wie klingt Ihre Firma?» nicht durchgelaufen: ${u || 'ohne Adresse'}`,
+    text: `Hallo Lorena\n\nJemand wollte den Test «Wie klingt Ihre Firma?» machen, er ist aber nicht durchgelaufen.\n\nWebseite: ${u}\nE-Mail: ${em}\nGrund: ${clip(grund, 300)}${art ? ' (' + art + ')' : ''}\n\nBitte melde dich persönlich bei der Person, sie wartet auf eine Auswertung.\n\nRhetorIQ` });
+}
 // Einmal pro Tag eine Mail, sobald das Tagesbudget der tiefen Analyse aufgebraucht ist
 let budgetMailTag = '';
 async function meldeBudget() {
@@ -146,8 +153,10 @@ function makeRouter({ max = 5, fetchHtml = safeFetch.safeFetchHtml, deps: depsIn
       starteTiefenanalyse({ id: rowId, url: target.toString(), host, email, html: page.html, finalUrl: page.url || target.toString() }, deps);
     } catch (e) {
       if (rowId) await pool.query('DELETE FROM schnelltests WHERE id=$1', [rowId]).catch(() => {});
+      // Kein Interessent geht verloren: Lorena bekommt bei jedem gescheiterten Test eine Mail mit Webseite, E-Mail und Grund
+      meldeFehler({ url: req.body && req.body.url, email: req.body && req.body.email, grund: e && e.message, art: e && e.code }).catch(() => {});
       if (e.code === 'FETCH' || e.code === 'PARSE') return res.status(422).json({ error: e.message });
-      console.error('[schnelltest]', e.message);
+      console.error('[schnelltest]', (e && e.stack) || e.message);
       res.status(500).json({ error: 'Der Test «Wie klingt Ihre Firma?» ist gerade nicht verfügbar. Bitte versuchen Sie es später erneut.' });
     }
   });
