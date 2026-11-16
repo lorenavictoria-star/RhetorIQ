@@ -252,15 +252,17 @@ test('Versand: genau drei nötig, sendet PDF-Anhang an die Firma, setzt gesendet
   assert.equal(r.status, 200);
   assert.equal(r.body.status, 'gesendet');
   assert.ok(r.body.gesendet_am);
-  assert.equal(H.mails.length, 1);
-  const m = H.mails[0];
+  assert.equal(H.mails.length, 2, 'Mail an die Firma und Kopie an Lorena');
+  const kopie = H.mails.find(x => x.kind === 'schnelltest_kopie');
+  assert.ok(kopie && kopie.subject === 'Kopie: ' + mail.betreff && kopie.attachments.length === 1 && kopie.text.includes('firma@muster.ch'), 'Kopie an Lorena mit PDF');
+  const m = H.mails.find(x => x.kind === 'schnelltest_kunde');
   assert.equal(m.kind, 'schnelltest_kunde'); assert.equal(m.to, 'firma@muster.ch'); assert.equal(m.subject, mail.betreff);
   assert.equal(m.text, mail.text);
   assert.equal(m.attachments.length, 1);
   assert.match(m.attachments[0].name, /^RhetorIQ_Wie-klingt-Ihre-Firma_muster\.ch\.pdf$/);
   assert.equal(Buffer.from(m.attachments[0].contentBase64, 'base64').slice(0, 4).toString(), '%PDF');
   assert.equal((await app.call('POST', '/api/schnelltests/' + id + '/senden', { token: tok, body: mail })).status, 409, 'kein zweiter Versand');
-  assert.equal(H.mails.length, 1);
+  assert.equal(H.mails.length, 2);
   assert.equal((await app.call('PUT', '/api/schnelltests/' + id, { token: tok, body: { auswahl: ['k1'] } })).status, 409, 'nach dem Senden gesperrt');
 });
 

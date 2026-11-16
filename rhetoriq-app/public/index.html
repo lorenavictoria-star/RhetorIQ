@@ -14441,7 +14441,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
   function mailDatei(an,betreff,text,pdfBytes,pdfName){
     var gr='----=_RhetorIQ_'+Date.now().toString(36);
     var k=['X-Unsent: 1','From: Lorena Lienhard <contact@lorenalienhard.ch>','To: '+an,'Subject: =?UTF-8?B?'+b64Text(betreff)+'?=','MIME-Version: 1.0','Content-Type: multipart/mixed; boundary="'+gr+'"','',
-      '--'+gr,'Content-Type: text/plain; charset=UTF-8','Content-Transfer-Encoding: base64','',b64Zeilen(b64Text(text)),'',
+      '--'+gr,'Content-Type: text/plain; charset=UTF-8','Content-Transfer-Encoding: base64','',b64Zeilen(b64Text(String(text).replace(/\s+$/,'')+'\r\n\r\n')),'',
       '--'+gr,'Content-Type: application/pdf; name="'+pdfName+'"','Content-Transfer-Encoding: base64','Content-Disposition: attachment; filename="'+pdfName+'"','',b64Zeilen(b64Bytes(pdfBytes)),'',
       '--'+gr+'--',''];
     return new Blob([k.join('\r\n')],{type:'message/rfc822'});
