@@ -92,7 +92,9 @@ async function tiefenJob(j, deps) {
       const dd = row && pdfDaten(row);
       if (dd && dd.kandidaten.length) { const pdf = await require('../lib/schnelltestPdf').erzeugePdf(dd); anhang = [{ name: dateiname(j.host), contentBase64: pdf.buf.toString('base64') }]; }
     } catch (e) { console.error('[schnelltest] PDF für Hinweis-Mail fehlgeschlagen:', e && e.message); }
-    await meldeLorena(MAILS.hinweisMail({ id: j.id, url: j.url, host: j.host, email: j.email, kennzahlen, kandidaten: a.kandidaten, mehrseiten: a.mehrseiten, vorauswahl, mitPdf: anhang.length > 0 }), anhang, j.email);
+    const SL = require('../lib/schnelltestSendelink');
+    const sendeLinks = vorauswahl.length >= 3 ? { sie: SL.erzeugeLink(j.id, 'sie'), du: SL.erzeugeLink(j.id, 'du') } : null;
+    await meldeLorena(MAILS.hinweisMail({ id: j.id, url: j.url, host: j.host, email: j.email, kennzahlen, kandidaten: a.kandidaten, mehrseiten: a.mehrseiten, vorauswahl, mitPdf: anhang.length > 0, sendeLinks }), anhang, j.email);
   } catch (e) {
     console.error('[schnelltest] tiefe Analyse fehlgeschlagen:', e && e.message);
     await meldeLorena({ subject: `Neuer Test «Wie klingt Ihre Firma?»: ${j.host}`, text: `Hallo Lorena\n\nEin Test «Wie klingt Ihre Firma?» wurde ausgefüllt. Die tiefe Analyse ist fehlgeschlagen.\n\nWebseite: ${j.url}\nE-Mail: ${j.email}\n\nRhetorIQ` }).catch(() => {});
@@ -221,6 +223,30 @@ function pdfDaten(r) {
   };
 }
 
+// Versand der Auswertung an die Firma (von der Plattform und vom Link in der Hinweis-Mail genutzt). Gibt { ok } oder { ok:false, status, error } zurück.
+async function versende(r, betreffRoh, textRoh, queue) {
+  if (r.status === 'gesendet') return { ok: false, status: 409, error: 'Dieser Test wurde schon gesendet.' };
+  const d = pdfDaten(r);
+  if (d.kandidaten.length < 3) return { ok: false, status: 400, error: 'Wähle mindestens drei Auffälligkeiten aus und speichere die Auswahl, bevor du sendest.' };
+  if (!EMAIL_RE.test(String(r.email || ''))) return { ok: false, status: 400, error: 'Die E-Mail-Adresse dieses Schnelltests ist ungültig.' };
+  const betreff = String(betreffRoh || '').trim().slice(0, 200), text = String(textRoh || '').trim().slice(0, 6000);
+  if (betreff.length < 3 || text.length < 20) return { ok: false, status: 400, error: 'Bitte gib Betreff und Text der Mail an.' };
+  // Versand genau einmal: erst den Status setzen, dann senden
+  const beansprucht = (await pool.query(`UPDATE schnelltests SET status='gesendet', gesendet_am=NOW() WHERE id=$1 AND status<>'gesendet' RETURNING id`, [r.id])).rows[0];
+  if (!beansprucht) return { ok: false, status: 409, error: 'Dieser Test wurde schon gesendet.' };
+  const zurueck = () => pool.query(`UPDATE schnelltests SET status='freigegeben', gesendet_am=NULL WHERE id=$1`, [r.id]).catch(() => {});
+  try {
+    const pdf = await require('../lib/schnelltestPdf').erzeugePdf(d);
+    if (pdf.seiten > pdf.limit) { await zurueck(); return { ok: false, status: 409, error: 'Die Texte sind zu lang für ' + pdf.limit + ' Seiten. Bitte kürze die gewählten Auffälligkeiten oder deine Einschätzung.' }; }
+    const anhang = [{ name: dateiname(r.host), contentBase64: pdf.buf.toString('base64') }];
+    await queue({ kind: 'schnelltest_kunde', to: r.email, subject: betreff, text, senderName: 'Lorena Lienhard', attachments: anhang });
+    // Kopie an Lorena mit demselben PDF; bei Lorenas eigener Adresse (Testlauf) entfällt sie, sonst käme dieselbe Mail doppelt
+    const kopieAn = process.env.ADVISOR_NOTIFY_EMAIL || process.env.SMTP_FROM || 'contact@lorenalienhard.ch';
+    if (String(r.email).toLowerCase() !== String(kopieAn).toLowerCase()) queue({ kind: 'schnelltest_kopie', to: kopieAn, subject: 'Kopie: ' + betreff, text: `Kopie der Mail an ${r.email}:\n\n${text}`, senderName: 'RhetorIQ', attachments: anhang }).catch(e => console.error('[schnelltest] Kopie fehlgeschlagen:', e && e.message));
+    return { ok: true };
+  } catch (e) { await zurueck(); throw e; }
+}
+
 function makeAdvisorRouter({ queue = queueEmail } = {}) {
   const router = express.Router();
   router.use(rateLimit({ windowMs: 60 * 60 * 1000, max: 600, keyGenerator: (req) => ipKeyGenerator(req.ip), standardHeaders: true, legacyHeaders: false, message: { error: 'Zu viele Anfragen. Bitte versuche es später erneut.' } }));
@@ -315,40 +341,83 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
   });
 
   router.post('/:id/senden', async (req, res) => {
-    let beansprucht = null;
     try {
       const r = await holen(req.params.id);
       if (!r) return res.status(404).json({ error: 'Test «Wie klingt Ihre Firma?» nicht gefunden.' });
-      if (r.status === 'gesendet') return res.status(409).json({ error: 'Dieser Test wurde schon gesendet.' });
-      const d = pdfDaten(r);
-      if (d.kandidaten.length < 3) return res.status(400).json({ error: 'Wähle mindestens drei Auffälligkeiten aus und speichere die Auswahl, bevor du sendest.' });
-      if (!EMAIL_RE.test(String(r.email || ''))) return res.status(400).json({ error: 'Die E-Mail-Adresse dieses Schnelltests ist ungültig.' });
       const b = req.body && typeof req.body === 'object' ? req.body : {};
-      const betreff = String(b.betreff || '').trim().slice(0, 200), text = String(b.text || '').trim().slice(0, 6000);
-      if (betreff.length < 3 || text.length < 20) return res.status(400).json({ error: 'Bitte gib Betreff und Text der Mail an.' });
-      // Versand genau einmal: erst den Status setzen, dann senden
-      beansprucht = (await pool.query(`UPDATE schnelltests SET status='gesendet', gesendet_am=NOW() WHERE id=$1 AND status<>'gesendet' RETURNING id`, [r.id])).rows[0];
-      if (!beansprucht) return res.status(409).json({ error: 'Dieser Test wurde schon gesendet.' });
-      const pdf = await require('../lib/schnelltestPdf').erzeugePdf(d);
-      if (pdf.seiten > pdf.limit) { await pool.query(`UPDATE schnelltests SET status='freigegeben', gesendet_am=NULL WHERE id=$1`, [r.id]); beansprucht = null; return res.status(409).json({ error: 'Die Texte sind zu lang für ' + pdf.limit + ' Seiten. Bitte kürze die gewählten Auffälligkeiten oder deine Einschätzung.' }); }
-      const buf = pdf.buf;
-      await queue({ kind: 'schnelltest_kunde', to: r.email, subject: betreff, text, senderName: 'Lorena Lienhard', attachments: [{ name: dateiname(r.host), contentBase64: buf.toString('base64') }] });
-      // Kopie an Lorena mit demselben PDF: landet in ihrem Mailprogramm und lässt sich dort weiterleiten
-      const kopieAn = process.env.ADVISOR_NOTIFY_EMAIL || process.env.SMTP_FROM || 'contact@lorenalienhard.ch';
-      // Ist die Firma-Adresse zugleich Lorenas eigene (Testlauf), käme sonst dieselbe Mail doppelt an
-      if (String(r.email).toLowerCase() !== String(kopieAn).toLowerCase()) queue({ kind: 'schnelltest_kopie', to: kopieAn, subject: 'Kopie: ' + betreff, text: `Kopie der Mail an ${r.email}:\n\n${text}`, senderName: 'RhetorIQ', attachments: [{ name: dateiname(r.host), contentBase64: buf.toString('base64') }] }).catch(e => console.error('[schnelltest] Kopie fehlgeschlagen:', e && e.message));
+      const ergebnis = await versende(r, String(b.betreff || ''), String(b.text || ''), queue);
+      if (!ergebnis.ok) return res.status(ergebnis.status).json({ error: ergebnis.error });
       res.json(detail(await holen(r.id)));
-    } catch (e) {
-      if (beansprucht) await pool.query(`UPDATE schnelltests SET status='freigegeben', gesendet_am=NULL WHERE id=$1`, [beansprucht.id]).catch(() => {});
-      fehler(res, e);
-    }
+    } catch (e) { fehler(res, e); }
   });
   return router;
 }
 function dateiname(host) { return 'RhetorIQ_Wie-klingt-Ihre-Firma_' + String(host || 'webseite').replace(/[^a-z0-9.-]/gi, '_').slice(0, 60) + '.pdf'; }
 
+
+// ── Ein-Klick-Versand aus der Hinweis-Mail (öffentlich erreichbar, durch unterschriebenen Link geschützt) ──
+const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function seite(titel, innen) {
+  return `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${esc(titel)}</title>
+<style>body{margin:0;background:#FBF6EA;color:#14213D;font:16px/1.5 Georgia,serif}main{max-width:640px;margin:0 auto;padding:32px 20px}h1{font-size:26px;margin:0 0 16px}.k{background:#fff;border:1px solid #e2d8c3;padding:16px 18px;margin:14px 0}.l{font:12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#6b6552;margin-bottom:4px}pre{white-space:pre-wrap;font:15px/1.5 Arial,sans-serif;margin:0}button{font:16px Arial,sans-serif;background:#14213D;color:#fff;border:0;padding:12px 22px;cursor:pointer}p.s{font:14px Arial,sans-serif;color:#6b6552}</style></head><body><main>${innen}</main></body></html>`;
+}
+function makeSendeRouter({ queue = queueEmail } = {}) {
+  const router = express.Router();
+  router.use(rateLimit({ windowMs: 60 * 60 * 1000, max: 60, keyGenerator: (req) => ipKeyGenerator(req.ip), standardHeaders: true, legacyHeaders: false, message: 'Zu viele Anfragen.' }));
+  router.use(express.urlencoded({ extended: false, limit: '4kb' }));
+  const SL = require('../lib/schnelltestSendelink');
+  async function laden(req, src) {
+    const id = String(req.params.id || '');
+    if (!/^\d{1,9}$/.test(id)) return { fehler: 'Der Link ist ungültig.' };
+    const p = SL.pruefe(id, src.a, src.e, src.t);
+    if (!p.ok) return { fehler: p.grund === 'abgelaufen' ? 'Der Link ist abgelaufen. Öffne den Test in der Plattform und sende dort.' : 'Der Link ist ungültig.' };
+    await require('../lib/schemaRedesign').ensureSchema();
+    const r = (await pool.query('SELECT * FROM schnelltests WHERE id=$1', [Number(id)])).rows[0];
+    if (!r) return { fehler: 'Dieser Test existiert nicht mehr.' };
+    return { r, anrede: p.anrede, src };
+  }
+  const vorschau = (r, anrede) => {
+    const mail = MAILS.begleitMail(r.host, anrede, { vorname: r.kontakt_vorname, nachname: r.kontakt_nachname });
+    return { mail, d: pdfDaten(r) };
+  };
+  router.get('/:id', async (req, res) => {
+    try {
+      res.set({ 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' });
+      const x = await laden(req, req.query);
+      if (x.fehler) return res.status(400).send(seite('Senden', `<h1>Nicht möglich</h1><p>${esc(x.fehler)}</p>`));
+      const { r, anrede } = x;
+      if (r.status === 'gesendet') return res.send(seite('Schon gesendet', `<h1>Schon gesendet</h1><p>Diese Auswertung ging am ${esc(new Date(r.gesendet_am).toLocaleDateString('de-CH'))} an ${esc(r.email)}.</p>`));
+      const { mail, d } = vorschau(r, anrede);
+      if (d.kandidaten.length < 3) return res.send(seite('Senden', `<h1>Noch nicht bereit</h1><p>Es sind weniger als drei Auffälligkeiten ausgewählt. Öffne den Test in der Plattform und wähle mindestens drei aus.</p>`));
+      const felder = `<input type="hidden" name="a" value="${esc(anrede)}"><input type="hidden" name="e" value="${esc(req.query.e)}"><input type="hidden" name="t" value="${esc(req.query.t)}">`;
+      res.send(seite('Auswertung senden', `<h1>Auswertung jetzt senden?</h1>
+<div class="k"><div class="l">An</div>${esc(r.email)}</div>
+<div class="k"><div class="l">Betreff</div>${esc(mail.betreff)}</div>
+<div class="k"><div class="l">Text (${anrede === 'du' ? 'du-Form' : 'Sie-Form'})</div><pre>${esc(mail.text)}</pre></div>
+<div class="k"><div class="l">Anhang</div>${esc(dateiname(r.host))}, ${d.kandidaten.length} Auffälligkeiten:<br>${d.kandidaten.map(c => '– ' + esc(c.titel)).join('<br>')}</div>
+<form method="post" action="">${felder}<button type="submit">Jetzt senden</button></form>
+<p class="s">Du bekommst eine Kopie. Das Senden lässt sich nicht zurücknehmen. Anpassen kannst du Text und Auswahl in der Plattform.</p>`));
+    } catch (e) { console.error('[schnelltest-senden]', e && e.message); res.status(500).send(seite('Senden', '<h1>Das hat nicht geklappt</h1><p>Bitte versuche es in der Plattform.</p>')); }
+  });
+  router.post('/:id', async (req, res) => {
+    try {
+      res.set({ 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' });
+      const x = await laden(req, req.body || {});
+      if (x.fehler) return res.status(400).send(seite('Senden', `<h1>Nicht möglich</h1><p>${esc(x.fehler)}</p>`));
+      const { r, anrede } = x;
+      const { mail } = vorschau(r, anrede);
+      const erg = await versende(r, mail.betreff, mail.text, queue);
+      if (!erg.ok) return res.status(erg.status).send(seite('Senden', `<h1>Nicht gesendet</h1><p>${esc(erg.error)}</p>`));
+      res.send(seite('Gesendet', `<h1>Gesendet</h1><p>Die Auswertung ging an ${esc(r.email)}. Du bekommst eine Kopie.</p>`));
+    } catch (e) { console.error('[schnelltest-senden]', e && e.message); res.status(500).send(seite('Senden', '<h1>Das hat nicht geklappt</h1><p>Bitte versuche es in der Plattform.</p>')); }
+  });
+  return router;
+}
+
 module.exports = makeRouter();
 module.exports.makeRouter = makeRouter;
 module.exports.makeAdvisorRouter = makeAdvisorRouter;
 module.exports.advisorRouter = makeAdvisorRouter();
+module.exports.makeSendeRouter = makeSendeRouter;
+module.exports.sendeRouter = makeSendeRouter();
 module.exports.drain = drain;

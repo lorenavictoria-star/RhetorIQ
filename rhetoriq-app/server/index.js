@@ -286,6 +286,7 @@ app.use('/api/geschenk', require('./routes/geschenk'));
 app.use('/api/ev', require('./routes/ev'));
 app.use('/api/schnelltest', require('./routes/schnelltest'));
 app.use('/api/schnelltests', require('./routes/schnelltest').advisorRouter);
+app.use('/api/schnelltest-senden', require('./routes/schnelltest').sendeRouter);
 app.use('/api/onboarding-drafts', require('./routes/onboardingDrafts'));
 app.use('/api/files', require('./routes/files'));
 app.use('/api/help-chat', require('./routes/helpChat'));

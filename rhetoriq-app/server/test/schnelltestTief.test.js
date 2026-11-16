@@ -378,3 +378,40 @@ test('Test speichert Vor- und Nachnamen aus der Adresse und lässt sie ändern',
     assert.match(r.body.begleitmail_du.text, /^Hallo Anton\n/);
   } finally { await app2.close(); }
 });
+
+test('Ein-Klick-Link: Vorschau per GET, Versand nur per POST, einmal, nur mit gültiger Unterschrift', async () => {
+  const SL = require('../lib/schnelltestSendelink');
+  const app3 = await H.startApp([['/api/schnelltest-senden', require('../routes/schnelltest').makeSendeRouter({ queue: async (m) => { H.mails.push(m); return H.mails.length; } })]]);
+  try {
+    const kand = [1, 2, 3].map(KAND);
+    const r0 = await pool.query(`INSERT INTO schnelltests (url, host, email, kontakt_vorname, kontakt_nachname, kandidaten, auswahl) VALUES ('https://link.ch','link.ch','anna.muster@link.ch','Anna','Muster',$1,$2) RETURNING id`, [JSON.stringify(kand), JSON.stringify(['k1', 'k2', 'k3'])]);
+    const id3 = r0.rows[0].id;
+    const url = SL.erzeugeLink(id3, 'du');
+    const pfad = url.replace(/^https?:\/\/[^/]+/, '');
+    const get = await fetch(app3.base + pfad.replace('/api/schnelltest-senden', '/api/schnelltest-senden'));
+    const html = await get.text();
+    assert.equal(get.status, 200);
+    assert.ok(html.includes('Hallo Anna') && html.includes('anna.muster@link.ch') && html.includes('Jetzt senden'));
+    H.mails.length = 0;
+    assert.equal((await pool.query(`SELECT status FROM schnelltests WHERE id=$1`, [id3])).rows[0].status || 'entwurf', 'entwurf', 'GET sendet nichts');
+    assert.equal(H.mails.length, 0);
+    // falsche Unterschrift
+    const schlecht = await fetch(app3.base + pfad.replace(/t=[0-9a-f]+/, 't=' + '0'.repeat(40)));
+    assert.equal(schlecht.status, 400);
+    // abgelaufen
+    const alt = SL.erzeugeLink(id3, 'du', Date.now() - 20 * 86400000).replace(/^https?:\/\/[^/]+/, '');
+    assert.equal((await fetch(app3.base + alt)).status, 400);
+    // POST sendet genau einmal
+    const q = new URL(url).searchParams;
+    const body = new URLSearchParams({ a: q.get('a'), e: q.get('e'), t: q.get('t') }).toString();
+    const post = await fetch(app3.base + '/api/schnelltest-senden/' + id3, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+    assert.equal(post.status, 200);
+    assert.ok((await post.text()).includes('Gesendet'));
+    const kunde = H.mails.find(x => x.kind === 'schnelltest_kunde');
+    assert.ok(kunde && kunde.to === 'anna.muster@link.ch' && /^Hallo Anna\n/.test(kunde.text) && kunde.attachments.length === 1);
+    assert.ok(H.mails.some(x => x.kind === 'schnelltest_kopie'));
+    const nochmal = await fetch(app3.base + '/api/schnelltest-senden/' + id3, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+    assert.equal(nochmal.status, 409);
+    assert.equal(H.mails.filter(x => x.kind === 'schnelltest_kunde').length, 1);
+  } finally { await app3.close(); }
+});
