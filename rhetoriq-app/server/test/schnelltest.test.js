@@ -93,19 +93,17 @@ test('gescheiterter Test meldet Webseite, E-Mail und Grund an Lorena', async () 
 });
 
 test('technischer Fehler: Person sieht nie «nicht verfügbar», Lorena bekommt die Angaben', async () => {
-  const { makeRouter } = require('../routes/schnelltest');
-  const kaputt = await H.startApp([['/api/schnelltest', makeRouter({ max: 1000, fetchHtml, deps: { generateText: async () => { throw new Error('KI weg'); } } })]]);
+  H.mails.length = 0; H.ai.fail = true;
   try {
-    H.mails.length = 0;
-    const r = await post(kaputt, { url: 'fehler.ch', email: 'Wartet2@Test.ch' });
+    const r = await post(big, { url: 'fehler.ch', email: 'Wartet2@Test.ch' });
     assert.equal(r.status, 202);
     assert.match(r.body.nachricht, /Ihre Angaben sind bei mir angekommen/);
     assert.ok(!JSON.stringify(r.body).includes('nicht verfügbar'));
     await new Promise(x => setTimeout(x, 50));
     const m = H.mails.find(x => x.kind === 'schnelltest_fehler');
-    assert.ok(m && m.text.includes('fehler.ch') && m.text.includes('Wartet2@Test.ch') && m.text.includes('KI weg'));
+    assert.ok(m && m.text.includes('fehler.ch') && m.text.includes('Wartet2@Test.ch') && m.text.includes('KI kaputt'));
     assert.equal((await pool.query(`SELECT 1 FROM schnelltests WHERE host='fehler.ch'`)).rows.length, 0);
-  } finally { await kaputt.close(); }
+  } finally { H.ai.fail = false; }
 });
 
 test('unlesbare KI-Antwort gibt 422 ohne Eintrag', async () => {
