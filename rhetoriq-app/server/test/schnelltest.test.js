@@ -77,6 +77,7 @@ test('nach der tiefen Analyse stehen die stärksten Auffälligkeiten (bis drei) 
   const m = H.mails.find(x => x.kind === 'schnelltest_notify');
   assert.ok(m && m.text.includes('schon für dich vorgewählt'));
   assert.ok(m.attachments && m.attachments.length === 1 && Buffer.from(m.attachments[0].contentBase64, 'base64').slice(0, 4).toString() === '%PDF', 'PDF hängt an der Mail an Lorena');
+  assert.equal(m.replyTo, 'vw@test.ch', 'Antworten geht direkt an die Firma');
   assert.ok(m.text.includes('hängt als PDF an dieser Mail') && m.text.includes('An: vw@test.ch') && m.text.includes('Betreff: Ihr Test'), 'vorbereitete Mail steht im Text');
 });
 
@@ -154,4 +155,11 @@ test('Ratenbegrenzung pro IP', async () => {
   assert.equal((await post(small, { url: 'r1.ch', email: 'r1@test.ch' })).status, 200);
   assert.equal((await post(small, { url: 'r2.ch', email: 'r2@test.ch' })).status, 200);
   assert.equal((await post(small, { url: 'r3.ch', email: 'r3@test.ch' })).status, 429);
+});
+
+test('Brevo-Inhalt: Antwortadresse nur bei gültiger Adresse', () => {
+  const { buildPayload } = require('../lib/brevoPayload');
+  assert.deepEqual(buildPayload({ to: 'a@b.ch', subject: 'S', text: 'T', senderName: 'X', replyTo: 'firma@muster.ch' }).replyTo, { email: 'firma@muster.ch' });
+  assert.equal(buildPayload({ to: 'a@b.ch', subject: 'S', text: 'T', senderName: 'X', replyTo: 'kaputt' }).replyTo, undefined);
+  assert.equal(buildPayload({ to: 'a@b.ch', subject: 'S', text: 'T', senderName: 'X' }).replyTo, undefined);
 });

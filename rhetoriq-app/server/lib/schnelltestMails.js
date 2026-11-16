@@ -29,6 +29,7 @@ function hinweisMail(a) {
         : []),
       `Hier schaust du die Auswahl durch, ergänzt deine Einschätzung und sendest das PDF: ${appUrl()}/#schnelltest-${a.id}`, '',
       ...(a.mitPdf ? ['Die erste Auswertung hängt als PDF an dieser Mail (mit den vorgewählten Auffälligkeiten).', ''] : []),
+      `Antwortest du auf diese Mail, geht sie direkt an ${a.email}. Beim Weiterleiten hängt das PDF an.`, '',
       'Vorbereitete Mail an die Firma:', `An: ${a.email}`, `Betreff: ${begleitMail(a.host).betreff}`, '', begleitMail(a.host).text, '',
       'RhetorIQ'
     ].join('\n')

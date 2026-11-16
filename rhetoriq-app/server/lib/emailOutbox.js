@@ -14,8 +14,9 @@ const MAX_ATTEMPTS = 20; // with the 3-minute sweep this allows ~1h of retrying
                           // allowlist) without losing the email entirely.
 const ALERT_AFTER_MS = 15 * 60 * 1000; // early warning, well before MAX_ATTEMPTS gives up
 
-async function queueEmail({ kind, to, subject, text, senderName = 'RhetorIQ', attachments }) {
+async function queueEmail({ kind, to, subject, text, senderName = 'RhetorIQ', attachments, replyTo }) {
   let rows;
+  if (replyTo) await pool.query('ALTER TABLE email_outbox ADD COLUMN IF NOT EXISTS reply_to TEXT');
   if (Array.isArray(attachments) && attachments.length) {
     // Anhänge (base64) liegen als JSON in der Warteschlange, damit sie auch Wiederholungsversuche überstehen.
     await pool.query('ALTER TABLE email_outbox ADD COLUMN IF NOT EXISTS attachments JSONB');
@@ -32,6 +33,7 @@ async function queueEmail({ kind, to, subject, text, senderName = 'RhetorIQ', at
     ));
   }
   const id = rows[0].id;
+  if (replyTo) await pool.query('UPDATE email_outbox SET reply_to=$1 WHERE id=$2', [String(replyTo).slice(0, 200), id]);
   // Best-effort immediate attempt so delivery is fast in the normal case —
   // failure here is not fatal, sweepOutbox() will pick it up regardless.
   await attemptSend(id).catch(e => console.error(`[email-outbox] immediate send #${id} failed:`, e.message));
@@ -43,7 +45,7 @@ async function attemptSend(id) {
   const row = rows[0];
   if (!row) return;
   try {
-    await brevoSend({ to: row.to_email, subject: row.subject, text: row.body, senderName: row.sender_name, attachments: row.attachments || undefined });
+    await brevoSend({ to: row.to_email, subject: row.subject, text: row.body, senderName: row.sender_name, attachments: row.attachments || undefined, replyTo: row.reply_to || undefined });
     await pool.query(`UPDATE email_outbox SET status='sent', sent_at=NOW(), attempts=attempts+1 WHERE id=$1`, [id]);
   } catch (e) {
     const attempts = row.attempts + 1;
