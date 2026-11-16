@@ -24,7 +24,10 @@ function hinweisMail(a) {
       `Webseite: ${a.url}`, `E-Mail: ${a.email}`, `Gelesene Seiten: ${a.mehrseiten || 1}`, '',
       'Kennzahlen:', ...kennzahlenZeilen(a.kennzahlen).map(x => '  ' + x), '',
       kand.length ? 'Auffälligkeiten (Kurzform):' : 'Es liegen noch keine Auffälligkeiten vor.', ...kand, '',
-      `Hier wählst Du drei aus, ergänzt Deine Einschätzung und sendest das PDF: ${appUrl()}/#schnelltest-${a.id}`, '',
+      ...((a.vorauswahl && a.vorauswahl.length)
+        ? [a.vorauswahl.length === 3 ? 'Die drei stärksten Auffälligkeiten habe ich schon für Dich vorgewählt:' : 'Die stärksten Auffälligkeiten habe ich schon für Dich vorgewählt (es fehlen noch welche bis drei):', ...a.vorauswahl.map(id => { const c = (a.kandidaten || []).find(x => x.id === id); return c ? '  ' + (1 + (a.kandidaten || []).indexOf(c)) + '. ' + c.titel : null; }).filter(Boolean), '']
+        : []),
+      `Hier schaust Du die Auswahl durch, ergänzt Deine Einschätzung und sendest das PDF: ${appUrl()}/#schnelltest-${a.id}`, '',
       'RhetorIQ'
     ].join('\n')
   };

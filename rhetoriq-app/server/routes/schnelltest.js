@@ -14,10 +14,11 @@ const { requireAdvisor } = require('../middleware/auth');
 //   Danach läuft im Hintergrund die tiefe Analyse (bis 3 Seiten, Kennzahlen, 6 bis 8 geprüfte Auffälligkeiten) und meldet sich bei Lorena.
 //   Beraterin (Auth): GET /api/schnelltests, GET/PUT /api/schnelltests/:id, GET /api/schnelltests/:id/pdf, POST /api/schnelltests/:id/senden
 // Schutz: Herkunft, Honeypot, Zeitfalle, 5 pro Stunde und IP, höchstens 150 pro Tag, dieselbe Adresse oder E-Mail
-// nur einmal pro 24 Stunden, nur öffentliche Webadressen (lib/safeFetch).
+// höchstens dreimal pro 24 Stunden, nur öffentliche Webadressen (lib/safeFetch).
 const ALLOWED_ORIGINS = ['https://rhetoriq.ch', 'https://www.rhetoriq.ch'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const DAILY_MAX = 150;
+const PRO_ADRESSE_MAX = 3;
 const KONTAKT = 'Schreiben Sie mir an contact@lorenalienhard.ch, ich werte Ihre Webseite gern persönlich aus.';
 const ANGEKOMMEN = 'Vielen Dank, Ihre Angaben sind bei mir angekommen. Ich werte Ihre Webseite persönlich aus und melde mich in Kürze per E-Mail bei Ihnen.';
 const clip = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
@@ -77,9 +78,13 @@ async function tiefenJob(j, deps) {
     await pool.query(
       `UPDATE schnelltests SET kandidaten=$1, kennzahlen=$2, gesamteindruck=$3, staerken=$4, mehrseiten_gelesen=$5, analyse_fertig_am=NOW() WHERE id=$6`,
       [JSON.stringify(a.kandidaten), JSON.stringify(kennzahlen), a.gesamteindruck, JSON.stringify(a.staerken), a.mehrseiten, j.id]);
+    // Vorauswahl: die drei stärksten Auffälligkeiten stehen schon angekreuzt bereit, Lorena schaut nur drüber und sendet
+    const rangliste = A.rangiere(a.kandidaten || []);
+    const vorauswahl = rangliste.slice(0, 3).map(c => c.id);
+    if (vorauswahl.length) await pool.query(`UPDATE schnelltests SET auswahl=$1 WHERE id=$2 AND auswahl IS NULL`, [JSON.stringify(vorauswahl), j.id]);
     if (a.kiFehler) console.error('[schnelltest] tiefe Analyse ohne KI-Ergebnis:', a.kiFehler);
     if (a.kiFehler === 'Tagesbudget erreicht') await meldeBudget().catch(e => console.error('[schnelltest] Budget-Mail fehlgeschlagen:', e && e.message));
-    await meldeLorena(MAILS.hinweisMail({ id: j.id, url: j.url, host: j.host, email: j.email, kennzahlen, kandidaten: a.kandidaten, mehrseiten: a.mehrseiten }));
+    await meldeLorena(MAILS.hinweisMail({ id: j.id, url: j.url, host: j.host, email: j.email, kennzahlen, kandidaten: a.kandidaten, mehrseiten: a.mehrseiten, vorauswahl }));
   } catch (e) {
     console.error('[schnelltest] tiefe Analyse fehlgeschlagen:', e && e.message);
     await meldeLorena({ subject: `Neuer Test «Wie klingt Ihre Firma?»: ${j.host}`, text: `Hallo Lorena\n\nEin Test «Wie klingt Ihre Firma?» wurde ausgefüllt. Die tiefe Analyse ist fehlgeschlagen.\n\nWebseite: ${j.url}\nE-Mail: ${j.email}\n\nRhetorIQ` }).catch(() => {});
@@ -122,8 +127,9 @@ function makeRouter({ max = 5, fetchHtml = safeFetch.safeFetchHtml, deps: depsIn
       const day = await pool.query(`SELECT COUNT(*)::int AS n FROM schnelltests WHERE created_at > NOW() - INTERVAL '24 hours'`);
       if (day.rows[0].n >= DAILY_MAX) { meldeFehler({ url: req.body.url, email, grund: 'Tageslimit erreicht', art: 'LIMIT' }).catch(() => {}); return res.status(429).json({ error: 'Heute sind alle kostenlosen Tests vergeben. ' + KONTAKT }); }
       if (!(await require('../lib/budget').allow('schnelltest')).ok) { meldeFehler({ url: req.body.url, email, grund: 'Tagesbudget erreicht', art: 'LIMIT' }).catch(() => {}); return res.status(429).json({ error: 'Heute sind alle kostenlosen Tests vergeben. ' + KONTAKT }); }
-      const dup = await pool.query(`SELECT id FROM schnelltests WHERE (host=$1 OR email=$2) AND created_at > NOW() - INTERVAL '24 hours' LIMIT 1`, [host, email]);
-      if (dup.rows.length) return res.status(429).json({ error: 'Für diese Webseite oder E-Mail-Adresse wurde in den letzten 24 Stunden schon ein Test erstellt.' });
+      // Dieselbe Webseite oder E-Mail-Adresse: höchstens dreimal in 24 Stunden
+      const dup = await pool.query(`SELECT COUNT(*)::int AS n FROM schnelltests WHERE (host=$1 OR email=$2) AND created_at > NOW() - INTERVAL '24 hours'`, [host, email]);
+      if (dup.rows[0].n >= PRO_ADRESSE_MAX) return res.status(429).json({ error: 'Für diese Webseite oder E-Mail-Adresse wurden in den letzten 24 Stunden schon drei Tests erstellt. Bitte versuchen Sie es morgen erneut.' });
       // Platz reservieren, damit zwei gleichzeitige Anfragen nicht beide durchkommen
       rowId = (await pool.query(`INSERT INTO schnelltests (url, host, email) VALUES ($1,$2,$3) RETURNING id`, [target.toString(), host, email])).rows[0].id;
 

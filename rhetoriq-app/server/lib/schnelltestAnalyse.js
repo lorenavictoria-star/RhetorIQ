@@ -456,9 +456,19 @@ async function analysiere({ url, host, startSeite, deps, kiZeitMs = 120000 }) {
   };
 }
 
+// Rangfolge der Auffälligkeiten: von der KI gelesene vor automatischen, ohne Stilwarnung, mit Beleg und Aha-Satz, und möglichst aus verschiedenen Kategorien
+function rangiere(kandidaten) {
+  const punkte = c => (c.automatisch ? 0 : 3) - (c.stilwarnung ? 3 : 0) + (String(c.beleg || '').length >= 20 ? 1 : 0) + (c.aha ? 1 : 0);
+  const sortiert = [...(kandidaten || [])].sort((x, y) => punkte(y) - punkte(x));
+  const out = [], kats = new Set();
+  for (const c of sortiert) if (!kats.has(c.kategorie)) { out.push(c); kats.add(c.kategorie); }
+  for (const c of sortiert) if (!out.includes(c)) out.push(c);
+  return out;
+}
+
 module.exports = {
   NEXT_STEP, KATEGORIEN, FLOSKELN, GESAMT_ZEIT_MS, GESAMT_ZEICHEN, SYSTEM_TIEF,
   htmlZuText, findeLinks, ladeSeiten, saetze, woerter, floskelTreffer, berechneKennzahlen,
   findeZitat, textIndex, pruefeKandidaten, pruefeStaerken, fallbackKandidaten, fallbackStaerken, fallbackGesamteindruck,
-  bereinige, GEGENUEBER, analysiere
+  bereinige, GEGENUEBER, analysiere, rangiere
 };

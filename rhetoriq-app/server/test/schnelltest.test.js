@@ -48,10 +48,34 @@ test('Schnelltest liefert drei Befunde, speichert und meldet an Lorena', async (
   assert.ok(m && m.text.includes('gast@test.ch') && m.text.includes('muster.ch') && m.text.includes('Kennzahlen'));
 });
 
-test('gleiche Adresse oder E-Mail nur einmal pro 24 Stunden', async () => {
-  assert.equal((await post(big, { url: 'https://www.muster.ch/andere', email: 'neu1@test.ch' })).status, 429, 'gleiche Webseite');
-  assert.equal((await post(big, { url: 'ganzneu.ch', email: 'gast@test.ch' })).status, 429, 'gleiche E-Mail');
-  assert.equal((await post(big, { url: 'ganzneu.ch', email: 'neu2@test.ch' })).status, 200);
+test('dieselbe Webseite oder E-Mail höchstens dreimal pro 24 Stunden', async () => {
+  // muster.ch hat schon einen Test (erster Test oben): zwei weitere gehen, der vierte nicht
+  assert.equal((await post(big, { url: 'https://www.muster.ch/andere', email: 'neu1@test.ch' })).status, 200, 'zweiter Test derselben Webseite');
+  assert.equal((await post(big, { url: 'muster.ch', email: 'neu1b@test.ch' })).status, 200, 'dritter Test derselben Webseite');
+  assert.equal((await post(big, { url: 'muster.ch', email: 'neu1c@test.ch' })).status, 429, 'vierter Test derselben Webseite');
+  // gast@test.ch hat einen Test: zwei weitere mit anderen Webseiten gehen, der vierte nicht
+  assert.equal((await post(big, { url: 'ganzneu.ch', email: 'gast@test.ch' })).status, 200);
+  assert.equal((await post(big, { url: 'ganzneu2.ch', email: 'gast@test.ch' })).status, 200);
+  const r = await post(big, { url: 'ganzneu3.ch', email: 'gast@test.ch' });
+  assert.equal(r.status, 429, 'vierter Test derselben E-Mail');
+  assert.match(r.body.error, /drei Tests/);
+  await require('../routes/schnelltest').drain();
+});
+
+test('nach der tiefen Analyse stehen die stärksten Auffälligkeiten (bis drei) schon vorgewählt', async () => {
+  H.mails.length = 0;
+  assert.equal((await post(big, { url: 'vorwahl.ch', email: 'vw@test.ch' })).status, 200);
+  await require('../routes/schnelltest').drain();
+  const { rows } = await pool.query(`SELECT auswahl, kandidaten, status FROM schnelltests WHERE host='vorwahl.ch'`);
+  const auswahl = typeof rows[0].auswahl === 'string' ? JSON.parse(rows[0].auswahl) : rows[0].auswahl;
+  const kand = typeof rows[0].kandidaten === 'string' ? JSON.parse(rows[0].kandidaten) : rows[0].kandidaten;
+  assert.equal(auswahl.length, Math.min(3, kand.length));
+  assert.ok(auswahl.length >= 1);
+  assert.equal(new Set(auswahl).size, auswahl.length);
+  assert.ok(auswahl.every(id => kand.some(c => c.id === id)));
+  assert.equal(rows[0].status || 'entwurf', 'entwurf', 'Lorena gibt selbst frei');
+  const m = H.mails.find(x => x.kind === 'schnelltest_notify');
+  assert.ok(m && m.text.includes('schon für Dich vorgewählt'));
 });
 
 test('Herkunft, Honeypot und Zeitfalle', async () => {
