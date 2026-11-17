@@ -67,6 +67,8 @@ async function eingang(aid, jetzt = new Date()) {
   }
 
   for (const m of (await sicher(`SELECT id, von_name, von_adresse, betreff, auszug, empfangen_am, gelesen_am FROM inbox_mails WHERE empfangen_am >= $1 ORDER BY empfangen_am DESC LIMIT 300`, [mailGrenze])).filter(m => plattformMail(m.von_name, m.von_adresse, m.betreff)).slice(0, 100)) {
+    // Hinweis-Mails und Kopien zu den Tests «Wie klingt Ihre Firma?» erscheinen unter «Tests», nicht doppelt als Mail
+    if (/^(Neuer Test «Wie klingt Ihre Firma\?»|Kopie: )/.test(String(m.betreff || ''))) continue;
     liste.push({ id: 'mail-' + m.id, typ: 'mail', titel: kurz(m.betreff || '(ohne Betreff)', 120), info: kurz(m.von_name ? `${m.von_name} <${m.von_adresse}>` : m.von_adresse, 140),
       zeit: iso(m.empfangen_am), neu: !m.gelesen_am, ziel: { ansicht: 'mail', id: m.id, auszug: m.auszug || '', von: m.von_adresse } });
   }
@@ -83,9 +85,15 @@ async function eingang(aid, jetzt = new Date()) {
       zeit: iso(w.created_at), neu: true, ziel: { ansicht: 'warteliste', id: w.id } });
   }
 
+  for (const t of await sicher(`SELECT id, host, email, status, auswahl, kandidaten, created_at FROM schnelltests WHERE status <> 'gesendet' ORDER BY created_at DESC LIMIT 100`)) {
+    const n = (() => { try { const k = typeof t.kandidaten === 'string' ? JSON.parse(t.kandidaten) : t.kandidaten; return Array.isArray(k) ? k.length : 0; } catch { return 0; } })();
+    liste.push({ id: 'test-' + t.id, typ: 'test', titel: kurz(`Test «Wie klingt Ihre Firma?»: ${t.host}`, 120), info: kurz(`${t.email}. ${n ? n + ' Auffälligkeiten, wartet auf dein Senden' : 'Analyse läuft'}`, 140),
+      zeit: iso(t.created_at), neu: new Date(t.created_at) >= grenzeNeu, ziel: { ansicht: 'test', id: t.id } });
+  }
+
   const alle = liste.filter(e => e.zeit).sort((a, b) => (a.zeit < b.zeit ? 1 : a.zeit > b.zeit ? -1 : 0));
-  const zaehler = { alle: alle.length, freigaben: 0, anfragen: 0, mails: 0, termine: 0, warteliste: 0 };
-  const feld = { freigabe: 'freigaben', anfrage: 'anfragen', mail: 'mails', termin: 'termine', warteliste: 'warteliste' };
+  const zaehler = { alle: alle.length, freigaben: 0, anfragen: 0, mails: 0, termine: 0, warteliste: 0, tests: 0 };
+  const feld = { freigabe: 'freigaben', anfrage: 'anfragen', mail: 'mails', termin: 'termine', warteliste: 'warteliste', test: 'tests' };
   for (const e of alle) zaehler[feld[e.typ]]++;
   return { zaehler, eintraege: alle.slice(0, MAX_EINTRAEGE) };
 }

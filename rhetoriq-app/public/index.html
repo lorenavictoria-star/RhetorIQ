@@ -2427,7 +2427,7 @@ window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Warteliste", "Waitin
 </script>
 <script id="rq-xpairs-eingang">
 // DE/EN-Paare für den Eingang der Beraterin; rq-i18n fügt window.RQ_EXTRA_PAIRS zu PAIRS hinzu.
-window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Eingegangen","Received"],["Gelöscht.","Deleted."],["Diese Mail aus dem Eingang löschen? Die Mail in Gmail bleibt erhalten.","Delete this mail from the inbox? The mail stays in Gmail."],["Diese Anfrage endgültig löschen? Name, E-Mail und Nachricht werden entfernt.","Delete this inquiry permanently? Name, email and message will be removed."],["Diesen Eintrag von der Warteliste löschen? Das kann nicht rückgängig gemacht werden.","Delete this waiting list entry? This cannot be undone."],["Das Löschen hat nicht geklappt.","Deleting did not work."],["Beispiele","Examples"],["Alles erledigt. Nichts Neues.","All done. Nothing new."],["Hier ist nichts Neues.","Nothing new here."],["Alle","All"],["Freigaben","Approvals"],["Anfragen","Inquiries"],["E-Mails","Emails"],["Termine","Appointments"],["Warteliste","Waiting list"],["Freigeben","Approve"],["Antworten","Reply"],["Ansehen","View"],["Öffnen","Open"],["Schliessen","Close"],["Neu","New"],["gestern {1}","yesterday {1}"],["Der Eingang konnte nicht geladen werden.","The inbox could not be loaded."],["Heute","Today"],["Kalender öffnen","Open calendar"],["Terminbuchung","Appointment booking"],["Nächster Termin","Next appointment"],["Kein Termin mehr heute","No more appointments today"],["Heute ist ein freier Tag.","Today is a day off."],["Frei","Free"],["Jetzt","Now"],["Filter","Filter"],["Texte mit Frist","Texts with deadline"],["Blöcke","Blocks"],["Freie Zeit","Free time"]]);
+window.RQ_EXTRA_PAIRS=(window.RQ_EXTRA_PAIRS||[]).concat([["Eingegangen","Received"],["Gelöscht.","Deleted."],["Diese Mail aus dem Eingang löschen? Die Mail in Gmail bleibt erhalten.","Delete this mail from the inbox? The mail stays in Gmail."],["Diese Anfrage endgültig löschen? Name, E-Mail und Nachricht werden entfernt.","Delete this inquiry permanently? Name, email and message will be removed."],["Diesen Eintrag von der Warteliste löschen? Das kann nicht rückgängig gemacht werden.","Delete this waiting list entry? This cannot be undone."],["Das Löschen hat nicht geklappt.","Deleting did not work."],["Beispiele","Examples"],["Alles erledigt. Nichts Neues.","All done. Nothing new."],["Hier ist nichts Neues.","Nothing new here."],["Alle","All"],["Freigaben","Approvals"],["Anfragen","Inquiries"],["E-Mails","Emails"],["Termine","Appointments"],["Warteliste","Waiting list"],["Tests","Tests"],["Öffnen und senden","Open and send"],["Freigeben","Approve"],["Antworten","Reply"],["Ansehen","View"],["Öffnen","Open"],["Schliessen","Close"],["Neu","New"],["gestern {1}","yesterday {1}"],["Der Eingang konnte nicht geladen werden.","The inbox could not be loaded."],["Heute","Today"],["Kalender öffnen","Open calendar"],["Terminbuchung","Appointment booking"],["Nächster Termin","Next appointment"],["Kein Termin mehr heute","No more appointments today"],["Heute ist ein freier Tag.","Today is a day off."],["Frei","Free"],["Jetzt","Now"],["Filter","Filter"],["Texte mit Frist","Texts with deadline"],["Blöcke","Blocks"],["Freie Zeit","Free time"]]);
 </script>
 <script id="rq-xpairs-datenwaechter">
 // DE/EN-Paare für den Daten-Wächter; rq-i18n fügt window.RQ_EXTRA_PAIRS zu PAIRS hinzu.
@@ -14500,6 +14500,14 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
       if(root&&root.scrollIntoView)setTimeout(function(){root.scrollIntoView({behavior:'smooth',block:'start'});},150);
     }catch(e){alert(e.message||'Der Test konnte nicht geöffnet werden.');}
   };
+  window.rqSchnelltestOeffneId=async function(id){
+    try{
+      var r=await call('/api/schnelltests');st.liste=r.schnelltests||[];
+      var root=$('st-root');if(root){root.open=true;}
+      await oeffne(id);
+      if(root&&root.scrollIntoView)setTimeout(function(){root.scrollIntoView({behavior:'smooth',block:'start'});},150);
+    }catch(e){alert(e.message||'Der Test konnte nicht geöffnet werden.');}
+  };
   window.rqSchnelltestMailAusTitel=async function(titel){
     var host=String(titel||'').split(':').pop().trim().toLowerCase().replace(/^www\./,'');
     try{var r=await call('/api/schnelltests');var t=(r.schnelltests||[]).filter(function(x){return String(x.host||'').toLowerCase().replace(/^www\./,'')===host;})[0];
@@ -14644,9 +14652,9 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
 // ═══ Eingang der Beraterin: Liste von allem Neuen, Streifen «Heute», eingeklappte Kalender-Zeilen. Alle Texte aus Daten werden mit textContent gesetzt. ═══
 (function(){
   var st={daten:null,filter:'alle',timer:null,laden:false,gelesen:{},offen:{}};
-  var FILTER=[['alle','Alle','alle'],['freigabe','Freigaben','freigaben'],['anfrage','Anfragen','anfragen'],['mail','E-Mails','mails'],['termin','Termine','termine'],['warteliste','Warteliste','warteliste']];
-  var ICON={freigabe:'ti-circle-check',anfrage:'ti-message-circle',mail:'ti-mail',termin:'ti-calendar-event',warteliste:'ti-list-details'};
-  var AKTION={freigabe:'Freigeben',anfrage:'Antworten',mail:'Öffnen',termin:'Ansehen',warteliste:'Öffnen'};
+  var FILTER=[['alle','Alle','alle'],['freigabe','Freigaben','freigaben'],['anfrage','Anfragen','anfragen'],['mail','E-Mails','mails'],['termin','Termine','termine'],['test','Tests','tests'],['warteliste','Warteliste','warteliste']];
+  var ICON={freigabe:'ti-circle-check',anfrage:'ti-message-circle',mail:'ti-mail',termin:'ti-calendar-event',warteliste:'ti-list-details',test:'ti-chart-bar'};
+  var AKTION={freigabe:'Freigeben',anfrage:'Antworten',mail:'Öffnen',termin:'Ansehen',warteliste:'Öffnen',test:'Öffnen und senden'};
   var TZ='Europe/Zurich',DAY0=7*60,DAY1=19*60;
   function isA(){try{return !!isAdv;}catch(e){return false;}}
   function $(id){return document.getElementById(id);}
@@ -14705,6 +14713,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     }
     if(e.typ==='termin'){faltAuf('bu-root',true);return;}
     if(e.typ==='warteliste'){faltAuf('wl-root',true);return;}
+    if(e.typ==='test'&&typeof window.rqSchnelltestOeffneId==='function'){window.rqSchnelltestOeffneId(e.ziel&&e.ziel.id);return;}
   }
   function faltAuf(id,scroll){
     var d=$(id);if(!d)return;

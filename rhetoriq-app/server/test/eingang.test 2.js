@@ -52,7 +52,7 @@ test('Zähler und Sortierung: neueste zuerst, alle Quellen', async () => {
   await fuellen();
   const r = await srv.call('GET', '/api/assistent/eingang', { token: tAdv });
   assert.equal(r.status, 200);
-  assert.deepEqual(r.body.zaehler, { alle: 5, freigaben: 1, anfragen: 1, mails: 1, termine: 1, warteliste: 1 });
+  assert.deepEqual(r.body.zaehler, { alle: 5, freigaben: 1, anfragen: 1, mails: 1, termine: 1, warteliste: 1, tests: 0 });
   assert.deepEqual(r.body.eintraege.map(e => e.typ), ['warteliste', 'mail', 'anfrage', 'termin', 'freigabe']);
   const zeiten = r.body.eintraege.map(e => e.zeit);
   assert.deepEqual([...zeiten].sort().reverse(), zeiten);
@@ -64,7 +64,7 @@ test('Zähler und Sortierung: neueste zuerst, alle Quellen', async () => {
 
 test('Leerer Eingang und Höchstzahl 50', async () => {
   let r = await srv.call('GET', '/api/assistent/eingang', { token: tAdv });
-  assert.deepEqual(r.body, { zaehler: { alle: 0, freigaben: 0, anfragen: 0, mails: 0, termine: 0, warteliste: 0 }, eintraege: [] });
+  assert.deepEqual(r.body, { zaehler: { alle: 0, freigaben: 0, anfragen: 0, mails: 0, termine: 0, warteliste: 0, tests: 0 }, eintraege: [] });
   for (let i = 0; i < 60; i++) await pool.query(`INSERT INTO inquiries (name, email, created_at) VALUES ($1,'x@y.ch',$2)`, ['A' + i, vor(i)]);
   r = await srv.call('GET', '/api/assistent/eingang', { token: tAdv });
   assert.equal(r.body.eintraege.length, 50);

@@ -52,7 +52,7 @@ test('Zähler und Sortierung: neueste zuerst, alle Quellen', async () => {
   await fuellen();
   const r = await srv.call('GET', '/api/assistent/eingang', { token: tAdv });
   assert.equal(r.status, 200);
-  assert.deepEqual(r.body.zaehler, { alle: 5, freigaben: 1, anfragen: 1, mails: 1, termine: 1, warteliste: 1 });
+  assert.deepEqual(r.body.zaehler, { alle: 5, freigaben: 1, anfragen: 1, mails: 1, termine: 1, warteliste: 1, tests: 0 });
   assert.deepEqual(r.body.eintraege.map(e => e.typ), ['warteliste', 'mail', 'anfrage', 'termin', 'freigabe']);
   const zeiten = r.body.eintraege.map(e => e.zeit);
   assert.deepEqual([...zeiten].sort().reverse(), zeiten);
@@ -64,7 +64,7 @@ test('Zähler und Sortierung: neueste zuerst, alle Quellen', async () => {
 
 test('Leerer Eingang und Höchstzahl 50', async () => {
   let r = await srv.call('GET', '/api/assistent/eingang', { token: tAdv });
-  assert.deepEqual(r.body, { zaehler: { alle: 0, freigaben: 0, anfragen: 0, mails: 0, termine: 0, warteliste: 0 }, eintraege: [] });
+  assert.deepEqual(r.body, { zaehler: { alle: 0, freigaben: 0, anfragen: 0, mails: 0, termine: 0, warteliste: 0, tests: 0 }, eintraege: [] });
   for (let i = 0; i < 60; i++) await pool.query(`INSERT INTO inquiries (name, email, created_at) VALUES ($1,'x@y.ch',$2)`, ['A' + i, vor(i)]);
   r = await srv.call('GET', '/api/assistent/eingang', { token: tAdv });
   assert.equal(r.body.eintraege.length, 50);
@@ -199,4 +199,13 @@ test('Mail-Empfang: Ratenbegrenzung', async () => {
   const codes = [];
   for (let i = 0; i < 5; i++) codes.push((await mailPost(mail({ message_id: 'r' + i }), SECRET, srvKlein)).status);
   assert.deepEqual(codes, [200, 200, 200, 429, 429]);
+});
+
+test('Tests «Wie klingt Ihre Firma?» erscheinen unter Tests, ihre Hinweis-Mails nicht doppelt als Mail', async () => {
+  await pool.query(`CREATE TABLE IF NOT EXISTS schnelltests (id SERIAL PRIMARY KEY, url TEXT, host TEXT, email TEXT, status TEXT DEFAULT 'entwurf', auswahl JSONB, kandidaten JSONB, created_at TIMESTAMPTZ DEFAULT NOW())`).catch(() => {});
+  await pool.query(`INSERT INTO schnelltests (url, host, email, kandidaten) VALUES ('https://t.ch','t.ch','a@t.ch','[{"id":"k1"},{"id":"k2"}]')`).catch(() => {});
+  await pool.query(`INSERT INTO inbox_mails (von_name, von_adresse, betreff, auszug, empfangen_am) VALUES ('RhetorIQ','contact@lorenalienhard.ch','Neuer Test «Wie klingt Ihre Firma?»: t.ch','x',NOW())`).catch(() => {});
+  const r = await srv.call('GET', '/api/assistent/eingang', { token: tAdv });
+  assert.ok(r.body.eintraege.some(e => e.typ === 'test' && e.ziel.id), 'Test erscheint');
+  assert.ok(!r.body.eintraege.some(e => e.typ === 'mail' && /^Neuer Test/.test(e.titel)), 'Hinweis-Mail nicht doppelt');
 });
