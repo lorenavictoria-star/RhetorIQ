@@ -143,7 +143,7 @@ function render(daten, g) {
     // ── Auffälligkeiten: fliessend, ein Block bleibt zusammen und rückt bei Platzmangel auf die nächste Seite ──
     doc.addPage(); doc.y = 56;
     let oben = true;
-    (daten.kandidaten || []).slice(0, 3).forEach((c, i) => {
+    (daten.kandidaten || []).forEach((c, i) => {
       const hc = messe(g, (w) => w.kandidat(c, i + 1));
       if (!oben && doc.y + 18 + hc > UNTEN) { doc.addPage(); doc.y = 56; oben = true; }
       if (!oben) { doc.y += 6; linie(doc.y, LINIE); doc.y += 12; }
