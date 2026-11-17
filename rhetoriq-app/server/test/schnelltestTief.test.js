@@ -255,9 +255,8 @@ test('Versand: genau drei nötig, sendet PDF-Anhang an die Firma, setzt gesendet
   assert.equal(r.status, 200);
   assert.equal(r.body.status, 'gesendet');
   assert.ok(r.body.gesendet_am);
-  assert.equal(H.mails.length, 2, 'Mail an die Firma und Kopie an Lorena');
-  const kopie = H.mails.find(x => x.kind === 'schnelltest_kopie');
-  assert.ok(kopie && kopie.subject === 'Kopie: ' + mail.betreff && kopie.attachments.length === 1 && kopie.text.includes('firma@muster.ch'), 'Kopie an Lorena mit PDF');
+  assert.equal(H.mails.length, 1, 'nur die Mail an die Firma, keine Kopie ohne Häkchen');
+  assert.ok(!H.mails.find(x => x.kind === 'schnelltest_kopie'));
   const m = H.mails.find(x => x.kind === 'schnelltest_kunde');
   assert.equal(m.kind, 'schnelltest_kunde'); assert.equal(m.to, 'firma@muster.ch'); assert.equal(m.subject, mail.betreff);
   assert.equal(m.text, mail.text);
@@ -265,8 +264,19 @@ test('Versand: genau drei nötig, sendet PDF-Anhang an die Firma, setzt gesendet
   assert.match(m.attachments[0].name, /^RhetorIQ_Wie-klingt-Ihre-Firma_muster\.ch\.pdf$/);
   assert.equal(Buffer.from(m.attachments[0].contentBase64, 'base64').slice(0, 4).toString(), '%PDF');
   assert.equal((await app.call('POST', '/api/schnelltests/' + id + '/senden', { token: tok, body: mail })).status, 409, 'kein zweiter Versand');
-  assert.equal(H.mails.length, 2);
+  assert.equal(H.mails.length, 1);
   assert.equal((await app.call('PUT', '/api/schnelltests/' + id, { token: tok, body: { auswahl: ['k1'] } })).status, 409, 'nach dem Senden gesperrt');
+});
+
+test('Kopie an Lorena nur mit Häkchen', async () => {
+  const kand = [1, 2, 3].map(KAND);
+  const r0 = await pool.query(`INSERT INTO schnelltests (url, host, email, kandidaten, auswahl, status) VALUES ('https://kopie.ch','kopie.ch','k@kopie.ch',$1,$2,'freigegeben') RETURNING id`, [JSON.stringify(kand), JSON.stringify(['k1', 'k2', 'k3'])]);
+  H.mails.length = 0;
+  const r = await app.call('POST', '/api/schnelltests/' + r0.rows[0].id + '/senden', { token: tok, body: { betreff: 'Ihre Auswertung', text: 'Guten Tag, hier ist Ihre Auswertung.', kopie: true } });
+  assert.equal(r.status, 200);
+  assert.equal(H.mails.length, 2);
+  const k = H.mails.find(x => x.kind === 'schnelltest_kopie');
+  assert.ok(k && k.attachments.length === 1 && k.text.includes('k@kopie.ch'));
 });
 
 test('mit vier Auffälligkeiten darf das PDF vier Seiten haben', async () => {
@@ -391,7 +401,7 @@ test('Ein-Klick-Link: Vorschau per GET, Versand nur per POST, einmal, nur mit g�
     const get = await fetch(app3.base + pfad.replace('/api/schnelltest-senden', '/api/schnelltest-senden'));
     const html = await get.text();
     assert.equal(get.status, 200);
-    assert.ok(html.includes('Hallo Anna') && html.includes('anna.muster@link.ch') && html.includes('Jetzt senden'));
+    assert.ok(html.includes('Hallo Anna') && html.includes('anna.muster@link.ch') && html.includes('Jetzt senden') && html.includes('Kopie an mich'));
     H.mails.length = 0;
     assert.equal((await pool.query(`SELECT status FROM schnelltests WHERE id=$1`, [id3])).rows[0].status || 'entwurf', 'entwurf', 'GET sendet nichts');
     assert.equal(H.mails.length, 0);
@@ -409,7 +419,7 @@ test('Ein-Klick-Link: Vorschau per GET, Versand nur per POST, einmal, nur mit g�
     assert.ok((await post.text()).includes('Gesendet'));
     const kunde = H.mails.find(x => x.kind === 'schnelltest_kunde');
     assert.ok(kunde && kunde.to === 'anna.muster@link.ch' && /^Hallo Anna\n/.test(kunde.text) && kunde.attachments.length === 1);
-    assert.ok(H.mails.some(x => x.kind === 'schnelltest_kopie'));
+    assert.ok(!H.mails.some(x => x.kind === 'schnelltest_kopie'), 'ohne Häkchen keine Kopie');
     const nochmal = await fetch(app3.base + '/api/schnelltest-senden/' + id3, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
     assert.equal(nochmal.status, 409);
     assert.equal(H.mails.filter(x => x.kind === 'schnelltest_kunde').length, 1);

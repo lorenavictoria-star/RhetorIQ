@@ -14514,7 +14514,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     if(!(await speichern(true)))return;
     if(st.busy)return;st.busy=true;
     try{
-      st.d=await call('/api/schnelltests/'+st.d.id+'/senden','POST',{betreff:$('st-betreff').value,text:$('st-mail').value});
+      st.d=await call('/api/schnelltests/'+st.d.id+'/senden','POST',{betreff:$('st-betreff').value,text:$('st-mail').value,kopie:!!($('st-kopie')&&$('st-kopie').checked)});
       meldung('Gesendet an '+st.d.email+'.');zeichneDetail();
     }catch(e){meldung(e.message,true);}
     finally{st.busy=false;}
@@ -14580,7 +14580,7 @@ button.tp-ban.fremd{cursor:pointer;border:1px dashed rgba(0,0,0,.45)}
     }
     box.appendChild(h('label',{class:'st-feld'},[h('span',{class:'st-fl',text:'Betreff'}),h('input',{type:'text',class:'rq-in',id:'st-betreff',maxlength:200,value:bm.betreff,disabled:ro||false})]));
     box.appendChild(feld('Text der Mail (das PDF hängt automatisch an)','st-mail',bm.text,10,6000));
-    box.appendChild(h('div',{class:'tp-bar'},[h('button',{type:'button',class:'rq-btn ghost tp-sm',text:'In Mail öffnen',onclick:function(){mailOeffnen(d.id,true);}}),h('button',{type:'button',class:'rq-btn ghost tp-sm',text:'In Gmail öffnen',onclick:gmailOeffnen}),h('button',{type:'button',class:'rq-btn tp-sm',text:ro?'Schon gesendet':'An Kunden senden',disabled:ro,onclick:senden})]));
+    box.appendChild(h('div',{class:'tp-bar'},[h('label',{class:'st-feld'},[h('input',{type:'checkbox',id:'st-kopie','aria-label':'Kopie an mich senden'}),' Kopie an mich senden']),h('button',{type:'button',class:'rq-btn ghost tp-sm',text:'In Mail öffnen',onclick:function(){mailOeffnen(d.id,true);}}),h('button',{type:'button',class:'rq-btn ghost tp-sm',text:'In Gmail öffnen',onclick:gmailOeffnen}),h('button',{type:'button',class:'rq-btn tp-sm',text:ro?'Schon gesendet':'An Kunden senden',disabled:ro,onclick:senden})]));
     aktualisiereZaehler();
   }
 

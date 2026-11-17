@@ -224,7 +224,7 @@ function pdfDaten(r) {
 }
 
 // Versand der Auswertung an die Firma (von der Plattform und vom Link in der Hinweis-Mail genutzt). Gibt { ok } oder { ok:false, status, error } zurück.
-async function versende(r, betreffRoh, textRoh, queue) {
+async function versende(r, betreffRoh, textRoh, queue, kopie = false) {
   if (r.status === 'gesendet') return { ok: false, status: 409, error: 'Dieser Test wurde schon gesendet.' };
   const d = pdfDaten(r);
   if (d.kandidaten.length < 3) return { ok: false, status: 400, error: 'Wähle mindestens drei Auffälligkeiten aus und speichere die Auswahl, bevor du sendest.' };
@@ -240,9 +240,9 @@ async function versende(r, betreffRoh, textRoh, queue) {
     if (pdf.seiten > pdf.limit) { await zurueck(); return { ok: false, status: 409, error: 'Die Texte sind zu lang für ' + pdf.limit + ' Seiten. Bitte kürze die gewählten Auffälligkeiten oder deine Einschätzung.' }; }
     const anhang = [{ name: dateiname(r.host), contentBase64: pdf.buf.toString('base64') }];
     await queue({ kind: 'schnelltest_kunde', to: r.email, subject: betreff, text, senderName: 'Lorena Lienhard', attachments: anhang });
-    // Kopie an Lorena mit demselben PDF; bei Lorenas eigener Adresse (Testlauf) entfällt sie, sonst käme dieselbe Mail doppelt
+    // Kopie an Lorena nur auf Wunsch (Häkchen «Kopie an mich»); bei Lorenas eigener Adresse (Testlauf) entfällt sie, sonst käme dieselbe Mail doppelt
     const kopieAn = process.env.ADVISOR_NOTIFY_EMAIL || process.env.SMTP_FROM || 'contact@lorenalienhard.ch';
-    if (String(r.email).toLowerCase() !== String(kopieAn).toLowerCase()) queue({ kind: 'schnelltest_kopie', to: kopieAn, subject: 'Kopie: ' + betreff, text: `Kopie der Mail an ${r.email}:\n\n${text}`, senderName: 'RhetorIQ', attachments: anhang }).catch(e => console.error('[schnelltest] Kopie fehlgeschlagen:', e && e.message));
+    if (kopie && String(r.email).toLowerCase() !== String(kopieAn).toLowerCase()) queue({ kind: 'schnelltest_kopie', to: kopieAn, subject: 'Kopie: ' + betreff, text: `Kopie der Mail an ${r.email}:\n\n${text}`, senderName: 'RhetorIQ', attachments: anhang }).catch(e => console.error('[schnelltest] Kopie fehlgeschlagen:', e && e.message));
     return { ok: true };
   } catch (e) { await zurueck(); throw e; }
 }
@@ -345,7 +345,7 @@ function makeAdvisorRouter({ queue = queueEmail } = {}) {
       const r = await holen(req.params.id);
       if (!r) return res.status(404).json({ error: 'Test «Wie klingt Ihre Firma?» nicht gefunden.' });
       const b = req.body && typeof req.body === 'object' ? req.body : {};
-      const ergebnis = await versende(r, String(b.betreff || ''), String(b.text || ''), queue);
+      const ergebnis = await versende(r, String(b.betreff || ''), String(b.text || ''), queue, b.kopie === true);
       if (!ergebnis.ok) return res.status(ergebnis.status).json({ error: ergebnis.error });
       res.json(detail(await holen(r.id)));
     } catch (e) { fehler(res, e); }
@@ -395,8 +395,8 @@ function makeSendeRouter({ queue = queueEmail } = {}) {
 <div class="k"><div class="l">Betreff</div>${esc(mail.betreff)}</div>
 <div class="k"><div class="l">Text (${anrede === 'du' ? 'du-Form' : 'Sie-Form'})</div><pre>${esc(mail.text)}</pre></div>
 <div class="k"><div class="l">Anhang</div>${esc(dateiname(r.host))}, ${d.kandidaten.length} Auffälligkeiten:<br>${d.kandidaten.map(c => '– ' + esc(c.titel)).join('<br>')}</div>
-<form method="post" action="">${felder}<button type="submit">Jetzt senden</button></form>
-<p class="s">Du bekommst eine Kopie. Das Senden lässt sich nicht zurücknehmen. Anpassen kannst du Text und Auswahl in der Plattform.</p>`));
+<form method="post" action="">${felder}<label class="s"><input type="checkbox" name="kopie" value="1"> Kopie an mich senden</label><br><button type="submit">Jetzt senden</button></form>
+<p class="s">Die Auswertung und der gesendete Text bleiben im Test in der Plattform gespeichert. Das Senden lässt sich nicht zurücknehmen. Anpassen kannst du Text und Auswahl in der Plattform.</p>`));
     } catch (e) { console.error('[schnelltest-senden]', e && e.message); res.status(500).send(seite('Senden', '<h1>Das hat nicht geklappt</h1><p>Bitte versuche es in der Plattform.</p>')); }
   });
   router.post('/:id', async (req, res) => {
@@ -406,9 +406,9 @@ function makeSendeRouter({ queue = queueEmail } = {}) {
       if (x.fehler) return res.status(400).send(seite('Senden', `<h1>Nicht möglich</h1><p>${esc(x.fehler)}</p>`));
       const { r, anrede } = x;
       const { mail } = vorschau(r, anrede);
-      const erg = await versende(r, mail.betreff, mail.text, queue);
+      const erg = await versende(r, mail.betreff, mail.text, queue, (req.body || {}).kopie === '1');
       if (!erg.ok) return res.status(erg.status).send(seite('Senden', `<h1>Nicht gesendet</h1><p>${esc(erg.error)}</p>`));
-      res.send(seite('Gesendet', `<h1>Gesendet</h1><p>Die Auswertung ging an ${esc(r.email)}. Du bekommst eine Kopie.</p>`));
+      res.send(seite('Gesendet', `<h1>Gesendet</h1><p>Die Auswertung ging an ${esc(r.email)}.</p>`));
     } catch (e) { console.error('[schnelltest-senden]', e && e.message); res.status(500).send(seite('Senden', '<h1>Das hat nicht geklappt</h1><p>Bitte versuche es in der Plattform.</p>')); }
   });
   return router;
