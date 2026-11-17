@@ -114,7 +114,7 @@ function makeRouter({ max = 5, fetchHtml = safeFetch.safeFetchHtml, deps: depsIn
     windowMs: 60 * 60 * 1000, max,
     keyGenerator: (req) => ipKeyGenerator(req.ip),
     standardHeaders: true, legacyHeaders: false,
-    message: { error: 'Zu viele Tests von Ihrer Adresse. Bitte versuchen Sie es später erneut.' }
+    handler: (req, res) => { meldeFehler({ url: req.body && req.body.url, email: req.body && req.body.email, grund: 'Mehr als ' + max + ' Tests pro Stunde von derselben Internetadresse', art: 'LIMIT' }).catch(() => {}); res.status(429).json({ error: 'Zu viele Tests von Ihrer Adresse. Bitte versuchen Sie es später erneut.' }); }
   });
 
   router.post('/', limit, async (req, res) => {
@@ -139,7 +139,7 @@ function makeRouter({ max = 5, fetchHtml = safeFetch.safeFetchHtml, deps: depsIn
       if (!(await require('../lib/budget').allow('schnelltest')).ok) { meldeFehler({ url: req.body.url, email, grund: 'Tagesbudget erreicht', art: 'LIMIT' }).catch(() => {}); return res.status(429).json({ error: 'Heute sind alle kostenlosen Tests vergeben. ' + KONTAKT }); }
       // Dieselbe Webseite oder E-Mail-Adresse: höchstens dreimal in 24 Stunden
       const dup = await pool.query(`SELECT COUNT(*)::int AS n FROM schnelltests WHERE (host=$1 OR email=$2) AND created_at > NOW() - INTERVAL '24 hours'`, [host, email]);
-      if (dup.rows[0].n >= PRO_ADRESSE_MAX) return res.status(429).json({ error: 'Für diese Webseite oder E-Mail-Adresse wurden in den letzten 24 Stunden schon drei Tests erstellt. Bitte versuchen Sie es morgen erneut.' });
+      if (dup.rows[0].n >= PRO_ADRESSE_MAX) { meldeFehler({ url: req.body.url, email, grund: 'Schon 3 Tests in 24 Stunden für diese Webseite oder E-Mail', art: 'LIMIT' }).catch(() => {}); return res.status(429).json({ error: 'Für diese Webseite oder E-Mail-Adresse wurden in den letzten 24 Stunden schon drei Tests erstellt. Bitte versuchen Sie es morgen erneut.' }); }
       // Platz reservieren, damit zwei gleichzeitige Anfragen nicht beide durchkommen
       const nm = require('../lib/namenAusMail').namenAusMail(email);
       rowId = (await pool.query(`INSERT INTO schnelltests (url, host, email, kontakt_vorname, kontakt_nachname) VALUES ($1,$2,$3,$4,$5) RETURNING id`, [target.toString(), host, email, nm.vorname, nm.nachname])).rows[0].id;
