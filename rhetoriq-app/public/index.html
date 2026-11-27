@@ -17304,6 +17304,133 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable
   tab();
 })();
 </script>
+<script id="rq-wsbew-js">
+// Workspace, Reiter «Bewertungen»: Antworten auf Kundenbewertungen in der Brand Voice. Eingang, Entwurf, Freigabe, Auto-Modus, Vorlagen, Webhook.
+(function(){
+  var E=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
+  var H=function(t){return '<div style="font-size:11px;letter-spacing:.05em;color:var(--mu);text-transform:uppercase;font-weight:700;margin:18px 0 6px">'+t+'</div>';};
+  var STAT={wartet:'Wartet auf Freigabe',entwurf:'Entwurf',freigegeben:'Freigegeben, noch zu veröffentlichen',gepostet:'Veröffentlicht',uebersprungen:'Übersprungen',fehler:'Fehler',neu:'Neu'};
+  var RISIKO={gesundheit:'Gesundheit',recht:'Recht',hygiene:'Hygiene',diskriminierung:'Diskriminierung',drohung:'Drohung oder Presse',personen:'Vorwurf gegen Personen'};
+  var filter='wartet';
+  function tab(){
+    var wrap=document.getElementById('ws-tabs');if(!wrap)return null;
+    var b=document.getElementById('ws-tab-bew');
+    if(!b){b=document.createElement('button');b.className='mlist-pill';b.id='ws-tab-bew';b.textContent='Bewertungen';b.onclick=function(){wsSwitchTab('bew');};
+      var st=document.getElementById('ws-tab-bsp')||document.getElementById('ws-tab-store')||document.getElementById('ws-tab-admin');wrap.insertBefore(b,st);}
+    return b;
+  }
+  function sterne(n){n=Number(n)||0;return n?'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n):'';}
+  async function jf(url,o){var r=await api(url,o);var j=await r.json().catch(function(){return {};});if(!r.ok)throw new Error(j.error||'Das hat nicht geklappt.');return j;}
+  function post(body){return {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})};}
+
+  async function render(body){
+    var cid=_wsClientId,d;
+    body.innerHTML='<div class="rq-hint">Lädt …</div>';
+    try{d=await jf('/api/bewertungen/'+cid);}catch(e){body.innerHTML='<div class="rq-hint">'+E(e.message)+'</div>';return;}
+    var set=d.einstellungen,z=d.zaehler||{},list=d.bewertungen||[];
+    var modi={aus:'Aus',entwurf:'Nur Entwurf schreiben',freigabe:'Entwurf, Team gibt frei',auto:'Automatisch veröffentlichen'};
+    var h=H('Antworten auf Bewertungen')+'<div class="rq-hint" style="margin-bottom:10px">Jede neue Bewertung bekommt einen Entwurf in der Brand Voice dieses Kunden, passend zur Sternezahl. Bewertungen mit Gesundheit, Recht, Hygiene, Diskriminierung oder Drohung gehen immer an einen Menschen.</div>';
+    h+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><label for="wsw-modus"><b>Modus</b></label><select id="wsw-modus">'
+      +Object.keys(modi).map(function(k){return '<option value="'+k+'"'+(set.modus===k?' selected':'')+'>'+modi[k]+'</option>';}).join('')+'</select>'
+      +'<span id="wsw-auto" style="'+(set.modus==='auto'?'':'display:none')+'">ab <select id="wsw-ab"><option value="4"'+(set.autoAbSterne==4?' selected':'')+'>4</option><option value="5"'+(set.autoAbSterne==5?' selected':'')+'>5</option></select> Sternen, höchstens <input id="wsw-max" type="number" min="1" max="100" value="'+set.maxAutoProTag+'" style="width:60px"> pro Tag</span>'
+      +'<button type="button" class="obtn" id="wsw-save">Speichern</button> <span class="rq-hint" id="wsw-msg"></span></div>';
+    h+='<div class="rq-hint">Kanäle: '+Object.keys(d.kanaele||{}).map(function(k){var c=d.kanaele[k];return E(c.label)+(c.verbunden?' verbunden':' nicht verbunden');}).join(', ')+'. Ohne verbundenen Kanal kopierst du die freigegebene Antwort auf die Plattform. '
+      +(set.letzteAbholung?'Letzte Abfrage: '+new Date(set.letzteAbholung).toLocaleString('de-CH')+'.':'')+'</div>';
+    // Filter
+    h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 8px">'+['wartet','fehler','freigegeben','gepostet','uebersprungen','entwurf'].map(function(k){
+      return '<button type="button" class="mlist-pill'+(filter===k?' active':'')+'" data-f="'+k+'">'+STAT[k]+(z[k]?' ('+z[k]+')':'')+'</button>';}).join('')
+      +'<button type="button" class="obtn" id="wsw-abholen" style="margin-left:auto">Jetzt abfragen</button></div>';
+    var sicht=list.filter(function(b){return b.status===filter;});
+    h+=sicht.length?sicht.map(function(b){
+      var ris=(b.risiko||[]).map(function(r){return RISIKO[r]||r;});
+      return '<div class="rq-vw-zeile" style="cursor:default;display:block;margin-bottom:10px" data-id="'+b.id+'">'
+        +'<div><b>'+E(b.autor||'Unbekannt')+'</b> <span style="color:#b8860b">'+sterne(b.sterne)+'</span> <span class="rq-hint">'+E(b.plattform)+' · '+new Date(b.eingang_am).toLocaleDateString('de-CH')+'</span>'
+        +(ris.length?' <span style="color:#a33;font-weight:600">Prüfen: '+E(ris.join(', '))+'</span>':'')+(b.auto_gepostet?' <span class="rq-hint">automatisch</span>':'')+'</div>'
+        +(b.text?'<div style="margin:6px 0;padding:8px;background:var(--bg2,#f6f4ee);border-radius:6px">'+E(b.text)+'</div>':'')
+        +(b.fehler?'<div style="color:#a33;margin:4px 0">'+E(b.fehler)+'</div>':'')
+        +(b.status==='gepostet'?'<div style="margin-top:6px">'+E(b.antwort_final||b.entwurf||'')+'</div>'
+          :'<textarea rows="4" style="width:100%;margin-top:6px" data-e="'+b.id+'">'+E(b.antwort_final||b.entwurf||'')+'</textarea>'
+           +'<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="obtn" data-a="freigeben">Freigeben</button>'
+           +'<button type="button" class="obtn" data-a="kopieren">Kopieren</button>'
+           +'<button type="button" class="obtn" data-a="neu">Neu schreiben …</button>'
+           +'<button type="button" class="obtn" data-a="skip">Überspringen</button> <span class="rq-hint" data-m></span></div>')
+        +'</div>';
+    }).join(''):'<div class="rq-hint">Nichts in dieser Ansicht.</div>';
+    // Von Hand erfassen
+    h+=H('Bewertung von Hand erfassen')
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><select id="wsn-pl"><option value="google">Google</option><option value="tripadvisor">Tripadvisor</option><option value="trustpilot">Trustpilot</option><option value="facebook">Facebook</option><option value="yelp">Yelp</option><option value="sonstige">Sonstige</option></select>'
+      +'<select id="wsn-st"><option value="5">5 Sterne</option><option value="4">4 Sterne</option><option value="3">3 Sterne</option><option value="2">2 Sterne</option><option value="1">1 Stern</option></select>'
+      +'<input id="wsn-au" type="text" placeholder="Name der Person" style="flex:1;min-width:140px"></div>'
+      +'<textarea id="wsn-tx" rows="4" placeholder="Text der Bewertung einfügen" style="width:100%"></textarea>'
+      +'<div style="margin-top:8px"><button type="button" class="obtn" id="wsn-add">Entwurf schreiben</button> <span class="rq-hint" id="wsn-msg"></span></div>';
+    // Vorlagen
+    h+=H('Vorlagen und Beispielantworten')+'<div class="rq-hint" style="margin-bottom:8px">Die Stimme kommt aus der Brand Voice. Hier legst du Aufbau und Länge je Fall fest und kannst Beispielantworten hinterlegen, an denen sich der Ton orientiert.</div>';
+    Object.keys(d.standardVorlagen).forEach(function(k){
+      var v=d.standardVorlagen[k],e=set.vorlagen[k]||{};
+      h+='<details style="margin-bottom:6px"><summary><b>'+E(v.label)+'</b></summary>'
+        +'<div class="rq-hint" style="margin:4px 0">Aufbau</div><textarea rows="3" style="width:100%" data-vk="'+k+'" data-vf="aufbau">'+E(e.aufbau||v.aufbau)+'</textarea>'
+        +'<div class="rq-hint" style="margin:4px 0">Beispielantwort (optional)</div><textarea rows="3" style="width:100%" data-vk="'+k+'" data-vf="beispiel">'+E((e.beispiele||[])[0]||'')+'</textarea></details>';
+    });
+    h+='<div class="rq-hint" style="margin:8px 0 4px">Kontakt für die persönliche Klärung (erscheint in Antworten auf Kritik)</div><input id="wsw-kontakt" type="text" value="'+E(set.kontaktHinweis)+'" placeholder="zum Beispiel: info@seerose.ch oder Telefon 056 000 00 00" style="width:100%">';
+    h+='<div style="margin-top:8px"><button type="button" class="obtn" id="wsv-save">Vorlagen speichern</button> <span class="rq-hint" id="wsv-msg"></span></div>';
+    // Webhook
+    h+=H('Automatischer Eingang (Webhook)')+'<div class="rq-hint">Diensten wie Zapier, Make oder einem Bewertungsportal gibst du diese Adresse. Sie schicken jede neue Bewertung als JSON mit <code>platform</code>, <code>id</code>, <code>rating</code>, <code>comment</code> und <code>author</code>. Der Schlüssel wird nur einmal angezeigt.</div>'
+      +'<div style="margin-top:6px"><button type="button" class="obtn" id="wsh-neu">'+(set.hatToken?'Neuen Schlüssel erzeugen':'Schlüssel erzeugen')+'</button></div><div id="wsh-out" class="rq-hint" style="margin-top:6px;word-break:break-all"></div>';
+    body.innerHTML=h;
+
+    var $=function(s){return body.querySelector(s);};
+    $('#wsw-modus').onchange=function(){$('#wsw-auto').style.display=this.value==='auto'?'':'none';};
+    $('#wsw-save').onclick=async function(){
+      var m=$('#wsw-msg');
+      if($('#wsw-modus').value==='auto'&&set.modus!=='auto'&&!confirm('Im Automatik-Modus werden Antworten ohne Prüfung veröffentlicht, solange kein Risiko erkannt wird. Wirklich einschalten?'))return;
+      try{await jf('/api/bewertungen/'+cid+'/einstellungen',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({modus:$('#wsw-modus').value,autoAbSterne:$('#wsw-ab').value,maxAutoProTag:$('#wsw-max').value})});m.textContent='Gespeichert.';render(body);}catch(e){m.textContent=e.message;}
+    };
+    body.querySelectorAll('[data-f]').forEach(function(b){b.onclick=function(){filter=b.getAttribute('data-f');render(body);};});
+    $('#wsw-abholen').onclick=async function(){this.disabled=true;try{await jf('/api/bewertungen/'+cid+'/abholen',post());}catch(e){alert(e.message);}render(body);};
+    body.querySelectorAll('[data-id]').forEach(function(card){
+      var id=card.getAttribute('data-id'),ta=card.querySelector('textarea'),m=card.querySelector('[data-m]');
+      card.querySelectorAll('[data-a]').forEach(function(btn){btn.onclick=async function(){
+        var a=btn.getAttribute('data-a');
+        try{
+          if(a==='kopieren'){await navigator.clipboard.writeText(ta.value);m.textContent='Kopiert.';return;}
+          if(a==='freigeben'){
+            await jf('/api/bewertungen/'+cid+'/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({entwurf:ta.value})});
+            await jf('/api/bewertungen/'+cid+'/'+id+'/freigeben',post({text:ta.value}));
+          }
+          if(a==='neu'){var hinweis=prompt('Was soll anders werden? (zum Beispiel: kürzer, wärmer, ohne Einladung)','');if(hinweis===null)return;m.textContent='Schreibt …';await jf('/api/bewertungen/'+cid+'/'+id+'/neu-schreiben',post({hinweis:hinweis}));}
+          if(a==='skip')await jf('/api/bewertungen/'+cid+'/'+id+'/ueberspringen',post());
+          render(body);
+        }catch(e){m.textContent=e.message;}
+      };});
+    });
+    $('#wsn-add').onclick=async function(){
+      var m=$('#wsn-msg');m.textContent='Schreibt …';
+      try{await jf('/api/bewertungen/'+cid+'/neu',post({plattform:$('#wsn-pl').value,sterne:$('#wsn-st').value,autor:$('#wsn-au').value,text:$('#wsn-tx').value}));filter='wartet';render(body);}catch(e){m.textContent=e.message;}
+    };
+    $('#wsv-save').onclick=async function(){
+      var m=$('#wsv-msg'),v={};
+      body.querySelectorAll('[data-vk]').forEach(function(t){var k=t.getAttribute('data-vk');v[k]=v[k]||{aufbau:'',beispiele:[]};if(t.getAttribute('data-vf')==='aufbau')v[k].aufbau=t.value;else if(t.value.trim())v[k].beispiele=[t.value];});
+      try{await jf('/api/bewertungen/'+cid+'/einstellungen',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({vorlagen:v,kontaktHinweis:$('#wsw-kontakt').value})});m.textContent='Gespeichert.';}catch(e){m.textContent=e.message;}
+    };
+    $('#wsh-neu').onclick=async function(){
+      try{var j=await jf('/api/bewertungen/'+cid+'/token',post());var url=location.origin+'/api/bewertungen/eingang/'+cid+'/'+j.token;$('#wsh-out').innerHTML='Adresse (POST):<br><code>'+E(url)+'</code><br>Bitte jetzt kopieren, sie wird nicht erneut angezeigt.';}catch(e){$('#wsh-out').textContent=e.message;}
+    };
+  }
+  var ws=window.wsSwitchTab;
+  if(typeof ws==='function')window.wsSwitchTab=function(t){
+    if(t==='bew'){
+      Array.prototype.forEach.call(document.querySelectorAll('#ws-tabs .mlist-pill'),function(x){x.classList.remove('active');});
+      var b=tab();if(b)b.classList.add('active');
+      return render(document.getElementById('ws-body'));
+    }
+    var u=document.getElementById('ws-tab-bew');if(u)u.classList.remove('active');
+    return ws.apply(this,arguments);
+  };
+  var ow=window.openWorkspace;
+  if(typeof ow==='function')window.openWorkspace=async function(){var r=await ow.apply(this,arguments);tab();return r;};
+  tab();
+})();
+</script>
 <script id="rq-einheiten-js">
 // Restaurants (Betriebe) eines Kunden: Abschnitt im Workspace-Reiter «Module» und Auswahl «Für welches Restaurant?» in allen Textarten.
 (function(){

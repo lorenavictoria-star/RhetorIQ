@@ -264,6 +264,7 @@ app.use('/api/webseiten', require('./routes/webseiten'));
 app.use('/api/memory', require('./routes/memory'));
 app.use('/api/subscriptions', require('./routes/subscriptions'));
 app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/bewertungen', require('./routes/bewertungen'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/klaviyo', require('./routes/klaviyo'));
 app.use('/api/integrationen', require('./routes/integrationen'));
@@ -450,6 +451,7 @@ const PORT = process.env.PORT || 3001;
   cron.schedule('0 7 * * *', () => require('./jobs/tagesplan').runTagesplanJob().catch(e => console.error('[tagesplan] job failed:', e.message)), { timezone: 'Europe/Zurich' });
   // Kalender-Synchronisation: alle 15 Minuten (fremde Kalender lesen, Google-Kanal erneuern, Abgleich als Sicherheitsnetz; abschaltbar mit KALENDERSYNC=aus)
   cron.schedule('0 16 * * *', () => require('./jobs/buchung-erinnerung').runBuchungErinnerungJob().catch(e => console.error('[buchung] Erinnerung failed:', e.message)), { timezone: 'Europe/Zurich' });
+  cron.schedule('*/15 * * * *', () => require('./jobs/bewertungen').runBewertungenJob().catch(e => console.error('[bewertungen] job failed:', e.message)));
   cron.schedule('*/15 * * * *', () => require('./jobs/kalendersync').runKalendersyncJob().catch(e => console.error('[kalendersync] job failed:', require('./lib/scrub').scrubText(e.message))), { timezone: 'Europe/Zurich' });
   console.log('[cron] Weekly report: every Sunday 08:00 Zurich');
   console.log('[cron] Monthly report: 1st of month 08:07 Zurich');

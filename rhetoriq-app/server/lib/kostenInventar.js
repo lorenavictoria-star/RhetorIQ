@@ -167,6 +167,11 @@ const INVENTAR = {
     calls: () => [{ model: SONNET, inputTokens: 1400 + 700 + 1500 + 100, outputTokens: 900 }], menge: 60, mengeAnnahme: '60 Nachrichten je Monat',
     cache: 'keiner (System ohne Markierung)', haeufigkeit: 'je Nachricht'
   },
+  'bewertung-antwort': {
+    label: 'Antwort auf eine Kundenbewertung', funktion: 'Entwurf in der Brand Voice, automatisch bei jeder neuen Bewertung', ausloeser: 'folge', modell: 'Sonnet',
+    calls: () => [{ model: SONNET, inputTokens: 1800, outputTokens: 200 }], menge: 40, mengeAnnahme: '40 Bewertungen je Monat über alle Kunden',
+    cache: 'keiner', haeufigkeit: 'je neue Bewertung'
+  },
   'feedback-vorschlag': {
     label: 'Lösungsvorschlag zu einer Feedback-Notiz', funktion: 'Vorschlag für Lorena in der Benachrichtigungsmail', ausloeser: 'folge', modell: 'Sonnet',
     calls: () => [{ model: SONNET, inputTokens: 500, outputTokens: 350 }], menge: 20, mengeAnnahme: '20 Feedback-Notizen je Monat',
