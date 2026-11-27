@@ -50,6 +50,7 @@ function build({ generate } = {}) {
       const zaehler = Object.fromEntries(z.map(r => [r.status, r.n]));
       const kanaele = {};
       for (const [k, v] of Object.entries(B.KANAELE)) kanaele[k] = { label: v.label, verbunden: await v.verbunden(clientId) };
+      kanaele.rueckkanal = { label: 'Rückkanal', ...(await B.rueckkanalStatus(clientId)) };
       res.json({ einstellungen: set, standardVorlagen: B.STANDARD_VORLAGEN, zaehler, kanaele, bewertungen: rows });
     } catch (e) { return fehler(res, e); }
   });
@@ -74,6 +75,21 @@ function build({ generate } = {}) {
 
   router.post('/:clientId/token', ...gate, async (req, res) => {
     try { res.json({ token: await B.neuerToken(Number(req.params.clientId)), hinweis: 'Dieser Schlüssel wird nur jetzt angezeigt.' }); } catch (e) { return fehler(res, e); }
+  });
+
+  // Rückkanal einrichten (Zapier, Make, n8n): nur Beraterin oder Hauptzugang, der Signaturschlüssel wird einmal angezeigt
+  router.put('/:clientId/rueckkanal', ...gate, async (req, res) => {
+    try {
+      if (!isMainAccountOrAdvisor(req.user)) return res.status(403).json({ error: 'Das darf nur die Beraterin oder der Hauptzugang.' });
+      const r = await B.rueckkanalSetzen(Number(req.params.clientId), req.body && req.body.url);
+      res.json({ ok: true, signaturSchluessel: r.secret, hinweis: 'Dieser Schlüssel wird nur jetzt angezeigt.' });
+    } catch (e) { return fehler(res, e.status ? e : Object.assign(e, { status: 400 })); }
+  });
+  router.delete('/:clientId/rueckkanal', ...gate, async (req, res) => {
+    try {
+      if (!isMainAccountOrAdvisor(req.user)) return res.status(403).json({ error: 'Das darf nur die Beraterin oder der Hauptzugang.' });
+      await B.rueckkanalEntfernen(Number(req.params.clientId)); res.json({ ok: true });
+    } catch (e) { return fehler(res, e); }
   });
 
   router.post('/:clientId/abholen', ...gate, async (req, res) => {

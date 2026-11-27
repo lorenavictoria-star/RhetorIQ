@@ -8,6 +8,7 @@ const { pool } = require('../db');
 const { generateText, resolveModelId } = require('./aiProvider');
 const { fuerAuftrag, ohneGedankenstriche } = require('./brandVoiceAuswahl');
 const integrationen = require('./integrationen');
+const { parseTarget, guardedLookup } = require('./safeFetch');
 
 const MODI = ['aus', 'entwurf', 'freigabe', 'auto'];
 const STATUS = ['neu', 'entwurf', 'wartet', 'freigegeben', 'gepostet', 'uebersprungen', 'fehler'];
@@ -266,10 +267,10 @@ async function erzeugeEntwurf(clientId, bewertung, { hinweis, generate = generat
 // Ablage der Zugangsdaten verschlüsselt (integrationen.speichere, Name «google_bewertungen»).
 let transport = httpsJson;
 function _setzeTransport(fn) { transport = fn || httpsJson; }
-function httpsJson({ method, url, headers, body }) {
+function httpsJson({ method, url, headers, body, sicher }) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
-    const req = https.request({ method, hostname: u.hostname, path: u.pathname + u.search, headers, timeout: 20000 }, res => {
+    const req = https.request({ method, hostname: u.hostname, path: u.pathname + u.search, headers, timeout: 20000, ...(sicher ? { lookup: guardedLookup } : {}) }, res => {
       let d = ''; res.on('data', c => { d += c; if (d.length > 2e6) req.destroy(); });
       res.on('end', () => { let j = null; try { j = d ? JSON.parse(d) : {}; } catch { /* kein JSON */ } resolve({ status: res.statusCode, json: j }); });
     });
@@ -317,6 +318,45 @@ const KANAELE = {
 };
 function kanal(plattform) { return Object.prototype.hasOwnProperty.call(KANAELE, plattform) ? KANAELE[plattform] : null; }
 
+
+// Rückkanal: Die Plattform schickt die freigegebene Antwort an eine Adresse des Kunden (Zapier, Make, n8n oder eigenes System).
+// Dort wird sie in Google, Tripadvisor, Facebook oder wohin auch immer gepostet. Damit entfällt die API-Freigabe der Plattformen:
+// Zapier und Make besitzen die geprüften Verbindungen bereits. Die Nutzlast ist mit HMAC-SHA256 signiert (Header x-rhetoriq-signatur).
+const RUECK = 'bewertung_rueckkanal';
+async function rueckkanalSetzen(clientId, url) {
+  const u = parseTarget(url);
+  if (u.protocol !== 'https:') { const e = new Error('Die Adresse muss mit https beginnen.'); e.status = 400; throw e; }
+  const secret = crypto.randomBytes(24).toString('hex');
+  await integrationen.speichere(clientId, RUECK, { url: u.toString(), secret });
+  return { secret };
+}
+async function rueckkanalStatus(clientId) {
+  const z = await integrationen.lade(clientId, RUECK);
+  if (!z) return { verbunden: false };
+  const u = new URL(z.url);
+  return { verbunden: true, host: u.hostname };
+}
+function rueckkanalEntfernen(clientId) { return integrationen.loesche(clientId, RUECK); }
+const RUECKKANAL = {
+  label: 'Rückkanal (Zapier, Make)',
+  async verbunden(clientId) { return !!(await integrationen.lade(clientId, RUECK)); },
+  async posten(clientId, bew, text) {
+    const z = await integrationen.lade(clientId, RUECK);
+    if (!z) throw new Error('Kein Rückkanal eingerichtet.');
+    const body = JSON.stringify({ ereignis: 'bewertung_antwort', bewertungId: bew.id, plattform: bew.plattform, externId: bew.extern_id, externName: bew.extern_name, autor: bew.autor, sterne: bew.sterne, bewertung: bew.text, antwort: text });
+    const sig = crypto.createHmac('sha256', z.secret).update(body).digest('hex');
+    const r = await transport({ method: 'POST', url: z.url, sicher: true, body, headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body), 'x-rhetoriq-signatur': sig } });
+    if (r.status < 200 || r.status >= 300) throw new Error('Der Rückkanal hat die Antwort nicht angenommen (Status ' + r.status + ').');
+  }
+};
+// Direkter Kanal der Plattform zuerst, sonst der Rückkanal des Kunden
+async function kanalFuer(clientId, plattform) {
+  const k = kanal(plattform);
+  if (k && await k.verbunden(clientId)) return k;
+  if (await RUECKKANAL.verbunden(clientId)) return RUECKKANAL;
+  return null;
+}
+
 // ── Verarbeitung ─────────────────────────────────────────────────────────────
 async function autoHeute(clientId) {
   const { rows } = await pool.query(
@@ -343,8 +383,7 @@ async function verarbeite(clientId, id, { generate } = {}) {
   if (weg === 'aus') return bew;
   try {
     const e = await erzeugeEntwurf(clientId, bew, { generate });
-    const k = kanal(bew.plattform);
-    if (weg === 'auto' && k && await k.verbunden(clientId) && e.hatStimme) {
+    if (weg === 'auto' && await kanalFuer(clientId, bew.plattform) && e.hatStimme) {
       await pool.query('UPDATE bewertungen SET entwurf=$3, antwort_final=$3, vorlage_key=$4, status=\'freigegeben\', fehler=NULL WHERE id=$1 AND client_id=$2', [id, clientId, e.entwurf, e.vorlageKey]);
       return await veroeffentliche(clientId, id, { auto: true });
     }
@@ -363,8 +402,8 @@ async function veroeffentliche(clientId, id, { auto = false, text } = {}) {
   if (!bew) return null;
   const antwort = kuerze(text || bew.antwort_final || bew.entwurf, 4000);
   if (!antwort) { const e = new Error('Es gibt noch keinen Entwurf.'); e.status = 400; throw e; }
-  const k = kanal(bew.plattform);
-  if (!k || !(await k.verbunden(clientId))) {
+  const k = await kanalFuer(clientId, bew.plattform);
+  if (!k) {
     // Kein Kanal verbunden: freigegeben, das Team kopiert die Antwort auf der Plattform
     const u = await pool.query('UPDATE bewertungen SET status=\'freigegeben\', antwort_final=$3, fehler=NULL WHERE id=$1 AND client_id=$2 RETURNING *', [id, clientId, antwort]);
     return u.rows[0];
@@ -413,5 +452,5 @@ async function liste(clientId, { status, limit = 100 } = {}) {
 module.exports = {
   MODI, STATUS, STANDARD_VORLAGEN, KANAELE, ensureSchema, resetEnsured, einstellungen, speichereEinstellungen, neuerToken, tokenGilt,
   nimmAuf, vorlageFuer, risikoGruende, sprachErkennung, entscheide, erzeugeEntwurf, verarbeite, veroeffentliche, abholenUndVerarbeiten,
-  alleKunden, liste, kanal, _setzeTransport
+  alleKunden, liste, kanal, kanalFuer, rueckkanalSetzen, rueckkanalStatus, rueckkanalEntfernen, _setzeTransport
 };

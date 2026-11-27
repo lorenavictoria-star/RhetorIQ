@@ -168,3 +168,35 @@ test('Google lehnt ab: Status fehler, Antworttext bleibt erhalten', async () => 
   assert.equal(f.body.bewertung.status, 'fehler');
   assert.equal(f.body.bewertung.antwort_final, 'Danke.');
 });
+
+test('Rückkanal: nur https und keine interne Adresse, signierte Zustellung, Auto-Veröffentlichung über Zapier', async () => {
+  const crypto = require('crypto');
+  assert.equal((await srv.call('PUT', `/api/bewertungen/${cid2}/rueckkanal`, { token: tAdv, body: { url: 'http://hooks.zapier.com/x' } })).status, 400);
+  assert.equal((await srv.call('PUT', `/api/bewertungen/${cid2}/rueckkanal`, { token: tAdv, body: { url: 'https://localhost/x' } })).status, 400);
+  assert.equal((await srv.call('PUT', `/api/bewertungen/${cid2}/rueckkanal`, { token: tAdv, body: { url: 'https://169.254.169.254/x' } })).status, 400);
+  const team = H.clientToken(cid2, { clientUserId: 8, clientUserRole: 'editor' });
+  await pool.query('INSERT INTO client_users (id, client_id) VALUES (8, $1)', [cid2]);
+  assert.equal((await srv.call('PUT', `/api/bewertungen/${cid2}/rueckkanal`, { token: team, body: { url: 'https://hooks.zapier.com/x' } })).status, 403);
+  const ok = await srv.call('PUT', `/api/bewertungen/${cid2}/rueckkanal`, { token: tAdv, body: { url: 'https://hooks.zapier.com/hooks/catch/1/abc/' } });
+  assert.equal(ok.status, 200);
+  const secret = ok.body.signaturSchluessel;
+  const gesendet = [];
+  B._setzeTransport(async (req) => { gesendet.push(req); return { status: 200, json: {} }; });
+  await pool.query(`INSERT INTO company_memory (client_id, memory_type, content) VALUES ($1,'brand_voice','Ruhig und klar.')`, [cid2]);
+  await srv.call('PUT', `/api/bewertungen/${cid2}/einstellungen`, { token: tAdv, body: { modus: 'auto' } });
+  const r = await srv.call('POST', `/api/bewertungen/${cid2}/neu`, { token: tAdv, body: { plattform: 'facebook', externId: 'fb-1', sterne: 5, text: 'Sehr gutes Essen und nette Bedienung' } });
+  assert.equal(r.body.bewertung.status, 'gepostet');
+  assert.equal(r.body.bewertung.auto_gepostet, true);
+  assert.equal(gesendet.length, 1);
+  assert.equal(gesendet[0].sicher, true);
+  const erwartet = crypto.createHmac('sha256', secret).update(gesendet[0].body).digest('hex');
+  assert.equal(gesendet[0].headers['x-rhetoriq-signatur'], erwartet);
+  assert.equal(JSON.parse(gesendet[0].body).externId, 'fb-1');
+  // Fehler beim Zustellen: Status fehler, Text bleibt
+  B._setzeTransport(async () => ({ status: 500, json: {} }));
+  const r2 = await srv.call('POST', `/api/bewertungen/${cid2}/neu`, { token: tAdv, body: { plattform: 'facebook', externId: 'fb-2', sterne: 5, text: 'Wieder sehr schön gewesen bei euch' } });
+  assert.equal(r2.body.bewertung.status, 'fehler');
+  assert.ok(r2.body.bewertung.antwort_final);
+  // Trennen
+  assert.equal((await srv.call('DELETE', `/api/bewertungen/${cid2}/rueckkanal`, { token: tAdv })).status, 200);
+});
